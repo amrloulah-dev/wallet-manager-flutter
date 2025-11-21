@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1008406561641",
+    "project_id": "ewallet-manager-421b8",
+    "storage_bucket": "ewallet-manager-421b8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008406561641:android:61a3f112163039c56633f8",
+        "android_client_info": {
+          "package_name": "com.loulah.example.walletmanager2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1008406561641-fo9s77aciubifurhei02ik9s739p881q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.loulah.example.walletmanager2",
+            "certificate_hash": "d9d2f5768cb48d857e136befe7d31848c4616415"
+          }
+        },
+        {
+          "client_id": "1008406561641-0l457nr6fsfbov3oepk2ad4n22q26qro.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAH5QLTrbWoslrJVmaSJHLaeuTuz1zkhMY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1008406561641-0l457nr6fsfbov3oepk2ad4n22q26qro.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
