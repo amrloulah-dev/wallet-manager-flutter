@@ -9,9 +9,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../data/models/store_model.dart';
+import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/theme_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -56,7 +56,8 @@ class SettingsScreen extends StatelessWidget {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      if (context.mounted) ToastUtils.showError(AppLocalizations.of(context)!.errorOpenWhatsapp);
+      if (context.mounted)
+        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenWhatsapp);
     }
   }
 
@@ -67,12 +68,14 @@ class SettingsScreen extends StatelessWidget {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: email,
-      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+      query:
+          'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
     try {
       await launchUrl(emailLaunchUri);
     } catch (e) {
-      if (context.mounted) ToastUtils.showError(AppLocalizations.of(context)!.errorOpenEmail);
+      if (context.mounted)
+        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenEmail);
     }
   }
 
@@ -101,12 +104,19 @@ class SettingsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppTextStyles.labelSmall.copyWith(color: Colors.black)),
-                  Text(value, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black),),
+                  Text(label,
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: Colors.black)),
+                  Text(
+                    value,
+                    style:
+                        AppTextStyles.bodyMedium.copyWith(color: Colors.black),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary(context)),
           ],
         ),
       ),
@@ -154,46 +164,64 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, authProvider, child) {
         final user = authProvider.currentUser;
         final store = authProvider.currentStore;
-        final avatarLetter = user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'U';
+        final avatarLetter = user?.fullName.isNotEmpty == true
+            ? user!.fullName[0].toUpperCase()
+            : 'U';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle(context, AppLocalizations.of(context)!.accountInfo),
+            _buildSectionTitle(
+                context, AppLocalizations.of(context)!.accountInfo),
             // User Card
             Card(
               elevation: 1,
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: AppColors.primary.withAlpha((0.1 * 255).round()),
-                      child: Text(avatarLetter, style: AppTextStyles.h2.copyWith(color: AppColors.primary)),
+                      backgroundColor:
+                          AppColors.primary.withAlpha((0.1 * 255).round()),
+                      child: Text(avatarLetter,
+                          style: AppTextStyles.h2
+                              .copyWith(color: AppColors.primary)),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user?.fullName ?? AppLocalizations.of(context)!.user, style: AppTextStyles.h3),
+                          Text(
+                              user?.fullName ??
+                                  AppLocalizations.of(context)!.user,
+                              style: AppTextStyles.h3),
                           const SizedBox(height: 4),
-                          Text(user?.email ?? user?.phone ?? AppLocalizations.of(context)!.noEmail, style: AppTextStyles.bodyMedium),
+                          Text(
+                              user?.email ??
+                                  user?.phone ??
+                                  AppLocalizations.of(context)!.noEmail,
+                              style: AppTextStyles.bodyMedium),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        user?.isOwner ?? false ? AppLocalizations.of(context)!.owner : AppLocalizations.of(context)!.employee,
-                        style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                        user?.isOwner ?? false
+                            ? AppLocalizations.of(context)!.owner
+                            : AppLocalizations.of(context)!.employee,
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: Colors.white),
                       ),
                     ),
                   ],
@@ -206,14 +234,19 @@ class SettingsScreen extends StatelessWidget {
               Card(
                 elevation: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      _buildInfoRow(label: AppLocalizations.of(context)!.storeName, value: store.storeName),
+                      _buildInfoRow(
+                          label: AppLocalizations.of(context)!.storeName,
+                          value: store.storeName),
                       const Divider(height: 24),
-                      _buildInfoRow(label: AppLocalizations.of(context)!.creationDate, value: DateHelper.formatTimestamp(store.createdAt)),
+                      _buildInfoRow(
+                          label: AppLocalizations.of(context)!.creationDate,
+                          value: DateHelper.formatTimestamp(store.createdAt)),
                     ],
                   ),
                 ),
@@ -231,10 +264,16 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildLicenseCard(BuildContext context, StoreLicense license) {
     final isExpired = license.isExpired;
     final daysRemaining = license.daysRemaining;
-    final cardColor = isExpired ? AppColors.error.withAlpha((0.05 * 255).round()) : AppColors.success.withAlpha((0.05 * 255).round());
-    final borderColor = isExpired ? AppColors.error.withAlpha((0.2 * 255).round()) : AppColors.success.withAlpha((0.2 * 255).round());
+    final cardColor = isExpired
+        ? AppColors.error.withAlpha((0.05 * 255).round())
+        : AppColors.success.withAlpha((0.05 * 255).round());
+    final borderColor = isExpired
+        ? AppColors.error.withAlpha((0.2 * 255).round())
+        : AppColors.success.withAlpha((0.2 * 255).round());
     final statusColor = isExpired ? AppColors.error : AppColors.success;
-    final statusText = isExpired ? AppLocalizations.of(context)!.expired : AppLocalizations.of(context)!.active;
+    final statusText = isExpired
+        ? AppLocalizations.of(context)!.expired
+        : AppLocalizations.of(context)!.active;
 
     return Card(
       elevation: 1,
@@ -252,36 +291,49 @@ class SettingsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context)!.licenseInfo, style: AppTextStyles.h3),
+                Text(AppLocalizations.of(context)!.licenseInfo,
+                    style: AppTextStyles.h3),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: statusColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(statusText, style: AppTextStyles.labelSmall.copyWith(color: Colors.white)),
+                  child: Text(statusText,
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: Colors.white)),
                 ),
               ],
             ),
             const Divider(height: 24),
-            _buildInfoRow(label: AppLocalizations.of(context)!.licenseKey, value: license.licenseKey),
+            _buildInfoRow(
+                label: AppLocalizations.of(context)!.licenseKey,
+                value: license.licenseKey),
             const SizedBox(height: 12),
-            _buildInfoRow(label: AppLocalizations.of(context)!.expiryDate, value: DateHelper.formatTimestamp(license.expiryDate)),
+            _buildInfoRow(
+                label: AppLocalizations.of(context)!.expiryDate,
+                value: DateHelper.formatTimestamp(license.expiryDate)),
             if (!isExpired) ...[
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppLocalizations.of(context)!.daysRemaining, style: AppTextStyles.bodyMedium),
+                  Text(AppLocalizations.of(context)!.daysRemaining,
+                      style: AppTextStyles.bodyMedium),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: daysRemaining <= 7 ? AppColors.warning : AppColors.primary,
+                      color: daysRemaining <= 7
+                          ? AppColors.warning
+                          : AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '$daysRemaining ${AppLocalizations.of(context)!.day}',
-                      style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: Colors.white),
                     ),
                   ),
                 ],
@@ -297,7 +349,8 @@ class SettingsScreen extends StatelessWidget {
                   onPressed: () => _showContactDialog(context),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    backgroundColor: AppColors.primary.withAlpha((0.1 * 255).round()),
+                    backgroundColor:
+                        AppColors.primary.withAlpha((0.1 * 255).round()),
                   ),
                 ),
               ),
@@ -318,11 +371,16 @@ class SettingsScreen extends StatelessWidget {
             return Card(
               elevation: 1,
               margin: const EdgeInsets.symmetric(horizontal: 16.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
-                leading: Icon(_getThemeIcon(themeProvider.themeMode), color: AppColors.primary),
-                title: Text(AppLocalizations.of(context)!.theme, style: AppTextStyles.bodyLarge),
-                subtitle: Text(getThemeModeName(context, themeProvider.themeMode), style: AppTextStyles.bodyMedium),
+                leading: Icon(_getThemeIcon(themeProvider.themeMode),
+                    color: AppColors.primary),
+                title: Text(AppLocalizations.of(context)!.theme,
+                    style: AppTextStyles.bodyLarge),
+                subtitle: Text(
+                    getThemeModeName(context, themeProvider.themeMode),
+                    style: AppTextStyles.bodyMedium),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => _showThemeDialog(context),
               ),
@@ -335,11 +393,17 @@ class SettingsScreen extends StatelessWidget {
             return Card(
               elevation: 1,
               margin: const EdgeInsets.symmetric(horizontal: 16.0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: const Icon(Icons.language, color: AppColors.primary),
-                title: Text(AppLocalizations.of(context)!.language, style: AppTextStyles.bodyLarge),
-                subtitle: Text(localizationProvider.isArabic ? AppLocalizations.of(context)!.arabic : AppLocalizations.of(context)!.english, style: AppTextStyles.bodyMedium),
+                title: Text(AppLocalizations.of(context)!.language,
+                    style: AppTextStyles.bodyLarge),
+                subtitle: Text(
+                    localizationProvider.isArabic
+                        ? AppLocalizations.of(context)!.arabic
+                        : AppLocalizations.of(context)!.english,
+                    style: AppTextStyles.bodyMedium),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => _showLanguageDialog(context),
               ),
@@ -358,12 +422,15 @@ class SettingsScreen extends StatelessWidget {
         Card(
           elevation: 1,
           margin: const EdgeInsets.symmetric(horizontal: 16.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
               ListTile(
-                leading: Icon(Icons.vpn_key_outlined, color: AppColors.textSecondary(context)),
-                title: Text(AppLocalizations.of(context)!.license, style: AppTextStyles.bodyLarge),
+                leading: Icon(Icons.vpn_key_outlined,
+                    color: AppColors.textSecondary(context)),
+                title: Text(AppLocalizations.of(context)!.license,
+                    style: AppTextStyles.bodyLarge),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => _showLicenseDialog(context),
               ),
@@ -383,7 +450,10 @@ class SettingsScreen extends StatelessWidget {
       context,
       title: AppLocalizations.of(context)!.licenseInfo,
       options: [
-        _buildInfoRow(label: AppLocalizations.of(context)!.licenseKey, value: store?.license.licenseKey ?? AppLocalizations.of(context)!.notAvailable),
+        _buildInfoRow(
+            label: AppLocalizations.of(context)!.licenseKey,
+            value: store?.license.licenseKey ??
+                AppLocalizations.of(context)!.notAvailable),
         const Divider(height: 24),
         _buildContactRow(
           context: context,
@@ -415,12 +485,14 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: ElevatedButton.icon(
         icon: const Icon(Icons.logout, color: Colors.white),
-        label: Text(AppLocalizations.of(context)!.logout, style: const TextStyle(color: Colors.white)),
+        label: Text(AppLocalizations.of(context)!.logout,
+            style: const TextStyle(color: Colors.white)),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.error,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: () => _showLogoutDialog(context),
       ),
@@ -440,7 +512,8 @@ class SettingsScreen extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+            style:
+                AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
           ),
@@ -466,7 +539,8 @@ class SettingsScreen extends StatelessWidget {
       title: AppLocalizations.of(context)!.chooseTheme,
       options: ThemeMode.values.map((mode) {
         return RadioListTile<ThemeMode>(
-          title: Text(getThemeModeName(context, mode), style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
+          title: Text(getThemeModeName(context, mode),
+              style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
           value: mode,
           groupValue: context.read<ThemeProvider>().themeMode,
           activeColor: AppColors.primary,
@@ -487,7 +561,8 @@ class SettingsScreen extends StatelessWidget {
       title: AppLocalizations.of(context)!.chooseLanguage,
       options: [
         RadioListTile<String>(
-          title: Text(AppLocalizations.of(context)!.arabic, style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
+          title: Text(AppLocalizations.of(context)!.arabic,
+              style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
           value: 'ar',
           groupValue: context.read<LocalizationProvider>().locale.languageCode,
           activeColor: AppColors.primary,
@@ -499,7 +574,8 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         RadioListTile<String>(
-          title: Text(AppLocalizations.of(context)!.english, style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
+          title: Text(AppLocalizations.of(context)!.english,
+              style: AppTextStyles.bodyLarge.copyWith(color: Colors.black)),
           value: 'en',
           groupValue: context.read<LocalizationProvider>().locale.languageCode,
           activeColor: AppColors.primary,
@@ -530,7 +606,8 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       applicationName: AppConstants.appName,
       applicationVersion: AppConstants.appVersion,
-      applicationIcon: const Icon(Icons.wallet, size: 48, color: AppColors.primary),
+      applicationIcon:
+          const Icon(Icons.wallet, size: 48, color: AppColors.primary),
       children: [
         Text(AppLocalizations.of(context)!.appDescription),
       ],
@@ -557,7 +634,8 @@ class SettingsScreen extends StatelessWidget {
         );
       } catch (e) {
         if (context.mounted) {
-          ToastUtils.showError('${AppLocalizations.of(context)!.logoutFailed}: $e');
+          ToastUtils.showError(
+              '${AppLocalizations.of(context)!.logoutFailed}: $e');
         }
       }
     }
