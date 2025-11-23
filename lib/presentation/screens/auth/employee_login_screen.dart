@@ -15,6 +15,7 @@ import '../../../providers/employee_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/loading_indicator.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 enum _LoginStep { password, pin, google }
 
@@ -57,7 +58,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     _setLoading(true);
 
     final authProvider = context.read<AuthProvider>();
-    final storeId = await authProvider.verifyStorePassword(_storePasswordController.text.trim());
+    final storeId = await authProvider
+        .verifyStorePassword(_storePasswordController.text.trim());
 
     if (storeId != null) {
       setState(() {
@@ -66,7 +68,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       });
     } else {
       if (mounted) {
-        ToastUtils.showError(authProvider.errorMessage ?? 'كلمة سر المحل غير صحيحة');
+        ToastUtils.showError(authProvider.errorMessage ??
+            AppLocalizations.of(context)!.storePasswordInvalid);
       }
     }
     _setLoading(false);
@@ -91,7 +94,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     } else {
       setState(() => _enteredPin = '');
       if (mounted) {
-        ToastUtils.showError(employeeProvider.errorMessage ?? 'الرقم السري غير صحيح');
+        ToastUtils.showError(employeeProvider.errorMessage ??
+            AppLocalizations.of(context)!.pinInvalid);
       }
     }
     _setLoading(false);
@@ -109,17 +113,21 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       if (success) {
         if (authProvider.firebaseUser?.uid == _verifiedStoreId) {
           // Google UID matches the store owner, proceed to finalize
-          await authProvider.finalizeEmployeeSession(employee: _verifiedEmployee!);
+          await authProvider.finalizeEmployeeSession(
+              employee: _verifiedEmployee!);
           if (!mounted) return;
-          Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
+          Navigator.pushReplacementNamed(
+              context, RouteConstants.ownerDashboard);
           if (mounted && authProvider.isAuthenticated) {
-            ToastUtils.showSuccess('مرحباً ${_verifiedEmployee!.fullName}');
+            ToastUtils.showSuccess(
+                '${AppLocalizations.of(context)!.welcome} ${_verifiedEmployee!.fullName}');
           }
         } else {
           // Wrong Google account signed in
           await authProvider.logout();
           if (mounted) {
-            ToastUtils.showError('يرجى تسجيل الدخول بحساب جوجل الخاص بالمتجر.');
+            ToastUtils.showError(
+                AppLocalizations.of(context)!.wrongGoogleAccount);
           }
         }
       } else {
@@ -132,7 +140,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     } on LicenseExpiredException {
       _showLicenseExpiredDialog();
     } catch (e) {
-      ToastUtils.showError('حدث خطأ غير متوقع.');
+      ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
     }
     _setLoading(false);
   }
@@ -140,10 +148,10 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   void _showLicenseExpiredDialog() {
     DialogUtils.showConfirmDialog(
       context,
-      title: 'الترخيص منتهي',
-      message: 'يجب تجديد الترخيص للمتابعة.',
-      confirmText: 'تواصل للتجديد',
-      cancelText: 'إلغاء',
+      title: AppLocalizations.of(context)!.licenseExpired,
+      message: AppLocalizations.of(context)!.licenseExpiredMessage,
+      confirmText: AppLocalizations.of(context)!.contactToRenewBtn,
+      cancelText: AppLocalizations.of(context)!.cancel,
       type: DialogType.warning,
     ).then((confirmed) {
       if (confirmed == true) {
@@ -167,7 +175,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   void _onBackspace() {
     if (_enteredPin.isNotEmpty) {
       HapticFeedback.lightImpact();
-      setState(() => _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1));
+      setState(
+          () => _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1));
     }
   }
 
@@ -180,7 +189,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
         context.read<AuthProvider>().logout();
       }
       if (step == _LoginStep.pin) {
-         context.read<AuthProvider>().logout();
+        context.read<AuthProvider>().logout();
       }
       _verifiedEmployee = null;
       _enteredPin = '';
@@ -191,9 +200,11 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تسجيل دخول الموظف'),
+        title: Text(AppLocalizations.of(context)!.employeeLogin),
         leading: _currentStep != _LoginStep.password
-            ? BackButton(onPressed: () => _resetToStep(_LoginStep.values[_currentStep.index - 1]))
+            ? BackButton(
+                onPressed: () =>
+                    _resetToStep(_LoginStep.values[_currentStep.index - 1]))
             : null,
       ),
       body: _isLoading
@@ -238,15 +249,15 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     IconData icon;
     switch (_currentStep) {
       case _LoginStep.password:
-        title = 'الخطوة 1: أدخل كلمة سر المتجر';
+        title = AppLocalizations.of(context)!.step1StorePassword;
         icon = Icons.store_outlined;
         break;
       case _LoginStep.pin:
-        title = 'الخطوة 2: أدخل الرقم السري الخاص بك';
+        title = AppLocalizations.of(context)!.step2Pin;
         icon = Icons.pin_outlined;
         break;
       case _LoginStep.google:
-        title = 'الخطوة 3: سجل بحساب جوجل الخاص بالمتجر';
+        title = AppLocalizations.of(context)!.step3GoogleStore;
         icon = FontAwesomeIcons.google;
         break;
     }
@@ -254,9 +265,13 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       children: [
         Icon(icon, size: 64, color: AppColors.primary),
         const SizedBox(height: 16),
-        Text('تسجيل دخول الموظف', style: AppTextStyles.h2, textAlign: TextAlign.center),
+        Text(AppLocalizations.of(context)!.employeeLogin,
+            style: AppTextStyles.h2, textAlign: TextAlign.center),
         const SizedBox(height: 8),
-        Text(title, style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary(context)), textAlign: TextAlign.center),
+        Text(title,
+            style: AppTextStyles.bodyLarge
+                .copyWith(color: AppColors.textSecondary(context)),
+            textAlign: TextAlign.center),
       ],
     );
   }
@@ -268,8 +283,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
         CustomTextField(
           controller: _storePasswordController,
           focusNode: _storePasswordFocus,
-          labelText: 'كلمة سر المتجر',
-          hintText: 'أدخل كلمة سر المتجر المكونة من 6 أرقام',
+          labelText: AppLocalizations.of(context)!.storePassword,
+          hintText: AppLocalizations.of(context)!.storePasswordHint,
           validator: Validators.validateStorePassword,
           keyboardType: TextInputType.number,
           obscureText: true,
@@ -279,7 +294,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
         ),
         const SizedBox(height: 24),
         CustomButton(
-          text: 'تحقق',
+          text: AppLocalizations.of(context)!.verify,
           onPressed: _verifyStorePassword,
           icon: const Icon(Icons.verified_user_outlined),
         ),
@@ -300,7 +315,9 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: index < _enteredPin.length ? AppColors.primary : AppColors.surface(context),
+                color: index < _enteredPin.length
+                    ? AppColors.primary
+                    : AppColors.surface(context),
                 border: Border.all(color: AppColors.primary, width: 2),
               ),
             );
@@ -324,7 +341,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       children: [
         const SizedBox(height: 32),
         CustomButton(
-          text: 'تسجيل الدخول عبر جوجل',
+          text: AppLocalizations.of(context)!.loginWithGoogle,
           onPressed: _handleGoogleSignInAndFinalize,
           icon: const FaIcon(FontAwesomeIcons.google, color: Colors.white),
         ),
@@ -351,7 +368,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     );
   }
 
-  Widget _buildKeypadButton({required Widget child, required VoidCallback onTap}) {
+  Widget _buildKeypadButton(
+      {required Widget child, required VoidCallback onTap}) {
     return SizedBox(
       width: 72,
       height: 72,
@@ -365,8 +383,9 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
   Widget _buildFooter() {
     return TextButton(
-      onPressed: () => Navigator.pushReplacementNamed(context, RouteConstants.storeRegistration),
-      child: const Text('هل أنت مالك المتجر؟ تسجيل الدخول من هنا'),
+      onPressed: () => Navigator.pushReplacementNamed(
+          context, RouteConstants.storeRegistration),
+      child: Text(AppLocalizations.of(context)!.areYouOwner),
     );
   }
 }

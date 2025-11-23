@@ -13,6 +13,7 @@ import '../../../core/utils/debouncer.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/wallet/wallet_card.dart';
 import '../../widgets/common/add_close_animated_icon.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletsListScreen extends StatefulWidget {
   const WalletsListScreen({super.key});
@@ -21,7 +22,8 @@ class WalletsListScreen extends StatefulWidget {
   State<WalletsListScreen> createState() => _WalletsListScreenState();
 }
 
-class _WalletsListScreenState extends State<WalletsListScreen> with TickerProviderStateMixin {
+class _WalletsListScreenState extends State<WalletsListScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
   final _scrollController = ScrollController();
@@ -58,7 +60,8 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
       context.read<WalletProvider>().fetchMoreWallets();
     }
   }
@@ -87,16 +90,18 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
   }
 
   void _navigateToWalletDetails(String walletId) {
-    Navigator.pushNamed(context, RouteConstants.walletDetails, arguments: walletId);
+    Navigator.pushNamed(context, RouteConstants.walletDetails,
+        arguments: walletId);
   }
 
   void _showDeleteDialog(WalletModel wallet) async {
     final walletProvider = context.read<WalletProvider>();
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'حذف المحفظة',
-      message: 'هل أنت متأكد أنك تريد حذف محفظة ${wallet.phoneNumber}؟',
-      confirmText: 'حذف',
+      title: AppLocalizations.of(context)!.deleteWallet,
+      message: AppLocalizations.of(context)!
+          .deleteWalletConfirmation(wallet.phoneNumber),
+      confirmText: AppLocalizations.of(context)!.delete,
       type: DialogType.danger,
     );
 
@@ -104,9 +109,11 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
       final success = await walletProvider.deleteWallet(wallet.walletId);
       if (mounted) {
         if (success) {
-          ToastUtils.showSuccess('تم حذف المحفظة بنجاح');
+          ToastUtils.showSuccess(
+              AppLocalizations.of(context)!.walletDeletedSuccessfully);
         } else {
-          ToastUtils.showError(walletProvider.errorMessage ?? 'فشل حذف المحفظة');
+          ToastUtils.showError(walletProvider.errorMessage ??
+              AppLocalizations.of(context)!.walletDeletionFailed);
         }
       }
     }
@@ -116,7 +123,7 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المحافظ'),
+        title: Text(AppLocalizations.of(context)!.wallets),
         centerTitle: true,
       ),
       body: Consumer<WalletProvider>(
@@ -142,7 +149,8 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
 
     if (provider.hasError) {
       return CustomErrorWidget(
-        message: provider.errorMessage ?? 'حدث خطأ ما',
+        message: provider.errorMessage ??
+            AppLocalizations.of(context)!.somethingWentWrong,
         onRetry: provider.fetchInitialWallets,
       );
     }
@@ -157,10 +165,10 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
 
     if (wallets.isEmpty) {
       return EmptyStateWidget(
-        message: 'لا توجد محافظ بعد',
-        description: 'ابدأ بإضافة محفظة جديدة لإدارة معاملاتك المالية.',
+        message: AppLocalizations.of(context)!.noWalletsYet,
+        description: AppLocalizations.of(context)!.startAddingWallets,
         icon: Icons.wallet_outlined,
-        actionText: 'إضافة محفظة',
+        actionText: AppLocalizations.of(context)!.addWallet,
         onAction: _navigateToAddWallet,
       );
     }
@@ -209,7 +217,7 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
             onPressed: _toggleFabMenu,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            tooltip: 'إضافة',
+            tooltip: AppLocalizations.of(context)!.addWallet,
             child: AddCloseAnimatedIcon(
               progress: _fabAnimationController,
               color: Colors.white,
@@ -224,14 +232,14 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
   List<Widget> _buildFabOptions() {
     final options = <Widget>[
       _FabOption(
-        label: 'إضافة رصيد',
+        label: AppLocalizations.of(context)!.addBalance,
         icon: Icons.add_card_outlined,
         onPressed: _navigateToAddBalance,
         animation: _fabAnimationController,
         translation: const Offset(0, -65),
       ),
       _FabOption(
-        label: 'إضافة محفظة',
+        label: AppLocalizations.of(context)!.addWallet,
         icon: Icons.account_balance_wallet_outlined,
         onPressed: _navigateToAddWallet,
         animation: _fabAnimationController,
@@ -254,7 +262,7 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
           });
         },
         decoration: InputDecoration(
-          hintText: 'ابحث برقم الموبايل...',
+          hintText: AppLocalizations.of(context)!.searchByPhoneNumber,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -270,8 +278,6 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
     );
   }
 
-
-
   Widget _buildSummaryCard(List<WalletModel> wallets) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -285,12 +291,12 @@ class _WalletsListScreenState extends State<WalletsListScreen> with TickerProvid
         children: [
           _SummaryItem(
             icon: Icons.wallet,
-            label: 'إجمالي المحافظ',
+            label: AppLocalizations.of(context)!.totalWallets,
             value: wallets.length.toString(),
           ),
           _SummaryItem(
             icon: Icons.check_circle_outline,
-            label: 'المحافظ النشطة',
+            label: AppLocalizations.of(context)!.activeWallets,
             value: wallets.where((w) => w.isActive).length.toString(),
           ),
         ],
@@ -360,10 +366,12 @@ class _FabOption extends StatelessWidget {
         children: [
           Card(
             elevation: 4,
-            color:AppColors.primary ,
+            color: AppColors.primary,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(label, style: AppTextStyles.labelMedium.copyWith(color: AppColors.surface(context) )),
+              child: Text(label,
+                  style: AppTextStyles.labelMedium
+                      .copyWith(color: AppColors.surface(context))),
             ),
           ),
           const SizedBox(width: 16),

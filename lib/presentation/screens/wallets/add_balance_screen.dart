@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +11,7 @@ import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class AddBalanceScreen extends StatefulWidget {
   const AddBalanceScreen({super.key});
@@ -38,7 +38,8 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
       return;
     }
     if (_selectedWallet == null) {
-      ToastUtils.showError('يرجى اختيار محفظة أولاً');
+      ToastUtils.showError(
+          AppLocalizations.of(context)!.pleaseSelectWalletFirst);
       return;
     }
 
@@ -50,7 +51,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     final currentUserId = authProvider.currentUserId;
 
     if (currentUserId == null) {
-      ToastUtils.showError('User not authenticated.');
+      ToastUtils.showError(AppLocalizations.of(context)!.userNotAuthenticated);
       setState(() => _isSubmitting = false);
       return;
     }
@@ -63,11 +64,12 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
 
     if (mounted) {
       if (success) {
-        ToastUtils.showSuccess('تم إضافة الرصيد بنجاح');
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.balanceAddedSuccessfully);
         Navigator.pop(context);
       } else {
-        ToastUtils.showError(
-            walletProvider.errorMessage ?? 'فشل في إضافة الرصيد');
+        ToastUtils.showError(walletProvider.errorMessage ??
+            AppLocalizations.of(context)!.failedToAddBalance);
       }
     }
 
@@ -78,7 +80,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة رصيد لمحفظة'),
+        title: Text(AppLocalizations.of(context)!.addBalanceToWallet),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -113,23 +115,26 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (walletProvider.wallets.isEmpty) {
-          return const Text('لا توجد محافظ متاحة.');
+          return Text(AppLocalizations.of(context)!.noWalletsAvailable);
         }
         return DropdownButtonFormField<WalletModel>(
           value: _selectedWallet,
           decoration: InputDecoration(
-            labelText: 'اختر المحفظة',
-            prefixIcon: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
+            labelText: AppLocalizations.of(context)!.selectWallet,
+            prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
+                color: AppColors.primary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             filled: true,
             fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           ),
-          hint: const Text('اختر المحفظة التي تريد إضافة رصيد لها'),
-          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.primary, size: 28),
+          hint: Text(AppLocalizations.of(context)!.selectWalletToAddBalance),
+          icon: const Icon(Icons.arrow_drop_down_rounded,
+              color: AppColors.primary, size: 28),
           style: AppTextStyles.bodyLarge,
           isExpanded: true,
           dropdownColor: Colors.white,
@@ -140,7 +145,8 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withAlpha((0.05 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
@@ -179,7 +185,9 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
               _selectedWallet = wallet;
             });
           },
-          validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
+          validator: (value) => value == null
+              ? AppLocalizations.of(context)!.pleaseSelectWallet
+              : null,
         );
       },
     );
@@ -195,9 +203,10 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('تفاصيل المحفظة المحددة', style: AppTextStyles.h3),
+            Text(AppLocalizations.of(context)!.selectedWalletDetails,
+                style: AppTextStyles.h3),
             const Divider(height: 20),
-            _buildInfoRow('الرصيد الحالي:',
+            _buildInfoRow(AppLocalizations.of(context)!.currentBalanceLabel,
                 NumberFormatter.formatAmount(_selectedWallet!.balance)),
           ],
         ),
@@ -211,8 +220,8 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
       children: [
         Text(label, style: AppTextStyles.bodyLarge),
         Text(value,
-            style: AppTextStyles.bodyLarge
-                .copyWith(fontWeight: FontWeight.bold, color: AppColors.primary)),
+            style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold, color: AppColors.primary)),
       ],
     );
   }
@@ -220,10 +229,12 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   Widget _buildAmountField() {
     return CustomTextField(
       controller: _amountController,
-      labelText: 'المبلغ المراد إضافته',
+      labelText: AppLocalizations.of(context)!.amountToAdd,
       hintText: '0.00',
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+      ],
       validator: (val) => Validators.validateAmount(val, minAmount: 1),
       prefixIcon: const Icon(Icons.attach_money_outlined),
     );
@@ -231,7 +242,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
 
   Widget _buildSubmitButton() {
     return CustomButton(
-      text: 'إضافة الرصيد',
+      text: AppLocalizations.of(context)!.addBalanceAction,
       onPressed: _handleSubmit,
       isLoading: _isSubmitting,
       icon: const Icon(Icons.add),

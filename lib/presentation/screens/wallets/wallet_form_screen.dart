@@ -12,6 +12,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletFormScreen extends StatefulWidget {
   const WalletFormScreen({super.key});
@@ -32,14 +33,17 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   String? _selectedWalletStatus;
 
   // Map for wallet type display names
-  final Map<String, String> _walletTypeDisplayNames = {
-    'vodafone_cash': 'فودافون كاش',
-    'instapay': 'إنستاباي',
-    'orange_cash': 'أورانج كاش',
-    'etisalat_cash': 'اتصالات كاش',
-    'we_pay': 'WE Pay',
-    'other': 'أخرى',
-  };
+  // Map for wallet type display names
+  Map<String, String> _getWalletTypeDisplayNames(BuildContext context) {
+    return {
+      'vodafone_cash': AppLocalizations.of(context)!.vodafoneCash,
+      'instapay': AppLocalizations.of(context)!.instapay,
+      'orange_cash': AppLocalizations.of(context)!.orangeCash,
+      'etisalat_cash': AppLocalizations.of(context)!.etisalatCash,
+      'we_pay': AppLocalizations.of(context)!.wePay,
+      'other': AppLocalizations.of(context)!.other,
+    };
+  }
 
   @override
   void initState() {
@@ -84,18 +88,20 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     }
 
     if (_selectedWalletType == null) {
-      ToastUtils.showError('يرجى اختيار نوع المحفظة');
+      ToastUtils.showError(
+          AppLocalizations.of(context)!.pleaseSelectWalletType);
       return;
     }
 
     if (_selectedWalletStatus == null) {
-      ToastUtils.showError('يرجى اختيار حالة المحفظة');
+      ToastUtils.showError(
+          AppLocalizations.of(context)!.pleaseSelectWalletStatus);
       return;
     }
 
     final userId = authProvider.currentUserId;
     if (userId == null) {
-      ToastUtils.showError('خطأ في المصادقة، يرجى تسجيل الدخول مرة أخرى');
+      ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
       return;
     }
 
@@ -107,7 +113,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
         'notes': _notesController.text,
         // Wallet status and phone number are not editable in this version
       };
-      success = await walletProvider.updateWallet(_walletToEdit!.walletId, data);
+      success =
+          await walletProvider.updateWallet(_walletToEdit!.walletId, data);
     } else {
       // Create logic
       success = await walletProvider.createWallet(
@@ -122,8 +129,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
     if (success) {
       ToastUtils.showSuccess(_isEditMode
-              ? 'تم تعديل المحفظة بنجاح'
-              : 'تم إضافة المحفظة بنجاح');
+          ? AppLocalizations.of(context)!.walletUpdatedSuccessfully
+          : AppLocalizations.of(context)!.walletAddedSuccessfully);
       if (!mounted) return;
       Navigator.of(context).pop();
     }
@@ -134,7 +141,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditMode ? 'تعديل المحفظة' : 'إضافة محفظة جديدة'),
+        title: Text(_isEditMode
+            ? AppLocalizations.of(context)!.editWallet
+            : AppLocalizations.of(context)!.addNewWallet),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -173,8 +182,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   Widget _buildPhoneNumberField() {
     return CustomTextField(
       controller: _phoneController,
-      labelText: 'رقم الموبايل',
-      hintText: '01xxxxxxxxx',
+      labelText: AppLocalizations.of(context)!.phoneNumber,
+      hintText: AppLocalizations.of(context)!.phonePlaceholder,
       enabled: !_isEditMode,
       readOnly: _isEditMode,
       keyboardType: TextInputType.number,
@@ -188,38 +197,44 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   Widget _buildBalanceField() {
     return CustomTextField(
       controller: _balanceController,
-      labelText: 'الرصيد المبدئي',
+      labelText: AppLocalizations.of(context)!.initialBalance,
       hintText: '0.00',
       enabled: !_isEditMode,
       readOnly: _isEditMode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+      ],
       validator: (val) => Validators.validateAmount(val, minAmount: -1),
       prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
     );
   }
 
   Widget _buildWalletTypeDropdown() {
+    final walletTypes = _getWalletTypeDisplayNames(context);
     return DropdownButtonFormField<String>(
       value: _selectedWalletType,
       decoration: InputDecoration(
-        labelText: 'نوع المحفظة',
-        prefixIcon: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
+        labelText: AppLocalizations.of(context)!.walletType,
+        prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
+            color: AppColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         filled: true,
         fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       ),
-      hint: const Text('اختر نوع المحفظة'),
-      icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.primary, size: 28),
+      hint: Text(AppLocalizations.of(context)!.selectWalletType),
+      icon: const Icon(Icons.arrow_drop_down_rounded,
+          color: AppColors.primary, size: 28),
       style: AppTextStyles.bodyLarge,
       dropdownColor: Colors.white,
       isExpanded: true,
       itemHeight: null,
-      items: _walletTypeDisplayNames.keys.map((String key) {
+      items: walletTypes.keys.map((String key) {
         return DropdownMenuItem<String>(
           value: key,
           child: Padding(
@@ -236,7 +251,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
                 ),
               ),
               child: Text(
-                _walletTypeDisplayNames[key]!,
+                walletTypes[key]!,
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
@@ -247,11 +262,11 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
         );
       }).toList(),
       selectedItemBuilder: (BuildContext context) {
-        return _walletTypeDisplayNames.keys.map((String key) {
+        return walletTypes.keys.map((String key) {
           return Align(
             alignment: Alignment.centerRight,
             child: Text(
-              _walletTypeDisplayNames[key]!,
+              walletTypes[key]!,
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary(context),
@@ -265,7 +280,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
           _selectedWalletType = value;
         });
       },
-      validator: (value) => value == null ? 'نوع المحفظة مطلوب' : null,
+      validator: (value) => value == null
+          ? AppLocalizations.of(context)!.walletTypeRequired
+          : null,
     );
   }
 
@@ -273,13 +290,14 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('حالة المحفظة', style: AppTextStyles.labelMedium),
+        Text(AppLocalizations.of(context)!.walletStatus,
+            style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: RadioListTile<String>(
-                title: const Text('جديدة'),
+                title: Text(AppLocalizations.of(context)!.newStatus),
                 value: 'new',
                 groupValue: _selectedWalletStatus,
                 onChanged: _isEditMode
@@ -289,7 +307,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
             ),
             Expanded(
               child: RadioListTile<String>(
-                title: const Text('قديمة'),
+                title: Text(AppLocalizations.of(context)!.oldStatus),
                 value: 'old',
                 groupValue: _selectedWalletStatus,
                 onChanged: _isEditMode
@@ -312,7 +330,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.primary.withAlpha((0.2 * 255).round())),
+        side:
+            BorderSide(color: AppColors.primary.withAlpha((0.2 * 255).round())),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -324,16 +343,16 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
                 const Icon(Icons.info_outline, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'حدود المحفظة',
+                  AppLocalizations.of(context)!.walletLimits,
                   style: AppTextStyles.h3.copyWith(color: AppColors.primary),
                 ),
               ],
             ),
             const Divider(height: 20),
-            _buildLimitRow('الحد اليومي (إرسال/استقبال)',
+            _buildLimitRow(AppLocalizations.of(context)!.dailyLimit,
                 NumberFormatter.formatAmount(dailyLimit)),
             const SizedBox(height: 8),
-            _buildLimitRow('الحد الشهري (إرسال/استقبال)',
+            _buildLimitRow(AppLocalizations.of(context)!.monthlyLimit,
                 NumberFormatter.formatAmount(monthlyLimit)),
           ],
         ),
@@ -365,7 +384,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       children: [
         Text(label, style: AppTextStyles.bodyMedium),
         Text(value,
-            style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
+            style:
+                AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
       ],
     );
   }
@@ -373,8 +393,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   Widget _buildNotesField() {
     return CustomTextField(
       controller: _notesController,
-      labelText: 'ملاحظات (اختياري)',
-      hintText: 'أي تفاصيل إضافية عن المحفظة',
+      labelText: AppLocalizations.of(context)!.notesOptional,
+      hintText: AppLocalizations.of(context)!.notesPlaceholder,
       maxLines: 3,
       maxLength: 200,
       validator: (value) => Validators.validateNotes(value, maxLength: 200),
@@ -386,7 +406,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return Consumer<WalletProvider>(
       builder: (context, provider, child) {
         return CustomButton(
-          text: _isEditMode ? 'حفظ التعديلات' : 'إضافة المحفظة',
+          text: _isEditMode
+              ? AppLocalizations.of(context)!.saveChanges
+              : AppLocalizations.of(context)!.addWalletAction,
           onPressed: _handleSubmit,
           isLoading: provider.isCreating || provider.isUpdating,
         );
@@ -411,7 +433,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
                 Expanded(
                   child: Text(
                     provider.errorMessage!,
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.error),
                   ),
                 ),
               ],

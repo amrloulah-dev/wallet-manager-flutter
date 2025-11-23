@@ -14,6 +14,7 @@ import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/wallet_stats_card.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletDetailsScreen extends StatefulWidget {
   const WalletDetailsScreen({super.key});
@@ -35,8 +36,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   Widget build(BuildContext context) {
     if (_walletId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('خطأ')),
-        body: CustomErrorWidget(message: 'لم يتم تحديد محفظة. પણ'),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.error)),
+        body: CustomErrorWidget(
+            message: AppLocalizations.of(context)!.noWalletSelected),
       );
     }
 
@@ -47,19 +49,19 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('تفاصيل المحفظة'),
+            title: Text(AppLocalizations.of(context)!.walletDetails),
             centerTitle: true,
             actions: wallet != null
                 ? [
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),
                       onPressed: () => _navigateToEditWallet(context, wallet),
-                      tooltip: 'تعديل',
+                      tooltip: AppLocalizations.of(context)!.edit,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => _showDeleteDialog(wallet),
-                      tooltip: 'حذف',
+                      tooltip: AppLocalizations.of(context)!.delete,
                     ),
                   ]
                 : [],
@@ -67,11 +69,12 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
           body: _buildBody(context, snapshot),
           floatingActionButton: wallet != null
               ? FloatingActionButton.extended(
-                  onPressed: () => _navigateToCreateTransaction(context, wallet),
+                  onPressed: () =>
+                      _navigateToCreateTransaction(context, wallet),
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   icon: const Icon(Icons.add),
-                  label: const Text('معاملة جديدة'),
+                  label: Text(AppLocalizations.of(context)!.newTransaction),
                 )
               : null,
         );
@@ -79,14 +82,17 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, AsyncSnapshot<WalletModel?> snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-      return LoadingIndicator(message: 'جاري تحميل بيانات المحفظة...');
+  Widget _buildBody(
+      BuildContext context, AsyncSnapshot<WalletModel?> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting &&
+        !snapshot.hasData) {
+      return LoadingIndicator(
+          message: AppLocalizations.of(context)!.loadingWalletData);
     }
 
     if (snapshot.hasError) {
       return CustomErrorWidget(
-        message: 'حدث خطأ أثناء تحميل البيانات.',
+        message: AppLocalizations.of(context)!.errorLoadingData,
         onRetry: () => setState(() {}),
       );
     }
@@ -95,7 +101,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
     if (wallet == null) {
       return CustomErrorWidget(
-        message: 'لم يتم العثور على المحفظة المطلوبة.',
+        message: AppLocalizations.of(context)!.walletNotFound,
         onRetry: () => Navigator.of(context).pop(),
       );
     }
@@ -128,10 +134,10 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSectionTitle('حدود الإرسال'),
+              _buildSectionTitle(AppLocalizations.of(context)!.sendLimits),
               _buildSendLimitsCard(wallet),
               const SizedBox(height: 24),
-              _buildSectionTitle('حدود الاستقبال'),
+              _buildSectionTitle(AppLocalizations.of(context)!.receiveLimits),
               _buildReceiveLimitsCard(wallet),
               const SizedBox(height: 24),
               WalletStatsCard(stats: wallet.stats),
@@ -165,7 +171,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'رقم الموبايل',
+                        AppLocalizations.of(context)!.phoneNumber,
                         style: AppTextStyles.labelSmall
                             .copyWith(color: AppColors.textSecondary(context)),
                       ),
@@ -178,22 +184,23 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             _buildInfoRow(
               context: context,
               icon: Icons.account_balance,
-              label: 'الرصيد الحالي',
+              label: AppLocalizations.of(context)!.currentBalance,
               value: NumberFormatter.formatAmount(wallet.balance),
-              valueStyle: AppTextStyles.h2.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              valueStyle: AppTextStyles.h2.copyWith(
+                  color: AppColors.primary, fontWeight: FontWeight.bold),
             ),
             const Divider(height: 24),
             _buildInfoRow(
               context: context,
               icon: Icons.account_balance_wallet_outlined,
-              label: 'نوع المحفظة',
+              label: AppLocalizations.of(context)!.walletType,
               value: wallet.walletTypeDisplayName,
             ),
             const SizedBox(height: 16),
             _buildInfoRow(
               context: context,
               icon: Icons.label_outline,
-              label: 'حالة المحفظة',
+              label: AppLocalizations.of(context)!.walletStatus,
               value: wallet.walletStatusDisplayName,
               valueColor: wallet.walletStatus == 'new'
                   ? AppColors.newWallet
@@ -203,7 +210,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             _buildInfoRow(
               context: context,
               icon: Icons.calendar_today_outlined,
-              label: 'تاريخ الإضافة',
+              label: AppLocalizations.of(context)!.addedDate,
               value: DateHelper.formatTimestamp(wallet.createdAt),
             ),
             if (wallet.notes != null && wallet.notes!.isNotEmpty) ...[
@@ -211,7 +218,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               _buildInfoRow(
                 context: context,
                 icon: Icons.note_outlined,
-                label: 'ملاحظات',
+                label: AppLocalizations.of(context)!.notes,
                 value: wallet.notes!,
                 maxLines: 5,
               ),
@@ -246,8 +253,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: valueStyle ?? AppTextStyles.bodyLarge.copyWith(
-                    color: valueColor, fontWeight: FontWeight.w500),
+                style: valueStyle ??
+                    AppTextStyles.bodyLarge.copyWith(
+                        color: valueColor, fontWeight: FontWeight.w500),
                 maxLines: maxLines,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -273,7 +281,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
         child: Column(
           children: [
             WalletLimitBar(
-              label: 'الحد اليومي',
+              label: AppLocalizations.of(context)!.dailyLimitSimple,
               used: wallet.sendLimits.dailyUsed,
               limit: wallet.sendLimits.dailyLimit,
               percentage: wallet.sendLimits.dailyPercentage,
@@ -281,7 +289,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
-              label: 'الحد الشهري',
+              label: AppLocalizations.of(context)!.monthlyLimitSimple,
               used: wallet.sendLimits.monthlyUsed,
               limit: wallet.sendLimits.monthlyLimit,
               percentage: wallet.sendLimits.monthlyPercentage,
@@ -291,7 +299,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                 wallet.sendLimits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
-                  'تم الوصول للحد الأقصى للإرسال. لا يمكن إرسال مبالغ جديدة اليوم/هذا الشهر.'),
+                  AppLocalizations.of(context)!.sendLimitReachedMessage),
             ],
           ],
         ),
@@ -311,7 +319,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
         child: Column(
           children: [
             WalletLimitBar(
-              label: 'الحد اليومي',
+              label: AppLocalizations.of(context)!.dailyLimitSimple,
               used: wallet.receiveLimits.dailyUsed,
               limit: wallet.receiveLimits.dailyLimit,
               percentage: wallet.receiveLimits.dailyPercentage,
@@ -319,7 +327,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
-              label: 'الحد الشهري',
+              label: AppLocalizations.of(context)!.monthlyLimitSimple,
               used: wallet.receiveLimits.monthlyUsed,
               limit: wallet.receiveLimits.monthlyLimit,
               percentage: wallet.receiveLimits.monthlyPercentage,
@@ -329,7 +337,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                 wallet.receiveLimits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
-                  'تم الوصول للحد الأقصى للاستقبال. لا يمكن استقبال مبالغ جديدة اليوم/هذا الشهر.'),
+                  AppLocalizations.of(context)!.receiveLimitReachedMessage),
             ],
           ],
         ),
@@ -372,10 +380,10 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   void _showDeleteDialog(WalletModel wallet) async {
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تأكيد الحذف',
-      message:
-          'هل أنت متأكد أنك تريد حذف محفظة "${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}"?\n\nسيتم إخفاء المحفظة من القائمة ولكن لن يتم حذف معاملاتها السابقة.',
-      confirmText: 'حذف',
+      title: AppLocalizations.of(context)!.confirmDeletion,
+      message: AppLocalizations.of(context)!.deleteWalletConfirmationDetailed(
+          NumberFormatter.formatPhoneNumber(wallet.phoneNumber)),
+      confirmText: AppLocalizations.of(context)!.delete,
       type: DialogType.danger,
     );
 
@@ -388,11 +396,12 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       if (!mounted) return;
 
       if (success) {
-        ToastUtils.showSuccess('تم حذف المحفظة بنجاح');
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.walletDeletedSuccessfully);
         navigator.pop(); // Go back from details screen
       } else {
-        ToastUtils.showError(
-            walletProvider.errorMessage ?? 'فشل حذف المحفظة');
+        ToastUtils.showError(walletProvider.errorMessage ??
+            AppLocalizations.of(context)!.walletDeletionFailed);
       }
     }
   }

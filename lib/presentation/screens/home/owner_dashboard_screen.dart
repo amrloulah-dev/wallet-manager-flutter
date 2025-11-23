@@ -18,6 +18,7 @@ import '../../widgets/dashboard/section_header.dart';
 import '../../widgets/dashboard/alert_card.dart';
 import '../../widgets/transaction/transaction_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_card.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -32,9 +33,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     super.didChangeDependencies();
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentStoreId != null) {
-      context.read<StatisticsProvider>().setStoreId(authProvider.currentStoreId);
+      context
+          .read<StatisticsProvider>()
+          .setStoreId(authProvider.currentStoreId);
       context.read<WalletProvider>().setStoreId(authProvider.currentStoreId!);
-      context.read<TransactionProvider>().setStoreId(authProvider.currentStoreId!);
+      context
+          .read<TransactionProvider>()
+          .setStoreId(authProvider.currentStoreId!);
       context.read<DebtProvider>().setStoreId(authProvider.currentStoreId!);
     }
   }
@@ -54,7 +59,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     await Future.wait([
       statsProvider.fetchDashboardStats(forceRefresh: true),
       context.read<WalletProvider>().fetchInitialWallets(forceRefresh: true),
-      context.read<TransactionProvider>().fetchInitialTransactions(forceRefresh: true),
+      context
+          .read<TransactionProvider>()
+          .fetchInitialTransactions(forceRefresh: true),
       context.read<DebtProvider>().fetchInitialDebts(forceRefresh: true),
     ]);
   }
@@ -67,40 +74,42 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final bool? confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تسجيل الخروج',
-      message: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
-      confirmText: 'خروج',
+      title: AppLocalizations.of(context)!.logout,
+      message: AppLocalizations.of(context)!.logoutConfirmation,
+      confirmText: AppLocalizations.of(context)!.exit,
       type: DialogType.danger,
     );
 
     if (confirmed == true) {
       await authProvider.logout();
       if (mounted) {
-        Navigator.pushReplacementNamed(context, RouteConstants.storeRegistration);
+        Navigator.pushReplacementNamed(
+            context, RouteConstants.storeRegistration);
       }
     }
   }
 
-  String _getGreetingMessage() {
+  String _getGreetingMessage(BuildContext context) {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'صباح الخير 🌅';
+      return AppLocalizations.of(context)!.goodMorning;
     }
     if (hour < 17) {
-      return 'مساء الخير ☀️';
+      return AppLocalizations.of(context)!.goodAfternoon;
     }
-    return 'مساء الخير 🌙';
+    return AppLocalizations.of(context)!.goodEvening;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الرئيسية'),
+        title: Text(AppLocalizations.of(context)!.home),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.pushNamed(context, RouteConstants.settings),
+            onPressed: () =>
+                Navigator.pushNamed(context, RouteConstants.settings),
           ),
         ],
       ),
@@ -134,7 +143,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToCreateTransaction,
         icon: const Icon(Icons.add),
-        label: const Text('معاملة جديدة'),
+        label: Text(AppLocalizations.of(context)!.newTransaction),
         foregroundColor: Colors.white,
         backgroundColor: AppColors.primary,
       ),
@@ -145,8 +154,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.currentUser;
     final store = authProvider.currentStore;
-    final avatarLetter =
-        user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'U';
+    final avatarLetter = user?.fullName.isNotEmpty == true
+        ? user!.fullName[0].toUpperCase()
+        : 'U';
 
     return Drawer(
       elevation: 2,
@@ -163,15 +173,17 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: AppColors.primary.withAlpha((0.1 * 255).round()),
+                    backgroundColor:
+                        AppColors.primary.withAlpha((0.1 * 255).round()),
                     child: Text(
                       avatarLetter,
-                      style: AppTextStyles.h1.copyWith(color: AppColors.primary),
+                      style:
+                          AppTextStyles.h1.copyWith(color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    user?.fullName ?? 'مستخدم',
+                    user?.fullName ?? AppLocalizations.of(context)!.user,
                     style: AppTextStyles.h3
                         .copyWith(color: AppColors.textPrimary(context)),
                     overflow: TextOverflow.ellipsis,
@@ -179,7 +191,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    store?.storeName ?? 'متجر',
+                    store?.storeName ?? AppLocalizations.of(context)!.storeName,
                     style: AppTextStyles.bodyMedium
                         .copyWith(color: AppColors.textSecondary(context)),
                     overflow: TextOverflow.ellipsis,
@@ -196,23 +208,24 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 padding: const EdgeInsets.all(8.0),
                 children: [
                   _DrawerMenuTile(
-                    title: 'الرئيسية',
+                    title: AppLocalizations.of(context)!.home,
                     icon: Icons.dashboard_outlined,
                     isSelected: true, // Current screen
                     onTap: () => Navigator.pop(context),
                   ),
                   _DrawerMenuTile(
-                    title: 'المحافظ',
+                    title: AppLocalizations.of(context)!.wallets,
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () {
                       Navigator.pop(context);
                       if (context.read<AuthProvider>().isOwner) {
-                        Navigator.pushNamed(context, RouteConstants.walletsList);
+                        Navigator.pushNamed(
+                            context, RouteConstants.walletsList);
                       }
                     },
                   ),
                   _DrawerMenuTile(
-                    title: 'المعاملات',
+                    title: AppLocalizations.of(context)!.transactions,
                     icon: Icons.receipt_long_outlined,
                     onTap: () {
                       Navigator.pop(context);
@@ -221,7 +234,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     },
                   ),
                   _DrawerMenuTile(
-                    title: 'الديون',
+                    title: AppLocalizations.of(context)!.debts,
                     icon: Icons.credit_card_outlined,
                     onTap: () {
                       Navigator.pop(context);
@@ -229,7 +242,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     },
                   ),
                   _DrawerMenuTile(
-                    title: 'الإحصائيات',
+                    title: AppLocalizations.of(context)!.statistics,
                     icon: Icons.bar_chart_outlined,
                     onTap: () {
                       Navigator.pop(context);
@@ -238,12 +251,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     },
                   ),
                   _DrawerMenuTile(
-                    title: 'إدارة الموظفين',
+                    title: AppLocalizations.of(context)!.manageEmployees,
                     icon: Icons.people_alt_outlined,
                     onTap: () {
                       Navigator.pop(context);
                       if (authProvider.isOwner) {
-                        Navigator.pushNamed(context, RouteConstants.manageEmployees);
+                        Navigator.pushNamed(
+                            context, RouteConstants.manageEmployees);
                       }
                     },
                   ),
@@ -258,7 +272,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               child: Column(
                 children: [
                   _DrawerMenuTile(
-                    title: 'الإعدادات',
+                    title: AppLocalizations.of(context)!.settings,
                     icon: Icons.settings_outlined,
                     onTap: () {
                       Navigator.pop(context);
@@ -266,7 +280,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     },
                   ),
                   _DrawerMenuTile(
-                    title: 'تسجيل الخروج',
+                    title: AppLocalizations.of(context)!.logout,
                     icon: Icons.logout,
                     iconColor: AppColors.error,
                     textColor: AppColors.error,
@@ -292,7 +306,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.primary.withAlpha((0.8 * 255).round())],
+              colors: [
+                AppColors.primary,
+                AppColors.primary.withAlpha((0.8 * 255).round())
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -304,14 +321,15 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _getGreetingMessage(),
+                  _getGreetingMessage(context),
                   style: AppTextStyles.h3.copyWith(color: Colors.white70),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  authProvider.currentUser?.fullName ?? 'مستخدم',
+                  authProvider.currentUser?.fullName ??
+                      AppLocalizations.of(context)!.user,
                   style: AppTextStyles.h1.copyWith(color: Colors.white),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -335,16 +353,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             childAspectRatio: 1.8,
-            children: List.generate(4, (index) => const SkeletonCard(height: 80)),
+            children:
+                List.generate(4, (index) => const SkeletonCard(height: 80)),
           );
         }
-        if (provider.errorMessage != null && provider.dashboardSummary == null) {
+        if (provider.errorMessage != null &&
+            provider.dashboardSummary == null) {
           return Center(child: Text(provider.errorMessage!));
         }
 
         final stats = provider.dashboardSummary;
         if (stats == null) {
-          return const Center(child: Text('لا يمكن تحميل الإحصائيات'));
+          return Center(
+              child: Text(AppLocalizations.of(context)!.errorLoadingStats));
         }
 
         final lastUpdated = stats.lastUpdated.toDate();
@@ -382,36 +403,39 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   childAspectRatio: childAspectRatio,
                   children: [
                     StatsCard(
-                      title: 'إجمالي المحافظ',
-                      value: stats.totalWallets.toString(),
-                      icon: Icons.account_balance_wallet_outlined,
-                      color: Colors.blue.shade700,
-                      onTap: () {
-                        if (context.read<AuthProvider>().isOwner) {
-                          Navigator.pushNamed(context, RouteConstants.walletsList);
-                        }
-                      }
-                    ),
+                        title: AppLocalizations.of(context)!.totalWallets,
+                        value: stats.totalWallets.toString(),
+                        icon: Icons.account_balance_wallet_outlined,
+                        color: Colors.blue.shade700,
+                        onTap: () {
+                          if (context.read<AuthProvider>().isOwner) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.walletsList);
+                          }
+                        }),
                     StatsCard(
-                      title: 'إجمالي المعاملات',
+                      title: AppLocalizations.of(context)!.totalTransactions,
                       value: stats.totalTransactions.toString(),
                       icon: Icons.swap_horiz,
                       color: Colors.green.shade700,
-                      onTap: () => Navigator.pushNamed(context, RouteConstants.todayTransactions),
+                      onTap: () => Navigator.pushNamed(
+                          context, RouteConstants.todayTransactions),
                     ),
                     StatsCard(
-                      title: 'إجمالي العمولات',
+                      title: AppLocalizations.of(context)!.totalCommission,
                       value: stats.totalCommission.toInt().toString(),
                       icon: Icons.attach_money,
                       color: Colors.orange.shade800,
-                      onTap: () => Navigator.pushNamed(context, RouteConstants.todayTransactions),
+                      onTap: () => Navigator.pushNamed(
+                          context, RouteConstants.todayTransactions),
                     ),
                     StatsCard(
-                      title: 'ديون مفتوحة',
+                      title: AppLocalizations.of(context)!.openDebts,
                       value: stats.openDebtsCount.toString(),
                       icon: Icons.credit_card_off_outlined,
                       color: Colors.red.shade700,
-                      onTap: () => Navigator.pushNamed(context, RouteConstants.debtsList),
+                      onTap: () => Navigator.pushNamed(
+                          context, RouteConstants.debtsList),
                     ),
                   ],
                 );
@@ -421,8 +445,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                'آخر تحديث: $formattedTime',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary(context)),
+                '${AppLocalizations.of(context)!.lastUpdated} $formattedTime',
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.textSecondary(context)),
               ),
             ),
           ],
@@ -458,17 +483,17 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
         final List<Widget> actions = [
           QuickActionCard(
-            title: 'معاملة جديدة',
+            title: AppLocalizations.of(context)!.newTransaction,
             icon: Icons.add_circle_outline,
             color: AppColors.primary,
             onTap: _navigateToCreateTransaction,
           ),
           QuickActionCard(
-            title: 'محفظة جديدة',
+            title: AppLocalizations.of(context)!.newWallet,
             icon: Icons.account_balance_wallet_outlined,
             color: Colors.orange.shade700,
-            onTap: (){
-              if(context.read<AuthProvider>().isOwner){
+            onTap: () {
+              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.walletForm);
               }
             },
@@ -477,41 +502,42 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             builder: (context, provider, _) {
               final openDebts = provider.dashboardSummary?.openDebtsCount ?? 0;
               return QuickActionCard(
-                title: 'دين جديد ($openDebts)',
+                title: '${AppLocalizations.of(context)!.newDebt} ($openDebts)',
                 icon: Icons.post_add_outlined,
                 color: AppColors.error,
-                onTap: () => Navigator.pushNamed(context, RouteConstants.addDebt),
+                onTap: () =>
+                    Navigator.pushNamed(context, RouteConstants.addDebt),
               );
             },
           ),
           QuickActionCard(
-            title: 'عرض المحافظ',
+            title: AppLocalizations.of(context)!.viewWallets,
             icon: Icons.wallet,
             color: Colors.blue.shade700,
-            onTap: (){
-              if(context.read<AuthProvider>().isOwner){
+            onTap: () {
+              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.walletsList);
               }
             },
           ),
           QuickActionCard(
-            title: 'الإحصائيات',
+            title: AppLocalizations.of(context)!.statistics,
             icon: Icons.bar_chart,
             color: Colors.purple.shade700,
-            onTap: (){
-              if(context.read<AuthProvider>().isOwner){
+            onTap: () {
+              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.generalStatistics);
               }
             },
           ),
           QuickActionCard(
-            title: 'عرض الديون',
+            title: AppLocalizations.of(context)!.viewDebts,
             icon: Icons.credit_card,
             color: Colors.red.shade700,
-            onTap: ()=> Navigator.pushNamed(context, RouteConstants.debtsList),
+            onTap: () => Navigator.pushNamed(context, RouteConstants.debtsList),
           ),
           QuickActionCard(
-            title: 'إدارة الموظفين',
+            title: AppLocalizations.of(context)!.manageEmployees,
             icon: Icons.people_alt_outlined,
             color: Colors.teal.shade700,
             onTap: () {
@@ -529,7 +555,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 24),
-              const SectionHeader(title: 'إجراءات سريعة'),
+              SectionHeader(title: AppLocalizations.of(context)!.quickActions),
               const SizedBox(height: 12),
               GridView.count(
                 shrinkWrap: true,
@@ -560,10 +586,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         for (var wallet in wallets) {
           if (wallet.sendLimits.dailyPercentage >= 90) {
             alerts.add(AlertCard(
-              message: 'محفظة ${wallet.phoneNumber} على وشك الوصول للحد اليومي للإرسال.',
+              message: AppLocalizations.of(context)!
+                  .walletAlertMessage(wallet.phoneNumber),
               type: AlertType.warning,
               onActionTap: () {
-                if(context.read<AuthProvider>().isOwner){
+                if (context.read<AuthProvider>().isOwner) {
                   Navigator.pushNamed(
                     context,
                     RouteConstants.walletDetails,
@@ -571,7 +598,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   );
                 }
               },
-              actionText: 'عرض التفاصيل',
+              actionText: AppLocalizations.of(context)!.viewDetails,
             ));
           }
         }
@@ -579,10 +606,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         final openDebtsCount = debtProvider.summary['openDebtsCount'] ?? 0;
         if (openDebtsCount > 0) {
           alerts.add(AlertCard(
-            message: 'لديك $openDebtsCount ديون مفتوحة.',
+            message:
+                AppLocalizations.of(context)!.openDebtsAlert(openDebtsCount),
             type: AlertType.error,
-            onActionTap: () => Navigator.pushNamed(context, RouteConstants.debtsList),
-            actionText: 'عرض الديون',
+            onActionTap: () =>
+                Navigator.pushNamed(context, RouteConstants.debtsList),
+            actionText: AppLocalizations.of(context)!.viewDebts,
           ));
         }
 
@@ -597,12 +626,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 24),
-              const SectionHeader(title: 'تنبيهات'),
+              SectionHeader(title: AppLocalizations.of(context)!.alerts),
               const SizedBox(height: 12),
               ...alerts.map((alert) => Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: alert,
-              )),
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: alert,
+                  )),
             ],
           ),
         );
@@ -621,18 +650,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             children: [
               const SizedBox(height: 24),
               SectionHeader(
-                title: 'آخر المعاملات',
-                actionText: 'عرض الكل',
-                onActionTap: () => Navigator.pushNamed(context, RouteConstants.todayTransactions),
+                title: AppLocalizations.of(context)!.recentTransactions,
+                actionText: AppLocalizations.of(context)!.viewAll,
+                onActionTap: () => Navigator.pushNamed(
+                    context, RouteConstants.todayTransactions),
               ),
               const SizedBox(height: 12),
               if (provider.isLoading)
                 const SkeletonList(itemCount: 2, itemHeight: 80)
               else if (provider.transactions.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Text(
-                    'لا توجد معاملات اليوم.',
+                    AppLocalizations.of(context)!.noTransactionsToday,
                     style: AppTextStyles.bodyMedium,
                   ),
                 )

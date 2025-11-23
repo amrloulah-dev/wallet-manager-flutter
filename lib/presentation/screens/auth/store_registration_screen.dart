@@ -13,13 +13,15 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../../data/models/license_key_model.dart';
 import '../../../data/repositories/license_key_repository.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StoreRegistrationScreen extends StatefulWidget {
   const StoreRegistrationScreen({super.key});
 
   @override
-  State<StoreRegistrationScreen> createState() => _StoreRegistrationScreenState();
+  State<StoreRegistrationScreen> createState() =>
+      _StoreRegistrationScreenState();
 }
 
 class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
@@ -32,7 +34,6 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   LicenseKeyModel? _verifiedKey;
   late final LicenseKeyRepository _licenseKeyRepository;
   int _currentStep = 0;
-
 
   bool _isRegistering = true;
   bool _obscurePassword = true;
@@ -75,12 +76,12 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   void _showContactDialog() {
     DialogUtils.showOptionsDialog(
       context,
-      title: 'تواصل معنا',
+      title: AppLocalizations.of(context)!.contactUs,
       options: [
         _buildContactRow(
           context: context,
           icon: Icons.phone,
-          label: 'واتساب',
+          label: AppLocalizations.of(context)!.whatsapp,
           value: '01091264053',
           onTap: () {
             Navigator.of(context).pop();
@@ -91,7 +92,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         _buildContactRow(
           context: context,
           icon: Icons.email,
-          label: 'البريد الإلكتروني',
+          label: AppLocalizations.of(context)!.email,
           value: 'amrloulah2021@gmail.com',
           onTap: () {
             Navigator.of(context).pop();
@@ -105,10 +106,10 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   void _showLicenseExpiredDialog() {
     DialogUtils.showConfirmDialog(
       context,
-      title: 'الترخيص منتهي',
-      message: 'يجب تجديد الترخيص للمتابعة.',
-      confirmText: 'تجديد الترخيص',
-      cancelText: 'إلغاء',
+      title: AppLocalizations.of(context)!.licenseExpired,
+      message: AppLocalizations.of(context)!.licenseExpiredMessage,
+      confirmText: AppLocalizations.of(context)!.renewLicense,
+      cancelText: AppLocalizations.of(context)!.cancel,
       type: DialogType.warning,
     ).then((confirmed) {
       if (confirmed == true) {
@@ -133,8 +134,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       if (!_isRegistering) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('لا يوجد حساب مرتبط بهذا البريد. يرجى إكمال التسجيل.'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.noAccountLinked),
               backgroundColor: Colors.blue,
             ),
           );
@@ -150,8 +151,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       if (_verifiedKey == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('خطأ: مفتاح الترخيص غير متوفر. يرجى الرجوع والتحقق منه.'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.licenseKeyError),
               backgroundColor: Colors.red,
             ),
           );
@@ -179,8 +180,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('تم إنشاء الحساب ولكن فشل تفعيل مفتاح الترخيص. يرجى التواصل مع الدعم الفني.'),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.activationFailed),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -195,6 +196,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       // Handle other exceptions if necessary
     }
   }
+
   void _showSuccessMessage(String message) {
     ToastUtils.showSuccess(message);
   }
@@ -206,24 +208,24 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         builder: (context, authProvider, child) {
           if (authProvider.isAuthenticated) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
-              _showSuccessMessage('تم تسجيل الدخول بنجاح!');
+              Navigator.pushReplacementNamed(
+                  context, RouteConstants.ownerDashboard);
+              _showSuccessMessage(AppLocalizations.of(context)!.loginSuccess);
             });
             return const Center(child: CircularProgressIndicator());
           }
           return SafeArea(
-            child:
-                Center(
-                  child: _isRegistering
-                      ? Form(key: _formKey, child: _buildCurrentStep())
-                      : _buildLoginUI(authProvider),
-                ),
+            child: Center(
+              child: _isRegistering
+                  ? Form(key: _formKey, child: _buildCurrentStep())
+                  : _buildLoginUI(authProvider),
+            ),
           );
         },
       ),
     );
   }
-  
+
   Widget _buildLoginUI(AuthProvider authProvider) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -233,22 +235,26 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         children: [
           const Icon(Icons.wallet, size: 80, color: AppColors.primary),
           const SizedBox(height: 16),
-          const Text('Wallet Manager', textAlign: TextAlign.center, style: AppTextStyles.h1),
-          const Text('إدارة المحافظ', textAlign: TextAlign.center, style: AppTextStyles.h2),
+          Text(AppLocalizations.of(context)!.walletManager,
+              textAlign: TextAlign.center, style: AppTextStyles.h1),
+          Text(AppLocalizations.of(context)!.manageWallets,
+              textAlign: TextAlign.center, style: AppTextStyles.h2),
           const SizedBox(height: 32),
           CustomButton(
-            text: 'تسجيل الدخول عبر جوجل',
+            text: AppLocalizations.of(context)!.loginWithGoogle,
             onPressed: _handleGoogleSignIn,
             isLoading: authProvider.isLoading,
             icon: const FaIcon(FontAwesomeIcons.google, color: Colors.white),
           ),
-          if (authProvider.status == AuthStatus.error && authProvider.errorMessage != null)
+          if (authProvider.status == AuthStatus.error &&
+              authProvider.errorMessage != null)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: Text(
                 authProvider.errorMessage!,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                style:
+                    AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
               ),
             ),
           const SizedBox(height: 24),
@@ -281,13 +287,15 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         children: [
           const Icon(Icons.wallet, size: 80, color: AppColors.primary),
           const SizedBox(height: 16),
-          const Text('إنشاء حساب جديد', textAlign: TextAlign.center, style: AppTextStyles.h2),
-          const Text('الخطوة 1: معلومات المحل', textAlign: TextAlign.center, style: AppTextStyles.bodyLarge),
+          Text(AppLocalizations.of(context)!.createAccount,
+              textAlign: TextAlign.center, style: AppTextStyles.h2),
+          Text(AppLocalizations.of(context)!.step1StoreInfo,
+              textAlign: TextAlign.center, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 32),
           ..._buildRegistrationForm(),
           const SizedBox(height: 24),
           CustomButton(
-            text: 'التالي',
+            text: AppLocalizations.of(context)!.next,
             onPressed: () {
               if (_formKey.currentState?.validate() ?? false) {
                 setState(() => _currentStep++);
@@ -313,78 +321,91 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Text('الخطوة 2: مفتاح الترخيص', style: AppTextStyles.h2, textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          Card(
-            color: AppColors.info.withAlpha((0.1 * 255).round()),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Icon(Icons.info_outline, color: AppColors.info, size: 48),
-                  const SizedBox(height: 12),
-                  Text('للحصول على مفتاح الترخيص', style: AppTextStyles.h3, textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text('تواصل معنا على:', style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  _buildContactRow(
-                    context: context,
-                    icon: Icons.phone,
-                    label: 'واتساب',
-                    value: '01091264053',
-                    onTap: () => _launchWhatsApp(),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildContactRow(
-                    context: context,
-                    icon: Icons.email,
-                    label: 'البريد الإلكتروني',
-                    value: 'amrloulah2021@gmail.com',
-                    onTap: () => _launchEmail(),
-                  ),
-                ],
+            Text(AppLocalizations.of(context)!.step2LicenseKey,
+                style: AppTextStyles.h2, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Card(
+              color: AppColors.info.withAlpha((0.1 * 255).round()),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: AppColors.info, size: 48),
+                    const SizedBox(height: 12),
+                    Text(AppLocalizations.of(context)!.getLicenseKey,
+                        style: AppTextStyles.h3, textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
+                    Text(AppLocalizations.of(context)!.contactUsAt,
+                        style: AppTextStyles.bodyMedium,
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    _buildContactRow(
+                      context: context,
+                      icon: Icons.phone,
+                      label: AppLocalizations.of(context)!.whatsapp,
+                      value: '01091264053',
+                      onTap: () => _launchWhatsApp(),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildContactRow(
+                      context: context,
+                      icon: Icons.email,
+                      label: AppLocalizations.of(context)!.email,
+                      value: 'amrloulah2021@gmail.com',
+                      onTap: () => _launchEmail(),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          CustomTextField(
-            controller: _licenseKeyController,
-            labelText: 'مفتاح الترخيص',
-            hintText: 'WALLET-2025-XXXX-XXXX',
-            prefixIcon: const Icon(Icons.vpn_key),
-            textCapitalization: TextCapitalization.characters,
-            validator: Validators.validateLicenseKey,
-            maxLength: 21,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 8),
-                    Text(
-                      'أدخل مفتاح الترخيص المكون من 21 حرف',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary(context)),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24), // Replaced Spacer with a fixed size box
-          
-                    if (_verifiedKey != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Center(child: Text('تم التحقق بنجاح!', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.success))),
+            const SizedBox(height: 24),
+            CustomTextField(
+              controller: _licenseKeyController,
+              labelText: AppLocalizations.of(context)!.licenseKey,
+              hintText: 'WALLET-2025-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key),
+              textCapitalization: TextCapitalization.characters,
+              validator: Validators.validateLicenseKey,
+              maxLength: 21,
+              onChanged: (_) => setState(() {}),
             ),
-          CustomButton(
-            text: _verifiedKey == null ? 'تحقق من المفتاح' : 'التالي',
-            onPressed: _verifiedKey != null
-                ? () => setState(() => _currentStep++)
-                : (_isVerifying || _licenseKeyController.text.trim().isEmpty ? null : _verifyLicenseKey),
-            isLoading: _isVerifying,
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => setState(() => _currentStep--),
-            child: const Text('رجوع'),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              AppLocalizations.of(context)!.enterLicenseKey,
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textSecondary(context)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24), // Replaced Spacer with a fixed size box
+
+            if (_verifiedKey != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Center(
+                    child: Text(AppLocalizations.of(context)!.verifiedSuccess,
+                        style: AppTextStyles.bodyLarge
+                            .copyWith(color: AppColors.success))),
+              ),
+            CustomButton(
+              text: _verifiedKey == null
+                  ? AppLocalizations.of(context)!.verifyKey
+                  : AppLocalizations.of(context)!.next,
+              onPressed: _verifiedKey != null
+                  ? () => setState(() => _currentStep++)
+                  : (_isVerifying || _licenseKeyController.text.trim().isEmpty
+                      ? null
+                      : _verifyLicenseKey),
+              isLoading: _isVerifying,
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => setState(() => _currentStep--),
+              child: Text(AppLocalizations.of(context)!.back),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -398,11 +419,13 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         children: [
           const Icon(Icons.wallet, size: 80, color: AppColors.primary),
           const SizedBox(height: 16),
-          const Text('الخطوة الأخيرة', textAlign: TextAlign.center, style: AppTextStyles.h2),
-          const Text('ربط حساب جوجل وإنشاء الحساب', textAlign: TextAlign.center, style: AppTextStyles.bodyLarge),
+          Text(AppLocalizations.of(context)!.step3Google,
+              textAlign: TextAlign.center, style: AppTextStyles.h2),
+          Text(AppLocalizations.of(context)!.linkGoogle,
+              textAlign: TextAlign.center, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 32),
           CustomButton(
-            text: 'إنشاء حساب جديد عبر جوجل',
+            text: AppLocalizations.of(context)!.createAccountGoogle,
             onPressed: _handleGoogleSignIn,
             isLoading: authProvider.isLoading,
             icon: const FaIcon(FontAwesomeIcons.google, color: Colors.white),
@@ -410,7 +433,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => setState(() => _currentStep--),
-            child: const Text('رجوع'),
+            child: Text(AppLocalizations.of(context)!.back),
           ),
         ],
       ),
@@ -420,7 +443,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   Future<void> _verifyLicenseKey() async {
     final licenseKey = _licenseKeyController.text.toUpperCase();
     if (licenseKey.isEmpty || licenseKey.length != 21) {
-      ToastUtils.showError('يجب إدخال مفتاح ترخيص صحيح');
+      ToastUtils.showError(AppLocalizations.of(context)!.enterValidLicense);
       return;
     }
 
@@ -430,23 +453,22 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       final keyModel = await _licenseKeyRepository.verifyLicenseKey(licenseKey);
 
       if (keyModel == null) {
-        ToastUtils.showError('مفتاح الترخيص غير صحيح');
+        ToastUtils.showError(AppLocalizations.of(context)!.invalidLicense);
         return;
       }
 
       if (keyModel.isUsed) {
-        ToastUtils.showError('مفتاح الترخيص مستخدم بالفعل');
+        ToastUtils.showError(AppLocalizations.of(context)!.licenseUsed);
         return;
       }
 
       setState(() => _verifiedKey = keyModel);
-      ToastUtils.showSuccess('تم التحقق من المفتاح بنجاح');
+      ToastUtils.showSuccess(AppLocalizations.of(context)!.verifySuccess);
       // await _completeRegistration(); // This will be called on button press now
-
     } catch (e) {
-      ToastUtils.showError('حدث خطأ أثناء التحقق من المفتاح');
+      ToastUtils.showError(AppLocalizations.of(context)!.errorVerifying);
     } finally {
-      if(mounted) {
+      if (mounted) {
         setState(() => _isVerifying = false);
       }
     }
@@ -477,12 +499,19 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppTextStyles.labelSmall.copyWith(color: Colors.black)),
-                  Text(value, style: AppTextStyles.bodyMedium.copyWith(color: Colors.black),),
+                  Text(label,
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: Colors.black)),
+                  Text(
+                    value,
+                    style:
+                        AppTextStyles.bodyMedium.copyWith(color: Colors.black),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary(context)),
           ],
         ),
       ),
@@ -491,30 +520,33 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
   Future<void> _launchWhatsApp() async {
     const phone = '201091264053';
-    const message = 'مرحباً، أريد الحصول على مفتاح ترخيص لتطبيق Wallet Manager';
+    final message = AppLocalizations.of(context)!.whatsappMessageLicense;
     final encodedMessage = Uri.encodeComponent(message);
     final url = 'https://wa.me/$phone?text=$encodedMessage';
     final uri = Uri.parse(url);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
-      if (mounted) ToastUtils.showError('لا يمكن فتح واتساب');
+      if (mounted)
+        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenWhatsapp);
     }
   }
 
   Future<void> _launchEmail() async {
     const email = 'amrloulah2021@gmail.com';
-    const subject = 'طلب مفتاح ترخيص';
-    const body = 'مرحباً،\nأريد الحصول على مفتاح ترخيص لتطبيق Wallet Manager';
+    final subject = AppLocalizations.of(context)!.emailSubjectLicense;
+    final body = AppLocalizations.of(context)!.emailBodyLicense;
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: email,
-      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+      query:
+          'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
     try {
       await launchUrl(emailLaunchUri);
     } catch (e) {
-      if (mounted) ToastUtils.showError('لا يمكن فتح تطبيق البريد الإلكتروني');
+      if (mounted)
+        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenEmail);
     }
   }
 
@@ -522,8 +554,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     return [
       CustomTextField(
         controller: _storeNameController,
-        labelText: 'اسم المحل',
-        hintText: 'أدخل اسم المحل الخاص بك',
+        labelText: AppLocalizations.of(context)!.storeName,
+        hintText: AppLocalizations.of(context)!.storeNameHint,
         validator: Validators.validateStoreName,
         keyboardType: TextInputType.name,
         prefixIcon: const Icon(Icons.store),
@@ -531,43 +563,49 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       const SizedBox(height: 16),
       CustomTextField(
         controller: _storePasswordController,
-        labelText: 'كلمة سر المحل',
-        hintText: 'أدخل كلمة سر مكونة من 6 أرقام',
+        labelText: AppLocalizations.of(context)!.storePassword,
+        hintText: AppLocalizations.of(context)!.storePasswordHint,
         validator: Validators.validateStorePassword,
         keyboardType: TextInputType.number,
         obscureText: _obscurePassword,
         prefixIcon: const Icon(Icons.lock),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+          icon:
+              Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
       const SizedBox(height: 16),
       CustomTextField(
         controller: _confirmPasswordController,
-        labelText: 'تأكيد كلمة السر',
-        hintText: 'أعد إدخال كلمة السر',
-        validator: (value) => Validators.validateConfirmPassword(value, _storePasswordController.text),
+        labelText: AppLocalizations.of(context)!.confirmPassword,
+        hintText: AppLocalizations.of(context)!.confirmPasswordHint,
+        validator: (value) => Validators.validateConfirmPassword(
+            value, _storePasswordController.text),
         keyboardType: TextInputType.number,
         obscureText: _obscureConfirmPassword,
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
-          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+          icon: Icon(_obscureConfirmPassword
+              ? Icons.visibility_off
+              : Icons.visibility),
+          onPressed: () => setState(
+              () => _obscureConfirmPassword = !_obscureConfirmPassword),
         ),
       ),
     ];
   }
 
   Widget _buildDivider() {
-    return const Row(
+    return Row(
       children: [
-        Expanded(child: Divider()),
+        const Expanded(child: Divider()),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text('أو', style: AppTextStyles.bodyMedium),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text(AppLocalizations.of(context)!.or,
+              style: AppTextStyles.bodyMedium),
         ),
-        Expanded(child: Divider()),
+        const Expanded(child: Divider()),
       ],
     );
   }
@@ -576,7 +614,9 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     return TextButton(
       onPressed: _toggleMode,
       child: Text(
-        _isRegistering ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد',
+        _isRegistering
+            ? AppLocalizations.of(context)!.haveAccount
+            : AppLocalizations.of(context)!.noAccount,
         style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
       ),
     );
@@ -587,8 +627,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       onPressed: () {
         Navigator.pushNamed(context, RouteConstants.employeeLogin);
       },
-      child: const Text(
-        'تسجيل الدخول كموظف',
+      child: Text(
+        AppLocalizations.of(context)!.loginAsEmployee,
         style: AppTextStyles.labelMedium,
       ),
     );
@@ -597,13 +637,10 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   Widget _buildRenewLicenseLink() {
     return TextButton(
       onPressed: () => _showContactDialog(),
-      child: const Text(
-        'تواصل معنا لتجديد الترخيص',
+      child: Text(
+        AppLocalizations.of(context)!.contactToRenew,
         style: AppTextStyles.labelMedium,
       ),
     );
   }
-
-
 }
-
