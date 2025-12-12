@@ -1232,19 +1232,16 @@ abstract class AppLocalizations {
   /// **'يرجى اختيار محفظة أولاً'**
   String get pleaseSelectWalletFirst;
 
-  /// No description provided for @userNotAuthenticated.
   ///
   /// In ar, this message translates to:
   /// **'المستخدم غير مسجل الدخول.'**
   String get userNotAuthenticated;
 
-  /// No description provided for @balanceAddedSuccessfully.
   ///
   /// In ar, this message translates to:
   /// **'تم إضافة الرصيد بنجاح'**
   String get balanceAddedSuccessfully;
 
-  /// No description provided for @failedToAddBalance.
   ///
   /// In ar, this message translates to:
   /// **'فشل في إضافة الرصيد'**
