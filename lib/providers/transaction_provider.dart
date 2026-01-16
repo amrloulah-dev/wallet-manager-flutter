@@ -20,7 +20,9 @@ class TransactionProvider extends ChangeNotifier {
   Map<String, dynamic> _summary = {};
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
-  final DateTimeRange _dateRange = DateTimeRange(start: DateHelper.getStartOfDay(DateTime.now()), end: DateHelper.getEndOfDay(DateTime.now()));
+  final DateTimeRange _dateRange = DateTimeRange(
+      start: DateHelper.getStartOfDay(DateTime.now()),
+      end: DateHelper.getEndOfDay(DateTime.now()));
 
   // Status
   TransactionStatus _status = TransactionStatus.idle;
@@ -42,7 +44,8 @@ class TransactionProvider extends ChangeNotifier {
   TransactionProvider({
     TransactionRepository? transactionRepository,
     String? storeId,
-  })  : _transactionRepository = transactionRepository ?? TransactionRepository(),
+  })  : _transactionRepository =
+            transactionRepository ?? TransactionRepository(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
       if (_currentStoreId != null && !isLoading && !isLoadingMore) {
@@ -113,13 +116,14 @@ class TransactionProvider extends ChangeNotifier {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       _transactions = _cachedTransactions!;
-      if(status != TransactionStatus.loaded){
+      if (status != TransactionStatus.loaded) {
         _setStatus(TransactionStatus.loaded);
       }
       return;
     }
 
-    final trace = FirebasePerformance.instance.newTrace('fetch_initial_transactions');
+    final trace =
+        FirebasePerformance.instance.newTrace('fetch_initial_transactions');
     await trace.start();
 
     _setStatus(TransactionStatus.loading);
@@ -127,7 +131,8 @@ class TransactionProvider extends ChangeNotifier {
     _hasMore = true;
 
     try {
-      final result = await _transactionRepository.getTransactionsByDateRangePaginated(
+      final result =
+          await _transactionRepository.getTransactionsByDateRangePaginated(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
@@ -152,12 +157,14 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) return;
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+      return;
 
     _setStatus(TransactionStatus.loadingMore);
 
     try {
-      final result = await _transactionRepository.getTransactionsByDateRangePaginated(
+      final result =
+          await _transactionRepository.getTransactionsByDateRangePaginated(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
@@ -175,7 +182,8 @@ class TransactionProvider extends ChangeNotifier {
     } on ServerException catch (e) {
       _setError(e.message);
     } catch (e) {
-      _setError('An unexpected error occurred while fetching more transactions.');
+      _setError(
+          'An unexpected error occurred while fetching more transactions.');
     }
   }
 
@@ -214,13 +222,15 @@ class TransactionProvider extends ChangeNotifier {
     String? customerName,
     required double amount,
     required double commission,
+    double serviceFee = 0.0,
     String paymentStatus = 'paid',
     String? notes,
     required String createdBy,
   }) async {
     _setStatus(TransactionStatus.creating);
     try {
-      if (_currentStoreId == null) throw ValidationException('Store ID not found.');
+      if (_currentStoreId == null)
+        throw ValidationException('Store ID not found.');
       if (amount <= 0) throw ValidationException('Amount must be positive.');
 
       final newTransaction = TransactionModel(
@@ -232,6 +242,7 @@ class TransactionProvider extends ChangeNotifier {
         customerName: customerName,
         amount: amount,
         commission: commission,
+        serviceFee: serviceFee,
         paymentStatus: paymentStatus,
         notes: notes,
         transactionDate: Timestamp.now(),
@@ -252,7 +263,8 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  Future<List<TransactionModel>> fetchTransactionsForDateRange(DateTime startDate, DateTime endDate) async {
+  Future<List<TransactionModel>> fetchTransactionsForDateRange(
+      DateTime startDate, DateTime endDate) async {
     if (_currentStoreId == null) return [];
     try {
       return await _transactionRepository.getTransactionsByDateRange(

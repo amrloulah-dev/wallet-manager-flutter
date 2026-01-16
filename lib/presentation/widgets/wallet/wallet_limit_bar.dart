@@ -4,11 +4,11 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
 
 class WalletLimitBar extends StatelessWidget {
-  final String label;          // e.g. 'إرسال يومي'
-  final double used;           // current used amount
-  final double limit;          // maximum limit
-  final double percentage;     // 0-100
-  final String warningLevel;   // 'green' | 'yellow' | 'red'
+  final String label; // e.g. 'إرسال يومي'
+  final double used; // current used amount
+  final double limit; // maximum limit
+  final double percentage; // 0-100
+  final String warningLevel; // 'green' | 'yellow' | 'red'
 
   const WalletLimitBar({
     super.key,
@@ -21,6 +21,12 @@ class WalletLimitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cap visual percentage at 100%
+    final int displayPercentage = percentage.clamp(0.0, 100.0).toInt();
+    // Cap progress bar value at 1.0 (full)
+    final double progressValue = (percentage / 100).clamp(0.0, 1.0);
+    final Color barColor = _getColorForWarningLevel(warningLevel);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -35,10 +41,10 @@ class WalletLimitBar extends StatelessWidget {
               ),
             ),
             Text(
-              NumberFormatter.formatPercentage(percentage / 100),
+              '$displayPercentage%',
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.bold,
-                color: _getColorForWarningLevel(warningLevel),
+                color: barColor,
               ),
             ),
           ],
@@ -56,11 +62,9 @@ class WalletLimitBar extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: percentage / 100,
+              value: progressValue,
               backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation(
-                _getColorForWarningLevel(warningLevel),
-              ),
+              valueColor: AlwaysStoppedAnimation(barColor),
               minHeight: 8,
             ),
           ),

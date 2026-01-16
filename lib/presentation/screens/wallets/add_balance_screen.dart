@@ -11,6 +11,7 @@ import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class AddBalanceScreen extends StatefulWidget {
@@ -117,27 +118,12 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
         if (walletProvider.wallets.isEmpty) {
           return Text(AppLocalizations.of(context)!.noWalletsAvailable);
         }
-        return DropdownButtonFormField<WalletModel>(
+        return CustomDropdown<WalletModel>(
           value: _selectedWallet,
-          decoration: InputDecoration(
-            labelText: AppLocalizations.of(context)!.selectWallet,
-            prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-                color: AppColors.primary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-          ),
-          hint: Text(AppLocalizations.of(context)!.selectWalletToAddBalance),
-          icon: const Icon(Icons.arrow_drop_down_rounded,
-              color: AppColors.primary, size: 28),
-          style: AppTextStyles.bodyLarge,
-          isExpanded: true,
-          dropdownColor: Colors.white,
+          labelText: AppLocalizations.of(context)!.selectWallet,
+          prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
+              color: AppColors.primary),
+          hint: AppLocalizations.of(context)!.selectWalletToAddBalance,
           items: walletProvider.wallets.map((WalletModel wallet) {
             return DropdownMenuItem<WalletModel>(
               value: wallet,
@@ -188,6 +174,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
           validator: (value) => value == null
               ? AppLocalizations.of(context)!.pleaseSelectWallet
               : null,
+          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
         );
       },
     );

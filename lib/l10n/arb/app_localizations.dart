@@ -1016,6 +1016,12 @@ abstract class AppLocalizations {
   /// **'قديمة'**
   String get oldStatus;
 
+  /// No description provided for @registeredStore.
+  ///
+  /// In ar, this message translates to:
+  /// **'محل مسجل'**
+  String get registeredStore;
+
   /// No description provided for @walletLimits.
   ///
   /// In ar, this message translates to:
@@ -1025,7 +1031,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailyLimit.
   ///
   /// In ar, this message translates to:
-  /// **'الحد اليومي (إرسال/استقبال)'**
+  /// **'حد المعاملة الواحدة (إرسال/استقبال)'**
   String get dailyLimit;
 
   /// No description provided for @monthlyLimit.
@@ -1232,16 +1238,19 @@ abstract class AppLocalizations {
   /// **'يرجى اختيار محفظة أولاً'**
   String get pleaseSelectWalletFirst;
 
+  /// No description provided for @userNotAuthenticated.
   ///
   /// In ar, this message translates to:
   /// **'المستخدم غير مسجل الدخول.'**
   String get userNotAuthenticated;
 
+  /// No description provided for @balanceAddedSuccessfully.
   ///
   /// In ar, this message translates to:
   /// **'تم إضافة الرصيد بنجاح'**
   String get balanceAddedSuccessfully;
 
+  /// No description provided for @failedToAddBalance.
   ///
   /// In ar, this message translates to:
   /// **'فشل في إضافة الرصيد'**
@@ -1300,6 +1309,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إضافة الرصيد'**
   String get addBalanceAction;
+
+  /// No description provided for @transactionFees.
+  ///
+  /// In ar, this message translates to:
+  /// **'رسوم المعاملة'**
+  String get transactionFees;
+
+  /// No description provided for @totalDeduction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الخصم'**
+  String get totalDeduction;
+
+  /// No description provided for @calculatingFees.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري حساب الرسوم...'**
+  String get calculatingFees;
 }
 
 class _AppLocalizationsDelegate

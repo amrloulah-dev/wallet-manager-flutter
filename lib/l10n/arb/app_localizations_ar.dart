@@ -483,10 +483,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get oldStatus => 'قديمة';
 
   @override
+  String get registeredStore => 'محل مسجل';
+
+  @override
   String get walletLimits => 'حدود المحفظة';
 
   @override
-  String get dailyLimit => 'الحد اليومي (إرسال/استقبال)';
+  String get dailyLimit => 'حد المعاملة الواحدة (إرسال/استقبال)';
 
   @override
   String get monthlyLimit => 'الحد الشهري (إرسال/استقبال)';
@@ -630,4 +633,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addBalanceAction => 'إضافة الرصيد';
+
+  @override
+  String get transactionFees => 'رسوم المعاملة';
+
+  @override
+  String get totalDeduction => 'إجمالي الخصم';
+
+  @override
+  String get calculatingFees => 'جاري حساب الرسوم...';
 }

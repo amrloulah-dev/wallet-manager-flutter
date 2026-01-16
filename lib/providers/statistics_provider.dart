@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
@@ -23,7 +24,8 @@ class StatisticsProvider extends ChangeNotifier {
   DateTimeRange? _filteredDateRange;
   Map<String, dynamic>? _filteredStats;
   StatsSummaryModel? _dashboardSummary;
-  
+  DailyStatsModel? _todayStats;
+
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -41,6 +43,7 @@ class StatisticsProvider extends ChangeNotifier {
   DateTimeRange? get filteredDateRange => _filteredDateRange;
   Map<String, dynamic>? get filteredStats => _filteredStats;
   StatsSummaryModel? get dashboardSummary => _dashboardSummary;
+  DailyStatsModel? get todayStats => _todayStats;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -63,7 +66,8 @@ class StatisticsProvider extends ChangeNotifier {
         fetchDashboardStats(forceRefresh: true);
       }
     });
-    _transactionsChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
+    _transactionsChangedSubscription =
+        appEvents.onTransactionsChanged.listen((_) {
       if (_storeId != null) {
         fetchDashboardStats(forceRefresh: true);
       }
@@ -86,6 +90,7 @@ class StatisticsProvider extends ChangeNotifier {
         fetchDashboardStats();
       } else {
         _dashboardSummary = null;
+        _todayStats = null;
         _cachedSummary = null;
         _cacheTimestamp = null;
         notifyListeners();
@@ -112,8 +117,17 @@ class StatisticsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final summary = await _statsRepository.getStatsSummary(_storeId!);
+      final results = await Future.wait([
+        _statsRepository.getStatsSummary(_storeId!),
+        _statsRepository.fetchTodayStats(_storeId!),
+      ]);
+
+      final summary = results[0] as StatsSummaryModel;
+      final daily = results[1] as DailyStatsModel;
+
       _dashboardSummary = summary;
+      _todayStats = daily;
+
       _cachedSummary = summary;
       _cacheTimestamp = now;
       _isLoading = false;
@@ -140,13 +154,14 @@ class StatisticsProvider extends ChangeNotifier {
 
       final startDate = DateHelper.getStartOfDay(dateRange.start);
       final endDate = DateHelper.getEndOfDay(dateRange.end);
-      
+
       print('Filtering from $startDate to $endDate');
 
-
       final List<dynamic> results = await Future.wait([
-        _transactionRepository.getTransactionAggregates(_storeId!, startDate: startDate, endDate: endDate),
-        _debtRepository.getDebtAggregates(_storeId!, startDate: startDate, endDate: endDate),
+        _transactionRepository.getTransactionAggregates(_storeId!,
+            startDate: startDate, endDate: endDate),
+        _debtRepository.getDebtAggregates(_storeId!,
+            startDate: startDate, endDate: endDate),
         _walletRepository.getTotalBalance(_storeId!),
         _walletRepository.getWalletsCount(_storeId!),
       ]);

@@ -12,6 +12,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletFormScreen extends StatefulWidget {
@@ -128,10 +129,10 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     }
 
     if (success) {
+      if (!mounted) return;
       ToastUtils.showSuccess(_isEditMode
           ? AppLocalizations.of(context)!.walletUpdatedSuccessfully
           : AppLocalizations.of(context)!.walletAddedSuccessfully);
-      if (!mounted) return;
       Navigator.of(context).pop();
     }
     // Error message is displayed by the Consumer widget
@@ -160,7 +161,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
                 const SizedBox(height: 16),
                 _buildWalletTypeDropdown(),
                 const SizedBox(height: 24),
-                _buildWalletStatusRadios(),
+                _buildWalletStatusDropdown(),
                 if (_selectedWalletStatus != null) ...[
                   const SizedBox(height: 24),
                   _buildLimitsInfoCard(),
@@ -212,28 +213,12 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletTypeDropdown() {
     final walletTypes = _getWalletTypeDisplayNames(context);
-    return DropdownButtonFormField<String>(
+    return CustomDropdown<String>(
       value: _selectedWalletType,
-      decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.walletType,
-        prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-            color: AppColors.primary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      ),
-      hint: Text(AppLocalizations.of(context)!.selectWalletType),
-      icon: const Icon(Icons.arrow_drop_down_rounded,
-          color: AppColors.primary, size: 28),
-      style: AppTextStyles.bodyLarge,
-      dropdownColor: Colors.white,
-      isExpanded: true,
-      itemHeight: null,
+      labelText: AppLocalizations.of(context)!.walletType,
+      prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
+          color: AppColors.primary),
+      hint: AppLocalizations.of(context)!.selectWalletType,
       items: walletTypes.keys.map((String key) {
         return DropdownMenuItem<String>(
           value: key,
@@ -283,41 +268,46 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.walletTypeRequired
           : null,
+      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 
-  Widget _buildWalletStatusRadios() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(AppLocalizations.of(context)!.walletStatus,
-            style: AppTextStyles.labelMedium),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.newStatus),
-                value: 'new',
-                groupValue: _selectedWalletStatus,
-                onChanged: _isEditMode
-                    ? null
-                    : (value) => setState(() => _selectedWalletStatus = value),
-              ),
+  Widget _buildWalletStatusDropdown() {
+    final statusDisplayNames = {
+      'new': AppLocalizations.of(context)!.newStatus,
+      'old': AppLocalizations.of(context)!.oldStatus,
+      'registered_store': AppLocalizations.of(context)!.registeredStore,
+    };
+
+    return CustomDropdown<String>(
+      value: _selectedWalletStatus,
+      labelText: AppLocalizations.of(context)!.walletStatus,
+      prefixIcon:
+          const Icon(Icons.verified_user_outlined, color: AppColors.primary),
+      hint: AppLocalizations.of(context)!.pleaseSelectWalletStatus,
+      items: statusDisplayNames.entries.map((entry) {
+        return DropdownMenuItem<String>(
+          value: entry.key,
+          child: Text(
+            entry.value,
+            style: AppTextStyles.bodyLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
             ),
-            Expanded(
-              child: RadioListTile<String>(
-                title: Text(AppLocalizations.of(context)!.oldStatus),
-                value: 'old',
-                groupValue: _selectedWalletStatus,
-                onChanged: _isEditMode
-                    ? null
-                    : (value) => setState(() => _selectedWalletStatus = value),
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        );
+      }).toList(),
+      onChanged: _isEditMode
+          ? null
+          : (value) {
+              setState(() {
+                _selectedWalletStatus = value;
+              });
+            },
+      validator: (value) => value == null
+          ? AppLocalizations.of(context)!.pleaseSelectWalletStatus
+          : null,
+      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 
@@ -362,16 +352,22 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   double _getDailyLimit() {
     if (_selectedWalletType == 'instapay') {
-      return AppConstants.instapayDailyLimit;
+      return AppConstants.instapayTransactionLimit;
+    }
+    if (_selectedWalletStatus == 'registered_store') {
+      return AppConstants.registeredStoreTransactionLimit;
     }
     return _selectedWalletStatus == 'new'
-        ? AppConstants.newWalletDailyLimit
-        : AppConstants.oldWalletDailyLimit;
+        ? AppConstants.newWalletTransactionLimit
+        : AppConstants.oldWalletTransactionLimit;
   }
 
   double _getMonthlyLimit() {
     if (_selectedWalletType == 'instapay') {
       return AppConstants.instapayMonthlyLimit;
+    }
+    if (_selectedWalletStatus == 'registered_store') {
+      return AppConstants.registeredStoreMonthlyLimit;
     }
     return _selectedWalletStatus == 'new'
         ? AppConstants.newWalletMonthlyLimit

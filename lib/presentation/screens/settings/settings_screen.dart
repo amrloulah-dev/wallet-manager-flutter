@@ -453,7 +453,10 @@ class SettingsScreen extends StatelessWidget {
         _buildInfoRow(
             label: AppLocalizations.of(context)!.licenseKey,
             value: store?.license.licenseKey ??
-                AppLocalizations.of(context)!.notAvailable),
+                AppLocalizations.of(context)!.notAvailable,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.black,
+            )),
         const Divider(height: 24),
         _buildContactRow(
           context: context,
@@ -503,7 +506,11 @@ class SettingsScreen extends StatelessWidget {
   // Helper Methods
   // ===========================
 
-  Widget _buildInfoRow({required String label, required String value}) {
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+    TextStyle? style,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -512,7 +519,7 @@ class SettingsScreen extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style:
+            style: style ??
                 AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,

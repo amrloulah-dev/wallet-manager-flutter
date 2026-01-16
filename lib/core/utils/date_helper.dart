@@ -6,7 +6,8 @@ class DateHelper {
   // Format Timestamp to String
   // ===========================
   /// Converts a Firestore Timestamp to a formatted string.
-  static String formatTimestamp(Timestamp timestamp, {String format = 'dd/MM/yyyy'}) {
+  static String formatTimestamp(Timestamp timestamp,
+      {String format = 'dd/MM/yyyy'}) {
     final dateTime = timestamp.toDate();
     return DateFormat(format).format(dateTime);
   }
@@ -15,7 +16,8 @@ class DateHelper {
   // Format DateTime to String
   // ===========================
   /// Formats a DateTime object into a string.
-  static String formatDateTime(DateTime dateTime, {String format = 'dd/MM/yyyy'}) {
+  static String formatDateTime(DateTime dateTime,
+      {String format = 'dd/MM/yyyy'}) {
     return DateFormat(format).format(dateTime);
   }
 
@@ -86,7 +88,9 @@ class DateHelper {
   /// Checks if the given date is today.
   static bool isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   // ===========================
@@ -174,5 +178,13 @@ class DateHelper {
   /// Converts a Firestore Timestamp to a DateTime object.
   static DateTime timestampToDateTime(Timestamp timestamp) {
     return timestamp.toDate();
+  }
+
+  // ===========================
+  // Get Current Date String (yyyy-MM-dd)
+  // ===========================
+  /// Returns the current date formatted as 'yyyy-MM-dd'.
+  static String getCurrentDateString() {
+    return DateFormat('yyyy-MM-dd').format(DateTime.now());
   }
 }

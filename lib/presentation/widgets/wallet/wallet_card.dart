@@ -119,22 +119,25 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildLimits() {
+    final sendLimits = widget.wallet.getLimits();
+    final receiveLimits = widget.wallet.getReceiveLimits();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WalletLimitBar(
           label: 'إرسال يومي',
-          used: widget.wallet.sendLimits.dailyUsed,
-          limit: widget.wallet.sendLimits.dailyLimit,
-          percentage: widget.wallet.sendLimits.dailyPercentage,
+          used: sendLimits.dailyUsed,
+          limit: sendLimits.dailyLimit,
+          percentage: sendLimits.dailyPercentage,
           warningLevel: widget.wallet.sendDailyWarningLevel,
         ),
         const SizedBox(height: 8),
         WalletLimitBar(
           label: 'استقبال يومي',
-          used: widget.wallet.receiveLimits.dailyUsed,
-          limit: widget.wallet.receiveLimits.dailyLimit,
-          percentage: widget.wallet.receiveLimits.dailyPercentage,
+          used: receiveLimits.dailyUsed,
+          limit: receiveLimits.dailyLimit,
+          percentage: receiveLimits.dailyPercentage,
           warningLevel:
               'green', // This should be calculated in the model ideally
         ),
@@ -150,14 +153,16 @@ class _WalletCardState extends State<WalletCard> {
           children: [
             Row(
               children: [
-                const Icon(Icons.account_balance_wallet_outlined, size: 16, color: AppColors.primary),
+                const Icon(Icons.account_balance_wallet_outlined,
+                    size: 16, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text('الرصيد الحالي', style: AppTextStyles.bodySmall),
               ],
             ),
             Text(
               NumberFormatter.formatAmount(widget.wallet.balance),
-              style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.primary, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -183,7 +188,8 @@ class _WalletCardState extends State<WalletCard> {
                 const SizedBox(width: 4),
                 Text(
                   'عمولة: ${NumberFormatter.formatAmount(widget.wallet.stats.totalCommission)}',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.success),
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.success),
                 ),
               ],
             ),
@@ -200,8 +206,8 @@ class _WalletCardState extends State<WalletCard> {
         if (widget.onEdit != null)
           ElevatedButton.icon(
             onPressed: widget.onEdit,
-            icon: const Icon(Icons.edit_outlined,
-                size: 18, color: Colors.white),
+            icon:
+                const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
             label: const Text(
               'تعديل',
               style: TextStyle(color: Colors.white),
@@ -211,7 +217,9 @@ class _WalletCardState extends State<WalletCard> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
           ),
-          SizedBox(width: 15,),
+        SizedBox(
+          width: 15,
+        ),
         if (widget.onDelete != null)
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -219,13 +227,13 @@ class _WalletCardState extends State<WalletCard> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
             onPressed: widget.onDelete,
-            icon: const Icon(Icons.delete_outline,
-                size: 18, color: Colors.white),
+            icon:
+                const Icon(Icons.delete_outline, size: 18, color: Colors.white),
             label: const Text(
               'حذف',
               style: TextStyle(color: Colors.white),
             ),
-            ),
+          ),
       ],
     );
   }

@@ -13,7 +13,10 @@ import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
+import '../../../core/utils/fee_calculator.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
   const CreateTransactionScreen({super.key});
@@ -39,12 +42,14 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
   bool _isTypeValidated = true;
   double _totalAmount = 0.0;
+  double _serviceFee = 0.0;
 
   @override
   void initState() {
     super.initState();
     _amountController.addListener(_updateTotal);
     _commissionController.addListener(_updateTotal);
+    _customerPhoneController.addListener(_updateTotal);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Pre-select wallet if ID is passed
@@ -62,7 +67,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   void _trySelectWallet(List<WalletModel> wallets) {
     if (_preSelectedWalletId != null) {
       try {
-        final walletToSelect = wallets.firstWhere((w) => w.walletId == _preSelectedWalletId);
+        final walletToSelect =
+            wallets.firstWhere((w) => w.walletId == _preSelectedWalletId);
         setState(() {
           _selectedWallet = walletToSelect;
         });
@@ -76,6 +82,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   void dispose() {
     _amountController.removeListener(_updateTotal);
     _commissionController.removeListener(_updateTotal);
+    _customerPhoneController.removeListener(_updateTotal);
     _customerPhoneController.dispose();
     _customerNameController.dispose();
     _amountController.dispose();
@@ -87,7 +94,18 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   void _updateTotal() {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final commission = double.tryParse(_commissionController.text) ?? 0.0;
+
+    double fee = 0.0;
+    if (_selectedWallet != null && _transactionType == 'send') {
+      fee = FeeCalculator.calculateTransactionFee(
+        amount: amount,
+        sourceWalletType: _selectedWallet!.walletType,
+        receiverPhone: _customerPhoneController.text,
+      );
+    }
+
     setState(() {
+      _serviceFee = fee;
       _totalAmount = amount + commission;
     });
   }
@@ -119,6 +137,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       customerName: _customerNameController.text,
       amount: amount,
       commission: commission,
+      serviceFee: _serviceFee,
       paymentStatus: _paymentStatus,
       notes: _notesController.text,
       createdBy: currentUserId,
@@ -128,7 +147,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
       Navigator.pop(context, true);
     } else if (mounted) {
-      ToastUtils.showError(transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة');
+      ToastUtils.showError(
+          transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة');
     }
   }
 
@@ -153,6 +173,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                   const SizedBox(height: 24),
                   _buildAmountSection(),
                   const SizedBox(height: 24),
+                  _buildFeeSection(),
                   _buildLimitsPreview(),
                   const SizedBox(height: 24),
                   _buildNotesSection(),
@@ -177,8 +198,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-                              color: AppColors.warning.withAlpha((0.1 * 255).round()),
-                              borderRadius: BorderRadius.circular(12),            ),
+              color: AppColors.warning.withAlpha((0.1 * 255).round()),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: const Text('لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.'),
           );
         }
@@ -188,25 +210,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           _trySelectWallet(walletProvider.wallets);
         }
 
-        return DropdownButtonFormField<WalletModel>(
+        return CustomDropdown<WalletModel>(
           value: _selectedWallet,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-            hintText: 'اختر المحفظة لإجراء المعاملة',
-            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-          ),
-          hint: const Text('اختر المحفظة لإجراء المعاملة'),
-          icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.primary, size: 28),
-          style: AppTextStyles.bodyLarge,
-          dropdownColor: Colors.white,
-          isExpanded: true,
-          itemHeight: null,
+          hint: 'اختر المحفظة لإجراء المعاملة',
           items: walletProvider.wallets.map((WalletModel wallet) {
             return DropdownMenuItem<WalletModel>(
               value: wallet,
@@ -214,7 +220,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withAlpha((0.05 * 255).round()),
                     borderRadius: BorderRadius.circular(8),
@@ -251,14 +258,18 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           onChanged: (wallet) {
             setState(() {
               _selectedWallet = wallet;
-              _preSelectedWalletId = null; // Clear pre-selection after manual choice
+              _preSelectedWalletId =
+                  null; // Clear pre-selection after manual choice
+              _updateTotal(); // Recalculate fees when wallet changes
             });
           },
           validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
+          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
         );
       },
     );
   }
+
   Widget _buildTransactionTypeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +284,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 icon: Icons.arrow_upward,
                 color: AppColors.send,
                 isSelected: _transactionType == 'send',
-                onTap: () => setState(() => _transactionType = 'send'),
+                onTap: () {
+                  setState(() => _transactionType = 'send');
+                  _updateTotal();
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -283,7 +297,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 icon: Icons.arrow_downward,
                 color: AppColors.receive,
                 isSelected: _transactionType == 'receive',
-                onTap: () => setState(() => _transactionType = 'receive'),
+                onTap: () {
+                  setState(() => _transactionType = 'receive');
+                  _updateTotal();
+                },
               ),
             ),
           ],
@@ -344,7 +361,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 hintText: '0.00',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) => Validators.validateAmount(val, minAmount: 0),
+                validator: (val) =>
+                    Validators.validateAmount(val, minAmount: 0),
                 prefixIcon: const Icon(Icons.money),
                 onChanged: (_) => _updateTotal(),
               ),
@@ -377,6 +395,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           decoration: BoxDecoration(
             color: AppColors.primary.withAlpha((0.05 * 255).round()),
             borderRadius: BorderRadius.circular(8),
+            border: null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -393,7 +412,59 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
+  Widget _buildFeeSection() {
+    if (_transactionType != 'send' || _serviceFee <= 0)
+      return const SizedBox.shrink();
 
+    final localizations = AppLocalizations.of(context)!;
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final totalDeduction = amount + _serviceFee;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider(context)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                localizations.transactionFees,
+                style: AppTextStyles.bodyMedium,
+              ),
+              Text(
+                '${NumberFormatter.formatAmount(_serviceFee)} EGP',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                localizations.totalDeduction,
+                style: AppTextStyles.bodyLarge
+                    .copyWith(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '${NumberFormatter.formatAmount(totalDeduction)} EGP',
+                style: AppTextStyles.h3.copyWith(color: AppColors.error),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildLimitsPreview() {
     if (_selectedWallet == null || _transactionType == null) {
@@ -402,10 +473,16 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final isSend = _transactionType == 'send';
-    final limits = isSend ? _selectedWallet!.sendLimits : _selectedWallet!.receiveLimits;
+    final limits = isSend
+        ? _selectedWallet!.getLimits()
+        : _selectedWallet!.getReceiveLimits();
     final newUsed = limits.dailyUsed + amount;
     final newMonthlyUsed = limits.monthlyUsed + amount;
-    final willExceed = newUsed > limits.dailyLimit || newMonthlyUsed > limits.monthlyLimit;
+
+    // Check individual limits
+    final bool dailyExceeded = newUsed > limits.dailyLimit;
+    final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
+    final bool willExceed = dailyExceeded || monthlyExceeded;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -443,16 +520,19 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             label: 'الحد اليومي (بعد المعاملة)',
             used: newUsed,
             limit: limits.dailyLimit,
-            percentage: limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0,
-            warningLevel: willExceed ? 'red' : 'green',
+            percentage:
+                limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0,
+            warningLevel: dailyExceeded ? 'red' : 'green',
           ),
           const SizedBox(height: 16),
           WalletLimitBar(
             label: 'الحد الشهري (بعد المعاملة)',
             used: newMonthlyUsed,
             limit: limits.monthlyLimit,
-            percentage: limits.monthlyLimit > 0 ? (newMonthlyUsed / limits.monthlyLimit) * 100 : 0,
-            warningLevel: willExceed ? 'red' : 'green',
+            percentage: limits.monthlyLimit > 0
+                ? (newMonthlyUsed / limits.monthlyLimit) * 100
+                : 0,
+            warningLevel: monthlyExceeded ? 'red' : 'green',
           ),
           if (willExceed)
             Padding(
@@ -543,7 +623,9 @@ class _TransactionTypeButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withAlpha((0.1 * 255).round()) : AppColors.surface(context),
+          color: isSelected
+              ? color.withAlpha((0.1 * 255).round())
+              : AppColors.surface(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

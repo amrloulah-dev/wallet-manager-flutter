@@ -484,10 +484,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oldStatus => 'Old';
 
   @override
+  String get registeredStore => 'Registered Store';
+
+  @override
   String get walletLimits => 'Wallet Limits';
 
   @override
-  String get dailyLimit => 'Daily Limit (Send/Receive)';
+  String get dailyLimit => 'Transaction Limit (Send/Receive)';
 
   @override
   String get monthlyLimit => 'Monthly Limit (Send/Receive)';
@@ -630,4 +633,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addBalanceAction => 'Add Balance';
+
+  @override
+  String get transactionFees => 'Transaction Fees';
+
+  @override
+  String get totalDeduction => 'Total Deduction';
+
+  @override
+  String get calculatingFees => 'Calculating fees...';
 }

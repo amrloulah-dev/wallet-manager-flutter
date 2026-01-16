@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -52,8 +51,10 @@ class WalletLimits {
 
   double get dailyRemaining => dailyLimit - dailyUsed;
   double get monthlyRemaining => monthlyLimit - monthlyUsed;
-  double get dailyPercentage => dailyLimit > 0 ? (dailyUsed / dailyLimit) * 100 : 0;
-  double get monthlyPercentage => monthlyLimit > 0 ? (monthlyUsed / monthlyLimit) * 100 : 0;
+  double get dailyPercentage =>
+      dailyLimit > 0 ? (dailyUsed / dailyLimit) * 100 : 0;
+  double get monthlyPercentage =>
+      monthlyLimit > 0 ? (monthlyUsed / monthlyLimit) * 100 : 0;
   bool get isDailyLimitReached => dailyUsed >= dailyLimit;
   bool get isMonthlyLimitReached => monthlyUsed >= monthlyLimit;
 }
@@ -77,7 +78,8 @@ class WalletStats {
     return WalletStats(
       totalTransactions: (map['totalTransactions'] as num?)?.toInt() ?? 0,
       totalSentAmount: (map['totalSentAmount'] as num?)?.toDouble() ?? 0.0,
-      totalReceivedAmount: (map['totalReceivedAmount'] as num?)?.toDouble() ?? 0.0,
+      totalReceivedAmount:
+          (map['totalReceivedAmount'] as num?)?.toDouble() ?? 0.0,
       totalCommission: (map['totalCommission'] as num?)?.toDouble() ?? 0.0,
       lastTransactionDate: map['lastTransactionDate'] as Timestamp?,
     );
@@ -163,10 +165,13 @@ class WalletModel {
       createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
       createdBy: data[FirebaseConstants.createdBy] ?? '',
       updatedAt: data[FirebaseConstants.updatedAt],
-      sendLimits: WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
-      receiveLimits: WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
+      sendLimits:
+          WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
+      receiveLimits:
+          WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
       lastDailyReset: data[FirebaseConstants.lastDailyReset] ?? Timestamp.now(),
-      lastMonthlyReset: data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
+      lastMonthlyReset:
+          data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
       stats: WalletStats.fromMap(data[FirebaseConstants.stats] ?? {}),
     );
   }
@@ -244,12 +249,20 @@ class WalletModel {
     final isInstapay = walletType == 'instapay';
 
     final double dailyLimit = isInstapay
-        ? AppConstants.instapayDailyLimit
-        : (isNew ? AppConstants.newWalletDailyLimit : AppConstants.oldWalletDailyLimit);
+        ? AppConstants.instapayTransactionLimit
+        : (isNew
+            ? AppConstants.newWalletTransactionLimit
+            : (walletStatus == 'registered_store'
+                ? AppConstants.registeredStoreTransactionLimit
+                : AppConstants.oldWalletTransactionLimit));
 
     final double monthlyLimit = isInstapay
         ? AppConstants.instapayMonthlyLimit
-        : (isNew ? AppConstants.newWalletMonthlyLimit : AppConstants.oldWalletMonthlyLimit);
+        : (isNew
+            ? AppConstants.newWalletMonthlyLimit
+            : (walletStatus == 'registered_store'
+                ? AppConstants.registeredStoreMonthlyLimit
+                : AppConstants.oldWalletMonthlyLimit));
 
     return WalletModel(
       walletId: walletId,
@@ -279,7 +292,9 @@ class WalletModel {
   bool get needsDailyReset {
     final now = DateTime.now();
     final lastReset = lastDailyReset.toDate();
-    return now.day != lastReset.day || now.month != lastReset.month || now.year != lastReset.year;
+    return now.day != lastReset.day ||
+        now.month != lastReset.month ||
+        now.year != lastReset.year;
   }
 
   bool get needsMonthlyReset {
@@ -305,6 +320,8 @@ class WalletModel {
         return 'جديدة';
       case 'old':
         return 'قديمة';
+      case 'registered_store':
+        return 'محل مسجل';
       default:
         return walletStatus;
     }
@@ -322,28 +339,52 @@ class WalletModel {
   }
 
   bool canSendAmount(double amount) {
-    return !sendLimits.isDailyLimitReached &&
-        !sendLimits.isMonthlyLimitReached &&
-        (sendLimits.dailyRemaining >= amount) &&
-        (sendLimits.monthlyRemaining >= amount);
+    // New Logic: Check Transaction Cap and Monthly Cap.
+    // Daily Limit in the model now represents Transaction Limit.
+    final limits = getLimits();
+    return amount <= limits.dailyLimit &&
+        !limits.isMonthlyLimitReached &&
+        (limits.monthlyRemaining >= amount);
   }
 
   bool canReceiveAmount(double amount) {
-    return !receiveLimits.isDailyLimitReached &&
-        !receiveLimits.isMonthlyLimitReached &&
-        (receiveLimits.dailyRemaining >= amount) &&
-        (receiveLimits.monthlyRemaining >= amount);
+    // New Logic: Check Transaction Cap and Monthly Cap.
+    // Daily Limit in the model now represents Transaction Limit.
+    final limits = getReceiveLimits();
+
+    return amount <= limits.dailyLimit &&
+        !limits.isMonthlyLimitReached &&
+        (limits.monthlyRemaining >= amount);
+  }
+
+  // Helper to get limits easily as requested
+  WalletLimits getLimits() {
+    if (walletStatus == 'registered_store') {
+      return sendLimits.copyWith(
+        dailyLimit: AppConstants.registeredStoreTransactionLimit,
+      );
+    }
+    return sendLimits;
+  }
+
+  WalletLimits getReceiveLimits() {
+    if (walletStatus == 'registered_store') {
+      return receiveLimits.copyWith(
+        dailyLimit: AppConstants.registeredStoreTransactionLimit,
+      );
+    }
+    return receiveLimits;
   }
 
   String get sendDailyWarningLevel {
-    final percentage = sendLimits.dailyPercentage;
+    final percentage = getLimits().dailyPercentage;
     if (percentage >= 90) return 'red';
     if (percentage >= 70) return 'yellow';
     return 'green';
   }
 
   String get sendMonthlyWarningLevel {
-    final percentage = sendLimits.monthlyPercentage;
+    final percentage = getLimits().monthlyPercentage;
     if (percentage >= 90) return 'red';
     if (percentage >= 70) return 'yellow';
     return 'green';

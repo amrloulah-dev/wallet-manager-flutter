@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;
@@ -12,7 +14,11 @@ class StatsRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   DocumentReference _getSummaryDocRef(String storeId) {
-    return _firestore.collection('stores').doc(storeId).collection('stats').doc('summary');
+    return _firestore
+        .collection('stores')
+        .doc(storeId)
+        .collection('stats')
+        .doc('summary');
   }
 
   Future<StatsSummaryModel> getStatsSummary(String storeId) async {
@@ -22,6 +28,28 @@ class StatsRepository {
       return StatsSummaryModel.fromMap(doc.data() as Map<String, dynamic>);
     } else {
       return initializeStats(storeId);
+    }
+  }
+
+  Future<DailyStatsModel> fetchTodayStats(String storeId) async {
+    try {
+      final todayDate = DateHelper.getCurrentDateString();
+      final docRef = _firestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('daily_stats')
+          .doc(todayDate);
+
+      final doc = await docRef.get();
+      if (doc.exists) {
+        return DailyStatsModel.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
+      } else {
+        return DailyStatsModel.empty(todayDate);
+      }
+    } catch (e) {
+      debugPrint('Error fetching today stats: $e');
+      return DailyStatsModel.empty(DateHelper.getCurrentDateString());
     }
   }
 
@@ -44,7 +72,8 @@ class StatsRepository {
     return summary;
   }
 
-  Future<void> updateStatsOnTransactionCreate(String storeId, TransactionModel tx) async {
+  Future<void> updateStatsOnTransactionCreate(
+      String storeId, TransactionModel tx) async {
     final docRef = _getSummaryDocRef(storeId);
     final Map<String, dynamic> updates = {
       'totalTransactions': FieldValue.increment(1),
@@ -100,7 +129,8 @@ class StatsRepository {
       if (amountChange.abs() > 0.001) {
         updates['totalOpenAmount'] = FieldValue.increment(amountChange);
 
-        if (amountChange < 0) { // Payment
+        if (amountChange < 0) {
+          // Payment
           updates['totalPaidAmount'] = FieldValue.increment(-amountChange);
         }
       }
@@ -117,21 +147,25 @@ class StatsRepository {
       }
     }
 
-    if (updates.length > 1) { // more than just lastUpdated
+    if (updates.length > 1) {
+      // more than just lastUpdated
       final summaryDoc = await firestoreTransaction.get(summaryRef);
 
       if (!summaryDoc.exists) {
         final initialStats = StatsSummaryModel.empty();
         final initialMap = initialStats.toMap();
-        
+
         // Apply increments manually to the initial map
         updates.forEach((key, value) {
           if (value is FieldValue && value.toString().contains('Increment')) {
             // This is a bit of a hack to get the increment value.
             // A better solution would be to not use FieldValue here, but this keeps the logic consistent.
-            final incrementValue = double.tryParse(value.toString().split('(').last.split(')').first) ?? 0.0;
+            final incrementValue = double.tryParse(
+                    value.toString().split('(').last.split(')').first) ??
+                0.0;
             if (initialMap[key] is int) {
-              initialMap[key] = (initialMap[key] as int) + incrementValue.toInt();
+              initialMap[key] =
+                  (initialMap[key] as int) + incrementValue.toInt();
             } else if (initialMap[key] is double) {
               initialMap[key] = (initialMap[key] as double) + incrementValue;
             }
@@ -139,15 +173,14 @@ class StatsRepository {
         });
         initialMap['lastUpdated'] = FieldValue.serverTimestamp();
         firestoreTransaction.set(summaryRef, initialMap..remove('lastUpdated'));
-
-
       } else {
         firestoreTransaction.update(summaryRef, updates);
       }
     }
   }
 
-  Future<void> updateStatsOnWalletChange(String storeId, {int countChange = 0, double balanceChange = 0.0}) async {
+  Future<void> updateStatsOnWalletChange(String storeId,
+      {int countChange = 0, double balanceChange = 0.0}) async {
     if (countChange == 0 && balanceChange == 0.0) return;
 
     final docRef = _getSummaryDocRef(storeId);
@@ -166,7 +199,8 @@ class StatsRepository {
   Future<void> reconcileStatsFromDebts(String storeId) async {
     try {
       // 1. Get all debt documents for the store
-      final debtQuery = _firestore.collection('debts').where('storeId', isEqualTo: storeId);
+      final debtQuery =
+          _firestore.collection('debts').where('storeId', isEqualTo: storeId);
       final debtSnapshot = await debtQuery.get();
 
       // 2. Compute authoritative values
@@ -191,7 +225,10 @@ class StatsRepository {
 
       final summaryRef = _getSummaryDocRef(storeId);
       final currentSummaryDoc = await summaryRef.get();
-      final currentSummary = currentSummaryDoc.exists ? StatsSummaryModel.fromMap(currentSummaryDoc.data()! as Map<String, dynamic>) : StatsSummaryModel.empty();
+      final currentSummary = currentSummaryDoc.exists
+          ? StatsSummaryModel.fromMap(
+              currentSummaryDoc.data()! as Map<String, dynamic>)
+          : StatsSummaryModel.empty();
 
       // 4. Atomically write the new values
       final reconciledStats = {
@@ -203,7 +240,6 @@ class StatsRepository {
 
       await summaryRef.update(reconciledStats);
       debugPrint('Reconciliation complete for store: $storeId');
-
     } catch (e) {
       debugPrint('Error during debt reconciliation for store $storeId: $e');
       rethrow;

@@ -274,6 +274,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   Widget _buildSendLimitsCard(WalletModel wallet) {
+    final limits = wallet.getLimits();
     return Card(
       elevation: 1,
       child: Padding(
@@ -282,21 +283,20 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
           children: [
             WalletLimitBar(
               label: AppLocalizations.of(context)!.dailyLimitSimple,
-              used: wallet.sendLimits.dailyUsed,
-              limit: wallet.sendLimits.dailyLimit,
-              percentage: wallet.sendLimits.dailyPercentage,
+              used: limits.dailyUsed,
+              limit: limits.dailyLimit,
+              percentage: limits.dailyPercentage,
               warningLevel: wallet.sendDailyWarningLevel,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
               label: AppLocalizations.of(context)!.monthlyLimitSimple,
-              used: wallet.sendLimits.monthlyUsed,
-              limit: wallet.sendLimits.monthlyLimit,
-              percentage: wallet.sendLimits.monthlyPercentage,
+              used: limits.monthlyUsed,
+              limit: limits.monthlyLimit,
+              percentage: limits.monthlyPercentage,
               warningLevel: wallet.sendMonthlyWarningLevel,
             ),
-            if (wallet.sendLimits.isDailyLimitReached ||
-                wallet.sendLimits.isMonthlyLimitReached) ...[
+            if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
                   AppLocalizations.of(context)!.sendLimitReachedMessage),
@@ -308,9 +308,19 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   Widget _buildReceiveLimitsCard(WalletModel wallet) {
-    // Assuming receive limits have warning levels in the model, otherwise default to 'green'
-    final dailyReceiveWarningLevel = 'green';
-    final monthlyReceiveWarningLevel = 'green';
+    // Limits
+    final limits = wallet.getReceiveLimits();
+
+    // Logic for receive limits warning (could be moved to model later)
+    String getWarningLevel(double percentage) {
+      if (percentage >= 90) return 'red';
+      if (percentage >= 70) return 'yellow';
+      return 'green';
+    }
+
+    final dailyReceiveWarningLevel = getWarningLevel(limits.dailyPercentage);
+    final monthlyReceiveWarningLevel =
+        getWarningLevel(limits.monthlyPercentage);
 
     return Card(
       elevation: 1,
@@ -320,21 +330,20 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
           children: [
             WalletLimitBar(
               label: AppLocalizations.of(context)!.dailyLimitSimple,
-              used: wallet.receiveLimits.dailyUsed,
-              limit: wallet.receiveLimits.dailyLimit,
-              percentage: wallet.receiveLimits.dailyPercentage,
+              used: limits.dailyUsed,
+              limit: limits.dailyLimit,
+              percentage: limits.dailyPercentage,
               warningLevel: dailyReceiveWarningLevel,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
               label: AppLocalizations.of(context)!.monthlyLimitSimple,
-              used: wallet.receiveLimits.monthlyUsed,
-              limit: wallet.receiveLimits.monthlyLimit,
-              percentage: wallet.receiveLimits.monthlyPercentage,
+              used: limits.monthlyUsed,
+              limit: limits.monthlyLimit,
+              percentage: limits.monthlyPercentage,
               warningLevel: monthlyReceiveWarningLevel,
             ),
-            if (wallet.receiveLimits.isDailyLimitReached ||
-                wallet.receiveLimits.isMonthlyLimitReached) ...[
+            if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
                   AppLocalizations.of(context)!.receiveLimitReachedMessage),

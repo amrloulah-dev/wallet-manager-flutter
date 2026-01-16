@@ -174,8 +174,9 @@
   "walletStatus": "Wallet Status",
   "newStatus": "New",
   "oldStatus": "Old",
+  "registeredStore": "Registered Store",
   "walletLimits": "Wallet Limits",
-  "dailyLimit": "Daily Limit (Send/Receive)",
+  "dailyLimit": "Transaction Limit (Send/Receive)",
   "monthlyLimit": "Monthly Limit (Send/Receive)",
   "notesOptional": "Notes (Optional)",
   "notesPlaceholder": "Any additional details about the wallet",
@@ -228,5 +229,8 @@
   "selectedWalletDetails": "Selected Wallet Details",
   "currentBalanceLabel": "Current Balance:",
   "amountToAdd": "Amount to Add",
-  "addBalanceAction": "Add Balance"
+  "addBalanceAction": "Add Balance",
+  "transactionFees": "Transaction Fees",
+  "totalDeduction": "Total Deduction",
+  "calculatingFees": "Calculating fees..."
 }

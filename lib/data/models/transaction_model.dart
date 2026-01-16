@@ -13,6 +13,7 @@ class TransactionModel {
   final String? customerName;
   final double amount;
   final double commission;
+  final double serviceFee; // Fee charged by the network/service
   final String paymentStatus; // 'paid' | 'debt'
   final String? debtId;
   final String? notes;
@@ -34,6 +35,7 @@ class TransactionModel {
     this.customerName,
     required this.amount,
     this.commission = 0.0,
+    this.serviceFee = 0.0,
     this.paymentStatus = 'paid',
     this.debtId,
     this.notes,
@@ -58,6 +60,7 @@ class TransactionModel {
       customerName: data['customerName'],
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
       commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+      serviceFee: (data['serviceFee'] as num?)?.toDouble() ?? 0.0,
       paymentStatus: data['paymentStatus'] ?? 'paid',
       debtId: data['debtId'],
       notes: data[FirebaseConstants.notes],
@@ -81,6 +84,7 @@ class TransactionModel {
       'customerName': customerName,
       'amount': amount,
       'commission': commission,
+      'serviceFee': serviceFee,
       'paymentStatus': paymentStatus,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
@@ -104,6 +108,7 @@ class TransactionModel {
     String? customerName,
     double? amount,
     double? commission,
+    double? serviceFee,
     String? paymentStatus,
     String? debtId,
     String? notes,
@@ -125,6 +130,7 @@ class TransactionModel {
       customerName: customerName ?? this.customerName,
       amount: amount ?? this.amount,
       commission: commission ?? this.commission,
+      serviceFee: serviceFee ?? this.serviceFee,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       debtId: debtId ?? this.debtId,
       notes: notes ?? this.notes,
@@ -145,13 +151,16 @@ class TransactionModel {
   bool get isDeposit => transactionType == 'deposit';
   bool get isPaid => paymentStatus == 'paid';
   bool get isDebt => paymentStatus == 'debt';
-  double get totalAmount => amount + commission;
-  String get transactionTypeDisplay => isSend ? 'إرسال' : (isReceive ? 'استقبال' : 'إيداع');
+  double get totalAmount =>
+      amount + commission; // Original total amount (base + comm)
+  String get transactionTypeDisplay =>
+      isSend ? 'إرسال' : (isReceive ? 'استقبال' : 'إيداع');
   IconData get transactionTypeIcon => isSend
       ? Icons.arrow_upward
       : (isReceive ? Icons.arrow_downward : Icons.add_card_outlined);
-  Color get transactionTypeColor =>
-      isSend ? AppColors.send : (isReceive ? AppColors.receive : AppColors.primary);
+  Color get transactionTypeColor => isSend
+      ? AppColors.send
+      : (isReceive ? AppColors.receive : AppColors.primary);
   String get paymentStatusDisplay => isPaid ? 'مدفوع' : 'دين';
   bool get canBeModified {
     // Can be modified within 5 minutes of creation
@@ -162,10 +171,11 @@ class TransactionModel {
       DateHelper.formatTimestamp(transactionDate, format: 'dd/MM/yyyy');
   String get formattedTime =>
       DateHelper.formatTimestamp(transactionDate, format: 'hh:mm a');
-  String get relativeTime => DateHelper.getRelativeTime(transactionDate.toDate());
+  String get relativeTime =>
+      DateHelper.getRelativeTime(transactionDate.toDate());
 
   @override
   String toString() {
-    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: $amount, status: $paymentStatus)';
+    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: $amount, serviceFee: $serviceFee, status: $paymentStatus)';
   }
 }

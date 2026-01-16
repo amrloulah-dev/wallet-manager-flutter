@@ -174,8 +174,9 @@
   "walletStatus": "حالة المحفظة",
   "newStatus": "جديدة",
   "oldStatus": "قديمة",
+  "registeredStore": "محل مسجل",
   "walletLimits": "حدود المحفظة",
-  "dailyLimit": "الحد اليومي (إرسال/استقبال)",
+  "dailyLimit": "حد المعاملة الواحدة (إرسال/استقبال)",
   "monthlyLimit": "الحد الشهري (إرسال/استقبال)",
   "notesOptional": "ملاحظات (اختياري)",
   "notesPlaceholder": "أي تفاصيل إضافية عن المحفظة",
@@ -228,5 +229,8 @@
   "selectedWalletDetails": "تفاصيل المحفظة المحددة",
   "currentBalanceLabel": "الرصيد الحالي:",
   "amountToAdd": "المبلغ المراد إضافته",
-  "addBalanceAction": "إضافة الرصيد"
+  "addBalanceAction": "إضافة الرصيد",
+  "transactionFees": "رسوم المعاملة",
+  "totalDeduction": "إجمالي الخصم",
+  "calculatingFees": "جاري حساب الرسوم..."
 }

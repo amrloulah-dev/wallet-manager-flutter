@@ -32,15 +32,20 @@ class TransactionRepository {
   // 1️⃣ CREATE
   Future<void> createTransaction(TransactionModel transaction) async {
     try {
-      final balanceChange = transaction.isSend ? -transaction.amount : transaction.amount;
+      final balanceChange = transaction.isSend
+          ? -(transaction.amount + transaction.serviceFee)
+          : transaction.amount;
 
       await _firestore.runTransaction((tx) async {
-        final walletRef = _firestore.collection(FirebaseConstants.walletsCollection).doc(transaction.walletId);
+        final walletRef = _firestore
+            .collection(FirebaseConstants.walletsCollection)
+            .doc(transaction.walletId);
         final walletSnap = await tx.get(walletRef);
         if (!walletSnap.exists) throw NotFoundException('Wallet');
 
         if (transaction.isDeposit) {
-          tx.update(walletRef, {'balance': FieldValue.increment(transaction.amount)});
+          tx.update(
+              walletRef, {'balance': FieldValue.increment(transaction.amount)});
           return;
         }
 
@@ -49,23 +54,47 @@ class TransactionRepository {
 
         var validationWallet = wallet;
         if (validationWallet.needsDailyReset) {
-            validationWallet = validationWallet.copyWith(
-                sendLimits: validationWallet.sendLimits.copyWith(dailyUsed: 0),
-                receiveLimits: validationWallet.receiveLimits.copyWith(dailyUsed: 0)
-            );
+          validationWallet = validationWallet.copyWith(
+              sendLimits: validationWallet.sendLimits.copyWith(dailyUsed: 0),
+              receiveLimits:
+                  validationWallet.receiveLimits.copyWith(dailyUsed: 0));
         }
         if (validationWallet.needsMonthlyReset) {
-            validationWallet = validationWallet.copyWith(
-                sendLimits: validationWallet.sendLimits.copyWith(monthlyUsed: 0),
-                receiveLimits: validationWallet.receiveLimits.copyWith(monthlyUsed: 0)
-            );
+          validationWallet = validationWallet.copyWith(
+              sendLimits: validationWallet.sendLimits.copyWith(monthlyUsed: 0),
+              receiveLimits:
+                  validationWallet.receiveLimits.copyWith(monthlyUsed: 0));
         }
 
         if (transaction.isSend) {
-          if (validationWallet.balance < transaction.amount) throw ValidationException('المبلغ المراد إرساله أكبر من الرصيد المتاح.');
-          if (!validationWallet.canSendAmount(transaction.amount)) throw ValidationException('تم تجاوز حد الإرسال اليومي أو الشهري لهذه المحفظة.');
+          if (validationWallet.balance < transaction.amount)
+            throw ValidationException(
+                'المبلغ المراد إرساله أكبر من الرصيد المتاح.');
+
+          // New Validation Rules (Strict Implementation)
+          // Rule 1: Transaction Cap
+          if (transaction.amount > validationWallet.getLimits().dailyLimit) {
+            throw ValidationException(
+                'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
+          }
+          // Rule 3: Monthly Aggregate
+          if (validationWallet.getLimits().monthlyUsed + transaction.amount >
+              validationWallet.getLimits().monthlyLimit) {
+            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+          }
         } else if (transaction.isReceive) {
-          if (!validationWallet.canReceiveAmount(transaction.amount)) throw ValidationException('تم تجاوز حد الاستقبال اليومي أو الشهري لهذه المحفظة.');
+          // Rule 1: Transaction Cap
+          if (transaction.amount >
+              validationWallet.getReceiveLimits().dailyLimit) {
+            throw ValidationException(
+                'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
+          }
+          // Rule 3: Monthly Aggregate
+          if (validationWallet.getReceiveLimits().monthlyUsed +
+                  transaction.amount >
+              validationWallet.getReceiveLimits().monthlyLimit) {
+            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+          }
         }
 
         final txRef = _transactionsCollection.doc(transaction.transactionId);
@@ -74,58 +103,100 @@ class TransactionRepository {
         final Map<String, dynamic> walletUpdateData = {};
 
         walletUpdateData['balance'] = FieldValue.increment(balanceChange);
-        walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] = FieldValue.increment(1);
-        walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] = now;
+        walletUpdateData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
+            FieldValue.increment(1);
+        walletUpdateData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
+            now;
 
         final bool needsDailyReset = wallet.needsDailyReset;
         final bool needsMonthlyReset = wallet.needsMonthlyReset;
 
         if (needsDailyReset) {
-            walletUpdateData['lastDailyReset'] = now;
+          walletUpdateData['lastDailyReset'] = now;
         }
         if (needsMonthlyReset) {
-            walletUpdateData['lastMonthlyReset'] = now;
+          walletUpdateData['lastMonthlyReset'] = now;
         }
 
         if (transaction.isSend) {
-            walletUpdateData['sendLimits.dailyUsed'] = needsDailyReset ? transaction.amount : FieldValue.increment(transaction.amount);
-            walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset ? transaction.amount : FieldValue.increment(transaction.amount);
-            if (needsDailyReset) walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
-            if (needsMonthlyReset) walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
+          walletUpdateData['sendLimits.dailyUsed'] = needsDailyReset
+              ? transaction.amount
+              : FieldValue.increment(transaction.amount);
+          walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset
+              ? transaction.amount
+              : FieldValue.increment(transaction.amount);
+          if (needsDailyReset)
+            walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
+          if (needsMonthlyReset)
+            walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
         } else if (transaction.isReceive) {
-            walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset ? transaction.amount : FieldValue.increment(transaction.amount);
-            walletUpdateData['receiveLimits.monthlyUsed'] = needsMonthlyReset ? transaction.amount : FieldValue.increment(transaction.amount);
-            if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
-            if (needsMonthlyReset) walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
+          walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset
+              ? transaction.amount
+              : FieldValue.increment(transaction.amount);
+          walletUpdateData['receiveLimits.monthlyUsed'] = needsMonthlyReset
+              ? transaction.amount
+              : FieldValue.increment(transaction.amount);
+          if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
+          if (needsMonthlyReset)
+            walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
         }
 
         if (transaction.isSend || transaction.isReceive) {
-            walletUpdateData['${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] = FieldValue.increment(transaction.amount);
-            walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] = FieldValue.increment(transaction.commission);
+          walletUpdateData[
+                  '${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] =
+              FieldValue.increment(transaction.amount);
+          walletUpdateData[
+                  '${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
+              FieldValue.increment(transaction.commission);
         }
-        
+
         tx.update(walletRef, walletUpdateData);
+
+        // Update Daily Stats
+        final dailyStatsRef = _firestore
+            .collection('stores')
+            .doc(transaction.storeId)
+            .collection('daily_stats')
+            .doc(DateHelper.getCurrentDateString());
+
+        tx.set(
+          dailyStatsRef,
+          {
+            'transactionCount': FieldValue.increment(1),
+            'totalCommission': FieldValue.increment(transaction.commission),
+            'totalAmount': FieldValue.increment(transaction.amount),
+          },
+          SetOptions(merge: true),
+        );
       });
 
       // Update summary stats after the main transaction succeeds
       if (!transaction.isDeposit) {
-        await _statsRepository.updateStatsOnTransactionCreate(transaction.storeId, transaction);
-        await _statsRepository.updateStatsOnWalletChange(transaction.storeId, balanceChange: balanceChange);
+        await _statsRepository.updateStatsOnTransactionCreate(
+            transaction.storeId, transaction);
+        await _statsRepository.updateStatsOnWalletChange(transaction.storeId,
+            balanceChange: balanceChange);
         if (transaction.isDebt) {
-          await _statsRepository.incrementOpenDebtStats(transaction.storeId, transaction.amount);
+          await _statsRepository.incrementOpenDebtStats(
+              transaction.storeId, transaction.amount);
         }
       } else {
-         await _statsRepository.updateStatsOnWalletChange(transaction.storeId, balanceChange: transaction.amount);
+        await _statsRepository.updateStatsOnWalletChange(transaction.storeId,
+            balanceChange: transaction.amount);
       }
 
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_${transaction.walletId}');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to create transaction: ${e.message}', code: e.code);
+      throw ServerException('Failed to create transaction: ${e.message}',
+          code: e.code);
     } catch (e) {
       if (e is AppException) rethrow;
-      throw ServerException('An unexpected error occurred while creating the transaction.');
+      throw ServerException(
+          'An unexpected error occurred while creating the transaction.');
     }
   }
 
@@ -142,9 +213,11 @@ class TransactionRepository {
       _cacheManager.set(cacheKey, tx, duration: const Duration(minutes: 10));
       return tx;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get transaction: ${e.message}', code: e.code);
+      throw ServerException('Failed to get transaction: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching the transaction.');
+      throw ServerException(
+          'An unexpected error occurred while fetching the transaction.');
     }
   }
 
@@ -156,7 +229,8 @@ class TransactionRepository {
     int limit = 15,
     DocumentSnapshot? lastDoc,
   }) async {
-    final cacheKey = 'transactions_page_0_${storeId}_${startDate.toIso8601String()}_${endDate.toIso8601String()}_$transactionType';
+    final cacheKey =
+        'transactions_page_0_${storeId}_${startDate.toIso8601String()}_${endDate.toIso8601String()}_$transactionType';
     if (lastDoc == null) {
       final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
       if (cachedResult != null) return cachedResult;
@@ -165,8 +239,10 @@ class TransactionRepository {
     try {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where('transactionDate', isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
-          .where('transactionDate', isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
+          .where('transactionDate',
+              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
+          .where('transactionDate',
+              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
           .where('isDeleted', isEqualTo: false)
           .orderBy('transactionDate', descending: true);
 
@@ -179,7 +255,9 @@ class TransactionRepository {
       }
 
       final snapshot = await query.limit(limit).get();
-      final transactions = snapshot.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList();
+      final transactions = snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc))
+          .toList();
       final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
 
       final result = {
@@ -193,40 +271,57 @@ class TransactionRepository {
 
       return result;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get paginated transactions: ${e.message}', code: e.code);
+      throw ServerException(
+          'Failed to get paginated transactions: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching paginated transactions.');
+      throw ServerException(
+          'An unexpected error occurred while fetching paginated transactions.');
     }
   }
 
-  Future<List<TransactionModel>> getTransactionsByDateRange(String storeId, DateTime startDate, DateTime endDate) async {
+  Future<List<TransactionModel>> getTransactionsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate) async {
     try {
       final snapshot = await _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where('transactionDate', isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
-          .where('transactionDate', isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
+          .where('transactionDate',
+              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
+          .where('transactionDate',
+              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
           .where('isDeleted', isEqualTo: false)
           .orderBy('transactionDate', descending: true)
           .get();
-      return snapshot.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc))
+          .toList();
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get transactions by date range: ${e.message}', code: e.code);
+      throw ServerException(
+          'Failed to get transactions by date range: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching transactions.');
+      throw ServerException(
+          'An unexpected error occurred while fetching transactions.');
     }
   }
 
   // 3️⃣ UPDATE
-  Future<void> updateTransaction(String transactionId, Map<String, dynamic> data) async {
+  Future<void> updateTransaction(
+      String transactionId, Map<String, dynamic> data) async {
     try {
-      final updateData = {...data, FirebaseConstants.updatedAt: Timestamp.now()};
+      final updateData = {
+        ...data,
+        FirebaseConstants.updatedAt: Timestamp.now()
+      };
       await _transactionsCollection.doc(transactionId).update(updateData);
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to update transaction: ${e.message}', code: e.code);
+      throw ServerException('Failed to update transaction: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while updating the transaction.');
+      throw ServerException(
+          'An unexpected error occurred while updating the transaction.');
     }
   }
 
@@ -241,9 +336,11 @@ class TransactionRepository {
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to delete transaction: ${e.message}', code: e.code);
+      throw ServerException('Failed to delete transaction: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while deleting the transaction.');
+      throw ServerException(
+          'An unexpected error occurred while deleting the transaction.');
     }
   }
 
@@ -253,22 +350,28 @@ class TransactionRepository {
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('isDeleted', isEqualTo: false)
           .get();
-      return snapshot.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc))
+          .toList();
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get all transactions: ${e.message}', code: e.code);
+      throw ServerException('Failed to get all transactions: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching all transactions.');
+      throw ServerException(
+          'An unexpected error occurred while fetching all transactions.');
     }
   }
 
-  Future<Map<String, dynamic>> getTransactionAggregates(String storeId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<Map<String, dynamic>> getTransactionAggregates(String storeId,
+      {DateTime? startDate, DateTime? endDate}) async {
     try {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('isDeleted', isEqualTo: false);
 
       if (startDate != null) {
-        query = query.where('transactionDate', isGreaterThanOrEqualTo: startDate);
+        query =
+            query.where('transactionDate', isGreaterThanOrEqualTo: startDate);
       }
       if (endDate != null) {
         query = query.where('transactionDate', isLessThanOrEqualTo: endDate);
@@ -306,7 +409,8 @@ class TransactionRepository {
 
       return {
         'totalTransactions': manualSendCount + manualReceiveCount,
-        'totalCommission': manualTotalSentCommission + manualTotalReceiveCommission,
+        'totalCommission':
+            manualTotalSentCommission + manualTotalReceiveCommission,
         'sendCount': manualSendCount,
         'totalSentAmount': manualTotalSent,
         'receiveCount': manualReceiveCount,

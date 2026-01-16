@@ -414,16 +414,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           }
                         }),
                     StatsCard(
-                      title: AppLocalizations.of(context)!.totalTransactions,
-                      value: stats.totalTransactions.toString(),
+                      title:
+                          '${AppLocalizations.of(context)!.totalTransactions} (Day)',
+                      value: (provider.todayStats?.transactionCount ?? 0)
+                          .toString(),
                       icon: Icons.swap_horiz,
                       color: Colors.green.shade700,
                       onTap: () => Navigator.pushNamed(
                           context, RouteConstants.todayTransactions),
                     ),
                     StatsCard(
-                      title: AppLocalizations.of(context)!.totalCommission,
-                      value: stats.totalCommission.toInt().toString(),
+                      title:
+                          '${AppLocalizations.of(context)!.totalCommission} (Day)',
+                      value: (provider.todayStats?.totalCommission ?? 0)
+                          .toInt()
+                          .toString(),
                       icon: Icons.attach_money,
                       color: Colors.orange.shade800,
                       onTap: () => Navigator.pushNamed(
@@ -584,7 +589,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
         final wallets = walletProvider.wallets;
         for (var wallet in wallets) {
-          if (wallet.sendLimits.dailyPercentage >= 90) {
+          if (wallet.getLimits().dailyPercentage >= 90) {
             alerts.add(AlertCard(
               message: AppLocalizations.of(context)!
                   .walletAlertMessage(wallet.phoneNumber),
