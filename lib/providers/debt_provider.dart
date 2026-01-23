@@ -8,7 +8,15 @@ import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
 import '../core/errors/app_exceptions.dart';
 
-enum DebtStatus { idle, loading, loadingMore, loaded, creating, updating, error }
+enum DebtStatus {
+  idle,
+  loading,
+  loadingMore,
+  loaded,
+  creating,
+  updating,
+  error
+}
 
 class DebtProvider extends ChangeNotifier {
   final DebtRepository _debtRepository;
@@ -26,6 +34,7 @@ class DebtProvider extends ChangeNotifier {
 
   // Filter
   String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
+  String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
 
   // Cache
   List<DebtModel>? _cachedDebts;
@@ -60,6 +69,7 @@ class DebtProvider extends ChangeNotifier {
   DebtStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String get currentFilter => _currentFilter;
+  String get currentDebtType => _currentDebtType;
   String? get currentStoreId => _currentStoreId;
   bool get hasMore => _hasMore;
 
@@ -81,6 +91,16 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
+  void setDebtType(String type) {
+    if (_currentDebtType != type) {
+      _currentDebtType = type;
+      _cachedDebts = null;
+      _cacheTimestamp = null;
+      // Reset filter if needed or keep it. Keeping it is fine.
+      fetchInitialDebts(forceRefresh: true);
+    }
+  }
+
   Future<void> fetchInitialDebts({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
 
@@ -90,7 +110,7 @@ class DebtProvider extends ChangeNotifier {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       _debts = _cachedDebts!;
-      if(status != DebtStatus.loaded){
+      if (status != DebtStatus.loaded) {
         _setStatus(DebtStatus.loaded);
       }
       return;
@@ -107,6 +127,7 @@ class DebtProvider extends ChangeNotifier {
       final result = await _debtRepository.getDebtsByStoreIdPaginated(
         _currentStoreId!,
         status: _currentFilter == 'all' ? null : _currentFilter,
+        type: _currentDebtType,
         limit: 20,
       );
 
@@ -128,7 +149,8 @@ class DebtProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreDebts() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) return;
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+      return;
 
     _setStatus(DebtStatus.loadingMore);
 
@@ -136,6 +158,7 @@ class DebtProvider extends ChangeNotifier {
       final result = await _debtRepository.getDebtsByStoreIdPaginated(
         _currentStoreId!,
         status: _currentFilter == 'all' ? null : _currentFilter,
+        type: _currentDebtType,
         limit: 20,
         lastDoc: _lastDocument,
       );
@@ -158,10 +181,14 @@ class DebtProvider extends ChangeNotifier {
     try {
       // This summary logic could be improved by using the central stats provider
       final results = await Future.wait([
-        _debtRepository.getDebtsCount(_currentStoreId!, status: 'open'),
-        _debtRepository.getDebtsCount(_currentStoreId!, status: 'paid'),
-        _debtRepository.getDebtsTotalAmount(_currentStoreId!, status: 'open'),
-        _debtRepository.getDebtsTotalAmount(_currentStoreId!, status: 'paid'),
+        _debtRepository.getDebtsCount(_currentStoreId!,
+            status: 'open', type: _currentDebtType),
+        _debtRepository.getDebtsCount(_currentStoreId!,
+            status: 'paid', type: _currentDebtType),
+        _debtRepository.getDebtsTotalAmount(_currentStoreId!,
+            status: 'open', type: _currentDebtType),
+        _debtRepository.getDebtsTotalAmount(_currentStoreId!,
+            status: 'paid', type: _currentDebtType),
       ]);
 
       final openCount = results[0] as int;
@@ -191,15 +218,18 @@ class DebtProvider extends ChangeNotifier {
   }) async {
     _setStatus(DebtStatus.creating);
     try {
-      if (_currentStoreId == null) throw ValidationException('Store ID not found.');
+      if (_currentStoreId == null)
+        throw ValidationException('Store ID not found.');
       if (amountDue <= 0) throw ValidationException('Amount must be positive.');
 
       // This logic for updating an existing debt is complex and should ideally be a transaction.
       // For now, we adapt it to use the new transactional create method.
-      final existingDebtByPhone = await _debtRepository.getDebtByCustomerPhone(_currentStoreId!, customerPhone);
+      final existingDebtByPhone = await _debtRepository.getDebtByCustomerPhone(
+          _currentStoreId!, customerPhone);
       if (existingDebtByPhone != null) {
         // --- CORRECTED: Use the new transactional method ---
-        return await addPartialDebt(existingDebtByPhone.debtId, amountDue, createdBy);
+        return await addPartialDebt(
+            existingDebtByPhone.debtId, amountDue, createdBy);
       } else {
         final newDebt = DebtModel(
           debtId: FirebaseFirestore.instance.collection('debts').doc().id,
@@ -227,7 +257,8 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> addPartialDebt(String debtId, double amountToAdd, String userId) async {
+  Future<bool> addPartialDebt(
+      String debtId, double amountToAdd, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
       await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
@@ -257,7 +288,8 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> payPartialDebt(String debtId, double amountToPay, String userId) async {
+  Future<bool> payPartialDebt(
+      String debtId, double amountToPay, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
       // The provider now just calls the atomic repository method
@@ -300,10 +332,12 @@ class DebtProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<DebtModel>> fetchDebtsForDateRange(DateTime startDate, DateTime endDate) async {
+  Future<List<DebtModel>> fetchDebtsForDateRange(
+      DateTime startDate, DateTime endDate) async {
     if (_currentStoreId == null) return [];
     try {
-      return await _debtRepository.getDebtsByDateRange(_currentStoreId!, startDate, endDate);
+      return await _debtRepository.getDebtsByDateRange(
+          _currentStoreId!, startDate, endDate);
     } catch (e) {
       _setError('Failed to fetch debts for date range.');
       return [];

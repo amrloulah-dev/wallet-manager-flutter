@@ -45,9 +45,11 @@ class DebtRepository {
       });
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to create debt: ${e.message}', code: e.code);
+      throw ServerException('Failed to create debt: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while creating the debt: $e');
+      throw ServerException(
+          'An unexpected error occurred while creating the debt: $e');
     }
   }
 
@@ -69,19 +71,21 @@ class DebtRepository {
     } on FirebaseException catch (e) {
       throw ServerException('Failed to get debt: ${e.message}', code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching the debt.');
+      throw ServerException(
+          'An unexpected error occurred while fetching the debt.');
     }
   }
 
   Future<Map<String, dynamic>> getDebtsByStoreIdPaginated(
     String storeId, {
     String? status,
+    String? type,
     int limit = 15,
     DocumentSnapshot? lastDoc,
   }) async {
     // Caching logic remains the same
     if (lastDoc == null) {
-      final cacheKey = 'debts_page_0_${storeId}_$status';
+      final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
       final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
       if (cachedResult != null) {
         return cachedResult;
@@ -97,12 +101,17 @@ class DebtRepository {
         query = query.where('debtStatus', isEqualTo: status);
       }
 
+      if (type != null) {
+        query = query.where('debtType', isEqualTo: type);
+      }
+
       if (lastDoc != null) {
         query = query.startAfterDocument(lastDoc);
       }
 
       final snapshot = await query.limit(limit).get();
-      final debts = snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+      final debts =
+          snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
       final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
 
       final result = {
@@ -111,20 +120,23 @@ class DebtRepository {
       };
 
       if (lastDoc == null) {
-        final cacheKey = 'debts_page_0_${storeId}_$status';
+        final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
         _cacheManager.set(cacheKey, result);
       }
 
       return result;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get store debts: ${e.message}', code: e.code);
+      throw ServerException('Failed to get store debts: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching store debts.');
+      throw ServerException(
+          'An unexpected error occurred while fetching store debts.');
     }
   }
 
   // Other read methods remain the same...
-  Future<DebtModel?> getDebtByCustomerName(String storeId, String customerName) async {
+  Future<DebtModel?> getDebtByCustomerName(
+      String storeId, String customerName) async {
     try {
       final normalizedName = customerName.trim().toLowerCase();
       final snapshot = await _debtsCollection
@@ -137,13 +149,16 @@ class DebtRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debt by customer name: ${e.message}', code: e.code);
+      throw ServerException('Failed to get debt by customer name: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching debt by customer name.');
+      throw ServerException(
+          'An unexpected error occurred while fetching debt by customer name.');
     }
   }
 
-  Future<DebtModel?> getDebtByCustomerPhone(String storeId, String customerPhone) async {
+  Future<DebtModel?> getDebtByCustomerPhone(
+      String storeId, String customerPhone) async {
     try {
       final snapshot = await _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -155,14 +170,18 @@ class DebtRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debt by customer phone: ${e.message}', code: e.code);
+      throw ServerException(
+          'Failed to get debt by customer phone: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching debt by customer phone.');
+      throw ServerException(
+          'An unexpected error occurred while fetching debt by customer phone.');
     }
   }
 
   // 3️⃣ UPDATE
-  Future<void> processPayment(String debtId, double amountToPay, String userId) async {
+  Future<void> processPayment(
+      String debtId, double amountToPay, String userId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -175,16 +194,18 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToPay <= 0) throw ValidationException('Amount must be positive.');
-        if (amountToPay > oldDebt.amountDue) throw ValidationException('Paid amount exceeds remaining debt.');
+        if (amountToPay <= 0)
+          throw ValidationException('Amount must be positive.');
+        if (amountToPay > oldDebt.amountDue)
+          throw ValidationException('Paid amount exceeds remaining debt.');
 
         final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
-        
+
         final Map<String, dynamic> updateData = {
           'updatedAt': FieldValue.serverTimestamp(),
           'lastUpdatedBy': userId,
         };
-        
+
         DebtModel newDebt;
 
         if (isFullPayment) {
@@ -218,14 +239,17 @@ class DebtRepository {
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to process payment: ${e.message}', code: e.code);
+      throw ServerException('Failed to process payment: ${e.message}',
+          code: e.code);
     } catch (e) {
       if (e is AppException) rethrow;
-      throw ServerException('An unexpected error occurred while processing the payment: $e');
+      throw ServerException(
+          'An unexpected error occurred while processing the payment: $e');
     }
   }
 
-  Future<void> addPartialDebt(String debtId, double amountToAdd, String userId) async {
+  Future<void> addPartialDebt(
+      String debtId, double amountToAdd, String userId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -238,7 +262,8 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToAdd <= 0) throw ValidationException('Amount must be positive.');
+        if (amountToAdd <= 0)
+          throw ValidationException('Amount must be positive.');
 
         final wasPaid = oldDebt.debtStatus == 'paid';
 
@@ -273,10 +298,12 @@ class DebtRepository {
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to add partial debt: ${e.message}', code: e.code);
+      throw ServerException('Failed to add partial debt: ${e.message}',
+          code: e.code);
     } catch (e) {
       if (e is AppException) rethrow;
-      throw ServerException('An unexpected error occurred while adding partial debt: $e');
+      throw ServerException(
+          'An unexpected error occurred while adding partial debt: $e');
     }
   }
 
@@ -286,15 +313,19 @@ class DebtRepository {
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to update debt: ${e.message}', code: e.code);
+      throw ServerException('Failed to update debt: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while updating the debt.');
+      throw ServerException(
+          'An unexpected error occurred while updating the debt.');
     }
   }
 
-  Future<Map<String, dynamic>> getDebtAggregates(String storeId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<Map<String, dynamic>> getDebtAggregates(String storeId,
+      {DateTime? startDate, DateTime? endDate}) async {
     try {
-      Query query = _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
+      Query query =
+          _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
 
       if (startDate != null) {
         query = query.where('debtDate', isGreaterThanOrEqualTo: startDate);
@@ -339,7 +370,8 @@ class DebtRepository {
     }
   }
 
-  Future<List<DebtModel>> getDebtsByDateRange(String storeId, DateTime startDate, DateTime endDate) async {
+  Future<List<DebtModel>> getDebtsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate) async {
     try {
       final snapshot = await _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -348,17 +380,24 @@ class DebtRepository {
           .get();
       return snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debts by date range: ${e.message}', code: e.code);
+      throw ServerException('Failed to get debts by date range: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while fetching debts by date range.');
+      throw ServerException(
+          'An unexpected error occurred while fetching debts by date range.');
     }
   }
 
-  Future<int> getDebtsCount(String storeId, {String? status}) async {
+  Future<int> getDebtsCount(String storeId,
+      {String? status, String? type}) async {
     try {
-      Query query = _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
+      Query query =
+          _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
       if (status != null) {
         query = query.where('debtStatus', isEqualTo: status);
+      }
+      if (type != null) {
+        query = query.where('debtType', isEqualTo: type);
       }
       // Use aggregate query for efficiency
       final countQuery = query.count();
@@ -369,16 +408,21 @@ class DebtRepository {
     }
   }
 
-  Future<double> getDebtsTotalAmount(String storeId, {String? status}) async {
+  Future<double> getDebtsTotalAmount(String storeId,
+      {String? status, String? type}) async {
     try {
-      Query query = _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
+      Query query =
+          _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
       if (status != null) {
         query = query.where('debtStatus', isEqualTo: status);
       }
-      
+      if (type != null) {
+        query = query.where('debtType', isEqualTo: type);
+      }
+
       final aggregateQuery = query.aggregate(sum('amountDue'));
       final snapshot = await aggregateQuery.get();
-      
+
       return snapshot.getSum('amountDue') ?? 0.0;
     } catch (e) {
       return 0.0;

@@ -11,7 +11,8 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 
 class AddDebtScreen extends StatefulWidget {
-  const AddDebtScreen({super.key});
+  final String? initialDebtType;
+  const AddDebtScreen({super.key, this.initialDebtType});
 
   @override
   State<AddDebtScreen> createState() => _AddDebtScreenState();
@@ -20,10 +21,19 @@ class AddDebtScreen extends StatefulWidget {
 class _AddDebtScreenState extends State<AddDebtScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _customerNameController = TextEditingController();
-  final TextEditingController _customerPhoneController = TextEditingController();
+  final TextEditingController _customerPhoneController =
+      TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   String _debtType = 'transaction'; // 'transaction' | 'store_sale'
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDebtType != null) {
+      _debtType = widget.initialDebtType!;
+    }
+  }
 
   @override
   void dispose() {
@@ -154,7 +164,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     final isSelected = _debtType == value;
     return Card(
       elevation: 0,
-      color: isSelected ? AppColors.primary.withAlpha((0.05 * 255).round()) : AppColors.surface(context),
+      color: isSelected
+          ? AppColors.primary.withAlpha((0.05 * 255).round())
+          : AppColors.surface(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -203,7 +215,8 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
               Expanded(
                 child: Text(
                   'سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.info),
+                  style:
+                      AppTextStyles.bodySmall.copyWith(color: AppColors.info),
                 ),
               ),
             ],

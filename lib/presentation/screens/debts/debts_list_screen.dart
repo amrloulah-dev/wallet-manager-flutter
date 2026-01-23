@@ -46,14 +46,20 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
       context.read<DebtProvider>().fetchMoreDebts();
     }
   }
 
   void _navigateToAddDebt(BuildContext context) {
     if (PermissionHelper.canCreateDebt(context, showMessage: true)) {
-      Navigator.pushNamed(context, RouteConstants.addDebt);
+      final currentType = context.read<DebtProvider>().currentDebtType;
+      Navigator.pushNamed(
+        context,
+        RouteConstants.addDebt,
+        arguments: currentType,
+      );
     }
   }
 
@@ -75,7 +81,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         return;
       }
 
-      final success = await debtProvider.payPartialDebt(debt.debtId, debt.amountDue, currentUserId);
+      final success = await debtProvider.payPartialDebt(
+          debt.debtId, debt.amountDue, currentUserId);
 
       if (mounted && !success) {
         ToastUtils.showError(debtProvider.errorMessage ?? 'فشل تسديد الدين');
@@ -138,6 +145,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   Widget _buildSummarySection(DebtProvider provider) {
     return Column(
       children: [
+        _buildTypeSegmentControl(provider),
         DebtSummaryCard(
           openDebtsCount: provider.summary['openDebtsCount'] ?? 0,
           paidDebtsCount: provider.summary['paidDebtsCount'] ?? 0,
@@ -192,7 +200,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 ? () => _showPartialPaymentSheet(context, debt)
                 : null,
             onMarkPaid: debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
-                ? () => _showMarkPaidDialog(debt) 
+                ? () => _showMarkPaidDialog(debt)
                 : null,
           );
         },
@@ -200,7 +208,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
     );
   }
 
-  Widget _buildFilterTabs(BuildContext context, Map<String, dynamic> summary, DebtProvider provider) {
+  Widget _buildFilterTabs(BuildContext context, Map<String, dynamic> summary,
+      DebtProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -235,6 +244,89 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       ),
     );
   }
+
+  Widget _buildTypeSegmentControl(DebtProvider provider) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider(context)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TypeTab(
+              label: 'حوالات مالية',
+              isSelected: provider.currentDebtType == 'transaction',
+              onTap: () => provider.setDebtType('transaction'),
+              icon: Icons.swap_horiz,
+            ),
+          ),
+          Expanded(
+            child: _TypeTab(
+              label: 'مبيعات محل',
+              isSelected: provider.currentDebtType == 'store_sale',
+              onTap: () => provider.setDebtType('store_sale'),
+              icon: Icons.storefront_outlined,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypeTab extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final IconData icon;
+
+  const _TypeTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color:
+                  isSelected ? Colors.white : AppColors.textSecondary(context),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppTextStyles.labelLarge.copyWith(
+                color: isSelected
+                    ? Colors.white
+                    : AppColors.textSecondary(context),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _FilterChip extends StatelessWidget {
@@ -258,7 +350,9 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withAlpha((0.1 * 255).round()) : Colors.transparent,
+          color: isSelected
+              ? color.withAlpha((0.1 * 255).round())
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

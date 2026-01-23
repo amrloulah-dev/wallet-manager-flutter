@@ -408,10 +408,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         icon: Icons.account_balance_wallet_outlined,
                         color: Colors.blue.shade700,
                         onTap: () {
-                          if (context.read<AuthProvider>().isOwner) {
                             Navigator.pushNamed(
                                 context, RouteConstants.walletsList);
-                          }
                         }),
                     StatsCard(
                       title:
@@ -498,9 +496,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.account_balance_wallet_outlined,
             color: Colors.orange.shade700,
             onTap: () {
-              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.walletForm);
-              }
             },
           ),
           Consumer<StatisticsProvider>(
@@ -520,9 +516,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.wallet,
             color: Colors.blue.shade700,
             onTap: () {
-              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.walletsList);
-              }
             },
           ),
           QuickActionCard(
@@ -530,9 +524,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.bar_chart,
             color: Colors.purple.shade700,
             onTap: () {
-              if (context.read<AuthProvider>().isOwner) {
                 Navigator.pushNamed(context, RouteConstants.generalStatistics);
-              }
             },
           ),
           QuickActionCard(
