@@ -146,12 +146,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
     return Column(
       children: [
         _buildTypeSegmentControl(provider),
-        DebtSummaryCard(
-          openDebtsCount: provider.summary['openDebtsCount'] ?? 0,
-          paidDebtsCount: provider.summary['paidDebtsCount'] ?? 0,
-          totalOpenAmount: provider.summary['totalOpenAmount'] ?? 0.0,
-          totalPaidAmount: provider.summary['totalPaidAmount'] ?? 0.0,
-        ),
+        const DebtSummaryCard(),
         _buildFilterTabs(context, provider.summary, provider),
       ],
     );
@@ -258,7 +253,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         children: [
           Expanded(
             child: _TypeTab(
-              label: 'حوالات مالية',
+              label: 'تحويلات مالية',
               isSelected: provider.currentDebtType == 'transaction',
               onTap: () => provider.setDebtType('transaction'),
               icon: Icons.swap_horiz,

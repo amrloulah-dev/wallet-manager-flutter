@@ -179,29 +179,18 @@ class DebtProvider extends ChangeNotifier {
   Future<void> _fetchSummary() async {
     if (_currentStoreId == null) return;
     try {
-      // This summary logic could be improved by using the central stats provider
-      final results = await Future.wait([
-        _debtRepository.getDebtsCount(_currentStoreId!,
-            status: 'open', type: _currentDebtType),
-        _debtRepository.getDebtsCount(_currentStoreId!,
-            status: 'paid', type: _currentDebtType),
-        _debtRepository.getDebtsTotalAmount(_currentStoreId!,
-            status: 'open', type: _currentDebtType),
-        _debtRepository.getDebtsTotalAmount(_currentStoreId!,
-            status: 'paid', type: _currentDebtType),
-      ]);
-
-      final openCount = results[0] as int;
-      final paidCount = results[1] as int;
-      final totalOpenAmount = results[2] as double;
-      final totalPaidAmount = results[3] as double;
+      final stats = await _debtRepository.fetchDebtStatistics(
+        storeId: _currentStoreId!,
+        type: _currentDebtType,
+      );
 
       _summary = {
-        'openDebtsCount': openCount,
-        'paidDebtsCount': paidCount,
-        'totalDebtsCount': openCount + paidCount,
-        'totalOpenAmount': totalOpenAmount,
-        'totalPaidAmount': totalPaidAmount,
+        'openDebtsCount': stats['openCount'],
+        'paidDebtsCount': stats['paidCount'],
+        'totalDebtsCount':
+            (stats['openCount'] as int) + (stats['paidCount'] as int),
+        'totalOpenAmount': stats['openTotal'],
+        'totalPaidAmount': stats['paidTotal'],
       };
     } catch (e) {
       _summary = {};
@@ -238,6 +227,7 @@ class DebtProvider extends ChangeNotifier {
           customerPhone: customerPhone,
           debtType: debtType,
           amountDue: amountDue,
+          totalAmount: amountDue, // Set totalAmount explicitly
           notes: notes,
           debtDate: Timestamp.now(),
           createdAt: Timestamp.now(),
@@ -301,6 +291,29 @@ class DebtProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _setError('Failed to process payment.');
+      return false;
+    }
+  }
+
+  Future<bool> deleteDebt(String debtId) async {
+    _setStatus(DebtStatus.updating);
+    try {
+      await _debtRepository.deleteDebt(debtId);
+
+      // Remove from local list
+      _debts.removeWhere((element) => element.debtId == debtId);
+
+      // Refresh statistics as totals changed
+      await _fetchSummary();
+
+      _setStatus(DebtStatus.loaded);
+      appEvents.fireStatsRefresh();
+      return true;
+    } on AppException catch (e) {
+      _setError(e.message);
+      return false;
+    } catch (e) {
+      _setError('Failed to delete debt.');
       return false;
     }
   }

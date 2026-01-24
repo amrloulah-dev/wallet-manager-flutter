@@ -7,13 +7,22 @@ import 'package:walletmanager/data/repositories/stats_repository.dart';
 
 // Mocks
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockTransaction extends Mock implements Transaction {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
 class MockFieldValue extends Mock implements FieldValue {}
 
-class MockCollectionReferenceWithDoc extends Mock implements CollectionReference<Map<String, dynamic>> {
+class MockCollectionReferenceWithDoc extends Mock
+    implements CollectionReference<Map<String, dynamic>> {
   final MockDocumentReference mockDocRef;
   MockCollectionReferenceWithDoc(this.mockDocRef);
 
@@ -41,12 +50,17 @@ void main() {
     statsRepository = StatsRepository(firestore: mockFirestore);
 
     // Setup mock Firestore hierarchy
-    final mockStatsCollectionRef = MockCollectionReferenceWithDoc(mockSummaryDocRef);
-    final mockStoresCollectionRef = MockCollectionReferenceWithDoc(mockSummaryDocRef);
-    when(() => mockFirestore.collection(any())).thenReturn(mockStoresCollectionRef);
-    when(() => mockStoresCollectionRef.doc(any())).thenReturn(mockSummaryDocRef);
-    when(() => mockSummaryDocRef.collection(any())).thenReturn(mockStatsCollectionRef);
-    
+    final mockStatsCollectionRef =
+        MockCollectionReferenceWithDoc(mockSummaryDocRef);
+    final mockStoresCollectionRef =
+        MockCollectionReferenceWithDoc(mockSummaryDocRef);
+    when(() => mockFirestore.collection(any()))
+        .thenReturn(mockStoresCollectionRef);
+    when(() => mockStoresCollectionRef.doc(any()))
+        .thenReturn(mockSummaryDocRef);
+    when(() => mockSummaryDocRef.collection(any()))
+        .thenReturn(mockStatsCollectionRef);
+
     // Register fallback values
     registerFallbackValue(mockSummaryDocRef);
     registerFallbackValue(<String, dynamic>{});
@@ -54,11 +68,14 @@ void main() {
   });
 
   // Helper to setup mocks for a transaction run
-  void setupMocksForTransaction({bool docExists = true, Map<String, dynamic>? initialData}) {
-    when(() => mockTransaction.get(mockSummaryDocRef)).thenAnswer((_) async => mockSummaryDocSnapshot);
+  void setupMocksForTransaction(
+      {bool docExists = true, Map<String, dynamic>? initialData}) {
+    when(() => mockTransaction.get(mockSummaryDocRef))
+        .thenAnswer((_) async => mockSummaryDocSnapshot);
     when(() => mockSummaryDocSnapshot.exists).thenReturn(docExists);
     if (docExists) {
-      when(() => mockSummaryDocSnapshot.data()).thenReturn(initialData ?? StatsSummaryModel.empty().toMap());
+      when(() => mockSummaryDocSnapshot.data())
+          .thenReturn(initialData ?? StatsSummaryModel.empty().toMap());
     }
   }
 
@@ -78,6 +95,7 @@ void main() {
         customerPhone: '123456789',
         debtType: 'lend',
         amountDue: amount,
+        totalAmount: amount,
         debtStatus: status,
         createdBy: userId,
         createdAt: now,
@@ -85,11 +103,13 @@ void main() {
       );
     }
 
-    test('should correctly increment stats when a new debt is created', () async {
+    test('should correctly increment stats when a new debt is created',
+        () async {
       // ARRANGE
       final newDebt = createTestDebt(id: debtId, amount: 100);
       setupMocksForTransaction(docExists: false);
-      when(() => mockTransaction.set(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.set(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -100,7 +120,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.set(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.set(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['openDebtsCount'], 1);
       expect(captured['totalOpenAmount'], 100.0);
       expect(captured['totalTransactions'], 1);
@@ -117,7 +140,8 @@ void main() {
         'totalTransactions': 1,
         'paidDebtsCount': 0,
       });
-      when(() => mockTransaction.update(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.update(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -128,7 +152,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.update(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.update(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['totalOpenAmount'], isA<FieldValue>());
       expect(captured['totalPaidAmount'], isA<FieldValue>());
       expect(captured['totalTransactions'], isA<FieldValue>());
@@ -145,7 +172,8 @@ void main() {
         'totalTransactions': 2,
         'paidDebtsCount': 0,
       });
-      when(() => mockTransaction.update(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.update(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -156,7 +184,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.update(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.update(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['totalOpenAmount'], isA<FieldValue>());
       expect(captured['totalTransactions'], isA<FieldValue>());
       expect(captured['totalPaidAmount'], isNull); // No payment was made
@@ -174,7 +205,8 @@ void main() {
         'totalPaidAmount': 0.0,
         'totalTransactions': 1,
       });
-      when(() => mockTransaction.update(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.update(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -185,7 +217,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.update(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.update(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['totalOpenAmount'], isA<FieldValue>());
       expect(captured['totalPaidAmount'], isA<FieldValue>());
       expect(captured['totalTransactions'], isA<FieldValue>());
@@ -204,7 +239,8 @@ void main() {
         'totalPaidAmount': 100.0,
         'totalTransactions': 2,
       });
-      when(() => mockTransaction.update(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.update(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -215,7 +251,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.update(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.update(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['totalOpenAmount'], isA<FieldValue>());
       expect(captured['totalTransactions'], isA<FieldValue>());
       expect(captured['openDebtsCount'], isA<FieldValue>());
@@ -223,11 +262,13 @@ void main() {
       expect(captured['totalPaidAmount'], isNull); // No direct payment change
     });
 
-    test('should correctly update stats when a fully paid debt is reopened with a new partial debt', () async {
+    test(
+        'should correctly update stats when a fully paid debt is reopened with a new partial debt',
+        () async {
       // ARRANGE
       final oldDebt = createTestDebt(id: debtId, amount: 0, status: 'paid');
       final newDebt = oldDebt.copyWith(amountDue: 50, debtStatus: 'open');
-      
+
       setupMocksForTransaction(initialData: {
         'openDebtsCount': 0,
         'paidDebtsCount': 1,
@@ -235,7 +276,8 @@ void main() {
         'totalPaidAmount': 100.0, // Customer had previously paid 100
         'totalTransactions': 2,
       });
-      when(() => mockTransaction.update(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.update(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -246,22 +288,31 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.update(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
-      
+      final captured =
+          verify(() => mockTransaction.update(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
+
       // Verify that the FieldValue increments are correct
       expect(captured['openDebtsCount'].toString(), 'FieldValue(Increment(1))');
-      expect(captured['paidDebtsCount'].toString(), 'FieldValue(Increment(-1))');
-      expect(captured['totalOpenAmount'].toString(), 'FieldValue(Increment(50.0))');
-      expect(captured['totalTransactions'].toString(), 'FieldValue(Increment(1))');
-      expect(captured['totalPaidAmount'], isNull); // No payment was made in this transaction
+      expect(
+          captured['paidDebtsCount'].toString(), 'FieldValue(Increment(-1))');
+      expect(captured['totalOpenAmount'].toString(),
+          'FieldValue(Increment(50.0))');
+      expect(
+          captured['totalTransactions'].toString(), 'FieldValue(Increment(1))');
+      expect(captured['totalPaidAmount'],
+          isNull); // No payment was made in this transaction
     });
 
-    test('should create stats document if it does not exist on update', () async {
+    test('should create stats document if it does not exist on update',
+        () async {
       // ARRANGE
       final oldDebt = createTestDebt(id: debtId, amount: 100);
       final newDebt = oldDebt.copyWith(amountDue: 50);
       setupMocksForTransaction(docExists: false); // Summary doc does NOT exist
-      when(() => mockTransaction.set(any(), any())).thenAnswer((_) => mockTransaction);
+      when(() => mockTransaction.set(any(), any()))
+          .thenAnswer((_) => mockTransaction);
 
       // ACT
       await statsRepository.updateStatsOnDebtUpdate(
@@ -272,7 +323,10 @@ void main() {
       );
 
       // ASSERT
-      final captured = verify(() => mockTransaction.set(mockSummaryDocRef, captureAny())).captured.first as Map<String, dynamic>;
+      final captured =
+          verify(() => mockTransaction.set(mockSummaryDocRef, captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
       expect(captured['totalOpenAmount'], -50.0);
       expect(captured['totalPaidAmount'], 50.0);
       expect(captured['totalTransactions'], 1);

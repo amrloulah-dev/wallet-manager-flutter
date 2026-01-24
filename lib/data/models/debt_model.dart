@@ -14,21 +14,22 @@ class DebtModel {
   final String customerPhone;
 
   // Debt Details
-  final String debtType;          // 'transaction' | 'store_sale'
-  final double amountDue;         // المبلغ المستحق
+  final String debtType; // 'transaction' | 'store_sale'
+  final double amountDue; // المبلغ المستحق (المتبقي)
+  final double totalAmount; // إجمالي مبلغ الدين الأصلي
   final String? notes;
 
   // Status
-  final String debtStatus;        // 'open' | 'paid'
+  final String debtStatus; // 'open' | 'paid'
 
   // Dates
-  final Timestamp debtDate;       // تاريخ إنشاء الدين
-  final Timestamp? paidDate;      // تاريخ التسديد (null if open)
+  final Timestamp debtDate; // تاريخ إنشاء الدين
+  final Timestamp? paidDate; // تاريخ التسديد (null if open)
 
   // Tracking
-  final String createdBy;         // userId who created
+  final String createdBy; // userId who created
   final Timestamp createdAt;
-  final String? markedPaidBy;     // userId who marked as paid
+  final String? markedPaidBy; // userId who marked as paid
   final Timestamp? updatedAt;
   final String? lastUpdatedBy;
 
@@ -41,6 +42,7 @@ class DebtModel {
     required this.customerPhone,
     required this.debtType,
     required this.amountDue,
+    required this.totalAmount,
     this.notes,
     this.debtStatus = 'open',
     required this.debtDate,
@@ -58,15 +60,26 @@ class DebtModel {
     }
     final data = doc.data() as Map<String, dynamic>;
 
+    final status = data['debtStatus'] ?? 'open';
+    final amountDue = (data['amountDue'] as num?)?.toDouble() ?? 0.0;
+
+    // Fallback for old data where totalAmount didn't exist
+    double totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+    if (totalAmount == 0.0 && status == 'open') {
+      // If it's open, the total is at least the current due amount
+      totalAmount = amountDue;
+    }
+
     return DebtModel(
       debtId: doc.id,
       storeId: data[FirebaseConstants.storeId] ?? '',
       customerName: data['customerName'] ?? '',
       customerPhone: data['customerPhone'] ?? '',
       debtType: data['debtType'] ?? 'store_sale',
-      amountDue: (data['amountDue'] as num?)?.toDouble() ?? 0.0,
+      amountDue: amountDue,
+      totalAmount: totalAmount,
       notes: data[FirebaseConstants.notes],
-      debtStatus: data['debtStatus'] ?? 'open',
+      debtStatus: status,
       debtDate: data['debtDate'] ?? Timestamp.now(),
       paidDate: data['paidDate'],
       createdBy: data[FirebaseConstants.createdBy] ?? '',
@@ -85,6 +98,7 @@ class DebtModel {
       'customerPhone': customerPhone,
       'debtType': debtType,
       'amountDue': amountDue,
+      'totalAmount': totalAmount,
       FirebaseConstants.notes: notes,
       'debtStatus': debtStatus,
       'debtDate': debtDate,
@@ -104,6 +118,7 @@ class DebtModel {
     String? customerPhone,
     String? debtType,
     double? amountDue,
+    double? totalAmount,
     String? notes,
     String? debtStatus,
     Timestamp? debtDate,
@@ -121,6 +136,7 @@ class DebtModel {
       customerPhone: customerPhone ?? this.customerPhone,
       debtType: debtType ?? this.debtType,
       amountDue: amountDue ?? this.amountDue,
+      totalAmount: totalAmount ?? this.totalAmount,
       notes: notes ?? this.notes,
       debtStatus: debtStatus ?? this.debtStatus,
       debtDate: debtDate ?? this.debtDate,
@@ -140,7 +156,8 @@ class DebtModel {
   bool get isTransactionDebt => debtType == 'transaction';
   bool get isStoreSaleDebt => debtType == 'store_sale';
 
-  String get debtTypeDisplay => isTransactionDebt ? 'معاملة محفظة' : 'بيع من المحل';
+  String get debtTypeDisplay =>
+      isTransactionDebt ? 'معاملة محفظة' : 'بيع من المحل';
   String get debtStatusDisplay => isOpen ? 'مفتوح' : 'مسدد';
 
   IconData get debtTypeIcon =>
@@ -157,5 +174,5 @@ class DebtModel {
 
   @override
   String toString() =>
-      'DebtModel(id: $debtId, customer: $customerName, amount: $amountDue, status: $debtStatus)';
+      'DebtModel(id: $debtId, customer: $customerName, amountDue: $amountDue, totalAmount: $totalAmount)';
 }

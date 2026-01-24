@@ -30,8 +30,6 @@ class DebtRepository {
     try {
       await _firestore.runTransaction((transaction) async {
         // 1. Perform all reads first
-        // The _statsRepository.updateStatsOnDebtUpdate method will perform its own read
-        // (transaction.get(summaryRef)) before its write.
         await _statsRepository.updateStatsOnDebtUpdate(
           firestoreTransaction: transaction,
           storeId: debt.storeId,
@@ -134,7 +132,6 @@ class DebtRepository {
     }
   }
 
-  // Other read methods remain the same...
   Future<DebtModel?> getDebtByCustomerName(
       String storeId, String customerName) async {
     try {
@@ -224,7 +221,8 @@ class DebtRepository {
           );
         }
 
-        // This method performs its own read and queues its write. It must be called before our write below.
+        // Note: For payments, we do NOT change totalAmount.
+
         await _statsRepository.updateStatsOnDebtUpdate(
           firestoreTransaction: transaction,
           storeId: oldDebt.storeId,
@@ -269,6 +267,7 @@ class DebtRepository {
 
         final Map<String, dynamic> updateData = {
           'amountDue': FieldValue.increment(amountToAdd),
+          'totalAmount': FieldValue.increment(amountToAdd), // Increase total
           'updatedAt': FieldValue.serverTimestamp(),
           'lastUpdatedBy': userId,
         };
@@ -280,10 +279,10 @@ class DebtRepository {
 
         final newDebt = oldDebt.copyWith(
           amountDue: oldDebt.amountDue + amountToAdd,
+          totalAmount: oldDebt.totalAmount + amountToAdd,
           debtStatus: wasPaid ? 'open' : oldDebt.debtStatus,
         );
 
-        // This method performs its own read and queues its write. It must be called before our write below.
         await _statsRepository.updateStatsOnDebtUpdate(
           firestoreTransaction: transaction,
           storeId: oldDebt.storeId,
@@ -431,7 +430,55 @@ class DebtRepository {
 
   // 4️⃣ DELETE
   Future<void> deleteDebt(String debtId) async {
-    // Not implemented for MVP as per instructions.
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final debtDocRef = _debtsCollection.doc(debtId);
+        final debtDoc = await transaction.get(debtDocRef);
+
+        if (!debtDoc.exists) {
+          throw NotFoundException('Debt');
+        }
+
+        final debt = DebtModel.fromFirestore(debtDoc);
+        final storeId = debt.storeId;
+
+        // Stats Reference
+        final statsRef = _firestore
+            .collection('stores')
+            .doc(storeId)
+            .collection('stats')
+            .doc('summary');
+
+        // Prepare Stats Updates
+        final Map<String, dynamic> updates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
+
+        if (debt.isOpen) {
+          updates['openDebtsCount'] = FieldValue.increment(-1);
+          updates['totalOpenAmount'] = FieldValue.increment(-debt.amountDue);
+        } else if (debt.isPaid) {
+          updates['paidDebtsCount'] = FieldValue.increment(-1);
+          updates['totalPaidAmount'] = FieldValue.increment(-debt.totalAmount);
+        }
+
+        // Perform Writes
+        transaction.delete(debtDocRef);
+        // Attempt to update stats, assuming the summary document exists.
+        // If it doesn't, this part of the transaction will fail, ensuring consistency.
+        transaction.update(statsRef, updates);
+      });
+
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clear('debt_details_$debtId');
+    } on FirebaseException catch (e) {
+      throw ServerException('Failed to delete debt: ${e.message}',
+          code: e.code);
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw ServerException(
+          'An unexpected error occurred while deleting the debt: $e');
+    }
   }
 
   // 5️⃣ STREAM
@@ -442,5 +489,53 @@ class DebtRepository {
       }
       return DebtModel.fromFirestore(doc);
     });
+  }
+
+  // 6️⃣ STATISTICS
+  Future<Map<String, dynamic>> fetchDebtStatistics({
+    required String storeId,
+    required String type,
+  }) async {
+    try {
+      final baseQuery = _debtsCollection
+          .where(FirebaseConstants.storeId, isEqualTo: storeId)
+          .where('debtType', isEqualTo: type);
+
+      // Open Debts Query
+      final openQuery = baseQuery.where('debtStatus', isEqualTo: 'open');
+      final openAggregate = openQuery.aggregate(
+        sum('amountDue'),
+        count(),
+      );
+
+      // Paid Debts Query
+      final paidQuery = baseQuery.where('debtStatus', isEqualTo: 'paid');
+
+      // We sum 'totalAmount' (original total)
+      final paidAggregate = paidQuery.aggregate(
+        sum('totalAmount'),
+        count(),
+      );
+
+      final results =
+          await Future.wait([openAggregate.get(), paidAggregate.get()]);
+      final openSnapshot = results[0];
+      final paidSnapshot = results[1];
+
+      return {
+        'openCount': openSnapshot.count ?? 0,
+        'openTotal': openSnapshot.getSum('amountDue') ?? 0.0,
+        'paidCount': paidSnapshot.count ?? 0,
+        'paidTotal': paidSnapshot.getSum('totalAmount') ?? 0.0,
+      };
+    } catch (e) {
+      debugPrint('Error fetching debt stats: $e');
+      return {
+        'openCount': 0,
+        'openTotal': 0.0,
+        'paidCount': 0,
+        'paidTotal': 0.0,
+      };
+    }
   }
 }

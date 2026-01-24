@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/dialog_utils.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 
 import '../../../core/constants/route_constants.dart';
 import '../../../core/theme/app_colors.dart';
@@ -100,52 +102,71 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     return AppLocalizations.of(context)!.goodEvening;
   }
 
+  DateTime? currentBackPressTime;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.home),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () =>
-                Navigator.pushNamed(context, RouteConstants.settings),
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeHeader(),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildQuickStats(),
-                    const SizedBox(height: 24), // Increased spacing
-                    _buildQuickActions(),
-                    const SizedBox(height: 24),
-                    _buildAlerts(),
-                    _buildRecentTransactions(),
-                  ],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          return;
+        }
+        final now = DateTime.now();
+        if (currentBackPressTime == null ||
+            now.difference(currentBackPressTime!) >
+                const Duration(seconds: 2)) {
+          currentBackPressTime = now;
+          ToastUtils.showInfo('اضغط مرة أخرى للخروج');
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.home),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () =>
+                  Navigator.pushNamed(context, RouteConstants.settings),
+            ),
+          ],
+        ),
+        drawer: _buildDrawer(),
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWelcomeHeader(),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildQuickStats(),
+                      const SizedBox(height: 24), // Increased spacing
+                      _buildQuickActions(),
+                      const SizedBox(height: 24),
+                      _buildAlerts(),
+                      _buildRecentTransactions(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToCreateTransaction,
-        icon: const Icon(Icons.add),
-        label: Text(AppLocalizations.of(context)!.newTransaction),
-        foregroundColor: Colors.white,
-        backgroundColor: AppColors.primary,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _navigateToCreateTransaction,
+          icon: const Icon(Icons.add),
+          label: Text(AppLocalizations.of(context)!.newTransaction),
+          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary,
+        ),
       ),
     );
   }
@@ -408,8 +429,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         icon: Icons.account_balance_wallet_outlined,
                         color: Colors.blue.shade700,
                         onTap: () {
-                            Navigator.pushNamed(
-                                context, RouteConstants.walletsList);
+                          Navigator.pushNamed(
+                              context, RouteConstants.walletsList);
                         }),
                     StatsCard(
                       title:
@@ -496,7 +517,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.account_balance_wallet_outlined,
             color: Colors.orange.shade700,
             onTap: () {
-                Navigator.pushNamed(context, RouteConstants.walletForm);
+              Navigator.pushNamed(context, RouteConstants.walletForm);
             },
           ),
           Consumer<StatisticsProvider>(
@@ -516,7 +537,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.wallet,
             color: Colors.blue.shade700,
             onTap: () {
-                Navigator.pushNamed(context, RouteConstants.walletsList);
+              Navigator.pushNamed(context, RouteConstants.walletsList);
             },
           ),
           QuickActionCard(
@@ -524,7 +545,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.bar_chart,
             color: Colors.purple.shade700,
             onTap: () {
-                Navigator.pushNamed(context, RouteConstants.generalStatistics);
+              Navigator.pushNamed(context, RouteConstants.generalStatistics);
             },
           ),
           QuickActionCard(

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/dialog_utils.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/debt_model.dart';
+import '../../../providers/debt_provider.dart';
+import '../../../providers/statistics_provider.dart';
 
 class DebtCard extends StatefulWidget {
   final DebtModel debt;
@@ -70,7 +74,8 @@ class _DebtCardState extends State<DebtCard> {
                 ],
 
                 // 5️⃣ Notes (if exists)
-                if (widget.debt.notes != null && widget.debt.notes!.isNotEmpty) ...[
+                if (widget.debt.notes != null &&
+                    widget.debt.notes!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _buildNotesSection(context),
                 ],
@@ -117,11 +122,51 @@ class _DebtCardState extends State<DebtCard> {
             ],
           ),
         ),
-        Text(
-          widget.debt.relativeDebtDate, // Example: "منذ 3 أيام"
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary(context),
-          ),
+        Row(
+          children: [
+            Text(
+              widget.debt.relativeDebtDate, // Example: "منذ 3 أيام"
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () async {
+                final confirm = await DialogUtils.showConfirmDialog(
+                  context,
+                  title: 'حذف الدين',
+                  message:
+                      'هل أنت متأكد من حذف هذا الدين؟ لا يمكن التراجع عن هذا الإجراء.',
+                  confirmText: 'حذف',
+                  type: DialogType.danger,
+                );
+
+                if (confirm == true) {
+                  if (context.mounted) {
+                    final success =
+                        await Provider.of<DebtProvider>(context, listen: false)
+                            .deleteDebt(widget.debt.debtId);
+
+                    if (success && context.mounted) {
+                      context
+                          .read<StatisticsProvider>()
+                          .refreshDashboardStats();
+                    }
+                  }
+                }
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Icon(
+                  Icons.delete_outline,
+                  size: 20,
+                  color: AppColors.error,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

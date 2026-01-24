@@ -36,6 +36,7 @@ class StatisticsProvider extends ChangeNotifier {
   StreamSubscription? _debtsChangedSubscription;
   StreamSubscription? _walletsChangedSubscription;
   StreamSubscription? _transactionsChangedSubscription;
+  StreamSubscription? _statsRefreshSubscription;
   bool _isDisposed = false;
 
   // Getters
@@ -72,6 +73,11 @@ class StatisticsProvider extends ChangeNotifier {
         fetchDashboardStats(forceRefresh: true);
       }
     });
+    _statsRefreshSubscription = appEvents.onStatsRefresh.listen((_) {
+      if (_storeId != null) {
+        fetchDashboardStats(forceRefresh: true);
+      }
+    });
   }
 
   @override
@@ -80,6 +86,7 @@ class StatisticsProvider extends ChangeNotifier {
     _debtsChangedSubscription?.cancel();
     _walletsChangedSubscription?.cancel();
     _transactionsChangedSubscription?.cancel();
+    _statsRefreshSubscription?.cancel();
     super.dispose();
   }
 
