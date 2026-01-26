@@ -25,9 +25,11 @@ class MyApp extends StatelessWidget {
         // Feature-specific providers will be moved to the router
       ],
       child: Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>(
-        builder: (context, authProvider, themeProvider, localizationProvider, child) {
+        builder: (context, authProvider, themeProvider, localizationProvider,
+            child) {
           return MaterialApp(
-            navigatorKey: NavigationService.navigatorKey, // Set the navigatorKey
+            navigatorKey:
+                NavigationService.navigatorKey, // Set the navigatorKey
             title: 'Wallet Manager',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
@@ -42,7 +44,9 @@ class MyApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             builder: BotToastInit(), //1. call BotToastInit
-            navigatorObservers: [BotToastNavigatorObserver()], //2. registered route observer
+            navigatorObservers: [
+              BotToastNavigatorObserver()
+            ], //2. registered route observer
             onGenerateRoute: AppRouter.generateRoute,
             initialRoute: _getInitialRoute(authProvider),
           );
@@ -53,8 +57,9 @@ class MyApp extends StatelessWidget {
 
   String _getInitialRoute(AuthProvider authProvider) {
     // ✅ Wait until authentication completes properly
-    if (authProvider.status == AuthStatus.loading || authProvider.status == AuthStatus.idle) {
-      return RouteConstants.storeRegistration;
+    if (authProvider.status == AuthStatus.loading ||
+        authProvider.status == AuthStatus.idle) {
+      return RouteConstants.loginLanding;
     }
 
     if (authProvider.status == AuthStatus.authenticated) {
@@ -67,11 +72,11 @@ class MyApp extends StatelessWidget {
         return RouteConstants.ownerDashboard;
       } else {
         // Invalid or unknown role — force re-login
-        return RouteConstants.storeRegistration;
+        return RouteConstants.loginLanding;
       }
     }
 
     // Default fallback for unauthenticated/error states
-    return RouteConstants.storeRegistration;
+    return RouteConstants.loginLanding;
   }
 }

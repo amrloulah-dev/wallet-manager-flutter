@@ -12,6 +12,7 @@ import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import '../core/constants/route_constants.dart';
+import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
 import '../presentation/screens/auth/employee_login_screen.dart';
 import '../presentation/screens/home/owner_dashboard_screen.dart';
@@ -33,14 +34,19 @@ import '../presentation/screens/employees/manage_employees_screen.dart';
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case RouteConstants.loginLanding:
+        return _buildRoute(const LoginLandingScreen(), settings);
+
       case RouteConstants.storeRegistration:
         return _buildRoute(const StoreRegistrationScreen(), settings);
 
       case RouteConstants.employeeLogin:
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) => EmployeeProvider(employeeRepository: EmployeeRepository()),
-            update: (_, auth, previous) => previous!..setStoreId(auth.currentStoreId),
+            create: (_) =>
+                EmployeeProvider(employeeRepository: EmployeeRepository()),
+            update: (_, auth, previous) =>
+                previous!..setStoreId(auth.currentStoreId),
             child: const EmployeeLoginScreen(),
           ),
           settings,
@@ -52,15 +58,18 @@ class AppRouter {
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
                 create: (_) => WalletProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
                 create: (_) => DebtProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
                 create: (_) => StatisticsProvider(
@@ -69,7 +78,8 @@ class AppRouter {
                   debtRepository: DebtRepository(),
                   statsRepository: StatsRepository(),
                 ),
-                update: (_, auth, previous) => previous!..setStoreId(auth.currentStoreId),
+                update: (_, auth, previous) =>
+                    previous!..setStoreId(auth.currentStoreId),
               ),
             ],
             child: const OwnerDashboardScreen(),
@@ -83,11 +93,13 @@ class AppRouter {
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
                 create: (_) => DebtProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
             ],
             child: const EmployeeDashboardScreen(),
@@ -102,7 +114,8 @@ class AppRouter {
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
             create: (_) => WalletProvider(),
-            update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+            update: (_, auth, prev) =>
+                prev!..setStoreId(auth.currentStoreId ?? ''),
             child: _getPageForWalletRoute(settings),
           ),
           settings,
@@ -114,11 +127,13 @@ class AppRouter {
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
                 create: (_) => WalletProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
             ],
             child: const CreateTransactionScreen(),
@@ -133,15 +148,19 @@ class AppRouter {
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
                 create: (_) => WalletProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId ?? ''),
               ),
               ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-                create: (_) => EmployeeProvider(employeeRepository: EmployeeRepository()),
-                update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId),
+                create: (_) =>
+                    EmployeeProvider(employeeRepository: EmployeeRepository()),
+                update: (_, auth, prev) =>
+                    prev!..setStoreId(auth.currentStoreId),
               ),
             ],
             child: _getPageForTransactionRoute(settings),
@@ -154,7 +173,8 @@ class AppRouter {
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
             create: (_) => DebtProvider(),
-            update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId ?? ''),
+            update: (_, auth, prev) =>
+                prev!..setStoreId(auth.currentStoreId ?? ''),
             child: _getPageForDebtRoute(settings),
           ),
           settings,
@@ -169,7 +189,8 @@ class AppRouter {
               debtRepository: DebtRepository(),
               statsRepository: StatsRepository(),
             ),
-            update: (_, auth, previous) => previous!..setStoreId(auth.currentStoreId),
+            update: (_, auth, previous) =>
+                previous!..setStoreId(auth.currentStoreId),
             child: const GeneralStatisticsScreen(),
           ),
           settings,
@@ -182,13 +203,13 @@ class AppRouter {
       case RouteConstants.manageEmployees:
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) => EmployeeProvider(employeeRepository: EmployeeRepository()),
+            create: (_) =>
+                EmployeeProvider(employeeRepository: EmployeeRepository()),
             update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId),
             child: _getPageForEmployeeRoute(settings),
           ),
           settings,
         );
-
 
       default:
         return MaterialPageRoute(
@@ -280,7 +301,8 @@ class AppRouter {
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
         var offsetAnimation = animation.drive(tween);
         var fadeAnimation = animation;
 

@@ -1,27 +1,30 @@
 ====================================
 STEP 0 — Task Understanding
 ====================================
-The task requires a comprehensive analysis of the `C:\src\walletmanager\lib` directory. I have performed a recursive scan to identify every file and folder. For each file found, I have analyzed its content to determine its specific purpose within the Flutter application architecture. The output below presents the complete directory tree followed by a detailed description of every single file, ensuring no omissions.
+I will perform a comprehensive recursive scan of the `C:\src\walletmanager\lib` directory to index every file and folder.
+For each file found, I will read its content to understand its specific purpose within the application architecture.
+Finally, I will generate a detailed report containing a complete directory tree and an exhaustive list of file descriptions,
+explaining the role of every component, widget, service, and utility in the codebase.
 
 ====================================
 STEP 1 — COMPLETE Directory Structure (Tree View)
 ====================================
-lib/
+C:\src\walletmanager\lib
 ├── app.dart
 ├── main.dart
-├── core/
-│   ├── constants/
+├── core
+│   ├── constants
 │   │   ├── app_constants.dart
 │   │   ├── firebase_constants.dart
 │   │   └── route_constants.dart
-│   ├── errors/
+│   ├── errors
 │   │   ├── app_exceptions.dart
 │   │   └── failures.dart
-│   ├── theme/
+│   ├── theme
 │   │   ├── app_colors.dart
 │   │   ├── app_text_styles.dart
 │   │   └── app_theme.dart
-│   └── utils/
+│   └── utils
 │       ├── cache_manager.dart
 │       ├── date_helper.dart
 │       ├── debouncer.dart
@@ -34,8 +37,8 @@ lib/
 │       ├── snackbar_utils.dart
 │       ├── toast_utils.dart
 │       └── validators.dart
-├── data/
-│   ├── models/
+├── data
+│   ├── models
 │   │   ├── daily_stats_model.dart
 │   │   ├── debt_model.dart
 │   │   ├── license_key_model.dart
@@ -44,7 +47,7 @@ lib/
 │   │   ├── transaction_model.dart
 │   │   ├── user_model.dart
 │   │   └── wallet_model.dart
-│   ├── repositories/
+│   ├── repositories
 │   │   ├── auth_repository.dart
 │   │   ├── debt_repository.dart
 │   │   ├── employee_repository.dart
@@ -54,46 +57,46 @@ lib/
 │   │   ├── transaction_repository.dart
 │   │   ├── user_repository.dart
 │   │   └── wallet_repository.dart
-│   └── services/
+│   └── services
 │       ├── firebase_service.dart
 │       ├── google_sign_in_service.dart
 │       └── local_storage_service.dart
-├── l10n/
-│   └── arb/
+├── l10n
+│   └── arb
 │       ├── app_ar.arb
 │       ├── app_en.arb
 │       ├── app_localizations.dart
 │       ├── app_localizations_ar.dart
 │       └── app_localizations_en.dart
-├── presentation/
-│   ├── screens/
-│   │   ├── auth/
+├── presentation
+│   ├── screens
+│   │   ├── auth
 │   │   │   ├── employee_login_screen.dart
 │   │   │   └── store_registration_screen.dart
-│   │   ├── debts/
+│   │   ├── debts
 │   │   │   ├── add_debt_screen.dart
 │   │   │   └── debts_list_screen.dart
-│   │   ├── employees/
+│   │   ├── employees
 │   │   │   ├── add_employee_screen.dart
 │   │   │   └── manage_employees_screen.dart
-│   │   ├── home/
+│   │   ├── home
 │   │   │   ├── employee_dashboard_screen.dart
 │   │   │   └── owner_dashboard_screen.dart
-│   │   ├── settings/
+│   │   ├── settings
 │   │   │   └── settings_screen.dart
-│   │   ├── statistics/
+│   │   ├── statistics
 │   │   │   └── general_statistics_screen.dart
-│   │   ├── transactions/
+│   │   ├── transactions
 │   │   │   ├── create_transaction_screen.dart
 │   │   │   ├── today_transactions_screen.dart
 │   │   │   └── transaction_details_screen.dart
-│   │   └── wallets/
+│   │   └── wallets
 │   │       ├── add_balance_screen.dart
 │   │       ├── wallet_details_screen.dart
 │   │       ├── wallet_form_screen.dart
 │   │       └── wallets_list_screen.dart
-│   └── widgets/
-│       ├── common/
+│   └── widgets
+│       ├── common
 │       │   ├── add_close_animated_icon.dart
 │       │   ├── custom_button.dart
 │       │   ├── custom_dropdown.dart
@@ -103,25 +106,25 @@ lib/
 │       │   ├── loading_indicator.dart
 │       │   ├── skeleton_card.dart
 │       │   └── skeleton_list.dart
-│       ├── dashboard/
+│       ├── dashboard
 │       │   ├── alert_card.dart
 │       │   ├── quick_action_card.dart
 │       │   ├── section_header.dart
 │       │   └── stats_card.dart
-│       ├── debt/
+│       ├── debt
 │       │   ├── debt_card.dart
 │       │   ├── debt_summary_card.dart
 │       │   └── partial_payment_bottom_sheet.dart
-│       ├── employee/
-│       │   └── employee_card.dart
-│       ├── transaction/
+│       ├── employee
+│       │   ├── employee_card.dart
+│       ├── transaction
 │       │   ├── transaction_card.dart
 │       │   └── transaction_summary_card.dart
-│       └── wallet/
+│       └── wallet
 │           ├── wallet_card.dart
 │           ├── wallet_limit_bar.dart
 │           └── wallet_stats_card.dart
-├── providers/
+├── providers
 │   ├── app_events.dart
 │   ├── auth_provider.dart
 │   ├── debt_provider.dart
@@ -131,7 +134,7 @@ lib/
 │   ├── theme_provider.dart
 │   ├── transaction_provider.dart
 │   └── wallet_provider.dart
-└── routes/
+└── routes
     ├── app_router.dart
     └── navigation_service.dart
 
@@ -139,293 +142,386 @@ lib/
 STEP 2 — EXHAUSTIVE File Descriptions
 ====================================
 
-lib/app.dart
-Initializes the MaterialApp with providers, themes, localization, and routing configuration. It serves as the root widget of the application structure.
+C:\src\walletmanager\lib\app.dart
+Configures the root widget `MyApp`, sets up `MultiProvider` for state management, 
+initializes localization (Arabic/English), applies the global theme, and handles 
+initial routing logic based on authentication status.
+
+C:\src\walletmanager\lib\main.dart
+The entry point of the application. Initializes the Flutter binding, Firebase, 
+and local storage services before running `MyApp`. Includes basic error handling 
+for initialization failures.
+
+C:\src\walletmanager\lib\core\constants\app_constants.dart
+Defines global application constants such as app name, version, and critical 
+business rules including transaction limits for different wallet types (New, Old, Registered Store, InstaPay).
+
+C:\src\walletmanager\lib\core\constants\firebase_constants.dart
+Stores string constants for Firestore collection names (stores, users, wallets, etc.) 
+and document field keys to ensure consistency and prevent typos in database queries.
+
+C:\src\walletmanager\lib\core\constants\route_constants.dart
+Lists all named routes used for navigation within the application, such as 
+`/owner-dashboard`, `/create-transaction`, and `/employee-login`.
+
+C:\src\walletmanager\lib\core\errors\app_exceptions.dart
+Defines a hierarchy of custom exception classes (e.g., `AuthException`, `ValidationException`) 
+to handle application-specific errors with meaningful messages and codes.
+
+C:\src\walletmanager\lib\core\errors\failures.dart
+Provides a set of `Failure` classes (e.g., `NetworkFailure`, `ServerFailure`) 
+that map exceptions to user-friendly error states for the UI layer.
+
+C:\src\walletmanager\lib\core\theme\app_colors.dart
+Centralizes the application's color palette, defining primary, secondary, status 
+colors (success, error), and supporting both light and dark mode variations.
+
+C:\src\walletmanager\lib\core\theme\app_text_styles.dart
+Defines standard text styles (Headings, Body, Labels) using the 'Cairo' font family 
+to ensure consistent typography throughout the application.
+
+C:\src\walletmanager\lib\core\theme\app_theme.dart
+Configures the global `ThemeData` for light and dark modes, including styles for 
+AppBars, Cards, Buttons, Inputs, and Text, utilizing `AppColors` and `AppTextStyles`.
+
+C:\src\walletmanager\lib\core\utils\cache_manager.dart
+Implements a simple in-memory caching mechanism to store and retrieve data 
+(like fetched lists) with expiration times to reduce redundant network calls.
+
+C:\src\walletmanager\lib\core\utils\date_helper.dart
+Provides utility functions for formatting dates and timestamps, and calculating 
+date ranges (start/end of day, week, month) and relative time strings in Arabic.
+
+C:\src\walletmanager\lib\core\utils\debouncer.dart
+A utility class to debounce actions, useful for delaying search queries or 
+preventing rapid repeated button clicks.
+
+C:\src\walletmanager\lib\core\utils\dialog_utils.dart
+Offers static methods to show standardized, animated dialogs for confirmation, 
+success, warning, and information, ensuring a consistent popup experience.
+
+C:\src\walletmanager\lib\core\utils\fee_calculator.dart
+Contains logic to calculate transaction fees based on the source wallet type 
+(Vodafone, Etisalat, etc.) and the destination provider, including percentage and fixed fee rules.
+
+C:\src\walletmanager\lib\core\utils\license_key_generator.dart
+Provides functionality to generate random, formatted license keys for stores 
+and save batches of them to Firestore.
+
+C:\src\walletmanager\lib\core\utils\number_formatter.dart
+Utilities for formatting numbers as currency (with commas), percentages, and 
+formatting Egyptian phone numbers for better readability.
+
+C:\src\walletmanager\lib\core\utils\password_hasher.dart
+Implements SHA-256 hashing for securing sensitive data like store passwords 
+and employee PINs before storage or verification.
+
+C:\src\walletmanager\lib\core\utils\permission_helper.dart
+Checks user permissions (e.g., canCreateDebt, canAccessScreen) against the 
+current user's role and assigned permissions to control access to features.
+
+C:\src\walletmanager\lib\core\utils\snackbar_utils.dart
+Provides static methods to display customized SnackBars for success, error, 
+info, and warning messages at the bottom of the screen.
+
+C:\src\walletmanager\lib\core\utils\toast_utils.dart
+Uses `bot_toast` to display non-intrusive toast notifications for feedback 
+(success, error, info) that float above the UI.
+
+C:\src\walletmanager\lib\core\utils\validators.dart
+Contains static validation methods for form fields, including rules for 
+phone numbers, passwords, license keys, amounts, and required fields.
+
+C:\src\walletmanager\lib\data\models\daily_stats_model.dart
+Model representing daily aggregated statistics (transaction count, total commission, 
+total amount) for charting and reporting.
+
+C:\src\walletmanager\lib\data\models\debt_model.dart
+Data model for debts, tracking customer info, amount due, total amount, 
+payment status (open/paid), and type (transaction vs store sale).
+
+C:\src\walletmanager\lib\data\models\license_key_model.dart
+Model representing a license key document, including its usage status, 
+expiry duration, and the store that claimed it.
 
-lib/main.dart
-The entry point of the application. It initializes Flutter bindings, Firebase, and Local Storage services before running the app.
+C:\src\walletmanager\lib\data\models\stats_summary_model.dart
+Aggregates high-level store statistics (total wallets, balance, transactions, 
+debts) to be displayed on the dashboard for performance efficiency.
 
-lib/core/constants/app_constants.dart
-Defines application-wide constants such as the app name, version, and financial limits for different wallet types (e.g., transaction limits, monthly limits).
+C:\src\walletmanager\lib\data\models\store_model.dart
+The core model for a Store, containing profile info, settings, active license details, 
+and embedded statistics.
 
-lib/core/constants/firebase_constants.dart
-Contains static string constants for Firestore collection names (stores, users, wallets, etc.) and field names to ensure consistency in database queries.
+C:\src\walletmanager\lib\data\models\transaction_model.dart
+Comprehensive model for financial transactions, capturing sender/receiver details, 
+amounts, fees, commissions, and linking to specific wallets and debts.
 
-lib/core/constants/route_constants.dart
-Lists all named routes used for navigation within the app, such as '/store-registration', '/owner-dashboard', and feature-specific routes.
+C:\src\walletmanager\lib\data\models\user_model.dart
+Represents a user in the system, distinguishing between 'owner' and 'employee' 
+roles, and holding specific permissions and PINs for employees.
 
-lib/core/errors/app_exceptions.dart
-Defines a hierarchy of custom exception classes (e.g., AuthException, ServerException, ValidationException) to handle specific error scenarios within the app logic.
+C:\src\walletmanager\lib\data\models\wallet_model.dart
+Model for a financial wallet, tracking its balance, type (e.g., Vodafone Cash), 
+status, and enforcing daily/monthly transaction limits.
 
-lib/core/errors/failures.dart
-Defines `Failure` classes that map exceptions to user-friendly error states for the UI layer, distinguishing between network, server, and validation failures.
+C:\src\walletmanager\lib\data\repositories\auth_repository.dart
+Handles interaction with Firebase Auth and Google Sign-In, abstracting 
+login, logout, and current user retrieval operations.
 
-lib/core/theme/app_colors.dart
-Specifies the color palette for light and dark themes, including primary, secondary, status-specific (success, error), and transaction-type colors.
+C:\src\walletmanager\lib\data\repositories\debt_repository.dart
+Manages Firestore operations for debts, including creation, pagination, 
+partial payments, and updating aggregate statistics transactionally.
 
-lib/core/theme/app_text_styles.dart
-Defines standard text styles (headers, body text, labels) using the 'Cairo' font family to maintain consistent typography throughout the app.
+C:\src\walletmanager\lib\data\repositories\employee_repository.dart
+Handles CRUD operations for employees within a store, including PIN verification, 
+limit checking (max employees), and activation status.
 
-lib/core/theme/app_theme.dart
-Configures the global `ThemeData` for both light and dark modes, including styles for app bars, buttons, input fields, and cards.
+C:\src\walletmanager\lib\data\repositories\license_key_repository.dart
+Verifies the validity of license keys against the `license_keys` collection and 
+handles marking keys as used during store registration.
 
-lib/core/utils/cache_manager.dart
-Implements a simple in-memory caching mechanism to store and retrieve data with expiration times, reducing redundant network requests.
+C:\src\walletmanager\lib\data\repositories\stats_repository.dart
+Dedicated repository for maintaining and fetching the `stats/summary` document 
+and daily stats for a store, ensuring atomic updates.
 
-lib/core/utils/date_helper.dart
-Provides utility methods for date and time formatting (e.g., timestamps to readable strings) and calculations like start/end of day/week/month.
+C:\src\walletmanager\lib\data\repositories\store_repository.dart
+Manages store documents, including creation, updating settings, validating 
+license status, and verifying store passwords.
 
-lib/core/utils/debouncer.dart
-A utility class that delays the execution of a function until a specified time has passed, useful for search fields to reduce API calls.
+C:\src\walletmanager\lib\data\repositories\transaction_repository.dart
+Handles transaction logic: creating records, atomically updating wallet balances 
+and limits, enforcing caps, and managing transaction history.
 
-lib/core/utils/dialog_utils.dart
-Offers static methods to display standardized dialogs (info, success, warning, confirmation) with consistent styling and animations.
+C:\src\walletmanager\lib\data\repositories\user_repository.dart
+Manages user documents in Firestore, handling role assignments, permissions updates, 
+and soft/hard deletion of user accounts.
 
-lib/core/utils/fee_calculator.dart
-Contains logic to calculate transaction fees based on the source wallet type (Vodafone, Instapay, etc.) and the destination network.
+C:\src\walletmanager\lib\data\repositories\wallet_repository.dart
+Performs CRUD operations for wallets, handles updating balances, and implements 
+logic to reset daily/monthly limits.
 
-lib/core/utils/license_key_generator.dart
-Provides functionality to generate random license keys formatted as 'WALLET-2025-XXXX-XXXX' and save batches of them to Firestore.
+C:\src\walletmanager\lib\data\services\firebase_service.dart
+A singleton service that initializes the Firebase application and provides 
+access to `FirebaseAuth` and `FirebaseFirestore` instances.
 
-lib/core/utils/number_formatter.dart
-Includes methods to format numbers with commas, format currency amounts with symbols, and format Egyptian phone numbers for display.
+C:\src\walletmanager\lib\data\services\google_sign_in_service.dart
+Wrapper for the Google Sign-In flow, handling the authentication process and 
+returning Firebase credentials.
 
-lib/core/utils/password_hasher.dart
-Implements SHA-256 hashing for passwords and PINs to securely store credentials and verify user inputs.
+C:\src\walletmanager\lib\data\services\local_storage_service.dart
+Manages `SharedPreferences` to persist user session data (IDs, roles) and 
+app settings like theme preference across app restarts.
 
-lib/core/utils/permission_helper.dart
-Checks user permissions for specific actions (e.g., creating transactions) based on their role (owner/employee) and assigned rights.
+C:\src\walletmanager\lib\l10n\arb\app_ar.arb
+Contains the Arabic translations for all application strings.
 
-lib/core/utils/snackbar_utils.dart
-Provides static methods to show styled SnackBars for success, error, info, and warning messages at the bottom of the screen.
+C:\src\walletmanager\lib\l10n\arb\app_en.arb
+Contains the English translations for all application strings.
 
-lib/core/utils/toast_utils.dart
-Uses the `bot_toast` package to display custom toast notifications for user feedback (success, error, info) overlaid on the screen.
+C:\src\walletmanager\lib\l10n\arb\app_localizations.dart
+The abstract base class for generated localization delegates, providing access 
+to localized resources via `AppLocalizations.of(context)`.
 
-lib/core/utils/validators.dart
-Contains validation logic for form fields, including checks for required fields, phone numbers, email formats, passwords, and numeric amounts.
+C:\src\walletmanager\lib\l10n\arb\app_localizations_ar.dart
+The generated Dart code implementing the Arabic localization logic.
 
-lib/data/models/daily_stats_model.dart
-Represents daily statistical data (transaction count, total commission, total amount) for a specific date.
+C:\src\walletmanager\lib\l10n\arb\app_localizations_en.dart
+The generated Dart code implementing the English localization logic.
 
-lib/data/models/debt_model.dart
-Data model for debts, including customer details, amount due, debt type (transaction/store sale), status (open/paid), and timestamps.
+C:\src\walletmanager\lib\presentation\screens\auth\employee_login_screen.dart
+UI for employee login: verifies Store Password, then Employee PIN, and finally 
+checks the Google Account session to authenticate.
 
-lib/data/models/license_key_model.dart
-Represents a license key document, tracking the key string, usage status, who used it, and expiration details.
+C:\src\walletmanager\lib\presentation\screens\auth\store_registration_screen.dart
+UI for registering a new store. Collects store details, validates a license key, 
+and links the store to a Google account.
 
-lib/data/models/stats_summary_model.dart
-Aggregates total statistics for the store, such as total wallets, balance, transaction counts, and debt summaries for dashboard display.
+C:\src\walletmanager\lib\presentation\screens\debts\add_debt_screen.dart
+A form screen to manually create a new debt record (either transaction-based or store sale) 
+for a specific customer.
 
-lib/data/models/store_model.dart
-Represents a store entity, including owner details, store settings, license status, and aggregate statistics.
+C:\src\walletmanager\lib\presentation\screens\debts\debts_list_screen.dart
+Displays a paginated list of debts with filtering options (Open/Paid). Allows marking 
+debts as paid or adding partial payments.
 
-lib/data/models/transaction_model.dart
-Data model for financial transactions, capturing details like type (send/receive), amount, commission, customer info, and related wallet.
+C:\src\walletmanager\lib\presentation\screens\employees\add_employee_screen.dart
+A form to register a new employee with a name, phone number, and secure PIN, 
+enforcing the store's maximum employee limit.
 
-lib/data/models/user_model.dart
-Represents a user (owner or employee) with authentication details, permissions, and personal information.
+C:\src\walletmanager\lib\presentation\screens\employees\manage_employees_screen.dart
+Lists all employees for the store owner, allowing management actions like 
+deactivating access or resetting permissions.
 
-lib/data/models/wallet_model.dart
-Data model for a financial wallet, tracking balance, limits (daily/monthly), type (e.g., Vodafone Cash), and active status.
+C:\src\walletmanager\lib\presentation\screens\home\employee_dashboard_screen.dart
+Restricted dashboard for employees, showing recent transactions and quick actions 
+relevant to their permissions.
 
-lib/data/repositories/auth_repository.dart
-Handles authentication operations using Firebase Auth and Google Sign-In, including login, logout, and retrieving current user state.
+C:\src\walletmanager\lib\presentation\screens\home\owner_dashboard_screen.dart
+The main hub for store owners, displaying high-level statistics, alerts (limits/debts), 
+quick actions, and navigation to all features.
 
-lib/data/repositories/debt_repository.dart
-Manages Firestore operations for debts, including creation, pagination, updating payments, and fetching debt summaries.
+C:\src\walletmanager\lib\presentation\screens\settings\settings_screen.dart
+Settings page allowing users to view account info, switch theme/language, view license 
+status, and contact support.
 
-lib/data/repositories/employee_repository.dart
-Handles CRUD operations for employees, including adding new employees, verifying PINs, and deactivating accounts.
+C:\src\walletmanager\lib\presentation\screens\statistics\general_statistics_screen.dart
+Shows detailed statistical reports and charts, with options to filter data by 
+custom date ranges.
 
-lib/data/repositories/license_key_repository.dart
-Verifies license keys against the database and handles the activation process linking a key to a store.
+C:\src\walletmanager\lib\presentation\screens\transactions\create_transaction_screen.dart
+The core screen for performing financial operations (send/receive). Selects a wallet, 
+calculates fees, and validates limits before execution.
 
-lib/data/repositories/stats_repository.dart
-Fetches and updates statistical data, including dashboard summaries and real-time updates triggered by transaction or debt changes.
+C:\src\walletmanager\lib\presentation\screens\transactions\today_transactions_screen.dart
+Lists transactions made in the current day, providing a quick daily overview 
+and summary for reconciliation.
 
-lib/data/repositories/store_repository.dart
-Manages store data in Firestore, including creation, retrieving store details by owner, and updating settings or licenses.
+C:\src\walletmanager\lib\presentation\screens\transactions\transaction_details_screen.dart
+Displays full metadata for a specific transaction, including timestamps, fees, 
+customer info, and associated notes.
 
-lib/data/repositories/transaction_repository.dart
-Handles transaction-related Firestore operations, including creation with wallet balance updates, pagination, and date-based filtering.
+C:\src\walletmanager\lib\presentation\screens\wallets\add_balance_screen.dart
+A simplified form to deposit funds into a selected wallet, increasing its balance 
+without recording a send/receive transaction.
 
-lib/data/repositories/user_repository.dart
-Manages user documents in Firestore, handling user creation, profile updates, permission management, and employee lookups.
+C:\src\walletmanager\lib\presentation\screens\wallets\wallet_details_screen.dart
+Shows detailed info for a single wallet, including current balance, progress bars 
+for daily/monthly limits, and specific stats.
 
-lib/data/repositories/wallet_repository.dart
-Performs CRUD operations for wallets, including pagination, balance updates, and resetting daily/monthly limits.
+C:\src\walletmanager\lib\presentation\screens\wallets\wallet_form_screen.dart
+Form to create a new wallet or edit an existing one, defining its type (Vodafone, InstaPay, etc.) 
+and initial status.
 
-lib/data/services/firebase_service.dart
-A singleton service that initializes Firebase Core and provides access to FirebaseAuth and FirebaseFirestore instances.
+C:\src\walletmanager\lib\presentation\screens\wallets\wallets_list_screen.dart
+Displays all wallets in the store with their balances. Supports searching, filtering, 
+and navigating to details or edit screens.
 
-lib/data/services/google_sign_in_service.dart
-Manages the Google Sign-In flow, handling the user interaction and retrieving authentication credentials for Firebase.
+C:\src\walletmanager\lib\presentation\widgets\common\add_close_animated_icon.dart
+A custom animated icon widget that transitions between an 'Add' (plus) state and 
+a 'Close' (X) state.
 
-lib/data/services/local_storage_service.dart
-A singleton service wrapping `SharedPreferences` to persist user session data, theme preferences, and other local settings.
+C:\src\walletmanager\lib\presentation\widgets\common\custom_button.dart
+A reusable button component with standard styling, support for loading states, 
+and optional icons.
 
-lib/l10n/arb/app_ar.arb
-Contains the Arabic translations for all application strings, following the Application Resource Bundle format.
+C:\src\walletmanager\lib\presentation\widgets\common\custom_dropdown.dart
+A styled dropdown form field wrapper ensuring consistent appearance for selecting 
+options like wallet types.
 
-lib/l10n/arb/app_en.arb
-Contains the English translations for all application strings, serving as the default or alternative language resource.
+C:\src\walletmanager\lib\presentation\widgets\common\custom_text_field.dart
+A standard text input field with built-in styling for borders, icons, labels, 
+and validation error display.
 
-lib/l10n/arb/app_localizations.dart
-Auto-generated abstract class that defines the localized string getters and delegate for the application.
+C:\src\walletmanager\lib\presentation\widgets\common\empty_state_widget.dart
+A widget displayed when lists are empty, showing an icon, a message, and an optional 
+action button to encourage user interaction.
 
-lib/l10n/arb/app_localizations_ar.dart
-Auto-generated class implementing the Arabic translations defined in `app_ar.arb`.
+C:\src\walletmanager\lib\presentation\widgets\common\error_widget.dart
+A standardized error display widget showing a message and a retry button, used 
+when data fetching fails.
 
-lib/l10n/arb/app_localizations_en.dart
-Auto-generated class implementing the English translations defined in `app_en.arb`.
+C:\src\walletmanager\lib\presentation\widgets\common\loading_indicator.dart
+A simple centered circular progress indicator with an optional loading message.
 
-lib/presentation/screens/auth/employee_login_screen.dart
-A screen allowing employees to log in using the store's password and their personal PIN, followed by Google authentication.
+C:\src\walletmanager\lib\presentation\widgets\common\skeleton_card.dart
+A placeholder widget mimicking a card layout, used for shimmer loading effects 
+before data arrives.
 
-lib/presentation/screens/auth/store_registration_screen.dart
-Handles the store registration flow, including store info entry, license key verification, and owner Google sign-in.
+C:\src\walletmanager\lib\presentation\widgets\common\skeleton_list.dart
+Generates a list of `SkeletonCard` widgets to create a realistic loading skeleton 
+for list views.
 
-lib/presentation/screens/debts/add_debt_screen.dart
-A form screen for creating a new debt record, capturing customer details, amount, and debt type (transaction or sale).
+C:\src\walletmanager\lib\presentation\widgets\dashboard\alert_card.dart
+Displays important warnings (e.g., wallet limit reached) on the dashboard with 
+distinct visual styling.
 
-lib/presentation/screens/debts/debts_list_screen.dart
-Displays a paginated list of debts with filtering options (all, open, paid) and summary statistics.
+C:\src\walletmanager\lib\presentation\widgets\dashboard\quick_action_card.dart
+A clickable card widget representing a shortcut to a frequent action (like 'New Transaction') 
+on the dashboard.
 
-lib/presentation/screens/employees/add_employee_screen.dart
-A form to add a new employee, requiring name, phone number, and a secure 4-digit PIN.
+C:\src\walletmanager\lib\presentation\widgets\dashboard\section_header.dart
+A reusable header for dashboard sections, containing a title and an optional 
+'View All' action button.
 
-lib/presentation/screens/employees/manage_employees_screen.dart
-Allows the store owner to view a list of employees and deactivate their accounts if necessary.
+C:\src\walletmanager\lib\presentation\widgets\dashboard\stats_card.dart
+A card displaying a key statistic (e.g., Total Balance) with an icon and color coding, 
+used in the dashboard grid.
 
-lib/presentation/screens/home/employee_dashboard_screen.dart
-The main dashboard for employees, showing quick actions and recent transactions relevant to their permissions.
+C:\src\walletmanager\lib\presentation\widgets\debt\debt_card.dart
+Renders a summary of a single debt item, including customer name, amount due, 
+and status indicator.
 
-lib/presentation/screens/home/owner_dashboard_screen.dart
-The comprehensive dashboard for store owners, displaying global statistics, charts, alerts, and navigation to all features.
+C:\src\walletmanager\lib\presentation\widgets\debt\debt_summary_card.dart
+Shows aggregated debt statistics (total open, total paid) at the top of the debts list.
 
-lib/presentation/screens/settings/settings_screen.dart
-Provides options for app settings, including theme switching, language selection, and viewing account/license information.
+C:\src\walletmanager\lib\presentation\widgets\debt\partial_payment_bottom_sheet.dart
+A modal sheet allowing users to input an amount to pay off part or all of an 
+existing debt.
 
-lib/presentation/screens/statistics/general_statistics_screen.dart
-Displays detailed statistical reports with date filtering capabilities, showing income, expenses, and performance metrics.
+C:\src\walletmanager\lib\presentation\widgets\employee\employee_card.dart
+Displays employee details (name, phone, active status) in a list item format 
+with management options.
 
-lib/presentation/screens/transactions/create_transaction_screen.dart
-A form for recording a new financial transaction (send/receive/deposit) with automatic fee calculation and limit checks.
+C:\src\walletmanager\lib\presentation\widgets\transaction\transaction_card.dart
+Renders a transaction item, showing amount, type (send/receive), time, and 
+commission in a concise row.
 
-lib/presentation/screens/transactions/today_transactions_screen.dart
-Shows a list of transactions occurring in the current day, with a summary header and filtering options.
+C:\src\walletmanager\lib\presentation\widgets\transaction\transaction_summary_card.dart
+Displays a summary of displayed transactions (total count, total amount sent/received) 
+at the top of transaction lists.
 
-lib/presentation/screens/transactions/transaction_details_screen.dart
-Displays full details of a specific transaction, including amounts, customer info, and metadata.
+C:\src\walletmanager\lib\presentation\widgets\wallet\wallet_card.dart
+A card widget representing a wallet, showing its type, phone number, balance, 
+and limit status.
 
-lib/presentation/screens/wallets/add_balance_screen.dart
-A simplified screen to add funds (deposit) to a selected wallet, updating its balance.
+C:\src\walletmanager\lib\presentation\widgets\wallet\wallet_limit_bar.dart
+A linear progress indicator visualizing how much of a wallet's daily or monthly 
+limit has been consumed.
 
-lib/presentation/screens/wallets/wallet_details_screen.dart
-Shows detailed information for a specific wallet, including current balance, limit usage bars, and statistics.
+C:\src\walletmanager\lib\presentation\widgets\wallet\wallet_stats_card.dart
+A detailed card showing specific statistics for a wallet, such as total transactions 
+performed and commission generated.
 
-lib/presentation/screens/wallets/wallet_form_screen.dart
-A form to create a new wallet or edit an existing one, validating input types and initial balances.
+C:\src\walletmanager\lib\providers\app_events.dart
+A lightweight event bus using streams to broadcast change events (e.g., 'wallet updated') 
+triggering data refreshes across providers.
 
-lib/presentation/screens/wallets/wallets_list_screen.dart
-Lists all wallets associated with the store, showing key metrics and allowing navigation to details or editing.
+C:\src\walletmanager\lib\providers\auth_provider.dart
+Manages the authentication state, handles Google Sign-In, session persistence, 
+and loading user/store profiles.
 
-lib/presentation/widgets/common/add_close_animated_icon.dart
-A custom animated icon widget that transitions between a 'plus' and a 'close' icon, used in the floating action button.
+C:\src\walletmanager\lib\providers\debt_provider.dart
+Manages the state for the debt feature, including fetching lists, creating new debts, 
+and handling payment updates.
 
-lib/presentation/widgets/common/custom_button.dart
-A reusable button widget with customizable styles (primary, outlined, text), loading state, and icons.
+C:\src\walletmanager\lib\providers\employee_provider.dart
+Handles state for employee management, including fetching the list, adding new 
+employees, and verifying PINs.
 
-lib/presentation/widgets/common/custom_dropdown.dart
-A styled dropdown form field for selecting options like wallet types or status, matching the app's design theme.
+C:\src\walletmanager\lib\providers\localization_provider.dart
+Manages the current application locale (Arabic/English) and persists the user's 
+preference.
 
-lib/presentation/widgets/common/custom_text_field.dart
-A standardized text input field with support for validation, icons, obscuring text, and consistent styling.
+C:\src\walletmanager\lib\providers\statistics_provider.dart
+Fetches and holds statistical data for the dashboard and reports, supporting 
+both live summaries and date-filtered queries.
 
-lib/presentation/widgets/common/empty_state_widget.dart
-Displays a user-friendly message and illustration when a list or data view is empty, optionally offering an action button.
+C:\src\walletmanager\lib\providers\theme_provider.dart
+Manages the active theme mode (Light/Dark/System) and persists the selection 
+to local storage.
 
-lib/presentation/widgets/common/error_widget.dart
-A widget to display error messages with a retry button, used when data fetching fails.
+C:\src\walletmanager\lib\providers\transaction_provider.dart
+Manages transaction state, including fetching history, creating new transactions, 
+and calculating local summaries.
 
-lib/presentation/widgets/common/loading_indicator.dart
-A reusable loading widget that supports different styles (circular, linear, dots) and optional text.
+C:\src\walletmanager\lib\providers\wallet_provider.dart
+Handles the state of wallets, including fetching, creating, updating balances, 
+and managing cache invalidation.
 
-lib/presentation/widgets/common/skeleton_card.dart
-Displays a shimmering skeleton placeholder for a card while content is loading.
+C:\src\walletmanager\lib\routes\app_router.dart
+Defines the route generation logic, mapping route names to screen widgets and 
+injecting necessary providers via `ChangeNotifierProxyProvider`.
 
-lib/presentation/widgets/common/skeleton_list.dart
-A list of skeleton cards to simulate a loading state for list views.
-
-lib/presentation/widgets/dashboard/alert_card.dart
-Displays important alerts (e.g., license expiry, limit reached) on the dashboard with distinct visual styles based on severity.
-
-lib/presentation/widgets/dashboard/quick_action_card.dart
-A card widget representing a quick action (e.g., "New Transaction") on the dashboard for fast access to common tasks.
-
-lib/presentation/widgets/dashboard/section_header.dart
-A consistent header widget for dashboard sections, optionally including an action button (e.g., "View All").
-
-lib/presentation/widgets/dashboard/stats_card.dart
-A dashboard widget displaying a single statistic (value and label) with an icon and background color.
-
-lib/presentation/widgets/debt/debt_card.dart
-Displays a summary of a single debt item in a list, including customer name, amount, and status.
-
-lib/presentation/widgets/debt/debt_summary_card.dart
-Shows aggregate debt statistics (total open, total paid) at the top of the debt list screen.
-
-lib/presentation/widgets/debt/partial_payment_bottom_sheet.dart
-A modal bottom sheet allowing users to record partial payments or additions to an existing debt.
-
-lib/presentation/widgets/employee/employee_card.dart
-Displays an employee's summary info (name, role, status) in a list card.
-
-lib/presentation/widgets/transaction/transaction_card.dart
-Represents a single transaction in a list, showing type (send/receive), amount, and time.
-
-lib/presentation/widgets/transaction/transaction_summary_card.dart
-Summarizes transaction totals (count, volume, commission) for a specific period (e.g., today).
-
-lib/presentation/widgets/wallet/wallet_card.dart
-Displays wallet information (type, number, balance) in a card format for the wallets list.
-
-lib/presentation/widgets/wallet/wallet_limit_bar.dart
-A visual progress bar indicating how much of a wallet's daily or monthly limit has been consumed.
-
-lib/presentation/widgets/wallet/wallet_stats_card.dart
-A detailed card showing specific statistics for a single wallet, used in the wallet details screen.
-
-lib/providers/app_events.dart
-Implements a simple event bus using Streams to broadcast global events (e.g., data changes) across the app.
-
-lib/providers/auth_provider.dart
-Manages authentication state, user sessions, and login/logout logic, interfacing with repositories and local storage.
-
-lib/providers/debt_provider.dart
-State management for debt-related operations, handling fetching, filtering, and creating debts.
-
-lib/providers/employee_provider.dart
-Manages the state of employees, including fetching lists, adding new employees, and handling search filters.
-
-lib/providers/localization_provider.dart
-Manages the application's locale settings, allowing users to switch between supported languages (Arabic/English).
-
-lib/providers/statistics_provider.dart
-Centralizes logic for fetching and managing dashboard and general statistics, coordinating data from multiple repositories.
-
-lib/providers/theme_provider.dart
-Manages the app's theme mode (light/dark/system) and persists the user's preference to local storage.
-
-lib/providers/transaction_provider.dart
-Handles state for transactions, including fetching paginated lists, creating new transactions, and calculating summaries.
-
-lib/providers/wallet_provider.dart
-Manages wallet state, including fetching lists, monitoring limits, and updating balances or details.
-
-lib/routes/app_router.dart
-Defines the route generation logic for the application, mapping route names to their respective screen widgets and providers.
-
-lib/routes/navigation_service.dart
-Holds a global navigator key to allow navigation from non-widget classes (like utility services) without a context.
+C:\src\walletmanager\lib\routes\navigation_service.dart
+Holds a global `NavigatorKey` to allow navigation from non-UI contexts (like 
+utility classes) if needed.
