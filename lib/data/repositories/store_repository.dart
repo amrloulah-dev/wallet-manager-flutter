@@ -3,6 +3,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
+import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
 
 /// Repository for all Firestore operations related to the 'stores' collection.
@@ -25,9 +26,28 @@ class StoreRepository {
   // ===========================
 
   /// Creates a new store document in Firestore.
+  /// Creates a new store document in Firestore.
+  /// Also initializes the accompanying statistics document atomically.
   Future<void> createStore(StoreModel store) async {
     try {
-      await _storesCollection.doc(store.storeId).set(store.toFirestore());
+      final batch = _firestore.batch();
+
+      // 1. Set Store Document
+      batch.set(_storesCollection.doc(store.storeId), store.toFirestore());
+
+      // 2. Initialize Stats Document
+      // Note: We use the same sub-collection path structure as found in StatsRepository:
+      // stores/{storeId}/stats/summary
+      final statsRef = _storesCollection
+          .doc(store.storeId)
+          .collection('stats')
+          .doc('summary');
+
+      final initialStats = StatsSummaryModel.empty();
+      batch.set(statsRef, initialStats.toMap());
+
+      // Commit all changes atomically
+      await batch.commit();
     } on FirebaseException catch (e) {
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
     } catch (e) {
@@ -48,7 +68,8 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المحل: ${e.message}', code: e.code);
+      throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -67,7 +88,8 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المحل: ${e.message}', code: e.code);
+      throw ServerException('فشل في البحث عن المحل: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -90,10 +112,14 @@ class StoreRepository {
   /// Updates a store document with the given data.
   Future<void> updateStore(String storeId, Map<String, dynamic> data) async {
     try {
-      final updateData = {...data, FirebaseConstants.updatedAt: FieldValue.serverTimestamp()};
+      final updateData = {
+        ...data,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
+      };
       await _storesCollection.doc(storeId).update(updateData);
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث بيانات المحل: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث بيانات المحل: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
     }
@@ -130,17 +156,22 @@ class StoreRepository {
       final Map<String, dynamic> statsData = {
         FirebaseConstants.statsLastUpdated: FieldValue.serverTimestamp(),
       };
-      if (totalWallets != null) statsData[FirebaseConstants.totalWallets] = totalWallets;
-      if (activeWallets != null) statsData[FirebaseConstants.activeWallets] = activeWallets;
+      if (totalWallets != null)
+        statsData[FirebaseConstants.totalWallets] = totalWallets;
+      if (activeWallets != null)
+        statsData[FirebaseConstants.activeWallets] = activeWallets;
       if (totalTransactionsToday != null) {
-        statsData[FirebaseConstants.totalTransactionsToday] = totalTransactionsToday;
+        statsData[FirebaseConstants.totalTransactionsToday] =
+            totalTransactionsToday;
       }
       if (totalCommissionToday != null) {
-        statsData[FirebaseConstants.totalCommissionToday] = totalCommissionToday;
+        statsData[FirebaseConstants.totalCommissionToday] =
+            totalCommissionToday;
       }
       await _storesCollection.doc(storeId).update(statsData);
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -166,14 +197,13 @@ class StoreRepository {
   /// Updates the store's password.
   Future<void> updateStorePassword(String storeId, String newPassword) async {
     final hashedPassword = PasswordHasher.hashPassword(newPassword);
-    await updateStore(storeId, {FirebaseConstants.storePassword: hashedPassword});
+    await updateStore(
+        storeId, {FirebaseConstants.storePassword: hashedPassword});
   }
 
   // ===========================
   // License Methods
   // ===========================
-
-
 
   /// Checks if the store's current license is active and not expired.
   Future<bool> isLicenseValid(String storeId) async {
@@ -194,7 +224,8 @@ class StoreRepository {
         FirebaseConstants.licenseLastCheck: FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث حالة الرخصصة: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث حالة الرخصصة: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -221,6 +252,8 @@ class StoreRepository {
         .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
         .limit(1)
         .get();
-    return querySnapshot.docs.map((doc) => StoreModel.fromFirestore(doc)).toList();
+    return querySnapshot.docs
+        .map((doc) => StoreModel.fromFirestore(doc))
+        .toList();
   }
 }

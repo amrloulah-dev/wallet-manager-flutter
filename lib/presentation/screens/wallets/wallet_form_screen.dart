@@ -271,8 +271,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
-
-  Widget _buildWalletStatusDropdown() {
+Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
       'new': AppLocalizations.of(context)!.newStatus,
       'old': AppLocalizations.of(context)!.oldStatus,
@@ -285,18 +284,50 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       prefixIcon:
           const Icon(Icons.verified_user_outlined, color: AppColors.primary),
       hint: AppLocalizations.of(context)!.pleaseSelectWalletStatus,
-      items: statusDisplayNames.entries.map((entry) {
+      // 1. استخدام keys.map لتكرار نفس التصميم
+      items: statusDisplayNames.keys.map((String key) {
         return DropdownMenuItem<String>(
-          value: entry.key,
-          child: Text(
-            entry.value,
-            style: AppTextStyles.bodyLarge.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+          value: key,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha((0.05 * 255).round()),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primary.withAlpha((0.3 * 255).round()),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                statusDisplayNames[key]!,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black, // لون النص داخل القائمة المنسدلة
+                ),
+              ),
             ),
           ),
         );
       }).toList(),
+      // 2. إضافة selectedItemBuilder لضبط شكل العنصر المختار وهو مغلق
+      selectedItemBuilder: (BuildContext context) {
+        return statusDisplayNames.keys.map((String key) {
+          return Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              statusDisplayNames[key]!,
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context), // لون النص وهو مختار
+              ),
+            ),
+          );
+        }).toList();
+      },
+      // الحفاظ على منطق التعديل كما هو
       onChanged: _isEditMode
           ? null
           : (value) {
