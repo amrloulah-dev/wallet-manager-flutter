@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -90,25 +91,47 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   }
 
   Future<void> _handleCreateAccount() async {
-    if (!(_formKeyStep2.currentState?.validate() ?? false)) return;
+    print('📍 UI: Button Clicked - Starting _handleCreateAccount');
+
+    if (!(_formKeyStep2.currentState?.validate() ?? false)) {
+      print('❌ UI: Validation Failed (Form is invalid)');
+      return;
+    }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.isLoading) return;
+    if (authProvider.isLoading) {
+      print('⚠️ UI: Ignored click (Provider is loading)');
+      return;
+    }
+
+      Provider.of<AuthProvider>(context, listen: false);
 
     // 1. Google Sign In
-    final loginSuccess = await authProvider.loginWithGoogleOrNull();
-    if (!loginSuccess) {
-      // Error handling is usually done in loginWithGoogleOrNull via toast, or we show snackbar
+    print('👉 UI: Calling authProvider.loginWithGoogleOrNull()...');
+    
+    // استدعاء الدالة (سواء رجعت true أو false مش هيفرق معانا دلوقتي)
+    await authProvider.loginWithGoogleOrNull();
+
+    // التحقق الحقيقي: هل المستخدم موجود في فايربيس؟
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      print('⛔ UI: Google Sign-In failed (User is null).');
+      ToastUtils.showError('فشل تسجيل الدخول بجوجل');
       return;
     }
 
     // 2. Register Store
+    print('👉 UI: Checking License Key...');
     if (_verifiedKey == null) {
+      print('❌ UI: License Key is NULL');
       ToastUtils.showError(AppLocalizations.of(context)!.licenseKeyError);
       return;
     }
 
     try {
+      print('🚀 UI: Calling registerStoreWithGoogle (The Critical Step)...');
+      
       final storeId = await authProvider.registerStoreWithGoogle(
         storeName: _storeNameController.text,
         storePassword: _storePasswordController.text,
@@ -116,26 +139,33 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         licenseKeyId: _verifiedKey!.keyId,
       );
 
+      print('✅ UI: registerStoreWithGoogle finished. StoreId: $storeId');
+
       if (storeId != null && mounted) {
         // 3. Activate License
+        print('👉 UI: Activating License...');
         try {
           await _licenseKeyRepository.activateLicenseKey(
             keyId: _verifiedKey!.keyId,
             storeId: storeId,
           );
+          print('✅ UI: License Activated.');
         } catch (e) {
-          // If activation fails but store created, it's a partial success/failure state.
-          // Usually we should handle this gracefully.
+          print('⚠️ UI: License activation warning: $e');
         }
 
-        // Navigation will be handled by the Consumer listener in build()
+        print('🎉 UI: Navigating to Dashboard...');
         Navigator.of(context).pushNamedAndRemoveUntil(
             RouteConstants.ownerDashboard, (route) => false);
         ToastUtils.showSuccess(AppLocalizations.of(context)!.loginSuccess);
+      } else {
+        print('❌ UI: StoreId is null!');
       }
     } on StoreInactiveException catch (e) {
+      print('🚨 UI Error (StoreInactive): ${e.message}');
       ToastUtils.showError(e.message);
     } catch (e) {
+      print('🚨 UI Error (Unexpected): $e');
       ToastUtils.showError('حدث خطأ غير متوقع: $e');
     }
   }

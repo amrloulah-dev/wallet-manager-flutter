@@ -29,10 +29,12 @@ class StoreRepository {
   /// Creates a new store document in Firestore.
   /// Also initializes the accompanying statistics document atomically.
   Future<void> createStore(StoreModel store) async {
+      print('🚀 STARTING createStore...'); // 1. هل دخل الدالة؟
     try {
       final batch = _firestore.batch();
-
+      print('📝 Setting Store Doc...'); // 2. قبل المتجر
       // 1. Set Store Document
+      
       batch.set(_storesCollection.doc(store.storeId), store.toFirestore());
 
       // 2. Initialize Stats Document
@@ -42,15 +44,20 @@ class StoreRepository {
           .doc(store.storeId)
           .collection('stats')
           .doc('summary');
+      print('📝 Initializing Stats...'); // 3. قبل الإحصائيات
 
       final initialStats = StatsSummaryModel.empty();
       batch.set(statsRef, initialStats.toMap());
-
+      print('✅ Stats Created: ${initialStats.toMap()}'); // اطبع الداتا نتأكد إن مفيش null
       // Commit all changes atomically
+       print('💾 Committing Batch...'); // 4. قبل الحفظ
       await batch.commit();
+       print('🎉 DONE createStore'); // 5. هل خلص؟
     } on FirebaseException catch (e) {
+       print('🚨 ERROR in createStore: $e'); // ده أهم سطر!!
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
     } catch (e) {
+      
       throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل.');
     }
   }

@@ -162,12 +162,15 @@ class AuthProvider extends ChangeNotifier {
     required String licenseKeyId,
   }) async {
     _setStatus(AuthStatus.loading);
+    print('🔥 PROVIDER: Start registerStoreWithGoogle'); // Debug 1
+
     try {
       final googleUser = _authRepository.getCurrentUser();
       if (googleUser == null) {
         throw AuthException('يجب تسجيل الدخول أولاً.');
       }
       _firebaseUser = googleUser;
+      print('🔥 PROVIDER: User found ${googleUser.uid}'); // Debug 2
 
       final existingStore = await _storeRepository.getStoreByOwnerId(googleUser.uid);
       if (existingStore != null) {
@@ -177,11 +180,15 @@ class AuthProvider extends ChangeNotifier {
       final storeId = googleUser.uid;
       final userId = googleUser.uid;
 
+      print('🔥 PROVIDER: Building StoreModel...'); // Debug 3
+
+      // ⚠️ التعديل الجوهري هنا: استخدام القيم الصفرية للإحصائيات
+      // تأكد إن StoreStats هو نفسه StatsSummaryModel اللي عدلناه
+      // لو الكلاس اسمه مختلف، استخدم الاسم الصحيح
       final newStore = StoreModel(
         storeId: storeId,
         storeName: storeName,
-        storePassword:
-        PasswordHasher.hashPassword(storePassword),
+        storePassword: PasswordHasher.hashPassword(storePassword),
         ownerId: userId,
         ownerName: googleUser.displayName ?? 'مالك جديد',
         ownerEmail: googleUser.email!,
@@ -195,8 +202,19 @@ class AuthProvider extends ChangeNotifier {
           expiryDate: Timestamp.fromDate(DateTime.now().add(const Duration(days: 365))),
           lastCheck: Timestamp.now(),
         ),
-        settings: StoreSettings(),
-        stats: StoreStats(lastUpdated: Timestamp.now()),
+        settings: StoreSettings(), // تأكد إن دي مش required fields
+        
+        // 🔥 هنا التصحيح: لازم نبعت كل البيانات عشان الـ Batch ميفشلش
+        // لو عندك دالة empty استخدمها: stats: StoreStats.empty(),
+        // لو معندكش، ابعت الأصفار يدوياً كالتالي:
+        stats: StoreStats(
+          totalWallets: 0,
+          activeWallets: 0,
+          totalTransactionsToday: 0,
+          totalCommissionToday: 0.0,
+          lastUpdated: Timestamp.now(),
+        ),
+        
         activeLicenseKey: licenseKey,
         licenseKeyId: licenseKeyId,
       );
@@ -212,11 +230,16 @@ class AuthProvider extends ChangeNotifier {
         lastLogin: Timestamp.now(),
       );
 
+      print('🔥 PROVIDER: Calling StoreRepo.createStore...'); // Debug 4
       await _storeRepository.createStore(newStore);
+      
+      print('🔥 PROVIDER: Creating User...'); // Debug 5
       await _userRepository.createUser(newOwner);
 
       _currentUser = newOwner;
       _currentStore = newStore;
+      
+      print('🔥 PROVIDER: Saving Session...');
       await _localStorage.saveSession(
         userId: userId,
         storeId: storeId,
@@ -229,10 +252,16 @@ class AuthProvider extends ChangeNotifier {
       appEvents.fireWalletsChanged();
       appEvents.fireTransactionsChanged();
       appEvents.fireDebtsChanged();
+      
+      print('🔥 PROVIDER: SUCCESS! Returning ID.');
       return storeId;
-    } catch (e) {
-      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع.');
-      await logout();
+
+    } catch (e, stack) {
+      print('🚨 PROVIDER ERROR: $e'); // طباعة الخطأ
+      print(stack); // طباعة مسار الخطأ
+      
+      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
+      await logout(); // ده اللي بيخرجك برة
       return null;
     }
   }
