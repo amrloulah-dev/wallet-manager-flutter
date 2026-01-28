@@ -12,6 +12,7 @@ import 'l10n/arb/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 import 'routes/app_router.dart';
+import 'presentation/screens/auth/login_landing_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -23,7 +24,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
-        ChangeNotifierProvider(create: (_) => EmployeeProvider(employeeRepository: EmployeeRepository())), 
+        ChangeNotifierProvider(
+            create: (_) =>
+                EmployeeProvider(employeeRepository: EmployeeRepository())),
 
         // Feature-specific providers will be moved to the router
       ],
@@ -51,35 +54,74 @@ class MyApp extends StatelessWidget {
               BotToastNavigatorObserver()
             ], //2. registered route observer
             onGenerateRoute: AppRouter.generateRoute,
-            initialRoute: _getInitialRoute(authProvider),
+            home: const AuthCheckWrapper(),
           );
         },
       ),
     );
   }
+}
 
-  String _getInitialRoute(AuthProvider authProvider) {
-    // ✅ Wait until authentication completes properly
-    if (authProvider.status == AuthStatus.loading ||
-        authProvider.status == AuthStatus.idle) {
-      return RouteConstants.loginLanding;
-    }
+class AuthCheckWrapper extends StatefulWidget {
+  const AuthCheckWrapper({super.key});
 
-    if (authProvider.status == AuthStatus.authenticated) {
-      // ✅ Prefer the most reliable role source
-      final userRole = authProvider.currentUser?.role ?? '';
+  @override
+  State<AuthCheckWrapper> createState() => _AuthCheckWrapperState();
+}
 
-      if (userRole == 'employee') {
-        return RouteConstants.employeeDashboard;
-      } else if (userRole == 'owner') {
-        return RouteConstants.ownerDashboard;
-      } else {
-        // Invalid or unknown role — force re-login
-        return RouteConstants.loginLanding;
+class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth state immediately if not already doing so
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      if (auth.status == AuthStatus.idle) {
+        auth.tryAutoLogin();
       }
-    }
+    });
+  }
 
-    // Default fallback for unauthenticated/error states
-    return RouteConstants.loginLanding;
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, child) {
+        if (auth.status == AuthStatus.loading ||
+            auth.status == AuthStatus.idle) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (auth.isAuthenticated) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final role = auth.currentUser?.role;
+            if (role == 'owner') {
+              Navigator.of(context)
+                  .pushReplacementNamed(RouteConstants.ownerDashboard);
+            } else if (role == 'employee') {
+              Navigator.of(context)
+                  .pushReplacementNamed(RouteConstants.employeeDashboard);
+            } else {
+              // Fallback for unknown role, show login
+              // Note: If we are here, we probably shouldn't stay in infinite loop
+              // But usually role is well defined.
+              // Just let it fall through to login logic?
+              // No, we should probably logout.
+              auth.logout();
+            }
+          });
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        return const LoginLandingScreen();
+      },
+    );
   }
 }

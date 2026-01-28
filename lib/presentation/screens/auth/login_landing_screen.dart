@@ -9,6 +9,7 @@ import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 import 'employee_login_screen.dart';
 
 class LoginLandingScreen extends StatefulWidget {
@@ -116,58 +117,63 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg(context),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 32),
-            // Header
-            Text('Wallet Manager',
-                style: AppTextStyles.h1.copyWith(color: AppColors.primary)),
-            const SizedBox(height: 24),
+    return DoubleBackToExitWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBg(context),
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 48),
+              // Header
+              Text('Wallet Manager',
+                  style: AppTextStyles.h1.copyWith(color: AppColors.primary)),
+              const SizedBox(height: 32),
 
-            // Tab Bar
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.divider(context)),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+              // Tab Bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary),
+                  border: Border.all(color: AppColors.divider(context)),
                 ),
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.textSecondary(context),
-                labelStyle: AppTextStyles.bodyLarge
-                    .copyWith(fontWeight: FontWeight.bold),
-                tabs: const [
-                  Tab(text: 'المالك'),
-                  Tab(text: 'موظف'),
-                ],
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary(context),
+                  labelStyle: AppTextStyles.bodyLarge
+                      .copyWith(fontWeight: FontWeight.bold),
+                  labelPadding: const EdgeInsets.symmetric(vertical: 12),
+                  tabs: const [
+                    Tab(text: 'المالك'),
+                    Tab(text: 'موظف'),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Tab View
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildOwnerTab(),
-                  _buildEmployeeTab(),
-                ],
+              // Tab View
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOwnerTab(),
+                    _buildEmployeeTab(),
+                  ],
+                ),
               ),
-            ),
 
-            // Footer
-            _buildFooter(),
-          ],
+              // Footer
+              _buildFooter(),
+            ],
+          ),
         ),
       ),
     );

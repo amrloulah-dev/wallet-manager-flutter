@@ -14,8 +14,9 @@ import '../../../providers/employee_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
-import '../../widgets/common/loading_indicator.dart';
+import 'package:walletmanager/presentation/widgets/common/loading_indicator.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 
 class EmployeeLoginScreen extends StatefulWidget {
   final StoreModel store;
@@ -135,192 +136,195 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     final employeeProvider = context.watch<EmployeeProvider>();
     final employees = employeeProvider.activeEmployees; // Only active users
 
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg(context),
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.employeeLogin),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const LoadingIndicator(message: 'جاري تسجيل الدخول...')
-          : SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Store Header
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: AppColors.primary.withOpacity(0.3)),
+    return DoubleBackToExitWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBg(context),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.employeeLogin),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+        ),
+        body: _isLoading
+            ? const LoadingIndicator(message: 'جاري تسجيل الدخول...')
+            : SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Store Header
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.3)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.store_rounded,
+                                    size: 48, color: AppColors.primary),
+                                const SizedBox(height: 12),
+                                Text(
+                                  widget.store.storeName,
+                                  style: AppTextStyles.h2
+                                      .copyWith(color: AppColors.primary),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'تسجيل دخول الموظفين',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary(context)),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.store_rounded,
-                                  size: 48, color: AppColors.primary),
-                              const SizedBox(height: 12),
-                              Text(
-                                widget.store.storeName,
-                                style: AppTextStyles.h2
-                                    .copyWith(color: AppColors.primary),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'تسجيل دخول الموظفين',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary(context)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
+                          const SizedBox(height: 32),
 
-                        // 1. Store Password
-                        CustomTextField(
-                          controller: _storePasswordController,
-                          labelText:
-                              AppLocalizations.of(context)!.storePassword,
-                          hintText: 'أدخل كلمة مرور المتجر',
-                          prefixIcon: const Icon(Icons.vpn_key_outlined),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureStorePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () => setState(() =>
-                                _obscureStorePassword = !_obscureStorePassword),
+                          // 1. Store Password
+                          CustomTextField(
+                            controller: _storePasswordController,
+                            labelText:
+                                AppLocalizations.of(context)!.storePassword,
+                            hintText: 'أدخل كلمة مرور المتجر',
+                            prefixIcon: const Icon(Icons.vpn_key_outlined),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscureStorePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () => setState(() =>
+                                  _obscureStorePassword =
+                                      !_obscureStorePassword),
+                            ),
+                            obscureText: _obscureStorePassword,
+                            keyboardType: TextInputType.text,
+                            // No strict validation on length here to allow flexibility, just not empty
+                            validator: (val) =>
+                                val == null || val.isEmpty ? 'مطلوب' : null,
                           ),
-                          obscureText: _obscureStorePassword,
-                          keyboardType: TextInputType.text,
-                          // No strict validation on length here to allow flexibility, just not empty
-                          validator: (val) =>
-                              val == null || val.isEmpty ? 'مطلوب' : null,
-                        ),
-                        const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                        // 2. Select Employee
-                        if (employeeProvider.isLoading)
-                          const Center(child: CircularProgressIndicator())
-                        else if (employeeProvider.hasError)
-                          Center(
-                              child: Text(
-                                  employeeProvider.errorMessage ?? 'Error',
-                                  style: const TextStyle(color: Colors.red)))
-                        else
-                          CustomDropdown<UserModel>(
-                            labelText: 'اختر الموظف',
-                            hint: 'اضغط للاختيار',
-                            value: _selectedEmployee,
-                            prefixIcon: const Icon(Icons.person_outline),
-                            fillColor: AppColors.primary
-                                .withAlpha((0.05 * 255).round()),
-                            items: employees.map((e) {
-                              return DropdownMenuItem(
-                                value: e,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12, horizontal: 12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary
-                                          .withAlpha((0.05 * 255).round()),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
+                          // 2. Select Employee
+                          if (employeeProvider.isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else if (employeeProvider.hasError)
+                            Center(
+                                child: Text(
+                                    employeeProvider.errorMessage ?? 'Error',
+                                    style: const TextStyle(color: Colors.red)))
+                          else
+                            CustomDropdown<UserModel>(
+                              labelText: 'اختر الموظف',
+                              hint: 'اضغط للاختيار',
+                              value: _selectedEmployee,
+                              prefixIcon: const Icon(Icons.person_outline),
+                              fillColor: AppColors.primary
+                                  .withAlpha((0.05 * 255).round()),
+                              items: employees.map((e) {
+                                return DropdownMenuItem(
+                                  value: e,
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 12),
+                                      decoration: BoxDecoration(
                                         color: AppColors.primary
-                                            .withAlpha((0.3 * 255).round()),
-                                        width: 1,
+                                            .withAlpha((0.05 * 255).round()),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: AppColors.primary
+                                              .withAlpha((0.3 * 255).round()),
+                                          width: 1,
+                                        ),
                                       ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            e.fullName,
-                                            style: AppTextStyles.bodyLarge
-                                                .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.black,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              e.fullName,
+                                              style: AppTextStyles.bodyLarge
+                                                  .copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            selectedItemBuilder: (context) {
-                              return employees.map((e) {
-                                return Container(
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    e.fullName,
-                                    style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary(context),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
-                              }).toList();
+                              }).toList(),
+                              selectedItemBuilder: (context) {
+                                return employees.map((e) {
+                                  return Container(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      e.fullName,
+                                      style: AppTextStyles.bodyLarge.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary(context),
+                                      ),
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                              onChanged: (val) {
+                                setState(() => _selectedEmployee = val);
+                              },
+                              validator: (val) =>
+                                  val == null ? 'يرجى اختيار الموظف' : null,
+                            ),
+                          const SizedBox(height: 20),
+
+                          // 3. Employee PIN
+                          CustomTextField(
+                            controller: _pinController,
+                            labelText: 'رقم التعريف الشخصي (PIN)',
+                            hintText: '****',
+                            prefixIcon: const Icon(Icons.pin_outlined),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePin
+                                  ? Icons.visibility_off
+                                  : Icons.visibility),
+                              onPressed: () =>
+                                  setState(() => _obscurePin = !_obscurePin),
+                            ),
+                            obscureText: _obscurePin,
+                            keyboardType: TextInputType.number,
+                            maxLength: 4,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            validator: (val) {
+                              if (val == null || val.isEmpty) return 'مطلوب';
+                              if (val.length != 4) return 'يجب أن يكون 4 أرقام';
+                              return null;
                             },
-                            onChanged: (val) {
-                              setState(() => _selectedEmployee = val);
-                            },
-                            validator: (val) =>
-                                val == null ? 'يرجى اختيار الموظف' : null,
                           ),
-                        const SizedBox(height: 20),
 
-                        // 3. Employee PIN
-                        CustomTextField(
-                          controller: _pinController,
-                          labelText: 'رقم التعريف الشخصي (PIN)',
-                          hintText: '****',
-                          prefixIcon: const Icon(Icons.pin_outlined),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscurePin
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () =>
-                                setState(() => _obscurePin = !_obscurePin),
+                          const SizedBox(height: 32),
+
+                          CustomButton(
+                            text: 'تسجيل الدخول',
+                            onPressed: _handleLogin,
+                            icon: const Icon(Icons.login),
                           ),
-                          obscureText: _obscurePin,
-                          keyboardType: TextInputType.number,
-                          maxLength: 4,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          validator: (val) {
-                            if (val == null || val.isEmpty) return 'مطلوب';
-                            if (val.length != 4) return 'يجب أن يكون 4 أرقام';
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        CustomButton(
-                          text: 'تسجيل الدخول',
-                          onPressed: _handleLogin,
-                          icon: const Icon(Icons.login),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 }

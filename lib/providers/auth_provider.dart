@@ -39,7 +39,7 @@ class AuthProvider extends ChangeNotifier {
         _storeRepository = storeRepository ?? StoreRepository(),
         _userRepository = userRepository ?? UserRepository(),
         _localStorage = localStorage ?? LocalStorageService() {
-    checkAuthState();
+    tryAutoLogin();
   }
 
   // Getters
@@ -60,87 +60,77 @@ class AuthProvider extends ChangeNotifier {
   // ===== Methods =====
 
   /// Validate saved session on app startup
-  Future<void> checkAuthState() async {
+  Future<void> tryAutoLogin() async {
     _setStatus(AuthStatus.loading);
     try {
-      final firebaseUser = _authRepository.getCurrentUser();
-      if (firebaseUser == null) {
-        _setStatus(AuthStatus.unauthenticated);
-        return;
-      }
-      _firebaseUser = firebaseUser;
-
+      // 1. Read saved session data
       final savedUserId = _localStorage.userId;
       final savedStoreId = _localStorage.storeId;
       final savedUserRole = _localStorage.userRole;
 
-      // Prioritize validating a complete, existing session
+      // 2. Validate Session
       if (savedUserId != null &&
           savedStoreId != null &&
           savedUserRole != null) {
-        final user = await _userRepository.getUserById(savedUserId);
-        final store = await _storeRepository.getStoreById(savedStoreId);
-
-        if (user != null && store != null && user.isActive) {
-          // Store status check
-          if (!store.isActive) {
-            throw StoreInactiveException();
-          }
-
-          // License check
-          if (store.license.isExpired) {
-            throw LicenseExpiredException();
-          }
-
-          if (savedUserRole == 'employee' && user.isEmployee) {
-            if (store.ownerId == firebaseUser.uid) {
-              // Finalize as employee
-              _currentUser = user;
-              _currentStore = store;
-              await _ensureEmployeePermissions(user);
-              final updatedUser =
-                  await _userRepository.getUserById(user.userId);
-              _currentUser = updatedUser ?? user;
-              _setStatus(AuthStatus.authenticated);
-              return; // Exit successfully
-            }
-          } else if (savedUserRole == 'owner' && user.isOwner) {
-            if (user.firebaseUid == firebaseUser.uid) {
-              // Finalize as owner
-              _currentUser = user;
-              _currentStore = store;
-              _setStatus(AuthStatus.authenticated);
-              return; // Exit successfully
-            }
+        // --- Owner Flow ---
+        if (savedUserRole == 'owner') {
+          final firebaseUser = _authRepository.getCurrentUser();
+          if (firebaseUser != null) {
+            _firebaseUser = firebaseUser;
+            // Reload owner data from Firestore
+            final success = await _finalizeOwnerLogin(firebaseUser.uid);
+            if (success) return;
           }
         }
-        // If any check above fails, the session is corrupt/invalid, fall through.
-      }
+        // --- Employee Flow ---
+        else if (savedUserRole == 'employee') {
+          // Employees might not have a direct Firebase Auth user (PIN based)
+          // Verify against Firestore directly
+          final user = await _userRepository.getUserById(savedUserId);
+          final store = await _storeRepository.getStoreById(savedStoreId);
 
-      // Fallback for incomplete/invalid session: try to recover as owner ONLY.
-      final owner =
-          await _userRepository.getUserByFirebaseUid(firebaseUser.uid);
-      if (owner != null && owner.isOwner) {
-        final store = await _storeRepository.getStoreById(owner.storeId);
-        if (store != null) {
-          _currentUser = owner;
-          _currentStore = store;
-          await _localStorage.saveSession(
-            userId: owner.userId,
-            storeId: store.storeId,
-            userRole: owner.role,
-            userName: owner.fullName,
-            storeName: store.storeName,
-          );
-          _setStatus(AuthStatus.authenticated);
-          return;
+          if (user != null && store != null) {
+            // Basic Validation
+            if (!user.isActive) throw AuthException('الحساب غير نشط');
+            if (!store.isActive) throw StoreInactiveException();
+            if (store.license.isExpired) throw LicenseExpiredException();
+
+            // Additional Check: verify store ownership if needed, or pin match (skipped here, trusting session)
+
+            _currentUser = user;
+            _currentStore = store;
+
+            // Ensure permissions are up to date
+            await _ensureEmployeePermissions(user);
+
+            // Update last login
+            await _userRepository.updateLastLogin(user.userId);
+
+            _setStatus(AuthStatus.authenticated);
+
+            // Fire events to load data
+            appEvents.fireWalletsChanged();
+            appEvents.fireTransactionsChanged();
+            appEvents.fireDebtsChanged();
+            return;
+          }
         }
       }
 
-      // If all session validation and recovery attempts fail, logout.
-      await logout();
+      // 3. Fallback: Firebase User exists but no local session (Owner Recovery)
+      final firebaseUser = _authRepository.getCurrentUser();
+      if (firebaseUser != null) {
+        _firebaseUser = firebaseUser;
+        // Try to recover owner session
+        final recovered = await _finalizeOwnerLogin(firebaseUser.uid);
+        if (recovered) return;
+      }
+
+      // If all attempts fail
+      _setStatus(AuthStatus.unauthenticated);
     } catch (e) {
       await logout();
+      _setStatus(AuthStatus.unauthenticated);
     }
   }
 

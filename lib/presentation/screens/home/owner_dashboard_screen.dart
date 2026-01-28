@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart'; // Removed
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/dialog_utils.dart';
-import 'package:walletmanager/core/utils/toast_utils.dart';
+// import 'package:walletmanager/core/utils/toast_utils.dart'; // Removed
 
 import '../../../core/constants/route_constants.dart';
 import '../../../core/theme/app_colors.dart';
@@ -22,6 +22,7 @@ import '../../widgets/dashboard/alert_card.dart';
 import '../../widgets/transaction/transaction_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_card.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -84,8 +85,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     if (confirmed == true) {
       await authProvider.logout();
       if (mounted) {
-        Navigator.pushReplacementNamed(
-            context, RouteConstants.storeRegistration);
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteConstants.loginLanding,
+          (route) => false,
+        );
       }
     }
   }
@@ -101,7 +104,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     return AppLocalizations.of(context)!.goodEvening;
   }
 
-  DateTime? currentBackPressTime;
+  // DateTime? currentBackPressTime; // Removed
 
   // 1️⃣ انسخ دالة النقل هنا (داخل الكلاس)
   Future<void> migrateUserAccountSurgical() async {
@@ -245,22 +248,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) {
-        if (didPop) {
-          return;
-        }
-        final now = DateTime.now();
-        if (currentBackPressTime == null ||
-            now.difference(currentBackPressTime!) >
-                const Duration(seconds: 2)) {
-          currentBackPressTime = now;
-          ToastUtils.showInfo('اضغط مرة أخرى للخروج');
-        } else {
-          SystemNavigator.pop();
-        }
-      },
+    return DoubleBackToExitWrapper(
       child: Scaffold(
           appBar: AppBar(
             title: Text(AppLocalizations.of(context)!.home),

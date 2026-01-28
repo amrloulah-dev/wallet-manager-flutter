@@ -636,7 +636,7 @@ class SettingsScreen extends StatelessWidget {
         await authProvider.logout();
         if (!context.mounted) return;
         Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteConstants.storeRegistration,
+          RouteConstants.loginLanding,
           (route) => false,
         );
       } catch (e) {

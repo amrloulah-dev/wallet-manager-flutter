@@ -16,6 +16,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 
 class StoreRegistrationScreen extends StatefulWidget {
   const StoreRegistrationScreen({super.key});
@@ -171,30 +172,32 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg(context),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary(context)),
-          onPressed: () {
-            if (_currentStep == 1) {
-              setState(() => _currentStep = 0);
-            } else {
-              Navigator.pop(context);
-            }
-          },
+    return DoubleBackToExitWrapper(
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBg(context),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary(context)),
+            onPressed: () {
+              if (_currentStep == 1) {
+                setState(() => _currentStep = 0);
+              } else {
+                Navigator.pop(context);
+              }
+            },
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_currentStep == 0) _buildStep1() else _buildStep2(),
-            ],
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_currentStep == 0) _buildStep1() else _buildStep2(),
+              ],
+            ),
           ),
         ),
       ),

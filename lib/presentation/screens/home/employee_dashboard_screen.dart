@@ -12,6 +12,7 @@ import '../../widgets/dashboard/quick_action_card.dart';
 import '../../widgets/dashboard/section_header.dart';
 import '../../widgets/transaction/transaction_card.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 
 class EmployeeDashboardScreen extends StatefulWidget {
   const EmployeeDashboardScreen({super.key});
@@ -41,8 +42,10 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
     if (confirmed == true) {
       await authProvider.logout();
       if (mounted) {
-        Navigator.pushReplacementNamed(
-            context, RouteConstants.storeRegistration);
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteConstants.loginLanding,
+          (route) => false,
+        );
       }
     }
   }
@@ -56,27 +59,29 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.employeeDashboard),
-      ),
-      drawer: _buildDrawer(),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildWelcomeHeader(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildQuickActions(),
-                  _buildRecentTransactions(),
-                ],
+    return DoubleBackToExitWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.employeeDashboard),
+        ),
+        drawer: _buildDrawer(),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWelcomeHeader(),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildQuickActions(),
+                    _buildRecentTransactions(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
