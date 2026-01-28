@@ -11,6 +11,7 @@ import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
+import 'package:walletmanager/data/models/store_model.dart';
 import '../core/constants/route_constants.dart';
 import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
@@ -41,13 +42,14 @@ class AppRouter {
         return _buildRoute(const StoreRegistrationScreen(), settings);
 
       case RouteConstants.employeeLogin:
+        final store = settings.arguments as StoreModel;
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
             create: (_) =>
                 EmployeeProvider(employeeRepository: EmployeeRepository()),
             update: (_, auth, previous) =>
                 previous!..setStoreId(auth.currentStoreId),
-            child: const EmployeeLoginScreen(),
+            child: EmployeeLoginScreen(store: store),
           ),
           settings,
         );
@@ -63,8 +65,7 @@ class AppRouter {
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) => prev!..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
                 create: (_) => DebtProvider(),
@@ -93,8 +94,7 @@ class AppRouter {
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) => prev!..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
                 create: (_) => DebtProvider(),
@@ -132,8 +132,7 @@ class AppRouter {
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) => prev!..updateAuthState(auth),
               ),
             ],
             child: const CreateTransactionScreen(),
@@ -153,8 +152,7 @@ class AppRouter {
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                update: (_, auth, prev) => prev!..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
                 create: (_) =>

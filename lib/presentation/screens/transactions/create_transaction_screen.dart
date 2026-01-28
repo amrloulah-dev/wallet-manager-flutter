@@ -140,7 +140,6 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       serviceFee: _serviceFee,
       paymentStatus: _paymentStatus,
       notes: _notesController.text,
-      createdBy: currentUserId,
     );
 
     if (mounted && success) {

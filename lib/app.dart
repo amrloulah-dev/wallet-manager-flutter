@@ -2,6 +2,8 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:walletmanager/data/repositories/employee_repository.dart';
+import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -21,6 +23,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider(employeeRepository: EmployeeRepository())), 
 
         // Feature-specific providers will be moved to the router
       ],

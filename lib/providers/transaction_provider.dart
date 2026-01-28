@@ -7,7 +7,9 @@ import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
+import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
+import 'auth_provider.dart';
 
 enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
 
@@ -16,6 +18,7 @@ class TransactionProvider extends ChangeNotifier {
 
   // State
   String? _currentStoreId;
+  UserModel? _currentUser;
   List<TransactionModel> _transactions = [];
   Map<String, dynamic> _summary = {};
   DocumentSnapshot? _lastDocument;
@@ -78,12 +81,21 @@ class TransactionProvider extends ChangeNotifier {
   bool get hasError => _status == TransactionStatus.error;
 
   // Methods
-  void setStoreId(String storeId) {
-    if (_currentStoreId != storeId) {
-      _currentStoreId = storeId;
-      _cachedTransactions = null;
-      _cacheTimestamp = null;
-      fetchInitialTransactions();
+  void updateAuthState(AuthProvider auth) {
+    if (_currentStoreId != auth.currentStoreId ||
+        _currentUser != auth.currentUser) {
+      _currentStoreId = auth.currentStoreId;
+      _currentUser = auth.currentUser;
+
+      // Only refresh if store changed (user change doesn't invalidate transaction list usually)
+      if (auth.currentStoreId != _currentStoreId) {
+        _cachedTransactions = null;
+        _cacheTimestamp = null;
+        fetchInitialTransactions();
+      } else if (_transactions.isEmpty && _currentStoreId != null) {
+        // Initial fetch if we have store but no data
+        fetchInitialTransactions();
+      }
     }
   }
 
@@ -225,7 +237,6 @@ class TransactionProvider extends ChangeNotifier {
     double serviceFee = 0.0,
     String paymentStatus = 'paid',
     String? notes,
-    required String createdBy,
   }) async {
     _setStatus(TransactionStatus.creating);
     try {
@@ -247,7 +258,10 @@ class TransactionProvider extends ChangeNotifier {
         notes: notes,
         transactionDate: Timestamp.now(),
         createdAt: Timestamp.now(),
-        createdBy: createdBy,
+        createdBy: _currentUser?.userId ?? '',
+        createdById: _currentUser?.userId,
+        createdByName: _currentUser?.fullName,
+        creatorRole: _currentUser?.role,
       );
 
       await _transactionRepository.createTransaction(newTransaction);

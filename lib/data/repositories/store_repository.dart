@@ -29,12 +29,12 @@ class StoreRepository {
   /// Creates a new store document in Firestore.
   /// Also initializes the accompanying statistics document atomically.
   Future<void> createStore(StoreModel store) async {
-      print('🚀 STARTING createStore...'); // 1. هل دخل الدالة؟
+    print('🚀 STARTING createStore...'); // 1. هل دخل الدالة؟
     try {
       final batch = _firestore.batch();
       print('📝 Setting Store Doc...'); // 2. قبل المتجر
       // 1. Set Store Document
-      
+
       batch.set(_storesCollection.doc(store.storeId), store.toFirestore());
 
       // 2. Initialize Stats Document
@@ -48,16 +48,16 @@ class StoreRepository {
 
       final initialStats = StatsSummaryModel.empty();
       batch.set(statsRef, initialStats.toMap());
-      print('✅ Stats Created: ${initialStats.toMap()}'); // اطبع الداتا نتأكد إن مفيش null
+      print(
+          '✅ Stats Created: ${initialStats.toMap()}'); // اطبع الداتا نتأكد إن مفيش null
       // Commit all changes atomically
-       print('💾 Committing Batch...'); // 4. قبل الحفظ
+      print('💾 Committing Batch...'); // 4. قبل الحفظ
       await batch.commit();
-       print('🎉 DONE createStore'); // 5. هل خلص؟
+      print('🎉 DONE createStore'); // 5. هل خلص؟
     } on FirebaseException catch (e) {
-       print('🚨 ERROR in createStore: $e'); // ده أهم سطر!!
+      print('🚨 ERROR in createStore: $e'); // ده أهم سطر!!
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
     } catch (e) {
-      
       throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل.');
     }
   }
@@ -87,6 +87,26 @@ class StoreRepository {
     try {
       final querySnapshot = await _storesCollection
           .where(FirebaseConstants.ownerIdField, isEqualTo: ownerId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return StoreModel.fromFirestore(querySnapshot.docs.first);
+      }
+      return null;
+    } on FirebaseException catch (e) {
+      throw ServerException('فشل في البحث عن المحل: ${e.message}',
+          code: e.code);
+    } catch (e) {
+      throw ServerException('حدث خطأ غير متوقع.');
+    }
+  }
+
+  /// Finds a store associated with a specific owner email.
+  Future<StoreModel?> getStoreByEmail(String email) async {
+    try {
+      final querySnapshot = await _storesCollection
+          .where(FirebaseConstants.ownerEmail, isEqualTo: email)
           .limit(1)
           .get();
 

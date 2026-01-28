@@ -75,7 +75,9 @@ class AuthProvider extends ChangeNotifier {
       final savedUserRole = _localStorage.userRole;
 
       // Prioritize validating a complete, existing session
-      if (savedUserId != null && savedStoreId != null && savedUserRole != null) {
+      if (savedUserId != null &&
+          savedStoreId != null &&
+          savedUserRole != null) {
         final user = await _userRepository.getUserById(savedUserId);
         final store = await _storeRepository.getStoreById(savedStoreId);
 
@@ -96,7 +98,8 @@ class AuthProvider extends ChangeNotifier {
               _currentUser = user;
               _currentStore = store;
               await _ensureEmployeePermissions(user);
-              final updatedUser = await _userRepository.getUserById(user.userId);
+              final updatedUser =
+                  await _userRepository.getUserById(user.userId);
               _currentUser = updatedUser ?? user;
               _setStatus(AuthStatus.authenticated);
               return; // Exit successfully
@@ -115,7 +118,8 @@ class AuthProvider extends ChangeNotifier {
       }
 
       // Fallback for incomplete/invalid session: try to recover as owner ONLY.
-      final owner = await _userRepository.getUserByFirebaseUid(firebaseUser.uid);
+      final owner =
+          await _userRepository.getUserByFirebaseUid(firebaseUser.uid);
       if (owner != null && owner.isOwner) {
         final store = await _storeRepository.getStoreById(owner.storeId);
         if (store != null) {
@@ -135,7 +139,6 @@ class AuthProvider extends ChangeNotifier {
 
       // If all session validation and recovery attempts fail, logout.
       await logout();
-
     } catch (e) {
       await logout();
     }
@@ -147,9 +150,9 @@ class AuthProvider extends ChangeNotifier {
         // Only update if permissions are not already set, to avoid unnecessary writes.
         // Note: A more robust check might be needed if permissions can be an empty object vs. null.
         if (employee.permissions == null) {
-            await _userRepository.updateUser(employee.userId, {
-              'permissions': UserPermissions.defaultPermissions().toMap(),
-            });
+          await _userRepository.updateUser(employee.userId, {
+            'permissions': UserPermissions.defaultPermissions().toMap(),
+          });
         }
       }
     }
@@ -162,106 +165,240 @@ class AuthProvider extends ChangeNotifier {
     required String licenseKeyId,
   }) async {
     _setStatus(AuthStatus.loading);
-    print('🔥 PROVIDER: Start registerStoreWithGoogle'); // Debug 1
-
     try {
       final googleUser = _authRepository.getCurrentUser();
       if (googleUser == null) {
         throw AuthException('يجب تسجيل الدخول أولاً.');
       }
       _firebaseUser = googleUser;
-      print('🔥 PROVIDER: User found ${googleUser.uid}'); // Debug 2
 
-      final existingStore = await _storeRepository.getStoreByOwnerId(googleUser.uid);
+      final existingStore =
+          await _storeRepository.getStoreByOwnerId(googleUser.uid);
       if (existingStore != null) {
         throw AuthException('هذا الحساب يمتلك متجرًا بالفعل.');
       }
 
-      final storeId = googleUser.uid;
-      final userId = googleUser.uid;
-
-      print('🔥 PROVIDER: Building StoreModel...'); // Debug 3
-
-      // ⚠️ التعديل الجوهري هنا: استخدام القيم الصفرية للإحصائيات
-      // تأكد إن StoreStats هو نفسه StatsSummaryModel اللي عدلناه
-      // لو الكلاس اسمه مختلف، استخدم الاسم الصحيح
-      final newStore = StoreModel(
-        storeId: storeId,
+      return await _createStoreAndUser(
+        uid: googleUser.uid,
+        email: googleUser.email!,
+        name: googleUser.displayName ?? 'مالك جديد',
+        photoUrl: googleUser.photoURL,
         storeName: storeName,
-        storePassword: PasswordHasher.hashPassword(storePassword),
-        ownerId: userId,
-        ownerName: googleUser.displayName ?? 'مالك جديد',
-        ownerEmail: googleUser.email!,
-        ownerPhoto: googleUser.photoURL,
-        createdAt: Timestamp.now(),
-        license: StoreLicense(
-          licenseKey: licenseKey,
-          licenseType: 'premium',
-          status: 'active',
-          startDate: Timestamp.now(),
-          expiryDate: Timestamp.fromDate(DateTime.now().add(const Duration(days: 365))),
-          lastCheck: Timestamp.now(),
-        ),
-        settings: StoreSettings(), // تأكد إن دي مش required fields
-        
-        // 🔥 هنا التصحيح: لازم نبعت كل البيانات عشان الـ Batch ميفشلش
-        // لو عندك دالة empty استخدمها: stats: StoreStats.empty(),
-        // لو معندكش، ابعت الأصفار يدوياً كالتالي:
-        stats: StoreStats(
-          totalWallets: 0,
-          activeWallets: 0,
-          totalTransactionsToday: 0,
-          totalCommissionToday: 0.0,
-          lastUpdated: Timestamp.now(),
-        ),
-        
-        activeLicenseKey: licenseKey,
+        storePassword: storePassword,
+        licenseKey: licenseKey,
         licenseKeyId: licenseKeyId,
       );
+    } catch (e) {
+      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
+      await logout();
+      return null;
+    }
+  }
 
-      final newOwner = UserModel(
-        userId: userId,
-        storeId: storeId,
-        role: 'owner',
-        fullName: googleUser.displayName ?? 'مالك جديد',
-        email: googleUser.email,
-        firebaseUid: googleUser.uid,
-        createdAt: Timestamp.now(),
-        lastLogin: Timestamp.now(),
+  Future<String?> registerStoreWithEmail({
+    required String ownerName,
+    required String email,
+    required String password,
+    required String storeName,
+    required String storePassword,
+    required String licenseKey,
+    required String licenseKeyId,
+  }) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final userCredential =
+          await _authRepository.createUserWithEmail(email, password);
+      final user = userCredential.user!;
+      _firebaseUser = user;
+
+      // Ensure display name is set
+      await user.updateDisplayName(ownerName);
+
+      return await _createStoreAndUser(
+        uid: user.uid,
+        email: email,
+        name: ownerName,
+        photoUrl: null,
+        storeName: storeName,
+        storePassword: storePassword,
+        licenseKey: licenseKey,
+        licenseKeyId: licenseKeyId,
       );
+    } catch (e) {
+      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
+      // If registration fails halfway, we might want to cleanup the created user
+      // but Firebase Auth handles mostly atomic creation.
+      // However, if store creation fails, we are in a bad state.
+      // For now, logging out cleans up local state.
+      await logout();
+      return null;
+    }
+  }
 
-      print('🔥 PROVIDER: Calling StoreRepo.createStore...'); // Debug 4
-      await _storeRepository.createStore(newStore);
-      
-      print('🔥 PROVIDER: Creating User...'); // Debug 5
-      await _userRepository.createUser(newOwner);
+  Future<String> _createStoreAndUser({
+    required String uid,
+    required String email,
+    required String name,
+    required String? photoUrl,
+    required String storeName,
+    required String storePassword,
+    required String licenseKey,
+    required String licenseKeyId,
+  }) async {
+    final storeId = uid;
+    final userId = uid;
 
-      _currentUser = newOwner;
-      _currentStore = newStore;
-      
-      print('🔥 PROVIDER: Saving Session...');
+    final newStore = StoreModel(
+      storeId: storeId,
+      storeName: storeName,
+      storePassword: PasswordHasher.hashPassword(storePassword),
+      ownerId: userId,
+      ownerName: name,
+      ownerEmail: email,
+      ownerPhoto: photoUrl,
+      createdAt: Timestamp.now(),
+      license: StoreLicense(
+        licenseKey: licenseKey,
+        licenseType: 'premium',
+        status: 'active',
+        startDate: Timestamp.now(),
+        expiryDate:
+            Timestamp.fromDate(DateTime.now().add(const Duration(days: 365))),
+        lastCheck: Timestamp.now(),
+      ),
+      settings: StoreSettings(),
+      stats: StoreStats(
+        totalWallets: 0,
+        activeWallets: 0,
+        totalTransactionsToday: 0,
+        totalCommissionToday: 0.0,
+        lastUpdated: Timestamp.now(),
+      ),
+      activeLicenseKey: licenseKey,
+      licenseKeyId: licenseKeyId,
+    );
+
+    final newOwner = UserModel(
+      userId: userId,
+      storeId: storeId,
+      role: 'owner',
+      fullName: name,
+      email: email,
+      firebaseUid: uid,
+      createdAt: Timestamp.now(),
+      lastLogin: Timestamp.now(),
+    );
+
+    await _storeRepository.createStore(newStore);
+    await _userRepository.createUser(newOwner);
+
+    _currentUser = newOwner;
+    _currentStore = newStore;
+
+    await _localStorage.saveSession(
+      userId: userId,
+      storeId: storeId,
+      userRole: 'owner',
+      userName: newOwner.fullName,
+      storeName: newStore.storeName,
+    );
+
+    _setStatus(AuthStatus.authenticated);
+    appEvents.fireWalletsChanged();
+    appEvents.fireTransactionsChanged();
+    appEvents.fireDebtsChanged();
+
+    return storeId;
+  }
+
+  Future<bool> loginOwnerWithEmail(String email, String password) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final userCredential =
+          await _authRepository.signInWithEmail(email, password);
+      final user = userCredential.user!;
+      _firebaseUser = user;
+
+      return await _finalizeOwnerLogin(user.uid);
+    } catch (e) {
+      _setError(e is AppException ? e.message : 'فشل تسجيل الدخول.');
+      await _authRepository.signOut();
+      return false;
+    }
+  }
+
+  Future<bool> _finalizeOwnerLogin(String uid) async {
+    final userModel = await _userRepository.getUserByFirebaseUid(uid);
+    if (userModel == null || !userModel.isOwner) {
+      throw AuthException('المستخدم غير موجود أو ليس مالكًا.');
+    }
+
+    final store = await _storeRepository.getStoreById(userModel.storeId);
+    if (store == null) {
+      throw AuthException('المتجر غير موجود.');
+    }
+
+    if (!store.isActive) throw StoreInactiveException();
+    if (store.license.isExpired) throw LicenseExpiredException();
+
+    _currentUser = userModel;
+    _currentStore = store;
+
+    await _userRepository.updateLastLogin(userModel.userId);
+    await _localStorage.saveSession(
+      userId: userModel.userId,
+      storeId: store.storeId,
+      userRole: userModel.role,
+      userName: userModel.fullName,
+      storeName: store.storeName,
+    );
+
+    _setStatus(AuthStatus.authenticated);
+    return true;
+  }
+
+  Future<bool> loginAsEmployee(UserModel employee, StoreModel store) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      if (!store.isActive) throw StoreInactiveException();
+      if (store.license.isExpired) throw LicenseExpiredException();
+
+      _currentUser = employee;
+      _currentStore = store;
+
+      await _userRepository.updateLastLogin(employee.userId);
       await _localStorage.saveSession(
-        userId: userId,
-        storeId: storeId,
-        userRole: 'owner',
-        userName: newOwner.fullName,
-        storeName: newStore.storeName,
+        userId: employee.userId,
+        storeId: store.storeId,
+        userRole: 'employee', // Explicitly set role
+        userName: employee.fullName,
+        storeName: store.storeName,
       );
 
       _setStatus(AuthStatus.authenticated);
       appEvents.fireWalletsChanged();
       appEvents.fireTransactionsChanged();
       appEvents.fireDebtsChanged();
-      
-      print('🔥 PROVIDER: SUCCESS! Returning ID.');
-      return storeId;
+      return true;
+    } catch (e) {
+      _setError(e is AppException ? e.message : 'فشل تسجيل دخول الموظف.');
+      await logout();
+      return false;
+    }
+  }
 
-    } catch (e, stack) {
-      print('🚨 PROVIDER ERROR: $e'); // طباعة الخطأ
-      print(stack); // طباعة مسار الخطأ
-      
-      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
-      await logout(); // ده اللي بيخرجك برة
+  Future<StoreModel?> findStoreByEmail(String email) async {
+    _setStatus(AuthStatus.loading);
+    try {
+      final store = await _storeRepository.getStoreByEmail(email);
+      if (store == null) {
+        throw AuthException('لم يتم العثور على متجر بهذا البريد الإلكتروني.');
+      }
+      _setStatus(AuthStatus.idle); // Not authenticated yet, just found store
+      return store;
+    } catch (e) {
+      _setError(
+          e is AppException ? e.message : 'حدث خطأ أثناء البحث عن المتجر.');
       return null;
     }
   }
@@ -351,21 +488,26 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       if (_firebaseUser == null) {
-        throw AuthException("No authenticated Google user found. Please sign in first.");
+        throw AuthException(
+            "No authenticated Google user found. Please sign in first.");
       }
 
       // Conditionally assign permissions before finalizing the session
       await _ensureEmployeePermissions(employee);
 
       // Re-fetch the employee and store to ensure all data is up-to-date
-      final updatedEmployee = await _userRepository.getUserById(employee.userId);
+      final updatedEmployee =
+          await _userRepository.getUserById(employee.userId);
       if (updatedEmployee == null) {
-        throw ServerException('Could not re-fetch employee details after permission check.');
+        throw ServerException(
+            'Could not re-fetch employee details after permission check.');
       }
 
-      final store = await _storeRepository.getStoreById(updatedEmployee.storeId);
+      final store =
+          await _storeRepository.getStoreById(updatedEmployee.storeId);
       if (store == null) {
-        throw ServerException('The store associated with this employee could not be found.');
+        throw ServerException(
+            'The store associated with this employee could not be found.');
       }
 
       // Store status check
@@ -396,7 +538,9 @@ class AuthProvider extends ChangeNotifier {
       appEvents.fireTransactionsChanged();
       appEvents.fireDebtsChanged();
     } catch (e) {
-      _setError(e is AppException ? e.message : 'Failed to finalize employee session.');
+      _setError(e is AppException
+          ? e.message
+          : 'Failed to finalize employee session.');
     } finally {
       _setLoading(false);
     }
@@ -424,7 +568,8 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser != null && _currentStore != null) {
       try {
         _currentUser = await _userRepository.getUserById(_currentUser!.userId);
-        _currentStore = await _storeRepository.getStoreById(_currentStore!.storeId);
+        _currentStore =
+            await _storeRepository.getStoreById(_currentStore!.storeId);
         notifyListeners();
       } catch (e) {
         _setError('فشل تحديث البيانات.');
@@ -439,7 +584,7 @@ class AuthProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
-  
+
   void _setLoading(bool loading) {
     _status = loading ? AuthStatus.loading : AuthStatus.idle;
     notifyListeners();

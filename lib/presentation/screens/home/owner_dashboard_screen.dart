@@ -40,9 +40,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           .read<StatisticsProvider>()
           .setStoreId(authProvider.currentStoreId);
       context.read<WalletProvider>().setStoreId(authProvider.currentStoreId!);
-      context
-          .read<TransactionProvider>()
-          .setStoreId(authProvider.currentStoreId!);
+      context.read<TransactionProvider>().updateAuthState(authProvider);
       context.read<DebtProvider>().setStoreId(authProvider.currentStoreId!);
     }
   }
@@ -105,12 +103,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   DateTime? currentBackPressTime;
 
-  
   // 1️⃣ انسخ دالة النقل هنا (داخل الكلاس)
   Future<void> migrateUserAccountSurgical() async {
     // ⚠️⚠️⚠️ هام جداً: استبدل القيم دي بالقيم الحقيقية
-    final String oldUid = "B1yitBr7U9bTQD1sruJjS8ftxD62"; 
-    final String newUid = "6M3p202It9YnnBO3RI31zya8NZ52"; 
+    final String oldUid = "B1yitBr7U9bTQD1sruJjS8ftxD62";
+    final String newUid = "6M3p202It9YnnBO3RI31zya8NZ52";
 
     // إظهار تنبيه إن العملية بدأت
     ScaffoldMessenger.of(context).showSnackBar(
@@ -131,49 +128,78 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
     try {
       // --- نفس كود النقل اللي اتفقنا عليه V4 ---
-      
+
       // 1. تنظيف المفتاح المؤقت
       QuerySnapshot tempKeyQuery = await firestore
           .collection('license_keys')
-          .where('usedBy', isEqualTo: newUid).get();
-          
+          .where('usedBy', isEqualTo: newUid)
+          .get();
+
       if (tempKeyQuery.docs.isEmpty) {
-         tempKeyQuery = await firestore
-          .collection('license_keys')
-          .where('ownerId', isEqualTo: newUid).get();
+        tempKeyQuery = await firestore
+            .collection('license_keys')
+            .where('ownerId', isEqualTo: newUid)
+            .get();
       }
 
       for (var doc in tempKeyQuery.docs) {
-        batch.update(doc.reference, {'usedBy': null, 'ownerId': null, 'isUsed': false});
+        batch.update(
+            doc.reference, {'usedBy': null, 'ownerId': null, 'isUsed': false});
         batchCount++;
       }
 
       // 2. نقل البروفايل
-      DocumentSnapshot oldStoreDoc = await firestore.collection('stores').doc(oldUid).get();
+      DocumentSnapshot oldStoreDoc =
+          await firestore.collection('stores').doc(oldUid).get();
       if (oldStoreDoc.exists) {
-        batch.set(firestore.collection('stores').doc(newUid), oldStoreDoc.data()!);
+        batch.set(
+            firestore.collection('stores').doc(newUid), oldStoreDoc.data()!);
         batchCount++;
       }
 
       // 3. نقل الإحصائيات (Summary)
-      DocumentSnapshot oldStatsDoc = await firestore.collection('stores').doc(oldUid).collection('stats').doc('summary').get();
+      DocumentSnapshot oldStatsDoc = await firestore
+          .collection('stores')
+          .doc(oldUid)
+          .collection('stats')
+          .doc('summary')
+          .get();
       if (oldStatsDoc.exists) {
-        batch.set(firestore.collection('stores').doc(newUid).collection('stats').doc('summary'), oldStatsDoc.data()!);
+        batch.set(
+            firestore
+                .collection('stores')
+                .doc(newUid)
+                .collection('stats')
+                .doc('summary'),
+            oldStatsDoc.data()!);
         batchCount++;
       }
 
       // 4. نقل الإحصائيات اليومية
-      QuerySnapshot dailyStatsQuery = await firestore.collection('stores').doc(oldUid).collection('daily_stats').get();
+      QuerySnapshot dailyStatsQuery = await firestore
+          .collection('stores')
+          .doc(oldUid)
+          .collection('daily_stats')
+          .get();
       for (var doc in dailyStatsQuery.docs) {
         await commitBatchIfNeeded();
-        batch.set(firestore.collection('stores').doc(newUid).collection('daily_stats').doc(doc.id), doc.data() as Map<String, dynamic>);
+        batch.set(
+            firestore
+                .collection('stores')
+                .doc(newUid)
+                .collection('daily_stats')
+                .doc(doc.id),
+            doc.data() as Map<String, dynamic>);
         batchCount++;
       }
 
       // 5. نقل Root Collections
       final collectionsToUpdate = ['wallets', 'debts', 'transactions', 'users'];
       for (String collection in collectionsToUpdate) {
-        QuerySnapshot query = await firestore.collection(collection).where('storeId', isEqualTo: oldUid).get();
+        QuerySnapshot query = await firestore
+            .collection(collection)
+            .where('storeId', isEqualTo: oldUid)
+            .get();
         for (var doc in query.docs) {
           await commitBatchIfNeeded();
           batch.update(doc.reference, {'storeId': newUid});
@@ -182,9 +208,15 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       }
 
       // 6. نقل المفتاح الأصلي
-      QuerySnapshot realLicenseQuery = await firestore.collection('license_keys').where('usedBy', isEqualTo: oldUid).get();
+      QuerySnapshot realLicenseQuery = await firestore
+          .collection('license_keys')
+          .where('usedBy', isEqualTo: oldUid)
+          .get();
       if (realLicenseQuery.docs.isEmpty) {
-         realLicenseQuery = await firestore.collection('license_keys').where('ownerId', isEqualTo: oldUid).get();
+        realLicenseQuery = await firestore
+            .collection('license_keys')
+            .where('ownerId', isEqualTo: oldUid)
+            .get();
       }
       for (var doc in realLicenseQuery.docs) {
         await commitBatchIfNeeded();
@@ -203,7 +235,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           duration: Duration(seconds: 5),
         ),
       );
-
     } catch (e) {
       // رسالة خطأ
       ScaffoldMessenger.of(context).showSnackBar(
@@ -211,7 +242,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -232,52 +262,51 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.home),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () =>
-                  Navigator.pushNamed(context, RouteConstants.settings),
-            ),
-          ],
-        ),
-        drawer: _buildDrawer(),
-        body: RefreshIndicator(
-          onRefresh: _refreshData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWelcomeHeader(),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildQuickStats(),
-                      const SizedBox(height: 24), // Increased spacing
-                      _buildQuickActions(),
-                      const SizedBox(height: 24),
-                      _buildAlerts(),
-                      _buildRecentTransactions(),
-                    ],
+          appBar: AppBar(
+            title: Text(AppLocalizations.of(context)!.home),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () =>
+                    Navigator.pushNamed(context, RouteConstants.settings),
+              ),
+            ],
+          ),
+          drawer: _buildDrawer(),
+          body: RefreshIndicator(
+            onRefresh: _refreshData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeHeader(),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildQuickStats(),
+                        const SizedBox(height: 24), // Increased spacing
+                        _buildQuickActions(),
+                        const SizedBox(height: 24),
+                        _buildAlerts(),
+                        _buildRecentTransactions(),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      // 2️⃣ ضيف الزرار المؤقت ده هنا
-       floatingActionButton: FloatingActionButton.extended(
-         onPressed: _navigateToCreateTransaction,
-        icon: const Icon(Icons.add),
-         label: Text(AppLocalizations.of(context)!.newTransaction),
-          foregroundColor: Colors.white,
-        backgroundColor: AppColors.primary,
-       )
-      ),
+          // 2️⃣ ضيف الزرار المؤقت ده هنا
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: _navigateToCreateTransaction,
+            icon: const Icon(Icons.add),
+            label: Text(AppLocalizations.of(context)!.newTransaction),
+            foregroundColor: Colors.white,
+            backgroundColor: AppColors.primary,
+          )),
     );
   }
 
@@ -863,5 +892,3 @@ class _DrawerMenuTile extends StatelessWidget {
     );
   }
 }
-
-

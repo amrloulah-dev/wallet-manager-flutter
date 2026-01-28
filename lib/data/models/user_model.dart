@@ -25,7 +25,8 @@ class UserModel {
 
   // Timestamps
   final Timestamp createdAt;
-  final String? createdBy; // ID of the user who created this user (e.g., owner ID)
+  final String?
+      createdBy; // ID of the user who created this user (e.g., owner ID)
   final Timestamp? updatedAt;
   final Timestamp lastLogin;
 
@@ -79,7 +80,9 @@ class UserModel {
       createdBy: data['createdBy'],
       updatedAt: data['updatedAt'],
       lastLogin: data['lastLogin'] ?? Timestamp.now(),
-      permissions: role == 'employee' ? UserPermissions.fromMap(data['permissions'] ?? {}) : null,
+      permissions: role == 'employee'
+          ? UserPermissions.fromMap(data['permissions'] ?? {})
+          : null,
       stats: role == 'employee' ? UserStats.fromMap(data['stats'] ?? {}) : null,
     );
   }
@@ -152,6 +155,18 @@ class UserModel {
   String toString() {
     return 'UserModel(userId: $userId, fullName: $fullName, role: $role)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is UserModel &&
+        other.userId == userId &&
+        other.storeId == storeId;
+  }
+
+  @override
+  int get hashCode => userId.hashCode ^ storeId.hashCode;
 }
 
 // ===========================
@@ -198,10 +213,11 @@ class UserPermissions {
 
   factory UserPermissions.fromMap(Map<String, dynamic> map) {
     final screensFromMap = map['canAccessScreens'];
-    
-    final List<String> effectiveScreens = (screensFromMap is List && screensFromMap.isNotEmpty)
-        ? List<String>.from(screensFromMap)
-        : UserPermissions.defaultPermissions().canAccessScreens;
+
+    final List<String> effectiveScreens =
+        (screensFromMap is List && screensFromMap.isNotEmpty)
+            ? List<String>.from(screensFromMap)
+            : UserPermissions.defaultPermissions().canAccessScreens;
 
     return UserPermissions(
       canCreateTransactions: map['canCreateTransactions'] ?? true,
@@ -230,11 +246,13 @@ class UserPermissions {
     bool? canViewAllTransactions,
   }) {
     return UserPermissions(
-      canCreateTransactions: canCreateTransactions ?? this.canCreateTransactions,
+      canCreateTransactions:
+          canCreateTransactions ?? this.canCreateTransactions,
       canCreateDebt: canCreateDebt ?? this.canCreateDebt,
       canAccessScreens: canAccessScreens ?? this.canAccessScreens,
       canMarkDebtPaid: canMarkDebtPaid ?? this.canMarkDebtPaid,
-      canViewAllTransactions: canViewAllTransactions ?? this.canViewAllTransactions,
+      canViewAllTransactions:
+          canViewAllTransactions ?? this.canViewAllTransactions,
     );
   }
 }

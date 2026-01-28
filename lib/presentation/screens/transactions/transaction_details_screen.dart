@@ -7,8 +7,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/transaction_model.dart';
-import 'package:walletmanager/providers/auth_provider.dart';
-import '../../../providers/employee_provider.dart';
+
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
@@ -71,13 +70,15 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
               },
             );
           }
-          return _buildTransactionDetails(context, provider.selectedTransaction!);
+          return _buildTransactionDetails(
+              context, provider.selectedTransaction!);
         },
       ),
     );
   }
 
-  Widget _buildTransactionDetails(BuildContext context, TransactionModel transaction) {
+  Widget _buildTransactionDetails(
+      BuildContext context, TransactionModel transaction) {
     return Hero(
       tag: 'transaction_${transaction.transactionId}',
       child: Material(
@@ -100,7 +101,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                 const SizedBox(height: 16),
                 _buildPaymentStatusCard(transaction),
               ],
-              if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
+              if (transaction.notes != null &&
+                  transaction.notes!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 _buildNotesCard(context, transaction),
               ],
@@ -130,13 +132,15 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary(context))),
+              Text(label,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textSecondary(context))),
               const SizedBox(height: 4),
               Text(
                 value,
                 style: valueStyle ??
-                    AppTextStyles.bodyLarge
-                        .copyWith(fontWeight: FontWeight.bold, color: valueColor),
+                    AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.bold, color: valueColor),
               ),
             ],
           ),
@@ -164,7 +168,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: transaction.transactionTypeColor.withAlpha((0.1 * 255).round()),
+              color: transaction.transactionTypeColor
+                  .withAlpha((0.1 * 255).round()),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -230,8 +235,10 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildCustomerInfoCard(BuildContext context, TransactionModel transaction) {
-    if (transaction.customerPhone == null || transaction.customerPhone!.isEmpty) {
+  Widget _buildCustomerInfoCard(
+      BuildContext context, TransactionModel transaction) {
+    if (transaction.customerPhone == null ||
+        transaction.customerPhone!.isEmpty) {
       return const SizedBox.shrink();
     }
     return _buildBaseCard(
@@ -261,14 +268,16 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildWalletInfoCard(BuildContext context, TransactionModel transaction) {
+  Widget _buildWalletInfoCard(
+      BuildContext context, TransactionModel transaction) {
     return Consumer<WalletProvider>(
       builder: (context, walletProvider, child) {
         if (walletProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final WalletModel? wallet = walletProvider.wallets.firstWhereOrNull((w) => w.walletId == transaction.walletId);
+        final WalletModel? wallet = walletProvider.wallets
+            .firstWhereOrNull((w) => w.walletId == transaction.walletId);
 
         return _buildBaseCard(
           child: Column(
@@ -300,7 +309,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildDateTimeCard(BuildContext context, TransactionModel transaction) {
+  Widget _buildDateTimeCard(
+      BuildContext context, TransactionModel transaction) {
     return _buildBaseCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +352,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.warning, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -350,10 +361,12 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                 children: [
                   Text(
                     'هذه المعاملة دين',
-                    style: AppTextStyles.labelLarge.copyWith(color: AppColors.warning),
+                    style: AppTextStyles.labelLarge
+                        .copyWith(color: AppColors.warning),
                   ),
                   const SizedBox(height: 4),
-                  const Text('لم يتم دفع المبلغ من قبل العميل وقت إنشاء المعاملة.'),
+                  const Text(
+                      'لم يتم دفع المبلغ من قبل العميل وقت إنشاء المعاملة.'),
                 ],
               ),
             ),
@@ -381,21 +394,27 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildMetadataCard(BuildContext context, TransactionModel transaction) {
-    final authProvider = context.watch<AuthProvider>();
-    final employeeProvider = context.watch<EmployeeProvider>();
+  Widget _buildMetadataCard(
+      BuildContext context, TransactionModel transaction) {
+    // 1. Resolve Creator Name
+    final creatorName = transaction.createdByName ?? 'غير معروف';
 
-    final creatorId = transaction.createdBy;
-    String creatorName = 'غير معروف';
+    // 2. Resolve Creator Role & Styles
+    String roleDisplay = '';
+    IconData creatorIcon = Icons.person_outline;
+    Color? roleColor;
 
-    // Find the creator's name
-    final employee = employeeProvider.getEmployeeById(creatorId);
-    if (employee != null) {
-      creatorName = employee.fullName;
-    } else if (creatorId == authProvider.currentStore?.ownerId) {
-      creatorName = authProvider.currentStore?.ownerName ?? 'المالك';
+    if (transaction.creatorRole == 'owner') {
+      roleDisplay = ' (المالك)';
+      creatorIcon = Icons.admin_panel_settings_outlined;
+      roleColor = AppColors.primary;
+    } else if (transaction.creatorRole == 'employee') {
+      roleDisplay = ' (موظف)';
+      creatorIcon = Icons.person_outline;
     }
 
+    // Combine
+    final fullCreatorDisplay = '$creatorName$roleDisplay';
 
     return _buildBaseCard(
       child: Column(
@@ -410,10 +429,12 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
           const SizedBox(height: 16),
           _buildInfoRow(
             context: context,
-            icon: Icons.person_add_alt_1,
+            icon: creatorIcon,
             label: 'تم إنشاؤها بواسطة',
-            value: creatorName,
-            valueStyle: AppTextStyles.caption,
+            value: fullCreatorDisplay,
+            valueColor: roleColor, // Apply specific color if set
+            valueStyle: AppTextStyles.bodyMedium
+                .copyWith(fontWeight: FontWeight.bold, color: roleColor),
           ),
         ],
       ),

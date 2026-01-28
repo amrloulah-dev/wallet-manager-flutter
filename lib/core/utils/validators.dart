@@ -59,6 +59,19 @@ class Validators {
   }
 
   // ===========================
+  // Generic Password Validation
+  // ===========================
+  static String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'يرجى إدخال كلمة السر';
+    }
+    if (value.length < 6) {
+      return 'كلمة السر يجب أن تكون 6 حروف على الأقل';
+    }
+    return null;
+  }
+
+  // ===========================
   // Confirm Password Validation
   // ===========================
   /// Validates that the confirmed password matches the original password.
@@ -105,13 +118,15 @@ class Validators {
     }
 
     // Check format
-    final RegExp licenseRegExp = RegExp(r'^WALLET-2025-[A-Z0-9]{4}-[A-Z0-9]{4}$');
+    final RegExp licenseRegExp =
+        RegExp(r'^WALLET-2025-[A-Z0-9]{4}-[A-Z0-9]{4}$');
     if (!licenseRegExp.hasMatch(trimmedValue.toUpperCase())) {
       return 'صيغة مفتاح الترخيص غير صحيحة';
     }
 
     return null;
   }
+
   // ===========================
   // Phone Number Validation (Egyptian format)
   // ===========================

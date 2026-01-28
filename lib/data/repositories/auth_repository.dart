@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../services/firebase_service.dart';
 import '../services/google_sign_in_service.dart';
@@ -37,7 +38,8 @@ class AuthRepository {
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'account-exists-with-different-credential':
-          throw AuthException('هذا الحساب موجود بالفعل ولكن بطريقة تسجيل دخول مختلفة.');
+          throw AuthException(
+              'هذا الحساب موجود بالفعل ولكن بطريقة تسجيل دخول مختلفة.');
         case 'invalid-credential':
           throw InvalidCredentialsException();
         case 'operation-not-allowed':
@@ -47,7 +49,8 @@ class AuthRepository {
         case 'user-not-found':
           throw UserNotFoundException();
         default:
-          throw AuthException('حدث خطأ غير معروف أثناء تسجيل الدخول: ${e.message}');
+          throw AuthException(
+              'حدث خطأ غير معروف أثناء تسجيل الدخول: ${e.message}');
       }
     } catch (e) {
       throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.toString()}');
@@ -55,11 +58,81 @@ class AuthRepository {
   }
 
   /// Signs out the current user from both Google and Firebase.
-  Future<void> signOut() async {
+ Future<void> signOut() async {
     try {
-      await _googleSignInService.signOut();
+      // 1. الخروج من فايربيس (ده الأهم وده بيشتغل في أي مكان)
+      await _auth.signOut();
+
+      // 2. محاولة الخروج من جوجل (لو متاح)
+      try {
+        final googleSignIn = GoogleSignIn();
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+          await googleSignIn.disconnect(); // اختياري حسب الحاجة
+        }
+      } catch (e) {
+        // لو الجهاز هواوي أو مفيهوش خدمات جوجل، هنتجاهل الخطأ ده
+        print('⚠️ Warning: Google Sign-In logout failed (Non-GMS device?): $e');
+      }
     } catch (e) {
-      throw AuthException('حدث خطأ أثناء تسجيل الخروج: ${e.toString()}');
+      // لو الخروج من فايربيس نفسه فشل، دي مشكلة حقيقية
+      throw AuthException('فشل تسجيل الخروج: $e');
+    }
+  }
+  // ===========================
+  // Email/Password Methods
+  // ===========================
+
+  /// Signs in the user with email and password.
+  Future<UserCredential> signInWithEmail(String email, String password) async {
+    try {
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          throw InvalidCredentialsException();
+        case 'user-disabled':
+          throw AuthException('تم تعطيل هذا الحساب.');
+        case 'invalid-email':
+          throw AuthException('البريد الإلكتروني غير صحيح.');
+        default:
+          throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.message}');
+      }
+    } catch (e) {
+      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
+    }
+  }
+
+  /// Creates a new user account with email and password.
+  Future<UserCredential> createUserWithEmail(
+      String email, String password) async {
+    try {
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'email-already-in-use':
+          throw AuthException('البريد الإلكتروني مستخدم بالفعل.');
+        case 'invalid-email':
+          throw AuthException('البريد الإلكتروني غير صحيح.');
+        case 'weak-password':
+          throw AuthException('كلمة المرور ضعيفة جداً.');
+        case 'operation-not-allowed':
+          throw AuthException('تسجيل الدخول بالبريد الإلكتروني غير مفعل.');
+        default:
+          throw AuthException('حدث خطأ أثناء إنشاء الحساب: ${e.message}');
+      }
+    } catch (e) {
+      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
     }
   }
 
@@ -112,6 +185,4 @@ class AuthRepository {
       throw AuthException('فشل في تحديث بيانات المستخدم: \${e.toString()}');
     }
   }
-
-
-  }
+}

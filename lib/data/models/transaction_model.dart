@@ -20,6 +20,9 @@ class TransactionModel {
   final Timestamp transactionDate;
   final Timestamp createdAt;
   final String createdBy;
+  final String? createdById;
+  final String? createdByName;
+  final String? creatorRole;
   final Timestamp? updatedAt;
   final String? updatedBy;
   final bool isDeleted;
@@ -42,6 +45,9 @@ class TransactionModel {
     required this.transactionDate,
     required this.createdAt,
     required this.createdBy,
+    this.createdById,
+    this.createdByName,
+    this.creatorRole,
     this.updatedAt,
     this.updatedBy,
     this.isDeleted = false,
@@ -67,6 +73,9 @@ class TransactionModel {
       transactionDate: data['transactionDate'] ?? Timestamp.now(),
       createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
       createdBy: data[FirebaseConstants.createdBy] ?? '',
+      createdById: data['createdById'],
+      createdByName: data['createdByName'],
+      creatorRole: data['creatorRole'],
       updatedAt: data[FirebaseConstants.updatedAt],
       updatedBy: data['updatedBy'],
       isDeleted: data['isDeleted'] ?? false,
@@ -91,6 +100,9 @@ class TransactionModel {
       'transactionDate': transactionDate,
       FirebaseConstants.createdAt: createdAt,
       FirebaseConstants.createdBy: createdBy,
+      'createdById': createdById,
+      'createdByName': createdByName,
+      'creatorRole': creatorRole,
       FirebaseConstants.updatedAt: updatedAt,
       'updatedBy': updatedBy,
       'isDeleted': isDeleted,
@@ -115,6 +127,9 @@ class TransactionModel {
     Timestamp? transactionDate,
     Timestamp? createdAt,
     String? createdBy,
+    String? createdById,
+    String? createdByName,
+    String? creatorRole,
     Timestamp? updatedAt,
     String? updatedBy,
     bool? isDeleted,
@@ -137,6 +152,9 @@ class TransactionModel {
       transactionDate: transactionDate ?? this.transactionDate,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
+      createdById: createdById ?? this.createdById,
+      createdByName: createdByName ?? this.createdByName,
+      creatorRole: creatorRole ?? this.creatorRole,
       updatedAt: updatedAt ?? this.updatedAt,
       updatedBy: updatedBy ?? this.updatedBy,
       isDeleted: isDeleted ?? this.isDeleted,

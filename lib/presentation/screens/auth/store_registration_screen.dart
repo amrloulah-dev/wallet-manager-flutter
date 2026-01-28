@@ -28,6 +28,7 @@ class StoreRegistrationScreen extends StatefulWidget {
 class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   // State
   int _currentStep = 0; // 0: License, 1: Store Info
+  int _registrationMethod = 0; // 0: Email, 1: Google
 
   // Controllers
   final GlobalKey<FormState> _formKeyStep2 = GlobalKey<FormState>();
@@ -36,6 +37,12 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   final TextEditingController _storePasswordController =
       TextEditingController();
   final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  // New Controllers for Email Registration
+  final TextEditingController _ownerNameController = TextEditingController();
+  final TextEditingController _ownerEmailController = TextEditingController();
+  final TextEditingController _ownerPasswordController =
       TextEditingController();
 
   // Logic
@@ -91,82 +98,72 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   }
 
   Future<void> _handleCreateAccount() async {
-    print('📍 UI: Button Clicked - Starting _handleCreateAccount');
-
-    if (!(_formKeyStep2.currentState?.validate() ?? false)) {
-      print('❌ UI: Validation Failed (Form is invalid)');
-      return;
-    }
+    if (!(_formKeyStep2.currentState?.validate() ?? false)) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    if (authProvider.isLoading) {
-      print('⚠️ UI: Ignored click (Provider is loading)');
-      return;
-    }
+    if (authProvider.isLoading) return;
 
-      Provider.of<AuthProvider>(context, listen: false);
-
-    // 1. Google Sign In
-    print('👉 UI: Calling authProvider.loginWithGoogleOrNull()...');
-    
-    // استدعاء الدالة (سواء رجعت true أو false مش هيفرق معانا دلوقتي)
-    await authProvider.loginWithGoogleOrNull();
-
-    // التحقق الحقيقي: هل المستخدم موجود في فايربيس؟
-    final currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      print('⛔ UI: Google Sign-In failed (User is null).');
-      ToastUtils.showError('فشل تسجيل الدخول بجوجل');
-      return;
-    }
-
-    // 2. Register Store
-    print('👉 UI: Checking License Key...');
     if (_verifiedKey == null) {
-      print('❌ UI: License Key is NULL');
       ToastUtils.showError(AppLocalizations.of(context)!.licenseKeyError);
       return;
     }
 
-    try {
-      print('🚀 UI: Calling registerStoreWithGoogle (The Critical Step)...');
-      
-      final storeId = await authProvider.registerStoreWithGoogle(
-        storeName: _storeNameController.text,
-        storePassword: _storePasswordController.text,
-        licenseKey: _verifiedKey!.licenseKey,
-        licenseKeyId: _verifiedKey!.keyId,
-      );
+    String? storeId;
 
-      print('✅ UI: registerStoreWithGoogle finished. StoreId: $storeId');
+    if (_registrationMethod == 1) {
+      // --- Google Registration ---
+      await authProvider.loginWithGoogleOrNull();
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-      if (storeId != null && mounted) {
-        // 3. Activate License
-        print('👉 UI: Activating License...');
-        try {
-          await _licenseKeyRepository.activateLicenseKey(
-            keyId: _verifiedKey!.keyId,
-            storeId: storeId,
-          );
-          print('✅ UI: License Activated.');
-        } catch (e) {
-          print('⚠️ UI: License activation warning: $e');
-        }
-
-        print('🎉 UI: Navigating to Dashboard...');
-        Navigator.of(context).pushNamedAndRemoveUntil(
-            RouteConstants.ownerDashboard, (route) => false);
-        ToastUtils.showSuccess(AppLocalizations.of(context)!.loginSuccess);
-      } else {
-        print('❌ UI: StoreId is null!');
+      if (currentUser == null) {
+        ToastUtils.showError('فشل تسجيل الدخول بجوجل');
+        return;
       }
-    } on StoreInactiveException catch (e) {
-      print('🚨 UI Error (StoreInactive): ${e.message}');
-      ToastUtils.showError(e.message);
-    } catch (e) {
-      print('🚨 UI Error (Unexpected): $e');
-      ToastUtils.showError('حدث خطأ غير متوقع: $e');
+
+      try {
+        storeId = await authProvider.registerStoreWithGoogle(
+          storeName: _storeNameController.text,
+          storePassword: _storePasswordController.text,
+          licenseKey: _verifiedKey!.licenseKey,
+          licenseKeyId: _verifiedKey!.keyId,
+        );
+      } on StoreInactiveException catch (e) {
+        ToastUtils.showError(e.message);
+        return;
+      } catch (e) {
+        // Error handled in provider usually, but we check storeId
+      }
+    } else {
+      // --- Email Registration ---
+      try {
+        storeId = await authProvider.registerStoreWithEmail(
+          ownerName: _ownerNameController.text,
+          email: _ownerEmailController.text.trim(),
+          password: _ownerPasswordController.text,
+          storeName: _storeNameController.text,
+          storePassword: _storePasswordController.text,
+          licenseKey: _verifiedKey!.licenseKey,
+          licenseKeyId: _verifiedKey!.keyId,
+        );
+      } catch (e) {
+        // Provider handles errors
+      }
+    }
+
+    // --- Success Handler ---
+    if (storeId != null && mounted) {
+      try {
+        await _licenseKeyRepository.activateLicenseKey(
+          keyId: _verifiedKey!.keyId,
+          storeId: storeId,
+        );
+      } catch (e) {
+        // Warning logic
+      }
+
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteConstants.ownerDashboard, (route) => false);
+      ToastUtils.showSuccess(AppLocalizations.of(context)!.loginSuccess);
     }
   }
 
@@ -279,6 +276,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
   Widget _buildStep2() {
     final authProvider = Provider.of<AuthProvider>(context);
+
     return Form(
       key: _formKeyStep2,
       child: Column(
@@ -296,7 +294,82 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                 .copyWith(color: AppColors.textSecondary(context)),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
+          // Registration Method Toggle
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _registrationMethod = 0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _registrationMethod == 0
+                          ? AppColors.primary.withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _registrationMethod == 0
+                            ? AppColors.primary
+                            : AppColors.divider(context),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'البريد الإلكتروني',
+                      style: TextStyle(
+                        color: _registrationMethod == 0
+                            ? AppColors.primary
+                            : AppColors.textSecondary(context),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _registrationMethod = 1),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _registrationMethod == 1
+                          ? AppColors.primary.withOpacity(0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _registrationMethod == 1
+                            ? AppColors.primary
+                            : AppColors.divider(context),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(FontAwesomeIcons.google, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Google',
+                          style: TextStyle(
+                            color: _registrationMethod == 1
+                                ? AppColors.primary
+                                : AppColors.textSecondary(context),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Common Store Fields
           CustomTextField(
             controller: _storeNameController,
             labelText: AppLocalizations.of(context)!.storeName,
@@ -335,13 +408,49 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                   () => _obscureConfirmPassword = !_obscureConfirmPassword),
             ),
           ),
+
+          // Specific Fields for Email Registration
+          if (_registrationMethod == 0) ...[
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+            Text('بيانات المالك', style: AppTextStyles.h3),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: _ownerNameController,
+              labelText: 'اسم المالك',
+              prefixIcon: const Icon(Icons.person),
+              validator: Validators.validateName,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: _ownerEmailController,
+              labelText: 'البريد الإلكتروني',
+              prefixIcon: const Icon(Icons.email),
+              validator: Validators.validateEmail,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: _ownerPasswordController,
+              labelText: 'كلمة مرور الحساب',
+              prefixIcon: const Icon(Icons.lock_outline),
+              validator: Validators.validatePassword,
+              obscureText: true,
+            ),
+          ],
+
           const SizedBox(height: 32),
           CustomButton(
-            text: 'إنشاء الحساب',
+            text: _registrationMethod == 1
+                ? 'تسجيل باستخدام Google'
+                : 'إنشاء الحساب',
             onPressed: authProvider.isLoading ? null : _handleCreateAccount,
             isLoading: authProvider.isLoading,
-            icon: const FaIcon(FontAwesomeIcons.google,
-                color: Colors.white, size: 18),
+            icon: _registrationMethod == 1
+                ? const FaIcon(FontAwesomeIcons.google,
+                    color: Colors.white, size: 18)
+                : null,
           ),
           const SizedBox(height: 16),
           TextButton(
