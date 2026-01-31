@@ -27,13 +27,10 @@
 
 ## 📸 App Screenshots
 
-| Financial Dashboard | Statistics & Analytics | Multi-Wallet Support |
-|:---:|:---:|:---:|
-| <img src="assets/screenshots/Dashboard.png" width="250"/> | <img src="assets/screenshots/stats.png" width="250"/> | <img src="assets/screenshots/wallets.png" width="250"/> |
+| Financial Dashboard | Multi-Wallet Support | Transaction Handling | Debt Management |
+|:---:|:---:|:---:|:---:|
+| <img src="assets/screenshots/Dashboard.png" width="200"/> | <img src="assets/screenshots/wallets.png" width="200"/> | <img src="assets/screenshots/transactions.png" width="200"/> | <img src="assets/screenshots/debts.png" width="200"/> |
 
-| Transaction Handling | Debt Management |
-|:---:|:---:|
-| <img src="assets/screenshots/transactions.png" width="250"/> | <img src="assets/screenshots/debts.png" width="250"/> |
 ---
 
 ## 🚀 Key Features
