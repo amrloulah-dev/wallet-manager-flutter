@@ -12,7 +12,7 @@
 <br />
 
 <!-- DOWNLOAD BUTTON -->
-<a href="https://drive.google.com/drive/folders/1dsfD6Zd-OIhfgP_EF_7ze9DTAdzjemdg?usp=sharing" target="_blank">
+<a href="https://drive.google.com/drive/folders/1JAbu5a8COLMpTgSXJsPSxh3M8OOI_-VQ?usp=sharing" target="_blank">
   <img src="https://img.shields.io/badge/Download_Demo_APK-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" height="40" />
 </a>
 
