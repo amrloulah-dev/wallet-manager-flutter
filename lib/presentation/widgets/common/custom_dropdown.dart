@@ -39,7 +39,7 @@ class CustomDropdown<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           items: items,
           selectedItemBuilder: selectedItemBuilder,
           isExpanded: isExpanded,

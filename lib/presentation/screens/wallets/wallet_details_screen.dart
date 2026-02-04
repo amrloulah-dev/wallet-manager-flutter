@@ -66,17 +66,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                   ]
                 : [],
           ),
-          body: _buildBody(context, snapshot),
-          floatingActionButton: wallet != null
-              ? FloatingActionButton.extended(
-                  onPressed: () =>
-                      _navigateToCreateTransaction(context, wallet),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.add),
-                  label: Text(AppLocalizations.of(context)!.newTransaction),
-                )
-              : null,
+          body: _buildBody(context, snapshot),          
         );
       },
     );

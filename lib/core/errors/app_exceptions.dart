@@ -1,4 +1,5 @@
 /// A structured hierarchy of custom exceptions for the application.
+library;
 
 // ===========================
 // Base Exception

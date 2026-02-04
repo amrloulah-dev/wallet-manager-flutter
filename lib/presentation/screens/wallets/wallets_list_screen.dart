@@ -27,7 +27,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
   final TextEditingController _searchController = TextEditingController();
   final _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
   final _scrollController = ScrollController();
-  bool _showFilters = false;
+  final bool _showFilters = false;
 
   late AnimationController _fabAnimationController;
   bool isFabMenuOpen = false;

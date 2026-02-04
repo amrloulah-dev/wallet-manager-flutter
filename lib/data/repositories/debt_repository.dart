@@ -191,10 +191,12 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToPay <= 0)
+        if (amountToPay <= 0) {
           throw ValidationException('Amount must be positive.');
-        if (amountToPay > oldDebt.amountDue)
+        }
+        if (amountToPay > oldDebt.amountDue) {
           throw ValidationException('Paid amount exceeds remaining debt.');
+        }
 
         final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
 
@@ -260,8 +262,9 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToAdd <= 0)
+        if (amountToAdd <= 0) {
           throw ValidationException('Amount must be positive.');
+        }
 
         final wasPaid = oldDebt.debtStatus == 'paid';
 

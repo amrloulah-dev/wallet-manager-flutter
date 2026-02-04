@@ -1,5 +1,6 @@
 /// Defines structured `Failure` classes to represent user-facing error states
 /// in the UI layer, corresponding to handled exceptions from the data layer.
+library;
 
 // ===========================
 // Base Failure

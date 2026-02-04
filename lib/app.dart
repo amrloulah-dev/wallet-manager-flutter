@@ -13,6 +13,7 @@ import 'providers/auth_provider.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 import 'routes/app_router.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
+import 'presentation/screens/auth/license_expired_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -93,6 +94,10 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
               child: CircularProgressIndicator(),
             ),
           );
+        }
+
+        if (auth.isSubscriptionExpired) {
+          return const LicenseExpiredScreen();
         }
 
         if (auth.isAuthenticated) {

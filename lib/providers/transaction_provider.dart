@@ -169,8 +169,9 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
+    }
 
     _setStatus(TransactionStatus.loadingMore);
 
@@ -240,8 +241,9 @@ class TransactionProvider extends ChangeNotifier {
   }) async {
     _setStatus(TransactionStatus.creating);
     try {
-      if (_currentStoreId == null)
+      if (_currentStoreId == null) {
         throw ValidationException('Store ID not found.');
+      }
       if (amount <= 0) throw ValidationException('Amount must be positive.');
 
       final newTransaction = TransactionModel(

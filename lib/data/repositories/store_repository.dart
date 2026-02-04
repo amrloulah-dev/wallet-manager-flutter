@@ -5,6 +5,7 @@ import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
 import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
+import 'package:uuid/uuid.dart';
 
 /// Repository for all Firestore operations related to the 'stores' collection.
 class StoreRepository {
@@ -26,25 +27,50 @@ class StoreRepository {
   // ===========================
 
   /// Creates a new store document in Firestore.
-  /// Creates a new store document in Firestore.
   /// Also initializes the accompanying statistics document atomically.
+  ///
+  /// **NOTE:** This method now enforces a "Trial Mode" for all new stores.
+  /// It overwrites any license information passed in the [store] object with
+  /// a generated trial license.
   Future<void> createStore(StoreModel store) async {
-    print('🚀 STARTING createStore...'); // 1. هل دخل الدالة؟
+    print('🚀 STARTING createStore...');
     try {
       final batch = _firestore.batch();
-      print('📝 Setting Store Doc...'); // 2. قبل المتجر
-      // 1. Set Store Document
+      print('📝 Setting Store Doc...');
 
-      batch.set(_storesCollection.doc(store.storeId), store.toFirestore());
+      // --- Generate Trial License ---
+      final trialLicense = StoreLicense(
+        licenseKey:
+            "TRIAL-MODE-${const Uuid().v4().substring(0, 8).toUpperCase()}",
+        licenseType: "trial",
+        status: "active",
+        startDate: Timestamp.now(),
+        expiryDate: Timestamp.fromDate(
+          DateTime.now().add(const Duration(days: 10)),
+        ),
+        lastCheck: Timestamp.now(),
+        autoRenew: false,
+      );
+
+      final storeWithTrial = store.copyWith(
+        license: trialLicense,
+        activeLicenseKey: trialLicense.licenseKey,
+        licenseKeyId: "TRIAL",
+      );
+      // -----------------------------
+
+      // 1. Set Store Document
+      batch.set(_storesCollection.doc(storeWithTrial.storeId),
+          storeWithTrial.toFirestore());
 
       // 2. Initialize Stats Document
       // Note: We use the same sub-collection path structure as found in StatsRepository:
       // stores/{storeId}/stats/summary
       final statsRef = _storesCollection
-          .doc(store.storeId)
+          .doc(storeWithTrial.storeId)
           .collection('stats')
           .doc('summary');
-      print('📝 Initializing Stats...'); // 3. قبل الإحصائيات
+      print('📝 Initializing Stats...');
 
       final initialStats = StatsSummaryModel.empty();
       batch.set(statsRef, initialStats.toMap());
@@ -183,10 +209,12 @@ class StoreRepository {
       final Map<String, dynamic> statsData = {
         FirebaseConstants.statsLastUpdated: FieldValue.serverTimestamp(),
       };
-      if (totalWallets != null)
+      if (totalWallets != null) {
         statsData[FirebaseConstants.totalWallets] = totalWallets;
-      if (activeWallets != null)
+      }
+      if (activeWallets != null) {
         statsData[FirebaseConstants.activeWallets] = activeWallets;
+      }
       if (totalTransactionsToday != null) {
         statsData[FirebaseConstants.totalTransactionsToday] =
             totalTransactionsToday;

@@ -38,7 +38,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   String? _preSelectedWalletId;
 
   String? _transactionType; // 'send' | 'receive'
-  String _paymentStatus = 'paid'; // 'paid' | 'debt'
+  final String _paymentStatus = 'paid'; // 'paid' | 'debt'
 
   bool _isTypeValidated = true;
   double _totalAmount = 0.0;
@@ -412,8 +412,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildFeeSection() {
-    if (_transactionType != 'send' || _serviceFee <= 0)
+    if (_transactionType != 'send' || _serviceFee <= 0) {
       return const SizedBox.shrink();
+    }
 
     final localizations = AppLocalizations.of(context)!;
     final amount = double.tryParse(_amountController.text) ?? 0.0;

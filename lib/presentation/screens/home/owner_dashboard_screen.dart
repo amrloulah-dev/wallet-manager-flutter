@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart'; // Removed
 import 'package:intl/intl.dart';
@@ -127,6 +126,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeHeader(),
+                  _buildTrialBanner(),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -152,7 +152,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             label: Text(AppLocalizations.of(context)!.newTransaction),
             foregroundColor: Colors.white,
             backgroundColor: AppColors.primary,
-          )),
+          )
+          ),
     );
   }
 
@@ -307,41 +308,87 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Widget _buildWelcomeHeader() {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        final user = authProvider.currentUser;
+        final avatarLetter = user?.fullName.isNotEmpty == true
+            ? user!.fullName[0].toUpperCase()
+            : 'U';
         return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withAlpha((0.8 * 255).round())
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+            color: AppColors.surface(context),
+            border: Border(
+                bottom: BorderSide(color: AppColors.border(context), width: 1)),
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary,
+              child: Text(
+                avatarLetter,
+                style: AppTextStyles.h3.copyWith(color: Colors.white),
+              ),
+            ),
+            title: Text(
+              _getGreetingMessage(context),
+              style: AppTextStyles.labelSmall
+                  .copyWith(color: AppColors.textSecondary(context)),
+            ),
+            subtitle: Text(
+              user?.fullName ?? AppLocalizations.of(context)!.user,
+              style: AppTextStyles.h3
+                  .copyWith(color: AppColors.textPrimary(context)),
             ),
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _getGreetingMessage(context),
-                  style: AppTextStyles.h3.copyWith(color: Colors.white70),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+        );
+      },
+    );
+  }
+
+  Widget _buildTrialBanner() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        if (!authProvider.isTrial) return const SizedBox.shrink();
+
+        final days = authProvider.trialDaysRemaining ?? 0;
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.amber.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.access_time_filled,
+                  color: Colors.amber.shade800, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'نسخة تجريبية: متبقي $days أيام',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.amber.shade900,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  authProvider.currentUser?.fullName ??
-                      AppLocalizations.of(context)!.user,
-                  style: AppTextStyles.h1.copyWith(color: Colors.white),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+              ),
+              TextButton(
+                onPressed: () {
+                  // Navigate to Settings/Contact to Renew
+                  Navigator.pushNamed(context, RouteConstants.settings);
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.amber.shade900,
+                  textStyle: AppTextStyles.labelMedium,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(60, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-              ],
-            ),
+                child: const Text('ترقية'),
+              )
+            ],
           ),
         );
       },

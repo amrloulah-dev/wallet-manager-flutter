@@ -229,12 +229,12 @@ class WalletRepository {
       if (wallet.needsDailyReset) {
         updates['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
         updates['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
-        updates['${FirebaseConstants.lastDailyReset}'] = now;
+        updates[FirebaseConstants.lastDailyReset] = now;
       }
       if (wallet.needsMonthlyReset) {
         updates['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
         updates['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
-        updates['${FirebaseConstants.lastMonthlyReset}'] = now;
+        updates[FirebaseConstants.lastMonthlyReset] = now;
       }
 
       if (updates.isNotEmpty) {

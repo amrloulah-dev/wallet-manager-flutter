@@ -1,4 +1,3 @@
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/dialog_utils.dart';
@@ -16,112 +15,6 @@ import 'package:walletmanager/providers/localization_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-
-  void _showContactDialog(BuildContext context) {
-    DialogUtils.showOptionsDialog(
-      context,
-      title: AppLocalizations.of(context)!.contactUs,
-      options: [
-        _buildContactRow(
-          context: context,
-          icon: Icons.phone,
-          label: AppLocalizations.of(context)!.whatsapp,
-          value: '01091264053',
-          onTap: () {
-            Navigator.of(context).pop();
-            _launchWhatsApp(context);
-          },
-        ),
-        const SizedBox(height: 8),
-        _buildContactRow(
-          context: context,
-          icon: Icons.email,
-          label: AppLocalizations.of(context)!.email,
-          value: 'amrloulah2021@gmail.com',
-          onTap: () {
-            Navigator.of(context).pop();
-            _launchEmail(context);
-          },
-        ),
-      ],
-    );
-  }
-
-  Future<void> _launchWhatsApp(BuildContext context) async {
-    const phone = '201091264053';
-    final message = AppLocalizations.of(context)!.whatsappMessageRenew;
-    final encodedMessage = Uri.encodeComponent(message);
-    final url = 'https://wa.me/$phone?text=$encodedMessage';
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      if (context.mounted)
-        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenWhatsapp);
-    }
-  }
-
-  Future<void> _launchEmail(BuildContext context) async {
-    const email = 'amrloulah2021@gmail.com';
-    final subject = AppLocalizations.of(context)!.emailSubjectRenew;
-    final body = AppLocalizations.of(context)!.emailBodyRenew;
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: email,
-      query:
-          'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
-    );
-    try {
-      await launchUrl(emailLaunchUri);
-    } catch (e) {
-      if (context.mounted)
-        ToastUtils.showError(AppLocalizations.of(context)!.errorOpenEmail);
-    }
-  }
-
-  Widget _buildContactRow({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required String value,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border(context)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: Colors.black)),
-                  Text(
-                    value,
-                    style:
-                        AppTextStyles.bodyMedium.copyWith(color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios,
-                size: 16, color: AppColors.textSecondary(context)),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -241,10 +134,12 @@ class SettingsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _buildInfoRow(
+                          context: context,
                           label: AppLocalizations.of(context)!.storeName,
                           value: store.storeName),
                       const Divider(height: 24),
                       _buildInfoRow(
+                          context: context,
                           label: AppLocalizations.of(context)!.creationDate,
                           value: DateHelper.formatTimestamp(store.createdAt)),
                     ],
@@ -262,103 +157,139 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLicenseCard(BuildContext context, StoreLicense license) {
-    final isExpired = license.isExpired;
-    final daysRemaining = license.daysRemaining;
-    final cardColor = isExpired
-        ? AppColors.error.withAlpha((0.05 * 255).round())
-        : AppColors.success.withAlpha((0.05 * 255).round());
-    final borderColor = isExpired
-        ? AppColors.error.withAlpha((0.2 * 255).round())
-        : AppColors.success.withAlpha((0.2 * 255).round());
-    final statusColor = isExpired ? AppColors.error : AppColors.success;
-    final statusText = isExpired
-        ? AppLocalizations.of(context)!.expired
-        : AppLocalizations.of(context)!.active;
+    return Consumer<AuthProvider>(builder: (context, authProvider, _) {
+      final isTrial = authProvider.isTrial;
+      final isExpired = license.isExpired;
+      final daysRemaining =
+          isTrial ? authProvider.trialDaysRemaining : license.daysRemaining;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      elevation: 1,
-      color: cardColor,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(AppLocalizations.of(context)!.licenseInfo,
-                    style: AppTextStyles.h3),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(statusText,
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: Colors.white)),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            _buildInfoRow(
-                label: AppLocalizations.of(context)!.licenseKey,
-                value: license.licenseKey),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-                label: AppLocalizations.of(context)!.expiryDate,
-                value: DateHelper.formatTimestamp(license.expiryDate)),
-            if (!isExpired) ...[
-              const SizedBox(height: 12),
+      final cardColor = AppColors.licenseCardBg(context,
+          isTrial: isTrial, isExpired: isExpired);
+      final borderColor = AppColors.licenseCardBorder(context,
+          isTrial: isTrial, isExpired: isExpired);
+
+      Color statusColor;
+      String statusText;
+
+      if (isTrial) {
+        statusColor = isDark ? Colors.amber.shade200 : Colors.amber.shade800;
+        statusText = 'فترة تجريبية';
+      } else if (isExpired) {
+        statusColor = AppColors.error;
+        statusText = AppLocalizations.of(context)!.expired;
+      } else {
+        statusColor = AppColors.success;
+        statusText = AppLocalizations.of(context)!.active;
+      }
+
+      return Card(
+        elevation: 1,
+        color: cardColor,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: borderColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppLocalizations.of(context)!.daysRemaining,
-                      style: AppTextStyles.bodyMedium),
+                  Text(AppLocalizations.of(context)!.licenseInfo,
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textPrimary(context),
+                      )),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: daysRemaining <= 7
-                          ? AppColors.warning
-                          : AppColors.primary,
+                      color: statusColor,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      '$daysRemaining ${AppLocalizations.of(context)!.day}',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: Colors.white),
-                    ),
+                    child: Text(statusText,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: isTrial && !isDark
+                              ? Colors.white
+                              : (isDark ? Colors.black87 : Colors.white),
+                        )),
                   ),
                 ],
               ),
-            ],
-            if (isExpired || daysRemaining <= 7) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton.icon(
-                  icon: const Icon(Icons.new_releases_outlined),
-                  label: Text(AppLocalizations.of(context)!.contactToRenew),
-                  onPressed: () => _showContactDialog(context),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    backgroundColor:
-                        AppColors.primary.withAlpha((0.1 * 255).round()),
+              Divider(height: 24, color: isDark ? Colors.white12 : null),
+              _buildInfoRow(
+                  context: context,
+                  label: AppLocalizations.of(context)!.licenseKey,
+                  value: isTrial ? 'TRIAL' : license.licenseKey),
+              const SizedBox(height: 12),
+              _buildInfoRow(
+                  context: context,
+                  label: AppLocalizations.of(context)!.expiryDate,
+                  value: DateHelper.formatTimestamp(license.expiryDate)),
+              if (!isExpired) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        isTrial
+                            ? 'الأيام المتبقية'
+                            : AppLocalizations.of(context)!.daysRemaining,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary(context),
+                        )),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (daysRemaining ?? 0) <= 7
+                            ? AppColors.warning
+                            : AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$daysRemaining ${AppLocalizations.of(context)!.day}',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (isExpired || (daysRemaining ?? 0) <= 7 || isTrial) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.new_releases_outlined),
+                    label: Text(isTrial
+                        ? 'ترقية النسخة الكاملة'
+                        : AppLocalizations.of(context)!.contactToRenew),
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        RouteConstants.upgradeScreen,
+                        arguments: isTrial,
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          isDark ? Colors.amber.shade200 : AppColors.primary,
+                      backgroundColor:
+                          (isDark ? Colors.amber.shade900 : AppColors.primary)
+                              .withAlpha((0.1 * 255).round()),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildAppSettingsSection(BuildContext context) {
@@ -429,55 +360,23 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: Icon(Icons.vpn_key_outlined,
                     color: AppColors.textSecondary(context)),
-                title: Text(AppLocalizations.of(context)!.license,
+                title: Text(
+                    context.read<AuthProvider>().isTrial
+                        ? 'ترقية'
+                        : 'عرض الترخيص', // "Upgrade" or "View License"
                     style: AppTextStyles.bodyLarge),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () => _showLicenseDialog(context),
+                onTap: () {
+                  final isTrial = context.read<AuthProvider>().isTrial;
+                  Navigator.pushNamed(
+                    context,
+                    RouteConstants.upgradeScreen,
+                    arguments: isTrial,
+                  );
+                },
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  void _showLicenseDialog(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
-    final store = authProvider.currentStore;
-    final user = authProvider.currentUser;
-
-    DialogUtils.showOptionsDialog(
-      context,
-      title: AppLocalizations.of(context)!.licenseInfo,
-      options: [
-        _buildInfoRow(
-            label: AppLocalizations.of(context)!.licenseKey,
-            value: store?.license.licenseKey ??
-                AppLocalizations.of(context)!.notAvailable,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.black,
-            )),
-        const Divider(height: 24),
-        _buildContactRow(
-          context: context,
-          icon: Icons.email,
-          label: AppLocalizations.of(context)!.email,
-          value: user?.email ?? AppLocalizations.of(context)!.notAvailable,
-          onTap: () {
-            Navigator.of(context).pop();
-            _launchEmail(context);
-          },
-        ),
-        const SizedBox(height: 8),
-        _buildContactRow(
-          context: context,
-          icon: Icons.phone,
-          label: AppLocalizations.of(context)!.whatsapp,
-          value: '01091264053', // Replace with your WhatsApp number
-          onTap: () {
-            Navigator.of(context).pop();
-            _launchWhatsApp(context);
-          },
         ),
       ],
     );
@@ -507,6 +406,7 @@ class SettingsScreen extends StatelessWidget {
   // ===========================
 
   Widget _buildInfoRow({
+    required BuildContext context,
     required String label,
     required String value,
     TextStyle? style,
@@ -514,13 +414,19 @@ class SettingsScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTextStyles.bodyMedium),
+        Text(label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary(context),
+            )),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
             value,
             style: style ??
-                AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary(context),
+                ),
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
           ),

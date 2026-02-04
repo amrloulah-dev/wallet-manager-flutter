@@ -67,9 +67,10 @@ class TransactionRepository {
         }
 
         if (transaction.isSend) {
-          if (validationWallet.balance < transaction.amount)
+          if (validationWallet.balance < transaction.amount) {
             throw ValidationException(
                 'المبلغ المراد إرساله أكبر من الرصيد المتاح.');
+          }
 
           // New Validation Rules (Strict Implementation)
           // Rule 1: Transaction Cap
@@ -127,10 +128,12 @@ class TransactionRepository {
           walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset
               ? transaction.amount
               : FieldValue.increment(transaction.amount);
-          if (needsDailyReset)
+          if (needsDailyReset) {
             walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
-          if (needsMonthlyReset)
+          }
+          if (needsMonthlyReset) {
             walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
+          }
         } else if (transaction.isReceive) {
           walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset
               ? transaction.amount
@@ -139,8 +142,9 @@ class TransactionRepository {
               ? transaction.amount
               : FieldValue.increment(transaction.amount);
           if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
-          if (needsMonthlyReset)
+          if (needsMonthlyReset) {
             walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
+          }
         }
 
         if (transaction.isSend || transaction.isReceive) {

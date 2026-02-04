@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../providers/transaction_provider.dart';
@@ -105,12 +106,12 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateTransaction(context),
-        tooltip: 'معاملة جديدة',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add,),
+        label: Text(AppLocalizations.of(context)!.newTransaction),
+        icon: const Icon(Icons.add,),
       ),
     );
   }

@@ -15,25 +15,69 @@ class AppColors {
 
   // --- Adaptive Getters ---
   static Color textPrimary(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.textPrimary : light.textPrimary;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.textPrimary
+          : light.textPrimary;
 
   static Color textSecondary(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.textSecondary : light.textSecondary;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.textSecondary
+          : light.textSecondary;
 
   static Color surface(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.surface : light.surface;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.surface
+          : light.surface;
 
   static Color divider(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.divider : light.divider;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.divider
+          : light.divider;
 
   static Color scaffoldBg(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.scaffoldBg : light.scaffoldBg;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.scaffoldBg
+          : light.scaffoldBg;
 
   static Color border(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark.border : light.border;
+      Theme.of(context).brightness == Brightness.dark
+          ? dark.border
+          : light.border;
 
   static Color hint(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? dark.hint : light.hint;
+
+  static Color licenseCardBg(BuildContext context,
+      {required bool isTrial, required bool isExpired}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isTrial) {
+      return isDark ? const Color(0xFF3E2723) : Colors.amber.shade50;
+    }
+    if (isExpired) {
+      return isDark
+          ? const Color(0xFF421412)
+          : error.withAlpha((0.05 * 255).round());
+    }
+    return isDark
+        ? const Color(0xFF1B321C)
+        : success.withAlpha((0.05 * 255).round());
+  }
+
+  static Color licenseCardBorder(BuildContext context,
+      {required bool isTrial, required bool isExpired}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isTrial) {
+      return isDark ? Colors.amber.shade900 : Colors.amber.shade200;
+    }
+    if (isExpired) {
+      return isDark
+          ? error.withAlpha((0.4 * 255).round())
+          : error.withAlpha((0.2 * 255).round());
+    }
+    return isDark
+        ? success.withAlpha((0.4 * 255).round())
+        : success.withAlpha((0.2 * 255).round());
+  }
 
   // Status & Semantic Colors
   static const Color success = Color(0xFF4CAF50);

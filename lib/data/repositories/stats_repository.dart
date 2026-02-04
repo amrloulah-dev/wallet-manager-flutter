@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
@@ -157,7 +156,7 @@ class StatsRepository {
 
         // Apply increments manually to the initial map
         updates.forEach((key, value) {
-          if (value is FieldValue && value.toString().contains('Increment')) {
+          if (value.toString().contains('Increment')) {
             // This is a bit of a hack to get the increment value.
             // A better solution would be to not use FieldValue here, but this keeps the logic consistent.
             final incrementValue = double.tryParse(

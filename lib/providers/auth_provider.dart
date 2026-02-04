@@ -6,18 +6,29 @@ import '../core/utils/password_hasher.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/store_repository.dart';
 import '../data/repositories/user_repository.dart';
+import '../data/repositories/device_repository.dart';
+import '../data/repositories/license_key_repository.dart';
 import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
 import '../data/services/local_storage_service.dart';
 import '../core/errors/app_exceptions.dart';
 
-enum AuthStatus { idle, loading, authenticated, unauthenticated, error }
+enum AuthStatus {
+  idle,
+  loading,
+  authenticated,
+  unauthenticated,
+  error,
+  expired
+}
 
 class AuthProvider extends ChangeNotifier {
   // Repositories
   final AuthRepository _authRepository;
   final StoreRepository _storeRepository;
   final UserRepository _userRepository;
+  final DeviceRepository _deviceRepository;
+  final LicenseKeyRepository _licenseKeyRepository;
   final LocalStorageService _localStorage;
 
   // State
@@ -34,10 +45,14 @@ class AuthProvider extends ChangeNotifier {
     AuthRepository? authRepository,
     StoreRepository? storeRepository,
     UserRepository? userRepository,
+    DeviceRepository? deviceRepository,
+    LicenseKeyRepository? licenseKeyRepository,
     LocalStorageService? localStorage,
   })  : _authRepository = authRepository ?? AuthRepository(),
         _storeRepository = storeRepository ?? StoreRepository(),
         _userRepository = userRepository ?? UserRepository(),
+        _deviceRepository = deviceRepository ?? DeviceRepository(),
+        _licenseKeyRepository = licenseKeyRepository ?? LicenseKeyRepository(),
         _localStorage = localStorage ?? LocalStorageService() {
     tryAutoLogin();
   }
@@ -46,16 +61,32 @@ class AuthProvider extends ChangeNotifier {
   User? get firebaseUser => _firebaseUser;
   UserModel? get currentUser => _currentUser;
   StoreModel? get currentStore => _currentStore;
+
+  // License Getters
+  String get licenseKey => _currentStore?.license.licenseKey ?? 'N/A';
+  Timestamp get licenseExpiryDate =>
+      _currentStore?.license.expiryDate ?? Timestamp.now();
+
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
   // Helper Getters
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isSubscriptionExpired => _status == AuthStatus.expired;
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
   String? get currentUserId => _currentUser?.userId;
   String? get currentStoreId => _currentStore?.storeId;
+
+  // Trial Status
+  bool get isTrial => _currentStore?.license.licenseType == 'trial';
+  int? get trialDaysRemaining {
+    if (!isTrial) return null;
+    final remaining =
+        _currentStore!.license.expiryDate.toDate().difference(DateTime.now());
+    return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
+  }
 
   // ===== Methods =====
 
@@ -91,14 +122,13 @@ class AuthProvider extends ChangeNotifier {
 
           if (user != null && store != null) {
             // Basic Validation
-            if (!user.isActive) throw AuthException('الحساب غير نشط');
-            if (!store.isActive) throw StoreInactiveException();
-            if (store.license.isExpired) throw LicenseExpiredException();
-
-            // Additional Check: verify store ownership if needed, or pin match (skipped here, trusting session)
-
             _currentUser = user;
             _currentStore = store;
+
+            if (store.license.isExpired) {
+              _setStatus(AuthStatus.expired);
+              return;
+            }
 
             // Ensure permissions are up to date
             await _ensureEmployeePermissions(user);
@@ -151,8 +181,6 @@ class AuthProvider extends ChangeNotifier {
   Future<String?> registerStoreWithGoogle({
     required String storeName,
     required String storePassword,
-    required String licenseKey,
-    required String licenseKeyId,
   }) async {
     _setStatus(AuthStatus.loading);
     try {
@@ -162,22 +190,39 @@ class AuthProvider extends ChangeNotifier {
       }
       _firebaseUser = googleUser;
 
+      // 1. Check Device Eligibility
+      final deviceId = await _deviceRepository.getDeviceId();
+      final isEligible =
+          await _deviceRepository.checkDeviceEligibility(deviceId);
+      if (!isEligible) {
+        throw AuthException(
+            'لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+      }
+
       final existingStore =
           await _storeRepository.getStoreByOwnerId(googleUser.uid);
       if (existingStore != null) {
         throw AuthException('هذا الحساب يمتلك متجرًا بالفعل.');
       }
 
-      return await _createStoreAndUser(
+      final storeId = await _createStoreAndUser(
         uid: googleUser.uid,
         email: googleUser.email!,
         name: googleUser.displayName ?? 'مالك جديد',
         photoUrl: googleUser.photoURL,
         storeName: storeName,
         storePassword: storePassword,
-        licenseKey: licenseKey,
-        licenseKeyId: licenseKeyId,
       );
+
+      // 2. Register Device Usage (Best effort)
+      try {
+        await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+      } catch (e) {
+        // Log error but don't fail the whole registration as store is already created
+        debugPrint("Warning: Failed to register device usage: $e");
+      }
+
+      return storeId;
     } catch (e) {
       _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
       await logout();
@@ -191,11 +236,19 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String storeName,
     required String storePassword,
-    required String licenseKey,
-    required String licenseKeyId,
   }) async {
     _setStatus(AuthStatus.loading);
     try {
+      // 1. Check Device Eligibility BEFORE creating auth user if possible,
+      // but usually we need to do it early.
+      final deviceId = await _deviceRepository.getDeviceId();
+      final isEligible =
+          await _deviceRepository.checkDeviceEligibility(deviceId);
+      if (!isEligible) {
+        throw AuthException(
+            'لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+      }
+
       final userCredential =
           await _authRepository.createUserWithEmail(email, password);
       final user = userCredential.user!;
@@ -204,16 +257,23 @@ class AuthProvider extends ChangeNotifier {
       // Ensure display name is set
       await user.updateDisplayName(ownerName);
 
-      return await _createStoreAndUser(
+      final storeId = await _createStoreAndUser(
         uid: user.uid,
         email: email,
         name: ownerName,
         photoUrl: null,
         storeName: storeName,
         storePassword: storePassword,
-        licenseKey: licenseKey,
-        licenseKeyId: licenseKeyId,
       );
+
+      // 2. Register Device Usage
+      try {
+        await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+      } catch (e) {
+        print("Warning: Failed to register device usage: $e");
+      }
+
+      return storeId;
     } catch (e) {
       _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
       // If registration fails halfway, we might want to cleanup the created user
@@ -232,11 +292,21 @@ class AuthProvider extends ChangeNotifier {
     required String? photoUrl,
     required String storeName,
     required String storePassword,
-    required String licenseKey,
-    required String licenseKeyId,
   }) async {
     final storeId = uid;
     final userId = uid;
+
+    // NOTE: License details here are DUMMY PLACEHOLDERS.
+    // The StoreRepository.createStore method will overwrite these with
+    // the canonical Trial License.
+    final placeholderLicense = StoreLicense(
+      licenseKey: "PENDING",
+      licenseType: "trial",
+      status: "pending",
+      startDate: Timestamp.now(),
+      expiryDate: Timestamp.now(),
+      lastCheck: Timestamp.now(),
+    );
 
     final newStore = StoreModel(
       storeId: storeId,
@@ -247,15 +317,7 @@ class AuthProvider extends ChangeNotifier {
       ownerEmail: email,
       ownerPhoto: photoUrl,
       createdAt: Timestamp.now(),
-      license: StoreLicense(
-        licenseKey: licenseKey,
-        licenseType: 'premium',
-        status: 'active',
-        startDate: Timestamp.now(),
-        expiryDate:
-            Timestamp.fromDate(DateTime.now().add(const Duration(days: 365))),
-        lastCheck: Timestamp.now(),
-      ),
+      license: placeholderLicense,
       settings: StoreSettings(),
       stats: StoreStats(
         totalWallets: 0,
@@ -264,8 +326,8 @@ class AuthProvider extends ChangeNotifier {
         totalCommissionToday: 0.0,
         lastUpdated: Timestamp.now(),
       ),
-      activeLicenseKey: licenseKey,
-      licenseKeyId: licenseKeyId,
+      activeLicenseKey: "PENDING",
+      licenseKeyId: "PENDING",
     );
 
     final newOwner = UserModel(
@@ -329,10 +391,14 @@ class AuthProvider extends ChangeNotifier {
     }
 
     if (!store.isActive) throw StoreInactiveException();
-    if (store.license.isExpired) throw LicenseExpiredException();
 
     _currentUser = userModel;
     _currentStore = store;
+
+    if (store.license.isExpired) {
+      _setStatus(AuthStatus.expired);
+      return true; // Login successful but expired
+    }
 
     await _userRepository.updateLastLogin(userModel.userId);
     await _localStorage.saveSession(
@@ -351,10 +417,14 @@ class AuthProvider extends ChangeNotifier {
     _setStatus(AuthStatus.loading);
     try {
       if (!store.isActive) throw StoreInactiveException();
-      if (store.license.isExpired) throw LicenseExpiredException();
 
       _currentUser = employee;
       _currentStore = store;
+
+      if (store.license.isExpired) {
+        _setStatus(AuthStatus.expired);
+        return true;
+      }
 
       await _userRepository.updateLastLogin(employee.userId);
       await _localStorage.saveSession(
@@ -424,13 +494,14 @@ class AuthProvider extends ChangeNotifier {
         throw StoreInactiveException();
       }
 
-      // License check
-      if (store.license.isExpired) {
-        throw LicenseExpiredException();
-      }
-
       _currentUser = user;
       _currentStore = store;
+
+      // License check
+      if (store.license.isExpired) {
+        _setStatus(AuthStatus.expired);
+        return true;
+      }
 
       await _userRepository.updateLastLogin(user.userId);
       await _localStorage.saveSession(
@@ -505,13 +576,14 @@ class AuthProvider extends ChangeNotifier {
         throw StoreInactiveException();
       }
 
-      // License check
-      if (store.license.isExpired) {
-        throw LicenseExpiredException();
-      }
-
       _currentUser = updatedEmployee;
       _currentStore = store;
+
+      // License check
+      if (store.license.isExpired) {
+        _setStatus(AuthStatus.expired);
+        return;
+      }
 
       await _localStorage.saveSession(
         userId: updatedEmployee.userId,
@@ -533,6 +605,39 @@ class AuthProvider extends ChangeNotifier {
           : 'Failed to finalize employee session.');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> activateNewLicense(String newKey) async {
+    _setLoading(true);
+    try {
+      if (_currentStore == null) {
+        throw AuthException('لا يوجد متجر نشط');
+      }
+
+      // 1. Verify Key
+      final keyData = await _licenseKeyRepository.verifyLicenseKey(newKey);
+      if (keyData == null) {
+        throw AuthException('المفتاح غير صحيح');
+      }
+      if (keyData.isUsed) {
+        throw AuthException('المفتاح مستخدم من قبل');
+      }
+
+      // 2. Activate Key
+      await _licenseKeyRepository.activateLicenseKey(
+        keyId: keyData.keyId,
+        storeId: _currentStore!.storeId,
+      );
+
+      // 3. Refresh Data (Fetch updated store profile with Premium status)
+      await refreshUserData();
+
+      _setLoading(false);
+    } catch (e) {
+      _setLoading(false); // Ensure loading is cleared on error
+      _setError(e is AppException ? e.message : 'فشل تفعيل المفتاح: $e');
+      rethrow;
     }
   }
 

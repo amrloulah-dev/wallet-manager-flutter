@@ -149,8 +149,9 @@ class DebtProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreDebts() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
+    }
 
     _setStatus(DebtStatus.loadingMore);
 
@@ -207,8 +208,9 @@ class DebtProvider extends ChangeNotifier {
   }) async {
     _setStatus(DebtStatus.creating);
     try {
-      if (_currentStoreId == null)
+      if (_currentStoreId == null) {
         throw ValidationException('Store ID not found.');
+      }
       if (amountDue <= 0) throw ValidationException('Amount must be positive.');
 
       // This logic for updating an existing debt is complex and should ideally be a transaction.

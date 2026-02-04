@@ -29,6 +29,7 @@ import '../presentation/screens/debts/add_debt_screen.dart';
 import '../presentation/screens/debts/debts_list_screen.dart';
 import '../presentation/screens/statistics/general_statistics_screen.dart';
 import '../presentation/screens/settings/settings_screen.dart';
+import '../presentation/screens/settings/upgrade_screen.dart';
 import '../presentation/screens/employees/add_employee_screen.dart';
 import '../presentation/screens/employees/manage_employees_screen.dart';
 
@@ -196,6 +197,10 @@ class AppRouter {
 
       case RouteConstants.settings:
         return _buildRoute(const SettingsScreen(), settings);
+
+      case RouteConstants.upgradeScreen:
+        final isTrial = settings.arguments as bool? ?? false;
+        return _buildRoute(UpgradeScreen(isTrial: isTrial), settings);
 
       case RouteConstants.addEmployee:
       case RouteConstants.manageEmployees:

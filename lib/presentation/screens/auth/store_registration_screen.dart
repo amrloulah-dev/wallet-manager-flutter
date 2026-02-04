@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
@@ -10,8 +10,7 @@ import 'package:walletmanager/core/theme/app_text_styles.dart';
 
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
-import 'package:walletmanager/data/models/license_key_model.dart';
-import 'package:walletmanager/data/repositories/license_key_repository.dart';
+// Removed unused LicenseKey imports
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
@@ -28,12 +27,11 @@ class StoreRegistrationScreen extends StatefulWidget {
 
 class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   // State
-  int _currentStep = 0; // 0: License, 1: Store Info
   int _registrationMethod = 0; // 0: Email, 1: Google
 
   // Controllers
-  final GlobalKey<FormState> _formKeyStep2 = GlobalKey<FormState>();
-  final TextEditingController _licenseKeyController = TextEditingController();
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(); // Renamed from _formKeyStep2
   final TextEditingController _storeNameController = TextEditingController();
   final TextEditingController _storePasswordController =
       TextEditingController();
@@ -47,15 +45,14 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       TextEditingController();
 
   // Logic
-  final LicenseKeyRepository _licenseKeyRepository = LicenseKeyRepository();
-  LicenseKeyModel? _verifiedKey;
-  bool _isVerifyingLicense = false;
+  // LicenseKeyRepository _licenseKeyRepository = LicenseKeyRepository(); // Removed
+  // LicenseKeyModel? _verifiedKey; // Removed
+  // bool _isVerifyingLicense = false; // Removed
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
-    _licenseKeyController.dispose();
     _storeNameController.dispose();
     _storePasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -64,50 +61,15 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
   // --- Actions ---
 
-  Future<void> _verifyLicense() async {
-    final keyInput = _licenseKeyController.text.trim().toUpperCase();
-    if (keyInput.isEmpty || keyInput.length != 21) {
-      ToastUtils.showError('يرجى إدخال مفتاح ترخيص صحيح (21 حرف)');
-      return;
-    }
-
-    setState(() => _isVerifyingLicense = true);
-
-    try {
-      final keyModel = await _licenseKeyRepository.verifyLicenseKey(keyInput);
-
-      if (keyModel == null) {
-        ToastUtils.showError(AppLocalizations.of(context)!.invalidLicense);
-        return;
-      }
-
-      if (keyModel.isUsed) {
-        ToastUtils.showError(AppLocalizations.of(context)!.licenseUsed);
-        return;
-      }
-
-      setState(() {
-        _verifiedKey = keyModel;
-        _currentStep = 1; // Move to Step 2
-      });
-      ToastUtils.showSuccess(AppLocalizations.of(context)!.verifySuccess);
-    } catch (e) {
-      ToastUtils.showError(AppLocalizations.of(context)!.errorVerifying);
-    } finally {
-      if (mounted) setState(() => _isVerifyingLicense = false);
-    }
-  }
+  // Removed _verifyLicense method
 
   Future<void> _handleCreateAccount() async {
-    if (!(_formKeyStep2.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isLoading) return;
 
-    if (_verifiedKey == null) {
-      ToastUtils.showError(AppLocalizations.of(context)!.licenseKeyError);
-      return;
-    }
+    // License check removed
 
     String? storeId;
 
@@ -125,8 +87,6 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         storeId = await authProvider.registerStoreWithGoogle(
           storeName: _storeNameController.text,
           storePassword: _storePasswordController.text,
-          licenseKey: _verifiedKey!.licenseKey,
-          licenseKeyId: _verifiedKey!.keyId,
         );
       } on StoreInactiveException catch (e) {
         ToastUtils.showError(e.message);
@@ -143,8 +103,6 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           password: _ownerPasswordController.text,
           storeName: _storeNameController.text,
           storePassword: _storePasswordController.text,
-          licenseKey: _verifiedKey!.licenseKey,
-          licenseKeyId: _verifiedKey!.keyId,
         );
       } catch (e) {
         // Provider handles errors
@@ -153,14 +111,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
     // --- Success Handler ---
     if (storeId != null && mounted) {
-      try {
-        await _licenseKeyRepository.activateLicenseKey(
-          keyId: _verifiedKey!.keyId,
-          storeId: storeId,
-        );
-      } catch (e) {
-        // Warning logic
-      }
+      // Activation logic removed as it's auto-trial now
 
       Navigator.of(context).pushNamedAndRemoveUntil(
           RouteConstants.ownerDashboard, (route) => false);
@@ -181,11 +132,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: AppColors.textPrimary(context)),
             onPressed: () {
-              if (_currentStep == 1) {
-                setState(() => _currentStep = 0);
-              } else {
-                Navigator.pop(context);
-              }
+              Navigator.pop(context);
             },
           ),
         ),
@@ -195,7 +142,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_currentStep == 0) _buildStep1() else _buildStep2(),
+                _buildRegistrationForm(),
               ],
             ),
           ),
@@ -204,84 +151,13 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     );
   }
 
-  Widget _buildStep1() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'تفعيل الترخيص',
-          style: AppTextStyles.h1.copyWith(fontSize: 28),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'الخطوة 1 من 2',
-          style: AppTextStyles.bodyMedium
-              .copyWith(color: AppColors.textSecondary(context)),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
+  // Removed _buildStep1
 
-        // Contact Info Card
-        Card(
-          elevation: 2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          color: AppColors.surface(context),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Text(
-                  'للحصول على مفتاح الترخيص، تواصل معنا:',
-                  style: AppTextStyles.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                _buildContactRow(
-                  icon: Icons.phone,
-                  label: 'WhatsApp',
-                  value: '01091264053',
-                  onTap: () => _launchWhatsApp(),
-                ),
-                const SizedBox(height: 8),
-                _buildContactRow(
-                  icon: Icons.email,
-                  label: 'Email',
-                  value: 'amrloulah2021@gmail.com',
-                  onTap: () => _launchEmail(),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
-
-        CustomTextField(
-          controller: _licenseKeyController,
-          labelText: 'مفتاح الترخيص',
-          hintText: 'WALLET-2025-XXXX-XXXX',
-          prefixIcon: const Icon(Icons.vpn_key),
-          textCapitalization: TextCapitalization.characters,
-          maxLength: 21,
-          validator: Validators.validateLicenseKey,
-        ),
-        const SizedBox(height: 24),
-
-        CustomButton(
-          text: 'تحقق',
-          onPressed: _isVerifyingLicense ? null : _verifyLicense,
-          isLoading: _isVerifyingLicense,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStep2() {
+  Widget _buildRegistrationForm() {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Form(
-      key: _formKeyStep2,
+      key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -291,8 +167,9 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'الخطوة 2 من 2',
+            'قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية',
             style: AppTextStyles.bodyMedium
                 .copyWith(color: AppColors.textSecondary(context)),
             textAlign: TextAlign.center,
@@ -457,8 +334,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           ),
           const SizedBox(height: 16),
           TextButton(
-            onPressed: () => setState(() => _currentStep = 0),
-            child: const Text('الرجوع'),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
           ),
         ],
       ),
@@ -466,60 +343,4 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   }
 
   // --- Helpers ---
-
-  Widget _buildContactRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.divider(context)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text('$label: $value', style: AppTextStyles.bodyMedium),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _launchWhatsApp() async {
-    const phone = '201091264053';
-    final message = AppLocalizations.of(context)!.whatsappMessageLicense;
-    final url = 'https://wa.me/$phone?text=${Uri.encodeComponent(message)}';
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (e) {
-      if (mounted) ToastUtils.showError('Could not launch WhatsApp');
-    }
-  }
-
-  Future<void> _launchEmail() async {
-    const email = 'amrloulah2021@gmail.com';
-    final subject = AppLocalizations.of(context)!.emailSubjectLicense;
-    final body = AppLocalizations.of(context)!.emailBodyLicense;
-    final uri = Uri(
-        scheme: 'mailto',
-        path: email,
-        query:
-            'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}');
-    try {
-      await launchUrl(uri);
-    } catch (e) {
-      if (mounted) ToastUtils.showError('Could not launch Email');
-    }
-  }
 }
