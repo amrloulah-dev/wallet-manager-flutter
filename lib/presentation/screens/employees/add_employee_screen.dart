@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,8 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/employee_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../../data/models/user_permissions.dart';
+import '../../widgets/employee/user_permissions_widget.dart';
 
 class AddEmployeeScreen extends StatefulWidget {
   const AddEmployeeScreen({super.key});
@@ -33,6 +34,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   bool _isSubmitting = false;
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
+  UserPermissions _permissions =
+      UserPermissions.defaultPermissions(); // Added state
 
   @override
   void dispose() {
@@ -68,6 +71,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       fullName: _fullNameController.text.trim(),
       phone: phone,
       pin: _pinController.text,
+      permissions: _permissions, // Pass permissions
     );
 
     if (mounted) {
@@ -75,7 +79,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         ToastUtils.showSuccess('تمت إضافة الموظف بنجاح');
         Navigator.pop(context, true);
       } else {
-        ToastUtils.showError( 
+        ToastUtils.showError(
             employeeProvider.errorMessage ?? 'حدث خطأ غير متوقع');
       }
     }
@@ -122,7 +126,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     return Consumer2<EmployeeProvider, AuthProvider>(
       builder: (context, employeeProvider, authProvider, _) {
         final currentCount = employeeProvider.employeesCount;
-        final maxEmployees = authProvider.currentStore?.settings.maxEmployees ?? 5;
+        final maxEmployees =
+            authProvider.currentStore?.settings.maxEmployees ?? 5;
         final isAtLimit = currentCount >= maxEmployees;
 
         return Container(
@@ -155,7 +160,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                   ),
                   child: Text(
                     'تم الوصول للحد الأقصى',
-                    style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                    style:
+                        AppTextStyles.labelSmall.copyWith(color: Colors.white),
                   ),
                 ),
               ],
@@ -266,6 +272,13 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => _submitForm(),
         ),
+        const SizedBox(height: 24),
+        UserPermissionsWidget(
+          initialPermissions: _permissions,
+          onPermissionsChanged: (newPermissions) {
+            setState(() => _permissions = newPermissions);
+          },
+        ),
       ],
     );
   }
@@ -273,8 +286,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   Widget _buildSubmitButton() {
     return Consumer<EmployeeProvider>(
       builder: (context, provider, _) {
+// ... existing code ...
         final isAtLimit = provider.employeesCount >=
-            (context.read<AuthProvider>().currentStore?.settings.maxEmployees ?? 5);
+            (context.read<AuthProvider>().currentStore?.settings.maxEmployees ??
+                5);
 
         return CustomButton(
           text: 'إضافة الموظف',

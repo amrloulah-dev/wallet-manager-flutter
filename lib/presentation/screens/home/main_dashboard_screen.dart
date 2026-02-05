@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart'; // Removed
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:walletmanager/core/utils/dialog_utils.dart';
-// import 'package:walletmanager/core/utils/toast_utils.dart'; // Removed
+
+import 'package:walletmanager/core/utils/toast_utils.dart';
 
 import '../../../core/constants/route_constants.dart';
 import '../../../core/theme/app_colors.dart';
@@ -22,15 +22,16 @@ import '../../widgets/transaction/transaction_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_card.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
+import 'package:walletmanager/presentation/widgets/dashboard/app_drawer.dart';
 
-class OwnerDashboardScreen extends StatefulWidget {
-  const OwnerDashboardScreen({super.key});
+class MainDashboardScreen extends StatefulWidget {
+  const MainDashboardScreen({super.key});
 
   @override
-  State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
+  State<MainDashboardScreen> createState() => _MainDashboardScreenState();
 }
 
-class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
+class _MainDashboardScreenState extends State<MainDashboardScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -71,27 +72,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     Navigator.pushNamed(context, RouteConstants.createTransaction);
   }
 
-  Future<void> _showLogoutDialog() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final bool? confirmed = await DialogUtils.showConfirmDialog(
-      context,
-      title: AppLocalizations.of(context)!.logout,
-      message: AppLocalizations.of(context)!.logoutConfirmation,
-      confirmText: AppLocalizations.of(context)!.exit,
-      type: DialogType.danger,
-    );
-
-    if (confirmed == true) {
-      await authProvider.logout();
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteConstants.loginLanding,
-          (route) => false,
-        );
-      }
-    }
-  }
-
   String _getGreetingMessage(BuildContext context) {
     final hour = DateTime.now().hour;
     if (hour < 12) {
@@ -117,7 +97,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               ),
             ],
           ),
-          drawer: _buildDrawer(),
+          drawer: const AppDrawer(),
           body: RefreshIndicator(
             onRefresh: _refreshData,
             child: SingleChildScrollView(
@@ -152,156 +132,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             label: Text(AppLocalizations.of(context)!.newTransaction),
             foregroundColor: Colors.white,
             backgroundColor: AppColors.primary,
-          )
-          ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.currentUser;
-    final store = authProvider.currentStore;
-    final avatarLetter = user?.fullName.isNotEmpty == true
-        ? user!.fullName[0].toUpperCase()
-        : 'U';
-
-    return Drawer(
-      elevation: 2,
-      backgroundColor: AppColors.surface(context),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor:
-                        AppColors.primary.withAlpha((0.1 * 255).round()),
-                    child: Text(
-                      avatarLetter,
-                      style:
-                          AppTextStyles.h1.copyWith(color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.fullName ?? AppLocalizations.of(context)!.user,
-                    style: AppTextStyles.h3
-                        .copyWith(color: AppColors.textPrimary(context)),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    store?.storeName ?? AppLocalizations.of(context)!.storeName,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary(context)),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, indent: 16, endIndent: 16),
-
-            // Menu Items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(8.0),
-                children: [
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.home,
-                    icon: Icons.dashboard_outlined,
-                    isSelected: true, // Current screen
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.wallets,
-                    icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (context.read<AuthProvider>().isOwner) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.walletsList);
-                      }
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.transactions,
-                    icon: Icons.receipt_long_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                          context, RouteConstants.todayTransactions);
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.debts,
-                    icon: Icons.credit_card_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, RouteConstants.debtsList);
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.statistics,
-                    icon: Icons.bar_chart_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                          context, RouteConstants.generalStatistics);
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.manageEmployees,
-                    icon: Icons.people_alt_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (authProvider.isOwner) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.manageEmployees);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // Footer Items
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.settings,
-                    icon: Icons.settings_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, RouteConstants.settings);
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.logout,
-                    icon: Icons.logout,
-                    iconColor: AppColors.error,
-                    textColor: AppColors.error,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showLogoutDialog();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          )),
     );
   }
 
@@ -461,8 +292,17 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         icon: Icons.account_balance_wallet_outlined,
                         color: Colors.blue.shade700,
                         onTap: () {
-                          Navigator.pushNamed(
-                              context, RouteConstants.walletsList);
+                          final user = context.read<AuthProvider>().currentUser;
+                          final canAccess = user?.role == 'owner' ||
+                              (user?.permissions?.viewWallets ?? false);
+
+                          if (canAccess) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.walletsList);
+                          } else {
+                            ToastUtils.showError(
+                                AppLocalizations.of(context)!.accessDenied);
+                          }
                         }),
                     StatsCard(
                       title:
@@ -471,8 +311,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           .toString(),
                       icon: Icons.swap_horiz,
                       color: Colors.green.shade700,
-                      onTap: () => Navigator.pushNamed(
-                          context, RouteConstants.todayTransactions),
+                      onTap: () {
+                        final user = context.read<AuthProvider>().currentUser;
+                        if (user != null &&
+                            (user.role == 'owner' ||
+                                user.hasPermission(
+                                    (p) => p.createTransaction) ||
+                                user.hasPermission(
+                                    (p) => p.viewAllTransactions))) {
+                          Navigator.pushNamed(
+                              context, RouteConstants.todayTransactions);
+                        } else {
+                          ToastUtils.showError(
+                              AppLocalizations.of(context)!.accessDenied);
+                        }
+                      },
                     ),
                     StatsCard(
                       title:
@@ -482,16 +335,40 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           .toString(),
                       icon: Icons.attach_money,
                       color: Colors.orange.shade800,
-                      onTap: () => Navigator.pushNamed(
-                          context, RouteConstants.todayTransactions),
+                      onTap: () {
+                        final user = context.read<AuthProvider>().currentUser;
+                        if (user != null &&
+                            (user.role == 'owner' ||
+                                user.hasPermission(
+                                    (p) => p.createTransaction) ||
+                                user.hasPermission(
+                                    (p) => p.viewAllTransactions))) {
+                          Navigator.pushNamed(
+                              context, RouteConstants.todayTransactions);
+                        } else {
+                          ToastUtils.showError(
+                              AppLocalizations.of(context)!.accessDenied);
+                        }
+                      },
                     ),
                     StatsCard(
                       title: AppLocalizations.of(context)!.openDebts,
                       value: stats.openDebtsCount.toString(),
                       icon: Icons.credit_card_off_outlined,
                       color: Colors.red.shade700,
-                      onTap: () => Navigator.pushNamed(
-                          context, RouteConstants.debtsList),
+                      onTap: () {
+                        final user = context.read<AuthProvider>().currentUser;
+                        final canAccess = user?.role == 'owner' ||
+                            (user?.permissions?.viewDebts ?? false);
+
+                        if (canAccess) {
+                          Navigator.pushNamed(
+                              context, RouteConstants.debtsList);
+                        } else {
+                          ToastUtils.showError(
+                              AppLocalizations.of(context)!.accessDenied);
+                        }
+                      },
                     ),
                   ],
                 );
@@ -542,14 +419,27 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             title: AppLocalizations.of(context)!.newTransaction,
             icon: Icons.add_circle_outline,
             color: AppColors.primary,
-            onTap: _navigateToCreateTransaction,
+            onTap: () {
+              final user = context.read<AuthProvider>().currentUser;
+              if (user != null &&
+                  user.hasPermission((p) => p.createTransaction)) {
+                _navigateToCreateTransaction();
+              } else {
+                ToastUtils.showError('ليس لديك صلاحية لإنشاء معاملة');
+              }
+            },
           ),
           QuickActionCard(
             title: AppLocalizations.of(context)!.newWallet,
             icon: Icons.account_balance_wallet_outlined,
             color: Colors.orange.shade700,
             onTap: () {
-              Navigator.pushNamed(context, RouteConstants.walletForm);
+              final user = context.read<AuthProvider>().currentUser;
+              if (user != null && user.hasPermission((p) => p.createWallet)) {
+                Navigator.pushNamed(context, RouteConstants.walletForm);
+              } else {
+                ToastUtils.showError('ليس لديك صلاحية لإنشاء محفظة');
+              }
             },
           ),
           Consumer<StatisticsProvider>(
@@ -559,8 +449,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 title: '${AppLocalizations.of(context)!.newDebt} ($openDebts)',
                 icon: Icons.post_add_outlined,
                 color: AppColors.error,
-                onTap: () =>
-                    Navigator.pushNamed(context, RouteConstants.addDebt),
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null && user.hasPermission((p) => p.createDebt)) {
+                    Navigator.pushNamed(context, RouteConstants.addDebt);
+                  } else {
+                    ToastUtils.showError('ليس لديك صلاحية لإنشاء دين');
+                  }
+                },
               );
             },
           ),
@@ -569,7 +465,16 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.wallet,
             color: Colors.blue.shade700,
             onTap: () {
-              Navigator.pushNamed(context, RouteConstants.walletsList);
+              final user = context.read<AuthProvider>().currentUser;
+              final canAccess = user?.role == 'owner' ||
+                  (user?.permissions?.viewWallets ?? false);
+
+              if (canAccess) {
+                Navigator.pushNamed(context, RouteConstants.walletsList);
+              } else {
+                ToastUtils.showError(
+                    AppLocalizations.of(context)!.accessDenied);
+              }
             },
           ),
           QuickActionCard(
@@ -577,22 +482,42 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             icon: Icons.bar_chart,
             color: Colors.purple.shade700,
             onTap: () {
-              Navigator.pushNamed(context, RouteConstants.generalStatistics);
+              final user = context.read<AuthProvider>().currentUser;
+              if (user != null &&
+                  user.hasPermission((p) => p.viewDashboardStats)) {
+                Navigator.pushNamed(context, RouteConstants.generalStatistics);
+              } else {
+                ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
+              }
             },
           ),
           QuickActionCard(
             title: AppLocalizations.of(context)!.viewDebts,
             icon: Icons.credit_card,
             color: Colors.red.shade700,
-            onTap: () => Navigator.pushNamed(context, RouteConstants.debtsList),
+            onTap: () {
+              final user = context.read<AuthProvider>().currentUser;
+              final canAccess = user?.role == 'owner' ||
+                  (user?.permissions?.viewDebts ?? false);
+
+              if (canAccess) {
+                Navigator.pushNamed(context, RouteConstants.debtsList);
+              } else {
+                ToastUtils.showError(
+                    AppLocalizations.of(context)!.accessDenied);
+              }
+            },
           ),
           QuickActionCard(
             title: AppLocalizations.of(context)!.manageEmployees,
             icon: Icons.people_alt_outlined,
             color: Colors.teal.shade700,
             onTap: () {
-              if (context.read<AuthProvider>().isOwner) {
+              final user = context.read<AuthProvider>().currentUser;
+              if (user != null && user.role == 'owner') {
                 Navigator.pushNamed(context, RouteConstants.manageEmployees);
+              } else {
+                ToastUtils.showError('هذه الخاصية للمالك فقط');
               }
             },
           ),
@@ -640,12 +565,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   .walletAlertMessage(wallet.phoneNumber),
               type: AlertType.warning,
               onActionTap: () {
-                if (context.read<AuthProvider>().isOwner) {
+                final user = context.read<AuthProvider>().currentUser;
+                final canAccess = user?.role == 'owner' ||
+                    (user?.permissions?.viewWallets ?? false);
+
+                if (canAccess) {
                   Navigator.pushNamed(
                     context,
                     RouteConstants.walletDetails,
                     arguments: wallet.walletId,
                   );
+                } else {
+                  ToastUtils.showError(
+                      AppLocalizations.of(context)!.accessDenied);
                 }
               },
               actionText: AppLocalizations.of(context)!.viewDetails,
@@ -659,8 +591,18 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             message:
                 AppLocalizations.of(context)!.openDebtsAlert(openDebtsCount),
             type: AlertType.error,
-            onActionTap: () =>
-                Navigator.pushNamed(context, RouteConstants.debtsList),
+            onActionTap: () {
+              final user = context.read<AuthProvider>().currentUser;
+              final canAccess = user?.role == 'owner' ||
+                  (user?.permissions?.viewDebts ?? false);
+
+              if (canAccess) {
+                Navigator.pushNamed(context, RouteConstants.debtsList);
+              } else {
+                ToastUtils.showError(
+                    AppLocalizations.of(context)!.accessDenied);
+              }
+            },
             actionText: AppLocalizations.of(context)!.viewDebts,
           ));
         }
@@ -702,8 +644,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               SectionHeader(
                 title: AppLocalizations.of(context)!.recentTransactions,
                 actionText: AppLocalizations.of(context)!.viewAll,
-                onActionTap: () => Navigator.pushNamed(
-                    context, RouteConstants.todayTransactions),
+                onActionTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null &&
+                      (user.role == 'owner' ||
+                          user.hasPermission((p) => p.createTransaction) ||
+                          user.hasPermission((p) => p.viewAllTransactions))) {
+                    Navigator.pushNamed(
+                        context, RouteConstants.todayTransactions);
+                  } else {
+                    ToastUtils.showError(
+                        AppLocalizations.of(context)!.accessDenied);
+                  }
+                },
               ),
               const SizedBox(height: 12),
               if (provider.isLoading)
@@ -725,11 +678,20 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     final transaction = provider.transactions.elementAt(index);
                     return TransactionCard(
                       transaction: transaction,
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        RouteConstants.transactionDetails,
-                        arguments: transaction.transactionId,
-                      ),
+                      onTap: () {
+                        final user = context.read<AuthProvider>().currentUser;
+                        if (user != null &&
+                            user.hasPermission((p) => p.viewAllTransactions)) {
+                          Navigator.pushNamed(
+                            context,
+                            RouteConstants.transactionDetails,
+                            arguments: transaction.transactionId,
+                          );
+                        } else {
+                          ToastUtils.showError(
+                              'ليس لديك صلاحية لعرض تفاصيل المعاملة');
+                        }
+                      },
                     );
                   },
                 ),
@@ -737,51 +699,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _DrawerMenuTile extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool isSelected;
-  final Color? iconColor;
-  final Color? textColor;
-
-  const _DrawerMenuTile({
-    required this.title,
-    required this.icon,
-    required this.onTap,
-    this.isSelected = false,
-    this.iconColor,
-    this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveIconColor = iconColor ??
-        (isSelected ? AppColors.primary : AppColors.textSecondary(context));
-    final effectiveTextColor = textColor ??
-        (isSelected ? AppColors.primary : AppColors.textPrimary(context));
-
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: effectiveIconColor),
-      title: Text(
-        title,
-        style: AppTextStyles.labelLarge.copyWith(
-          color: effectiveTextColor,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-        ),
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      selected: isSelected,
-      selectedTileColor: AppColors.primary.withAlpha((0.1 * 255).round()),
-      hoverColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-      splashColor: AppColors.primary.withAlpha((0.1 * 255).round()),
     );
   }
 }

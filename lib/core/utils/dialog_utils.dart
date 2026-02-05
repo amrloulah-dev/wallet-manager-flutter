@@ -12,18 +12,18 @@ enum DialogType {
 class DialogUtils {
   static Future<T?> _showAnimatedDialog<T>(
     BuildContext context, {
-    required Widget child,
+    required Widget Function(BuildContext) builder,
     required DialogType type,
   }) {
     return showGeneralDialog<T>(
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      pageBuilder: (context, animation, secondaryAnimation) {
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          child: child,
+          child: builder(dialogContext),
         );
       },
       transitionDuration: const Duration(milliseconds: 400),
@@ -51,25 +51,34 @@ class DialogUtils {
     String confirmText = 'تأكيد',
     String cancelText = 'إلغاء',
     DialogType type = DialogType.info,
+    Future<void> Function()? onConfirm,
   }) {
     return _showAnimatedDialog<bool>(
       context,
       type: type,
-      child: _DialogContent(
+      builder: (dialogContext) => _DialogContent(
         title: title,
         message: message,
         type: type,
         actions: [
           Expanded(
             child: TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () =>
+                  Navigator.of(dialogContext, rootNavigator: true).pop(false),
               child: Text(cancelText),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () async {
+                // 1. Close the dialog immediately using its own navigator
+                Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                // 2. Then run the provided callback
+                if (onConfirm != null) {
+                  await onConfirm();
+                }
+              },
               style: FilledButton.styleFrom(
                 backgroundColor: _getHeaderColor(type),
               ),
@@ -90,14 +99,15 @@ class DialogUtils {
     await _showAnimatedDialog(
       context,
       type: DialogType.info,
-      child: _DialogContent(
+      builder: (dialogContext) => _DialogContent(
         title: title,
         message: message,
         type: DialogType.info,
         actions: [
           Expanded(
             child: FilledButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>
+                  Navigator.of(dialogContext, rootNavigator: true).pop(),
               child: Text(buttonText),
             ),
           ),
@@ -115,14 +125,15 @@ class DialogUtils {
     await _showAnimatedDialog(
       context,
       type: DialogType.success,
-      child: _DialogContent(
+      builder: (dialogContext) => _DialogContent(
         title: title,
         message: message,
         type: DialogType.success,
         actions: [
           Expanded(
             child: FilledButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>
+                  Navigator.of(dialogContext, rootNavigator: true).pop(),
               style: FilledButton.styleFrom(backgroundColor: AppColors.success),
               child: Text(buttonText),
             ),
@@ -141,14 +152,15 @@ class DialogUtils {
     await _showAnimatedDialog(
       context,
       type: DialogType.warning,
-      child: _DialogContent(
+      builder: (dialogContext) => _DialogContent(
         title: title,
         message: message,
         type: DialogType.warning,
         actions: [
           Expanded(
             child: FilledButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>
+                  Navigator.of(dialogContext, rootNavigator: true).pop(),
               style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
               child: Text(buttonText),
             ),
@@ -166,7 +178,7 @@ class DialogUtils {
     return _showAnimatedDialog<T>(
       context,
       type: DialogType.info,
-      child: _DialogContent(
+      builder: (dialogContext) => _DialogContent(
         title: title,
         type: DialogType.info,
         content: SingleChildScrollView(

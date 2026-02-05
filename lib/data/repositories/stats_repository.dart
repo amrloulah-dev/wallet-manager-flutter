@@ -47,7 +47,6 @@ class StatsRepository {
         return DailyStatsModel.empty(todayDate);
       }
     } catch (e) {
-      debugPrint('Error fetching today stats: $e');
       return DailyStatsModel.empty(DateHelper.getCurrentDateString());
     }
   }
@@ -238,9 +237,7 @@ class StatsRepository {
       };
 
       await summaryRef.update(reconciledStats);
-      debugPrint('Reconciliation complete for store: $storeId');
     } catch (e) {
-      debugPrint('Error during debt reconciliation for store $storeId: $e');
       rethrow;
     }
   }

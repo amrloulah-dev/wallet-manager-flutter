@@ -8,6 +8,7 @@ import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
+import '../data/models/user_permissions.dart'; // Added
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 
@@ -241,6 +242,12 @@ class TransactionProvider extends ChangeNotifier {
   }) async {
     _setStatus(TransactionStatus.creating);
     try {
+      // Check Permission
+      if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
+      if (!_currentUser!.hasPermission((p) => p.createTransaction)) {
+        throw PermissionException();
+      }
+
       if (_currentStoreId == null) {
         throw ValidationException('Store ID not found.');
       }

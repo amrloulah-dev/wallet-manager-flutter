@@ -10,6 +10,7 @@ import '../data/repositories/device_repository.dart';
 import '../data/repositories/license_key_repository.dart';
 import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
+import 'package:walletmanager/data/models/user_permissions.dart';
 import '../data/services/local_storage_service.dart';
 import '../core/errors/app_exceptions.dart';
 
@@ -219,7 +220,6 @@ class AuthProvider extends ChangeNotifier {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
       } catch (e) {
         // Log error but don't fail the whole registration as store is already created
-        debugPrint("Warning: Failed to register device usage: $e");
       }
 
       return storeId;
@@ -269,9 +269,7 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
-      } catch (e) {
-        print("Warning: Failed to register device usage: $e");
-      }
+      } catch (e) {}
 
       return storeId;
     } catch (e) {

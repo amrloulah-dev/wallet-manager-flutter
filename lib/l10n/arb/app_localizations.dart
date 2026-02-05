@@ -1327,6 +1327,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'جاري حساب الرسوم...'**
   String get calculatingFees;
+
+  /// No description provided for @accessDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم رفض الوصول'**
+  String get accessDenied;
 }
 
 class _AppLocalizationsDelegate

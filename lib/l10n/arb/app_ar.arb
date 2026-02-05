@@ -232,5 +232,6 @@
   "addBalanceAction": "إضافة الرصيد",
   "transactionFees": "رسوم المعاملة",
   "totalDeduction": "إجمالي الخصم",
-  "calculatingFees": "جاري حساب الرسوم..."
+  "calculatingFees": "جاري حساب الرسوم...",
+  "accessDenied": "تم رفض الوصول"
 }

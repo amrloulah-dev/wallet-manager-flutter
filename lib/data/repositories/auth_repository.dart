@@ -58,7 +58,7 @@ class AuthRepository {
   }
 
   /// Signs out the current user from both Google and Firebase.
- Future<void> signOut() async {
+  Future<void> signOut() async {
     try {
       // 1. الخروج من فايربيس (ده الأهم وده بيشتغل في أي مكان)
       await _auth.signOut();
@@ -72,7 +72,6 @@ class AuthRepository {
         }
       } catch (e) {
         // لو الجهاز هواوي أو مفيهوش خدمات جوجل، هنتجاهل الخطأ ده
-        print('⚠️ Warning: Google Sign-In logout failed (Non-GMS device?): $e');
       }
     } catch (e) {
       // لو الخروج من فايربيس نفسه فشل، دي مشكلة حقيقية

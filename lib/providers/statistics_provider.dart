@@ -162,8 +162,6 @@ class StatisticsProvider extends ChangeNotifier {
       final startDate = DateHelper.getStartOfDay(dateRange.start);
       final endDate = DateHelper.getEndOfDay(dateRange.end);
 
-      print('Filtering from $startDate to $endDate');
-
       final List<dynamic> results = await Future.wait([
         _transactionRepository.getTransactionAggregates(_storeId!,
             startDate: startDate, endDate: endDate),
@@ -184,7 +182,6 @@ class StatisticsProvider extends ChangeNotifier {
         ...transactionSummary as Map<String, dynamic>,
         ...debtSummary as Map<String, dynamic>,
       };
-      print('Filtered stats: $_filteredStats');
     } catch (e) {
       _errorMessage = "Failed to fetch filtered statistics.";
       _filteredStats = null;

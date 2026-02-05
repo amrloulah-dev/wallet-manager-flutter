@@ -16,8 +16,7 @@ import '../core/constants/route_constants.dart';
 import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
 import '../presentation/screens/auth/employee_login_screen.dart';
-import '../presentation/screens/home/owner_dashboard_screen.dart';
-import '../presentation/screens/home/employee_dashboard_screen.dart';
+import '../presentation/screens/home/main_dashboard_screen.dart';
 import '../presentation/screens/wallets/wallets_list_screen.dart';
 import '../presentation/screens/wallets/wallet_form_screen.dart';
 import '../presentation/screens/wallets/wallet_details_screen.dart';
@@ -84,26 +83,7 @@ class AppRouter {
                     previous!..setStoreId(auth.currentStoreId),
               ),
             ],
-            child: const OwnerDashboardScreen(),
-          ),
-          settings,
-        );
-
-      case RouteConstants.employeeDashboard:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-                create: (_) => DebtProvider(),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
-              ),
-            ],
-            child: const EmployeeDashboardScreen(),
+            child: const MainDashboardScreen(),
           ),
           settings,
         );

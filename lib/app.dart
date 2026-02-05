@@ -108,7 +108,7 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
                   .pushReplacementNamed(RouteConstants.ownerDashboard);
             } else if (role == 'employee') {
               Navigator.of(context)
-                  .pushReplacementNamed(RouteConstants.employeeDashboard);
+                  .pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {
               // Fallback for unknown role, show login
               // Note: If we are here, we probably shouldn't stay in infinite loop

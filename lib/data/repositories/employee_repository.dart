@@ -1,9 +1,9 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
+import '../models/user_permissions.dart';
 
 class EmployeeRepository {
   final FirebaseFirestore _firestore;
@@ -21,16 +21,17 @@ class EmployeeRepository {
     try {
       Query query = _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole);
+          .where(FirebaseConstants.role,
+              isEqualTo: FirebaseConstants.employeeRole);
 
       if (activeOnly) {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
       }
 
-      final snapshot = await query.orderBy(FirebaseConstants.createdAt, descending: true).get();
-      return snapshot.docs
-          .map((doc) => UserModel.fromFirestore(doc))
-          .toList();
+      final snapshot = await query
+          .orderBy(FirebaseConstants.createdAt, descending: true)
+          .get();
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e) {
       throw ServerException('Failed to get employees: \$e');
     }
@@ -44,7 +45,8 @@ class EmployeeRepository {
       final hashedPin = PasswordHasher.hashPassword(pin);
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+          .where(FirebaseConstants.role,
+              isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.pin, isEqualTo: hashedPin)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .limit(1)
@@ -64,6 +66,7 @@ class EmployeeRepository {
     required String fullName,
     required String phone,
     required String pin,
+    required UserPermissions permissions, // Added parameter
   }) async {
     final newUserId = _usersCollection.doc().id;
     final hashedPin = PasswordHasher.hashPassword(pin);
@@ -80,12 +83,14 @@ class EmployeeRepository {
       isActive: true,
       createdAt: Timestamp.now(),
       lastLogin: Timestamp.now(),
-      permissions: UserPermissions.defaultPermissions(),
+      permissions: permissions, // Use passed permissions
       stats: UserStats(),
     );
 
     await _firestore.runTransaction((transaction) async {
-      final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
+      final storeRef = _firestore
+          .collection(FirebaseConstants.storesCollection)
+          .doc(storeId);
       final storeSnap = await transaction.get(storeRef);
 
       if (!storeSnap.exists) {
@@ -94,14 +99,15 @@ class EmployeeRepository {
 
       final storeData = storeSnap.data()!;
       final maxEmployees = storeData['settings']?['maxEmployees'] ?? 5;
-      
+
       // We need to get the current count of employees within the transaction
       final employeesQuery = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+          .where(FirebaseConstants.role,
+              isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
-      
+
       final currentCount = employeesQuery.docs.length;
 
       if (currentCount >= maxEmployees) {
@@ -120,7 +126,8 @@ class EmployeeRepository {
       }
 
       transaction.set(_usersCollection.doc(newUserId), newUser.toFirestore());
-      transaction.update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
+      transaction
+          .update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
     });
   }
 
@@ -128,7 +135,8 @@ class EmployeeRepository {
     try {
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+          .where(FirebaseConstants.role,
+              isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
       return snapshot.docs.length;
@@ -139,7 +147,7 @@ class EmployeeRepository {
 
   Future<void> deactivateEmployee(String userId) async {
     final userRef = _usersCollection.doc(userId);
-    
+
     await _firestore.runTransaction((transaction) async {
       final userSnap = await transaction.get(userRef);
       if (!userSnap.exists) {
@@ -156,8 +164,11 @@ class EmployeeRepository {
       });
 
       if (wasActive && storeId != null) {
-        final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
-        transaction.update(storeRef, {'stats.totalEmployees': FieldValue.increment(-1)});
+        final storeRef = _firestore
+            .collection(FirebaseConstants.storesCollection)
+            .doc(storeId);
+        transaction.update(
+            storeRef, {'stats.totalEmployees': FieldValue.increment(-1)});
       }
     });
   }
@@ -178,7 +189,8 @@ class EmployeeRepository {
       final userData = userDoc.data() as Map<String, dynamic>;
       final storeId = userData[FirebaseConstants.storeId];
 
-      final existingEmployee = await getEmployeeByPIN(storeId: storeId, pin: newPin);
+      final existingEmployee =
+          await getEmployeeByPIN(storeId: storeId, pin: newPin);
       if (existingEmployee != null && existingEmployee.userId != userId) {
         throw ValidationException('New PIN is already in use');
       }
@@ -195,10 +207,25 @@ class EmployeeRepository {
     }
   }
 
+  Future<void> updateEmployeePermissions({
+    required String userId,
+    required UserPermissions permissions,
+  }) async {
+    try {
+      await _usersCollection.doc(userId).update({
+        'permissions': permissions.toMap(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw ServerException('Failed to update permissions: $e');
+    }
+  }
+
   Stream<List<UserModel>> watchEmployees(String storeId) {
     return _usersCollection
         .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+        .where(FirebaseConstants.role,
+            isEqualTo: FirebaseConstants.employeeRole)
         .orderBy(FirebaseConstants.createdAt, descending: true)
         .snapshots()
         .map((snapshot) =>

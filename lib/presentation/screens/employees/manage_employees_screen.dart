@@ -9,6 +9,7 @@ import 'package:walletmanager/presentation/widgets/common/empty_state_widget.dar
 import 'package:walletmanager/presentation/widgets/common/error_widget.dart';
 import 'package:walletmanager/presentation/widgets/common/loading_indicator.dart';
 import 'package:walletmanager/presentation/widgets/employee/employee_card.dart';
+import 'package:walletmanager/presentation/screens/employees/employee_details_screen.dart'; // Added import
 import 'package:walletmanager/providers/employee_provider.dart';
 
 class ManageEmployeesScreen extends StatefulWidget {
@@ -34,7 +35,8 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
       title: 'تعطيل حساب الموظف',
-      message: 'هل أنت متأكد أنك تريد تعطيل حساب ${employee.fullName}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.',
+      message:
+          'هل أنت متأكد أنك تريد تعطيل حساب ${employee.fullName}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.',
       confirmText: 'تعطيل',
       type: DialogType.danger,
     );
@@ -121,7 +123,17 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
             final employee = employees[index];
             return EmployeeCard(
               employee: employee,
-              onDelete: employee.isActive ? () => _showDeactivateDialog(employee) : null,
+              onDelete: employee.isActive
+                  ? () => _showDeactivateDialog(employee)
+                  : null,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EmployeeDetailsScreen(employee: employee),
+                  ),
+                );
+              },
             );
           },
         ),

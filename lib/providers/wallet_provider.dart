@@ -9,8 +9,11 @@ import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
+import 'package:walletmanager/data/models/user_model.dart'; // Added
+import 'package:walletmanager/data/models/user_permissions.dart'; // Added
+import 'auth_provider.dart'; // Added
 
-enum WalletStatusState { // Renamed to avoid conflict with model field
+enum WalletStatusState {
   idle,
   loading,
   loadingMore,
@@ -27,6 +30,7 @@ class WalletProvider extends ChangeNotifier {
 
   // State
   String? _currentStoreId;
+  UserModel? _currentUser; // Added
   List<WalletModel> _wallets = [];
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
@@ -89,6 +93,22 @@ class WalletProvider extends ChangeNotifier {
   bool get hasError => _status == WalletStatusState.error;
 
   // Methods
+
+  void updateAuthState(AuthProvider auth) {
+    if (_currentStoreId != auth.currentStoreId) {
+      setStoreId(auth.currentStoreId ?? '');
+    }
+    _currentUser = auth.currentUser;
+  }
+
+  // Helper Check
+  void _checkPermission(bool Function(UserPermissions) selector) {
+    if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
+    if (!_currentUser!.hasPermission(selector)) {
+      throw PermissionException();
+    }
+  }
+
   void setStoreId(String storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
@@ -107,13 +127,14 @@ class WalletProvider extends ChangeNotifier {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       _wallets = _cachedWallets!;
-      if(status != WalletStatusState.loaded){
+      if (status != WalletStatusState.loaded) {
         _setStatus(WalletStatusState.loaded);
       }
       return;
     }
 
-    final trace = FirebasePerformance.instance.newTrace('fetch_initial_wallets_optimized');
+    final trace = FirebasePerformance.instance
+        .newTrace('fetch_initial_wallets_optimized');
     await trace.start();
 
     _setStatus(WalletStatusState.loading);
@@ -134,8 +155,10 @@ class WalletProvider extends ChangeNotifier {
       _hasMore = fetchedWallets.length == 15;
 
       // 2. Check which of the fetched wallets need a reset
-      final walletsNeedingReset = fetchedWallets.where((w) => w.needsDailyReset || w.needsMonthlyReset).toList();
-      
+      final walletsNeedingReset = fetchedWallets
+          .where((w) => w.needsDailyReset || w.needsMonthlyReset)
+          .toList();
+
       if (walletsNeedingReset.isNotEmpty) {
         // 3. Trigger the backend update asynchronously (fire-and-forget)
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
@@ -149,15 +172,14 @@ class WalletProvider extends ChangeNotifier {
               tempWallet = tempWallet.copyWith(
                   sendLimits: wallet.sendLimits.copyWith(dailyUsed: 0),
                   receiveLimits: wallet.receiveLimits.copyWith(dailyUsed: 0),
-                  lastDailyReset: now
-              );
+                  lastDailyReset: now);
             }
             if (wallet.needsMonthlyReset) {
               tempWallet = tempWallet.copyWith(
                   sendLimits: tempWallet.sendLimits.copyWith(monthlyUsed: 0),
-                  receiveLimits: tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
-                  lastMonthlyReset: now
-              );
+                  receiveLimits:
+                      tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
+                  lastMonthlyReset: now);
             }
             return tempWallet;
           }
@@ -179,7 +201,8 @@ class WalletProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreWallets() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) return;
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+      return;
 
     _setStatus(WalletStatusState.loadingMore);
 
@@ -196,12 +219,14 @@ class WalletProvider extends ChangeNotifier {
       _lastDocument = result['lastDoc'];
       _hasMore = newWallets.length == 15;
 
-      final walletsNeedingReset = newWallets.where((w) => w.needsDailyReset || w.needsMonthlyReset).toList();
-      
+      final walletsNeedingReset = newWallets
+          .where((w) => w.needsDailyReset || w.needsMonthlyReset)
+          .toList();
+
       if (walletsNeedingReset.isNotEmpty) {
         // Fire and forget the backend update
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
-        
+
         // Update models in memory for immediate UI consistency
         final now = Timestamp.now();
         final updatedNewWallets = newWallets.map((wallet) {
@@ -211,15 +236,14 @@ class WalletProvider extends ChangeNotifier {
               tempWallet = tempWallet.copyWith(
                   sendLimits: wallet.sendLimits.copyWith(dailyUsed: 0),
                   receiveLimits: wallet.receiveLimits.copyWith(dailyUsed: 0),
-                  lastDailyReset: now
-              );
+                  lastDailyReset: now);
             }
             if (wallet.needsMonthlyReset) {
               tempWallet = tempWallet.copyWith(
                   sendLimits: tempWallet.sendLimits.copyWith(monthlyUsed: 0),
-                  receiveLimits: tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
-                  lastMonthlyReset: now
-              );
+                  receiveLimits:
+                      tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
+                  lastMonthlyReset: now);
             }
             return tempWallet;
           }
@@ -249,7 +273,10 @@ class WalletProvider extends ChangeNotifier {
   }) async {
     _setStatus(WalletStatusState.creating);
     try {
-      if (_currentStoreId == null) throw ValidationException('Store ID not found.');
+      _checkPermission((p) => p.createWallet);
+
+      if (_currentStoreId == null)
+        throw ValidationException('Store ID not found.');
 
       final newWallet = WalletModel.fromWalletStatus(
         walletId: FirebaseFirestore.instance.collection('wallets').doc().id,
@@ -277,6 +304,8 @@ class WalletProvider extends ChangeNotifier {
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
     _setStatus(WalletStatusState.updating);
     try {
+      _checkPermission((p) => p.editWallet);
+
       await _walletRepository.updateWallet(walletId, data);
       appEvents.fireWalletsChanged();
       return true;
@@ -289,11 +318,15 @@ class WalletProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> addBalanceToWallet(String walletId, double amount, String createdBy) async {
+  Future<bool> addBalanceToWallet(
+      String walletId, double amount, String createdBy) async {
     _setStatus(WalletStatusState.updating);
     try {
+      _checkPermission((p) => p.addBalance);
+
       if (amount <= 0) throw ValidationException('Amount must be positive.');
-      if (_currentStoreId == null) throw ValidationException('Store ID not found.');
+      if (_currentStoreId == null)
+        throw ValidationException('Store ID not found.');
 
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.transactionsCollection.doc().id,
@@ -323,6 +356,8 @@ class WalletProvider extends ChangeNotifier {
   Future<bool> deleteWallet(String walletId) async {
     _setStatus(WalletStatusState.deleting);
     try {
+      _checkPermission((p) => p.editWallet);
+
       await _walletRepository.deleteWallet(walletId);
       appEvents.fireWalletsChanged();
       _setStatus(WalletStatusState.loaded);

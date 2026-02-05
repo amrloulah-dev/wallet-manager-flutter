@@ -107,7 +107,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (userRole == 'owner') {
       Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
     } else if (userRole == 'employee') {
-      Navigator.pushReplacementNamed(context, RouteConstants.employeeDashboard);
+      Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
     } else {
       ToastUtils.showError('Role unknown');
     }

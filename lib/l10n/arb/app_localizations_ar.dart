@@ -642,4 +642,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calculatingFees => 'جاري حساب الرسوم...';
+
+  @override
+  String get accessDenied => 'تم رفض الوصول';
 }

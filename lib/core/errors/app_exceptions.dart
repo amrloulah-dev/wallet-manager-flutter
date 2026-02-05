@@ -31,7 +31,8 @@ class InvalidCredentialsException extends AuthException {
 
 /// Thrown when a user tries to log in to an inactive store.
 class StoreInactiveException extends AuthException {
-  StoreInactiveException() : super('هذا الحساب غير نشط، يرجى التواصل مع الإدارة.');
+  StoreInactiveException()
+      : super('هذا الحساب غير نشط، يرجى التواصل مع الإدارة.');
 }
 
 /// Thrown when trying to access a user that does not exist.
@@ -106,4 +107,8 @@ class NotFoundException extends AppException {
 /// Thrown when a user attempts an action they do not have permission for.
 class PermissionDeniedException extends AppException {
   PermissionDeniedException() : super('ليس لديك صلاحية للقيام بهذا الإجراء');
+}
+
+class PermissionException extends PermissionDeniedException {
+  PermissionException() : super();
 }

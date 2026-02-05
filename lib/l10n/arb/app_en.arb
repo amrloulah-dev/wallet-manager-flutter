@@ -232,5 +232,6 @@
   "addBalanceAction": "Add Balance",
   "transactionFees": "Transaction Fees",
   "totalDeduction": "Total Deduction",
-  "calculatingFees": "Calculating fees..."
+  "calculatingFees": "Calculating fees...",
+  "accessDenied": "Access Denied"
 }

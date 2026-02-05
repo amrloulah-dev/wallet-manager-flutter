@@ -528,29 +528,30 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _showLogoutDialog(BuildContext context) async {
-    final authProvider = context.read<AuthProvider>();
-    final bool? confirmed = await DialogUtils.showConfirmDialog(
-      context,
-      title: AppLocalizations.of(context)!.logout,
-      message: AppLocalizations.of(context)!.logoutConfirmation,
-      confirmText: AppLocalizations.of(context)!.exit,
-      type: DialogType.danger,
-    );
+    final currentContext = context;
+    final authProvider = currentContext.read<AuthProvider>();
 
-    if (confirmed == true) {
-      try {
-        await authProvider.logout();
-        if (!context.mounted) return;
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteConstants.loginLanding,
-          (route) => false,
-        );
-      } catch (e) {
-        if (context.mounted) {
-          ToastUtils.showError(
-              '${AppLocalizations.of(context)!.logoutFailed}: $e');
+    DialogUtils.showConfirmDialog(
+      currentContext,
+      title: AppLocalizations.of(currentContext)!.logout,
+      message: AppLocalizations.of(currentContext)!.logoutConfirmation,
+      confirmText: AppLocalizations.of(currentContext)!.exit,
+      type: DialogType.danger,
+      onConfirm: () async {
+        try {
+          await authProvider.logout();
+          if (!currentContext.mounted) return;
+          Navigator.of(currentContext).pushNamedAndRemoveUntil(
+            RouteConstants.loginLanding,
+            (route) => false,
+          );
+        } catch (e) {
+          if (currentContext.mounted) {
+            ToastUtils.showError(
+                '${AppLocalizations.of(currentContext)!.logoutFailed}: $e');
+          }
         }
-      }
-    }
+      },
+    );
   }
 }

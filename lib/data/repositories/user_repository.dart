@@ -3,6 +3,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_model.dart';
+import '../models/user_permissions.dart';
 import '../services/firebase_service.dart';
 
 /// Repository for all Firestore operations related to the 'users' collection.
@@ -48,7 +49,8 @@ class UserRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}', code: e.code);
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -67,14 +69,16 @@ class UserRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المستخدم: ${e.message}', code: e.code);
+      throw ServerException('فشل في البحث عن المستخدم: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }
 
   /// Finds a user by email for a specific store.
-  Future<UserModel?> getUserByEmailAndStoreId(String email, String storeId) async {
+  Future<UserModel?> getUserByEmailAndStoreId(
+      String email, String storeId) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -87,9 +91,11 @@ class UserRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('Failed to find user by email: ${e.message}', code: e.code);
+      throw ServerException('Failed to find user by email: ${e.message}',
+          code: e.code);
     } catch (e) {
-      throw ServerException('An unexpected error occurred while finding user by email.');
+      throw ServerException(
+          'An unexpected error occurred while finding user by email.');
     }
   }
 
@@ -100,9 +106,12 @@ class UserRepository {
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
-      return querySnapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      return querySnapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc))
+          .toList();
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب المستخدمين: ${e.message}', code: e.code);
+      throw ServerException('فشل في جلب المستخدمين: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -113,11 +122,14 @@ class UserRepository {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+          .where(FirebaseConstants.role,
+              isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .orderBy(FirebaseConstants.fullName)
           .get();
-      return querySnapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      return querySnapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc))
+          .toList();
     } on FirebaseException catch (e) {
       throw ServerException('فشل في جلب الموظفين: ${e.message}', code: e.code);
     } catch (e) {
@@ -138,7 +150,8 @@ class UserRepository {
       }
       return null;
     } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المالك: ${e.message}', code: e.code);
+      throw ServerException('فشل في جلب بيانات المالك: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -171,10 +184,14 @@ class UserRepository {
   /// Updates a user document with the given data.
   Future<void> updateUser(String userId, Map<String, dynamic> data) async {
     try {
-      final updateData = {...data, FirebaseConstants.updatedAt: Timestamp.now()};
+      final updateData = {
+        ...data,
+        FirebaseConstants.updatedAt: Timestamp.now()
+      };
       await _usersCollection.doc(userId).update(updateData);
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث بيانات المستخدم: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث بيانات المستخدم: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
     }
@@ -183,9 +200,12 @@ class UserRepository {
   /// Updates the last login timestamp for a user.
   Future<void> updateLastLogin(String userId) async {
     try {
-      await _usersCollection.doc(userId).update({FirebaseConstants.lastLogin: Timestamp.now()});
+      await _usersCollection
+          .doc(userId)
+          .update({FirebaseConstants.lastLogin: Timestamp.now()});
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث وقت تسجيل الدخول: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث وقت تسجيل الدخول: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -247,12 +267,14 @@ class UserRepository {
   // ===========================
 
   /// Updates the permissions for an employee.
-  Future<void> updateEmployeePermissions(String userId, UserPermissions permissions) async {
+  Future<void> updateEmployeePermissions(
+      String userId, UserPermissions permissions) async {
     final user = await getUserById(userId);
     if (user == null || !user.isEmployee) {
       throw NotFoundException('الموظف');
     }
-    await updateUser(userId, {FirebaseConstants.permissions: permissions.toMap()});
+    await updateUser(
+        userId, {FirebaseConstants.permissions: permissions.toMap()});
   }
 
   /// Checks if a user has a specific permission.
@@ -288,21 +310,29 @@ class UserRepository {
       }
 
       final statsData = <String, dynamic>{
-        '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}': Timestamp.now(),
+        '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}':
+            Timestamp.now(),
       };
       if (incrementTransactions != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] = FieldValue.increment(incrementTransactions);
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
+            FieldValue.increment(incrementTransactions);
       }
       if (incrementCommission != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] = FieldValue.increment(incrementCommission);
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
+            FieldValue.increment(incrementCommission);
       }
       if (incrementDebts != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalDebtsCreated}'] = FieldValue.increment(incrementDebts);
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalDebtsCreated}'] =
+            FieldValue.increment(incrementDebts);
       }
 
       await _usersCollection.doc(userId).update(statsData);
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث إحصائيات الموظف: ${e.message}', code: e.code);
+      throw ServerException('فشل تحديث إحصائيات الموظف: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }
@@ -339,15 +369,15 @@ class UserRepository {
         return UserModel.fromFirestore(snapshot);
       }
       return null;
-    }).handleError((error) {
-    });
+    }).handleError((error) {});
   }
 
   /// Provides a real-time stream of active employees for a store.
   Stream<List<UserModel>> watchEmployees(String storeId) {
     return _usersCollection
         .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .where(FirebaseConstants.role, isEqualTo: FirebaseConstants.employeeRole)
+        .where(FirebaseConstants.role,
+            isEqualTo: FirebaseConstants.employeeRole)
         .where(FirebaseConstants.isActive, isEqualTo: true)
         .orderBy(FirebaseConstants.fullName)
         .snapshots()
@@ -372,7 +402,8 @@ class UserRepository {
       }
       await batch.commit();
     } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المستخدمين دفعة واحدة: ${e.message}', code: e.code);
+      throw ServerException('فشل إنشاء المستخدمين دفعة واحدة: ${e.message}',
+          code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');
     }

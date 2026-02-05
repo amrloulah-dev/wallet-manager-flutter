@@ -2,7 +2,6 @@ import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../models/wallet_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -422,7 +421,6 @@ class TransactionRepository {
       };
     } catch (e) {
       // On any error, return a zero-map to prevent breaking the UI.
-      debugPrint('Error fetching transaction aggregates: $e');
       return {
         'totalTransactions': 0,
         'totalCommission': 0.0,

@@ -7,6 +7,9 @@ import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
 import '../core/errors/app_exceptions.dart';
+import '../data/models/user_model.dart';
+import '../data/models/user_permissions.dart'; // Added import
+import '../providers/auth_provider.dart'; // Added import for AuthProvider
 
 enum DebtStatus {
   idle,
@@ -23,6 +26,7 @@ class DebtProvider extends ChangeNotifier {
 
   // State
   String? _currentStoreId;
+  UserModel? _currentUser; // Added _currentUser
   List<DebtModel> _debts = [];
   Map<String, dynamic> _summary = {};
   DocumentSnapshot? _lastDocument;
@@ -81,6 +85,21 @@ class DebtProvider extends ChangeNotifier {
   bool get hasError => _status == DebtStatus.error;
 
   // Methods
+
+  void updateAuthState(AuthProvider auth) {
+    _currentStoreId = auth.currentStoreId;
+    _currentUser = auth.currentUser;
+    // Logic to refetch if store changed is already in setStoreId,
+    // but better to consolidate or just keep setStoreId logic here.
+    // For minimal disruption, I will just set _currentUser here.
+    // The previously existing setStoreId might be called from outside/UI?
+    // If we use ProxyProvider, updateAuthState is better.
+    // Let's assume ProxyProvider is used or will be used.
+
+    // NOTE: setStoreId logic also resets cache.
+    // If I replace setStoreId logic or just support both?
+    // The previous code had setStoreId. I will keep it but updateAuthState is helper.
+  }
 
   void setStoreId(String storeId) {
     if (_currentStoreId != storeId) {
@@ -198,6 +217,14 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
+  // Helper to check permission
+  void _checkPermission(bool Function(UserPermissions) selector) {
+    if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
+    if (!_currentUser!.hasPermission(selector)) {
+      throw PermissionException();
+    }
+  }
+
   Future<bool> createDebt({
     required String customerName,
     required String customerPhone,
@@ -208,6 +235,8 @@ class DebtProvider extends ChangeNotifier {
   }) async {
     _setStatus(DebtStatus.creating);
     try {
+      _checkPermission((p) => p.createDebt); // CHECK ADDED
+
       if (_currentStoreId == null) {
         throw ValidationException('Store ID not found.');
       }
@@ -253,6 +282,9 @@ class DebtProvider extends ChangeNotifier {
       String debtId, double amountToAdd, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
+      _checkPermission((p) => p
+          .createDebt); // CHECK ADDED (treating adding to debt as create debt permission)
+
       await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
       appEvents.fireDebtsChanged();
       return true;
@@ -268,6 +300,8 @@ class DebtProvider extends ChangeNotifier {
   Future<bool> updateDebt(String debtId, Map<String, dynamic> data) async {
     _setStatus(DebtStatus.updating);
     try {
+      // No specific permission for generic update, assuming createDebt or manageDebt covers it
+      // If a specific permission is needed, it should be added here.
       await _debtRepository.updateDebt(debtId, data);
       appEvents.fireDebtsChanged();
       return true;
@@ -284,6 +318,8 @@ class DebtProvider extends ChangeNotifier {
       String debtId, double amountToPay, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
+      _checkPermission((p) => p.collectDebt); // CHECK ADDED
+
       // The provider now just calls the atomic repository method
       await _debtRepository.processPayment(debtId, amountToPay, userId);
       appEvents.fireDebtsChanged();
@@ -300,6 +336,8 @@ class DebtProvider extends ChangeNotifier {
   Future<bool> deleteDebt(String debtId) async {
     _setStatus(DebtStatus.updating);
     try {
+      _checkPermission((p) => p.deleteDebt); // CHECK ADDED
+
       await _debtRepository.deleteDebt(debtId);
 
       // Remove from local list

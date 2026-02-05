@@ -1,9 +1,9 @@
-
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
+import '../data/models/user_permissions.dart'; // Added import
 
 enum EmployeeStatus { initial, loading, loaded, error }
 
@@ -39,8 +39,10 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   int get employeesCount => _employees.where((e) => e.isActive).length;
-  List<UserModel> get activeEmployees => _employees.where((e) => e.isActive).toList();
-  List<UserModel> get inactiveEmployees => _employees.where((e) => !e.isActive).toList();
+  List<UserModel> get activeEmployees =>
+      _employees.where((e) => e.isActive).toList();
+  List<UserModel> get inactiveEmployees =>
+      _employees.where((e) => !e.isActive).toList();
 
   EmployeeProvider({required EmployeeRepository employeeRepository})
       : _employeeRepository = employeeRepository;
@@ -59,7 +61,7 @@ class EmployeeProvider extends ChangeNotifier {
       _status = EmployeeStatus.initial;
       _errorMessage = null;
       _searchQuery = '';
-      
+
       if (storeId != null) {
         _listenToEmployees(storeId);
       } else {
@@ -92,6 +94,7 @@ class EmployeeProvider extends ChangeNotifier {
     required String fullName,
     required String phone,
     required String pin,
+    required UserPermissions permissions, // Added parameter
   }) async {
     if (_currentStoreId == null) {
       _setError('Store ID not set');
@@ -106,6 +109,7 @@ class EmployeeProvider extends ChangeNotifier {
         fullName: fullName,
         phone: phone,
         pin: pin,
+        permissions: permissions, // Pass permissions
       );
       // No longer need to fire event, stream will update automatically
       _errorMessage = null;
@@ -124,7 +128,6 @@ class EmployeeProvider extends ChangeNotifier {
     required String storeId,
     required String pin,
   }) async {
-
     // Validate PIN
     if (pin.length != 4 || !_isNumeric(pin)) {
       _setError('الرقم السري يجب أن يكون 4 أرقام');
@@ -132,21 +135,17 @@ class EmployeeProvider extends ChangeNotifier {
     }
 
     try {
-
       final employee = await _employeeRepository.getEmployeeByPIN(
         storeId: storeId,
         pin: pin,
       );
-
 
       if (employee == null) {
         _setError('الرقم السري غير صحيح');
       }
 
       return employee;
-
     } catch (e) {
-
       if (e is ServerException) {
         _setError(e.message);
       } else {
@@ -179,12 +178,33 @@ class EmployeeProvider extends ChangeNotifier {
     }
     _setStatus(EmployeeStatus.loading);
     try {
-      return await _employeeRepository.resetEmployeePIN(userId: userId, newPin: newPin);
+      return await _employeeRepository.resetEmployeePIN(
+          userId: userId, newPin: newPin);
     } on ValidationException catch (e) {
       _setError(e.message);
       return false;
     } on ServerException catch (e) {
       _setError(e.message);
+      return false;
+    }
+  }
+
+  Future<bool> updateEmployeePermissions(
+      String userId, UserPermissions permissions) async {
+    _setStatus(EmployeeStatus.loading);
+    try {
+      await _employeeRepository.updateEmployeePermissions(
+        userId: userId,
+        permissions: permissions,
+      );
+      // No need to refresh locally as stream will update
+      _setStatus(EmployeeStatus.loaded);
+      return true;
+    } on ServerException catch (e) {
+      _setError(e.message);
+      return false;
+    } catch (e) {
+      _setError('Failed to update permissions.');
       return false;
     }
   }

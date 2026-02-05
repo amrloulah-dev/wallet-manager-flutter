@@ -1,6 +1,5 @@
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 
 import '../../core/constants/firebase_constants.dart';
@@ -532,7 +531,6 @@ class DebtRepository {
         'paidTotal': paidSnapshot.getSum('totalAmount') ?? 0.0,
       };
     } catch (e) {
-      debugPrint('Error fetching debt stats: $e');
       return {
         'openCount': 0,
         'openTotal': 0.0,

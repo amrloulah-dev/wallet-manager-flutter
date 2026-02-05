@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'user_permissions.dart';
+
 // ===========================
 // Main User Model
 // ===========================
@@ -56,6 +58,14 @@ class UserModel {
   // Getters
   bool get isOwner => role == 'owner';
   bool get isEmployee => role == 'employee';
+
+  /// Helper to check permissions easily.
+  /// Example: user.hasPermission((p) => p.createDebt)
+  bool hasPermission(bool Function(UserPermissions) selector) {
+    if (isOwner) return true;
+    if (permissions == null) return false;
+    return selector(permissions!);
+  }
 
   /// Creates a UserModel from a Firestore document snapshot.
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -167,94 +177,6 @@ class UserModel {
 
   @override
   int get hashCode => userId.hashCode ^ storeId.hashCode;
-}
-
-// ===========================
-// Nested: User Permissions
-// ===========================
-
-class UserPermissions {
-  final bool canCreateTransactions;
-  final bool canCreateDebt;
-  final List<String> canAccessScreens;
-  final bool canMarkDebtPaid;
-  final bool canViewAllTransactions;
-
-  UserPermissions({
-    this.canCreateTransactions = true,
-    this.canCreateDebt = true,
-    this.canAccessScreens = const [
-      'AddDebtScreen',
-      'DebtsListScreen',
-      'DashboardScreen',
-      'CreateTransactionScreen',
-      'TodayTransactionsScreen',
-    ],
-    this.canMarkDebtPaid = true,
-    this.canViewAllTransactions = true,
-  });
-
-  /// Returns a default set of permissions for a new employee.
-  factory UserPermissions.defaultPermissions() {
-    return UserPermissions(
-      canCreateTransactions: true,
-      canCreateDebt: true,
-      canAccessScreens: [
-        'DashboardScreen',
-        'CreateTransactionScreen',
-        'TodayTransactionsScreen',
-        'AddDebtScreen',
-        'DebtsListScreen',
-      ],
-      canMarkDebtPaid: true,
-      canViewAllTransactions: false, // Default to not seeing all transactions
-    );
-  }
-
-  factory UserPermissions.fromMap(Map<String, dynamic> map) {
-    final screensFromMap = map['canAccessScreens'];
-
-    final List<String> effectiveScreens =
-        (screensFromMap is List && screensFromMap.isNotEmpty)
-            ? List<String>.from(screensFromMap)
-            : UserPermissions.defaultPermissions().canAccessScreens;
-
-    return UserPermissions(
-      canCreateTransactions: map['canCreateTransactions'] ?? true,
-      canCreateDebt: map['canCreateDebt'] ?? true,
-      canAccessScreens: effectiveScreens,
-      canMarkDebtPaid: map['canMarkDebtPaid'] ?? true,
-      canViewAllTransactions: map['canViewAllTransactions'] ?? false,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'canCreateTransactions': canCreateTransactions,
-      'canCreateDebt': canCreateDebt,
-      'canAccessScreens': canAccessScreens,
-      'canMarkDebtPaid': canMarkDebtPaid,
-      'canViewAllTransactions': canViewAllTransactions,
-    };
-  }
-
-  UserPermissions copyWith({
-    bool? canCreateTransactions,
-    bool? canCreateDebt,
-    List<String>? canAccessScreens,
-    bool? canMarkDebtPaid,
-    bool? canViewAllTransactions,
-  }) {
-    return UserPermissions(
-      canCreateTransactions:
-          canCreateTransactions ?? this.canCreateTransactions,
-      canCreateDebt: canCreateDebt ?? this.canCreateDebt,
-      canAccessScreens: canAccessScreens ?? this.canAccessScreens,
-      canMarkDebtPaid: canMarkDebtPaid ?? this.canMarkDebtPaid,
-      canViewAllTransactions:
-          canViewAllTransactions ?? this.canViewAllTransactions,
-    );
-  }
 }
 
 // ===========================

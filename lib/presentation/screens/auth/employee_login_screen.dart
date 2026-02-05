@@ -113,8 +113,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
       if (success) {
         if (!mounted) return;
-        Navigator.pushReplacementNamed(
-            context, RouteConstants.employeeDashboard);
+        Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
         ToastUtils.showSuccess(
             '${AppLocalizations.of(context)!.welcome} ${_selectedEmployee!.fullName}');
       } else {

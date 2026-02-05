@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 class DeviceRepository {
@@ -36,7 +35,6 @@ class DeviceRepository {
         return const Uuid().v4();
       }
     } catch (e) {
-      debugPrint('Error getting device ID: $e');
       return const Uuid().v4();
     }
   }
@@ -61,7 +59,6 @@ class DeviceRepository {
       final trialCount = data['trialCount'] as int? ?? 0;
       return trialCount < 2;
     } catch (e) {
-      debugPrint('Error checking device eligibility: $e');
       // Fail safe: return true or false based on policy.
       // Returning false might block legitimate users if error is transient,
       // but returning true might allow abuse.
@@ -83,7 +80,6 @@ class DeviceRepository {
         'lastTrialDate': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      debugPrint('Error registering device usage: $e');
       rethrow;
     }
   }
