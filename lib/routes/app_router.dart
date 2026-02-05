@@ -59,18 +59,24 @@ class AppRouter {
           MultiProvider(
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (_) => WalletProvider(),
+                create: (context) => WalletProvider(
+                    authProvider:
+                        Provider.of<AuthProvider>(context, listen: false)),
                 update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                    (prev ?? WalletProvider(authProvider: auth))
+                      ..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
                 update: (_, auth, prev) => prev!..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-                create: (_) => DebtProvider(),
+                create: (context) => DebtProvider(
+                    authProvider:
+                        Provider.of<AuthProvider>(context, listen: false)),
                 update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                    (prev ?? DebtProvider(authProvider: auth))
+                      ..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
                 create: (_) => StatisticsProvider(
@@ -94,9 +100,12 @@ class AppRouter {
       case RouteConstants.addBalance:
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-            create: (_) => WalletProvider(),
+            create: (context) => WalletProvider(
+                authProvider:
+                    Provider.of<AuthProvider>(context, listen: false)),
             update: (_, auth, prev) =>
-                prev!..setStoreId(auth.currentStoreId ?? ''),
+                (prev ?? WalletProvider(authProvider: auth))
+                  ..updateAuthState(auth),
             child: _getPageForWalletRoute(settings),
           ),
           settings,
@@ -107,9 +116,12 @@ class AppRouter {
           MultiProvider(
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (_) => WalletProvider(),
+                create: (context) => WalletProvider(
+                    authProvider:
+                        Provider.of<AuthProvider>(context, listen: false)),
                 update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                    (prev ?? WalletProvider(authProvider: auth))
+                      ..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
@@ -127,9 +139,12 @@ class AppRouter {
           MultiProvider(
             providers: [
               ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (_) => WalletProvider(),
+                create: (context) => WalletProvider(
+                    authProvider:
+                        Provider.of<AuthProvider>(context, listen: false)),
                 update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId ?? ''),
+                    (prev ?? WalletProvider(authProvider: auth))
+                      ..updateAuthState(auth),
               ),
               ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
                 create: (_) => TransactionProvider(),
@@ -151,9 +166,12 @@ class AppRouter {
       case RouteConstants.addDebt:
         return _buildRoute(
           ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-            create: (_) => DebtProvider(),
+            create: (context) => DebtProvider(
+                authProvider:
+                    Provider.of<AuthProvider>(context, listen: false)),
             update: (_, auth, prev) =>
-                prev!..setStoreId(auth.currentStoreId ?? ''),
+                (prev ?? DebtProvider(authProvider: auth))
+                  ..updateAuthState(auth),
             child: _getPageForDebtRoute(settings),
           ),
           settings,

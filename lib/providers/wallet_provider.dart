@@ -30,7 +30,8 @@ class WalletProvider extends ChangeNotifier {
 
   // State
   String? _currentStoreId;
-  UserModel? _currentUser; // Added
+
+  final AuthProvider _authProvider; // Made final and non-nullable
   List<WalletModel> _wallets = [];
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
@@ -53,10 +54,12 @@ class WalletProvider extends ChangeNotifier {
 
   // Constructor
   WalletProvider({
+    required AuthProvider authProvider, // Required authProvider
     WalletRepository? walletRepository,
     TransactionRepository? transactionRepository,
     String? storeId,
-  })  : _walletRepository = walletRepository ?? WalletRepository(),
+  })  : _authProvider = authProvider,
+        _walletRepository = walletRepository ?? WalletRepository(),
         _transactionRepository =
             transactionRepository ?? TransactionRepository(),
         _currentStoreId = storeId {
@@ -95,19 +98,36 @@ class WalletProvider extends ChangeNotifier {
   // Methods
 
   void updateAuthState(AuthProvider auth) {
+    // _authProvider is final, we don't reassign it.
     if (_currentStoreId != auth.currentStoreId) {
       setStoreId(auth.currentStoreId ?? '');
     }
-    _currentUser = auth.currentUser;
   }
 
-  // Helper Check
-  void _checkPermission(bool Function(UserPermissions) selector) {
-    if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
-    if (!_currentUser!.hasPermission(selector)) {
+  /// Robust permission check that ensures user is loaded
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) selector) async {
+    // 1. Attempt to load user with retry
+    final user = await _authProvider.ensureUserLoaded();
+
+    // 2. Verify User
+    if (user == null) {
+      throw AuthException(
+          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
+    }
+
+    // 3. Permission Guard
+    if (user.isOwner) return user;
+
+    if (!user.hasPermission(selector)) {
       throw PermissionException();
     }
+
+    return user;
   }
+
+  // Helper Check - Deprecated in favor of _validateUserAndPermission but kept for non-async if needed
+  // void _checkPermission(bool Function(UserPermissions) selector) { ... }
 
   void setStoreId(String storeId) {
     if (_currentStoreId != storeId) {
@@ -273,7 +293,7 @@ class WalletProvider extends ChangeNotifier {
   }) async {
     _setStatus(WalletStatusState.creating);
     try {
-      _checkPermission((p) => p.createWallet);
+      await _validateUserAndPermission((p) => p.createWallet);
 
       if (_currentStoreId == null)
         throw ValidationException('Store ID not found.');
@@ -304,7 +324,7 @@ class WalletProvider extends ChangeNotifier {
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
     _setStatus(WalletStatusState.updating);
     try {
-      _checkPermission((p) => p.editWallet);
+      await _validateUserAndPermission((p) => p.editWallet);
 
       await _walletRepository.updateWallet(walletId, data);
       appEvents.fireWalletsChanged();
@@ -322,7 +342,7 @@ class WalletProvider extends ChangeNotifier {
       String walletId, double amount, String createdBy) async {
     _setStatus(WalletStatusState.updating);
     try {
-      _checkPermission((p) => p.addBalance);
+      await _validateUserAndPermission((p) => p.addBalance);
 
       if (amount <= 0) throw ValidationException('Amount must be positive.');
       if (_currentStoreId == null)
@@ -356,7 +376,7 @@ class WalletProvider extends ChangeNotifier {
   Future<bool> deleteWallet(String walletId) async {
     _setStatus(WalletStatusState.deleting);
     try {
-      _checkPermission((p) => p.editWallet);
+      await _validateUserAndPermission((p) => p.editWallet);
 
       await _walletRepository.deleteWallet(walletId);
       appEvents.fireWalletsChanged();

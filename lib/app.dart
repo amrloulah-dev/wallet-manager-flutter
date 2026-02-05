@@ -8,6 +8,10 @@ import 'package:walletmanager/providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/route_constants.dart';
+import 'data/repositories/wallet_repository.dart';
+import 'data/repositories/debt_repository.dart';
+import 'providers/wallet_provider.dart';
+import 'providers/debt_provider.dart';
 import 'l10n/arb/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
@@ -28,8 +32,24 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) =>
                 EmployeeProvider(employeeRepository: EmployeeRepository())),
-
-        // Feature-specific providers will be moved to the router
+        ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
+          create: (context) => WalletProvider(
+              authProvider: Provider.of<AuthProvider>(context, listen: false),
+              walletRepository: WalletRepository()),
+          update: (_, auth, previous) => (previous ??
+              WalletProvider(
+                  authProvider: auth, walletRepository: WalletRepository()))
+            ..updateAuthState(auth),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
+          create: (context) => DebtProvider(
+              authProvider: Provider.of<AuthProvider>(context, listen: false),
+              debtRepository: DebtRepository()),
+          update: (_, auth, previous) => (previous ??
+              DebtProvider(
+                  authProvider: auth, debtRepository: DebtRepository()))
+            ..updateAuthState(auth),
+        ),
       ],
       child: Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>(
         builder: (context, authProvider, themeProvider, localizationProvider,

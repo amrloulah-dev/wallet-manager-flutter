@@ -24,9 +24,8 @@ enum DebtStatus {
 class DebtProvider extends ChangeNotifier {
   final DebtRepository _debtRepository;
 
-  // State
   String? _currentStoreId;
-  UserModel? _currentUser; // Added _currentUser
+  final AuthProvider _authProvider; // Made final and non-nullable
   List<DebtModel> _debts = [];
   Map<String, dynamic> _summary = {};
   DocumentSnapshot? _lastDocument;
@@ -49,9 +48,11 @@ class DebtProvider extends ChangeNotifier {
 
   // Constructor
   DebtProvider({
+    required AuthProvider authProvider, // Required authProvider
     DebtRepository? debtRepository,
     String? storeId,
-  })  : _debtRepository = debtRepository ?? DebtRepository(),
+  })  : _authProvider = authProvider,
+        _debtRepository = debtRepository ?? DebtRepository(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onDebtsChanged.listen((_) {
       if (_currentStoreId != null && !isLoading && !isLoadingMore) {
@@ -87,8 +88,10 @@ class DebtProvider extends ChangeNotifier {
   // Methods
 
   void updateAuthState(AuthProvider auth) {
+    // _authProvider is final, we don't reassign it.
+    // Use the auth instance passed (should be same as constructor).
     _currentStoreId = auth.currentStoreId;
-    _currentUser = auth.currentUser;
+
     // Logic to refetch if store changed is already in setStoreId,
     // but better to consolidate or just keep setStoreId logic here.
     // For minimal disruption, I will just set _currentUser here.
@@ -99,6 +102,29 @@ class DebtProvider extends ChangeNotifier {
     // NOTE: setStoreId logic also resets cache.
     // If I replace setStoreId logic or just support both?
     // The previous code had setStoreId. I will keep it but updateAuthState is helper.
+  }
+
+  // Robust permission check that ensures user is loaded
+  // Robust permission check that ensures user is loaded
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) selector) async {
+    // 1. Attempt to load user with retry
+    final user = await _authProvider.ensureUserLoaded();
+
+    // 2. Verify User
+    if (user == null) {
+      throw AuthException(
+          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
+    }
+
+    // 3. Permission Guard
+    if (user.isOwner) return user;
+
+    if (!user.hasPermission(selector)) {
+      throw PermissionException();
+    }
+
+    return user;
   }
 
   void setStoreId(String storeId) {
@@ -217,13 +243,8 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
-  // Helper to check permission
-  void _checkPermission(bool Function(UserPermissions) selector) {
-    if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
-    if (!_currentUser!.hasPermission(selector)) {
-      throw PermissionException();
-    }
-  }
+  // Helper to check permission - Deprecated but kept
+  // void _checkPermission(bool Function(UserPermissions) selector) { ... }
 
   Future<bool> createDebt({
     required String customerName,
@@ -235,7 +256,7 @@ class DebtProvider extends ChangeNotifier {
   }) async {
     _setStatus(DebtStatus.creating);
     try {
-      _checkPermission((p) => p.createDebt); // CHECK ADDED
+      final user = await _validateUserAndPermission((p) => p.createDebt);
 
       if (_currentStoreId == null) {
         throw ValidationException('Store ID not found.');
@@ -249,7 +270,7 @@ class DebtProvider extends ChangeNotifier {
       if (existingDebtByPhone != null) {
         // --- CORRECTED: Use the new transactional method ---
         return await addPartialDebt(
-            existingDebtByPhone.debtId, amountDue, createdBy);
+            existingDebtByPhone.debtId, amountDue, user.userId);
       } else {
         final newDebt = DebtModel(
           debtId: FirebaseFirestore.instance.collection('debts').doc().id,
@@ -262,12 +283,21 @@ class DebtProvider extends ChangeNotifier {
           notes: notes,
           debtDate: Timestamp.now(),
           createdAt: Timestamp.now(),
-          createdBy: createdBy,
+          createdBy: user.userId,
         );
         await _debtRepository.createDebt(newDebt);
       }
 
+      // Update Stats if it's an employee
+      if (user.isEmployee) {
+        await _authProvider.updateEmployeeStats(
+          userId: user.userId,
+          incrementDebts: 1,
+        );
+      }
+
       appEvents.fireDebtsChanged();
+      _setStatus(DebtStatus.loaded); // Reset status
       return true;
     } on AppException catch (e) {
       _setError(e.message);
@@ -282,8 +312,7 @@ class DebtProvider extends ChangeNotifier {
       String debtId, double amountToAdd, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
-      _checkPermission((p) => p
-          .createDebt); // CHECK ADDED (treating adding to debt as create debt permission)
+      await _validateUserAndPermission((p) => p.createDebt);
 
       await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
       appEvents.fireDebtsChanged();
@@ -302,6 +331,9 @@ class DebtProvider extends ChangeNotifier {
     try {
       // No specific permission for generic update, assuming createDebt or manageDebt covers it
       // If a specific permission is needed, it should be added here.
+      // For now we will replicate the check if feasible or leave it if it was open.
+      // User requested "Refactor all Write methods", so I'll add a safe check for createDebt as a baseline
+      await _validateUserAndPermission((p) => p.createDebt);
       await _debtRepository.updateDebt(debtId, data);
       appEvents.fireDebtsChanged();
       return true;
@@ -318,7 +350,7 @@ class DebtProvider extends ChangeNotifier {
       String debtId, double amountToPay, String userId) async {
     _setStatus(DebtStatus.updating);
     try {
-      _checkPermission((p) => p.collectDebt); // CHECK ADDED
+      await _validateUserAndPermission((p) => p.collectDebt);
 
       // The provider now just calls the atomic repository method
       await _debtRepository.processPayment(debtId, amountToPay, userId);
@@ -336,7 +368,7 @@ class DebtProvider extends ChangeNotifier {
   Future<bool> deleteDebt(String debtId) async {
     _setStatus(DebtStatus.updating);
     try {
-      _checkPermission((p) => p.deleteDebt); // CHECK ADDED
+      await _validateUserAndPermission((p) => p.deleteDebt);
 
       await _debtRepository.deleteDebt(debtId);
 

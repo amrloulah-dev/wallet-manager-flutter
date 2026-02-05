@@ -89,16 +89,17 @@ class ToastUtils {
       color: color,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Icon(icon, color: Colors.white, size: 22),
-                        const SizedBox(width: 12),
-                    Expanded(          child: Text(
-            message,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Icon(icon, color: Colors.white, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         ),
       ),
@@ -125,20 +126,25 @@ class ToastUtils {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: color, size: 22),
-                  const SizedBox(width: 12),
-                  Text(
-                    message,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.dark.textPrimary,
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Icon(icon, color: color, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.dark.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

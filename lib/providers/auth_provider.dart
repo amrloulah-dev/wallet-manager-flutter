@@ -63,6 +63,76 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
   StoreModel? get currentStore => _currentStore;
 
+  // Robust getter for currentUserId - Primary source is FirebaseAuth, then internal state, then LocalStorage
+  String? get currentUserId {
+    return FirebaseAuth.instance.currentUser?.uid ??
+        _currentUser?.userId ??
+        _localStorage.userId;
+  }
+
+  /// Returns null if no user is signed in or fetch failed.
+  /// Ensures the UserModel is loaded.
+  /// If in memory -> returns it.
+  /// If missing but Auth exists -> Fetches from Firestore with Retry.
+  Future<UserModel?> ensureUserLoaded() async {
+    // 1. Memory Check (Zero Cost)
+    if (_currentUser != null) return _currentUser;
+
+    // 2. Auth Session Check (Firebase - Owner)
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      _firebaseUser = firebaseUser;
+      return await _fetchWithRetry(firebaseUser.uid);
+    }
+
+    // 3. LocalStorage Check (Employee - Virtual)
+    final savedUserId = _localStorage.userId;
+    if (savedUserId != null) {
+      return await _fetchWithRetry(savedUserId);
+    }
+
+    return null;
+  }
+
+  Future<UserModel?> _fetchWithRetry(String uid) async {
+    try {
+      // Attempt 1
+      UserModel? user = await _fetchUserFromRepo(uid);
+      if (user != null) {
+        _updateLocalState(user);
+        return user;
+      }
+
+      // Wait 1 second
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Attempt 2
+      user = await _fetchUserFromRepo(uid);
+      if (user != null) {
+        _updateLocalState(user);
+        return user;
+      }
+    } catch (e) {
+      // Silent error handling - user will be prompted to login if needed
+    }
+    return null;
+  }
+
+  Future<UserModel?> _fetchUserFromRepo(String uid) async {
+    return await _userRepository.getUserByFirebaseUid(uid);
+  }
+
+  void _updateLocalState(UserModel user) {
+    _currentUser = user;
+    if (_currentStore == null) {
+      _storeRepository.getStoreById(user.storeId).then((store) {
+        _currentStore = store;
+        notifyListeners();
+      });
+    }
+    notifyListeners();
+  }
+
   // License Getters
   String get licenseKey => _currentStore?.license.licenseKey ?? 'N/A';
   Timestamp get licenseExpiryDate =>
@@ -77,7 +147,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
-  String? get currentUserId => _currentUser?.userId;
+
   String? get currentStoreId => _currentStore?.storeId;
 
   // Trial Status
@@ -668,6 +738,20 @@ class AuthProvider extends ChangeNotifier {
         _setError('فشل تحديث البيانات.');
       }
     }
+  }
+
+  Future<void> updateEmployeeStats({
+    required String userId,
+    int? incrementTransactions,
+    double? incrementCommission,
+    int? incrementDebts,
+  }) async {
+    await _userRepository.updateEmployeeStats(
+      userId: userId,
+      incrementTransactions: incrementTransactions,
+      incrementCommission: incrementCommission,
+      incrementDebts: incrementDebts,
+    );
   }
 
   void _setStatus(AuthStatus status) {
