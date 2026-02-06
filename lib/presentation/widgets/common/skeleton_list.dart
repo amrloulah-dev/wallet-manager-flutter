@@ -16,8 +16,10 @@ class SkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      shrinkWrap: true, // Fix: Added shrinkWrap to ensure the ListView takes only the space it needs.
-      physics: const NeverScrollableScrollPhysics(), // Fix: Disabled scrolling on the ListView to avoid conflicts with parent scroll views.
+      shrinkWrap:
+          true, // Fix: Added shrinkWrap to ensure the ListView takes only the space it needs.
+      physics:
+          const NeverScrollableScrollPhysics(), // Fix: Disabled scrolling on the ListView to avoid conflicts with parent scroll views.
       padding: padding ?? const EdgeInsets.all(16),
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 12),

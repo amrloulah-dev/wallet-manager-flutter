@@ -143,7 +143,8 @@ class _SummaryItem extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+            style:
+                AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

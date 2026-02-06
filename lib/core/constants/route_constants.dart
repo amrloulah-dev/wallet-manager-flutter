@@ -59,4 +59,5 @@ class RouteConstants {
   // ===========================
   static const String totalBalance = '/total-balance';
   static const String upgradeScreen = '/upgrade-screen';
+  static const String licenseExpired = '/license-expired';
 }

@@ -22,7 +22,8 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0), // Reduced padding as parent will have it
+          padding: const EdgeInsets.symmetric(
+              horizontal: 4.0), // Reduced padding as parent will have it
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

@@ -57,7 +57,6 @@ class ThemeProvider extends ChangeNotifier {
     } catch (e) {
       _themeMode = ThemeMode.system;
       // Optionally log the error
-
     }
   }
 

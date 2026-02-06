@@ -51,7 +51,8 @@ class AppTheme {
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
       hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.light.hint),
-      labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.light.textSecondary),
+      labelStyle: AppTextStyles.labelMedium
+          .copyWith(color: AppColors.light.textSecondary),
     ),
 
     // Button Themes
@@ -104,7 +105,8 @@ class AppTheme {
     iconTheme: IconThemeData(color: AppColors.light.textPrimary, size: 24),
 
     // Divider theme
-    dividerTheme: DividerThemeData(color: AppColors.light.divider, thickness: 1),
+    dividerTheme:
+        DividerThemeData(color: AppColors.light.divider, thickness: 1),
 
     visualDensity: VisualDensity.adaptivePlatformDensity,
   );
@@ -122,7 +124,8 @@ class AppTheme {
       backgroundColor: AppColors.dark.surface,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: AppTextStyles.h2.copyWith(color: AppColors.dark.textPrimary),
+      titleTextStyle:
+          AppTextStyles.h2.copyWith(color: AppColors.dark.textPrimary),
       iconTheme: const IconThemeData(color: AppColors.primaryLight),
     ),
 
@@ -157,14 +160,16 @@ class AppTheme {
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
       hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.dark.hint),
-      labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.dark.textSecondary),
+      labelStyle: AppTextStyles.labelMedium
+          .copyWith(color: AppColors.dark.textSecondary),
     ),
 
     // Button Themes
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primaryLight,
-        foregroundColor: AppColors.dark.scaffoldBg, // High contrast for text on button
+        foregroundColor:
+            AppColors.dark.scaffoldBg, // High contrast for text on button
         textStyle: AppTextStyles.labelLarge,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),

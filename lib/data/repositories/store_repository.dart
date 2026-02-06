@@ -42,11 +42,9 @@ class StoreRepository {
             "TRIAL-MODE-${const Uuid().v4().substring(0, 8).toUpperCase()}",
         licenseType: "trial",
         status: "active",
-        startDate: Timestamp.now(),
-        expiryDate: Timestamp.fromDate(
-          DateTime.now().add(const Duration(days: 10)),
-        ),
-        lastCheck: Timestamp.now(),
+        startDate: DateTime.now(),
+        expiryDate: DateTime.now().add(const Duration(days: 10)),
+        lastCheck: DateTime.now(),
         autoRenew: false,
       );
 

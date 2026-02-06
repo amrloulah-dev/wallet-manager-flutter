@@ -11,6 +11,7 @@ import '../data/models/user_model.dart';
 import '../data/models/user_permissions.dart'; // Added
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
+import '../core/services/analytics_service.dart';
 
 enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
 
@@ -274,6 +275,7 @@ class TransactionProvider extends ChangeNotifier {
       );
 
       await _transactionRepository.createTransaction(newTransaction);
+      AnalyticsService.logTransactionCreated(transactionType);
       appEvents.fireTransactionsChanged();
       appEvents.fireWalletsChanged();
       return true;

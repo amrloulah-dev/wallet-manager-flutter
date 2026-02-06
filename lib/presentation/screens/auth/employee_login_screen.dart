@@ -113,6 +113,16 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
       if (success) {
         if (!mounted) return;
+
+        if (authProvider.isSubscriptionExpired) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            RouteConstants.licenseExpired,
+            (route) => false,
+          );
+          return;
+        }
+
         Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
         ToastUtils.showSuccess(
             '${AppLocalizations.of(context)!.welcome} ${_selectedEmployee!.fullName}');

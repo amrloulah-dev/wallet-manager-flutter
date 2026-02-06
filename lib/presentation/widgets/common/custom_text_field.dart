@@ -70,11 +70,26 @@ class _CustomTextFieldState extends State<CustomTextField>
       vsync: this,
     );
     _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 10.0).chain(CurveTween(curve: Curves.easeOut)), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: 10.0, end: -10.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 2),
-      TweenSequenceItem(tween: Tween<double>(begin: -10.0, end: 5.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 2),
-      TweenSequenceItem(tween: Tween<double>(begin: 5.0, end: -5.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 2),
-      TweenSequenceItem(tween: Tween<double>(begin: -5.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)), weight: 1),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.0, end: 10.0)
+              .chain(CurveTween(curve: Curves.easeOut)),
+          weight: 1),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 10.0, end: -10.0)
+              .chain(CurveTween(curve: Curves.easeInOut)),
+          weight: 2),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: -10.0, end: 5.0)
+              .chain(CurveTween(curve: Curves.easeInOut)),
+          weight: 2),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 5.0, end: -5.0)
+              .chain(CurveTween(curve: Curves.easeInOut)),
+          weight: 2),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: -5.0, end: 0.0)
+              .chain(CurveTween(curve: Curves.easeIn)),
+          weight: 1),
     ]).animate(_shakeController);
   }
 

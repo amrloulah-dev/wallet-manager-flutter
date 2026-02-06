@@ -154,7 +154,7 @@ class UpgradeScreen extends StatelessWidget {
                     _buildInfoRow(context, "مفتاح الترخيص", licenseKey),
                     const SizedBox(height: 16),
                     _buildInfoRow(context, "تاريخ الانتهاء",
-                        DateHelper.formatTimestamp(expiryDate)),
+                        DateHelper.formatDateTime(expiryDate)),
                     const SizedBox(height: 16),
                     _buildInfoRow(
                         context, "الأيام المتبقية", "$daysRemaining يوم"),

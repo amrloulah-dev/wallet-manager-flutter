@@ -4,9 +4,9 @@
 ### Advanced Digital Wallet & Financial Management for Stores
 
 <!-- Badges -->
+[![Website](https://img.shields.io/badge/Official-Website-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://sites.google.com/view/wallet-manager-app)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter)](https://flutter.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-Backend-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![Provider](https://img.shields.io/badge/State-Provider-7952B3?style=for-the-badge)]()
 [![MVVM](https://img.shields.io/badge/Architecture-MVVM-success?style=for-the-badge)]()
 
 <br />
@@ -20,6 +20,8 @@
 <br />
 
 **Wallet Manager** is a specialized Flutter application tailored for the **Egyptian market**, designed to help store owners manage multiple digital wallets (Vodafone Cash, InstaPay, etc.), track debts, and control employee access securely.
+
+🌐 **Check out the official Landing Page:** [wallet-manager-app](https://sites.google.com/view/wallet-manager-app)
 
 </div>
 
@@ -45,11 +47,6 @@
 *   **Employee Mode:** Restricted access via **Secure PIN System**. Employees can perform transactions without viewing sensitive profit data.
 *   **License System:** App usage is secured via a custom license key mechanism.
 
-### 📝 Comprehensive Ledger
-*   **Debt Tracker:** Record customer debts, manage partial payments, and track status (Open/Paid).
-*   **Transaction History:** Detailed logs with filtering by date, type (Send/Receive), and provider.
-*   **Performance Analytics:** Daily reports on profits, transaction volume, and cash flow.
-
 ---
 
 ## 🛠️ Technical Architecture
@@ -62,18 +59,9 @@ The project is built using **Clean Architecture** principles with the **MVVM** p
 | **Backend** | Firebase (Firestore & Auth) |
 | **Auth** | Google Sign-In & Custom PIN Logic |
 | **Localization** | Arabic (`ar`) & English (`en`) support |
-| **Utilities** | `shared_preferences`, `intl`, `bot_toast` |
 
-### 📂 Project Structure
+---
 
-```text
-lib/
-├── core/                   # Constants, Themes, Utilities
-├── data/                   # Repositories & Firebase Services
-├── presentation/           # UI Screens & Widgets
-├── providers/              # ViewModels (Business Logic)
-└── l10n/                   # Localization (Arb files)
-```
 
 ⚙️ Setup & Installation
 1. Clone the Repo:

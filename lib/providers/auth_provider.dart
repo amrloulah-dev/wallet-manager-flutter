@@ -13,6 +13,7 @@ import '../data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import '../data/services/local_storage_service.dart';
 import '../core/errors/app_exceptions.dart';
+import '../core/services/analytics_service.dart';
 
 enum AuthStatus {
   idle,
@@ -135,15 +136,17 @@ class AuthProvider extends ChangeNotifier {
 
   // License Getters
   String get licenseKey => _currentStore?.license.licenseKey ?? 'N/A';
-  Timestamp get licenseExpiryDate =>
-      _currentStore?.license.expiryDate ?? Timestamp.now();
+  DateTime get licenseExpiryDate =>
+      _currentStore?.license.expiryDate ?? DateTime.now();
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
   // Helper Getters
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  bool get isSubscriptionExpired => _status == AuthStatus.expired;
+  bool get isSubscriptionExpired =>
+      _status == AuthStatus.expired ||
+      (_currentStore?.license.isExpired ?? false);
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
@@ -154,8 +157,8 @@ class AuthProvider extends ChangeNotifier {
   bool get isTrial => _currentStore?.license.licenseType == 'trial';
   int? get trialDaysRemaining {
     if (!isTrial) return null;
-    final remaining =
-        _currentStore!.license.expiryDate.toDate().difference(DateTime.now());
+    final expiry = _currentStore!.license.expiryDate;
+    final remaining = expiry.difference(DateTime.now());
     return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
   }
 
@@ -164,6 +167,7 @@ class AuthProvider extends ChangeNotifier {
   /// Validate saved session on app startup
   Future<void> tryAutoLogin() async {
     _setStatus(AuthStatus.loading);
+    AnalyticsService.logAppOpen();
     try {
       // 1. Read saved session data
       final savedUserId = _localStorage.userId;
@@ -266,8 +270,7 @@ class AuthProvider extends ChangeNotifier {
       final isEligible =
           await _deviceRepository.checkDeviceEligibility(deviceId);
       if (!isEligible) {
-        throw AuthException(
-            'لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+        throw DeviceLimitExceededException();
       }
 
       final existingStore =
@@ -285,6 +288,8 @@ class AuthProvider extends ChangeNotifier {
         storePassword: storePassword,
       );
 
+      AnalyticsService.logSignUp('google');
+
       // 2. Register Device Usage (Best effort)
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
@@ -294,9 +299,16 @@ class AuthProvider extends ChangeNotifier {
 
       return storeId;
     } catch (e) {
-      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
+      // Clean up local state on error
       await logout();
-      return null;
+
+      // Propagate specific exceptions to UI
+      if (e is DeviceLimitExceededException || e is StoreInactiveException) {
+        rethrow;
+      }
+
+      // For others, wrap or generic
+      throw e is AppException ? e : ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -315,12 +327,21 @@ class AuthProvider extends ChangeNotifier {
       final isEligible =
           await _deviceRepository.checkDeviceEligibility(deviceId);
       if (!isEligible) {
-        throw AuthException(
-            'لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+        throw DeviceLimitExceededException();
       }
 
-      final userCredential =
-          await _authRepository.createUserWithEmail(email, password);
+      UserCredential userCredential;
+      try {
+        userCredential =
+            await _authRepository.createUserWithEmail(email, password);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          throw EmailAlreadyInUseException();
+        } else if (e.code == 'weak-password') {
+          throw WeakPasswordException();
+        }
+        rethrow;
+      }
       final user = userCredential.user!;
       _firebaseUser = user;
 
@@ -336,6 +357,8 @@ class AuthProvider extends ChangeNotifier {
         storePassword: storePassword,
       );
 
+      AnalyticsService.logSignUp('email');
+
       // 2. Register Device Usage
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
@@ -343,13 +366,16 @@ class AuthProvider extends ChangeNotifier {
 
       return storeId;
     } catch (e) {
-      _setError(e is AppException ? e.message : 'حدث خطأ غير متوقع: $e');
-      // If registration fails halfway, we might want to cleanup the created user
-      // but Firebase Auth handles mostly atomic creation.
-      // However, if store creation fails, we are in a bad state.
-      // For now, logging out cleans up local state.
       await logout();
-      return null;
+
+      // Propagate specific exceptions to UI
+      if (e is DeviceLimitExceededException ||
+          e is EmailAlreadyInUseException ||
+          e is WeakPasswordException) {
+        rethrow;
+      }
+
+      throw e is AppException ? e : ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -371,9 +397,9 @@ class AuthProvider extends ChangeNotifier {
       licenseKey: "PENDING",
       licenseType: "trial",
       status: "pending",
-      startDate: Timestamp.now(),
-      expiryDate: Timestamp.now(),
-      lastCheck: Timestamp.now(),
+      startDate: DateTime.now(),
+      expiryDate: DateTime.now(),
+      lastCheck: DateTime.now(),
     );
 
     final newStore = StoreModel(
@@ -412,8 +438,15 @@ class AuthProvider extends ChangeNotifier {
     await _storeRepository.createStore(newStore);
     await _userRepository.createUser(newOwner);
 
+    // 2. Direct Fetch (Bypass internal provider state checks)
+    final freshStore = await _storeRepository.getStoreById(storeId);
+
     _currentUser = newOwner;
-    _currentStore = newStore;
+    if (freshStore != null) {
+      _currentStore = freshStore;
+    } else {
+      _currentStore = newStore; // Fallback
+    }
 
     await _localStorage.saveSession(
       userId: userId,
@@ -440,10 +473,17 @@ class AuthProvider extends ChangeNotifier {
       _firebaseUser = user;
 
       return await _finalizeOwnerLogin(user.uid);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        throw UserNotFoundException();
+      } else if (e.code == 'wrong-password') {
+        throw WrongPasswordException();
+      }
+      throw AuthException('فشل تسجيل الدخول: ${e.message}');
     } catch (e) {
       _setError(e is AppException ? e.message : 'فشل تسجيل الدخول.');
       await _authRepository.signOut();
-      return false;
+      rethrow;
     }
   }
 
@@ -469,6 +509,10 @@ class AuthProvider extends ChangeNotifier {
     }
 
     await _userRepository.updateLastLogin(userModel.userId);
+    AnalyticsService.setUserId(userModel.userId);
+    AnalyticsService.setUserProperty(name: 'role', value: userModel.role);
+    AnalyticsService.logLogin('email_password');
+
     await _localStorage.saveSession(
       userId: userModel.userId,
       storeId: store.storeId,
@@ -495,6 +539,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       await _userRepository.updateLastLogin(employee.userId);
+      AnalyticsService.setUserId(employee.userId);
+      AnalyticsService.setUserProperty(name: 'role', value: 'employee');
+      AnalyticsService.logLogin('pin_code');
+
       await _localStorage.saveSession(
         userId: employee.userId,
         storeId: store.storeId,
@@ -572,6 +620,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       await _userRepository.updateLastLogin(user.userId);
+      AnalyticsService.setUserId(user.userId);
+      AnalyticsService.setUserProperty(name: 'role', value: user.role);
+      AnalyticsService.logLogin('google');
+
       await _localStorage.saveSession(
         userId: user.userId,
         storeId: store.storeId,
@@ -700,6 +752,9 @@ class AuthProvider extends ChangeNotifier {
 
       // 3. Refresh Data (Fetch updated store profile with Premium status)
       await refreshUserData();
+
+      AnalyticsService.logLicenseUpgraded(
+          _currentStore?.license.licenseType ?? 'premium');
 
       _setLoading(false);
     } catch (e) {

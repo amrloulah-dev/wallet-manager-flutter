@@ -147,10 +147,10 @@ class StoreLicense {
   final String licenseKey;
   final String licenseType; // e.g., 'trial', 'premium', 'enterprise'
   final String status; // e.g., 'active', 'expired', 'suspended'
-  final Timestamp startDate;
-  final Timestamp expiryDate;
+  final DateTime startDate;
+  final DateTime expiryDate;
   final bool autoRenew;
-  final Timestamp lastCheck;
+  final DateTime lastCheck;
 
   StoreLicense({
     required this.licenseKey,
@@ -162,10 +162,10 @@ class StoreLicense {
     required this.lastCheck,
   });
 
-  bool get isExpired => DateTime.now().isAfter(expiryDate.toDate());
+  bool get isExpired => DateTime.now().isAfter(expiryDate);
   int get daysRemaining {
     if (isExpired) return 0;
-    return expiryDate.toDate().difference(DateTime.now()).inDays;
+    return expiryDate.difference(DateTime.now()).inDays;
   }
 
   factory StoreLicense.fromMap(Map<String, dynamic> map) {
@@ -173,10 +173,16 @@ class StoreLicense {
       licenseKey: map['licenseKey'] ?? '',
       licenseType: map['licenseType'] ?? 'trial',
       status: map['status'] ?? 'inactive',
-      startDate: map['startDate'] ?? Timestamp.now(),
-      expiryDate: map['expiryDate'] ?? Timestamp.now(),
+      startDate: map['startDate'] != null
+          ? (map['startDate'] as Timestamp).toDate()
+          : DateTime.now(),
+      expiryDate: map['expiryDate'] != null
+          ? (map['expiryDate'] as Timestamp).toDate()
+          : DateTime.now(),
       autoRenew: map['autoRenew'] ?? false,
-      lastCheck: map['lastCheck'] ?? Timestamp.now(),
+      lastCheck: map['lastCheck'] != null
+          ? (map['lastCheck'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 
@@ -185,10 +191,10 @@ class StoreLicense {
       'licenseKey': licenseKey,
       'licenseType': licenseType,
       'status': status,
-      'startDate': startDate,
-      'expiryDate': expiryDate,
+      'startDate': Timestamp.fromDate(startDate),
+      'expiryDate': Timestamp.fromDate(expiryDate),
       'autoRenew': autoRenew,
-      'lastCheck': lastCheck,
+      'lastCheck': Timestamp.fromDate(lastCheck),
     };
   }
 
@@ -196,10 +202,10 @@ class StoreLicense {
     String? licenseKey,
     String? licenseType,
     String? status,
-    Timestamp? startDate,
-    Timestamp? expiryDate,
+    DateTime? startDate,
+    DateTime? expiryDate,
     bool? autoRenew,
-    Timestamp? lastCheck,
+    DateTime? lastCheck,
   }) {
     return StoreLicense(
       licenseKey: licenseKey ?? this.licenseKey,
@@ -222,7 +228,10 @@ class StoreSettings {
   final String timezone;
   final int maxEmployees;
 
-  StoreSettings({this.currency = 'EGP', this.timezone = 'Africa/Cairo', this.maxEmployees = 5});
+  StoreSettings(
+      {this.currency = 'EGP',
+      this.timezone = 'Africa/Cairo',
+      this.maxEmployees = 5});
 
   factory StoreSettings.fromMap(Map<String, dynamic> map) {
     return StoreSettings(
@@ -240,7 +249,8 @@ class StoreSettings {
     };
   }
 
-  StoreSettings copyWith({String? currency, String? timezone, int? maxEmployees}) {
+  StoreSettings copyWith(
+      {String? currency, String? timezone, int? maxEmployees}) {
     return StoreSettings(
       currency: currency ?? this.currency,
       timezone: timezone ?? this.timezone,
@@ -298,7 +308,8 @@ class StoreStats {
     return StoreStats(
       totalWallets: totalWallets ?? this.totalWallets,
       activeWallets: activeWallets ?? this.activeWallets,
-      totalTransactionsToday: totalTransactionsToday ?? this.totalTransactionsToday,
+      totalTransactionsToday:
+          totalTransactionsToday ?? this.totalTransactionsToday,
       totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );

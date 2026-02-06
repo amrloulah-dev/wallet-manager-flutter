@@ -57,16 +57,18 @@ class WalletRepository {
     }
 
     try {
-      Query query =
-          _walletsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
+      Query query = _walletsCollection.where(FirebaseConstants.storeId,
+          isEqualTo: storeId);
       if (activeOnly) {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
       }
       if (walletType != null) {
-        query = query.where(FirebaseConstants.walletType, isEqualTo: walletType);
+        query =
+            query.where(FirebaseConstants.walletType, isEqualTo: walletType);
       }
       if (walletStatus != null) {
-        query = query.where(FirebaseConstants.walletStatus, isEqualTo: walletStatus);
+        query = query.where(FirebaseConstants.walletStatus,
+            isEqualTo: walletStatus);
       }
 
       if (lastDoc != null) {
@@ -74,7 +76,8 @@ class WalletRepository {
       }
 
       final snapshot = await query.limit(limit).get();
-      final wallets = snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
+      final wallets =
+          snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
       final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
 
       final result = {
@@ -103,7 +106,8 @@ class WalletRepository {
       final doc = await _walletsCollection.doc(walletId).get();
       if (!doc.exists) return null;
       final wallet = WalletModel.fromFirestore(doc);
-      _cacheManager.set(cacheKey, wallet, duration: const Duration(minutes: 10));
+      _cacheManager.set(cacheKey, wallet,
+          duration: const Duration(minutes: 10));
       return wallet;
     } catch (e) {
       throw ServerException('فشل العثور على المحفظة: $e');
@@ -116,7 +120,9 @@ class WalletRepository {
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
-      return snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => WalletModel.fromFirestore(doc))
+          .toList();
     } catch (e) {
       throw ServerException('فشل استرجاع كل المحافظ: $e');
     }
@@ -128,13 +134,12 @@ class WalletRepository {
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
-      
+
       double totalBalance = 0.0;
       for (var doc in snapshot.docs) {
         totalBalance += (doc.data() as Map<String, dynamic>)['balance'] ?? 0.0;
       }
       return totalBalance;
-
     } catch (e) {
       return 0.0;
     }
@@ -153,10 +158,12 @@ class WalletRepository {
   }
 
   // 3️⃣ UPDATE Methods
-  Future<void> updateWallet(
-      String walletId, Map<String, dynamic> data) async {
+  Future<void> updateWallet(String walletId, Map<String, dynamic> data) async {
     try {
-      final updateData = {...data, FirebaseConstants.updatedAt: FieldValue.serverTimestamp()};
+      final updateData = {
+        ...data,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
+      };
       await _walletsCollection.doc(walletId).update(updateData);
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
@@ -173,7 +180,8 @@ class WalletRepository {
       await _walletsCollection.doc(walletId).update({
         'balance': FieldValue.increment(amount),
       });
-      await _statsRepository.updateStatsOnWalletChange(wallet.storeId, balanceChange: amount);
+      await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
+          balanceChange: amount);
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
@@ -194,13 +202,12 @@ class WalletRepository {
       if (wallet == null) throw NotFoundException('Wallet');
 
       await updateWallet(walletId, {FirebaseConstants.isActive: isActive});
-      
+
       await _statsRepository.updateStatsOnWalletChange(
         wallet.storeId,
         countChange: isActive ? 1 : -1,
         balanceChange: isActive ? wallet.balance : -wallet.balance,
       );
-
     } catch (e) {
       throw ServerException('فشل تحديث حالة المحفظة: $e');
     }

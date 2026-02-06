@@ -41,7 +41,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.9) {
       context.read<TransactionProvider>().fetchMoreTransactions();
     }
   }
@@ -50,7 +51,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
     Navigator.pushNamed(context, RouteConstants.createTransaction);
   }
 
-  void _navigateToTransactionDetails(BuildContext context, String transactionId) {
+  void _navigateToTransactionDetails(
+      BuildContext context, String transactionId) {
     Navigator.pushNamed(
       context,
       RouteConstants.transactionDetails,
@@ -76,11 +78,16 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 ),
                 color: AppColors.surface(context),
                 elevation: 4,
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String?>>[
-                  _buildFilterMenuItem(null, 'الكل', provider.filterType, icon: Icons.clear_all),
+                itemBuilder: (BuildContext context) =>
+                    <PopupMenuEntry<String?>>[
+                  _buildFilterMenuItem(null, 'الكل', provider.filterType,
+                      icon: Icons.clear_all),
                   const PopupMenuDivider(),
-                  _buildFilterMenuItem('send', 'إرسال', provider.filterType, icon: Icons.arrow_upward, color: AppColors.send),
-                  _buildFilterMenuItem('receive', 'استقبال', provider.filterType, icon: Icons.arrow_downward, color: AppColors.receive),
+                  _buildFilterMenuItem('send', 'إرسال', provider.filterType,
+                      icon: Icons.arrow_upward, color: AppColors.send),
+                  _buildFilterMenuItem(
+                      'receive', 'استقبال', provider.filterType,
+                      icon: Icons.arrow_downward, color: AppColors.receive),
                 ],
               );
             },
@@ -96,7 +103,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 sendCount: provider.summary['sendCount'] ?? 0,
                 receiveCount: provider.summary['receiveCount'] ?? 0,
                 totalSendAmount: provider.summary['totalSendAmount'] ?? 0.0,
-                totalReceiveAmount: provider.summary['totalReceiveAmount'] ?? 0.0,
+                totalReceiveAmount:
+                    provider.summary['totalReceiveAmount'] ?? 0.0,
                 totalCommission: provider.summary['totalCommission'] ?? 0.0,
               ),
               Expanded(
@@ -111,12 +119,16 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         label: Text(AppLocalizations.of(context)!.newTransaction),
-        icon: const Icon(Icons.add,),
+        icon: const Icon(
+          Icons.add,
+        ),
       ),
     );
   }
 
-  PopupMenuItem<String?> _buildFilterMenuItem(String? value, String text, String? groupValue, {IconData? icon, Color? color}) {
+  PopupMenuItem<String?> _buildFilterMenuItem(
+      String? value, String text, String? groupValue,
+      {IconData? icon, Color? color}) {
     return PopupMenuItem<String?>(
       value: value,
       child: Row(
@@ -129,13 +141,14 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
           ),
           const SizedBox(width: 8),
           if (icon != null)
-            Icon(icon, size: 18, color: color ?? AppColors.textSecondary(context)),
-          if (icon != null)
-            const SizedBox(width: 8),
+            Icon(icon,
+                size: 18, color: color ?? AppColors.textSecondary(context)),
+          if (icon != null) const SizedBox(width: 8),
           Text(
             text,
             style: TextStyle(
-              fontWeight: value == groupValue ? FontWeight.bold : FontWeight.normal,
+              fontWeight:
+                  value == groupValue ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ],
@@ -157,7 +170,9 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
 
     if (provider.transactions.isEmpty) {
       return EmptyStateWidget(
-        message: provider.filterType == null ? 'لا توجد معاملات اليوم' : 'لا توجد معاملات بهذا الفلتر',
+        message: provider.filterType == null
+            ? 'لا توجد معاملات اليوم'
+            : 'لا توجد معاملات بهذا الفلتر',
         description: 'ابدأ بإضافة معاملة جديدة',
         icon: Icons.receipt_long_outlined,
         actionText: 'معاملة جديدة',
@@ -170,7 +185,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.only(bottom: 80), // For FAB
-        itemCount: provider.transactions.length + (provider.isLoadingMore ? 1 : 0),
+        itemCount:
+            provider.transactions.length + (provider.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == provider.transactions.length) {
             return const Padding(
@@ -181,7 +197,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
           final transaction = provider.transactions[index];
           return TransactionCard(
             transaction: transaction,
-            onTap: () => _navigateToTransactionDetails(context, transaction.transactionId),
+            onTap: () => _navigateToTransactionDetails(
+                context, transaction.transactionId),
           );
         },
       ),

@@ -88,7 +88,7 @@ class EmployeeCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                   if (onDelete != null) ...[
+                if (onDelete != null) ...[
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.delete_outline,
@@ -103,13 +103,12 @@ class EmployeeCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8),
-                // Trailing: Actions
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: AppColors.primary.withAlpha((0.5 * 255).round()),
-                ),
-               
+                  // Trailing: Actions
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.primary.withAlpha((0.5 * 255).round()),
+                  ),
                 ],
               ],
             ),

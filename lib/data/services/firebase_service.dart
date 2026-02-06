@@ -33,7 +33,8 @@ class FirebaseService {
   /// Throws an exception if Firebase has not been initialized.
   FirebaseAuth get auth {
     if (_auth == null) {
-      throw Exception('Firebase Auth not initialized. Call FirebaseService().initialize() first.');
+      throw Exception(
+          'Firebase Auth not initialized. Call FirebaseService().initialize() first.');
     }
     return _auth!;
   }
@@ -42,7 +43,8 @@ class FirebaseService {
   /// Throws an exception if Firebase has not been initialized.
   FirebaseFirestore get firestore {
     if (_firestore == null) {
-      throw Exception('Firestore not initialized. Call FirebaseService().initialize() first.');
+      throw Exception(
+          'Firestore not initialized. Call FirebaseService().initialize() first.');
     }
     return _firestore!;
   }
@@ -75,7 +77,6 @@ class FirebaseService {
         persistenceEnabled: true,
         cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
-
     } catch (e) {
       // Log the error and rethrow to allow for handling at the app's root.
       rethrow;

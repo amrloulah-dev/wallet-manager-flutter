@@ -11,9 +11,9 @@ class LicenseKeyGenerator {
     final random = Random.secure();
 
     String randomPart(int length) => List.generate(
-      length,
-      (_) => chars[random.nextInt(chars.length)],
-    ).join();
+          length,
+          (_) => chars[random.nextInt(chars.length)],
+        ).join();
 
     final part1 = randomPart(4);
     final part2 = randomPart(4);
@@ -25,7 +25,7 @@ class LicenseKeyGenerator {
   static Future<void> generateAndSaveBatch({int count = 50}) async {
     final firestore = FirebaseFirestore.instance;
     final collection = firestore.collection('license_keys');
-    
+
     try {
       int remaining = count;
       while (remaining > 0) {
@@ -50,7 +50,6 @@ class LicenseKeyGenerator {
         await batch.commit();
         remaining -= batchCount;
       }
-
     } catch (e) {
       rethrow;
     }

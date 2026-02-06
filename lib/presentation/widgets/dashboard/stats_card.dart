@@ -26,7 +26,8 @@ class StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2, // Subtle shadow
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Softer corners
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16)), // Softer corners
       margin: EdgeInsets.zero, // Margin handled by grid spacing
       child: InkWell(
         onTap: onTap,
@@ -53,7 +54,8 @@ class StatsCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                  mainAxisAlignment:
+                      MainAxisAlignment.center, // Center vertically
                   children: [
                     Text(
                       title,

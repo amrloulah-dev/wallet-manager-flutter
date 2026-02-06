@@ -60,7 +60,8 @@ class WalletStatsCard extends StatelessWidget {
                 _StatItem(
                   icon: Icons.arrow_downward,
                   label: 'مبلغ الاستقبال',
-                  value: NumberFormatter.formatAmount(stats.totalReceivedAmount),
+                  value:
+                      NumberFormatter.formatAmount(stats.totalReceivedAmount),
                   color: AppColors.receive,
                 ),
                 _StatItem(
@@ -138,7 +139,8 @@ class _StatItem extends StatelessWidget {
             style: AppTextStyles.h3.copyWith(color: color),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textDirection: label == 'آخر معاملة' ? TextDirection.rtl : TextDirection.ltr,
+            textDirection:
+                label == 'آخر معاملة' ? TextDirection.rtl : TextDirection.ltr,
           ),
         ],
       ),

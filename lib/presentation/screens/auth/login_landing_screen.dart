@@ -10,6 +10,7 @@ import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
+import '../../../../core/errors/app_exceptions.dart';
 import 'employee_login_screen.dart';
 
 class LoginLandingScreen extends StatefulWidget {
@@ -67,15 +68,23 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     final authProvider = context.read<AuthProvider>();
     if (authProvider.isLoading) return;
 
-    final success = await authProvider.loginOwnerWithEmail(
-      _ownerEmailController.text.trim(),
-      _ownerPasswordController.text,
-    );
+    try {
+      await authProvider.loginOwnerWithEmail(
+        _ownerEmailController.text.trim(),
+        _ownerPasswordController.text,
+      );
 
-    if (success && mounted) {
-      _navigateBasedOnRole(authProvider);
-    } else if (mounted && authProvider.errorMessage != null) {
-      ToastUtils.showError(authProvider.errorMessage!);
+      if (mounted) {
+        _navigateBasedOnRole(authProvider);
+      }
+    } on UserNotFoundException catch (e) {
+      ToastUtils.showError(e.message);
+    } on WrongPasswordException catch (e) {
+      ToastUtils.showError(e.message);
+    } on AuthException catch (e) {
+      ToastUtils.showError(e.message);
+    } catch (e) {
+      ToastUtils.showError("حدث خطأ غير متوقع");
     }
   }
 
@@ -102,7 +111,19 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   void _navigateBasedOnRole(AuthProvider authProvider) {
-    // Check role and navigate accordingly
+    if (!mounted) return;
+
+    // 1. Check if subscription is expired
+    if (authProvider.isSubscriptionExpired) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        RouteConstants.licenseExpired,
+        (route) => false,
+      );
+      return;
+    }
+
+    // 2. Check role and navigate accordingly
     final userRole = authProvider.currentUser?.role ?? '';
     if (userRole == 'owner') {
       Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);

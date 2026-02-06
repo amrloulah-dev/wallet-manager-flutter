@@ -96,8 +96,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         ToastUtils.showSuccess('تم تحديث الدين بنجاح');
         Navigator.pop(context);
       } else {
-        ToastUtils.showError(
-            debtProvider.errorMessage ?? 'فشل تحديث الدين');
+        ToastUtils.showError(debtProvider.errorMessage ?? 'فشل تحديث الدين');
       }
     }
   }
@@ -158,7 +157,8 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         ),
         Text(
           NumberFormatter.formatPhoneNumber(widget.debt.customerPhone),
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
+          style: AppTextStyles.bodyMedium
+              .copyWith(color: AppColors.textSecondary(context)),
         ),
       ],
     );
@@ -180,7 +180,8 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         fillColor: _isPaymentMode ? AppColors.success : AppColors.error,
         color: _isPaymentMode ? AppColors.success : AppColors.error,
         borderColor: AppColors.divider(context),
-        selectedBorderColor: _isPaymentMode ? AppColors.success : AppColors.error,
+        selectedBorderColor:
+            _isPaymentMode ? AppColors.success : AppColors.error,
         children: const <Widget>[
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -233,7 +234,9 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
       labelText: 'المبلغ',
       hintText: '0.00',
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+      ],
       prefixIcon: const Icon(Icons.attach_money),
       autofocus: true,
       validator: (value) {

@@ -60,4 +60,3 @@ class FirebaseConstants {
   static const String totalCommission = 'totalCommission';
   static const String totalDebtsCreated = 'totalDebtsCreated';
 }
-  

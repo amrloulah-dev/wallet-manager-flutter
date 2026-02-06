@@ -73,30 +73,23 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
     String? storeId;
 
-    if (_registrationMethod == 1) {
-      // --- Google Registration ---
-      await authProvider.loginWithGoogleOrNull();
-      final currentUser = FirebaseAuth.instance.currentUser;
+    try {
+      if (_registrationMethod == 1) {
+        // --- Google Registration ---
+        await authProvider.loginWithGoogleOrNull();
+        final currentUser = FirebaseAuth.instance.currentUser;
 
-      if (currentUser == null) {
-        ToastUtils.showError('فشل تسجيل الدخول بجوجل');
-        return;
-      }
+        if (currentUser == null) {
+          ToastUtils.showError('فشل تسجيل الدخول بجوجل');
+          return;
+        }
 
-      try {
         storeId = await authProvider.registerStoreWithGoogle(
           storeName: _storeNameController.text,
           storePassword: _storePasswordController.text,
         );
-      } on StoreInactiveException catch (e) {
-        ToastUtils.showError(e.message);
-        return;
-      } catch (e) {
-        // Error handled in provider usually, but we check storeId
-      }
-    } else {
-      // --- Email Registration ---
-      try {
+      } else {
+        // --- Email Registration ---
         storeId = await authProvider.registerStoreWithEmail(
           ownerName: _ownerNameController.text,
           email: _ownerEmailController.text.trim(),
@@ -104,9 +97,20 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           storeName: _storeNameController.text,
           storePassword: _storePasswordController.text,
         );
-      } catch (e) {
-        // Provider handles errors
       }
+    } on DeviceLimitExceededException catch (e) {
+      ToastUtils.showError(e.message);
+    } on EmailAlreadyInUseException catch (e) {
+      ToastUtils.showError(e.message);
+    } on WeakPasswordException catch (e) {
+      ToastUtils.showError(e.message);
+    } on NetworkException catch (e) {
+      ToastUtils.showError(e.message);
+    } on StoreInactiveException catch (e) {
+      ToastUtils.showError(e.message);
+    } catch (e) {
+      ToastUtils.showError(
+          e is AppException ? e.message : "حدث خطأ غير متوقع: $e");
     }
 
     // --- Success Handler ---

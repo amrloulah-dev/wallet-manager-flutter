@@ -37,7 +37,8 @@ class LicenseFailure extends Failure {
 // ===========================
 /// Represents a failure due to network connectivity issues.
 class NetworkFailure extends Failure {
-  const NetworkFailure() : super('خطأ في الاتصال بالإنترنت، يرجى التحقق من اتصالك');
+  const NetworkFailure()
+      : super('خطأ في الاتصال بالإنترنت، يرجى التحقق من اتصالك');
 }
 
 // ===========================
@@ -69,7 +70,8 @@ class NotFoundFailure extends Failure {
 // ===========================
 /// Represents a failure due to insufficient user permissions.
 class PermissionDeniedFailure extends Failure {
-  const PermissionDeniedFailure() : super('ليس لديك صلاحية للقيام بهذا الإجراء');
+  const PermissionDeniedFailure()
+      : super('ليس لديك صلاحية للقيام بهذا الإجراء');
 }
 
 // ===========================

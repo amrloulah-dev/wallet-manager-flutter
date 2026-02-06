@@ -26,7 +26,8 @@ class LocalStorageService {
   /// Throws an exception if the service is not initialized.
   void _ensureInitialized() {
     if (_prefs == null) {
-      throw Exception('Local Storage not initialized. Call initialize() first.');
+      throw Exception(
+          'Local Storage not initialized. Call initialize() first.');
     }
   }
 

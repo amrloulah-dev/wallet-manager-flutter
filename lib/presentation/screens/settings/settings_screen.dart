@@ -228,7 +228,7 @@ class SettingsScreen extends StatelessWidget {
               _buildInfoRow(
                   context: context,
                   label: AppLocalizations.of(context)!.expiryDate,
-                  value: DateHelper.formatTimestamp(license.expiryDate)),
+                  value: DateHelper.formatDateTime(license.expiryDate)),
               if (!isExpired) ...[
                 const SizedBox(height: 12),
                 Row(

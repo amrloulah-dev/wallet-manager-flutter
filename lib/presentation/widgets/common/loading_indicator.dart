@@ -82,7 +82,8 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
                   widget.message!,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: widget.color ?? Theme.of(context).colorScheme.primary,
+                        color: widget.color ??
+                            Theme.of(context).colorScheme.primary,
                       ),
                 ),
               ),
@@ -129,7 +130,8 @@ class _LoadingIndicatorState extends State<LoadingIndicator>
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: CircleAvatar(
               radius: widget.size / 8,
-              backgroundColor: widget.color ?? Theme.of(context).colorScheme.primary,
+              backgroundColor:
+                  widget.color ?? Theme.of(context).colorScheme.primary,
             ),
           ),
         );

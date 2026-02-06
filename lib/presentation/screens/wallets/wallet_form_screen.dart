@@ -271,7 +271,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
-Widget _buildWalletStatusDropdown() {
+
+  Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
       'new': AppLocalizations.of(context)!.newStatus,
       'old': AppLocalizations.of(context)!.oldStatus,

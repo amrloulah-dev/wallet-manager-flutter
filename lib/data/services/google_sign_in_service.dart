@@ -37,7 +37,8 @@ class GoogleSignInService {
       }
 
       // 2. Obtain the auth details from the request.
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // 3. Create a new Firebase credential.
       final AuthCredential credential = GoogleAuthProvider.credential(
@@ -53,6 +54,7 @@ class GoogleSignInService {
       rethrow;
     }
   }
+
   // ===========================
   // Sign Out
   // ===========================
@@ -71,6 +73,7 @@ class GoogleSignInService {
       rethrow;
     }
   }
+
   // ===========================
   // Get Current User
   // ===========================

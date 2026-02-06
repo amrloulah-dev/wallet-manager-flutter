@@ -112,3 +112,19 @@ class PermissionDeniedException extends AppException {
 class PermissionException extends PermissionDeniedException {
   PermissionException() : super();
 }
+
+/// Thrown when the user has exceeded the maximum number of trials on a device.
+class DeviceLimitExceededException extends AppException {
+  DeviceLimitExceededException()
+      : super('لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+}
+
+/// Thrown when the password provided is too weak.
+class WeakPasswordException extends AuthException {
+  WeakPasswordException() : super('كلمة المرور ضعيفة جداً.');
+}
+
+/// Thrown when the password provided is incorrect.
+class WrongPasswordException extends AuthException {
+  WrongPasswordException() : super('كلمة المرور غير صحيحة');
+}

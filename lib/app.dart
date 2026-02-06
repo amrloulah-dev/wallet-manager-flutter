@@ -18,6 +18,7 @@ import 'package:walletmanager/routes/navigation_service.dart';
 import 'routes/app_router.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/auth/license_expired_screen.dart';
+import 'core/services/analytics_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -72,7 +73,8 @@ class MyApp extends StatelessWidget {
             ],
             builder: BotToastInit(), //1. call BotToastInit
             navigatorObservers: [
-              BotToastNavigatorObserver()
+              BotToastNavigatorObserver(),
+              AnalyticsService.observer,
             ], //2. registered route observer
             onGenerateRoute: AppRouter.generateRoute,
             home: const AuthCheckWrapper(),
@@ -116,10 +118,12 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           );
         }
 
+        // 1. Guard against Expired License (Prioritize this check)
         if (auth.isSubscriptionExpired) {
           return const LicenseExpiredScreen();
         }
 
+        // 2. Check Authentication
         if (auth.isAuthenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
@@ -130,11 +134,6 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
               Navigator.of(context)
                   .pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {
-              // Fallback for unknown role, show login
-              // Note: If we are here, we probably shouldn't stay in infinite loop
-              // But usually role is well defined.
-              // Just let it fall through to login logic?
-              // No, we should probably logout.
               auth.logout();
             }
           });

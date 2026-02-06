@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 
 enum ButtonType { primary, secondary, outlined, text }
+
 enum ButtonSize { large, medium, small }
 
 class CustomButton extends StatefulWidget {
@@ -121,7 +122,10 @@ class _CustomButtonState extends State<CustomButton>
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
           valueColor: AlwaysStoppedAnimation<Color>(
-            widget.textColor ?? (widget.type == ButtonType.primary ? Colors.white : AppColors.primary),
+            widget.textColor ??
+                (widget.type == ButtonType.primary
+                    ? Colors.white
+                    : AppColors.primary),
           ),
         ),
       );
@@ -141,7 +145,8 @@ class _CustomButtonState extends State<CustomButton>
   }
 
   ButtonStyle _getButtonStyle(BuildContext context) {
-    final effectiveBackgroundColor = widget.backgroundColor ?? _getBackgroundColor();
+    final effectiveBackgroundColor =
+        widget.backgroundColor ?? _getBackgroundColor();
     final effectiveTextColor = widget.textColor ?? _getTextColor();
     final effectiveBorderRadius = widget.borderRadius ?? 12;
     final effectivePadding = _getPadding();
@@ -159,7 +164,8 @@ class _CustomButtonState extends State<CustomButton>
         }
         return effectiveTextColor;
       }),
-      overlayColor: WidgetStateProperty.all(effectiveTextColor.withAlpha((0.1 * 255).round())),
+      overlayColor: WidgetStateProperty.all(
+          effectiveTextColor.withAlpha((0.1 * 255).round())),
       shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(effectiveBorderRadius),
@@ -172,7 +178,10 @@ class _CustomButtonState extends State<CustomButton>
           : null,
       padding: WidgetStateProperty.all(effectivePadding),
       textStyle: WidgetStateProperty.all(_getTextStyle()),
-      elevation: WidgetStateProperty.all(widget.type == ButtonType.primary || widget.type == ButtonType.secondary ? 2 : 0),
+      elevation: WidgetStateProperty.all(widget.type == ButtonType.primary ||
+              widget.type == ButtonType.secondary
+          ? 2
+          : 0),
     );
   }
 
@@ -204,11 +213,14 @@ class _CustomButtonState extends State<CustomButton>
     final fontSize = _getFontSize();
     switch (widget.size) {
       case ButtonSize.large:
-        return AppTextStyles.buttonLarge.copyWith(fontSize: fontSize, color: widget.textColor ?? _getTextColor());
+        return AppTextStyles.buttonLarge.copyWith(
+            fontSize: fontSize, color: widget.textColor ?? _getTextColor());
       case ButtonSize.medium:
-        return AppTextStyles.buttonMedium.copyWith(fontSize: fontSize, color: widget.textColor ?? _getTextColor());
+        return AppTextStyles.buttonMedium.copyWith(
+            fontSize: fontSize, color: widget.textColor ?? _getTextColor());
       case ButtonSize.small:
-        return AppTextStyles.buttonSmall.copyWith(fontSize: fontSize, color: widget.textColor ?? _getTextColor());
+        return AppTextStyles.buttonSmall.copyWith(
+            fontSize: fontSize, color: widget.textColor ?? _getTextColor());
     }
   }
 

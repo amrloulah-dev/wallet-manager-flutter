@@ -14,7 +14,8 @@ class GeneralStatisticsScreen extends StatefulWidget {
   const GeneralStatisticsScreen({super.key});
 
   @override
-  State<GeneralStatisticsScreen> createState() => _GeneralStatisticsScreenState();
+  State<GeneralStatisticsScreen> createState() =>
+      _GeneralStatisticsScreenState();
 }
 
 class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
@@ -56,15 +57,18 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
       if (localEndDate.isBefore(localStartDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية')),
+          const SnackBar(
+              content: Text('تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية')),
         );
         return;
       }
-      
-      // Adjust the end date to include the entire day
-      localEndDate = DateTime(localEndDate.year, localEndDate.month, localEndDate.day, 23, 59, 59);
 
-      provider.fetchFilteredStats(DateTimeRange(start: localStartDate, end: localEndDate));
+      // Adjust the end date to include the entire day
+      localEndDate = DateTime(
+          localEndDate.year, localEndDate.month, localEndDate.day, 23, 59, 59);
+
+      provider.fetchFilteredStats(
+          DateTimeRange(start: localStartDate, end: localEndDate));
     }
   }
 
@@ -75,8 +79,6 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     });
     context.read<StatisticsProvider>().clearFilteredStats();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -111,11 +113,13 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
     if (provider.mode == StatsMode.filtered) {
       if (provider.filteredStats != null) {
-        return _buildStatistics(context, StatsSummaryModel.fromMap(provider.filteredStats!));
+        return _buildStatistics(
+            context, StatsSummaryModel.fromMap(provider.filteredStats!));
       } else {
         return _buildEmptyState(isCustom: true);
       }
-    } else { // Dashboard mode
+    } else {
+      // Dashboard mode
       if (provider.dashboardSummary != null) {
         return _buildStatistics(context, provider.dashboardSummary!);
       } else {
@@ -134,7 +138,9 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(_startDate == null ? 'تاريخ البداية' : DateHelper.formatDateTime(_startDate!)),
+                  label: Text(_startDate == null
+                      ? 'تاريخ البداية'
+                      : DateHelper.formatDateTime(_startDate!)),
                   onPressed: () => _selectDate(context, true),
                 ),
               ),
@@ -142,7 +148,9 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(_endDate == null ? 'تاريخ النهاية' : DateHelper.formatDateTime(_endDate!)),
+                  label: Text(_endDate == null
+                      ? 'تاريخ النهاية'
+                      : DateHelper.formatDateTime(_endDate!)),
                   onPressed: () => _selectDate(context, false),
                 ),
               ),
@@ -181,9 +189,12 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.bar_chart_outlined, size: 80, color: AppColors.textSecondary(context)),
+          Icon(Icons.bar_chart_outlined,
+              size: 80, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
-          Text(isCustom ? 'لا توجد بيانات في هذا النطاق الزمني.' : 'لا توجد إحصائيات لعرضها.'),
+          Text(isCustom
+              ? 'لا توجد بيانات في هذا النطاق الزمني.'
+              : 'لا توجد إحصائيات لعرضها.'),
         ],
       ),
     );
@@ -227,7 +238,8 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     );
   }
 
-  Widget _buildTransactionsSection(BuildContext context, StatsSummaryModel stats) {
+  Widget _buildTransactionsSection(
+      BuildContext context, StatsSummaryModel stats) {
     return _buildStatCard(
       context: context,
       icon: Icons.swap_horiz,
@@ -278,16 +290,19 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
         _StatItem(
           context: context,
           label: 'المبلغ الإجمالي',
-          value: NumberFormatter.formatAmount(stats.totalSentAmount + stats.totalReceivedAmount),
+          value: NumberFormatter.formatAmount(
+              stats.totalSentAmount + stats.totalReceivedAmount),
         ),
       ],
     );
   }
 
-  Widget _buildCommissionSection(BuildContext context, StatsSummaryModel stats) {
+  Widget _buildCommissionSection(
+      BuildContext context, StatsSummaryModel stats) {
     final totalCommission = stats.totalCommission;
     final totalTransactions = stats.totalTransactions;
-    final averageCommission = totalTransactions > 0 ? totalCommission / totalTransactions : 0.0;
+    final averageCommission =
+        totalTransactions > 0 ? totalCommission / totalTransactions : 0.0;
     return _buildStatCard(
       context: context,
       icon: Icons.attach_money,
@@ -388,8 +403,8 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
           ),
           Text(
             value,
-            style:
-                AppTextStyles.h3.copyWith(color: valueColor ?? AppColors.textPrimary(context)),
+            style: AppTextStyles.h3
+                .copyWith(color: valueColor ?? AppColors.textPrimary(context)),
           ),
         ],
       ),

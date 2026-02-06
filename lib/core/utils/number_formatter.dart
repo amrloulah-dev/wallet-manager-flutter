@@ -20,7 +20,8 @@ class NumberFormatter {
   // ===========================
   /// Formats a number as a currency amount and optionally adds a currency symbol.
   /// Defaults to 'ج' for the currency symbol.
-  static String formatAmount(num? amount, {bool showCurrency = true, String currencySymbol = 'ج'}) {
+  static String formatAmount(num? amount,
+      {bool showCurrency = true, String currencySymbol = 'ج'}) {
     final formatted = formatNumber(amount ?? 0);
     return formatted; // Temporarily remove currency symbol
   }

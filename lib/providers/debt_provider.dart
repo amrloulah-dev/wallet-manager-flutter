@@ -10,6 +10,7 @@ import '../core/errors/app_exceptions.dart';
 import '../data/models/user_model.dart';
 import '../data/models/user_permissions.dart'; // Added import
 import '../providers/auth_provider.dart'; // Added import for AuthProvider
+import '../core/services/analytics_service.dart';
 
 enum DebtStatus {
   idle,
@@ -286,6 +287,7 @@ class DebtProvider extends ChangeNotifier {
           createdBy: user.userId,
         );
         await _debtRepository.createDebt(newDebt);
+        AnalyticsService.logDebtAdded();
       }
 
       // Update Stats if it's an employee

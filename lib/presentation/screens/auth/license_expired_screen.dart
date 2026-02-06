@@ -10,6 +10,7 @@ import 'package:walletmanager/data/repositories/license_key_repository.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/core/constants/route_constants.dart';
 
 class LicenseExpiredScreen extends StatefulWidget {
   const LicenseExpiredScreen({super.key});
@@ -67,8 +68,12 @@ class _LicenseExpiredScreenState extends State<LicenseExpiredScreen> {
       // 3. Refresh User Data to update status in Provider
       await authProvider.refreshUserData();
 
-      // If refreshUserData updates status to authenticated,
-      // the AppRouter (or Consumer in app.dart) should handle navigation.
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteConstants.ownerDashboard,
+          (route) => false,
+        );
+      }
     } catch (e) {
       ToastUtils.showError("فشل التجديد: ${e.toString()}");
     } finally {

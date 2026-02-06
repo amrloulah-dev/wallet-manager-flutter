@@ -66,7 +66,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                   ]
                 : [],
           ),
-          body: _buildBody(context, snapshot),          
+          body: _buildBody(context, snapshot),
         );
       },
     );

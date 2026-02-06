@@ -73,7 +73,8 @@ class _TransactionCardState extends State<TransactionCard> {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: widget.transaction.transactionTypeColor.withAlpha((0.1 * 255).round()),
+        color: widget.transaction.transactionTypeColor
+            .withAlpha((0.1 * 255).round()),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -150,7 +151,8 @@ class _TransactionCardState extends State<TransactionCard> {
   Widget _buildCustomerInfo(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.person_outline, size: 14, color: AppColors.textSecondary(context)),
+        Icon(Icons.person_outline,
+            size: 14, color: AppColors.textSecondary(context)),
         const SizedBox(width: 4),
         Text(
           NumberFormatter.formatPhoneNumber(widget.transaction.customerPhone),
@@ -197,7 +199,8 @@ class _TransactionCardState extends State<TransactionCard> {
           children: [
             const Icon(Icons.attach_money, size: 14, color: AppColors.success),
             Text(
-              NumberFormatter.formatAmount(widget.transaction.commission, showCurrency: false),
+              NumberFormatter.formatAmount(widget.transaction.commission,
+                  showCurrency: false),
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.success,
               ),
