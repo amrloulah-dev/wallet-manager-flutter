@@ -306,7 +306,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                         }),
                     StatsCard(
                       title:
-                          '${AppLocalizations.of(context)!.totalTransactions} (Day)',
+                          '${AppLocalizations.of(context)!.totalTransactions} ',
                       value: (provider.todayStats?.transactionCount ?? 0)
                           .toString(),
                       icon: Icons.swap_horiz,
@@ -329,7 +329,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                     ),
                     StatsCard(
                       title:
-                          '${AppLocalizations.of(context)!.totalCommission} (Day)',
+                          '${AppLocalizations.of(context)!.totalCommission} ',
                       value: (provider.todayStats?.totalCommission ?? 0)
                           .toInt()
                           .toString(),
@@ -374,7 +374,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                 );
               },
             ),
-            const SizedBox(height: 8),
+
             Align(
               alignment: Alignment.centerRight,
               child: Text(

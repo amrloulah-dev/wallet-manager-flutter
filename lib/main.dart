@@ -1,10 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.dart';
 import 'app.dart';
 import 'data/services/firebase_service.dart';
 import 'data/services/local_storage_service.dart';
 
 void main() async {
-// Ensure all bindings are initialized before async operations.
+  // Ensure all bindings are initialized before async operations.
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
@@ -31,6 +33,40 @@ void main() async {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ==========================================
+//  OVERLAY ENTRY POINT
+// ==========================================
+@pragma("vm:entry-point")
+void overlayMain() async {
+  debugPrint("🟢 OVERLAY ENTRY POINT STARTED!");
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Initialize Firebase (Crucial for Overlay Provider/Repo)
+  try {
+    await Firebase.initializeApp();
+    debugPrint("🟢 Firebase Initialized in Overlay");
+  } catch (e) {
+    debugPrint("⚠️ Firebase Init Error in Overlay: $e");
+  }
+
+  // 2. Initialize Storage (Crucial for reading wallet data)
+  await LocalStorageService.instance.initialize();
+
+  runApp(const TransactionOverlayApp());
+}
+
+class TransactionOverlayApp extends StatelessWidget {
+  const TransactionOverlayApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const TransactionOverlayScreen(),
     );
   }
 }

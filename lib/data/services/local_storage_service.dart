@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/sim_wallet_config.dart';
+import '../models/wallet_model.dart';
 
 /// A singleton service to manage local data using SharedPreferences.
 class LocalStorageService {
@@ -8,6 +11,8 @@ class LocalStorageService {
   static final LocalStorageService _instance = LocalStorageService._internal();
   factory LocalStorageService() => _instance;
   LocalStorageService._internal();
+
+  static LocalStorageService get instance => _instance;
 
   SharedPreferences? _prefs;
 
@@ -108,5 +113,88 @@ class LocalStorageService {
   Future<void> clearAll() async {
     _ensureInitialized();
     await _prefs!.clear();
+  }
+
+  // ===========================
+  // SMS Automation & SIM Linking
+  // ===========================
+  static const String _kSmsAutomationEnabled = 'sms_automation_enabled';
+  static const String _kSimMappings = 'sim_wallet_mappings';
+
+  /// Sets whether SMS automation is enabled.
+  Future<void> setSmsAutomationEnabled(bool enabled) async {
+    _ensureInitialized();
+    await _prefs!.setBool(_kSmsAutomationEnabled, enabled);
+  }
+
+  /// Returns true if SMS automation is enabled (defaults to false).
+  bool get isSmsAutomationEnabled =>
+      _prefs?.getBool(_kSmsAutomationEnabled) ?? false;
+
+  /// Saves the list of SIM-to-Wallet mappings.
+  Future<void> saveSimMappings(List<SimWalletConfig> mappings) async {
+    _ensureInitialized();
+    final List<String> jsonList =
+        mappings.map((config) => config.toJson()).toList();
+    await _prefs!.setStringList(_kSimMappings, jsonList);
+  }
+
+  /// Retrieves the list of SIM-to-Wallet mappings.
+  /// Returns an empty list if no data is found.
+  List<SimWalletConfig> getSimMappings() {
+    final List<String>? jsonList = _prefs?.getStringList(_kSimMappings);
+    if (jsonList == null) {
+      return [];
+    }
+    return jsonList
+        .map((jsonStr) => SimWalletConfig.fromJson(jsonStr))
+        .toList();
+  }
+
+  /// Helper to find the wallet configuration for a specific SIM slot index.
+  SimWalletConfig? getWalletForSim(int simSlotIndex) {
+    final mappings = getSimMappings();
+    try {
+      return mappings.firstWhere(
+        (config) => config.simSlotIndex == simSlotIndex,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ===========================
+  // Wallet Lite Cache (For Overlay)
+  // ===========================
+  static const String _kWalletLiteCache = 'wallet_lite_cache';
+
+  /// Caches a simplified list of wallets for the overlay to use.
+  Future<void> cacheWalletLiteList(List<WalletModel> wallets) async {
+    _ensureInitialized();
+    final List<Map<String, dynamic>> liteList = wallets.map((w) {
+      return {
+        'id': w.walletId,
+        'name': w.phoneNumber,
+        'phone': w.phoneNumber,
+        'type': w.walletType,
+      };
+    }).toList();
+
+    final String jsonString = json.encode(liteList);
+    await _prefs!.setString(_kWalletLiteCache, jsonString);
+  }
+
+  /// Retrieves the cached lite wallet list.
+  List<Map<String, dynamic>> getCachedWalletLiteList() {
+    final String? jsonString = _prefs?.getString(_kWalletLiteCache);
+    if (jsonString == null) {
+      return [];
+    }
+    try {
+      final List<dynamic> decoded = json.decode(jsonString);
+      return decoded.cast<Map<String, dynamic>>();
+    } catch (e) {
+      return [];
+    }
   }
 }

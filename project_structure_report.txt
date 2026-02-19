@@ -1,0 +1,585 @@
+Task Understanding
+================
+I understand that I must perform a full recursive scan of the 'C:\src\walletmanager\lib' directory.
+I will document every single file and folder found without exception.
+For each file, I will provide a specific 1-5 line description based on its actual content.
+The output will be a single text file containing the directory tree and exhaustive file descriptions.
+
+Directory Structure
+===================
+lib/
+├── app.dart
+├── main.dart
+├── core/
+│   ├── constants/
+│   │   ├── app_constants.dart
+│   │   ├── firebase_constants.dart
+│   │   └── route_constants.dart
+│   ├── errors/
+│   │   ├── app_exceptions.dart
+│   │   └── failures.dart
+│   ├── services/
+│   │   └── analytics_service.dart
+│   ├── theme/
+│   │   ├── app_colors.dart
+│   │   ├── app_text_styles.dart
+│   │   └── app_theme.dart
+│   └── utils/
+│       ├── cache_manager.dart
+│       ├── date_helper.dart
+│       ├── debouncer.dart
+│       ├── dialog_utils.dart
+│       ├── fee_calculator.dart
+│       ├── license_key_generator.dart
+│       ├── number_formatter.dart
+│       ├── password_hasher.dart
+│       ├── permission_helper.dart
+│       ├── snackbar_utils.dart
+│       ├── toast_utils.dart
+│       └── validators.dart
+├── data/
+│   ├── models/
+│   │   ├── daily_stats_model.dart
+│   │   ├── debt_model.dart
+│   │   ├── device_usage_model.dart
+│   │   ├── license_key_model.dart
+│   │   ├── stats_summary_model.dart
+│   │   ├── store_model.dart
+│   │   ├── transaction_model.dart
+│   │   ├── user_model.dart
+│   │   ├── user_permissions.dart
+│   │   └── wallet_model.dart
+│   ├── repositories/
+│   │   ├── auth_repository.dart
+│   │   ├── debt_repository.dart
+│   │   ├── device_repository.dart
+│   │   ├── employee_repository.dart
+│   │   ├── license_key_repository.dart
+│   │   ├── stats_repository.dart
+│   │   ├── store_repository.dart
+│   │   ├── transaction_repository.dart
+│   │   ├── user_repository.dart
+│   │   └── wallet_repository.dart
+│   └── services/
+│       ├── firebase_service.dart
+│       ├── google_sign_in_service.dart
+│       └── local_storage_service.dart
+├── l10n/
+│   └── arb/
+│       ├── app_ar.arb
+│       ├── app_en.arb
+│       ├── app_localizations.dart
+│       ├── app_localizations_ar.dart
+│       └── app_localizations_en.dart
+├── presentation/
+│   ├── screens/
+│   │   ├── auth/
+│   │   │   ├── employee_login_screen.dart
+│   │   │   ├── license_expired_screen.dart
+│   │   │   ├── login_landing_screen.dart
+│   │   │   └── store_registration_screen.dart
+│   │   ├── debts/
+│   │   │   ├── add_debt_screen.dart
+│   │   │   └── debts_list_screen.dart
+│   │   ├── employees/
+│   │   │   ├── add_employee_screen.dart
+│   │   │   ├── employee_details_screen.dart
+│   │   │   └── manage_employees_screen.dart
+│   │   ├── home/
+│   │   │   └── main_dashboard_screen.dart
+│   │   ├── settings/
+│   │   │   ├── settings_screen.dart
+│   │   │   └── upgrade_screen.dart
+│   │   ├── statistics/
+│   │   │   └── general_statistics_screen.dart
+│   │   ├── transactions/
+│   │   │   ├── create_transaction_screen.dart
+│   │   │   ├── today_transactions_screen.dart
+│   │   │   └── transaction_details_screen.dart
+│   │   └── wallets/
+│   │       ├── add_balance_screen.dart
+│   │       ├── wallet_details_screen.dart
+│   │       ├── wallet_form_screen.dart
+│   │       └── wallets_list_screen.dart
+│   └── widgets/
+│       ├── common/
+│       │   ├── add_close_animated_icon.dart
+│       │   ├── custom_button.dart
+│       │   ├── custom_dropdown.dart
+│       │   ├── custom_text_field.dart
+│       │   ├── double_back_to_exit_wrapper.dart
+│       │   ├── empty_state_widget.dart
+│       │   ├── error_widget.dart
+│       │   ├── loading_indicator.dart
+│       │   ├── skeleton_card.dart
+│       │   └── skeleton_list.dart
+│       ├── dashboard/
+│       │   ├── alert_card.dart
+│       │   ├── app_drawer.dart
+│       │   ├── quick_action_card.dart
+│       │   ├── section_header.dart
+│       │   └── stats_card.dart
+│       ├── debt/
+│       │   ├── debt_card.dart
+│       │   ├── debt_summary_card.dart
+│       │   └── partial_payment_bottom_sheet.dart
+│       ├── employee/
+│       │   ├── employee_card.dart
+│       │   └── user_permissions_widget.dart
+│       ├── transaction/
+│       │   ├── transaction_card.dart
+│       │   └── transaction_summary_card.dart
+│       └── wallet/
+│           ├── wallet_card.dart
+│           ├── wallet_limit_bar.dart
+│           └── wallet_stats_card.dart
+├── providers/
+│   ├── app_events.dart
+│   ├── auth_provider.dart
+│   ├── debt_provider.dart
+│   ├── employee_provider.dart
+│   ├── localization_provider.dart
+│   ├── statistics_provider.dart
+│   ├── theme_provider.dart
+│   ├── transaction_provider.dart
+│   └── wallet_provider.dart
+└── routes/
+    ├── app_router.dart
+    └── navigation_service.dart
+
+File Descriptions
+=================
+
+lib/app.dart
+Configures the root MaterialApp widget, including themes, localization delegates, and routes.
+Sets up the MultiProvider to inject all global providers (Auth, Theme, Localization, etc.) into the widget tree.
+Wraps the home screen in an AuthCheckWrapper to handle initial authentication state and redirection.
+
+lib/main.dart
+The entry point of the application.
+Initializes Flutter bindings, Firebase, and Local Storage before running the app.
+Handles initialization errors gracefully by showing a simple error screen.
+
+lib/core/constants/app_constants.dart
+Defines application-wide constants such as the app name and version.
+Specifies transaction and monthly limits for different wallet types (New, Old, Registered Store, InstaPay).
+Contains the trial duration constant.
+
+lib/core/constants/firebase_constants.dart
+Stores constant strings for Firebase collection names (stores, users, wallets, etc.).
+Defines field names used in Firestore documents to avoid hardcoded strings in code.
+Includes keys for sub-collections and specific document fields like 'createdAt' or 'isActive'.
+
+lib/core/constants/route_constants.dart
+Defines static string constants for all navigation routes in the app (e.g., loginLanding, ownerDashboard).
+Used by the AppRouter to map route names to their respective screen widgets.
+
+lib/core/errors/app_exceptions.dart
+Defines a hierarchy of custom exception classes extending `AppException`.
+Includes specific exceptions for Auth, License, Network, Server, and Validation errors.
+Each exception class provides a user-friendly message and an optional error code.
+
+lib/core/errors/failures.dart
+Defines abstract and concrete `Failure` classes to represent errors in the UI layer.
+Maps exceptions to failures like `AuthFailure`, `NetworkFailure`, and `ServerFailure`.
+Used to decouple UI error handling from specific exception types.
+
+lib/core/services/analytics_service.dart
+A wrapper class for `FirebaseAnalytics` to log app events.
+Provides methods to log screen views, login events, custom events (e.g., transaction created), and user properties.
+Includes a static observer for automatic navigation logging.
+
+lib/core/theme/app_colors.dart
+Defines the color palette for the application, including primary, secondary, and semantic colors.
+Provides static methods to access colors based on the current theme brightness (Light/Dark).
+Includes logic for dynamic colors like license card backgrounds based on status.
+
+lib/core/theme/app_text_styles.dart
+Defines a collection of static `TextStyle` constants for the app's typography.
+Includes styles for headings (h1, h2, h3), body text, labels, and buttons.
+Uses the 'Cairo' font family and predefined font weights and sizes.
+
+lib/core/theme/app_theme.dart
+Configures the `ThemeData` for both light and dark modes.
+Sets up component themes for AppBars, Cards, InputDecorations, Buttons, and Text.
+Ensures consistent visual styling across the application using `AppColors` and `AppTextStyles`.
+
+lib/core/utils/cache_manager.dart
+Implements a simple in-memory caching mechanism with expiration logic.
+Allows storing, retrieving, and clearing cached data using string keys.
+Used to cache repository fetch results to reduce Firestore reads.
+
+lib/core/utils/date_helper.dart
+Provides utility methods for date and time formatting and manipulation.
+Includes functions to check for "Today", "Start of Week", and format Timestamps.
+Offers a helper for generating relative time strings (e.g., "Just now", "2 hours ago") in Arabic.
+
+lib/core/utils/debouncer.dart
+A utility class to debounce repetitive actions, such as search input events.
+Uses a `Timer` to delay the execution of a callback function.
+
+lib/core/utils/dialog_utils.dart
+Provides static methods to show customized, animated dialogs.
+Supports various dialog types: Info, Success, Warning, and Confirmation.
+Uses a custom `_DialogContent` widget to style the dialogs consistently.
+
+lib/core/utils/fee_calculator.dart
+Contains logic to calculate transaction fees based on wallet type and network provider.
+Identifies mobile network providers (Vodafone, Etisalat, etc.) from phone prefixes.
+Implements specific fee rules for different wallet types and cross-network transfers.
+
+lib/core/utils/license_key_generator.dart
+Utility to generate random license key strings with a specific format.
+Includes a method to generate and batch-save keys to Firestore (for admin use).
+
+lib/core/utils/number_formatter.dart
+Provides static methods to format numbers and currency amounts.
+Formats phone numbers into readable groups.
+Handles parsing of formatted strings back into double values.
+
+lib/core/utils/password_hasher.dart
+Implements SHA-256 hashing for passwords and PINs.
+Provides methods to hash a plain string and verify a match against a stored hash.
+
+lib/core/utils/permission_helper.dart
+A static helper class to check user permissions within the UI context.
+Checks against the `AuthProvider`'s current user permissions or owner status.
+Can optionally show an error toast if permission is denied.
+
+lib/core/utils/snackbar_utils.dart
+Provides static methods to show `SnackBar` notifications.
+Configures styles for success, error, info, and warning snackbars.
+
+lib/core/utils/toast_utils.dart
+Wrapper around `BotToast` to show custom toast notifications.
+Provides styled toasts for success, error, info, and warning messages.
+Adapts the toast appearance based on the current theme (Light/Dark).
+
+lib/core/utils/validators.dart
+Contains static validation methods for form fields.
+Validates email, phone numbers (Egyptian format), passwords, names, and amounts.
+Returns localized error messages if validation fails.
+
+lib/data/models/daily_stats_model.dart
+Represents daily aggregated statistics for a store.
+Stores transaction counts, total commissions, and total amounts for a specific date.
+Includes factory methods for serialization to/from Firestore.
+
+lib/data/models/debt_model.dart
+Represents a debt record in the system.
+Contains details about the customer, amount due, total amount, status (open/paid), and type.
+Includes metadata like creation date, update timestamps, and the user who created it.
+
+lib/data/models/device_usage_model.dart
+Tracks device usage for trial enforcement.
+Stores the device ID, trial count, and associated store IDs.
+
+lib/data/models/license_key_model.dart
+Represents a license key document from Firestore.
+Contains the key string, usage status, expiry duration, and metadata about when/who used it.
+
+lib/data/models/stats_summary_model.dart
+Aggregates overall statistics for the dashboard.
+Includes totals for wallets, transactions, debts, balance, and commissions.
+Used to display quick stats on the main dashboard screen.
+
+lib/data/models/store_model.dart
+The primary model for a Store entity.
+Contains store profile, authentication info, license details, settings, and aggregated stats.
+Includes nested classes for `StoreLicense`, `StoreSettings`, and `StoreStats`.
+
+lib/data/models/transaction_model.dart
+Represents a financial transaction (send, receive, or deposit).
+Stores details like amount, commission, customer info, wallet ID, and transaction type.
+Includes validation logic getters and serialization methods.
+
+lib/data/models/user_model.dart
+Represents a user in the system, either an Owner or an Employee.
+Contains personal info, role, permissions (for employees), and activity timestamps.
+Includes helper methods to check roles and permissions.
+
+lib/data/models/user_permissions.dart
+Defines granular permission flags for employees (e.g., createTransaction, viewDebts).
+Includes factory methods to create default permissions and parse from Map.
+
+lib/data/models/wallet_model.dart
+Represents a financial wallet.
+Stores phone number, balance, type, status, limits, and usage statistics.
+Includes logic to calculate remaining limits and check if daily/monthly limits are reached.
+
+lib/data/repositories/auth_repository.dart
+Handles authentication operations using Firebase Auth and Google Sign-In.
+Provides methods for signing in/up with email or Google, and signing out.
+Manages the current user stream.
+
+lib/data/repositories/debt_repository.dart
+Manages CRUD operations for the 'debts' collection in Firestore.
+Handles creating debts, processing payments, adding partial debts, and fetching paginated lists.
+Updates store statistics transactionally when debts change.
+
+lib/data/repositories/device_repository.dart
+Interacts with the 'device_registrations' collection to track app usage per device.
+Uses `device_info_plus` to retrieve unique device identifiers.
+Enforces trial limits based on device ID.
+
+lib/data/repositories/employee_repository.dart
+Manages CRUD operations for store employees in the 'users' collection.
+Handles adding employees, verifying PINs, and updating permissions.
+Enforces limits on the number of employees per store.
+
+lib/data/repositories/license_key_repository.dart
+Handles verification and activation of license keys.
+Interacts with the 'license_keys' collection to mark keys as used and update store status.
+
+lib/data/repositories/stats_repository.dart
+Manages the aggregation and retrieval of store statistics.
+Updates summary documents when transactions or debts occur.
+Provides streams for real-time dashboard updates.
+
+lib/data/repositories/store_repository.dart
+Manages the 'stores' collection.
+Handles store creation (including trial setup), profile updates, and settings.
+Provides methods to fetch store details by owner ID or email.
+
+lib/data/repositories/transaction_repository.dart
+Manages the 'transactions' collection.
+Handles creation of transactions with strict validation of wallet limits and balances.
+Updates wallet balances and daily/monthly usage stats transactionally.
+
+lib/data/repositories/user_repository.dart
+Manages the 'users' collection for both owners and employees.
+Handles user creation, profile updates, and fetching users by various criteria.
+Includes logic for updating employee stats and permissions.
+
+lib/data/repositories/wallet_repository.dart
+Manages the 'wallets' collection.
+Handles creating, updating, and deleting wallets.
+Provides methods for fetching wallets with pagination and filtering.
+
+lib/data/services/firebase_service.dart
+A singleton service that initializes the Firebase app.
+Exposes the `FirebaseAuth` and `FirebaseFirestore` instances for use throughout the app.
+
+lib/data/services/google_sign_in_service.dart
+Handles the specific flow for Google Sign-In authentication.
+Wraps the `GoogleSignIn` package and returns Firebase `UserCredential` objects.
+
+lib/data/services/local_storage_service.dart
+A wrapper around `SharedPreferences` for persisting local data.
+Manages user session data (ID, store ID, role) and app settings like theme mode.
+
+lib/l10n/arb/app_ar.arb
+Contains the Arabic translations for all application strings in JSON format.
+
+lib/l10n/arb/app_en.arb
+Contains the English translations for all application strings in JSON format.
+
+lib/l10n/arb/app_localizations.dart
+The abstract base class for generated localizations, providing the `of(context)` method.
+
+lib/l10n/arb/app_localizations_ar.dart
+The generated implementation of `AppLocalizations` for the Arabic locale.
+
+lib/l10n/arb/app_localizations_en.dart
+The generated implementation of `AppLocalizations` for the English locale.
+
+lib/presentation/screens/auth/employee_login_screen.dart
+A screen for employees to log in using a store password and their personal PIN.
+Fetches the list of employees for the selected store to facilitate selection.
+
+lib/presentation/screens/auth/license_expired_screen.dart
+A blocking screen displayed when the store's license is expired.
+Provides options to enter a new license key or contact support for renewal.
+
+lib/presentation/screens/auth/login_landing_screen.dart
+The initial landing screen offering tabs for Owner Login (Email/Google) and Employee Login (Find Store).
+Handles navigation based on the user's role after successful login.
+
+lib/presentation/screens/auth/store_registration_screen.dart
+A form screen for creating a new store account.
+Supports registration via Email or Google and sets up the initial trial store.
+
+lib/presentation/screens/debts/add_debt_screen.dart
+A form screen to create a new debt record manually.
+Allows selecting debt type (Transaction vs Store Sale) and entering customer details.
+
+lib/presentation/screens/debts/debts_list_screen.dart
+Displays a paginated list of debts with filtering options (Open, Paid, All).
+Includes a summary card at the top and allows navigating to add/edit debts.
+
+lib/presentation/screens/employees/add_employee_screen.dart
+A form screen to add a new employee to the store.
+ collects name, phone, PIN, and initial permissions.
+
+lib/presentation/screens/employees/employee_details_screen.dart
+Shows detailed information about a specific employee.
+Allows the owner to edit the employee's permissions via a modal sheet.
+
+lib/presentation/screens/employees/manage_employees_screen.dart
+Lists all employees (active and inactive) for management.
+Allows the owner to deactivate employees or view their details.
+
+lib/presentation/screens/home/main_dashboard_screen.dart
+The central hub of the application.
+Displays quick statistics, quick action buttons, alerts for limits/debts, and recent transactions.
+Includes a drawer for app navigation.
+
+lib/presentation/screens/settings/settings_screen.dart
+Displays user profile, store info, and application settings (Theme, Language).
+Provides access to license information and the upgrade screen.
+
+lib/presentation/screens/settings/upgrade_screen.dart
+A screen providing instructions and contact buttons for upgrading to a premium license.
+Can also be used to enter a license key for activation.
+
+lib/presentation/screens/statistics/general_statistics_screen.dart
+Displays detailed charts and metrics for the store.
+Allows filtering data by custom date ranges.
+
+lib/presentation/screens/transactions/create_transaction_screen.dart
+A comprehensive form to create new transactions (Send/Receive).
+Handles wallet selection, fee calculation, and real-time validation of limits.
+
+lib/presentation/screens/transactions/today_transactions_screen.dart
+Lists transactions created in the current day.
+Provides filtering by transaction type (Send/Receive) and displays a daily summary.
+
+lib/presentation/screens/transactions/transaction_details_screen.dart
+Shows full details of a specific transaction including metadata like creator and timestamps.
+
+lib/presentation/screens/wallets/add_balance_screen.dart
+A simplified form to manually add balance (deposit) to a specific wallet.
+
+lib/presentation/screens/wallets/wallet_details_screen.dart
+Displays comprehensive details for a single wallet.
+Shows current balance, limit usage bars, statistics, and edit/delete options.
+
+lib/presentation/screens/wallets/wallet_form_screen.dart
+A form screen used for both creating and editing wallets.
+Handles input for phone number, wallet type, status, and initial balance.
+
+lib/presentation/screens/wallets/wallets_list_screen.dart
+Displays a list of all active wallets with a search bar.
+Includes a summary of total/active wallets and a FAB for adding new wallets/balance.
+
+lib/presentation/widgets/common/add_close_animated_icon.dart
+A custom widget that animates between a 'plus' and a 'close' icon.
+Used in the expandable Floating Action Button on the wallets list.
+
+lib/presentation/widgets/common/custom_button.dart
+A reusable button widget with support for loading states, icons, and different styles (Primary, Outlined, Text).
+
+lib/presentation/widgets/common/custom_dropdown.dart
+A styled dropdown field widget wrapper around `DropdownButtonFormField`.
+Ensures consistent styling with text fields across the app.
+
+lib/presentation/widgets/common/custom_text_field.dart
+A reusable text form field with consistent styling, validation, and optional shake animation on error.
+
+lib/presentation/widgets/common/double_back_to_exit_wrapper.dart
+A wrapper widget that intercepts the back button to show a "Press again to exit" toast.
+
+lib/presentation/widgets/common/empty_state_widget.dart
+A widget to display a friendly message and illustration when lists are empty.
+Optionally provides an action button to trigger a primary creation flow.
+
+lib/presentation/widgets/common/error_widget.dart
+A generic error display widget with a retry button.
+
+lib/presentation/widgets/common/loading_indicator.dart
+A custom loading spinner widget with optional text message and different styles.
+
+lib/presentation/widgets/common/skeleton_card.dart
+A shimmering placeholder widget used for loading states in lists.
+
+lib/presentation/widgets/common/skeleton_list.dart
+A convenience widget that builds a list of `SkeletonCard` items to simulate loading content.
+
+lib/presentation/widgets/dashboard/alert_card.dart
+Displays warning or error alerts on the dashboard (e.g., limit reached, open debts).
+
+lib/presentation/widgets/dashboard/app_drawer.dart
+The side navigation menu for the app.
+Handles navigation between main screens and logout functionality.
+
+lib/presentation/widgets/dashboard/quick_action_card.dart
+A square card widget used in the dashboard grid for quick access to frequent actions.
+
+lib/presentation/widgets/dashboard/section_header.dart
+A styled header widget for dashboard sections, optionally including an action button.
+
+lib/presentation/widgets/dashboard/stats_card.dart
+A card widget displaying a single statistic (title, value, icon) on the dashboard.
+
+lib/presentation/widgets/debt/debt_card.dart
+Displays a summary of a single debt item in a list.
+Includes actions to mark as paid or view details.
+
+lib/presentation/widgets/debt/debt_summary_card.dart
+A summary card showing total open vs. paid debts at the top of the debts list.
+
+lib/presentation/widgets/debt/partial_payment_bottom_sheet.dart
+A modal sheet allowing users to record a partial payment or add to an existing debt.
+
+lib/presentation/widgets/employee/employee_card.dart
+A list item card displaying employee information and status (active/inactive).
+
+lib/presentation/widgets/employee/user_permissions_widget.dart
+A widget grouping permission switches for editing employee access rights.
+
+lib/presentation/widgets/transaction/transaction_card.dart
+Displays a single transaction's details (amount, type, time, customer) in a list.
+
+lib/presentation/widgets/transaction/transaction_summary_card.dart
+Shows aggregated transaction stats (counts and totals) for the current view.
+
+lib/presentation/widgets/wallet/wallet_card.dart
+Displays a wallet's key info (phone, type, balance) and limit usage bars in a list.
+
+lib/presentation/widgets/wallet/wallet_limit_bar.dart
+A visual progress bar indicating how much of a daily or monthly limit has been used.
+
+lib/presentation/widgets/wallet/wallet_stats_card.dart
+Displays detailed statistics for a specific wallet (total transactions, volume, commission).
+
+lib/providers/app_events.dart
+A simplified event bus class using Streams to broadcast update events across providers.
+
+lib/providers/auth_provider.dart
+Manages the global authentication state (User, Store, License).
+Handles login, logout, registration, and session persistence logic.
+
+lib/providers/debt_provider.dart
+Manages state for debt-related operations.
+Handles fetching, creating, updating, and deleting debts, as well as tracking filters.
+
+lib/providers/employee_provider.dart
+Manages the state of employees within a store.
+Handles adding, fetching, and updating employee details and permissions.
+
+lib/providers/localization_provider.dart
+Manages the current app locale state.
+Persists the language selection to local storage.
+
+lib/providers/statistics_provider.dart
+Manages the state for dashboard and general statistics.
+Fetches and caches aggregated data for display.
+
+lib/providers/theme_provider.dart
+Manages the app's theme mode (Light/Dark/System).
+Persists the user's preference to local storage.
+
+lib/providers/transaction_provider.dart
+Manages state for transaction operations.
+Handles fetching paginated transactions, creation logic, and filtering.
+
+lib/providers/wallet_provider.dart
+Manages state for wallet operations.
+Handles fetching wallets, creating/updating them, and managing balance updates.
+
+lib/routes/app_router.dart
+Contains the `generateRoute` method to handle named navigation.
+Configures page transitions and dependency injection (Providers) for each screen.
+
+lib/routes/navigation_service.dart
+Holds a global `NavigatorKey` to allow navigation from non-UI contexts (like Providers).

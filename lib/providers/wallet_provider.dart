@@ -12,6 +12,7 @@ import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/user_model.dart'; // Added
 import 'package:walletmanager/data/models/user_permissions.dart'; // Added
 import 'auth_provider.dart'; // Added
+import 'package:walletmanager/data/services/local_storage_service.dart'; // Added
 
 enum WalletStatusState {
   idle,
@@ -211,6 +212,14 @@ class WalletProvider extends ChangeNotifier {
       _cachedWallets = fetchedWallets;
       _cacheTimestamp = DateTime.now();
       _setStatus(WalletStatusState.loaded);
+
+      // Cache the wallets locally for SMS Automation (Overlay & Settings)
+      try {
+        await LocalStorageService().cacheWalletLiteList(_wallets);
+        debugPrint(">>> Wallet Lite List Cached: ${_wallets.length} wallets");
+      } catch (e) {
+        debugPrint(">>> Error caching wallet lite list: $e");
+      }
     } on ServerException catch (e) {
       _setError(e.message);
     } catch (e) {

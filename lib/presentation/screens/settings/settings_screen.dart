@@ -12,6 +12,9 @@ import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
+import 'package:walletmanager/core/services/sms_service.dart';
+import 'package:walletmanager/data/models/sim_wallet_config.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -29,6 +32,8 @@ class SettingsScreen extends StatelessWidget {
           _buildAccountInfoSection(context),
           const Divider(height: 32, indent: 16, endIndent: 16),
           _buildAppSettingsSection(context),
+          const Divider(height: 32, indent: 16, endIndent: 16),
+          _buildSmsAutomationSection(context),
           const Divider(height: 32, indent: 16, endIndent: 16),
           _buildAppInfoSection(context),
           const Divider(height: 32, indent: 16, endIndent: 16),
@@ -552,6 +557,232 @@ class SettingsScreen extends StatelessWidget {
           }
         }
       },
+    );
+  }
+
+  // ===========================
+  // SMS Automation Section
+  // ===========================
+
+  Widget _buildSmsAutomationSection(BuildContext context) {
+    return const _SmsAutomationSection();
+  }
+}
+
+class _SmsAutomationSection extends StatefulWidget {
+  const _SmsAutomationSection();
+
+  @override
+  State<_SmsAutomationSection> createState() => _SmsAutomationSectionState();
+}
+
+class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
+  final LocalStorageService _storage = LocalStorageService();
+  bool _isEnabled = false;
+  List<Map<String, dynamic>> _availableWallets = [];
+  SimWalletConfig? _sim1Config;
+  SimWalletConfig? _sim2Config;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    await _storage.initialize();
+    final enabled = _storage.isSmsAutomationEnabled;
+    final wallets = _storage.getCachedWalletLiteList();
+
+    // Load current mappings
+    final mappings = _storage.getSimMappings();
+    SimWalletConfig? sim1;
+    SimWalletConfig? sim2;
+
+    try {
+      sim1 = mappings.firstWhere((m) => m.simSlotIndex == 0);
+    } catch (_) {}
+
+    try {
+      sim2 = mappings.firstWhere((m) => m.simSlotIndex == 1);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _isEnabled = enabled;
+        _availableWallets = wallets;
+        _sim1Config = sim1;
+        _sim2Config = sim2;
+      });
+    }
+  }
+
+  Future<void> _toggleSmsAutomation(bool value) async {
+    if (value) {
+      // 1. Request SMS Permission FIRST
+      final smsGranted = await SmsService().requestSmsPermission();
+
+      if (!smsGranted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('يجب الموافقة على صلاحية الرسائل لتفعيل الميزة'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Enable
+      try {
+        // 2. Request Overlay Permission SECOND
+        await SmsService().requestOverlayPermission();
+
+        // 3. Enable Logic
+        await _storage.setSmsAutomationEnabled(true);
+        setState(() {
+          _isEnabled = true;
+        });
+
+        // Ensure service is listening
+        await SmsService().init();
+      } catch (e) {
+        if (mounted) {
+          ToastUtils.showError('Required permissions missing: $e');
+        }
+        // Revert switch if failed
+        setState(() {
+          _isEnabled = false;
+        });
+      }
+    } else {
+      // Disable
+      await _storage.setSmsAutomationEnabled(false);
+      setState(() {
+        _isEnabled = false;
+      });
+    }
+  }
+
+  Future<void> _updateMapping(int simSlot, String? walletId) async {
+    if (walletId == null) return;
+
+    // Find selected wallet details
+    final wallet = _availableWallets.firstWhere((w) => w['id'] == walletId,
+        orElse: () => {});
+    if (wallet.isEmpty) return;
+
+    final newConfig = SimWalletConfig(
+      simSlotIndex: simSlot,
+      walletId: walletId,
+      walletName: wallet['name'] ?? 'Unknown',
+      serviceProvider: wallet['type'] ?? 'Unknown',
+      subscriptionId:
+          null, // Depending on device capability, might update later
+    );
+
+    // Update list
+    final mappings = _storage.getSimMappings();
+    mappings.removeWhere((m) => m.simSlotIndex == simSlot);
+    mappings.add(newConfig);
+
+    await _storage.saveSimMappings(mappings);
+
+    setState(() {
+      if (simSlot == 0) _sim1Config = newConfig;
+      if (simSlot == 1) _sim2Config = newConfig;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Text(
+            'الأتمتة والرسائل', // Automation & Messages
+            style: AppTextStyles.h3.copyWith(color: AppColors.primary),
+          ),
+        ),
+        Card(
+          elevation: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: Text(
+                  'تفعيل قراءة الرسائل تلقائياً',
+                  style: AppTextStyles.bodyLarge,
+                ),
+                subtitle: Text(
+                  'اكتشاف المعاملات من البنوك والمحافظ تلقائياً',
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
+                ),
+                value: _isEnabled,
+                activeColor: AppColors.primary,
+                onChanged: _toggleSmsAutomation,
+              ),
+              if (_isEnabled) ...[
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ربط الشريحة بالمحفظة',
+                        style: AppTextStyles.bodyMedium
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      // SIM 1
+                      _buildSimDropdown(0, 'الشريحة 1 (SIM 1)', _sim1Config),
+                      const SizedBox(height: 12),
+                      // SIM 2
+                      _buildSimDropdown(1, 'الشريحة 2 (SIM 2)', _sim2Config),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimDropdown(
+      int slot, String label, SimWalletConfig? currentConfig) {
+    return DropdownButtonFormField<String>(
+      value: currentConfig?.walletId,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: _availableWallets.isEmpty
+          ? [
+              const DropdownMenuItem(
+                  value: null,
+                  child: Text('لا توجد محافظ محفوظة',
+                      style: TextStyle(fontSize: 12)))
+            ]
+          : _availableWallets.map((w) {
+              return DropdownMenuItem<String>(
+                value: w['id'],
+                child: Text(
+                  w['name'] ?? 'Unknown',
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMedium,
+                ),
+              );
+            }).toList(),
+      onChanged: (val) => _updateMapping(slot, val),
     );
   }
 }

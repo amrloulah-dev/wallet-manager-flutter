@@ -1,79 +1,100 @@
-<div align="center">
+# Wallet Manager
 
-# 💸 Wallet Manager
-### Advanced Digital Wallet & Financial Management for Stores
+## Project Overview
+Wallet Manager is a Flutter-based application designed to help store owners and businesses manage financial wallets, transactions, debts, and employee access. It provides a centralized platform to track cash flows across various payment methods (like Vodafone Cash, InstaPay, etc.), enforce transaction limits, and monitor business performance through detailed statistics.
 
-<!-- Badges -->
-[![Website](https://img.shields.io/badge/Official-Website-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://sites.google.com/view/wallet-manager-app)
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter)](https://flutter.dev/)
-[![Firebase](https://img.shields.io/badge/Firebase-Backend-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![MVVM](https://img.shields.io/badge/Architecture-MVVM-success?style=for-the-badge)]()
+## Key Features
 
-<br />
+### 🔐 Authentication & Access Control
+*   **Owner Access:** Secure login via Email/Password or Google Sign-In.
+*   **Employee Access:** Simplified login using Store Email and a unique PIN.
+*   **Role-Based Permissions:** Granular permission settings for employees (e.g., ability to create transactions, view debts, manage wallets).
+*   **License Management:** Trial and Premium license validation system.
 
-<!-- DOWNLOAD BUTTON -->
-<a href="https://drive.google.com/drive/folders/1JAbu5a8COLMpTgSXJsPSxh3M8OOI_-VQ?usp=sharing" target="_blank">
-  <img src="https://img.shields.io/badge/Download_Demo_APK-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" height="40" />
-</a>
+### 💰 Wallet Management
+*   **Multi-Provider Support:** Specific logic for Vodafone Cash, InstaPay, Orange Cash, Etisalat Cash, and WE Pay.
+*   **Limit Enforcement:** Automatic validation of Daily and Monthly transaction limits based on provider rules.
+*   **Balance Tracking:** Real-time updates of wallet balances.
+*   **Management:** Create, edit, delete, and monitor active wallets.
 
-<br />
-<br />
+### 💸 Transaction Handling
+*   **Send & Receive:** Record outgoing and incoming money transfers.
+*   **Fee Calculation:** Automated commission calculation based on service provider rules.
+*   **History:** View daily transaction logs and detailed transaction receipts.
+*   **Debt Integration:** Option to mark transactions as "Debt" if unpaid at the time of creation.
 
-**Wallet Manager** is a specialized Flutter application tailored for the **Egyptian market**, designed to help store owners manage multiple digital wallets (Vodafone Cash, InstaPay, etc.), track debts, and control employee access securely.
+### 📝 Debt Management
+*   **Tracking:** Record debts from transactions or direct store sales.
+*   **Status Management:** Track "Open" and "Paid" debts.
+*   **Partial Payments:** Support for recording partial payments towards an existing debt.
+*   **Customer Details:** Link debts to specific customer names and phone numbers.
 
-🌐 **Check out the official Landing Page:** [wallet-manager-app](https://sites.google.com/view/wallet-manager-app)
+### 📊 Statistics & Analytics
+*   **Dashboard:** Real-time summary of total balance, transaction counts, commission earnings, and active debts.
+*   **Filtering:** View statistics by custom date ranges.
+*   **Breakdowns:** Detailed reports on transaction types (Send vs. Receive) and daily performance.
 
-</div>
+### ⚙️ Settings & Customization
+*   **Localization:** Full support for Arabic and English languages.
+*   **Theming:** Support for Light, Dark, and System theme modes.
+
+## Project Structure
+
+The project follows a Clean Architecture approach with a separation of concerns between Data, Domain (implicitly handled in providers/models), and Presentation layers.
+
+```
+lib/
+├── core/               # Shared utilities, constants, and theme configuration
+│   ├── constants/      # App-wide constants (Firebase paths, Routes)
+│   ├── errors/         # Custom exception handling classes
+│   ├── theme/          # App colors and text styles
+│   └── utils/          # Helpers (Date, Formatters, Validators, Permission Checks)
+├── data/               # Data layer
+│   ├── models/         # Data models (JSON/Firestore serialization)
+│   ├── repositories/   # Logic for interacting with Firestore collections
+│   └── services/       # External services (Firebase, Google Auth, LocalStorage)
+├── l10n/               # Localization files (.arb)
+├── presentation/       # UI layer
+│   ├── screens/        # Full-page screens organized by feature (Auth, Home, Wallets, etc.)
+│   └── widgets/        # Reusable UI components
+├── providers/          # State management (ChangeNotifier)
+└── routes/             # Navigation configuration
+```
+
+## Technologies & Dependencies
+
+*   **Framework:** [Flutter](https://flutter.dev/) (Dart)
+*   **Backend:** [Firebase](https://firebase.google.com/)
+    *   **Authentication:** User management (Email/Password, Google).
+    *   **Cloud Firestore:** NoSQL database for data storage.
+    *   **Analytics & Performance:** App monitoring.
+*   **State Management:** `provider`
+*   **Local Storage:** `shared_preferences`
+*   **Localization:** `flutter_localizations`, `intl`
+*   **Utilities:** `uuid`, `crypto` (for hashing PINs), `device_info_plus`, `url_launcher`.
+
+## Setup & Configuration
+
+1.  **Prerequisites:**
+    *   Flutter SDK installed.
+    *   Valid Firebase project setup.
+
+2.  **Firebase Configuration:**
+    *   Ensure `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) are placed in their respective directories.
+    *   Firestore security rules should be configured to allow appropriate access based on the `stores` and `users` collections structure.
+
+3.  **Running the App:**
+    ```bash
+    flutter pub get
+    flutter run
+    ```
+
+## Notes & Assumptions
+
+*   **Trial Logic:** The app enforces a trial period logic based on device ID and license keys stored in Firestore.
+*   **Permissions:** Employee permissions are stored in the user document and checked locally via `PermissionHelper` before allowing sensitive actions.
+*   **Data Consistency:** Critical updates (like transaction creation updating wallet balance and stats) are handled via Firestore Transactions to ensure data integrity.
+*   **Platform:** Designed primarily for mobile usage (Android/iOS).
 
 ---
-
-## 📸 App Screenshots
-
-| Financial Dashboard | Multi-Wallet Support | Transaction Handling | Debt Management |
-|:---:|:---:|:---:|:---:|
-| <img src="assets/screenshots/Dashboard.png" width="200"/> | <img src="assets/screenshots/wallets.png" width="200"/> | <img src="assets/screenshots/transactions.png" width="200"/> | <img src="assets/screenshots/debts.png" width="200"/> |
-
----
-
-## 🚀 Key Features
-
-### 💼 Smart Wallet Management
-*   **Multi-Provider Support:** Seamlessly manage **Vodafone Cash, Etisalat, Orange, WE, and InstaPay**.
-*   **Limit Enforcement:** Automatically tracks daily/monthly limits based on wallet type (New/Old/Registered) to prevent errors.
-*   **Fee Calculation:** Auto-calculates service fees and commissions tailored to Egyptian service providers.
-
-### 🔐 Security & Role-Based Access
-*   **Owner Dashboard:** Full control over statistics, settings, and financial reports.
-*   **Employee Mode:** Restricted access via **Secure PIN System**. Employees can perform transactions without viewing sensitive profit data.
-*   **License System:** App usage is secured via a custom license key mechanism.
-
----
-
-## 🛠️ Technical Architecture
-
-The project is built using **Clean Architecture** principles with the **MVVM** pattern.
-
-| Component | Technology |
-|:--- |:--- |
-| **State Management** | `provider` (View Models) |
-| **Backend** | Firebase (Firestore & Auth) |
-| **Auth** | Google Sign-In & Custom PIN Logic |
-| **Localization** | Arabic (`ar`) & English (`en`) support |
-
----
-
-
-⚙️ Setup & Installation
-1. Clone the Repo:
-  git clone https://github.com/amrloulah-dev/wallet-manager-flutter.git
-2. Firebase Setup:
-  Note: This project relies on Firebase. You need to provide your own configuration files.
-  Add your google-services.json to android/app/.
-  Add your GoogleService-Info.plist to ios/Runner/.
-Run:
-  flutter pub get
-  flutter run
-
-<div align="center">
-Developed with ❤️ by <a href="https://github.com/amrloulah-dev">Amr Loulah</a>
-</div>
+*Auto-generated based on codebase analysis.*
