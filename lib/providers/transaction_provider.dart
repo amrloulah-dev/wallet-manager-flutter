@@ -240,6 +240,7 @@ class TransactionProvider extends ChangeNotifier {
     double serviceFee = 0.0,
     String paymentStatus = 'paid',
     String? notes,
+    bool force = false,
   }) async {
     _setStatus(TransactionStatus.creating);
     try {
@@ -274,11 +275,15 @@ class TransactionProvider extends ChangeNotifier {
         creatorRole: _currentUser?.role,
       );
 
-      await _transactionRepository.createTransaction(newTransaction);
+      await _transactionRepository.createTransaction(newTransaction,
+          force: force);
       AnalyticsService.logTransactionCreated(transactionType);
       appEvents.fireTransactionsChanged();
       appEvents.fireWalletsChanged();
       return true;
+    } on LimitExceededWarning {
+      _setStatus(TransactionStatus.idle);
+      rethrow;
     } on AppException catch (e) {
       _setError(e.message);
       return false;

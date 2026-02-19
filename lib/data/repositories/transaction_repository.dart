@@ -29,7 +29,8 @@ class TransactionRepository {
   CollectionReference get transactionsCollection => _transactionsCollection;
 
   // 1️⃣ CREATE
-  Future<void> createTransaction(TransactionModel transaction) async {
+  Future<void> createTransaction(TransactionModel transaction,
+      {bool force = false}) async {
     try {
       final balanceChange = transaction.isSend
           ? -(transaction.amount + transaction.serviceFee)
@@ -74,26 +75,28 @@ class TransactionRepository {
           // New Validation Rules (Strict Implementation)
           // Rule 1: Transaction Cap
           if (transaction.amount > validationWallet.getLimits().dailyLimit) {
-            throw ValidationException(
+            _validateLimit(validationWallet, force,
                 'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
           }
           // Rule 3: Monthly Aggregate
           if (validationWallet.getLimits().monthlyUsed + transaction.amount >
               validationWallet.getLimits().monthlyLimit) {
-            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+            _validateLimit(
+                validationWallet, force, 'تم تجاوز الحد الشهري لهذه المحفظة.');
           }
         } else if (transaction.isReceive) {
           // Rule 1: Transaction Cap
           if (transaction.amount >
               validationWallet.getReceiveLimits().dailyLimit) {
-            throw ValidationException(
+            _validateLimit(validationWallet, force,
                 'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
           }
           // Rule 3: Monthly Aggregate
           if (validationWallet.getReceiveLimits().monthlyUsed +
                   transaction.amount >
               validationWallet.getReceiveLimits().monthlyLimit) {
-            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+            _validateLimit(
+                validationWallet, force, 'تم تجاوز الحد الشهري لهذه المحفظة.');
           }
         }
 
@@ -429,6 +432,18 @@ class TransactionRepository {
         'receiveCount': 0,
         'totalReceivedAmount': 0.0,
       };
+    }
+  }
+
+  void _validateLimit(WalletModel wallet, bool force, String message) {
+    if (wallet.walletType == 'instapay') {
+      if (!force) {
+        throw LimitExceededWarning(message);
+      }
+      // If force is true, allow bypassing the limit.
+    } else {
+      // For other wallets (and strictly enforced limits), throw ValidationException.
+      throw ValidationException(message);
     }
   }
 }

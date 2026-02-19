@@ -17,6 +17,7 @@ import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../../core/utils/fee_calculator.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
   const CreateTransactionScreen({super.key});
@@ -130,24 +131,79 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       return;
     }
 
-    final success = await transactionProvider.createTransaction(
-      walletId: _selectedWallet!.walletId,
-      transactionType: _transactionType!,
-      customerPhone: _customerPhoneController.text,
-      customerName: _customerNameController.text,
-      amount: amount,
-      commission: commission,
-      serviceFee: _serviceFee,
-      paymentStatus: _paymentStatus,
-      notes: _notesController.text,
-    );
+    try {
+      // 1. Try normal creation (force: false is default)
+      final success = await transactionProvider.createTransaction(
+        walletId: _selectedWallet!.walletId,
+        transactionType: _transactionType!,
+        customerPhone: _customerPhoneController.text,
+        customerName: _customerNameController.text,
+        amount: amount,
+        commission: commission,
+        serviceFee: _serviceFee,
+        paymentStatus: _paymentStatus,
+        notes: _notesController.text,
+        force: false,
+      );
 
-    if (mounted && success) {
-      ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
-      Navigator.pop(context, true);
-    } else if (mounted) {
-      ToastUtils.showError(
-          transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة');
+      if (mounted && success) {
+        ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
+        Navigator.pop(context, true);
+      } else if (mounted) {
+        // If it failed without throwing (shouldn't really happen with current logic but for safety)
+        if (transactionProvider.errorMessage != null) {
+          ToastUtils.showError(transactionProvider.errorMessage!);
+        }
+      }
+    } on LimitExceededWarning catch (_) {
+      // 2. Catch the specific Warning
+      // Show a Confirmation Dialog
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("تجاوز الحدود"),
+          content: const Text(
+              "هذه المعاملة تتخطى الحدود الرسمية لـ InstaPay.\nهل قمت بهذه المعاملة عبر تطبيق البنك مباشرة؟"),
+          actions: [
+            TextButton(
+              child: const Text("إلغاء"),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            TextButton(
+              child: const Text("نعم، سجلها"),
+              onPressed: () async {
+                Navigator.pop(ctx); // Close Dialog
+
+                // 3. Retry with Force = true
+                final successForce =
+                    await transactionProvider.createTransaction(
+                  walletId: _selectedWallet!.walletId,
+                  transactionType: _transactionType!,
+                  customerPhone: _customerPhoneController.text,
+                  customerName: _customerNameController.text,
+                  amount: amount,
+                  commission: commission,
+                  serviceFee: _serviceFee,
+                  paymentStatus: _paymentStatus,
+                  notes: _notesController.text,
+                  force: true,
+                );
+
+                if (mounted && successForce) {
+                  ToastUtils.showSuccess('تمت إضافة المعاملة بنجاح');
+                  Navigator.pop(context, true);
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // 3. Handle standard errors (Balance not enough, etc.)
+      if (mounted) {
+        ToastUtils.showError(e.toString());
+      }
     }
   }
 

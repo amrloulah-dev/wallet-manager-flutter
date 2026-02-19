@@ -93,6 +93,11 @@ class ValidationException extends AppException {
   ValidationException(super.message);
 }
 
+/// Thrown when a transaction exceeds soft limits (InstaPay) and requires user confirmation.
+class LimitExceededWarning extends AppException {
+  LimitExceededWarning(super.message);
+}
+
 // ===========================
 // Not Found Exceptions
 // ===========================
