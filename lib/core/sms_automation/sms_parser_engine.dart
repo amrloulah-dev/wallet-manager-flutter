@@ -1,9 +1,10 @@
+import 'package:walletmanager/core/sms_automation/utils/text_normalizer.dart';
+
 import 'models/parsed_sms_dto.dart';
 import 'strategies/sms_parser_strategy.dart';
 import 'strategies/vodafone_cash_strategy.dart';
 import 'strategies/generic_bank_strategy.dart';
 import 'package:flutter/foundation.dart';
-import 'utils/text_normalizer.dart';
 
 class SmsParserEngine {
   final List<SmsParserStrategy> _strategies;

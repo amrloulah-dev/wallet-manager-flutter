@@ -216,59 +216,28 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return CustomDropdown<String>(
       value: _selectedWalletType,
       labelText: AppLocalizations.of(context)!.walletType,
-      prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-          color: AppColors.primary),
+      prefixIcon: const Icon(
+        Icons.account_balance_wallet_outlined,
+        color: AppColors.primary,
+      ),
       hint: AppLocalizations.of(context)!.selectWalletType,
-      items: walletTypes.keys.map((String key) {
-        return DropdownMenuItem<String>(
-          value: key,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                walletTypes[key]!,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-      selectedItemBuilder: (BuildContext context) {
-        return walletTypes.keys.map((String key) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              walletTypes[key]!,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
-              ),
-            ),
-          );
-        }).toList();
-      },
+      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+
+      // 1. نمرر قائمة المفاتيح (Keys) كـ List
+      itemsList: walletTypes.keys.toList(),
+
+      // 2. نستخرج النص الظاهر للمستخدم عن طريق جلب القيمة من الـ Map باستخدام المفتاح
+      itemLabelBuilder: (String key) => walletTypes[key]!,
+
       onChanged: (value) {
         setState(() {
           _selectedWalletType = value;
         });
       },
+
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.walletTypeRequired
           : null,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 
@@ -282,64 +251,31 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return CustomDropdown<String>(
       value: _selectedWalletStatus,
       labelText: AppLocalizations.of(context)!.walletStatus,
-      prefixIcon:
-          const Icon(Icons.verified_user_outlined, color: AppColors.primary),
+      prefixIcon: const Icon(
+        Icons.verified_user_outlined,
+        color: AppColors.primary,
+      ),
       hint: AppLocalizations.of(context)!.pleaseSelectWalletStatus,
-      // 1. استخدام keys.map لتكرار نفس التصميم
-      items: statusDisplayNames.keys.map((String key) {
-        return DropdownMenuItem<String>(
-          value: key,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                statusDisplayNames[key]!,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black, // لون النص داخل القائمة المنسدلة
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-      // 2. إضافة selectedItemBuilder لضبط شكل العنصر المختار وهو مغلق
-      selectedItemBuilder: (BuildContext context) {
-        return statusDisplayNames.keys.map((String key) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              statusDisplayNames[key]!,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context), // لون النص وهو مختار
-              ),
-            ),
-          );
-        }).toList();
-      },
-      // الحفاظ على منطق التعديل كما هو
+      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+
+      // 1. تمرير قائمة المفاتيح (حالات المحفظة) كـ List
+      itemsList: statusDisplayNames.keys.toList(),
+
+      // 2. استخراج الاسم الظاهر للمستخدم بناءً على المفتاح
+      itemLabelBuilder: (String key) => statusDisplayNames[key]!,
+
+      // 3. الحفاظ على منطق وضع التعديل كما هو بالضبط
       onChanged: _isEditMode
-          ? null
+          ? null // تعطيل القائمة لو إحنا في وضع التعديل
           : (value) {
               setState(() {
                 _selectedWalletStatus = value;
               });
             },
+
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.pleaseSelectWalletStatus
           : null,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 

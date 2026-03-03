@@ -443,4 +443,34 @@ class WalletProvider extends ChangeNotifier {
     _status = WalletStatusState.idle;
     notifyListeners();
   }
+
+  void updateWalletOptimistically(Map<String, dynamic> data) {
+    // Expected data: {'walletId': String, 'amount': double, 'type': String ('credit' or 'debit')}
+    if (data['walletId'] == null ||
+        data['amount'] == null ||
+        data['type'] == null) return;
+
+    final walletId = data['walletId'] as String;
+    final amount = (data['amount'] as num).toDouble();
+    final type = data['type']
+        as String; // SMS type: 'credit' (Receive) or 'debit' (Send)
+
+    final index = _wallets.indexWhere((w) => w.walletId == walletId);
+    if (index == -1) return;
+
+    final wallet = _wallets[index];
+    double newBalance = wallet.balance;
+
+    // Map SMS Type to action
+    // credit = money received -> increase balance
+    // debit = money sent -> decrease balance
+    if (type == 'credit') {
+      newBalance += amount;
+    } else if (type == 'debit') {
+      newBalance -= amount;
+    }
+
+    _wallets[index] = wallet.copyWith(balance: newBalance);
+    notifyListeners();
+  }
 }

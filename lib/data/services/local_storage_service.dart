@@ -105,6 +105,23 @@ class LocalStorageService {
   /// Retrieves the saved theme mode, defaulting to 'system'.
   String get themeMode => _prefs?.getString(_keyThemeMode) ?? 'system';
 
+  /// Returns true if the saved theme mode is 'dark'
+  bool get isDarkMode => themeMode == 'dark';
+
+  // ===========================
+  // Language Handling
+  // ===========================
+  static const String _keyLanguageCode = 'languageCode';
+
+  /// Saves the language code
+  Future<void> saveLanguageCode(String code) async {
+    _ensureInitialized();
+    await _prefs!.setString(_keyLanguageCode, code);
+  }
+
+  /// Retrieves the saved language code, defaulting to 'ar'
+  String get languageCode => _prefs?.getString(_keyLanguageCode) ?? 'ar';
+
   // ===========================
   // Clear All Data
   // ===========================

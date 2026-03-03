@@ -12,19 +12,25 @@ class VodafoneCashStrategy extends SmsParserStrategy {
 
   @override
   ParsedSmsDto? parse(String normalizedBody) {
-    // Keywords Check: Must contain "مبلغ" AND ("استلام" OR "تحويل")
-    if (!normalizedBody.contains('مبلغ')) return null;
-    if (!normalizedBody.contains('استلام') &&
-        !normalizedBody.contains('تحويل')) {
+    // Gatekeeper Clause: Fast fail if message lacks a valid Egyptian mobile number
+    // We strictly check for an 11-digit number starting with 010, 011, 012, or 015
+    // This safely filters out ATM withdrawals and bill payments without failing on valid English messages.
+    if (!RegExp(r'01[0125]\d{8}').hasMatch(normalizedBody)) {
       return null;
     }
 
-    // Try Receive (Deposit)
-    final receiveRegex = RegExp(
-        r'تم\s+استلام\s+مبلغ\s*(?<amount>[\d\.,]+)\s*جنيه.*?من\s+رقم\s*(?<number>\d+)');
-    final receiveMatch = receiveRegex.firstMatch(normalizedBody);
+    // --- Receive (Credit / Deposit) ---
+    final arabicReceiveRegex = RegExp(
+        r'(استلام|ارسال|تحويل|ايداع).*?(مبلغ)?\s*(?<amount>[\d\.,]+)\s*(جنيه|ج\.م)?.*?(من\s*رقم)\s*(?<number>01[0125]\d{8})');
+    final englishReceiveRegex = RegExp(
+        r'(received).*?(?<amount>[\d\.,]+)\s*(egp|le).*?(from)\s*(?<number>01[0125]\d{8})');
+
+    final receiveMatch = arabicReceiveRegex.firstMatch(normalizedBody) ??
+        englishReceiveRegex.firstMatch(normalizedBody);
+
     if (receiveMatch != null) {
-      final amountStr = receiveMatch.namedGroup('amount')?.replaceAll(',', '');
+      // Replace any internal commas with dots for valid double parsing
+      final amountStr = receiveMatch.namedGroup('amount')?.replaceAll(',', '.');
       final number = receiveMatch.namedGroup('number');
       if (amountStr != null) {
         try {
@@ -40,12 +46,17 @@ class VodafoneCashStrategy extends SmsParserStrategy {
       }
     }
 
-    // Try Send (Transfer)
-    final sendRegex = RegExp(
-        r'تم\s+تحويل\s+مبلغ\s*(?<amount>[\d\.,]+)\s*جنيه.*?الى\s+رقم\s*(?<number>\d+)');
-    final sendMatch = sendRegex.firstMatch(normalizedBody);
+    // --- Send (Debit / Transfer / Payment) ---
+    final arabicSendRegex = RegExp(
+        r'(ارسال|تحويل|دفع).*?(مبلغ)?\s*(?<amount>[\d\.,]+)\s*(جنيه|ج\.م)?.*?(الي|الى|ل|لرقم)\s*(رقم)?\s*(?<number>01[0125]\d{8})');
+    final englishSendRegex = RegExp(
+        r'(sent|send|transfer|transferred).*?(?<amount>[\d\.,]+)\s*(egp|le).*?(to)\s*(?<number>01[0125]\d{8})');
+
+    final sendMatch = arabicSendRegex.firstMatch(normalizedBody) ??
+        englishSendRegex.firstMatch(normalizedBody);
+
     if (sendMatch != null) {
-      final amountStr = sendMatch.namedGroup('amount')?.replaceAll(',', '');
+      final amountStr = sendMatch.namedGroup('amount')?.replaceAll(',', '.');
       final number = sendMatch.namedGroup('number');
       if (amountStr != null) {
         try {

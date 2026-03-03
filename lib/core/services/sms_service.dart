@@ -105,7 +105,8 @@ void backgroundSmsHandler(SmsMessage message) async {
       enableDrag: true,
       overlayTitle: "New Transaction",
       overlayContent: 'Amount: ${dto.amount} EGP',
-      flag: OverlayFlag.defaultFlag,
+      flag:
+          OverlayFlag.focusPointer, // <--- CRITICAL FIX: Allows Keyboard Focus
       alignment: OverlayAlignment.center,
       visibility: NotificationVisibility.visibilityPublic,
       positionGravity: PositionGravity.auto,

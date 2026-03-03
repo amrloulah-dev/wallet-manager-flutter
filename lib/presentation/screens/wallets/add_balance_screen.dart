@@ -120,61 +120,33 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
         }
         return CustomDropdown<WalletModel>(
           value: _selectedWallet,
-          labelText: AppLocalizations.of(context)!.selectWallet,
-          prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-              color: AppColors.primary),
+          labelText:
+              AppLocalizations.of(context)!.selectWallet, // حافظنا على الترجمة
+          prefixIcon: const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: AppColors.primary,
+          ), // حافظنا على الأيقونة
           hint: AppLocalizations.of(context)!.selectWalletToAddBalance,
-          items: walletProvider.wallets.map((WalletModel wallet) {
-            return DropdownMenuItem<WalletModel>(
-              value: wallet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-          selectedItemBuilder: (BuildContext context) {
-            return walletProvider.wallets.map((WalletModel wallet) {
-              return Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-              );
-            }).toList();
+          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+
+          // 1. تمرير قائمة المحافظ مباشرة
+          itemsList: walletProvider.wallets,
+
+          // 2. استخراج النص (نفس الفورمات الخاص بك بالضبط)
+          itemLabelBuilder: (WalletModel wallet) {
+            return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
           },
+
           onChanged: (wallet) {
             setState(() {
               _selectedWallet = wallet;
             });
           },
+
           validator: (value) => value == null
-              ? AppLocalizations.of(context)!.pleaseSelectWallet
+              ? AppLocalizations.of(context)!
+                  .pleaseSelectWallet // حافظنا على رسالة الخطأ المترجمة
               : null,
-          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
         );
       },
     );

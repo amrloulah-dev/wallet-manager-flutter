@@ -2,16 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
+import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
+import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
+import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 
 class TransactionOverlayScreen extends StatelessWidget {
   const TransactionOverlayScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Determine language from local storage (defaulting to Arabic if not English)
+    final isAr = LocalStorageService.instance.languageCode != 'en';
+
     return ChangeNotifierProvider(
       create: (_) => OverlayProvider(),
-      child: const _OverlayContent(),
+      // Wrap in a MaterialApp to provide Theme and Localization context to the overlay,
+      // as overlays are detached from the main app's widget tree.
+      child: Theme(
+        data: ThemeData.light(),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.light(), // Enforce explicitly light theme
+          themeMode: ThemeMode.light,
+          builder: (context, child) {
+            return Directionality(
+              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+              child: Theme(
+                data: ThemeData.light(),
+                child: child!,
+              ),
+            );
+          },
+          home: const _OverlayContent(),
+        ),
+      ),
     );
   }
 }
@@ -25,10 +51,12 @@ class _OverlayContent extends StatefulWidget {
 
 class _OverlayContentState extends State<_OverlayContent> {
   late OverlayProvider _provider;
+  late FocusNode _commissionFocusNode;
 
   @override
   void initState() {
     super.initState();
+    _commissionFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider = Provider.of<OverlayProvider>(context, listen: false);
 
@@ -39,137 +67,128 @@ class _OverlayContentState extends State<_OverlayContent> {
           _provider.loadData(event);
         }
       });
+
+      // Request focus after a short delay so the Android WindowManager has
+      // fully attached the overlay window and granted it IME focus.
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _commissionFocusNode.requestFocus();
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _commissionFocusNode.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _provider = Provider.of<OverlayProvider>(context);
+    final theme = ThemeData.light(); // Explicit Light Mode
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     // Error Snackbar
     if (_provider.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_provider.errorMessage!),
-            backgroundColor: Colors.red,
+            content: Text(_provider.errorMessage!,
+                style:
+                    textTheme.bodyMedium?.copyWith(color: colorScheme.onError)),
+            backgroundColor: colorScheme.error,
           ),
         );
       });
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'New Transaction',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.grey),
-                        onPressed: _provider.close,
-                      ),
-                    ],
-                  ),
-                  const Divider(),
+    final isAr = LocalStorageService.instance.languageCode != 'en';
 
-                  if (_provider.isLoading &&
-                      !_provider.availableWallets.isNotEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else ...[
-                    // Details
-                    _buildInfoRow('Amount', '${_provider.amount} EGP'),
-                    const SizedBox(height: 8),
-                    _buildInfoRow('Sender', _provider.sender),
-                    const SizedBox(height: 16),
+    // Localized Strings
+    final txtTitle = isAr ? 'معاملة جديدة' : 'New Transaction';
+    final txtAmount = isAr ? 'المبلغ' : 'Amount';
+    final txtSender = isAr ? 'الراسل' : 'Sender';
+    final txtWallet = isAr ? 'اختر المحفظة' : 'Select Wallet';
+    final txtCommission = isAr ? 'العمولة' : 'Commission (EGP)';
+    final txtSave = isAr ? 'تأكيد وحفظ' : 'Confirm & Save';
+    final txtUnknown = isAr ? 'غير معروف' : 'Unknown';
 
-                    // Wallet Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _provider.selectedWalletId,
-                      decoration: const InputDecoration(
-                        labelText: 'Select Wallet',
-                        border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                      items: _provider.availableWallets.map((wallet) {
-                        return DropdownMenuItem<String>(
-                          value: wallet['id'],
-                          child: Text(wallet['name'] ?? 'Unknown'),
-                        );
-                      }).toList(),
-                      onChanged: _provider.setSelectedWallet,
+    return Theme(
+      data: ThemeData.light(),
+      child: Scaffold(
+        backgroundColor:
+            const Color(0x00000000), // Transparent overlay background
+        body: Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors
+                  .white, // dynamically adapt to dark/light -> Explicit light mode
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _HeaderWidget(
+                      title: txtTitle,
+                      onClose: _provider.close,
                     ),
-                    const SizedBox(height: 12),
-
-                    // Commission Field
-                    TextFormField(
-                      autofocus: true,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Commission (EGP)',
-                        border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    Divider(height: 24, color: Colors.grey.shade300),
+                    if (!_provider.isLoading ||
+                        _provider.availableWallets.isNotEmpty) ...[
+                      _HeroAmountWidget(
+                        txtAmount: txtAmount,
+                        amount: _provider.amount.toString(),
+                        type: _provider.type,
                       ),
-                      onChanged: _provider.setCommission,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Save Button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      const SizedBox(height: 16),
+                      _SenderDisplayWidget(
+                        txtSender: txtSender,
+                        sender: _provider.sender,
                       ),
-                      onPressed: _provider.isLoading
-                          ? null
-                          : _provider.submitTransaction,
-                      child: _provider.isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                      const SizedBox(height: 16),
+                      _WalletDropdownWidget(
+                        provider: _provider,
+                        txtWallet: txtWallet,
+                        txtUnknown: txtUnknown,
+                      ),
+                      const SizedBox(height: 16),
+                      _CommissionFieldWidget(
+                        provider: _provider,
+                        txtCommission: txtCommission,
+                        focusNode: _commissionFocusNode,
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        text: txtSave,
+                        isLoading: _provider.isLoading,
+                        onPressed: _provider.submitTransaction,
+                        fullWidth: true,
+                      ),
+                    ] else
+                      const Center(
+                          child: Padding(
+                              padding: EdgeInsets.all(20),
                               child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : const Text('Confirm & Save',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
+                                  color: AppColors.primary))),
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -177,15 +196,190 @@ class _OverlayContentState extends State<_OverlayContent> {
       ),
     );
   }
+}
 
-  Widget _buildInfoRow(String label, String value) {
+// -----------------------------------------------------------------------------
+// Small Reusable Widgets
+// -----------------------------------------------------------------------------
+
+/// Header for the Overlay containing title and close button
+class _HeaderWidget extends StatelessWidget {
+  final String title;
+  final VoidCallback onClose;
+
+  const _HeaderWidget({
+    required this.title,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-        Text(value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        Row(
+          children: [
+            const Icon(Icons.account_balance_wallet, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, color: Colors.black54),
+          onPressed: onClose,
+        ),
       ],
+    );
+  }
+}
+
+/// Hero section displaying the transaction amount
+class _HeroAmountWidget extends StatelessWidget {
+  final String txtAmount;
+  final String amount;
+  final String type;
+
+  const _HeroAmountWidget({
+    required this.txtAmount,
+    required this.amount,
+    required this.type,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Use specific colors: green for credit, red for debit
+    final amountColor = (type == 'credit') ? Colors.green : Colors.red;
+
+    return Column(
+      children: [
+        Text(
+          txtAmount,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$amount EGP',
+          textAlign: TextAlign.center,
+          textDirection:
+              TextDirection.ltr, // Keep numeric correctly formatted in LTR
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: amountColor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Read-only display for the Sender information.
+class _SenderDisplayWidget extends StatelessWidget {
+  final String txtSender;
+  final String sender;
+
+  const _SenderDisplayWidget({
+    required this.txtSender,
+    required this.sender,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Replace CustomTextField with a visual read-only Container.
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100, // light grey background
+        borderRadius: BorderRadius.circular(12), // rounded border
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.person_outline,
+              color: Colors.black54), // person icon
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              sender, // displaying parsed phone number/sender
+              style: const TextStyle(
+                color: Colors.black87, // black/dark grey text
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dropdown for selecting a wallet
+class _WalletDropdownWidget extends StatelessWidget {
+  final OverlayProvider provider;
+  final String txtWallet;
+  final String txtUnknown;
+
+  const _WalletDropdownWidget({
+    required this.provider,
+    required this.txtWallet,
+    required this.txtUnknown,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomDropdown<String>(
+      value: provider.selectedWalletId,
+      labelText: txtWallet,
+      prefixIcon: const Icon(
+        Icons.account_balance_wallet,
+      ),
+      itemsList: provider.availableWallets
+          .map((wallet) => wallet['id'].toString())
+          .toList(),
+      itemLabelBuilder: (String id) {
+        final wallet = provider.availableWallets.firstWhere(
+          (w) => w['id'] == id,
+          orElse: () => {'name': txtUnknown},
+        );
+        return wallet['name'] ?? txtUnknown;
+      },
+      onChanged: provider.setSelectedWallet,
+    );
+  }
+}
+
+/// Text field for entering commission with focus management
+class _CommissionFieldWidget extends StatelessWidget {
+  final OverlayProvider provider;
+  final String txtCommission;
+  final FocusNode focusNode;
+
+  const _CommissionFieldWidget({
+    required this.provider,
+    required this.txtCommission,
+    required this.focusNode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomTextField(
+      focusNode: focusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      labelText: txtCommission,
+      prefixIcon: const Icon(Icons
+          .attach_money), // Use prefixIcon instead of suffixIcon for RTL right alignment
+      onChanged: provider.setCommission,
     );
   }
 }

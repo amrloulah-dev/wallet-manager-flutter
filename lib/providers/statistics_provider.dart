@@ -204,4 +204,47 @@ class StatisticsProvider extends ChangeNotifier {
       await fetchDashboardStats(forceRefresh: true);
     }
   }
+
+  void addTransactionOptimistically(Map<String, dynamic> txData) {
+    if (_dashboardSummary == null || _todayStats == null) return;
+
+    final double amount = ((txData['amount'] ?? 0.0) as num).toDouble();
+    final double commission = ((txData['commission'] ?? 0.0) as num).toDouble();
+    final String? type = txData['type'] as String?;
+
+    // 1. Update Dashboard Summary
+    double newTotalReceived = _dashboardSummary!.totalReceivedAmount;
+    double newTotalSent = _dashboardSummary!.totalSentAmount;
+    int newReceiveCount = _dashboardSummary!.receiveCount;
+    int newSendCount = _dashboardSummary!.sendCount;
+
+    if (type == 'credit') {
+      newTotalReceived += amount;
+      newReceiveCount += 1;
+    } else if (type == 'debit') {
+      newTotalSent += amount;
+      newSendCount += 1;
+    }
+
+    _dashboardSummary = _dashboardSummary!.copyWith(
+      totalTransactions: _dashboardSummary!.totalTransactions + 1,
+      totalTransactionsToday: _dashboardSummary!.totalTransactionsToday + 1,
+      totalCommission: _dashboardSummary!.totalCommission + commission,
+      totalCommissionToday:
+          _dashboardSummary!.totalCommissionToday + commission,
+      totalReceivedAmount: newTotalReceived,
+      totalSentAmount: newTotalSent,
+      receiveCount: newReceiveCount,
+      sendCount: newSendCount,
+    );
+
+    // 2. Update Today Stats
+    _todayStats = _todayStats!.copyWith(
+      transactionCount: _todayStats!.transactionCount + 1,
+      totalCommission: _todayStats!.totalCommission + commission,
+      totalAmount: _todayStats!.totalAmount + amount,
+    );
+
+    notifyListeners();
+  }
 }

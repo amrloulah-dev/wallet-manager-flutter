@@ -209,62 +209,28 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           _trySelectWallet(walletProvider.wallets);
         }
 
-        return CustomDropdown<WalletModel>(
-          value: _selectedWallet,
-          hint: 'اختر المحفظة لإجراء المعاملة',
-          items: walletProvider.wallets.map((WalletModel wallet) {
-            return DropdownMenuItem<WalletModel>(
-              value: wallet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-          selectedItemBuilder: (BuildContext context) {
-            return walletProvider.wallets.map((WalletModel wallet) {
-              return Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-              );
-            }).toList();
-          },
-          onChanged: (wallet) {
-            setState(() {
-              _selectedWallet = wallet;
-              _preSelectedWalletId =
-                  null; // Clear pre-selection after manual choice
-              _updateTotal(); // Recalculate fees when wallet changes
-            });
-          },
-          validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
-          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-        );
+       return CustomDropdown<WalletModel>(
+  value: _selectedWallet,
+  hint: 'اختر المحفظة لإجراء المعاملة',
+  fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+  
+  // 1. تمرير قائمة المحافظ (Data) مباشرة
+  itemsList: walletProvider.wallets,
+  
+  // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
+  itemLabelBuilder: (WalletModel wallet) {
+    return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+  },
+  
+  onChanged: (wallet) {
+    setState(() {
+      _selectedWallet = wallet;
+      _preSelectedWalletId = null; // Clear pre-selection after manual choice
+      _updateTotal(); // Recalculate fees when wallet changes
+    });
+  },
+  validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
+);
       },
     );
   }

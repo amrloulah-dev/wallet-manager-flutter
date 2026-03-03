@@ -37,4 +37,18 @@ class DailyStatsModel {
       totalAmount: 0.0,
     );
   }
+
+  DailyStatsModel copyWith({
+    String? date,
+    int? transactionCount,
+    double? totalCommission,
+    double? totalAmount,
+  }) {
+    return DailyStatsModel(
+      date: date ?? this.date,
+      transactionCount: transactionCount ?? this.transactionCount,
+      totalCommission: totalCommission ?? this.totalCommission,
+      totalAmount: totalAmount ?? this.totalAmount,
+    );
+  }
 }

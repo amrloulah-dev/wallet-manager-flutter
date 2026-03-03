@@ -15,18 +15,20 @@ class TextNormalizer {
     // Convert to lower case
     text = text.toLowerCase();
 
-    // 2. Clean Numbers
+    // 2. Clean Whitespaces & Newlines
+    // Replace all line breaks and multiple spaces with a single space
+    // to prevent Regex matching issues.
+    text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    // 3. Clean Numbers
     // Convert Arabic/Eastern numerals to English/Western numerals
     text = _convertArabicNumeralsToEnglish(text);
 
-    // Remove commas from numbers is tricky if we do it globally,
-    // but usually 1,000 becomes 1000.
-    // We strictly want to remove commas that are part of numbers.
-    // However, the requirement says "Remove commas , from numbers".
-    // A simple approach is to remove all commas if they are between digits,
-    // or just remove all commas if the text structure allows.
-    // Given SMS context, removing commas is generally safe for amount parsing.
-    text = text.replaceAll(',', '');
+    // 4. Clean Thousands Separators
+    // Remove commas ONLY if they act as a thousands separator
+    // (followed by exactly 3 digits). This preserves decimal numbers like 100,50.
+    // The lookahead (?=\d{3}(?!\d)) ensures the comma is followed by exactly 3 digits.
+    text = text.replaceAll(RegExp(r',(?=\d{3}(?!\d))'), '');
 
     return text;
   }

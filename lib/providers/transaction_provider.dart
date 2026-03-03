@@ -323,4 +323,41 @@ class TransactionProvider extends ChangeNotifier {
     _status = TransactionStatus.idle;
     notifyListeners();
   }
+
+  void insertTransactionLocally(Map<String, dynamic> data) {
+    if (_currentStoreId == null) return;
+    if (data['walletId'] == null ||
+        data['amount'] == null ||
+        data['type'] == null) return;
+
+    final type = data['type'] as String; // 'credit' | 'debit'
+    String transactionType = 'receive';
+    if (type == 'debit') {
+      transactionType = 'send';
+    }
+
+    final newTransaction = TransactionModel(
+      transactionId:
+          DateTime.now().millisecondsSinceEpoch.toString(), // Temp ID
+      storeId: _currentStoreId!,
+      walletId: data['walletId'] as String,
+      transactionType: transactionType,
+      customerPhone: data['sender'] as String?,
+      amount: (data['amount'] as num).toDouble(),
+      commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+      transactionDate: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      createdBy: _currentUser?.fullName ?? 'SMS Auto',
+      createdById: _currentUser?.userId,
+      createdByName: _currentUser?.fullName,
+      creatorRole: _currentUser?.role,
+      isDeleted: false,
+      notes: 'Automated via SMS',
+    );
+
+    // Insert at the top of the list
+    _transactions.insert(0, newTransaction);
+    _calculateSummary();
+    notifyListeners();
+  }
 }

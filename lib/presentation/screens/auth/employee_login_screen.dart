@@ -235,57 +235,16 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               prefixIcon: const Icon(Icons.person_outline),
                               fillColor: AppColors.primary
                                   .withAlpha((0.05 * 255).round()),
-                              items: employees.map((e) {
-                                return DropdownMenuItem(
-                                  value: e,
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12, horizontal: 12),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withAlpha((0.05 * 255).round()),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: AppColors.primary
-                                              .withAlpha((0.3 * 255).round()),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              e.fullName,
-                                              style: AppTextStyles.bodyLarge
-                                                  .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                              selectedItemBuilder: (context) {
-                                return employees.map((e) {
-                                  return Container(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      e.fullName,
-                                      style: AppTextStyles.bodyLarge.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary(context),
-                                      ),
-                                    ),
-                                  );
-                                }).toList();
-                              },
+
+                              // 1. نمرر قائمة الموظفين مباشرة (بدل ويدجت الـ items المعقدة)
+                              itemsList: employees,
+
+                              // 2. نخبر الويدجت كيف تقرأ النص من الموديل (هنا هو fullName)
+                              itemLabelBuilder: (UserModel employee) =>
+                                  employee.fullName,
+
+                              // تم حذف selectedItemBuilder لأن الويدجت الجديدة تتكفل به داخلياً
+
                               onChanged: (val) {
                                 setState(() => _selectedEmployee = val);
                               },

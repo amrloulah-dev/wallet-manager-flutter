@@ -10,8 +10,12 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/route_constants.dart';
 import 'data/repositories/wallet_repository.dart';
 import 'data/repositories/debt_repository.dart';
+import 'data/repositories/transaction_repository.dart';
+import 'data/repositories/stats_repository.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/debt_provider.dart';
+import 'providers/transaction_provider.dart';
+import 'providers/statistics_provider.dart';
 import 'l10n/arb/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
@@ -19,6 +23,7 @@ import 'routes/app_router.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/auth/license_expired_screen.dart';
 import 'core/services/analytics_service.dart';
+import 'package:walletmanager/core/widgets/global_overlay_listener.dart'; // Added
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -51,35 +56,51 @@ class MyApp extends StatelessWidget {
                   authProvider: auth, debtRepository: DebtRepository()))
             ..updateAuthState(auth),
         ),
+        ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
+          create: (_) => TransactionProvider(),
+          update: (_, auth, prev) => prev!..updateAuthState(auth),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
+          create: (_) => StatisticsProvider(
+            walletRepository: WalletRepository(),
+            transactionRepository: TransactionRepository(),
+            debtRepository: DebtRepository(),
+            statsRepository: StatsRepository(),
+          ),
+          update: (_, auth, previous) =>
+              previous!..setStoreId(auth.currentStoreId),
+        ),
       ],
-      child: Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>(
-        builder: (context, authProvider, themeProvider, localizationProvider,
-            child) {
-          return MaterialApp(
-            navigatorKey:
-                NavigationService.navigatorKey, // Set the navigatorKey
-            title: 'Wallet Manager',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
-            locale: localizationProvider.locale,
-            supportedLocales: const [Locale('ar'), Locale('en')],
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            builder: BotToastInit(), //1. call BotToastInit
-            navigatorObservers: [
-              BotToastNavigatorObserver(),
-              AnalyticsService.observer,
-            ], //2. registered route observer
-            onGenerateRoute: AppRouter.generateRoute,
-            home: const AuthCheckWrapper(),
-          );
-        },
+      child: GlobalOverlayListener(
+        child: Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>(
+          builder: (context, authProvider, themeProvider, localizationProvider,
+              child) {
+            return MaterialApp(
+              navigatorKey:
+                  NavigationService.navigatorKey, // Set the navigatorKey
+              title: 'Wallet Manager',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              locale: localizationProvider.locale,
+              supportedLocales: const [Locale('ar'), Locale('en')],
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              builder: BotToastInit(), //1. call BotToastInit
+              navigatorObservers: [
+                BotToastNavigatorObserver(),
+                AnalyticsService.observer,
+              ], //2. registered route observer
+              onGenerateRoute: AppRouter.generateRoute,
+              home: const AuthCheckWrapper(),
+            );
+          },
+        ),
       ),
     );
   }

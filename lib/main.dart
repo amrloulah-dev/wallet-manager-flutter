@@ -4,6 +4,7 @@ import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.d
 import 'app.dart';
 import 'data/services/firebase_service.dart';
 import 'data/services/local_storage_service.dart';
+import 'core/services/sms_service.dart';
 
 void main() async {
   // Ensure all bindings are initialized before async operations.
@@ -16,7 +17,12 @@ void main() async {
     // Step 2: Initialize Local Storage.
     await LocalStorageService().initialize();
 
-    // Step 3: Run the application.
+    // Step 3: Check and initialize SMS automation if enabled
+    if (LocalStorageService.instance.isSmsAutomationEnabled) {
+      await SmsService().init();
+    }
+
+    // Step 4: Run the application.
     runApp(const MyApp());
   } catch (e) {
     // Step 4: Handle initialization errors gracefully.
@@ -64,8 +70,30 @@ class TransactionOverlayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Read cached values from LocalStorage. Fallback to light and 'ar' if not found.
+    final bool isDark = LocalStorageService.instance.isDarkMode;
+    final String lang = LocalStorageService.instance.languageCode;
+    final TextDirection direction =
+        lang == 'ar' ? TextDirection.rtl : TextDirection.ltr;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData.light(useMaterial3: true).copyWith(
+        primaryColor: Colors
+            .blue, // Using a generic blue as fallback, or use AppColors.primary if available
+        cardColor: Colors.white,
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        primaryColor: Colors.blueAccent,
+        cardColor: const Color(0xFF1E1E1E),
+      ),
+      builder: (context, child) {
+        return Directionality(
+          textDirection: direction,
+          child: child!,
+        );
+      },
       home: const TransactionOverlayScreen(),
     );
   }
