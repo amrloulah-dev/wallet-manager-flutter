@@ -540,6 +540,42 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
     final bool willExceed = dailyExceeded || monthlyExceeded;
 
+    final isInstaPay = _selectedWallet!.walletType == 'instapay';
+
+    // Default logic
+    double dailyPercentage =
+        limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0;
+    double monthlyPercentage = limits.monthlyLimit > 0
+        ? (newMonthlyUsed / limits.monthlyLimit) * 100
+        : 0;
+
+    String? customDailyText;
+    String? customMonthlyText;
+
+    if (!isSend && !isInstaPay) {
+      final availableDaily = _selectedWallet!.availableToReceiveDaily;
+      final newAvailableDaily =
+          availableDaily >= amount ? availableDaily - amount : 0.0;
+      if (limits.dailyLimit > 0) {
+        dailyPercentage = (1.0 - (newAvailableDaily / limits.dailyLimit)) * 100;
+      }
+      customDailyText =
+          'المتاح: ${NumberFormatter.formatAmount(newAvailableDaily)}';
+
+      final availableMonthly = _selectedWallet!.availableToReceiveMonthly;
+      final newAvailableMonthly =
+          availableMonthly >= amount ? availableMonthly - amount : 0.0;
+      if (limits.monthlyLimit > 0) {
+        monthlyPercentage =
+            (1.0 - (newAvailableMonthly / limits.monthlyLimit)) * 100;
+      }
+      customMonthlyText =
+          'المتاح: ${NumberFormatter.formatAmount(newAvailableMonthly)}';
+    }
+
+    final dailyLabel = isSend ? 'إرسال يومي' : 'استقبال يومي';
+    final monthlyLabel = isSend ? 'إرسال شهري' : 'استقبال شهري';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -573,22 +609,21 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           ),
           const Divider(height: 20),
           WalletLimitBar(
-            label: 'الحد اليومي (بعد المعاملة)',
+            label: dailyLabel,
             used: newUsed,
             limit: limits.dailyLimit,
-            percentage:
-                limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0,
+            percentage: dailyPercentage,
             warningLevel: dailyExceeded ? 'red' : 'green',
+            customAmountText: customDailyText,
           ),
           const SizedBox(height: 16),
           WalletLimitBar(
-            label: 'الحد الشهري (بعد المعاملة)',
+            label: monthlyLabel,
             used: newMonthlyUsed,
             limit: limits.monthlyLimit,
-            percentage: limits.monthlyLimit > 0
-                ? (newMonthlyUsed / limits.monthlyLimit) * 100
-                : 0,
+            percentage: monthlyPercentage,
             warningLevel: monthlyExceeded ? 'red' : 'green',
+            customAmountText: customMonthlyText,
           ),
           if (willExceed)
             Padding(

@@ -120,7 +120,6 @@ class _WalletCardState extends State<WalletCard> {
 
   Widget _buildLimits() {
     final sendLimits = widget.wallet.getLimits();
-    final receiveLimits = widget.wallet.getReceiveLimits();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,9 +134,17 @@ class _WalletCardState extends State<WalletCard> {
         const SizedBox(height: 8),
         WalletLimitBar(
           label: 'استقبال يومي',
-          used: receiveLimits.dailyUsed,
-          limit: receiveLimits.dailyLimit,
-          percentage: receiveLimits.dailyPercentage,
+          used: widget.wallet.receiveLimits.dailyLimit > 0
+              ? (widget.wallet.receiveLimits.dailyLimit -
+                  widget.wallet.availableToReceiveDaily)
+              : 0.0,
+          limit: widget.wallet.receiveLimits.dailyLimit,
+          percentage: widget.wallet.receiveLimits.dailyLimit > 0
+              ? (1.0 -
+                      (widget.wallet.availableToReceiveDaily /
+                          widget.wallet.receiveLimits.dailyLimit)) *
+                  100
+              : 0,
           warningLevel:
               'green', // This should be calculated in the model ideally
         ),

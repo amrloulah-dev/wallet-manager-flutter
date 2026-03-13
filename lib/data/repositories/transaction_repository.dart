@@ -43,12 +43,6 @@ class TransactionRepository {
         final walletSnap = await tx.get(walletRef);
         if (!walletSnap.exists) throw NotFoundException('Wallet');
 
-        if (transaction.isDeposit) {
-          tx.update(
-              walletRef, {'balance': FieldValue.increment(transaction.amount)});
-          return;
-        }
-
         var wallet = WalletModel.fromFirestore(walletSnap);
         final now = Timestamp.now();
 
@@ -66,6 +60,23 @@ class TransactionRepository {
                   validationWallet.receiveLimits.copyWith(monthlyUsed: 0));
         }
 
+        if (transaction.isReceive || transaction.isDeposit) {
+          if (transaction.amount > validationWallet.availableToReceiveMonthly) {
+            _validateLimit(validationWallet, force,
+                'عفواً، لا يمكن استقبال هذا المبلغ. سيتجاوز رصيد المحفظة أو الحد الشهري المسموح به.');
+          }
+          if (transaction.amount > validationWallet.availableToReceiveDaily) {
+            _validateLimit(validationWallet, force,
+                'عفواً، هذا المبلغ يتخطى الحد المتاح للاستقبال اليومي.');
+          }
+        }
+
+        if (transaction.isDeposit) {
+          tx.update(
+              walletRef, {'balance': FieldValue.increment(transaction.amount)});
+          return;
+        }
+
         if (transaction.isSend) {
           if (validationWallet.balance < transaction.amount) {
             throw ValidationException(
@@ -81,20 +92,6 @@ class TransactionRepository {
           // Rule 3: Monthly Aggregate
           if (validationWallet.getLimits().monthlyUsed + transaction.amount >
               validationWallet.getLimits().monthlyLimit) {
-            _validateLimit(
-                validationWallet, force, 'تم تجاوز الحد الشهري لهذه المحفظة.');
-          }
-        } else if (transaction.isReceive) {
-          // Rule 1: Transaction Cap
-          if (transaction.amount >
-              validationWallet.getReceiveLimits().dailyLimit) {
-            _validateLimit(validationWallet, force,
-                'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
-          }
-          // Rule 3: Monthly Aggregate
-          if (validationWallet.getReceiveLimits().monthlyUsed +
-                  transaction.amount >
-              validationWallet.getReceiveLimits().monthlyLimit) {
             _validateLimit(
                 validationWallet, force, 'تم تجاوز الحد الشهري لهذه المحفظة.');
           }

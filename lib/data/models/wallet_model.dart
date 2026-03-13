@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -336,6 +337,40 @@ class WalletModel {
       default:
         return FontAwesomeIcons.wallet;
     }
+  }
+
+  double get availableToReceiveMonthly {
+    // 1. Standard flow limit (Limit - Used this month)
+    double flowRemaining =
+        receiveLimits.monthlyLimit - receiveLimits.monthlyUsed;
+    if (flowRemaining < 0) flowRemaining = 0;
+
+    // 2. Capacity limit (Limit - Current Balance)
+    // Apply only to e-wallets, NOT instapay
+    if (walletType != 'instapay') {
+      double capacityRemaining = receiveLimits.monthlyLimit - balance;
+      if (capacityRemaining < 0) capacityRemaining = 0;
+
+      // Return the stricter (smaller) limit
+      return min(flowRemaining, capacityRemaining);
+    }
+
+    // If InstaPay, just return flow limit
+    return flowRemaining;
+  }
+
+  double get availableToReceiveDaily {
+    double flowRemaining = receiveLimits.dailyLimit - receiveLimits.dailyUsed;
+    if (flowRemaining < 0) flowRemaining = 0;
+
+    if (walletType != 'instapay') {
+      // Capacity is always bound by the MONTHLY limit, not daily
+      double capacityRemaining = receiveLimits.monthlyLimit - balance;
+      if (capacityRemaining < 0) capacityRemaining = 0;
+
+      return min(flowRemaining, capacityRemaining);
+    }
+    return flowRemaining;
   }
 
   bool canSendAmount(double amount) {

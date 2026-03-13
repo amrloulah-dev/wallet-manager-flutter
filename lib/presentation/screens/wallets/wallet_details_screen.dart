@@ -308,9 +308,37 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       return 'green';
     }
 
-    final dailyReceiveWarningLevel = getWarningLevel(limits.dailyPercentage);
-    final monthlyReceiveWarningLevel =
-        getWarningLevel(limits.monthlyPercentage);
+    final isInstaPay = wallet.walletType == 'instapay';
+
+    // Daily Logic
+    double dailyPercentage = limits.dailyPercentage;
+    String? customDailyText;
+
+    // Monthly Logic
+    double monthlyPercentage = limits.monthlyPercentage;
+    String? customMonthlyText;
+
+    if (!isInstaPay) {
+      // Capacity calculations for non-InstaPay
+      final dailyAvailable = wallet.availableToReceiveDaily;
+      final dailyLimit = limits.dailyLimit;
+      if (dailyLimit > 0) {
+        dailyPercentage = (1.0 - (dailyAvailable / dailyLimit)) * 100;
+      }
+      customDailyText =
+          'المتاح: ${NumberFormatter.formatAmount(dailyAvailable)}';
+
+      final monthlyAvailable = wallet.availableToReceiveMonthly;
+      final monthlyLimit = limits.monthlyLimit;
+      if (monthlyLimit > 0) {
+        monthlyPercentage = (1.0 - (monthlyAvailable / monthlyLimit)) * 100;
+      }
+      customMonthlyText =
+          'المتاح: ${NumberFormatter.formatAmount(monthlyAvailable)}';
+    }
+
+    final dailyReceiveWarningLevel = getWarningLevel(dailyPercentage);
+    final monthlyReceiveWarningLevel = getWarningLevel(monthlyPercentage);
 
     return Card(
       elevation: 1,
@@ -322,16 +350,18 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               label: AppLocalizations.of(context)!.dailyLimitSimple,
               used: limits.dailyUsed,
               limit: limits.dailyLimit,
-              percentage: limits.dailyPercentage,
+              percentage: dailyPercentage,
               warningLevel: dailyReceiveWarningLevel,
+              customAmountText: customDailyText,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
               label: AppLocalizations.of(context)!.monthlyLimitSimple,
               used: limits.monthlyUsed,
               limit: limits.monthlyLimit,
-              percentage: limits.monthlyPercentage,
+              percentage: monthlyPercentage,
               warningLevel: monthlyReceiveWarningLevel,
+              customAmountText: customMonthlyText,
             ),
             if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
