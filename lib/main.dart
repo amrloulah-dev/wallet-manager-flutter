@@ -5,6 +5,7 @@ import 'app.dart';
 import 'data/services/firebase_service.dart';
 import 'data/services/local_storage_service.dart';
 import 'core/services/sms_service.dart';
+import 'core/services/background_service.dart';
 
 void main() async {
   // Ensure all bindings are initialized before async operations.
@@ -19,22 +20,53 @@ void main() async {
 
     // Step 3: Check and initialize SMS automation if enabled
     if (LocalStorageService.instance.isSmsAutomationEnabled) {
-      await SmsService().init();
+      await SmsService().init(); // Permissions only
     }
 
-    // Step 4: Run the application.
+    // Step 4: Configure the Guardian Isolate (background service).
+    // This registers the onStart handler. The service auto-starts
+    // based on the `autoStart: true` configuration and persists
+    // across app kills.
+    await initializeBackgroundService();
+
+    // Add global error catcher
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+    };
+
+    // Step 5: Run the application.
     runApp(const MyApp());
-  } catch (e) {
-    // Step 4: Handle initialization errors gracefully.
-    // In a real production app, you might want to log this to a remote service.
+  } catch (e, stackTrace) {
+    debugPrint("🚨 INIT ERROR: $e");
+    debugPrint("🚨 STACKTRACE: $stackTrace");
     runApp(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
-          body: Center(
-            child: Text(
-              'An error occurred while initializing the app.\nPlease try again later.',
-              style: TextStyle(fontSize: 18, color: Colors.red),
-              textAlign: TextAlign.center,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('🚨 Initialization Error',
+                      style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  const Text('Error:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(e.toString(),
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.black)),
+                  const SizedBox(height: 16),
+                  const Text('Stack Trace:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(stackTrace.toString(),
+                      style:
+                          const TextStyle(fontSize: 10, color: Colors.grey)),
+                ],
+              ),
             ),
           ),
         ),
@@ -48,15 +80,12 @@ void main() async {
 // ==========================================
 @pragma("vm:entry-point")
 void overlayMain() async {
-  debugPrint("🟢 OVERLAY ENTRY POINT STARTED!");
   WidgetsFlutterBinding.ensureInitialized();
 
   // 1. Initialize Firebase (Crucial for Overlay Provider/Repo)
   try {
     await Firebase.initializeApp();
-    debugPrint("🟢 Firebase Initialized in Overlay");
   } catch (e) {
-    debugPrint("⚠️ Firebase Init Error in Overlay: $e");
   }
 
   // 2. Initialize Storage (Crucial for reading wallet data)

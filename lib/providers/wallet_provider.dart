@@ -215,11 +215,8 @@ class WalletProvider extends ChangeNotifier {
 
       // Cache the wallets locally for SMS Automation (Overlay & Settings)
       try {
-        await LocalStorageService().cacheWalletLiteList(_wallets);
-        debugPrint(">>> Wallet Lite List Cached: ${_wallets.length} wallets");
-      } catch (e) {
-        debugPrint(">>> Error caching wallet lite list: $e");
-      }
+        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
+      } catch (e) {}
     } on ServerException catch (e) {
       _setError(e.message);
     } catch (e) {
@@ -319,6 +316,8 @@ class WalletProvider extends ChangeNotifier {
       );
 
       await _walletRepository.createWallet(newWallet);
+      _wallets.add(newWallet);
+      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       appEvents.fireWalletsChanged();
       return true;
     } on AppException catch (e) {
@@ -336,6 +335,7 @@ class WalletProvider extends ChangeNotifier {
       await _validateUserAndPermission((p) => p.editWallet);
 
       await _walletRepository.updateWallet(walletId, data);
+      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       appEvents.fireWalletsChanged();
       return true;
     } on ServerException catch (e) {
@@ -370,6 +370,7 @@ class WalletProvider extends ChangeNotifier {
 
       await _transactionRepository.createTransaction(newTransaction);
       // This operation changes both wallets and transactions
+      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       appEvents.fireWalletsChanged();
       appEvents.fireTransactionsChanged();
       return true;
@@ -388,6 +389,8 @@ class WalletProvider extends ChangeNotifier {
       await _validateUserAndPermission((p) => p.editWallet);
 
       await _walletRepository.deleteWallet(walletId);
+      _wallets.removeWhere((w) => w.walletId == walletId);
+      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       appEvents.fireWalletsChanged();
       _setStatus(WalletStatusState.loaded);
       return true;

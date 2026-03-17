@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -52,6 +53,7 @@ class _OverlayContent extends StatefulWidget {
 class _OverlayContentState extends State<_OverlayContent> {
   late OverlayProvider _provider;
   late FocusNode _commissionFocusNode;
+  StreamSubscription? _overlaySubscription;
 
   @override
   void initState() {
@@ -60,11 +62,18 @@ class _OverlayContentState extends State<_OverlayContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider = Provider.of<OverlayProvider>(context, listen: false);
 
-      // Listen to overlay stream for data
-      FlutterOverlayWindow.overlayListener.listen((event) {
-        debugPrint("Overlay Event Received: $event");
-        if (event != null) {
-          _provider.loadData(event);
+      // -----------------------------------------------------------------------
+      // STREAM LISTENER — Parse every overlay event through ingestNewEvent().
+      // This guarantees a full state reset before applying new SMS data,
+      // even when the Flutter engine is kept warm between activations.
+      // -----------------------------------------------------------------------
+      _overlaySubscription =
+          FlutterOverlayWindow.overlayListener.listen((event) {
+
+        if (event != null && event is Map) {
+          _provider.ingestNewEvent(event);
+        } else {
+
         }
       });
 
@@ -80,6 +89,7 @@ class _OverlayContentState extends State<_OverlayContent> {
 
   @override
   void dispose() {
+    _overlaySubscription?.cancel();
     _commissionFocusNode.dispose();
     super.dispose();
   }

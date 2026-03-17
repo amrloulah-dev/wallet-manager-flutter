@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
             create: (_) =>
                 EmployeeProvider(employeeRepository: EmployeeRepository())),
         ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
+          lazy: false,
           create: (context) => WalletProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false),
               walletRepository: WalletRepository()),

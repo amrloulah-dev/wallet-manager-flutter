@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'dart:isolate';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 
@@ -11,7 +12,7 @@ class OverlayProvider with ChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
 
   bool _isLoading = false;
-  bool _isInitialized = false;
+  bool _isStorageInitialized = false; // Only guards one-time storage init
   String? _errorMessage;
 
   // Transaction Data
@@ -32,67 +33,80 @@ class OverlayProvider with ChangeNotifier {
   double get commission => _commission;
   List<Map<String, dynamic>> get availableWallets => _availableWallets;
 
-  /// Loads data passed from the background service
-  Future<void> loadData(dynamic arguments) async {
-    if (arguments == null) return;
+  // ---------------------------------------------------------------------------
+  // RESET — Wipes all transaction-specific fields to prevent stale state.
+  // Called at the start of every new overlay event.
+  // ---------------------------------------------------------------------------
+  void reset() {
+    _amount = 0.0;
+    _sender = '';
+    _type = '';
+    _selectedWalletId = null;
+    _commission = 0.0;
+    _errorMessage = null;
+    _isLoading = false;
+    // NOTE: _availableWallets and _isStorageInitialized are NOT reset.
+    // The wallet list is session-level cache and does not change per-SMS.
+  }
 
-    // Deduplication Check: Prevent UI reset if the same event is received twice
-    final incomingAmount = (arguments['amount'] as num?)?.toDouble() ?? 0.0;
-    final incomingSender = arguments['sender']?.toString() ?? 'Unknown';
+  // ---------------------------------------------------------------------------
+  // INGEST NEW EVENT — The single entry-point for every overlay activation.
+  //   1. reset()  → guarantees no stale data
+  //   2. parse    → reads new SMS fields
+  //   3. init     → loads wallets (only once per engine lifetime)
+  //   4. select   → picks the correct wallet
+  //   5. notify   → rebuilds UI
+  // ---------------------------------------------------------------------------
+  Future<void> ingestNewEvent(Map<dynamic, dynamic> data) async {
+    reset();
 
-    if (_amount == incomingAmount && _sender == incomingSender) {
-      debugPrint(
-          ">>> OverlayProvider: Duplicate event received. Ignoring to prevent UI reset.");
-      return;
-    }
-
-    // Set immediately to prevent race conditions before async operations
-    if (arguments is Map) {
-      _amount = incomingAmount;
-      _sender = incomingSender;
-    }
-
-    if (_isInitialized) return;
+    // --- Parse incoming SMS data ---
+    _amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+    _sender = data['sender']?.toString() ?? 'Unknown';
+    _type   = data['type']?.toString()   ?? 'credit';
 
     _isLoading = true;
-    notifyListeners();
+    notifyListeners(); // Show loading UI immediately with new amount/sender
 
     try {
-      // 1. Initialize Local Storage (Overlay is separate engine)
-      await _localStorageService.initialize();
-
-      // 2. Load Cached Wallets
-      _availableWallets = _localStorageService.getCachedWalletLiteList();
-
-      if (arguments is Map) {
-        // 'credit' (Receive) or 'debit' (Send)
-        _type = arguments['type'] as String? ?? 'credit';
-
-        // Smart Selection Logic
-        String? passedId = arguments['walletId'] as String?;
-        if (passedId != null && passedId.trim().isEmpty) passedId = null;
-
-        // Check if passedId actually exists in our list
-        bool exists = _availableWallets.any((w) => w['id'] == passedId);
-
-        if (exists) {
-          _selectedWalletId = passedId;
-        } else if (_availableWallets.isNotEmpty) {
-          // FALLBACK: Select the first wallet if match fails or id is null
-          // This prevents crash when Dropdown receives a value not in items
-          _selectedWalletId = _availableWallets.first['id'];
-        } else {
-          // No wallets available at all.
-          _selectedWalletId = null;
-        }
+      // One-time storage + wallet cache init
+      if (!_isStorageInitialized) {
+        await _localStorageService.initialize();
+        _isStorageInitialized = true;
       }
 
-      _isInitialized = true;
+      // Force the Isolate to flush its RAM and read the latest disk state from the Main App
+      await LocalStorageService.instance.reloadDisk();
+
+      // Refresh wallet list on every event (cheap local read)
+      _availableWallets = LocalStorageService.instance.getCachedWalletLiteList();
+
+      // Smart wallet selection
+      String? passedId = data['walletId']?.toString();
+      if (passedId != null && passedId.trim().isEmpty) passedId = null;
+
+      final bool exists = _availableWallets.any((w) => w['id'] == passedId);
+
+      if (exists) {
+        _selectedWalletId = passedId;
+      } else {
+        _selectedWalletId = null; // Prevent Dropdown assertion crashes
+      }
     } catch (e) {
       _errorMessage = 'Failed to load data: $e';
+
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// @deprecated — Use [ingestNewEvent] instead. Kept for backward compat.
+  @Deprecated('Use ingestNewEvent() which properly resets stale state.')
+  Future<void> loadData(dynamic arguments) async {
+    if (arguments == null) return;
+    if (arguments is Map) {
+      await ingestNewEvent(arguments);
     }
   }
 
@@ -232,25 +246,37 @@ class OverlayProvider with ChangeNotifier {
       // 5. Commit Batch
       await batch.commit();
 
-      // 6. Send directly to Main App Isolate via Native Port
-      final SendPort? sendPort =
-          IsolateNameServer.lookupPortByName('overlay_tx_port');
+      // 6. Save to Vault
+      final prefs = await SharedPreferences.getInstance();
+      
+      // CAUTION: Ensure variables like txId and storeId are actually defined in this scope!
+      final txData = jsonEncode({
+        'transactionId': txId, // Check if this exists
+        'amount': _amount,
+        'commission': _commission,
+        'type': _type,
+        'walletId': _selectedWalletId,
+        'sender': _sender,
+        'transactionDate': now.toDate().toIso8601String(),
+        'storeId': storeId, // Prevent null crash
+        'paymentStatus': 'paid',
+        'customerName': '',
+      });
+
+      await prefs.setString('pending_overlay_tx', txData);
+
+      // 7. Send Ping
+      final SendPort? sendPort = IsolateNameServer.lookupPortByName('main_app_port');
+      
       if (sendPort != null) {
-        sendPort.send({
-          'amount': _amount,
-          'commission': _commission,
-          'type': _type,
-          'walletId': _selectedWalletId,
-          'sender': _sender,
-        });
-        debugPrint(">>> Sent data via IsolateNameServer");
-      } else {
-        debugPrint(">>> Main App port not found (App might be closed)");
+        sendPort.send('update_ui');
       }
-      // 7. Close Overlay safely
+
+      // 8. Close Overlay
       await FlutterOverlayWindow.closeOverlay();
+
     } catch (e) {
-      debugPrint(">>> OverlayProvider Error saving batch: $e");
+
       _errorMessage = 'Error saving: ${e.toString()}';
     } finally {
       if (hasListeners) {

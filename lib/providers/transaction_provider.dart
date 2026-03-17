@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,7 +7,6 @@ import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
-import '../data/models/user_permissions.dart'; // Added
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 import '../core/services/analytics_service.dart';
@@ -41,6 +39,7 @@ class TransactionProvider extends ChangeNotifier {
   // Cache
   List<TransactionModel>? _cachedTransactions;
   DateTime? _cacheTimestamp;
+  DateTime? _lastOptimisticUpdate;
 
   StreamSubscription? _dataChangedSubscription;
   bool _isDisposed = false;
@@ -123,6 +122,12 @@ class TransactionProvider extends ChangeNotifier {
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
+
+    if (!forceRefresh &&
+        _lastOptimisticUpdate != null &&
+        DateTime.now().difference(_lastOptimisticUpdate!).inSeconds < 10) {
+      return;
+    }
 
     final now = DateTime.now();
     if (!forceRefresh &&
@@ -325,39 +330,53 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   void insertTransactionLocally(Map<String, dynamic> data) {
-    if (_currentStoreId == null) return;
-    if (data['walletId'] == null ||
-        data['amount'] == null ||
-        data['type'] == null) return;
+    try {
+      if (_currentStoreId == null) return;
+      if (data['walletId'] == null ||
+          data['amount'] == null ||
+          data['type'] == null) return;
 
-    final type = data['type'] as String; // 'credit' | 'debit'
-    String transactionType = 'receive';
-    if (type == 'debit') {
-      transactionType = 'send';
+      final type = data['type'] as String; // 'credit' | 'debit'
+      String transactionType = 'receive';
+      if (type == 'debit') {
+        transactionType = 'send';
+      }
+
+      // Parse the new fields passed via Vault + Ping
+      final transactionId = data['transactionId'] as String? ?? 
+          DateTime.now().millisecondsSinceEpoch.toString();
+          
+      DateTime parsedDate = DateTime.now();
+      if (data['transactionDate'] != null) {
+        parsedDate = DateTime.tryParse(data['transactionDate'].toString()) ?? DateTime.now();
+      }
+      
+      final storeId = data['storeId'] as String? ?? _currentStoreId!;
+
+      final newTransaction = TransactionModel(
+        transactionId: transactionId,
+        storeId: storeId,
+        walletId: data['walletId'] as String,
+        transactionType: transactionType,
+        customerPhone: data['sender'] as String?,
+        amount: (data['amount'] as num).toDouble(),
+        commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+        transactionDate: Timestamp.fromDate(parsedDate),
+        createdAt: Timestamp.now(),
+        createdBy: _currentUser?.fullName ?? 'SMS Auto',
+        createdById: _currentUser?.userId,
+        createdByName: _currentUser?.fullName,
+        creatorRole: _currentUser?.role,
+        isDeleted: false,
+        notes: 'Automated via SMS',
+      );
+
+      _transactions.insert(0, newTransaction);
+      
+      _calculateSummary();
+      _lastOptimisticUpdate = DateTime.now();
+      notifyListeners();
+    } catch (e) {
     }
-
-    final newTransaction = TransactionModel(
-      transactionId:
-          DateTime.now().millisecondsSinceEpoch.toString(), // Temp ID
-      storeId: _currentStoreId!,
-      walletId: data['walletId'] as String,
-      transactionType: transactionType,
-      customerPhone: data['sender'] as String?,
-      amount: (data['amount'] as num).toDouble(),
-      commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
-      transactionDate: Timestamp.now(),
-      createdAt: Timestamp.now(),
-      createdBy: _currentUser?.fullName ?? 'SMS Auto',
-      createdById: _currentUser?.userId,
-      createdByName: _currentUser?.fullName,
-      creatorRole: _currentUser?.role,
-      isDeleted: false,
-      notes: 'Automated via SMS',
-    );
-
-    // Insert at the top of the list
-    _transactions.insert(0, newTransaction);
-    _calculateSummary();
-    notifyListeners();
   }
 }

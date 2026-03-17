@@ -36,6 +36,13 @@ class LocalStorageService {
     }
   }
 
+  /// Forces the plugin to reload data from disk.
+  /// Crucial for isolates (like the Overlay) reading data written by the Main App.
+  Future<void> reloadDisk() async {
+    _ensureInitialized();
+    await _prefs!.reload();
+  }
+
   // ===========================
   // Keys
   // ===========================
@@ -213,5 +220,34 @@ class LocalStorageService {
     } catch (e) {
       return [];
     }
+  }
+
+  // ===========================
+  // Vault (Background → Overlay Data Bridge)
+  // ===========================
+  static const String _kPendingOverlayData = 'pending_overlay_data';
+
+  /// Saves transaction data from the background isolate so the
+  /// overlay can read it even if [FlutterOverlayWindow.shareData] fails.
+  Future<void> saveToVault(Map<String, dynamic> data) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kPendingOverlayData, json.encode(data));
+  }
+
+  /// Reads the last pending transaction written by the background service.
+  Map<String, dynamic>? readFromVault() {
+    final String? raw = _prefs?.getString(_kPendingOverlayData);
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(json.decode(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Clears the vault after the overlay has consumed the data.
+  Future<void> clearVault() async {
+    _ensureInitialized();
+    await _prefs!.remove(_kPendingOverlayData);
   }
 }

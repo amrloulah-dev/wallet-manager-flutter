@@ -9,7 +9,6 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/debt_provider.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
-import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import '../core/constants/route_constants.dart';
@@ -55,44 +54,8 @@ class AppRouter {
         );
 
       case RouteConstants.ownerDashboard:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-                create: (context) => DebtProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? DebtProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
-                create: (_) => StatisticsProvider(
-                  walletRepository: WalletRepository(),
-                  transactionRepository: TransactionRepository(),
-                  debtRepository: DebtRepository(),
-                  statsRepository: StatsRepository(),
-                ),
-                update: (_, auth, previous) =>
-                    previous!..setStoreId(auth.currentStoreId),
-              ),
-            ],
-            child: const MainDashboardScreen(),
-          ),
-          settings,
-        );
+        // ✅ NO local providers — inherits global instances from app.dart's MultiProvider
+        return _buildRoute(const MainDashboardScreen(), settings);
 
       case RouteConstants.walletsList:
       case RouteConstants.walletForm:
@@ -113,21 +76,14 @@ class AppRouter {
 
       case RouteConstants.createTransaction:
         return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-            ],
+          ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
+            create: (context) => WalletProvider(
+                authProvider:
+                    Provider.of<AuthProvider>(context, listen: false)),
+            update: (_, auth, prev) =>
+                (prev ?? WalletProvider(authProvider: auth))
+                  ..updateAuthState(auth),
+            // ✅ TransactionProvider inherited from global app.dart
             child: const CreateTransactionScreen(),
           ),
           settings,
@@ -146,10 +102,7 @@ class AppRouter {
                     (prev ?? WalletProvider(authProvider: auth))
                       ..updateAuthState(auth),
               ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
+              // ✅ TransactionProvider REMOVED — inherited from global app.dart
               ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
                 create: (_) =>
                     EmployeeProvider(employeeRepository: EmployeeRepository()),

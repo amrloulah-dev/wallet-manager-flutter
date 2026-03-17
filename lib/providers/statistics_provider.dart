@@ -32,6 +32,7 @@ class StatisticsProvider extends ChangeNotifier {
   // Cache
   StatsSummaryModel? _cachedSummary;
   DateTime? _cacheTimestamp;
+  DateTime? _lastOptimisticUpdate;
 
   StreamSubscription? _debtsChangedSubscription;
   StreamSubscription? _walletsChangedSubscription;
@@ -107,6 +108,11 @@ class StatisticsProvider extends ChangeNotifier {
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
     if (_storeId == null) return;
+
+    if (!forceRefresh && _lastOptimisticUpdate != null && DateTime.now().difference(_lastOptimisticUpdate!) < const Duration(seconds: 10)) {
+
+      return; // Abort the fetch
+    }
 
     final now = DateTime.now();
     if (!forceRefresh &&
@@ -245,6 +251,7 @@ class StatisticsProvider extends ChangeNotifier {
       totalAmount: _todayStats!.totalAmount + amount,
     );
 
+    _lastOptimisticUpdate = DateTime.now();
     notifyListeners();
   }
 }
