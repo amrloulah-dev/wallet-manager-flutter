@@ -3,9 +3,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/providers/app_events.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -137,6 +137,10 @@ class WalletProvider extends ChangeNotifier {
       _cacheTimestamp = null;
       fetchInitialWallets();
     }
+  }
+
+  Future<void> refresh() async {
+    await fetchInitialWallets(forceRefresh: true);
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {

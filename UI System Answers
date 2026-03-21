@@ -1,0 +1,61 @@
+Typography Answer:
+- Font Source: System Default (Code specifies 'Cairo', but it is not bundled or imported).
+- Font Name: "Cairo"
+- How It Is Applied: Centrally applied via ThemeData.fontFamily in AppTheme and explicitly used in AppTextStyles for all custom TextStyle definitions.
+- Evidence:
+  - File: lib/core/theme/app_theme.dart
+    ```dart
+    static ThemeData lightTheme = ThemeData(
+      // ...
+      fontFamily: 'Cairo',
+      // ...
+    );
+    ```
+  - File: lib/core/theme/app_text_styles.dart
+    ```dart
+    static const String _fontFamily = 'Cairo';
+    static const TextStyle h1 = TextStyle(
+      fontFamily: _fontFamily,
+      fontSize: 28,
+      // ...
+    );
+    ```
+  - Note: The pubspec.yaml file (Lines 110-120) contains only commented-out font examples, and there is no 'google_fonts' dependency, meaning 'Cairo' will only render if available as a system font on the host device.
+
+Theming Answer:
+- Color Source: Centralized Constants with Dynamic Adaptive Methods.
+- Main Approach: Colors are managed through an AppColors class that categorizes colors into LightColors and DarkColors palettes. It provides static adaptive methods that take BuildContext to dynamically return the appropriate color based on the current theme's brightness.
+- Theme Switching: Supported. Managed by a ThemeProvider that controls the ThemeMode. The AppTheme class defines both lightTheme and darkTheme configurations which are injected into the MaterialApp.
+- Evidence:
+  - File: lib/core/theme/app_colors.dart
+    ```dart
+    static Color textPrimary(BuildContext context) =>
+        Theme.of(context).brightness == Brightness.dark
+            ? dark.textPrimary
+            : light.textPrimary;
+    ```
+  - File: lib/core/theme/app_theme.dart
+    ```dart
+    static ThemeData lightTheme = ThemeData(
+      brightness: Brightness.light,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.light.scaffoldBg,
+      // ...
+    );
+    static ThemeData darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      // ...
+    );
+    ```
+  - File: lib/app.dart
+    ```dart
+    ChangeNotifierProvider(create: (_) => ThemeProvider()),
+    // ...
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
+    themeMode: themeProvider.themeMode,
+    ```
+
+Final Validation:
+- Typography: Explicitly defined as 'Cairo' in the code, but not technically provided by the project (missing assets/packages).
+- Theming: Highly centralized and structured using a dedicated theme and color system with full dark/light mode support.

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -146,8 +147,16 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
       Navigator.pop(context, true);
     } else if (mounted) {
-      ToastUtils.showError(
-          transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة');
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.bottomSlide,
+        title: 'خطأ',
+        desc: transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة',
+        btnOkOnPress: () {},
+        btnOkColor: Colors.red,
+        btnOkText: 'حسناً',
+      ).show();
     }
   }
 

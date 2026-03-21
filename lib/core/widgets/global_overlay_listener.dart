@@ -61,6 +61,9 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         context.read<StatisticsProvider>().addTransactionOptimistically(data);
         context.read<WalletProvider>().updateWalletOptimistically(data);
         context.read<TransactionProvider>().insertTransactionLocally(data);
+        
+        // Phase 4: Manually force a clean fetch of true limits and values without streams
+        context.read<WalletProvider>().refresh();
       }
 
       await prefs.remove('pending_overlay_tx');

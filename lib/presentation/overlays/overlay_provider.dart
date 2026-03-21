@@ -7,6 +7,10 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/core/utils/fee_calculator.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/data/repositories/transaction_repository.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class OverlayProvider with ChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
@@ -89,6 +93,13 @@ class OverlayProvider with ChangeNotifier {
 
       if (exists) {
         _selectedWalletId = passedId;
+        final selectedWallet = _availableWallets.firstWhere((w) => w['id'] == passedId);
+        final walletType = selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
+        _commission = FeeCalculator.calculateTransactionFee(
+          amount: _amount,
+          sourceWalletType: walletType,
+          receiverPhone: _sender,
+        );
       } else {
         _selectedWalletId = null; // Prevent Dropdown assertion crashes
       }
@@ -151,100 +162,29 @@ class OverlayProvider with ChangeNotifier {
 
       String transactionType = _type == 'debit' ? 'send' : 'receive';
       final now = Timestamp.now();
-      final firestore = FirebaseFirestore.instance;
-      final batch = firestore.batch();
-
-      // 1. Transaction Document
       final txId = DateTime.now().millisecondsSinceEpoch.toString();
-      final transactionRef = firestore.collection('transactions').doc(txId);
 
-      final transactionData = {
-        'transactionId': txId,
-        'storeId': storeId,
-        'walletId': _selectedWalletId!,
-        'transactionType': transactionType,
-        'customerPhone': _sender,
-        'amount': _amount,
-        'commission': _commission,
-        'serviceFee': 0.0,
-        'paymentStatus': 'paid',
-        'transactionDate': now,
-        'createdAt': now,
-        'createdBy': userName ?? 'SMS Auto',
-        'createdById': userId,
-        'createdByName': userName,
-        'creatorRole': userRole,
-        'isDeleted': false,
-        'notes': 'Automated via SMS',
-      };
-      batch.set(transactionRef, transactionData);
-
-      // 2. Wallet Document Update (Adjusting balance & Limits)
-      final walletRef = firestore.collection('wallets').doc(_selectedWalletId!);
-      double balanceChange = transactionType == 'send' ? -_amount : _amount;
-
-      final walletUpdate = <String, dynamic>{
-        'balance': FieldValue.increment(balanceChange),
-        'stats.totalTransactions': FieldValue.increment(1),
-        'stats.lastTransactionDate': now,
-        'stats.${transactionType == 'send' ? 'totalSentAmount' : 'totalReceivedAmount'}':
-            FieldValue.increment(_amount),
-        'stats.totalCommission': FieldValue.increment(_commission),
-        'updatedAt': now,
-      };
-
-      if (transactionType == 'send') {
-        walletUpdate['sendLimits.dailyUsed'] = FieldValue.increment(_amount);
-        walletUpdate['sendLimits.monthlyUsed'] = FieldValue.increment(_amount);
-      } else {
-        walletUpdate['receiveLimits.dailyUsed'] = FieldValue.increment(_amount);
-        walletUpdate['receiveLimits.monthlyUsed'] =
-            FieldValue.increment(_amount);
-      }
-      batch.update(walletRef, walletUpdate);
-
-      // 3. Stats Summary Document
-      final summaryRef = firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('stats')
-          .doc('summary');
-      final summaryUpdate = <String, dynamic>{
-        'totalTransactions': FieldValue.increment(1),
-        'totalCommission': FieldValue.increment(_commission),
-        'lastUpdated': now,
-      };
-      if (transactionType == 'send') {
-        summaryUpdate['sendCount'] = FieldValue.increment(1);
-        summaryUpdate['totalSentAmount'] = FieldValue.increment(_amount);
-      } else {
-        summaryUpdate['receiveCount'] = FieldValue.increment(1);
-        summaryUpdate['totalReceivedAmount'] = FieldValue.increment(_amount);
-      }
-      batch.set(summaryRef, summaryUpdate, SetOptions(merge: true));
-
-      // 4. Daily Stats Document
-      final date = now.toDate();
-      final todayDateStr =
-          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-      final dailyStatsRef = firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('daily_stats')
-          .doc(todayDateStr);
-      batch.set(
-        dailyStatsRef,
-        {
-          'transactionCount': FieldValue.increment(1),
-          'totalCommission': FieldValue.increment(_commission),
-          'totalAmount': FieldValue.increment(_amount),
-          'updatedAt': now,
-        },
-        SetOptions(merge: true),
+      final newTransaction = TransactionModel(
+        transactionId: txId,
+        storeId: storeId,
+        walletId: _selectedWalletId!,
+        transactionType: transactionType,
+        customerPhone: _sender,
+        amount: _amount,
+        commission: _commission,
+        serviceFee: 0.0,
+        paymentStatus: 'paid',
+        transactionDate: now,
+        createdAt: now,
+        createdBy: userName ?? 'SMS Auto',
+        createdById: userId,
+        createdByName: userName,
+        creatorRole: userRole,
+        isDeleted: false,
+        notes: 'Automated via SMS',
       );
 
-      // 5. Commit Batch
-      await batch.commit();
+      await TransactionRepository().createTransaction(newTransaction);
 
       // 6. Save to Vault
       final prefs = await SharedPreferences.getInstance();
@@ -276,7 +216,7 @@ class OverlayProvider with ChangeNotifier {
       await FlutterOverlayWindow.closeOverlay();
 
     } catch (e) {
-
+      BotToast.showText(text: 'Error saving transaction: ${e.toString()}');
       _errorMessage = 'Error saving: ${e.toString()}';
     } finally {
       if (hasListeners) {

@@ -24,6 +24,7 @@ import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/auth/license_expired_screen.dart';
 import 'core/services/analytics_service.dart';
 import 'package:walletmanager/core/widgets/global_overlay_listener.dart'; // Added
+import 'data/services/transaction_validator_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) =>
                 EmployeeProvider(employeeRepository: EmployeeRepository())),
+        Provider(create: (_) => TransactionValidatorService()),
         ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
           lazy: false,
           create: (context) => WalletProvider(

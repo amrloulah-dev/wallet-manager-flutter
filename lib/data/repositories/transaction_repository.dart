@@ -1,7 +1,7 @@
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
-import '../models/wallet_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/transaction_validator_service.dart';
 
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -35,145 +35,10 @@ class TransactionRepository {
           ? -(transaction.amount + transaction.serviceFee)
           : transaction.amount;
 
-      await _firestore.runTransaction((tx) async {
-        final walletRef = _firestore
-            .collection(FirebaseConstants.walletsCollection)
-            .doc(transaction.walletId);
-        final walletSnap = await tx.get(walletRef);
-        if (!walletSnap.exists) throw NotFoundException('Wallet');
+      // Delegate the Firestore write to the unified validator
 
-        if (transaction.isDeposit) {
-          tx.update(
-              walletRef, {'balance': FieldValue.increment(transaction.amount)});
-          return;
-        }
-
-        var wallet = WalletModel.fromFirestore(walletSnap);
-        final now = Timestamp.now();
-
-        var validationWallet = wallet;
-        if (validationWallet.needsDailyReset) {
-          validationWallet = validationWallet.copyWith(
-              sendLimits: validationWallet.sendLimits.copyWith(dailyUsed: 0),
-              receiveLimits:
-                  validationWallet.receiveLimits.copyWith(dailyUsed: 0));
-        }
-        if (validationWallet.needsMonthlyReset) {
-          validationWallet = validationWallet.copyWith(
-              sendLimits: validationWallet.sendLimits.copyWith(monthlyUsed: 0),
-              receiveLimits:
-                  validationWallet.receiveLimits.copyWith(monthlyUsed: 0));
-        }
-
-        if (transaction.isSend) {
-          if (validationWallet.balance < transaction.amount) {
-            throw ValidationException(
-                'المبلغ المراد إرساله أكبر من الرصيد المتاح.');
-          }
-
-          // New Validation Rules (Strict Implementation)
-          // Rule 1: Transaction Cap
-          if (transaction.amount > validationWallet.getLimits().dailyLimit) {
-            throw ValidationException(
-                'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
-          }
-          // Rule 3: Monthly Aggregate
-          if (validationWallet.getLimits().monthlyUsed + transaction.amount >
-              validationWallet.getLimits().monthlyLimit) {
-            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
-          }
-        } else if (transaction.isReceive) {
-          // Rule 1: Transaction Cap
-          if (transaction.amount >
-              validationWallet.getReceiveLimits().dailyLimit) {
-            throw ValidationException(
-                'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
-          }
-          // Rule 3: Monthly Aggregate
-          if (validationWallet.getReceiveLimits().monthlyUsed +
-                  transaction.amount >
-              validationWallet.getReceiveLimits().monthlyLimit) {
-            throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
-          }
-        }
-
-        final txRef = _transactionsCollection.doc(transaction.transactionId);
-        tx.set(txRef, transaction.toFirestore());
-
-        final Map<String, dynamic> walletUpdateData = {};
-
-        walletUpdateData['balance'] = FieldValue.increment(balanceChange);
-        walletUpdateData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
-            FieldValue.increment(1);
-        walletUpdateData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
-            now;
-
-        final bool needsDailyReset = wallet.needsDailyReset;
-        final bool needsMonthlyReset = wallet.needsMonthlyReset;
-
-        if (needsDailyReset) {
-          walletUpdateData['lastDailyReset'] = now;
-        }
-        if (needsMonthlyReset) {
-          walletUpdateData['lastMonthlyReset'] = now;
-        }
-
-        if (transaction.isSend) {
-          walletUpdateData['sendLimits.dailyUsed'] = needsDailyReset
-              ? transaction.amount
-              : FieldValue.increment(transaction.amount);
-          walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset
-              ? transaction.amount
-              : FieldValue.increment(transaction.amount);
-          if (needsDailyReset) {
-            walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
-          }
-          if (needsMonthlyReset) {
-            walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
-          }
-        } else if (transaction.isReceive) {
-          walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset
-              ? transaction.amount
-              : FieldValue.increment(transaction.amount);
-          walletUpdateData['receiveLimits.monthlyUsed'] = needsMonthlyReset
-              ? transaction.amount
-              : FieldValue.increment(transaction.amount);
-          if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
-          if (needsMonthlyReset) {
-            walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
-          }
-        }
-
-        if (transaction.isSend || transaction.isReceive) {
-          walletUpdateData[
-                  '${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] =
-              FieldValue.increment(transaction.amount);
-          walletUpdateData[
-                  '${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
-              FieldValue.increment(transaction.commission);
-        }
-
-        tx.update(walletRef, walletUpdateData);
-
-        // Update Daily Stats
-        final dailyStatsRef = _firestore
-            .collection('stores')
-            .doc(transaction.storeId)
-            .collection('daily_stats')
-            .doc(DateHelper.getCurrentDateString());
-
-        tx.set(
-          dailyStatsRef,
-          {
-            'transactionCount': FieldValue.increment(1),
-            'totalCommission': FieldValue.increment(transaction.commission),
-            'totalAmount': FieldValue.increment(transaction.amount),
-          },
-          SetOptions(merge: true),
-        );
-      });
+      // Delegate the Firestore write to the unified validator
+      await TransactionValidatorService().validateAndSave(transaction);
 
       // Update summary stats after the main transaction succeeds
       if (!transaction.isDeposit) {
