@@ -549,28 +549,15 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ? (newMonthlyUsed / limits.monthlyLimit) * 100
         : 0;
 
-    String? customDailyText;
-    String? customMonthlyText;
-
+    bool isCapacityRestricting = false;
     if (!isSend && !isInstaPay) {
-      final availableDaily = _selectedWallet!.availableToReceiveDaily;
-      final newAvailableDaily =
-          availableDaily >= amount ? availableDaily - amount : 0.0;
-      if (limits.dailyLimit > 0) {
-        dailyPercentage = (1.0 - (newAvailableDaily / limits.dailyLimit)) * 100;
+      double monthlyLimit = limits.monthlyLimit;
+      double monthlyUsed = limits.monthlyUsed;
+      double flowRemaining = monthlyLimit - monthlyUsed;
+      
+      if (_selectedWallet!.availableToReceiveMonthly < flowRemaining) {
+        isCapacityRestricting = true;
       }
-      customDailyText =
-          'المتاح: ${NumberFormatter.formatAmount(newAvailableDaily)}';
-
-      final availableMonthly = _selectedWallet!.availableToReceiveMonthly;
-      final newAvailableMonthly =
-          availableMonthly >= amount ? availableMonthly - amount : 0.0;
-      if (limits.monthlyLimit > 0) {
-        monthlyPercentage =
-            (1.0 - (newAvailableMonthly / limits.monthlyLimit)) * 100;
-      }
-      customMonthlyText =
-          'المتاح: ${NumberFormatter.formatAmount(newAvailableMonthly)}';
     }
 
     final dailyLabel = isSend ? 'إرسال يومي' : 'استقبال يومي';
@@ -614,7 +601,6 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             limit: limits.dailyLimit,
             percentage: dailyPercentage,
             warningLevel: dailyExceeded ? 'red' : 'green',
-            customAmountText: customDailyText,
           ),
           const SizedBox(height: 16),
           WalletLimitBar(
@@ -623,11 +609,18 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             limit: limits.monthlyLimit,
             percentage: monthlyPercentage,
             warningLevel: monthlyExceeded ? 'red' : 'green',
-            customAmountText: customMonthlyText,
           ),
+          if (isCapacityRestricting)
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: Text(
+                '⚠️ تنبيه: نظراً لرصيد المحفظة الحالي، أقصى مبلغ يمكنك استقباله الآن هو ${NumberFormatter.formatAmount(_selectedWallet!.availableToReceiveMonthly)}',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
+              ),
+            ),
           if (willExceed)
             Padding(
-              padding: const EdgeInsets.only(top: 12.0),
+              padding: const EdgeInsets.only(top: 16.0),
               child: Text(
                 'تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.',
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),

@@ -9,8 +9,6 @@ class WalletLimitBar extends StatelessWidget {
   final double limit; // maximum limit
   final double percentage; // 0-100
   final String warningLevel; // 'green' | 'yellow' | 'red'
-  final String?
-      customAmountText; // Optional custom text to replace "used / limit"
 
   const WalletLimitBar({
     super.key,
@@ -19,7 +17,6 @@ class WalletLimitBar extends StatelessWidget {
     required this.limit,
     required this.percentage,
     required this.warningLevel,
-    this.customAmountText,
   });
 
   @override
@@ -77,8 +74,7 @@ class WalletLimitBar extends StatelessWidget {
 
         // Amount Text
         Text(
-          customAmountText ??
-              '${NumberFormatter.formatAmount(used, showCurrency: false)} / ${NumberFormatter.formatAmount(limit)}',
+          '${NumberFormatter.formatAmount(used, showCurrency: false)} / ${NumberFormatter.formatAmount(limit)}',
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary(context),
           ),

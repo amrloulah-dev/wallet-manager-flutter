@@ -312,29 +312,19 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
     // Daily Logic
     double dailyPercentage = limits.dailyPercentage;
-    String? customDailyText;
 
     // Monthly Logic
     double monthlyPercentage = limits.monthlyPercentage;
-    String? customMonthlyText;
 
+    bool isCapacityRestricting = false;
     if (!isInstaPay) {
-      // Capacity calculations for non-InstaPay
-      final dailyAvailable = wallet.availableToReceiveDaily;
-      final dailyLimit = limits.dailyLimit;
-      if (dailyLimit > 0) {
-        dailyPercentage = (1.0 - (dailyAvailable / dailyLimit)) * 100;
+      double monthlyLimit = limits.monthlyLimit;
+      double monthlyUsed = limits.monthlyUsed;
+      double flowRemaining = monthlyLimit - monthlyUsed;
+      
+      if (wallet.availableToReceiveMonthly < flowRemaining) {
+        isCapacityRestricting = true;
       }
-      customDailyText =
-          'المتاح: ${NumberFormatter.formatAmount(dailyAvailable)}';
-
-      final monthlyAvailable = wallet.availableToReceiveMonthly;
-      final monthlyLimit = limits.monthlyLimit;
-      if (monthlyLimit > 0) {
-        monthlyPercentage = (1.0 - (monthlyAvailable / monthlyLimit)) * 100;
-      }
-      customMonthlyText =
-          'المتاح: ${NumberFormatter.formatAmount(monthlyAvailable)}';
     }
 
     final dailyReceiveWarningLevel = getWarningLevel(dailyPercentage);
@@ -352,7 +342,6 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               limit: limits.dailyLimit,
               percentage: dailyPercentage,
               warningLevel: dailyReceiveWarningLevel,
-              customAmountText: customDailyText,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
@@ -361,8 +350,14 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               limit: limits.monthlyLimit,
               percentage: monthlyPercentage,
               warningLevel: monthlyReceiveWarningLevel,
-              customAmountText: customMonthlyText,
             ),
+            if (isCapacityRestricting) ...[
+              const SizedBox(height: 16),
+              Text(
+                '⚠️ تنبيه: نظراً لرصيد المحفظة الحالي، أقصى مبلغ يمكنك استقباله الآن هو ${NumberFormatter.formatAmount(wallet.availableToReceiveMonthly)}',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
+              ),
+            ],
             if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
