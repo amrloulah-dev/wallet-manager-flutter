@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class FeeCalculator {
   // Network Prefixes
   static const List<String> vodafonePrefixes = ['010'];
@@ -9,6 +11,7 @@ class FeeCalculator {
   static const String walletVodafone = 'vodafone_cash';
   static const String walletEtisalat = 'etisalat_cash';
   static const String walletOrange = 'orange_cash';
+  static const String walletWePay = 'we_pay';
   static const String walletInstaPay = 'instapay';
 
   /// Identifies the network provider based on the phone number prefix.
@@ -46,6 +49,9 @@ class FeeCalculator {
     if (amount <= 0) return 0.0;
 
     final provider = identifyProvider(receiverPhone);
+    debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
+        'amount=$amount, sourceWalletType=$sourceWalletType, '
+        'receiverPhone=$receiverPhone, identifiedProvider=$provider');
 
     switch (sourceWalletType) {
       case walletVodafone:
@@ -69,10 +75,19 @@ class FeeCalculator {
           return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
         }
 
+      case walletWePay:
+        if (provider == 'WE') {
+          return 1.0;
+        } else {
+          return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
+        }
+
       case walletInstaPay:
         return _calculatePercentageFee(amount, 0.001, 0.5, 20.0);
 
       default:
+        debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
+            'WARNING — unknown walletType=$sourceWalletType, fee=0.0');
         return 0.0;
     }
   }

@@ -3,16 +3,17 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/providers/app_events.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
-import 'package:walletmanager/data/models/user_model.dart'; // Added
-import 'package:walletmanager/data/models/user_permissions.dart'; // Added
-import 'auth_provider.dart'; // Added
-import 'package:walletmanager/data/services/local_storage_service.dart'; // Added
+import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/data/models/user_permissions.dart';
+import 'auth_provider.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 
 enum WalletStatusState {
   idle,
@@ -51,6 +52,7 @@ class WalletProvider extends ChangeNotifier {
   DateTime? _cacheTimestamp;
 
   StreamSubscription? _dataChangedSubscription;
+  StreamSubscription? _overlayDataSubscription;
   bool _isDisposed = false;
 
   // Constructor
@@ -69,12 +71,41 @@ class WalletProvider extends ChangeNotifier {
         fetchInitialWallets(forceRefresh: true);
       }
     });
+
+    // Listen for overlay "refresh_wallets" pings (on-demand, no Firestore stream).
+    // FlutterOverlayWindow.overlayListener is a SINGLE-subscription stream.
+    // Cancel any prior subscription before re-listening to prevent
+    // "Bad state: Stream has already been listened to" crashes.
+    _overlayDataSubscription?.cancel();
+    _overlayDataSubscription = null;
+    try {
+      _overlayDataSubscription =
+          FlutterOverlayWindow.overlayListener.listen((event) {
+        debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+            'event received=$event');
+        if (event is Map && event['action'] == 'refresh_wallets') {
+          debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+              'refresh_wallets PING received — triggering fetchInitialWallets(forceRefresh: true)');
+          if (_currentStoreId != null && !isLoading && !isLoadingMore) {
+            fetchInitialWallets(forceRefresh: true);
+          } else {
+            debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+                'SKIPPED refresh — storeId=$_currentStoreId, '
+                'isLoading=$isLoading, isLoadingMore=$isLoadingMore');
+          }
+        }
+      });
+    } catch (_) {
+      // Gracefully ignore if the stream was already listened to by another
+      // instance (e.g. during hot reload). The appEvents path still works.
+    }
   }
 
   @override
   void dispose() {
     _isDisposed = true;
     _dataChangedSubscription?.cancel();
+    _overlayDataSubscription?.cancel();
     super.dispose();
   }
 
@@ -146,17 +177,25 @@ class WalletProvider extends ChangeNotifier {
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
 
+    debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: '
+        'ENTRY | storeId=$_currentStoreId, forceRefresh=$forceRefresh, '
+        'hasCachedWallets=${_cachedWallets != null}');
+
     final now = DateTime.now();
     if (!forceRefresh &&
         _cachedWallets != null &&
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
+      debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: '
+          'CACHE HIT — returning ${_cachedWallets!.length} cached wallets');
       _wallets = _cachedWallets!;
       if (status != WalletStatusState.loaded) {
         _setStatus(WalletStatusState.loaded);
       }
       return;
     }
+    debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: '
+        'CACHE MISS or forceRefresh=true — fetching from Firestore ...');
 
     final trace = FirebasePerformance.instance
         .newTrace('fetch_initial_wallets_optimized');

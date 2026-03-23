@@ -10,7 +10,7 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:bot_toast/bot_toast.dart';
+// BotToast is NOT initialized in the overlay isolate — do not use here.
 
 class OverlayProvider with ChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
@@ -69,6 +69,9 @@ class OverlayProvider with ChangeNotifier {
     _sender = data['sender']?.toString() ?? 'Unknown';
     _type   = data['type']?.toString()   ?? 'credit';
 
+    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
+        'raw data=$data | parsed amount=$_amount, sender=$_sender, type=$_type');
+
     _isLoading = true;
     notifyListeners(); // Show loading UI immediately with new amount/sender
 
@@ -100,6 +103,9 @@ class OverlayProvider with ChangeNotifier {
           sourceWalletType: walletType,
           receiverPhone: _sender,
         );
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
+            'auto-selected walletId=$passedId, walletType=$walletType, '
+            'calculatedCommission=$_commission');
       } else {
         _selectedWalletId = null; // Prevent Dropdown assertion crashes
       }
@@ -128,6 +134,31 @@ class OverlayProvider with ChangeNotifier {
 
   void setSelectedWallet(String? walletId) {
     _selectedWalletId = walletId;
+    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+        'new walletId=$walletId, current amount=$_amount');
+
+    // Recalculate commission for the newly selected wallet
+    if (walletId != null && _amount > 0) {
+      final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
+            (w) => w?['id'] == walletId,
+            orElse: () => null,
+          );
+      if (match != null) {
+        final walletType = match['walletType']?.toString() ?? 'vodafone_cash';
+        _commission = FeeCalculator.calculateTransactionFee(
+          amount: _amount,
+          sourceWalletType: walletType,
+          receiverPhone: _sender,
+        );
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+            'walletType=$walletType, recalculatedCommission=$_commission');
+      }
+    } else {
+      _commission = 0.0;
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+          'walletId is null or amount=0, commission reset to 0.0');
+    }
+
     notifyListeners();
   }
 
@@ -184,6 +215,11 @@ class OverlayProvider with ChangeNotifier {
         notes: 'Automated via SMS',
       );
 
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+          'FINAL PAYLOAD | txId=$txId, walletId=${_selectedWalletId}, '
+          'type=$transactionType, amount=$_amount, commission=$_commission, '
+          'sender=$_sender, storeId=$storeId');
+
       await TransactionRepository().createTransaction(newTransaction);
 
       // 6. Save to Vault
@@ -207,20 +243,32 @@ class OverlayProvider with ChangeNotifier {
 
       // 7. Send Ping
       final SendPort? sendPort = IsolateNameServer.lookupPortByName('main_app_port');
-      
       if (sendPort != null) {
         sendPort.send('update_ui');
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+            'IsolateNameServer ping sent to main_app_port');
+      } else {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+            'WARNING — main_app_port SendPort is null, ping NOT sent');
       }
 
-      // 8. Close Overlay
+      // 8. Notify main app to refresh wallets via overlay data channel
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+          'shareData(refresh_wallets) → broadcasting to main isolate');
+      await FlutterOverlayWindow.shareData({"action": "refresh_wallets"});
+
+      // 9. Close Overlay — MUST be the very last await in the try block
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+          'closing overlay window ...');
       await FlutterOverlayWindow.closeOverlay();
 
     } catch (e) {
-      BotToast.showText(text: 'Error saving transaction: ${e.toString()}');
       _errorMessage = 'Error saving: ${e.toString()}';
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+          'CATCH → $e');
     } finally {
+      _isLoading = false;
       if (hasListeners) {
-        _isLoading = false;
         notifyListeners();
       }
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,28 +32,23 @@ class TransactionRepository {
   // 1️⃣ CREATE
   Future<void> createTransaction(TransactionModel transaction) async {
     try {
-      final balanceChange = transaction.isSend
-          ? -(transaction.amount + transaction.serviceFee)
-          : transaction.amount;
+      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+          'RECEIVED | txId=${transaction.transactionId}, '
+          'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
+          'amount=${transaction.amount}, commission=${transaction.commission}');
+      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+          'Delegating to TransactionValidatorService.validateAndSave ...');
 
-      // Delegate the Firestore write to the unified validator
-
-      // Delegate the Firestore write to the unified validator
+      // Delegate entirely to the unified validator which handles
+      // balance, stats, and daily_stats atomically inside runTransaction.
       await TransactionValidatorService().validateAndSave(transaction);
+      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+          'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
 
-      // Update summary stats after the main transaction succeeds
-      if (!transaction.isDeposit) {
-        await _statsRepository.updateStatsOnTransactionCreate(
-            transaction.storeId, transaction);
-        await _statsRepository.updateStatsOnWalletChange(transaction.storeId,
-            balanceChange: balanceChange);
-        if (transaction.isDebt) {
-          await _statsRepository.incrementOpenDebtStats(
-              transaction.storeId, transaction.amount);
-        }
-      } else {
-        await _statsRepository.updateStatsOnWalletChange(transaction.storeId,
-            balanceChange: transaction.amount);
+      // Handle debt stats separately (not covered by the validator)
+      if (transaction.isDebt) {
+        await _statsRepository.incrementOpenDebtStats(
+            transaction.storeId, transaction.amount);
       }
 
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));

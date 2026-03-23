@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/date_helper.dart';
@@ -9,13 +10,19 @@ class TransactionValidatorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> validateAndSave(TransactionModel transaction) async {
-    // Positive Amount Check
+    debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
+        'ENTRY | txId=${transaction.transactionId}, walletId=${transaction.walletId}, '
+        'type=${transaction.transactionType}, amount=${transaction.amount}, '
+        'serviceFee=${transaction.serviceFee}, commission=${transaction.commission}, '
+        'storeId=${transaction.storeId}');
+
+    // 1. Positive Amount Check
     if (transaction.amount <= 0) {
-      throw ValidationException('Amount must be positive.');
+      throw ValidationException('المبلغ يجب أن يكون أكبر من الصفر.');
     }
 
     final balanceChange = transaction.isSend
-        ? -(transaction.amount + transaction.serviceFee)
+        ? -(transaction.amount + transaction.commission)
         : transaction.amount;
 
     // Wrap the successful validation states inside FirebaseFirestore.instance.runTransaction()
@@ -24,8 +31,9 @@ class TransactionValidatorService {
           .collection(FirebaseConstants.walletsCollection)
           .doc(transaction.walletId);
       final walletSnap = await tx.get(walletRef);
-      if (!walletSnap.exists) throw NotFoundException('Wallet');
+      if (!walletSnap.exists) throw NotFoundException('المحفظة غير موجودة.');
 
+      // Handle simple deposit immediately
       if (transaction.isDeposit) {
         tx.update(
             walletRef, {'balance': FieldValue.increment(transaction.amount)});
@@ -35,6 +43,13 @@ class TransactionValidatorService {
       var wallet = WalletModel.fromFirestore(walletSnap);
       final now = Timestamp.now();
 
+      debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+          'walletFetched | walletId=${wallet.walletId}, '
+          'walletType=${wallet.walletType}, currentBalance=${wallet.balance}, '
+          'totalDeduction=${transaction.amount + transaction.commission}, '
+          'balanceChange=$balanceChange');
+
+      // Reset limits locally for validation logic if needed
       var validationWallet = wallet;
       if (validationWallet.needsDailyReset) {
         validationWallet = validationWallet.copyWith(
@@ -49,7 +64,23 @@ class TransactionValidatorService {
                 validationWallet.receiveLimits.copyWith(monthlyUsed: 0));
       }
 
-      // Explicit capacity and network checks (InstaPay/Telecom)
+      // ------------------------------------------------------------------
+      // 2. CORE RULE: Balance Sufficiency Check (Moved to top for Priority)
+      // ------------------------------------------------------------------
+      if (transaction.isSend) {
+        final totalDeduction = transaction.amount + transaction.commission;
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+            'BALANCE CHECK | balance=${validationWallet.balance}, '
+            'totalDeduction=$totalDeduction, '
+            'sufficient=${validationWallet.balance >= totalDeduction}');
+        if (validationWallet.balance < totalDeduction) {
+          throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // 3. EXPLICIT NETWORK LIMITS (InstaPay / Telecom)
+      // ------------------------------------------------------------------
       final isInstaPay = wallet.walletType == 'instapay';
       final isTelecom = [
         'vodafone_cash',
@@ -59,66 +90,77 @@ class TransactionValidatorService {
       ].contains(wallet.walletType);
 
       if (isInstaPay && transaction.amount > 70000) {
-        throw ValidationException(
-            'Maximum single transaction for InstaPay is 70,000 EGP.');
+        throw ValidationException('الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.');
       }
       if (isTelecom && transaction.amount > 60000) {
-        throw ValidationException(
-            'Maximum single transaction for Telecom wallets is 60,000 EGP.');
+        throw ValidationException('الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.');
       }
 
-      if (transaction.isSend) {
-        // Balance Sufficiency Check
-        if (validationWallet.balance < transaction.amount) {
-          throw ValidationException(
-              'المبلغ المراد إرساله أكبر من الرصيد المتاح.');
+      // InstaPay explicit daily limit check (Applies to both Send and Receive)
+      if (isInstaPay) {
+        num usedAmount = transaction.isSend
+            ? validationWallet.sendLimits.dailyUsed
+            : validationWallet.receiveLimits.dailyUsed;
+            
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+            'INSTAPAY DAILY LIMIT | dailyUsed=$usedAmount, '
+            'incoming=${transaction.amount}, total=${usedAmount + transaction.amount}');
+        if (usedAmount + transaction.amount > 120000) {
+          throw ValidationException('تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).');
         }
+      }
 
-        if (transaction.amount > validationWallet.getLimits().dailyLimit) {
-          throw ValidationException(
-              'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
+      // ------------------------------------------------------------------
+      // 4. GENERAL WALLET CAPACITY LIMITS
+      // ------------------------------------------------------------------
+      if (transaction.isSend) {
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+            'SEND LIMITS | dailyUsed=${validationWallet.sendLimits.dailyUsed}, '
+            'dailyLimit=${validationWallet.getLimits().dailyLimit}, '
+            'monthlyUsed=${validationWallet.sendLimits.monthlyUsed}, '
+            'monthlyLimit=${validationWallet.getLimits().monthlyLimit}');
+        if (validationWallet.sendLimits.dailyUsed + transaction.amount > validationWallet.getLimits().dailyLimit) {
+          throw ValidationException('تم تجاوز الحد اليومي للإرسال لهذه المحفظة.');
         }
-        if (validationWallet.getLimits().monthlyUsed + transaction.amount >
-            validationWallet.getLimits().monthlyLimit) {
-          throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+        if (validationWallet.sendLimits.monthlyUsed + transaction.amount > validationWallet.getLimits().monthlyLimit) {
+          throw ValidationException('تم تجاوز الحد الشهري للإرسال لهذه المحفظة.');
         }
       } else if (transaction.isReceive) {
-        if (transaction.amount >
-            validationWallet.getReceiveLimits().dailyLimit) {
-          throw ValidationException(
-              'المبلغ يتجاوز الحد الأقصى للمعاملة الواحدة.');
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+            'RECEIVE LIMITS | dailyUsed=${validationWallet.receiveLimits.dailyUsed}, '
+            'dailyLimit=${validationWallet.getReceiveLimits().dailyLimit}, '
+            'monthlyUsed=${validationWallet.receiveLimits.monthlyUsed}, '
+            'monthlyLimit=${validationWallet.getReceiveLimits().monthlyLimit}');
+        if (validationWallet.receiveLimits.dailyUsed + transaction.amount > validationWallet.getReceiveLimits().dailyLimit) {
+          throw ValidationException('تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.');
         }
-        if (validationWallet.getReceiveLimits().monthlyUsed +
-                transaction.amount >
-            validationWallet.getReceiveLimits().monthlyLimit) {
-          throw ValidationException('تم تجاوز الحد الشهري لهذه المحفظة.');
+        if (validationWallet.receiveLimits.monthlyUsed + transaction.amount > validationWallet.getReceiveLimits().monthlyLimit) {
+          throw ValidationException('تم تجاوز الحد الشهري للاستقبال لهذه المحفظة.');
         }
       }
 
+      // ------------------------------------------------------------------
+      // 5. DATABASE WRITES (Atomic execution)
+      // ------------------------------------------------------------------
+      
+      // Save Transaction Document
       final txRef = _firestore
           .collection(FirebaseConstants.transactions)
           .doc(transaction.transactionId);
       tx.set(txRef, transaction.toFirestore());
 
+      // Prepare Wallet Updates
       final Map<String, dynamic> walletUpdateData = {};
 
       walletUpdateData['balance'] = FieldValue.increment(balanceChange);
-      walletUpdateData[
-              '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
-          FieldValue.increment(1);
-      walletUpdateData[
-              '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
-          now;
+      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] = FieldValue.increment(1);
+      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] = now;
 
       final bool needsDailyReset = wallet.needsDailyReset;
       final bool needsMonthlyReset = wallet.needsMonthlyReset;
 
-      if (needsDailyReset) {
-        walletUpdateData['lastDailyReset'] = now;
-      }
-      if (needsMonthlyReset) {
-        walletUpdateData['lastMonthlyReset'] = now;
-      }
+      if (needsDailyReset) walletUpdateData['lastDailyReset'] = now;
+      if (needsMonthlyReset) walletUpdateData['lastMonthlyReset'] = now;
 
       if (transaction.isSend) {
         walletUpdateData['sendLimits.dailyUsed'] = needsDailyReset
@@ -127,12 +169,8 @@ class TransactionValidatorService {
         walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
-        if (needsDailyReset) {
-          walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
-        }
-        if (needsMonthlyReset) {
-          walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
-        }
+        if (needsDailyReset) walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
+        if (needsMonthlyReset) walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
       } else if (transaction.isReceive) {
         walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset
             ? transaction.amount
@@ -141,23 +179,20 @@ class TransactionValidatorService {
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
         if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
-        if (needsMonthlyReset) {
-          walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
-        }
+        if (needsMonthlyReset) walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
       }
 
       if (transaction.isSend || transaction.isReceive) {
-        walletUpdateData[
-                '${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] =
+        walletUpdateData['${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] =
             FieldValue.increment(transaction.amount);
-        walletUpdateData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
+        walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
             FieldValue.increment(transaction.commission);
       }
 
+      // Commit Wallet Updates
       tx.update(walletRef, walletUpdateData);
 
-      // Update Daily Stats
+      // Update Daily Stats Document
       final dailyStatsRef = _firestore
           .collection('stores')
           .doc(transaction.storeId)
@@ -173,6 +208,10 @@ class TransactionValidatorService {
         },
         SetOptions(merge: true),
       );
+
+      debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+          'SUCCESS — all Firestore writes queued atomically for '
+          'txId=${transaction.transactionId}');
     });
   }
 }
