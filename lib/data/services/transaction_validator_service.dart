@@ -22,7 +22,7 @@ class TransactionValidatorService {
     }
 
     final balanceChange = transaction.isSend
-        ? -(transaction.amount + transaction.commission)
+        ? -(transaction.amount + transaction.serviceFee)
         : transaction.amount;
 
     // Wrap the successful validation states inside FirebaseFirestore.instance.runTransaction()
@@ -46,7 +46,7 @@ class TransactionValidatorService {
       debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
           'walletFetched | walletId=${wallet.walletId}, '
           'walletType=${wallet.walletType}, currentBalance=${wallet.balance}, '
-          'totalDeduction=${transaction.amount + transaction.commission}, '
+          'totalDeduction=${transaction.amount + transaction.serviceFee}, '
           'balanceChange=$balanceChange');
 
       // Reset limits locally for validation logic if needed
@@ -65,21 +65,7 @@ class TransactionValidatorService {
       }
 
       // ------------------------------------------------------------------
-      // 2. CORE RULE: Balance Sufficiency Check (Moved to top for Priority)
-      // ------------------------------------------------------------------
-      if (transaction.isSend) {
-        final totalDeduction = transaction.amount + transaction.commission;
-        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
-            'BALANCE CHECK | balance=${validationWallet.balance}, '
-            'totalDeduction=$totalDeduction, '
-            'sufficient=${validationWallet.balance >= totalDeduction}');
-        if (validationWallet.balance < totalDeduction) {
-          throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
-        }
-      }
-
-      // ------------------------------------------------------------------
-      // 3. EXPLICIT NETWORK LIMITS (InstaPay / Telecom)
+      // 2. EXPLICIT NETWORK LIMITS (InstaPay / Telecom) - Single Transaction
       // ------------------------------------------------------------------
       final isInstaPay = wallet.walletType == 'instapay';
       final isTelecom = [
@@ -96,6 +82,23 @@ class TransactionValidatorService {
         throw ValidationException('الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.');
       }
 
+      // ------------------------------------------------------------------
+      // 3. CORE RULE: Balance Sufficiency Check
+      // ------------------------------------------------------------------
+      if (transaction.isSend) {
+        final totalDeduction = transaction.amount + transaction.serviceFee;
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+            'BALANCE CHECK | balance=${validationWallet.balance}, '
+            'totalDeduction=$totalDeduction, '
+            'sufficient=${validationWallet.balance >= totalDeduction}');
+        if (validationWallet.balance < totalDeduction) {
+          throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // 4. CUMULATIVE LIMITS (InstaPay & General Capacity)
+      // ------------------------------------------------------------------
       // InstaPay explicit daily limit check (Applies to both Send and Receive)
       if (isInstaPay) {
         num usedAmount = transaction.isSend
@@ -111,7 +114,7 @@ class TransactionValidatorService {
       }
 
       // ------------------------------------------------------------------
-      // 4. GENERAL WALLET CAPACITY LIMITS
+      // GENERAL WALLET CAPACITY LIMITS
       // ------------------------------------------------------------------
       if (transaction.isSend) {
         debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '

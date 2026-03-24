@@ -254,6 +254,10 @@ class WalletProvider extends ChangeNotifier {
       _wallets = fetchedWallets;
       _cachedWallets = fetchedWallets;
       _cacheTimestamp = DateTime.now();
+      
+      notifyListeners();
+      debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: Finished and called notifyListeners');
+      
       _setStatus(WalletStatusState.loaded);
 
       // Cache the wallets locally for SMS Automation (Overlay & Settings)

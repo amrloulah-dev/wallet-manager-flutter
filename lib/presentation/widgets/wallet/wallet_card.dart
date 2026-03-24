@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../../providers/wallet_provider.dart';
 
 class WalletCard extends StatefulWidget {
   final WalletModel wallet;
@@ -28,6 +30,9 @@ class _WalletCardState extends State<WalletCard> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<WalletProvider>();
+    final reactiveWallet = provider.wallets.firstWhere((w) => w.walletId == widget.wallet.walletId, orElse: () => widget.wallet);
+
     final elevation = _isHighlighted ? 8.0 : 2.0;
     final scale = _isHighlighted ? 0.98 : 1.0;
 
@@ -51,15 +56,15 @@ class _WalletCardState extends State<WalletCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context),
+                _buildHeader(context, reactiveWallet),
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                _buildLimits(),
+                _buildLimits(reactiveWallet),
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                _buildStats(context),
+                _buildStats(context, reactiveWallet),
                 if (widget.onEdit != null || widget.onDelete != null) ...[
                   const SizedBox(height: 12),
                   _buildActions(),
@@ -72,22 +77,22 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, WalletModel wallet) {
     return Row(
       children: [
-        Icon(widget.wallet.walletTypeIcon, size: 32, color: AppColors.primary),
+        Icon(wallet.walletTypeIcon, size: 32, color: AppColors.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                NumberFormatter.formatPhoneNumber(widget.wallet.phoneNumber),
+                NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
                 style: AppTextStyles.h3,
               ),
               const SizedBox(height: 4),
               Text(
-                widget.wallet.walletTypeDisplayName,
+                wallet.walletTypeDisplayName,
                 style: AppTextStyles.bodySmall
                     .copyWith(color: AppColors.textSecondary(context)),
               ),
@@ -98,17 +103,17 @@ class _WalletCardState extends State<WalletCard> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: (widget.wallet.walletStatus == 'new'
+            color: (wallet.walletStatus == 'new'
                     ? AppColors.warning
                     : AppColors.success)
                 .withAlpha((0.15 * 255).round()),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            widget.wallet.walletStatusDisplayName,
+            wallet.walletStatusDisplayName,
             style: AppTextStyles.labelSmall.copyWith(
               fontWeight: FontWeight.bold,
-              color: widget.wallet.walletStatus == 'new'
+              color: wallet.walletStatus == 'new'
                   ? AppColors.warning
                   : AppColors.success,
             ),
@@ -118,9 +123,9 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildLimits() {
-    final sendLimits = widget.wallet.getLimits();
-    final receiveLimits = widget.wallet.getReceiveLimits();
+  Widget _buildLimits(WalletModel wallet) {
+    final sendLimits = wallet.getLimits();
+    final receiveLimits = wallet.getReceiveLimits();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +135,7 @@ class _WalletCardState extends State<WalletCard> {
           used: sendLimits.dailyUsed,
           limit: sendLimits.dailyLimit,
           percentage: sendLimits.dailyPercentage,
-          warningLevel: widget.wallet.sendDailyWarningLevel,
+          warningLevel: wallet.sendDailyWarningLevel,
         ),
         const SizedBox(height: 8),
         WalletLimitBar(
@@ -145,7 +150,7 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildStats(BuildContext context) {
+  Widget _buildStats(BuildContext context, WalletModel wallet) {
     return Column(
       children: [
         Row(
@@ -160,7 +165,7 @@ class _WalletCardState extends State<WalletCard> {
               ],
             ),
             Text(
-              NumberFormatter.formatAmount(widget.wallet.balance),
+              NumberFormatter.formatAmount(wallet.balance),
               style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.primary, fontWeight: FontWeight.bold),
             ),
@@ -176,7 +181,7 @@ class _WalletCardState extends State<WalletCard> {
                     size: 16, color: AppColors.textSecondary(context)),
                 const SizedBox(width: 4),
                 Text(
-                  'معاملات: ${NumberFormatter.formatNumber(widget.wallet.stats.totalTransactions)}',
+                  'معاملات: ${NumberFormatter.formatNumber(wallet.stats.totalTransactions)}',
                   style: AppTextStyles.bodySmall,
                 ),
               ],
@@ -187,7 +192,7 @@ class _WalletCardState extends State<WalletCard> {
                     size: 16, color: AppColors.textSecondary(context)),
                 const SizedBox(width: 4),
                 Text(
-                  'عمولة: ${NumberFormatter.formatAmount(widget.wallet.stats.totalCommission)}',
+                  'عمولة: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.success),
                 ),

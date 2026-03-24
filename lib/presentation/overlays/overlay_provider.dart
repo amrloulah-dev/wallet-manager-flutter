@@ -18,6 +18,7 @@ class OverlayProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isStorageInitialized = false; // Only guards one-time storage init
   String? _errorMessage;
+  String? _successMessage;
 
   // Transaction Data
   double _amount = 0.0;
@@ -30,6 +31,7 @@ class OverlayProvider with ChangeNotifier {
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get successMessage => _successMessage;
   double get amount => _amount;
   String get sender => _sender;
   String get type => _type;
@@ -48,6 +50,7 @@ class OverlayProvider with ChangeNotifier {
     _selectedWalletId = null;
     _commission = 0.0;
     _errorMessage = null;
+    _successMessage = null;
     _isLoading = false;
     // NOTE: _availableWallets and _isStorageInitialized are NOT reset.
     // The wallet list is session-level cache and does not change per-SMS.
@@ -106,6 +109,15 @@ class OverlayProvider with ChangeNotifier {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
             'auto-selected walletId=$passedId, walletType=$walletType, '
             'calculatedCommission=$_commission');
+
+        final isInstaPay = walletType == 'instapay';
+        final isTelecom = ['vodafone_cash', 'orange_cash', 'etisalat_cash', 'we_pay'].contains(walletType);
+        
+        if (isInstaPay && _amount > 70000) {
+          _errorMessage = "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة";
+        } else if (isTelecom && _amount > 60000) {
+          _errorMessage = "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة";
+        }
       } else {
         _selectedWalletId = null; // Prevent Dropdown assertion crashes
       }
@@ -195,6 +207,18 @@ class OverlayProvider with ChangeNotifier {
       final now = Timestamp.now();
       final txId = DateTime.now().millisecondsSinceEpoch.toString();
 
+      final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
+            (w) => w?['id'] == _selectedWalletId,
+            orElse: () => null,
+          );
+      final walletType = match?['walletType']?.toString() ?? 'vodafone_cash';
+      
+      final calculatedServiceFee = FeeCalculator.calculateTransactionFee(
+        amount: _amount,
+        sourceWalletType: walletType,
+        receiverPhone: _sender,
+      );
+
       final newTransaction = TransactionModel(
         transactionId: txId,
         storeId: storeId,
@@ -203,7 +227,7 @@ class OverlayProvider with ChangeNotifier {
         customerPhone: _sender,
         amount: _amount,
         commission: _commission,
-        serviceFee: 0.0,
+        serviceFee: calculatedServiceFee,
         paymentStatus: 'paid',
         transactionDate: now,
         createdAt: now,
@@ -255,6 +279,11 @@ class OverlayProvider with ChangeNotifier {
       // 8. Notify main app to refresh wallets via overlay data channel
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
           'shareData(refresh_wallets) → broadcasting to main isolate');
+      
+      // Target 2: Force Immediate UI State Change in Overlay
+      _isLoading = false;
+      notifyListeners();
+      
       await FlutterOverlayWindow.shareData({"action": "refresh_wallets"});
 
       // 9. Close Overlay — MUST be the very last await in the try block
@@ -263,14 +292,12 @@ class OverlayProvider with ChangeNotifier {
       await FlutterOverlayWindow.closeOverlay();
 
     } catch (e) {
-      _errorMessage = 'Error saving: ${e.toString()}';
+      _errorMessage = e.toString();
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
           'CATCH → $e');
     } finally {
       _isLoading = false;
-      if (hasListeners) {
-        notifyListeners();
-      }
+      notifyListeners();
     }
   }
 
