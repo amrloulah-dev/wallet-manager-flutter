@@ -120,17 +120,13 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       appBar: AppBar(
         title: const Text('الديون'),
       ),
-      body: Consumer<DebtProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              _buildSummarySection(provider),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildSummarySection(),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddDebt(context),
@@ -142,133 +138,169 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
     );
   }
 
-  Widget _buildSummarySection(DebtProvider provider) {
+  Widget _buildSummarySection() {
     return Column(
       children: [
-        _buildTypeSegmentControl(provider),
+        _buildTypeSegmentControl(),
         const DebtSummaryCard(),
-        _buildFilterTabs(context, provider.summary, provider),
+        _buildFilterTabs(context),
       ],
     );
   }
 
-  Widget _buildContent(DebtProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 5, itemHeight: 120);
-    }
+  Widget _buildContent() {
+    return Selector<DebtProvider, bool>(
+      selector: (context, provider) => provider.isLoading,
+      builder: (context, isLoading, child) {
+        if (isLoading) {
+          return const SkeletonList(itemCount: 5, itemHeight: 120);
+        }
 
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الديون.',
-        onRetry: provider.fetchInitialDebts,
-      );
-    }
+        return Selector<DebtProvider, bool>(
+          selector: (context, provider) => provider.hasError,
+          builder: (context, hasError, child) {
+            if (hasError) {
+              final provider = context.read<DebtProvider>();
+              return CustomErrorWidget(
+                message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الديون.',
+                onRetry: provider.fetchInitialDebts,
+              );
+            }
 
-    if (provider.debts.isEmpty) {
-      return EmptyStateWidget(
-        message: 'لا توجد ديون مسجلة',
-        description: 'سيتم عرض الديون المفتوحة والمسددة هنا.',
-        icon: Icons.credit_card_off_outlined,
-        actionText: 'إضافة دين جديد',
-        onAction: () => _navigateToAddDebt(context),
-      );
-    }
+            return Selector<DebtProvider, List<DebtModel>>(
+              selector: (context, provider) => provider.debts,
+              builder: (context, debts, child) {
+                if (debts.isEmpty) {
+                  return EmptyStateWidget(
+                    message: 'لا توجد ديون مسجلة',
+                    description: 'سيتم عرض الديون المفتوحة والمسددة هنا.',
+                    icon: Icons.credit_card_off_outlined,
+                    actionText: 'إضافة دين جديد',
+                    onAction: () => _navigateToAddDebt(context),
+                  );
+                }
 
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialDebts,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 80), // For FAB
-        itemCount: provider.debts.length + (provider.isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == provider.debts.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(child: CircularProgressIndicator()),
+                return Selector<DebtProvider, bool>(
+                  selector: (context, provider) => provider.isLoadingMore,
+                  builder: (context, isLoadingMore, child) {
+                    return RefreshIndicator(
+                      onRefresh: context.read<DebtProvider>().fetchInitialDebts,
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(bottom: 80),
+                        itemCount: debts.length + (isLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == debts.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          final debt = debts[index];
+                          return DebtCard(
+                            key: ValueKey('${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
+                            debt: debt,
+                            onTap: PermissionHelper.canMarkDebtPaid(context)
+                                ? () => _showPartialPaymentSheet(context, debt)
+                                : null,
+                            onMarkPaid: debt.isOpen &&
+                                    PermissionHelper.canMarkDebtPaid(context)
+                                ? () => _showMarkPaidDialog(debt)
+                                : null,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
             );
-          }
-          final debt = provider.debts[index];
-          return DebtCard(
-            key: ValueKey(debt.debtId),
-            debt: debt,
-            onTap: PermissionHelper.canMarkDebtPaid(context)
-                ? () => _showPartialPaymentSheet(context, debt)
-                : null,
-            onMarkPaid: debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
-                ? () => _showMarkPaidDialog(debt)
-                : null,
-          );
-        },
-      ),
+          },
+        );
+      },
     );
   }
 
-  Widget _buildFilterTabs(BuildContext context, Map<String, dynamic> summary,
-      DebtProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FilterChip(
-              label: 'الكل (${summary['totalDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'all',
-              onTap: () => provider.setFilter('all'),
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _FilterChip(
-              label: 'مفتوح (${summary['openDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'open',
-              onTap: () => provider.setFilter('open'),
-              color: AppColors.error,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _FilterChip(
-              label: 'مسدد (${summary['paidDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'paid',
-              onTap: () => provider.setFilter('paid'),
-              color: AppColors.success,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildFilterTabs(BuildContext context) {
+    return Selector<DebtProvider, String>(
+      selector: (context, provider) => provider.currentFilter,
+      builder: (context, currentFilter, child) {
+        return Selector<DebtProvider, Map<String, dynamic>>(
+          selector: (context, provider) => provider.summary,
+          builder: (context, summary, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'الكل (${summary['totalDebtsCount'] ?? 0})',
+                      isSelected: currentFilter == 'all',
+                      onTap: () => context.read<DebtProvider>().setFilter('all'),
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'مفتوح (${summary['openDebtsCount'] ?? 0})',
+                      isSelected: currentFilter == 'open',
+                      onTap: () => context.read<DebtProvider>().setFilter('open'),
+                      color: AppColors.error,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'مسدد (${summary['paidDebtsCount'] ?? 0})',
+                      isSelected: currentFilter == 'paid',
+                      onTap: () => context.read<DebtProvider>().setFilter('paid'),
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildTypeSegmentControl(DebtProvider provider) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.divider(context)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _TypeTab(
-              label: 'تحويلات مالية',
-              isSelected: provider.currentDebtType == 'transaction',
-              onTap: () => provider.setDebtType('transaction'),
-              icon: Icons.swap_horiz,
-            ),
+  Widget _buildTypeSegmentControl() {
+    return Selector<DebtProvider, String>(
+      selector: (context, provider) => provider.currentDebtType,
+      builder: (context, currentDebtType, child) {
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.divider(context)),
           ),
-          Expanded(
-            child: _TypeTab(
-              label: 'مبيعات محل',
-              isSelected: provider.currentDebtType == 'store_sale',
-              onTap: () => provider.setDebtType('store_sale'),
-              icon: Icons.storefront_outlined,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _TypeTab(
+                  label: 'تحويلات مالية',
+                  isSelected: currentDebtType == 'transaction',
+                  onTap: () => context.read<DebtProvider>().setDebtType('transaction'),
+                  icon: Icons.swap_horiz,
+                ),
+              ),
+              Expanded(
+                child: _TypeTab(
+                  label: 'مبيعات محل',
+                  isSelected: currentDebtType == 'store_sale',
+                  onTap: () => context.read<DebtProvider>().setDebtType('store_sale'),
+                  icon: Icons.storefront_outlined,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

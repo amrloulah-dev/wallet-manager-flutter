@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/route_constants.dart';
+import '../../../data/models/transaction_model.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../widgets/transaction/transaction_card.dart';
 import '../../widgets/transaction/transaction_summary_card.dart';
@@ -94,25 +95,25 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
           ),
         ],
       ),
-      body: Consumer<TransactionProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              TransactionSummaryCard(
-                totalTransactions: provider.summary['totalTransactions'] ?? 0,
-                sendCount: provider.summary['sendCount'] ?? 0,
-                receiveCount: provider.summary['receiveCount'] ?? 0,
-                totalSendAmount: provider.summary['totalSendAmount'] ?? 0.0,
-                totalReceiveAmount:
-                    provider.summary['totalReceiveAmount'] ?? 0.0,
-                totalCommission: provider.summary['totalCommission'] ?? 0.0,
-              ),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          Selector<TransactionProvider, Map<String, dynamic>>(
+            selector: (context, provider) => provider.summary,
+            builder: (context, summary, child) {
+              return TransactionSummaryCard(
+                totalTransactions: summary['totalTransactions'] ?? 0,
+                sendCount: summary['sendCount'] ?? 0,
+                receiveCount: summary['receiveCount'] ?? 0,
+                totalSendAmount: summary['totalSendAmount'] ?? 0.0,
+                totalReceiveAmount: summary['totalReceiveAmount'] ?? 0.0,
+                totalCommission: summary['totalCommission'] ?? 0.0,
+              );
+            },
+          ),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateTransaction(context),
@@ -156,52 +157,74 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
     );
   }
 
-  Widget _buildContent(TransactionProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 5, itemHeight: 80);
-    }
-
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل المعاملات.',
-        onRetry: provider.fetchInitialTransactions,
-      );
-    }
-
-    if (provider.transactions.isEmpty) {
-      return EmptyStateWidget(
-        message: provider.filterType == null
-            ? 'لا توجد معاملات اليوم'
-            : 'لا توجد معاملات بهذا الفلتر',
-        description: 'ابدأ بإضافة معاملة جديدة',
-        icon: Icons.receipt_long_outlined,
-        actionText: 'معاملة جديدة',
-        onAction: () => _navigateToCreateTransaction(context),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialTransactions,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 80), // For FAB
-        itemCount:
-            provider.transactions.length + (provider.isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == provider.transactions.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final transaction = provider.transactions[index];
-          return TransactionCard(
-            transaction: transaction,
-            onTap: () => _navigateToTransactionDetails(
-                context, transaction.transactionId),
-          );
-        },
+  Widget _buildContent() {
+    return Selector<TransactionProvider, (TransactionStatus, String?, String?, bool)>(
+      selector: (context, provider) => (
+        provider.status,
+        provider.errorMessage,
+        provider.filterType,
+        provider.hasMore
       ),
+      builder: (context, state, child) {
+        final status = state.$1;
+        final errorMessage = state.$2;
+        final filterType = state.$3;
+        final isLoading = status == TransactionStatus.loading;
+        final hasError = status == TransactionStatus.error;
+        final isLoadingMore = status == TransactionStatus.loadingMore;
+
+        if (isLoading) {
+          return const SkeletonList(itemCount: 5, itemHeight: 80);
+        }
+
+        if (hasError) {
+          return CustomErrorWidget(
+            message: errorMessage ?? 'حدث خطأ أثناء تحميل المعاملات.',
+            onRetry: context.read<TransactionProvider>().fetchInitialTransactions,
+          );
+        }
+
+        return Selector<TransactionProvider, List<TransactionModel>>(
+          selector: (context, provider) => provider.transactions,
+          builder: (context, transactions, child) {
+            if (transactions.isEmpty) {
+              return EmptyStateWidget(
+                message: filterType == null
+                    ? 'لا توجد معاملات اليوم'
+                    : 'لا توجد معاملات بهذا الفلتر',
+                description: 'ابدأ بإضافة معاملة جديدة',
+                icon: Icons.receipt_long_outlined,
+                actionText: 'معاملة جديدة',
+                onAction: () => _navigateToCreateTransaction(context),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: context.read<TransactionProvider>().fetchInitialTransactions,
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: 80), // For FAB
+                itemCount: transactions.length + (isLoadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == transactions.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  final transaction = transactions[index];
+                  return TransactionCard(
+                    key: ValueKey('${transaction.transactionId}_${transaction.amount}_${transaction.paymentStatus}'),
+                    transaction: transaction,
+                    onTap: () => _navigateToTransactionDetails(
+                        context, transaction.transactionId),
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

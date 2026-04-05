@@ -176,6 +176,30 @@ class WalletModel {
     );
   }
 
+  factory WalletModel.fromMap(Map<String, dynamic> data, String docId) {
+    return WalletModel(
+      walletId: docId,
+      storeId: data[FirebaseConstants.storeId] ?? '',
+      phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
+      walletType: data[FirebaseConstants.walletType] ?? '',
+      walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
+      balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
+      notes: data[FirebaseConstants.notes],
+      isActive: data[FirebaseConstants.isActive] ?? true,
+      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
+      createdBy: data[FirebaseConstants.createdBy] ?? '',
+      updatedAt: data[FirebaseConstants.updatedAt],
+      sendLimits:
+          WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
+      receiveLimits:
+          WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
+      lastDailyReset: data[FirebaseConstants.lastDailyReset] ?? Timestamp.now(),
+      lastMonthlyReset:
+          data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
+      stats: WalletStats.fromMap(data[FirebaseConstants.stats] ?? {}),
+    );
+  }
+
   Map<String, dynamic> toFirestore() {
     return {
       FirebaseConstants.storeId: storeId,

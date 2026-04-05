@@ -28,9 +28,25 @@ class DebtProvider extends ChangeNotifier {
   String? _currentStoreId;
   final AuthProvider _authProvider; // Made final and non-nullable
   List<DebtModel> _debts = [];
+  Map<String, DebtModel> _debtMap = {};
   Map<String, dynamic> _summary = {};
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
+
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
+  }
+
+  void _rebuildDebtMap() {
+    _debtMap = {for (var debt in _debts) debt.debtId: debt};
+  }
 
   // Status
   DebtStatus _status = DebtStatus.idle;
@@ -56,7 +72,7 @@ class DebtProvider extends ChangeNotifier {
         _debtRepository = debtRepository ?? DebtRepository(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onDebtsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
+      if (_currentStoreId != null && !isLoading && !isLoadingMore && !_fetchShieldActive) {
         fetchInitialDebts(forceRefresh: true);
       }
     });
@@ -66,11 +82,13 @@ class DebtProvider extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _dataChangedSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
   // Getters
   List<DebtModel> get debts => _debts;
+  Map<String, DebtModel> get debtMap => _debtMap;
   Map<String, dynamic> get summary => _summary;
   DebtStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -151,11 +169,16 @@ class DebtProvider extends ChangeNotifier {
     if (_currentStoreId == null) return;
 
     final now = DateTime.now();
+    if (!forceRefresh && _fetchShieldActive) {
+      return;
+    }
+
     if (!forceRefresh &&
         _cachedDebts != null &&
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       _debts = _cachedDebts!;
+      _rebuildDebtMap();
       if (status != DebtStatus.loaded) {
         _setStatus(DebtStatus.loaded);
       }
@@ -178,12 +201,14 @@ class DebtProvider extends ChangeNotifier {
       );
 
       _debts = result['debts'];
+      _rebuildDebtMap();
       _lastDocument = result['lastDoc'];
       _hasMore = _debts.length == 20;
       _cachedDebts = _debts;
       _cacheTimestamp = now;
 
       await _fetchSummary();
+      _activateFetchShield();
       _setStatus(DebtStatus.loaded);
     } on ServerException catch (e) {
       _setError(e.message);
@@ -212,6 +237,7 @@ class DebtProvider extends ChangeNotifier {
 
       final newDebts = result['debts'];
       _debts.addAll(newDebts);
+      _rebuildDebtMap();
       _lastDocument = result['lastDoc'];
       _hasMore = newDebts.length == 20;
 
@@ -286,7 +312,20 @@ class DebtProvider extends ChangeNotifier {
           createdAt: Timestamp.now(),
           createdBy: user.userId,
         );
-        await _debtRepository.createDebt(newDebt);
+        
+        // Optimistic UI updates
+        _debts.insert(0, newDebt);
+        _rebuildDebtMap();
+        notifyListeners();
+        
+        try {
+          await _debtRepository.createDebt(newDebt);
+        } catch (e) {
+          // Rollback
+          _debts.remove(newDebt);
+          _rebuildDebtMap();
+          rethrow;
+        }
         AnalyticsService.logDebtAdded();
       }
 
@@ -299,6 +338,7 @@ class DebtProvider extends ChangeNotifier {
       }
 
       appEvents.fireDebtsChanged();
+      _activateFetchShield();
       _setStatus(DebtStatus.loaded); // Reset status
       return true;
     } on AppException catch (e) {
@@ -316,8 +356,31 @@ class DebtProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
-      await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      final oldDebt = index >= 0 ? _debts[index] : null;
+      
+      if (index >= 0) {
+        _debts[index] = _debts[index].copyWith(
+          amountDue: _debts[index].amountDue + amountToAdd,
+          totalAmount: _debts[index].totalAmount + amountToAdd,
+        );
+        _rebuildDebtMap();
+        notifyListeners();
+      }
+
+      try {
+        await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
+      } catch (e) {
+        if (oldDebt != null) {
+          _debts[index] = oldDebt;
+          _rebuildDebtMap();
+          notifyListeners();
+        }
+        rethrow;
+      }
+      
       appEvents.fireDebtsChanged();
+      _activateFetchShield();
       return true;
     } on AppException catch (e) {
       _setError(e.message);
@@ -336,8 +399,39 @@ class DebtProvider extends ChangeNotifier {
       // For now we will replicate the check if feasible or leave it if it was open.
       // User requested "Refactor all Write methods", so I'll add a safe check for createDebt as a baseline
       await _validateUserAndPermission((p) => p.createDebt);
-      await _debtRepository.updateDebt(debtId, data);
+      
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      final oldDebt = index >= 0 ? _debts[index] : null;
+      
+      if (index >= 0) {
+        // Since we don't know exactly what changed, we can't fully optimistically apply the map for everything
+        // But we can attempt for typical fields
+        if (data.containsKey('customerName')) {
+          _debts[index] = _debts[index].copyWith(customerName: data['customerName']);
+        }
+        if (data.containsKey('customerPhone')) {
+          _debts[index] = _debts[index].copyWith(customerPhone: data['customerPhone']);
+        }
+        if (data.containsKey('notes')) {
+          _debts[index] = _debts[index].copyWith(notes: data['notes']);
+        }
+        _rebuildDebtMap();
+        notifyListeners();
+      }
+
+      try {
+        await _debtRepository.updateDebt(debtId, data);
+      } catch (e) {
+        if (oldDebt != null) {
+          _debts[index] = oldDebt;
+          _rebuildDebtMap();
+          notifyListeners();
+        }
+        rethrow;
+      }
+      
       appEvents.fireDebtsChanged();
+      _activateFetchShield();
       return true;
     } on ServerException catch (e) {
       _setError(e.message);
@@ -354,9 +448,32 @@ class DebtProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.collectDebt);
 
-      // The provider now just calls the atomic repository method
-      await _debtRepository.processPayment(debtId, amountToPay, userId);
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      final oldDebt = index >= 0 ? _debts[index] : null;
+      
+      if (index >= 0) {
+        final newDue = _debts[index].amountDue - amountToPay;
+        _debts[index] = _debts[index].copyWith(
+          amountDue: newDue < 0 ? 0 : newDue,
+          debtStatus: newDue <= 0 ? 'paid' : 'open',
+        );
+        _rebuildDebtMap();
+        notifyListeners();
+      }
+
+      try {
+        await _debtRepository.processPayment(debtId, amountToPay, userId);
+      } catch (e) {
+        if (oldDebt != null) {
+          _debts[index] = oldDebt;
+          _rebuildDebtMap();
+          notifyListeners();
+        }
+        rethrow;
+      }
+      
       appEvents.fireDebtsChanged();
+      _activateFetchShield();
       return true;
     } on AppException catch (e) {
       _setError(e.message);
@@ -372,14 +489,30 @@ class DebtProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.deleteDebt);
 
-      await _debtRepository.deleteDebt(debtId);
+      final index = _debts.indexWhere((element) => element.debtId == debtId);
+      final oldDebt = index >= 0 ? _debts[index] : null;
 
-      // Remove from local list
-      _debts.removeWhere((element) => element.debtId == debtId);
+      if (index >= 0) {
+        _debts.removeAt(index);
+        _rebuildDebtMap();
+        notifyListeners();
+      }
+
+      try {
+        await _debtRepository.deleteDebt(debtId);
+      } catch (e) {
+        if (oldDebt != null) {
+          _debts.insert(index, oldDebt);
+          _rebuildDebtMap();
+          notifyListeners();
+        }
+        rethrow;
+      }
 
       // Refresh statistics as totals changed
       await _fetchSummary();
 
+      _activateFetchShield();
       _setStatus(DebtStatus.loaded);
       appEvents.fireStatsRefresh();
       return true;

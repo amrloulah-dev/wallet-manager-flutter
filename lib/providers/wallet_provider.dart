@@ -35,9 +35,19 @@ class WalletProvider extends ChangeNotifier {
 
   final AuthProvider _authProvider; // Made final and non-nullable
   List<WalletModel> _wallets = [];
+  Map<String, WalletModel> _walletMap = {};
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
-  bool _lockFetching = false;
+  bool _fetchShieldActive = false;
+  Timer? _fetchShieldTimer;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      if (!_isDisposed) _fetchShieldActive = false;
+    });
+  }
 
   // Status
   WalletStatusState _status = WalletStatusState.idle;
@@ -112,6 +122,8 @@ class WalletProvider extends ChangeNotifier {
                 else
                   _wallets[i],
             ];
+            _rebuildWalletMap();
+            _activateFetchShield();
             notifyListeners();
             debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
                 'local_deduct applied! walletId=$walletId, '
@@ -148,12 +160,10 @@ class WalletProvider extends ChangeNotifier {
   void applyLocalDeduction(String walletId, double deduction, bool isSend) {
     if (_isDisposed) return;
 
-    // Lock Firestore fetches for 3 seconds to prevent stale SDK cache 
+    // Lock Firestore fetches for 5 seconds to prevent stale SDK cache 
     // from overwriting this beautiful local mutation!
-    _lockFetching = true;
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!_isDisposed) _lockFetching = false;
-    });
+    _activateFetchShield();
+
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) {
@@ -169,6 +179,7 @@ class WalletProvider extends ChangeNotifier {
       for (int i = 0; i < _wallets.length; i++)
         if (i == index) oldWallet.copyWith(balance: newBalance) else _wallets[i],
     ];
+    _rebuildWalletMap();
     notifyListeners();
     debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '
         'walletId=$walletId | oldBalance=${oldWallet.balance} → New Balance: $newBalance | '
@@ -178,6 +189,7 @@ class WalletProvider extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _fetchShieldTimer?.cancel();
     _dataChangedSubscription?.cancel();
     _overlayDataSubscription?.cancel();
     super.dispose();
@@ -185,6 +197,7 @@ class WalletProvider extends ChangeNotifier {
 
   // Getters
   List<WalletModel> get wallets => _wallets;
+  Map<String, WalletModel> get walletMap => _walletMap;
   WalletStatusState get status => _status;
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
@@ -249,7 +262,7 @@ class WalletProvider extends ChangeNotifier {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    if (_lockFetching) {
+    if (_fetchShieldActive) {
       debugPrint('🔥 [TX_FLOW] Fetch blocked to preserve local mutation!');
       return;
     }
@@ -335,6 +348,8 @@ class WalletProvider extends ChangeNotifier {
       _cachedWallets = List<WalletModel>.from(fetchedWallets);
       _cacheTimestamp = DateTime.now();
       
+      _rebuildWalletMap();
+
       notifyListeners();
       debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: Finished and called notifyListeners. Wallet count=${_wallets.length}');
       
@@ -354,6 +369,10 @@ class WalletProvider extends ChangeNotifier {
   }
 
   Future<void> fetchMoreWallets() async {
+    if (_fetchShieldActive) {
+      debugPrint('🔥 [TX_FLOW] FetchBlocked: Preserving local mutation on load more.');
+      return;
+    }
     if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
       return;
 
@@ -408,6 +427,8 @@ class WalletProvider extends ChangeNotifier {
         _wallets = [..._wallets, ...newWallets];
       }
 
+      _rebuildWalletMap();
+
       notifyListeners();
       _setStatus(WalletStatusState.loaded);
     } on ServerException catch (e) {
@@ -443,11 +464,22 @@ class WalletProvider extends ChangeNotifier {
         createdBy: createdBy,
       );
 
-      await _walletRepository.createWallet(newWallet);
-      _wallets.add(newWallet);
-      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
-      appEvents.fireWalletsChanged();
-      return true;
+      _wallets = [..._wallets, newWallet];
+      _rebuildWalletMap();
+      notifyListeners();
+
+      try {
+        await _walletRepository.createWallet(newWallet);
+        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
+        appEvents.fireWalletsChanged();
+        _setStatus(WalletStatusState.loaded);
+        return true;
+      } catch (e) {
+        _wallets = _wallets.where((w) => w.walletId != newWallet.walletId).toList();
+        _rebuildWalletMap();
+        notifyListeners();
+        throw e;
+      }
     } on AppException catch (e) {
       _setError(e.message);
       return false;
@@ -462,10 +494,37 @@ class WalletProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      await _walletRepository.updateWallet(walletId, data);
-      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
-      appEvents.fireWalletsChanged();
-      return true;
+      final oldWallet = _walletMap[walletId];
+      if (oldWallet == null) return false;
+
+      final updatedMap = oldWallet.toFirestore()..addAll(data);
+      // Wait, fromMap might also require docId since we mapped it from document, let's see how WalletModel is defined.
+      // Usually fromMap only takes the map, but wait, fromWalletStatus is another factory.
+      // Let's use copyWith if possible, but map update is dynamic. Let's just use fromMap.
+      final optimisticWallet = WalletModel.fromMap(updatedMap, walletId);
+
+      _wallets = [
+        for (final w in _wallets)
+          if (w.walletId == walletId) optimisticWallet else w
+      ];
+      _rebuildWalletMap();
+      notifyListeners();
+
+      try {
+        await _walletRepository.updateWallet(walletId, data);
+        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
+        appEvents.fireWalletsChanged();
+        _setStatus(WalletStatusState.loaded);
+        return true;
+      } catch (e) {
+        _wallets = [
+          for (final w in _wallets)
+            if (w.walletId == walletId) oldWallet else w
+        ];
+        _rebuildWalletMap();
+        notifyListeners();
+        throw e;
+      }
     } on ServerException catch (e) {
       _setError(e.message);
       return false;
@@ -496,12 +555,34 @@ class WalletProvider extends ChangeNotifier {
         createdBy: createdBy,
       );
 
-      await _transactionRepository.createTransaction(newTransaction);
-      // This operation changes both wallets and transactions
-      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
-      appEvents.fireWalletsChanged();
-      appEvents.fireTransactionsChanged();
-      return true;
+      final wallet = _walletMap[walletId];
+      if (wallet == null) throw ValidationException('Wallet not found');
+      final oldBalance = wallet.balance;
+      final newBalance = oldBalance + amount;
+
+      _wallets = [
+        for (final w in _wallets)
+          if (w.walletId == walletId) w.copyWith(balance: newBalance) else w
+      ];
+      _rebuildWalletMap();
+      notifyListeners();
+
+      try {
+        await _transactionRepository.createTransaction(newTransaction);
+        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
+        appEvents.fireWalletsChanged();
+        appEvents.fireTransactionsChanged();
+        _setStatus(WalletStatusState.loaded);
+        return true;
+      } catch (e) {
+        _wallets = [
+          for (final w in _wallets)
+            if (w.walletId == walletId) w.copyWith(balance: oldBalance) else w
+        ];
+        _rebuildWalletMap();
+        notifyListeners();
+        throw e;
+      }
     } on AppException catch (e) {
       _setError(e.message);
       return false;
@@ -516,12 +597,31 @@ class WalletProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      await _walletRepository.deleteWallet(walletId);
-      _wallets.removeWhere((w) => w.walletId == walletId);
-      await LocalStorageService.instance.cacheWalletLiteList(_wallets);
-      appEvents.fireWalletsChanged();
-      _setStatus(WalletStatusState.loaded);
-      return true;
+      final index = _wallets.indexWhere((w) => w.walletId == walletId);
+      if (index == -1) return false;
+      final removedWallet = _wallets[index];
+
+      _wallets = [
+        for (int i = 0; i < _wallets.length; i++)
+          if (i != index) _wallets[i]
+      ];
+      _rebuildWalletMap();
+      notifyListeners();
+
+      try {
+        await _walletRepository.deleteWallet(walletId);
+        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
+        appEvents.fireWalletsChanged();
+        _setStatus(WalletStatusState.loaded);
+        return true;
+      } catch (e) {
+        final newWallets = List<WalletModel>.from(_wallets);
+        newWallets.insert(index, removedWallet);
+        _wallets = newWallets;
+        _rebuildWalletMap();
+        notifyListeners();
+        throw e;
+      }
     } on FirebaseException catch (e) {
       _setError(e.message ?? 'Failed to delete wallet.');
       return false;
@@ -605,6 +705,14 @@ class WalletProvider extends ChangeNotifier {
       for (int i = 0; i < _wallets.length; i++)
         if (i == index) wallet.copyWith(balance: newBalance) else _wallets[i],
     ];
+    _rebuildWalletMap();
+    _activateFetchShield();
     notifyListeners();
+  }
+
+  void _rebuildWalletMap() {
+    _walletMap = {
+      for (final wallet in _wallets) wallet.walletId: wallet,
+    };
   }
 }

@@ -126,83 +126,101 @@ class _WalletsListScreenState extends State<WalletsListScreen>
         title: Text(AppLocalizations.of(context)!.wallets),
         centerTitle: true,
       ),
-      body: Consumer<WalletProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              _buildSearchBar(provider),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
       floatingActionButton: _buildSpeedDialFab(),
     );
   }
 
-  Widget _buildContent(WalletProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 4, itemHeight: 150);
-    }
-
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ??
-            AppLocalizations.of(context)!.somethingWentWrong,
-        onRetry: provider.fetchInitialWallets,
-      );
-    }
-
-    final wallets = provider.wallets.where((wallet) {
-      final search = _searchController.text.toLowerCase();
-      if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    if (wallets.isEmpty) {
-      return EmptyStateWidget(
-        message: AppLocalizations.of(context)!.noWalletsYet,
-        description: AppLocalizations.of(context)!.startAddingWallets,
-        icon: Icons.wallet_outlined,
-        actionText: AppLocalizations.of(context)!.addWallet,
-        onAction: _navigateToAddWallet,
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialWallets,
-      child: Column(
-        children: [
-          _buildSummaryCard(wallets),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 80), // Space for FAB
-              itemCount: wallets.length + (provider.isLoadingMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == wallets.length) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                final wallet = wallets[index];
-                return WalletCard(
-                  key: ValueKey('${wallet.walletId}_${wallet.balance}'),
-                  wallet: wallet,
-                  onTap: () => _navigateToWalletDetails(wallet.walletId),
-                  onEdit: () => _navigateToEditWallet(wallet),
-                  onDelete: () => _showDeleteDialog(wallet),
-                );
-              },
-            ),
-          ),
-        ],
+  Widget _buildContent() {
+    return Selector<WalletProvider, (bool, bool, String?, bool)>(
+      selector: (context, provider) => (
+        provider.isLoading,
+        provider.hasError,
+        provider.errorMessage,
+        provider.isLoadingMore
       ),
+      builder: (context, status, child) {
+        final isLoading = status.$1;
+        final hasError = status.$2;
+        final errorMessage = status.$3;
+        final isLoadingMore = status.$4;
+
+        if (isLoading) {
+          return const SkeletonList(itemCount: 4, itemHeight: 150);
+        }
+
+        if (hasError) {
+          return CustomErrorWidget(
+            message: errorMessage ??
+                AppLocalizations.of(context)!.somethingWentWrong,
+            onRetry: context.read<WalletProvider>().fetchInitialWallets,
+          );
+        }
+
+        return Selector<WalletProvider, List<WalletModel>>(
+          selector: (context, provider) => provider.wallets,
+          builder: (context, wallets, child) {
+            final filteredWallets = wallets.where((wallet) {
+              final search = _searchController.text.toLowerCase();
+              if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
+                return false;
+              }
+              return true;
+            }).toList();
+
+            if (filteredWallets.isEmpty) {
+              return EmptyStateWidget(
+                message: AppLocalizations.of(context)!.noWalletsYet,
+                description: AppLocalizations.of(context)!.startAddingWallets,
+                icon: Icons.wallet_outlined,
+                actionText: AppLocalizations.of(context)!.addWallet,
+                onAction: _navigateToAddWallet,
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: context.read<WalletProvider>().fetchInitialWallets,
+              child: Column(
+                children: [
+                  _buildSummaryCard(filteredWallets),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(bottom: 80),
+                      itemCount:
+                          filteredWallets.length + (isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == filteredWallets.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final wallet = filteredWallets[index];
+                        return WalletCard(
+                          key: ValueKey('${wallet.walletId}_${wallet.balance}'),
+                          wallet: wallet,
+                          onTap: () =>
+                              _navigateToWalletDetails(wallet.walletId),
+                          onEdit: () => _navigateToEditWallet(wallet),
+                          onDelete: () => _showDeleteDialog(wallet),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -251,7 +269,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
     return options;
   }
 
-  Widget _buildSearchBar(WalletProvider provider) {
+  Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: TextField(

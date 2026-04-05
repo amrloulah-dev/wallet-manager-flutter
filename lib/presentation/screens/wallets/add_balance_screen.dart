@@ -25,7 +25,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
 
-  WalletModel? _selectedWallet;
+  String? _selectedWalletId;
   bool _isSubmitting = false;
 
   @override
@@ -38,7 +38,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-    if (_selectedWallet == null) {
+    if (_selectedWalletId == null) {
       ToastUtils.showError(
           AppLocalizations.of(context)!.pleaseSelectWalletFirst);
       return;
@@ -58,7 +58,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     }
 
     final success = await walletProvider.addBalanceToWallet(
-      _selectedWallet!.walletId,
+      _selectedWalletId!,
       amount,
       currentUserId,
     );
@@ -94,7 +94,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
               children: [
                 _buildWalletSelection(),
                 const SizedBox(height: 24),
-                if (_selectedWallet != null) ...[
+                if (_selectedWalletId != null) ...[
                   _buildWalletInfoCard(),
                   const SizedBox(height: 24),
                   _buildAmountField(),
@@ -119,7 +119,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
           return Text(AppLocalizations.of(context)!.noWalletsAvailable);
         }
         return CustomDropdown<WalletModel>(
-          value: _selectedWallet,
+          value: _selectedWalletId != null ? walletProvider.walletMap[_selectedWalletId!] : null,
           labelText:
               AppLocalizations.of(context)!.selectWallet, // حافظنا على الترجمة
           prefixIcon: const Icon(
@@ -139,7 +139,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
 
           onChanged: (wallet) {
             setState(() {
-              _selectedWallet = wallet;
+              _selectedWalletId = wallet?.walletId;
             });
           },
 
@@ -153,23 +153,30 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   }
 
   Widget _buildWalletInfoCard() {
-    if (_selectedWallet == null) return const SizedBox.shrink();
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppLocalizations.of(context)!.selectedWalletDetails,
-                style: AppTextStyles.h3),
-            const Divider(height: 20),
-            _buildInfoRow(AppLocalizations.of(context)!.currentBalanceLabel,
-                NumberFormatter.formatAmount(_selectedWallet!.balance)),
-          ],
-        ),
-      ),
+    if (_selectedWalletId == null) return const SizedBox.shrink();
+    
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_selectedWalletId!],
+      builder: (context, wallet, child) {
+        if (wallet == null) return const SizedBox.shrink();
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppLocalizations.of(context)!.selectedWalletDetails,
+                    style: AppTextStyles.h3),
+                const Divider(height: 20),
+                _buildInfoRow(AppLocalizations.of(context)!.currentBalanceLabel,
+                    NumberFormatter.formatAmount(wallet.balance)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

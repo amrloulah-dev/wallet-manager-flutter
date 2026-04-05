@@ -19,7 +19,13 @@ class TransactionProvider extends ChangeNotifier {
   String? _currentStoreId;
   UserModel? _currentUser;
   List<TransactionModel> _transactions = [];
+  Map<String, TransactionModel> _transactionMap = {};
+  List<TransactionModel> _todayTransactions = [];
   Map<String, dynamic> _summary = {};
+
+  // Fetch Shield
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
   final DateTimeRange _dateRange = DateTimeRange(
@@ -51,7 +57,7 @@ class TransactionProvider extends ChangeNotifier {
             transactionRepository ?? TransactionRepository(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
+      if (_currentStoreId != null && !isLoading && !isLoadingMore && !_fetchShieldActive) {
         fetchInitialTransactions(forceRefresh: true);
       }
     });
@@ -59,13 +65,37 @@ class TransactionProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _fetchShieldTimer?.cancel();
     _isDisposed = true;
     _dataChangedSubscription?.cancel();
     super.dispose();
   }
 
+  void _rebuildTransactionMap() {
+    _transactionMap = {
+      for (final tx in _transactions) tx.transactionId: tx,
+    };
+  }
+
+  void _recomputeTodayTransactions() {
+    final now = DateTime.now();
+    _todayTransactions = _transactions.where((tx) {
+      return DateHelper.isSameDay(tx.transactionDate.toDate(), now);
+    }).toList();
+  }
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
+  }
+
   // Getters
   List<TransactionModel> get transactions => _transactions;
+  Map<String, TransactionModel> get transactionMap => _transactionMap;
+  List<TransactionModel> get todayTransactions => _todayTransactions;
   Map<String, dynamic> get summary => _summary;
   TransactionStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -121,6 +151,7 @@ class TransactionProvider extends ChangeNotifier {
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
+    if (_fetchShieldActive) return;
 
     if (!forceRefresh &&
         _lastOptimisticUpdate != null &&
@@ -159,6 +190,8 @@ class TransactionProvider extends ChangeNotifier {
       );
 
       _transactions = result['transactions'];
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
       _lastDocument = result['lastDoc'];
       _hasMore = _transactions.length == 20;
       _cachedTransactions = _transactions;
@@ -194,6 +227,8 @@ class TransactionProvider extends ChangeNotifier {
 
       final newTransactions = result['transactions'] as List<TransactionModel>;
       _transactions.addAll(newTransactions);
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
       _lastDocument = result['lastDoc'];
       _hasMore = newTransactions.length == 20;
       _calculateSummary();
@@ -371,9 +406,11 @@ class TransactionProvider extends ChangeNotifier {
       );
 
       _transactions.insert(0, newTransaction);
-      
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
       _calculateSummary();
       _lastOptimisticUpdate = DateTime.now();
+      _activateFetchShield();
       notifyListeners();
     } catch (e) {
     }

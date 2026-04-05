@@ -9,10 +9,8 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
-import '../../../data/repositories/wallet_repository.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/wallet_stats_card.dart';
-import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
@@ -42,11 +40,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       );
     }
 
-    return StreamBuilder<WalletModel?>(
-      stream: WalletRepository().watchWallet(_walletId!),
-      builder: (context, snapshot) {
-        final wallet = snapshot.data;
-
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_walletId!],
+      builder: (context, wallet, child) {
         return Scaffold(
           appBar: AppBar(
             title: Text(AppLocalizations.of(context)!.walletDetails),
@@ -66,29 +62,13 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                   ]
                 : [],
           ),
-          body: _buildBody(context, snapshot),
+          body: _buildBody(context, wallet),
         );
       },
     );
   }
 
-  Widget _buildBody(
-      BuildContext context, AsyncSnapshot<WalletModel?> snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting &&
-        !snapshot.hasData) {
-      return LoadingIndicator(
-          message: AppLocalizations.of(context)!.loadingWalletData);
-    }
-
-    if (snapshot.hasError) {
-      return CustomErrorWidget(
-        message: AppLocalizations.of(context)!.errorLoadingData,
-        onRetry: () => setState(() {}),
-      );
-    }
-
-    final wallet = snapshot.data;
-
+  Widget _buildBody(BuildContext context, WalletModel? wallet) {
     if (wallet == null) {
       return CustomErrorWidget(
         message: AppLocalizations.of(context)!.walletNotFound,

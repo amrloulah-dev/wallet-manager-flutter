@@ -1,6 +1,11 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../data/models/stats_summary_model.dart';
+import '../../../data/models/daily_stats_model.dart';
+import '../../../data/models/transaction_model.dart';
+import '../../../data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/theme/app_colors.dart';
@@ -91,13 +96,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final statsProvider = context.watch<StatisticsProvider>();
-    final transactionProvider = context.watch<TransactionProvider>();
-    final walletProvider = context.watch<WalletProvider>();
-    final debtProvider = context.watch<DebtProvider>();
-
-
     return DoubleBackToExitWrapper(
       child: Scaffold(
           appBar: AppBar(
@@ -118,19 +116,19 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildWelcomeHeader(authProvider),
-                  _buildTrialBanner(authProvider),
+                  _buildWelcomeHeader(),
+                  _buildTrialBanner(),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildQuickStats(statsProvider),
+                        _buildQuickStats(),
                         const SizedBox(height: 24),
-                        _buildQuickActions(statsProvider), // Pass if needed, or read inside if not dependent
+                        _buildQuickActions(),
                         const SizedBox(height: 24),
-                        _buildAlerts(walletProvider, debtProvider),
-                        _buildRecentTransactions(transactionProvider),
+                        _buildAlerts(),
+                        _buildRecentTransactions(),
                       ],
                     ),
                   ),
@@ -148,43 +146,49 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     );
   }
 
-  Widget _buildWelcomeHeader(AuthProvider authProvider) {
-    final user = authProvider.currentUser;
-    final avatarLetter = user?.fullName.isNotEmpty == true
-        ? user!.fullName[0].toUpperCase()
-        : 'U';
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        border: Border(
-            bottom: BorderSide(color: AppColors.border(context), width: 1)),
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          radius: 20,
-          backgroundColor: AppColors.primary,
-          child: Text(
-            avatarLetter,
-            style: AppTextStyles.h3.copyWith(color: Colors.white),
+  Widget _buildWelcomeHeader() {
+    return Selector<AuthProvider, String?>(
+      selector: (context, provider) => provider.currentUser?.fullName,
+      builder: (context, fullName, child) {
+        final avatarLetter = fullName?.isNotEmpty == true
+            ? fullName![0].toUpperCase()
+            : 'U';
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            border: Border(
+                bottom: BorderSide(color: AppColors.border(context), width: 1)),
           ),
-        ),
-        title: Text(
-          _getGreetingMessage(context),
-          style: AppTextStyles.labelSmall
-              .copyWith(color: AppColors.textSecondary(context)),
-        ),
-        subtitle: Text(
-          user?.fullName ?? AppLocalizations.of(context)!.user,
-          style: AppTextStyles.h3
-              .copyWith(color: AppColors.textPrimary(context)),
-        ),
-      ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary,
+              child: Text(
+                avatarLetter,
+                style: AppTextStyles.h3.copyWith(color: Colors.white),
+              ),
+            ),
+            title: Text(
+              _getGreetingMessage(context),
+              style: AppTextStyles.labelSmall
+                  .copyWith(color: AppColors.textSecondary(context)),
+            ),
+            subtitle: Text(
+              fullName ?? AppLocalizations.of(context)!.user,
+              style: AppTextStyles.h3
+                  .copyWith(color: AppColors.textPrimary(context)),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTrialBanner(AuthProvider authProvider) {
+  Widget _buildTrialBanner() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
         if (!authProvider.isTrial) return const SizedBox.shrink();
 
         final days = authProvider.trialDaysRemaining ?? 0;
@@ -228,11 +232,22 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             ],
           ),
         );
+      },
+    );
   }
 
-  Widget _buildQuickStats(StatisticsProvider provider) {
+  Widget _buildQuickStats() {
+    return Selector<StatisticsProvider,
+        ({StatsSummaryModel? summary, DailyStatsModel? today, bool isLoading, String? error})>(
+      selector: (context, provider) => (
+        summary: provider.dashboardSummary,
+        today: provider.todayStats,
+        isLoading: provider.isLoading,
+        error: provider.errorMessage,
+      ),
+      builder: (context, data, child) {
         try {
-          if (provider.isLoading && provider.dashboardSummary == null) {
+          if (data.isLoading && data.summary == null) {
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -244,12 +259,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                   List.generate(4, (index) => const SkeletonCard(height: 80)),
             );
           }
-          if (provider.errorMessage != null &&
-              provider.dashboardSummary == null) {
-            return Center(child: Text(provider.errorMessage!));
+          if (data.error != null && data.summary == null) {
+            return Center(child: Text(data.error!));
           }
 
-          final stats = provider.dashboardSummary;
+          final stats = data.summary;
           if (stats == null) {
             return Center(
                 child: Text(AppLocalizations.of(context)!.errorLoadingStats));
@@ -310,7 +324,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                       StatsCard(
                         title:
                             '${AppLocalizations.of(context)!.totalTransactions} ',
-                        value: (provider.todayStats?.transactionCount ?? 0)
+                        value: (data.today?.transactionCount ?? 0)
                             .toString(),
                         icon: Icons.swap_horiz,
                         color: Colors.green.shade700,
@@ -333,7 +347,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                       StatsCard(
                         title:
                             '${AppLocalizations.of(context)!.totalCommission} ',
-                        value: (provider.todayStats?.totalCommission ?? 0)
+                        value: (data.today?.totalCommission ?? 0)
                             .toInt()
                             .toString(),
                         icon: Icons.attach_money,
@@ -389,7 +403,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             ],
           );
         } catch (e) {
-
           return Center(
             child: Text(
               "UI Error: $e",
@@ -397,242 +410,284 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             ),
           );
         }
+      },
+    );
   }
 
-  Widget _buildQuickActions(StatisticsProvider statsProvider) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final isSmallScreen = width < 360;
-        final isMediumScreen = width >= 360 && width < 600;
+  Widget _buildQuickActions() {
+    return Selector<StatisticsProvider, int>(
+      selector: (context, provider) => provider.dashboardSummary?.openDebtsCount ?? 0,
+      builder: (context, openDebtsCount, child) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final isSmallScreen = width < 360;
+            final isMediumScreen = width >= 360 && width < 600;
 
-        int crossAxisCount;
-        double childAspectRatio;
-        double horizontalPadding;
+            int crossAxisCount;
+            double childAspectRatio;
+            double horizontalPadding;
 
-        if (isSmallScreen) {
-          crossAxisCount = 3;
-          childAspectRatio = 0.8;
-          horizontalPadding = 12;
-        } else if (isMediumScreen) {
-          crossAxisCount = 3;
-          childAspectRatio = .95;
-          horizontalPadding = 16;
-        } else {
-          crossAxisCount = 6;
-          childAspectRatio = 1.0;
-          horizontalPadding = 16;
-        }
+            if (isSmallScreen) {
+              crossAxisCount = 3;
+              childAspectRatio = 0.8;
+              horizontalPadding = 12;
+            } else if (isMediumScreen) {
+              crossAxisCount = 3;
+              childAspectRatio = .95;
+              horizontalPadding = 16;
+            } else {
+              crossAxisCount = 6;
+              childAspectRatio = 1.0;
+              horizontalPadding = 16;
+            }
 
-        final List<Widget> actions = [
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.newTransaction,
-            icon: Icons.add_circle_outline,
-            color: AppColors.primary,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              if (user != null &&
-                  user.hasPermission((p) => p.createTransaction)) {
-                _navigateToCreateTransaction();
-              } else {
-                ToastUtils.showError('ليس لديك صلاحية لإنشاء معاملة');
-              }
-            },
-          ),
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.newWallet,
-            icon: Icons.account_balance_wallet_outlined,
-            color: Colors.orange.shade700,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              if (user != null && user.hasPermission((p) => p.createWallet)) {
-                Navigator.pushNamed(context, RouteConstants.walletForm);
-              } else {
-                ToastUtils.showError('ليس لديك صلاحية لإنشاء محفظة');
-              }
-            },
-          ),
-          QuickActionCard(
-            title: '${AppLocalizations.of(context)!.newDebt} (${statsProvider.dashboardSummary?.openDebtsCount ?? 0})',
-            icon: Icons.post_add_outlined,
-            color: AppColors.error,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              if (user != null && user.hasPermission((p) => p.createDebt)) {
-                Navigator.pushNamed(context, RouteConstants.addDebt);
-              } else {
-                ToastUtils.showError('ليس لديك صلاحية لإنشاء دين');
-              }
-            },
-          ),
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.viewWallets,
-            icon: Icons.wallet,
-            color: Colors.blue.shade700,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              final canAccess = user?.role == 'owner' ||
-                  (user?.permissions?.viewWallets ?? false);
-
-              if (canAccess) {
-                Navigator.pushNamed(context, RouteConstants.walletsList);
-              } else {
-                ToastUtils.showError(
-                    AppLocalizations.of(context)!.accessDenied);
-              }
-            },
-          ),
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.statistics,
-            icon: Icons.bar_chart,
-            color: Colors.purple.shade700,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              if (user != null &&
-                  user.hasPermission((p) => p.viewDashboardStats)) {
-                Navigator.pushNamed(context, RouteConstants.generalStatistics);
-              } else {
-                ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
-              }
-            },
-          ),
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.viewDebts,
-            icon: Icons.credit_card,
-            color: Colors.red.shade700,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              final canAccess = user?.role == 'owner' ||
-                  (user?.permissions?.viewDebts ?? false);
-
-              if (canAccess) {
-                Navigator.pushNamed(context, RouteConstants.debtsList);
-              } else {
-                ToastUtils.showError(
-                    AppLocalizations.of(context)!.accessDenied);
-              }
-            },
-          ),
-          QuickActionCard(
-            title: AppLocalizations.of(context)!.manageEmployees,
-            icon: Icons.people_alt_outlined,
-            color: Colors.teal.shade700,
-            onTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              if (user != null && user.role == 'owner') {
-                Navigator.pushNamed(context, RouteConstants.manageEmployees);
-              } else {
-                ToastUtils.showError('هذه الخاصية للمالك فقط');
-              }
-            },
-          ),
-        ];
-
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 24),
-              SectionHeader(title: AppLocalizations.of(context)!.quickActions),
-              const SizedBox(height: 12),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: childAspectRatio,
-                children: actions,
+            final List<Widget> actions = [
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.newTransaction,
+                icon: Icons.add_circle_outline,
+                color: AppColors.primary,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null &&
+                      user.hasPermission((p) => p.createTransaction)) {
+                    _navigateToCreateTransaction();
+                  } else {
+                    ToastUtils.showError('ليس لديك صلاحية لإنشاء معاملة');
+                  }
+                },
               ),
-            ],
-          ),
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.newWallet,
+                icon: Icons.account_balance_wallet_outlined,
+                color: Colors.orange.shade700,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null && user.hasPermission((p) => p.createWallet)) {
+                    Navigator.pushNamed(context, RouteConstants.walletForm);
+                  } else {
+                    ToastUtils.showError('ليس لديك صلاحية لإنشاء محفظة');
+                  }
+                },
+              ),
+              QuickActionCard(
+                title: '${AppLocalizations.of(context)!.newDebt} ($openDebtsCount)',
+                icon: Icons.post_add_outlined,
+                color: AppColors.error,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null && user.hasPermission((p) => p.createDebt)) {
+                    Navigator.pushNamed(context, RouteConstants.addDebt);
+                  } else {
+                    ToastUtils.showError('ليس لديك صلاحية لإنشاء دين');
+                  }
+                },
+              ),
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.viewWallets,
+                icon: Icons.wallet,
+                color: Colors.blue.shade700,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  final canAccess = user?.role == 'owner' ||
+                      (user?.permissions?.viewWallets ?? false);
+
+                  if (canAccess) {
+                    Navigator.pushNamed(context, RouteConstants.walletsList);
+                  } else {
+                    ToastUtils.showError(
+                        AppLocalizations.of(context)!.accessDenied);
+                  }
+                },
+              ),
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.statistics,
+                icon: Icons.bar_chart,
+                color: Colors.purple.shade700,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null &&
+                      user.hasPermission((p) => p.viewDashboardStats)) {
+                    Navigator.pushNamed(context, RouteConstants.generalStatistics);
+                  } else {
+                    ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
+                  }
+                },
+              ),
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.viewDebts,
+                icon: Icons.credit_card,
+                color: Colors.red.shade700,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  final canAccess = user?.role == 'owner' ||
+                      (user?.permissions?.viewDebts ?? false);
+
+                  if (canAccess) {
+                    Navigator.pushNamed(context, RouteConstants.debtsList);
+                  } else {
+                    ToastUtils.showError(
+                        AppLocalizations.of(context)!.accessDenied);
+                  }
+                },
+              ),
+              QuickActionCard(
+                title: AppLocalizations.of(context)!.manageEmployees,
+                icon: Icons.people_alt_outlined,
+                color: Colors.teal.shade700,
+                onTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null && user.role == 'owner') {
+                    Navigator.pushNamed(context, RouteConstants.manageEmployees);
+                  } else {
+                    ToastUtils.showError('هذه الخاصية للمالك فقط');
+                  }
+                },
+              ),
+            ];
+
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 24),
+                  SectionHeader(title: AppLocalizations.of(context)!.quickActions),
+                  const SizedBox(height: 12),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: childAspectRatio,
+                    children: actions,
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildAlerts(WalletProvider walletProvider, DebtProvider debtProvider) {
-        if (walletProvider.isLoading) {
+  Widget _buildAlerts() {
+    // Outer Selector: WalletProvider — only rebuilds when the list of
+    // wallets at ≥90% daily limit changes (by walletId identity).
+    return Selector<WalletProvider,
+        ({bool isLoading, List<WalletModel> alertWallets})>(
+      selector: (context, wp) => (
+        isLoading: wp.isLoading,
+        alertWallets: wp.wallets
+            .where((w) => w.getLimits().dailyPercentage >= 90)
+            .toList(),
+      ),
+      shouldRebuild: (prev, next) =>
+          prev.isLoading != next.isLoading ||
+          !listEquals(
+            prev.alertWallets.map((w) => w.walletId).toList(),
+            next.alertWallets.map((w) => w.walletId).toList(),
+          ),
+      builder: (context, walletData, child) {
+        if (walletData.isLoading) {
           return const SkeletonCard(height: 80);
         }
 
-        final List<Widget> alerts = [];
+        // Inner Selector: DebtProvider — only rebuilds when openDebtsCount changes.
+        return Selector<DebtProvider, int>(
+          selector: (context, dp) => dp.summary['openDebtsCount'] ?? 0,
+          builder: (context, openDebtsCount, child) {
+            final List<Widget> alerts = [];
 
-        final wallets = walletProvider.wallets;
-        for (var wallet in wallets) {
-          if (wallet.getLimits().dailyPercentage >= 90) {
-            alerts.add(AlertCard(
-              message: AppLocalizations.of(context)!
-                  .walletAlertMessage(wallet.phoneNumber),
-              type: AlertType.warning,
-              onActionTap: () {
-                final user = context.read<AuthProvider>().currentUser;
-                final canAccess = user?.role == 'owner' ||
-                    (user?.permissions?.viewWallets ?? false);
+            for (var wallet in walletData.alertWallets) {
+              alerts.add(AlertCard(
+                message: AppLocalizations.of(context)!
+                    .walletAlertMessage(wallet.phoneNumber),
+                type: AlertType.warning,
+                onActionTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  final canAccess = user?.role == 'owner' ||
+                      (user?.permissions?.viewWallets ?? false);
 
-                if (canAccess) {
-                  Navigator.pushNamed(
-                    context,
-                    RouteConstants.walletDetails,
-                    arguments: wallet.walletId,
-                  );
-                } else {
-                  ToastUtils.showError(
-                      AppLocalizations.of(context)!.accessDenied);
-                }
-              },
-              actionText: AppLocalizations.of(context)!.viewDetails,
-            ));
-          }
-        }
+                  if (canAccess) {
+                    Navigator.pushNamed(
+                      context,
+                      RouteConstants.walletDetails,
+                      arguments: wallet.walletId,
+                    );
+                  } else {
+                    ToastUtils.showError(
+                        AppLocalizations.of(context)!.accessDenied);
+                  }
+                },
+                actionText: AppLocalizations.of(context)!.viewDetails,
+              ));
+            }
 
-        final openDebtsCount = debtProvider.summary['openDebtsCount'] ?? 0;
-        if (openDebtsCount > 0) {
-          alerts.add(AlertCard(
-            message:
-                AppLocalizations.of(context)!.openDebtsAlert(openDebtsCount),
-            type: AlertType.error,
-            onActionTap: () {
-              final user = context.read<AuthProvider>().currentUser;
-              final canAccess = user?.role == 'owner' ||
-                  (user?.permissions?.viewDebts ?? false);
+            if (openDebtsCount > 0) {
+              alerts.add(AlertCard(
+                message:
+                    AppLocalizations.of(context)!.openDebtsAlert(openDebtsCount),
+                type: AlertType.error,
+                onActionTap: () {
+                  final user = context.read<AuthProvider>().currentUser;
+                  final canAccess = user?.role == 'owner' ||
+                      (user?.permissions?.viewDebts ?? false);
 
-              if (canAccess) {
-                Navigator.pushNamed(context, RouteConstants.debtsList);
-              } else {
-                ToastUtils.showError(
-                    AppLocalizations.of(context)!.accessDenied);
-              }
-            },
-            actionText: AppLocalizations.of(context)!.viewDebts,
-          ));
-        }
+                  if (canAccess) {
+                    Navigator.pushNamed(context, RouteConstants.debtsList);
+                  } else {
+                    ToastUtils.showError(
+                        AppLocalizations.of(context)!.accessDenied);
+                  }
+                },
+                actionText: AppLocalizations.of(context)!.viewDebts,
+              ));
+            }
 
-        if (alerts.isEmpty) {
-          return const SizedBox.shrink();
-        }
+            if (alerts.isEmpty) {
+              return const SizedBox.shrink();
+            }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 24),
-              SectionHeader(title: AppLocalizations.of(context)!.alerts),
-              const SizedBox(height: 12),
-              ...alerts.map((alert) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: alert,
-                  )),
-            ],
-          ),
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 24),
+                  SectionHeader(title: AppLocalizations.of(context)!.alerts),
+                  const SizedBox(height: 12),
+                  ...alerts.map((alert) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: alert,
+                      )),
+                ],
+              ),
+            );
+          },
         );
+      },
+    );
   }
 
-  Widget _buildRecentTransactions(TransactionProvider provider) {
+  Widget _buildRecentTransactions() {
+    // Selector: Only rebuilds when the top-5 transaction list or loading state changes.
+    return Selector<TransactionProvider,
+        ({bool isLoading, List<TransactionModel> recentFive})>(
+      selector: (context, provider) => (
+        isLoading: provider.isLoading,
+        recentFive: provider.transactions.take(5).toList(),
+      ),
+      shouldRebuild: (prev, next) =>
+          prev.isLoading != next.isLoading ||
+          !listEquals(
+            prev.recentFive.map((t) => t.transactionId).toList(),
+            next.recentFive.map((t) => t.transactionId).toList(),
+          ),
+      builder: (context, data, child) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
@@ -658,9 +713,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              if (provider.isLoading)
+              if (data.isLoading)
                 const SkeletonList(itemCount: 2, itemHeight: 80)
-              else if (provider.transactions.isEmpty)
+              else if (data.recentFive.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Text(
@@ -672,10 +727,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: provider.transactions.take(5).length,
+                  itemCount: data.recentFive.length,
                   itemBuilder: (context, index) {
-                    final transaction = provider.transactions.elementAt(index);
+                    final transaction = data.recentFive[index];
                     return TransactionCard(
+                      key: ValueKey('recent_tx_${transaction.transactionId}'),
                       transaction: transaction,
                       onTap: () {
                         final user = context.read<AuthProvider>().currentUser;
@@ -697,9 +753,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
             ],
           ),
         );
-      // Removed the Consumer builder here
-      // },
-    // Removed the Consumer builder here
-    // );
+      },
+    );
   }
 }

@@ -87,52 +87,77 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
         title: const Text('الإحصائيات العامة'),
         centerTitle: true,
       ),
-      body: Consumer<StatisticsProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              _buildDateFilter(provider),
-              const Divider(height: 1),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildDateFilter(),
+          const Divider(height: 1),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildContent(StatisticsProvider provider) {
-    if (provider.isLoading) {
-      return const LoadingIndicator(message: 'جاري تحميل الإحصائيات...');
-    }
-    if (provider.errorMessage != null) {
-      return CustomErrorWidget(message: provider.errorMessage!);
-    }
+  Widget _buildContent() {
+    return Selector<StatisticsProvider, bool>(
+      selector: (context, provider) => provider.isLoading,
+      builder: (context, isLoading, child) {
+        if (isLoading) {
+          return const LoadingIndicator(message: 'جاري تحميل الإحصائيات...');
+        }
+        
+        return Selector<StatisticsProvider, String?>(
+          selector: (context, provider) => provider.errorMessage,
+          builder: (context, errorMessage, child) {
+            if (errorMessage != null) {
+              return CustomErrorWidget(message: errorMessage);
+            }
 
-    if (provider.mode == StatsMode.filtered) {
-      if (provider.filteredStats != null) {
-        return _buildStatistics(
-            context, StatsSummaryModel.fromMap(provider.filteredStats!));
-      } else {
-        return _buildEmptyState(isCustom: true);
-      }
-    } else {
-      // Dashboard mode
-      if (provider.dashboardSummary != null) {
-        return _buildStatistics(context, provider.dashboardSummary!);
-      } else {
-        return _buildEmptyState();
-      }
-    }
+            return Selector<StatisticsProvider, StatsMode>(
+              selector: (context, provider) => provider.mode,
+              builder: (context, mode, child) {
+                if (mode == StatsMode.filtered) {
+                  return Selector<StatisticsProvider, Map<String, dynamic>?>(
+                    selector: (context, provider) => provider.filteredStats,
+                    builder: (context, filteredStats, child) {
+                      if (filteredStats != null) {
+                        return _buildStatistics(
+                            context, StatsSummaryModel.fromMap(filteredStats));
+                      } else {
+                        return _buildEmptyState(isCustom: true);
+                      }
+                    },
+                  );
+                } else {
+                  // Dashboard mode
+                  return Selector<StatisticsProvider, StatsSummaryModel?>(
+                    selector: (context, provider) => provider.dashboardSummary,
+                    builder: (context, dashboardSummary, child) {
+                      if (dashboardSummary != null) {
+                        return _buildStatistics(context, dashboardSummary);
+                      } else {
+                        return _buildEmptyState();
+                      }
+                    },
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
-  Widget _buildDateFilter(StatisticsProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
+  Widget _buildDateFilter() {
+    return Selector<StatisticsProvider, StatsMode>(
+      selector: (context, provider) => provider.mode,
+      builder: (context, mode, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
           Row(
             children: [
               Expanded(
@@ -166,7 +191,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
                   size: ButtonSize.small,
                 ),
               ),
-              if (provider.mode == StatsMode.filtered) ...[
+              if (mode == StatsMode.filtered) ...[
                 const SizedBox(width: 12),
                 Expanded(
                   child: CustomButton(
@@ -181,6 +206,8 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 

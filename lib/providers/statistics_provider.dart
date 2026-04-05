@@ -32,13 +32,23 @@ class StatisticsProvider extends ChangeNotifier {
   // Cache
   StatsSummaryModel? _cachedSummary;
   DateTime? _cacheTimestamp;
-  DateTime? _lastOptimisticUpdate;
 
   StreamSubscription? _debtsChangedSubscription;
   StreamSubscription? _walletsChangedSubscription;
   StreamSubscription? _transactionsChangedSubscription;
   StreamSubscription? _statsRefreshSubscription;
   bool _isDisposed = false;
+
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
+  }
 
   // Getters
   StatsMode get mode => _mode;
@@ -88,6 +98,7 @@ class StatisticsProvider extends ChangeNotifier {
     _walletsChangedSubscription?.cancel();
     _transactionsChangedSubscription?.cancel();
     _statsRefreshSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
@@ -109,8 +120,7 @@ class StatisticsProvider extends ChangeNotifier {
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
     if (_storeId == null) return;
 
-    if (!forceRefresh && _lastOptimisticUpdate != null && DateTime.now().difference(_lastOptimisticUpdate!) < const Duration(seconds: 10)) {
-
+    if (!forceRefresh && _fetchShieldActive) {
       return; // Abort the fetch
     }
 
@@ -145,6 +155,7 @@ class StatisticsProvider extends ChangeNotifier {
       _cacheTimestamp = now;
       _isLoading = false;
       _errorMessage = null;
+      _activateFetchShield();
       notifyListeners();
     } catch (e) {
       _dashboardSummary = null;
@@ -251,7 +262,6 @@ class StatisticsProvider extends ChangeNotifier {
       totalAmount: _todayStats!.totalAmount + amount,
     );
 
-    _lastOptimisticUpdate = DateTime.now();
     notifyListeners();
   }
 }

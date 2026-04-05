@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -270,15 +269,9 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Widget _buildWalletInfoCard(
       BuildContext context, TransactionModel transaction) {
-    return Consumer<WalletProvider>(
-      builder: (context, walletProvider, child) {
-        if (walletProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final WalletModel? wallet = walletProvider.wallets
-            .firstWhereOrNull((w) => w.walletId == transaction.walletId);
-
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[transaction.walletId],
+      builder: (context, wallet, child) {
         return _buildBaseCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

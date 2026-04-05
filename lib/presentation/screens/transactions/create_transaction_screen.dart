@@ -35,8 +35,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   final _commissionController = TextEditingController();
   final _notesController = TextEditingController();
 
-  WalletModel? _selectedWallet;
-  String? _preSelectedWalletId;
+  String? _selectedWalletId;
 
   String? _transactionType; // 'send' | 'receive'
   final String _paymentStatus = 'paid'; // 'paid' | 'debt'
@@ -56,27 +55,11 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       // Pre-select wallet if ID is passed
       final arguments = ModalRoute.of(context)?.settings.arguments as String?;
       if (arguments != null) {
-        _preSelectedWalletId = arguments;
-        final walletProvider = context.read<WalletProvider>();
-        if (walletProvider.wallets.isNotEmpty) {
-          _trySelectWallet(walletProvider.wallets);
-        }
+        setState(() {
+          _selectedWalletId = arguments;
+        });
       }
     });
-  }
-
-  void _trySelectWallet(List<WalletModel> wallets) {
-    if (_preSelectedWalletId != null) {
-      try {
-        final walletToSelect =
-            wallets.firstWhere((w) => w.walletId == _preSelectedWalletId);
-        setState(() {
-          _selectedWallet = walletToSelect;
-        });
-      } catch (e) {
-        // Wallet not found in the list
-      }
-    }
   }
 
   @override
@@ -96,11 +79,15 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final commission = double.tryParse(_commissionController.text) ?? 0.0;
 
+    final wallet = _selectedWalletId != null 
+        ? context.read<WalletProvider>().walletMap[_selectedWalletId!] 
+        : null;
+
     double fee = 0.0;
-    if (_selectedWallet != null && _transactionType == 'send') {
+    if (wallet != null && _transactionType == 'send') {
       fee = FeeCalculator.calculateTransactionFee(
         amount: amount,
-        sourceWalletType: _selectedWallet!.walletType,
+        sourceWalletType: wallet.walletType,
         receiverPhone: _customerPhoneController.text,
       );
     }
@@ -132,7 +119,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     }
 
     final success = await transactionProvider.createTransaction(
-      walletId: _selectedWallet!.walletId,
+      walletId: _selectedWalletId!,
       transactionType: _transactionType!,
       customerPhone: _customerPhoneController.text,
       customerName: _customerNameController.text,
@@ -174,7 +161,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               children: [
                 _buildWalletSelection(),
                 const SizedBox(height: 16),
-                if (_selectedWallet != null) ...[
+                if (_selectedWalletId != null) ...[
                   _buildTransactionTypeSection(),
                   const SizedBox(height: 24),
                   _buildCustomerInfoSection(),
@@ -213,13 +200,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           );
         }
 
-        // Try to pre-select wallet if not already selected
-        if (_selectedWallet == null) {
-          _trySelectWallet(walletProvider.wallets);
-        }
-
        return CustomDropdown<WalletModel>(
-  value: _selectedWallet,
+  value: _selectedWalletId != null ? walletProvider.walletMap[_selectedWalletId!] : null,
   hint: 'اختر المحفظة لإجراء المعاملة',
   fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
   
@@ -233,8 +215,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   
   onChanged: (wallet) {
     setState(() {
-      _selectedWallet = wallet;
-      _preSelectedWalletId = null; // Clear pre-selection after manual choice
+      _selectedWalletId = wallet?.walletId;
       _updateTotal(); // Recalculate fees when wallet changes
     });
   },
@@ -442,22 +423,27 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildLimitsPreview() {
-    if (_selectedWallet == null || _transactionType == null) {
+    if (_selectedWalletId == null || _transactionType == null) {
       return const SizedBox.shrink();
     }
 
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final isSend = _transactionType == 'send';
-    final limits = isSend
-        ? _selectedWallet!.getLimits()
-        : _selectedWallet!.getReceiveLimits();
-    final newUsed = limits.dailyUsed + amount;
-    final newMonthlyUsed = limits.monthlyUsed + amount;
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_selectedWalletId!],
+      builder: (context, wallet, child) {
+        if (wallet == null) return const SizedBox.shrink();
 
-    // Check individual limits
-    final bool dailyExceeded = newUsed > limits.dailyLimit;
-    final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
-    final bool willExceed = dailyExceeded || monthlyExceeded;
+        final amount = double.tryParse(_amountController.text) ?? 0.0;
+        final isSend = _transactionType == 'send';
+        final limits = isSend
+            ? wallet.getLimits()
+            : wallet.getReceiveLimits();
+        final newUsed = limits.dailyUsed + amount;
+        final newMonthlyUsed = limits.monthlyUsed + amount;
+
+        // Check individual limits
+        final bool dailyExceeded = newUsed > limits.dailyLimit;
+        final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
+        final bool willExceed = dailyExceeded || monthlyExceeded;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -519,6 +505,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             ),
         ],
       ),
+    );
+      },
     );
   }
 
