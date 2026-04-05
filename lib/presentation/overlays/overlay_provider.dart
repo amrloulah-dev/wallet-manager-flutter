@@ -249,12 +249,16 @@ class OverlayProvider with ChangeNotifier {
       // 6. Save to Vault
       final prefs = await SharedPreferences.getInstance();
       
+      // Compute total deduction BEFORE building vault payload.
+      // This must match the shareData payload math below.
+      final totalDeductionForVault = newTransaction.amount + newTransaction.serviceFee;
+      
       // CAUTION: Ensure variables like txId and storeId are actually defined in this scope!
       final txData = jsonEncode({
         'transactionId': txId, // Check if this exists
-        'amount': _amount,
+        'amount': totalDeductionForVault, // MUST include service fee for correct local mutation
         'commission': _commission,
-        'type': _type,
+        'type': _type, // 'debit' = send, 'credit' = receive
         'walletId': _selectedWalletId,
         'sender': _sender,
         'transactionDate': now.toDate().toIso8601String(),
@@ -276,15 +280,26 @@ class OverlayProvider with ChangeNotifier {
             'WARNING — main_app_port SendPort is null, ping NOT sent');
       }
 
-      // 8. Notify main app to refresh wallets via overlay data channel
+      // 8. Send exact deduction to main app for zero-cost local state mutation.
+      //    No Firestore read needed — the overlay already knows the exact amounts.
+      final totalDeduction = newTransaction.amount + newTransaction.serviceFee;
+      final isSend = newTransaction.isSend;
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'shareData(refresh_wallets) → broadcasting to main isolate');
+          'shareData(local_deduct) → walletId=${newTransaction.walletId}, '
+          'deduction=$totalDeduction, isSend=$isSend');
       
-      // Target 2: Force Immediate UI State Change in Overlay
+      // Force Immediate UI State Change in Overlay
       _isLoading = false;
       notifyListeners();
       
-      await FlutterOverlayWindow.shareData({"action": "refresh_wallets"});
+      // Fire-and-forget: do NOT await shareData — it creates a cross-isolate
+      // deadlock that prevents closeOverlay() from ever being reached.
+      FlutterOverlayWindow.shareData({
+        "action": "local_deduct",
+        "walletId": newTransaction.walletId,
+        "amount": totalDeduction,
+        "isSend": isSend,
+      });
 
       // 9. Close Overlay — MUST be the very last await in the try block
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '

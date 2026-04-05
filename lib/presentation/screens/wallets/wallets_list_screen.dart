@@ -192,6 +192,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
                 }
                 final wallet = wallets[index];
                 return WalletCard(
+                  key: ValueKey('${wallet.walletId}_${wallet.balance}'),
                   wallet: wallet,
                   onTap: () => _navigateToWalletDetails(wallet.walletId),
                   onEdit: () => _navigateToEditWallet(wallet),

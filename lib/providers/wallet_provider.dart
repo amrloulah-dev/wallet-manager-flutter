@@ -37,6 +37,7 @@ class WalletProvider extends ChangeNotifier {
   List<WalletModel> _wallets = [];
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
+  bool _lockFetching = false;
 
   // Status
   WalletStatusState _status = WalletStatusState.idle;
@@ -67,9 +68,12 @@ class WalletProvider extends ChangeNotifier {
             transactionRepository ?? TransactionRepository(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onWalletsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
-        fetchInitialWallets(forceRefresh: true);
-      }
+      // Intentionally NOT calling fetchInitialWallets() here.
+      // The onWalletsChanged event fires after local mutations (create/delete/update).
+      // A Firestore fetch at this point would race against the optimistic update
+      // and could overwrite the correct local state with stale cached data.
+      // The UI is already up-to-date via notifyListeners() in each mutating method.
+      debugPrint('🔥 [wallet_provider] appEvents.onWalletsChanged — skipping fetch, UI already updated via notifyListeners.');
     });
 
     // Listen for overlay "refresh_wallets" pings (on-demand, no Firestore stream).
@@ -83,22 +87,92 @@ class WalletProvider extends ChangeNotifier {
           FlutterOverlayWindow.overlayListener.listen((event) {
         debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
             'event received=$event');
-        if (event is Map && event['action'] == 'refresh_wallets') {
-          debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-              'refresh_wallets PING received — triggering fetchInitialWallets(forceRefresh: true)');
-          if (_currentStoreId != null && !isLoading && !isLoadingMore) {
-            fetchInitialWallets(forceRefresh: true);
-          } else {
+
+        if (event is Map && event['action'] == 'local_deduct') {
+          // ── Zero-cost local state mutation ──
+          // The overlay already wrote to Firestore; we just need to update RAM.
+          final walletId = event['walletId']?.toString();
+          final deduction = (event['amount'] as num?)?.toDouble() ?? 0.0;
+          final isSend = event['isSend'] == true;
+
+          if (walletId == null) return;
+
+          final index = _wallets.indexWhere((w) => w.walletId == walletId);
+          if (index != -1) {
+            final oldWallet = _wallets[index];
+            final newBalance = isSend
+                ? oldWallet.balance - deduction
+                : oldWallet.balance + deduction;
+
+            // Build new list with updated wallet (forces deep reference change)
+            _wallets = [
+              for (int i = 0; i < _wallets.length; i++)
+                if (i == index)
+                  oldWallet.copyWith(balance: newBalance)
+                else
+                  _wallets[i],
+            ];
+            notifyListeners();
             debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-                'SKIPPED refresh — storeId=$_currentStoreId, '
-                'isLoading=$isLoading, isLoadingMore=$isLoadingMore');
+                'local_deduct applied! walletId=$walletId, '
+                'oldBalance=${oldWallet.balance}, newBalance=$newBalance, '
+                'isSend=$isSend. No Firebase read needed!');
+          } else {
+            // walletId not found in RAM — wallet list may not be loaded yet.
+            // Do NOT fetch from Firestore here; a stale fetch would overwrite
+            // any other pending optimistic mutations. The next natural screen
+            // load / pull-to-refresh will reconcile the server state.
+            debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+                'walletId=$walletId NOT found in _wallets — skipping fetch to '
+                'prevent stale overwrite. Will reconcile on next screen load.');
           }
+        } else if (event is Map && event['action'] == 'refresh_wallets') {
+          // Legacy event: previously triggered a full Firestore re-fetch.
+          // Nuclear fix: NEVER fetch here — just notify so the UI can react
+          // to whatever is already in RAM.
+          debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+              'refresh_wallets received — NO Firestore fetch (stale-overwrite prevention). '
+              'Calling notifyListeners() only.');
+          notifyListeners();
         }
       });
     } catch (_) {
       // Gracefully ignore if the stream was already listened to by another
       // instance (e.g. during hot reload). The appEvents path still works.
     }
+  }
+
+  // ── Public API for optimistic local balance mutation ──
+  // Called by GlobalOverlayListener (IsolateNameServer path) and
+  // overlayListener (FlutterOverlayWindow path) to avoid any Firestore reads.
+  void applyLocalDeduction(String walletId, double deduction, bool isSend) {
+    if (_isDisposed) return;
+
+    // Lock Firestore fetches for 3 seconds to prevent stale SDK cache 
+    // from overwriting this beautiful local mutation!
+    _lockFetching = true;
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!_isDisposed) _lockFetching = false;
+    });
+
+    final index = _wallets.indexWhere((w) => w.walletId == walletId);
+    if (index == -1) {
+      debugPrint('🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
+      return;
+    }
+
+    final oldWallet = _wallets[index];
+    final newBalance =
+        isSend ? oldWallet.balance - deduction : oldWallet.balance + deduction;
+
+    _wallets = [
+      for (int i = 0; i < _wallets.length; i++)
+        if (i == index) oldWallet.copyWith(balance: newBalance) else _wallets[i],
+    ];
+    notifyListeners();
+    debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '
+        'walletId=$walletId | oldBalance=${oldWallet.balance} → New Balance: $newBalance | '
+        'isSend=$isSend | No Firestore read.');
   }
 
   @override
@@ -175,6 +249,10 @@ class WalletProvider extends ChangeNotifier {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
+    if (_lockFetching) {
+      debugPrint('🔥 [TX_FLOW] Fetch blocked to preserve local mutation!');
+      return;
+    }
     if (_currentStoreId == null) return;
 
     debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: '
@@ -251,12 +329,14 @@ class WalletProvider extends ChangeNotifier {
         }).toList();
       }
 
-      _wallets = fetchedWallets;
-      _cachedWallets = fetchedWallets;
+      // CRITICAL: Assign a NEW list instance to break reference equality.
+      // Flutter may skip rebuilds if _wallets points to the same List object.
+      _wallets = List<WalletModel>.from(fetchedWallets);
+      _cachedWallets = List<WalletModel>.from(fetchedWallets);
       _cacheTimestamp = DateTime.now();
       
       notifyListeners();
-      debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: Finished and called notifyListeners');
+      debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: Finished and called notifyListeners. Wallet count=${_wallets.length}');
       
       _setStatus(WalletStatusState.loaded);
 
@@ -323,11 +403,12 @@ class WalletProvider extends ChangeNotifier {
           return wallet;
         }).toList();
 
-        _wallets.addAll(updatedNewWallets);
+        _wallets = [..._wallets, ...updatedNewWallets];
       } else {
-        _wallets.addAll(newWallets);
+        _wallets = [..._wallets, ...newWallets];
       }
 
+      notifyListeners();
       _setStatus(WalletStatusState.loaded);
     } on ServerException catch (e) {
       _setError(e.message);
@@ -520,7 +601,10 @@ class WalletProvider extends ChangeNotifier {
       newBalance -= amount;
     }
 
-    _wallets[index] = wallet.copyWith(balance: newBalance);
+    _wallets = [
+      for (int i = 0; i < _wallets.length; i++)
+        if (i == index) wallet.copyWith(balance: newBalance) else _wallets[i],
+    ];
     notifyListeners();
   }
 }

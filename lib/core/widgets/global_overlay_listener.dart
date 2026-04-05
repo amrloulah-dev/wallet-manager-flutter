@@ -38,10 +38,10 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // 1. Check vault just in case
-      _fetchAndApplyData(); 
-      // 2. Force the widget tree below to rebuild in case a frame was dropped!
-      setState(() {}); 
+      // Apply any pending overlay tx from SharedPreferences vault.
+      // DO NOT call refresh() here — it triggers a Firestore fetch that
+      // overwrites optimistic mutations with stale cached data.
+      _fetchAndApplyData();
     }
   }
 
@@ -51,23 +51,34 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       await prefs.reload();
 
       final txString = prefs.getString('pending_overlay_tx');
-      if (txString == null) {
-        return;
-      }
+      if (txString == null) return;
 
       final data = jsonDecode(txString) as Map<String, dynamic>;
 
       if (mounted) {
         context.read<StatisticsProvider>().addTransactionOptimistically(data);
-        context.read<WalletProvider>().updateWalletOptimistically(data);
         context.read<TransactionProvider>().insertTransactionLocally(data);
-        
-        // Phase 4: Manually force a clean fetch of true limits and values without streams
-        context.read<WalletProvider>().refresh();
+
+        // ── Zero-cost local wallet mutation ──
+        // Apply the balance deduction directly to RAM.
+        // NEVER call refresh() / fetchInitialWallets() here:
+        // Firestore cache lag would overwrite our correct optimistic balance.
+        final walletId = data['walletId']?.toString();
+        final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+        final type = data['type']?.toString(); // 'debit' = send, 'credit' = receive
+        if (walletId != null && amount > 0 && type != null) {
+          final isSend = type == 'debit';
+          context.read<WalletProvider>().applyLocalDeduction(
+            walletId,
+            amount,
+            isSend,
+          );
+        }
       }
 
       await prefs.remove('pending_overlay_tx');
     } catch (e) {
+      debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
     }
   }
 

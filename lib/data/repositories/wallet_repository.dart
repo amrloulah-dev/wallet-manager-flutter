@@ -75,7 +75,7 @@ class WalletRepository {
         query = query.startAfterDocument(lastDoc);
       }
 
-      final snapshot = await query.limit(limit).get();
+      final snapshot = await query.limit(limit).get(const GetOptions(source: Source.server));
       final wallets =
           snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
       final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;

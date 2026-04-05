@@ -17,13 +17,15 @@ The Unified Validation Engine feature centralizes all financial validation logic
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*Reference: `.specify/memory/constitution.md` v1.0.0*
 
-- **Framework**: Flutter (Dart) - ✅ PASS
-- **Architecture**: Layered (`core`, `data`, `presentation`) - ✅ PASS
-- **State Management**: `provider` and `rxdart`. No `setState` for complex logic. - ✅ PASS
-- **Security & Database Operations**: MUST use `runTransaction`. Direct UI writes forbidden. - ✅ PASS
-- **UI & Reusability**: Use `awesome_dialog` and `bot_toast`. Reuse widgets. - ✅ PASS
-- **Performance**: Use `const`, keep main isolate clean. - ✅ PASS
+- **P1 Zero-Latency**: Optimistic local mutation before Firestore write. - ✅ PASS
+- **P2 Anti-Jank**: `Selector`/`Consumer` only, no root `context.watch`. - ⚠ REVIEW (existing code may use `StreamBuilder`)
+- **P3 Zero-Waste**: No `StreamBuilder` for Provider-managed data. - ⚠ REVIEW (plan originally used `snapshots()` streams)
+- **P4 Safe Rollback**: `try-catch` + revert on every optimistic write. - ✅ PASS
+- **P5 O(1) Lookup**: `Map<String, Model>` in Providers. - ✅ PASS
+- **P6 Fetch Shield**: Block auto-fetch after isolate state injection. - ✅ PASS
+- **P7 ValueKey**: Composite `ValueKey` on mutable list items. - ✅ PASS
 
 ## Project Structure
 

@@ -399,9 +399,12 @@ class WalletModel {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is WalletModel && other.walletId == walletId;
+    return other is WalletModel &&
+        other.walletId == walletId &&
+        other.balance == balance &&
+        other.isActive == isActive;
   }
 
   @override
-  int get hashCode => walletId.hashCode;
+  int get hashCode => walletId.hashCode ^ balance.hashCode ^ isActive.hashCode;
 }
