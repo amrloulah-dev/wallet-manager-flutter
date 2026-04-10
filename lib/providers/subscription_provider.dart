@@ -1,0 +1,174 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../data/models/store_model.dart';
+import '../data/services/local_storage_service.dart';
+import 'auth_provider.dart';
+import '../data/repositories/subscription_repository.dart';
+import '../data/models/subscription_request_model.dart';
+class SubscriptionProvider extends ChangeNotifier {
+  AuthProvider _authProvider;
+  final SubscriptionRepository _repository = SubscriptionRepository();
+  SubscriptionRequestModel? _latestRequest;
+  
+  StoreSubscription? _previousSubscription;
+
+  SubscriptionProvider({required AuthProvider authProvider}) 
+      : _authProvider = authProvider {
+    _previousSubscription = _authProvider.currentStore?.subscription;
+    _authProvider.addListener(_onAuthChanged);
+    _syncToStorage();
+    _fetchLatestRequest();
+  }
+
+  void updateAuthProvider(AuthProvider newAuth) {
+    _authProvider.removeListener(_onAuthChanged);
+    _authProvider = newAuth;
+    _previousSubscription = _authProvider.currentStore?.subscription;
+    _authProvider.addListener(_onAuthChanged);
+    _syncToStorage();
+    _fetchLatestRequest();
+    notifyListeners();
+  }
+
+  StoreSubscription? get _subscription => _authProvider.currentStore?.subscription;
+  SubscriptionRequestModel? get latestRequest => _latestRequest;
+  
+  void _onAuthChanged() {
+    final currentSub = _subscription;
+    
+    // T051: Upgrade detection
+    if (_previousSubscription != null && currentSub != null) {
+      final wasPending = _previousSubscription!.pendingRequestDate != null;
+      final isNowPending = currentSub.pendingRequestDate != null;
+      
+      if (wasPending && !isNowPending && (currentSub.planId == 'pro_yearly' || currentSub.planId == 'lifetime')) {
+        // Dependably trigger success modal state
+        LocalStorageService.instance.setHasSeenSuccessModal(false);
+      }
+    }
+    _previousSubscription = currentSub;
+
+    _syncToStorage();
+    _fetchLatestRequest();
+    notifyListeners();
+  }
+
+  bool get hasSeenSuccessModal => LocalStorageService.instance.hasSeenSuccessModal;
+  bool get hasDismissedRejection => LocalStorageService.instance.hasDismissedRejection;
+
+  void markSuccessModalSeen() {
+    LocalStorageService.instance.setHasSeenSuccessModal(true);
+    notifyListeners();
+  }
+
+  void dismissRejectionBanner() {
+    LocalStorageService.instance.setHasDismissedRejection(true);
+    notifyListeners();
+  }
+
+  Future<void> _fetchLatestRequest() async {
+    final storeId = _authProvider.currentStore?.storeId;
+    if (storeId != null) {
+      final request = await _repository.getLatestSubscriptionRequest(storeId);
+      if (_latestRequest?.id != request?.id || _latestRequest?.status != request?.status) {
+        
+        // If a new request arrives, clear locally dismissed rejection
+        if (request != null && _latestRequest?.id != request.id) {
+           LocalStorageService.instance.setHasDismissedRejection(false);
+           LocalStorageService.instance.setHasSeenSuccessModal(false); // Reset success too for any future transition
+        }
+
+        _latestRequest = request;
+        notifyListeners();
+      }
+    } else {
+      _latestRequest = null;
+      notifyListeners();
+    }
+  }
+
+  double _deduceAmount(String planId) {
+    if (planId == 'lifetime') return 2500.0;
+    if (planId == 'pro_yearly') return 1200.0;
+    return 0.0;
+  }
+
+  Future<void> submitSubscriptionRequest({
+    required String planId,
+    required String paymentMethod,
+    required String receiptNumber,
+  }) async {
+    final storeId = _authProvider.currentStoreId;
+    if (storeId == null) throw Exception('Store ID not found');
+
+    // Store previous states for rollback
+    final previousRequest = _latestRequest;
+    
+    // Optimistic UI update
+    _latestRequest = SubscriptionRequestModel(
+      id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
+      storeId: storeId,
+      planId: planId,
+      amount: _deduceAmount(planId),
+      paymentMethod: paymentMethod,
+      receiptNumber: receiptNumber,
+      status: 'pending',
+      createdAt: Timestamp.now(),
+    );
+    notifyListeners();
+
+    try {
+      await _repository.submitSubscriptionRequest(
+        storeId: storeId,
+        planId: planId,
+        paymentMethod: paymentMethod,
+        receiptNumber: receiptNumber,
+      );
+      // Data will refresh on next _fetchLatestRequest or auth sync
+    } catch (e) {
+      _latestRequest = previousRequest;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  void _syncToStorage() {
+    final sub = _subscription;
+    if (sub != null) {
+      LocalStorageService.instance.saveSubscriptionLimits(
+        endDateMs: sub.endDate?.millisecondsSinceEpoch,
+        isLifetime: sub.planId == 'lifetime',
+        smsEnabled: sub.smsEnabled,
+        isSuspended: sub.status == 'suspended',
+      );
+    }
+  }
+  
+  int get maxWallets => _subscription?.maxWallets ?? 3;
+  int get maxEmployees => _subscription?.maxEmployees ?? 1;
+  bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
+  
+  bool get isSuspended => _subscription?.status == 'suspended';
+  
+  bool canAddWallet(int currentWalletCount) {
+    // T053: Enhance local gatekeeper fallback explicitly
+    if (_subscription != null && _subscription!.isExpired && _subscription!.pendingRequestDate == null) {
+      return currentWalletCount < 3;
+    }
+    return currentWalletCount < maxWallets;
+  }
+  
+  bool canAddEmployee(int currentEmployeeCount) {
+    // T053: Enhance local gatekeeper fallback explicitly
+    if (_subscription != null && _subscription!.isExpired && _subscription!.pendingRequestDate == null) {
+      return currentEmployeeCount < 1;
+    }
+    return currentEmployeeCount < maxEmployees;
+  }
+  
+  @override
+  void dispose() {
+    _authProvider.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+}

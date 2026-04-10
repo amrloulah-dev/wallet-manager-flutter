@@ -336,6 +336,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageEmployees => 'Manage Employees';
 
   @override
+  String get mySubscription => 'My Subscription';
+
+  @override
   String get errorLoadingStats => 'Cannot load statistics';
 
   @override

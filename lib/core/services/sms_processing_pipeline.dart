@@ -95,6 +95,22 @@ Future<void> handleIncomingSms(
     // ── Guard: Feature flag ─────────────────────────────────
     if (!storage.isSmsAutomationEnabled) return;
 
+    // ── Guard: Subscription Limits ───────────────────────────
+    final isSuspended = storage.subIsSuspended;
+    if (isSuspended) return;
+
+    final smsEnabled = storage.subSmsEnabled;
+    if (!smsEnabled) return;
+
+    final isLifetime = storage.isSubLifetime;
+    if (!isLifetime) {
+      final endDateMs = storage.subEndDateMs;
+      if (endDateMs != null) {
+        final endDate = DateTime.fromMillisecondsSinceEpoch(endDateMs);
+        if (DateTime.now().isAfter(endDate)) return;
+      }
+    }
+
     final String? body = message.body;
     final String? address = message.address;
     if (body == null || address == null) return;

@@ -25,6 +25,7 @@ import 'package:walletmanager/presentation/widgets/common/skeleton_card.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 import 'package:walletmanager/presentation/widgets/dashboard/app_drawer.dart';
+import '../dashboard/widgets/subscription_banner.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   const MainDashboardScreen({super.key});
@@ -117,7 +118,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeHeader(),
-                  _buildTrialBanner(),
+                  const SubscriptionBanner(),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -180,56 +181,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
               style: AppTextStyles.h3
                   .copyWith(color: AppColors.textPrimary(context)),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTrialBanner() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        if (!authProvider.isTrial) return const SizedBox.shrink();
-
-        final days = authProvider.trialDaysRemaining ?? 0;
-
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.amber.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.amber.shade200),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.access_time_filled,
-                  color: Colors.amber.shade800, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'نسخة تجريبية: متبقي $days أيام',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.amber.shade900,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to Settings/Contact to Renew
-                  Navigator.pushNamed(context, RouteConstants.settings);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.amber.shade900,
-                  textStyle: AppTextStyles.labelMedium,
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(60, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text('ترقية'),
-              )
-            ],
           ),
         );
       },

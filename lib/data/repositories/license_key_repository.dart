@@ -76,12 +76,9 @@ class LicenseKeyRepository {
 
         // 3. Update Store Doc
         transaction.update(storeRef, {
-          'licenseKeyId': keyId,
-          'activeLicenseKey': licenseKeyString,
-          'license.licenseKey': licenseKeyString,
-          'license.licenseType': 'premium',
-          'license.status': 'active',
-          'license.expiryDate': Timestamp.fromDate(newExpiryDate),
+          'subscription.planId': 'premium',
+          'subscription.status': 'active',
+          'subscription.endDate': Timestamp.fromDate(newExpiryDate),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       });

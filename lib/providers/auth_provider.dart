@@ -8,6 +8,7 @@ import '../data/repositories/store_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/device_repository.dart';
 import '../data/repositories/license_key_repository.dart';
+import '../data/repositories/subscription_repository.dart';
 import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
@@ -135,9 +136,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // License Getters
-  String get licenseKey => _currentStore?.license.licenseKey ?? 'N/A';
+  String get licenseKey => _currentStore?.subscription.planId ?? 'N/A';
   DateTime get licenseExpiryDate =>
-      _currentStore?.license.expiryDate ?? DateTime.now();
+      _currentStore?.subscription.endDate ?? DateTime.now();
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -146,7 +147,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isSubscriptionExpired =>
       _status == AuthStatus.expired ||
-      (_currentStore?.license.isExpired ?? false);
+      (_currentStore?.subscription.isExpired ?? false);
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
@@ -154,10 +155,10 @@ class AuthProvider extends ChangeNotifier {
   String? get currentStoreId => _currentStore?.storeId;
 
   // Trial Status
-  bool get isTrial => _currentStore?.license.licenseType == 'trial';
+  bool get isTrial => _currentStore?.subscription.planId == 'trial';
   int? get trialDaysRemaining {
-    if (!isTrial) return null;
-    final expiry = _currentStore!.license.expiryDate;
+    if (!isTrial || _currentStore?.subscription.endDate == null) return null;
+    final expiry = _currentStore!.subscription.endDate!;
     final remaining = expiry.difference(DateTime.now());
     return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
   }
@@ -200,7 +201,7 @@ class AuthProvider extends ChangeNotifier {
             _currentUser = user;
             _currentStore = store;
 
-            if (store.license.isExpired) {
+            if (store.subscription.isExpired) {
               _setStatus(AuthStatus.expired);
               return;
             }
@@ -293,6 +294,8 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage (Best effort)
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+        // T050: Explicitly record device hardware identifier
+        await SubscriptionRepository().verifyDevice(storeId);
       } catch (e) {
         // Log error but don't fail the whole registration as store is already created
       }
@@ -362,6 +365,8 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+        // T050: Explicitly record device hardware identifier
+        await SubscriptionRepository().verifyDevice(storeId);
       } catch (e) {}
 
       return storeId;
@@ -393,13 +398,14 @@ class AuthProvider extends ChangeNotifier {
     // NOTE: License details here are DUMMY PLACEHOLDERS.
     // The StoreRepository.createStore method will overwrite these with
     // the canonical Trial License.
-    final placeholderLicense = StoreLicense(
-      licenseKey: "PENDING",
-      licenseType: "trial",
-      status: "pending",
-      startDate: DateTime.now(),
-      expiryDate: DateTime.now(),
-      lastCheck: DateTime.now(),
+    final placeholderSubscription = StoreSubscription(
+      planId: "trial",
+      status: "active",
+      endDate: DateTime.now().add(const Duration(days: 14)),
+      trialConsumed: true,
+      maxWallets: 3,
+      maxEmployees: 1,
+      smsEnabled: false,
     );
 
     final newStore = StoreModel(
@@ -411,7 +417,7 @@ class AuthProvider extends ChangeNotifier {
       ownerEmail: email,
       ownerPhoto: photoUrl,
       createdAt: Timestamp.now(),
-      license: placeholderLicense,
+      subscription: placeholderSubscription,
       settings: StoreSettings(),
       stats: StoreStats(
         totalWallets: 0,
@@ -420,8 +426,6 @@ class AuthProvider extends ChangeNotifier {
         totalCommissionToday: 0.0,
         lastUpdated: Timestamp.now(),
       ),
-      activeLicenseKey: "PENDING",
-      licenseKeyId: "PENDING",
     );
 
     final newOwner = UserModel(
@@ -503,7 +507,7 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = userModel;
     _currentStore = store;
 
-    if (store.license.isExpired) {
+    if (store.subscription.isExpired) {
       _setStatus(AuthStatus.expired);
       return true; // Login successful but expired
     }
@@ -533,7 +537,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = employee;
       _currentStore = store;
 
-      if (store.license.isExpired) {
+      if (store.subscription.isExpired) {
         _setStatus(AuthStatus.expired);
         return true;
       }
@@ -614,7 +618,7 @@ class AuthProvider extends ChangeNotifier {
       _currentStore = store;
 
       // License check
-      if (store.license.isExpired) {
+      if (store.subscription.isExpired) {
         _setStatus(AuthStatus.expired);
         return true;
       }
@@ -700,7 +704,7 @@ class AuthProvider extends ChangeNotifier {
       _currentStore = store;
 
       // License check
-      if (store.license.isExpired) {
+      if (store.subscription.isExpired) {
         _setStatus(AuthStatus.expired);
         return;
       }
@@ -754,7 +758,7 @@ class AuthProvider extends ChangeNotifier {
       await refreshUserData();
 
       AnalyticsService.logLicenseUpgraded(
-          _currentStore?.license.licenseType ?? 'premium');
+          _currentStore?.subscription.planId ?? 'premium');
 
       _setLoading(false);
     } catch (e) {

@@ -734,6 +734,12 @@ abstract class AppLocalizations {
   /// **'إدارة الموظفين'**
   String get manageEmployees;
 
+  /// No description provided for @mySubscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشتراكي'**
+  String get mySubscription;
+
   /// No description provided for @errorLoadingStats.
   ///
   /// In ar, this message translates to:

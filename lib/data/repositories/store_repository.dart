@@ -5,7 +5,7 @@ import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
 import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
-import 'package:uuid/uuid.dart';
+
 
 /// Repository for all Firestore operations related to the 'stores' collection.
 class StoreRepository {
@@ -36,22 +36,19 @@ class StoreRepository {
     try {
       final batch = _firestore.batch();
 
-      // --- Generate Trial License ---
-      final trialLicense = StoreLicense(
-        licenseKey:
-            "TRIAL-MODE-${const Uuid().v4().substring(0, 8).toUpperCase()}",
-        licenseType: "trial",
-        status: "active",
-        startDate: DateTime.now(),
-        expiryDate: DateTime.now().add(const Duration(days: 10)),
-        lastCheck: DateTime.now(),
-        autoRenew: false,
+      // --- Generate Trial Subscription ---
+      final trialSubscription = StoreSubscription(
+        planId: 'trial',
+        status: 'active',
+        endDate: DateTime.now().add(const Duration(days: 14)),
+        trialConsumed: true,
+        maxWallets: 3,
+        maxEmployees: 1,
+        smsEnabled: false,
       );
 
       final storeWithTrial = store.copyWith(
-        license: trialLicense,
-        activeLicenseKey: trialLicense.licenseKey,
-        licenseKeyId: "TRIAL",
+        subscription: trialSubscription,
       );
       // -----------------------------
 
@@ -247,29 +244,28 @@ class StoreRepository {
   }
 
   // ===========================
-  // License Methods
+  // Subscription Methods
   // ===========================
 
-  /// Checks if the store's current license is active and not expired.
-  Future<bool> isLicenseValid(String storeId) async {
+  /// Checks if the store's current subscription is active and not expired.
+  Future<bool> isSubscriptionValid(String storeId) async {
     try {
       final store = await getStoreById(storeId);
       if (store == null) return false;
-      return store.license.status == 'active' && !store.license.isExpired;
+      return store.subscription.status == 'active' && !store.subscription.isExpired;
     } catch (e) {
       return false;
     }
   }
 
-  /// Updates the status of a store's license.
-  Future<void> updateLicenseStatus(String storeId, String status) async {
+  /// Updates the status of a store's subscription.
+  Future<void> updateSubscriptionStatus(String storeId, String status) async {
     try {
       await _storesCollection.doc(storeId).update({
-        FirebaseConstants.licenseStatus: status,
-        FirebaseConstants.licenseLastCheck: FieldValue.serverTimestamp(),
+        'subscription.status': status,
       });
     } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث حالة الرخصصة: ${e.message}',
+      throw ServerException('فشل تحديث حالة الاشتراك: ${e.message}',
           code: e.code);
     } catch (e) {
       throw ServerException('حدث خطأ غير متوقع.');

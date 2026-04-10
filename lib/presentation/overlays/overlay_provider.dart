@@ -28,6 +28,9 @@ class OverlayProvider with ChangeNotifier {
   double _commission = 0.0;
   List<Map<String, dynamic>> _availableWallets = [];
 
+  // Constitution Principle 6: Fetch Shield to prevent janky UI rebuilds
+  bool _blockAutoFetch = false;
+
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -38,6 +41,16 @@ class OverlayProvider with ChangeNotifier {
   String? get selectedWalletId => _selectedWalletId;
   double get commission => _commission;
   List<Map<String, dynamic>> get availableWallets => _availableWallets;
+
+  @override
+  void notifyListeners() {
+    if (_blockAutoFetch) {
+      debugPrint('🛡️ [Fetch Shield] _blockAutoFetch active — suppressed '
+          'notifyListeners() to prevent unnecessary janky UI rebuilds');
+      return;
+    }
+    super.notifyListeners();
+  }
 
   // ---------------------------------------------------------------------------
   // RESET — Wipes all transaction-specific fields to prevent stale state.
@@ -65,6 +78,7 @@ class OverlayProvider with ChangeNotifier {
   //   5. notify   → rebuilds UI
   // ---------------------------------------------------------------------------
   Future<void> ingestNewEvent(Map<dynamic, dynamic> data) async {
+    _blockAutoFetch = true;
     reset();
 
     // --- Parse incoming SMS data ---
@@ -76,7 +90,12 @@ class OverlayProvider with ChangeNotifier {
         'raw data=$data | parsed amount=$_amount, sender=$_sender, type=$_type');
 
     _isLoading = true;
+    
+    // We explicitly unblock here for the first loader state if needed, but 
+    // we want to block during limit mutations.
+    _blockAutoFetch = false;
     notifyListeners(); // Show loading UI immediately with new amount/sender
+    _blockAutoFetch = true;
 
     try {
       // One-time storage + wallet cache init
@@ -87,6 +106,12 @@ class OverlayProvider with ChangeNotifier {
 
       // Force the Isolate to flush its RAM and read the latest disk state from the Main App
       await LocalStorageService.instance.reloadDisk();
+
+      if (_localStorageService.subIsSuspended || !_localStorageService.subSmsEnabled) {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: SMS gating failed. Aborting overlay.');
+        await FlutterOverlayWindow.closeOverlay();
+        return;
+      }
 
       // Refresh wallet list on every event (cheap local read)
       _availableWallets = LocalStorageService.instance.getCachedWalletLiteList();
@@ -126,6 +151,7 @@ class OverlayProvider with ChangeNotifier {
 
     } finally {
       _isLoading = false;
+      _blockAutoFetch = false; // Unblock to allow final render
       notifyListeners();
     }
   }
@@ -240,7 +266,7 @@ class OverlayProvider with ChangeNotifier {
       );
 
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'FINAL PAYLOAD | txId=$txId, walletId=${_selectedWalletId}, '
+          'FINAL PAYLOAD | txId=$txId, walletId=$_selectedWalletId, '
           'type=$transactionType, amount=$_amount, commission=$_commission, '
           'sender=$_sender, storeId=$storeId');
 
@@ -265,6 +291,7 @@ class OverlayProvider with ChangeNotifier {
         'storeId': storeId, // Prevent null crash
         'paymentStatus': 'paid',
         'customerName': '',
+        'blockAutoFetch': true, // Principle 6: Fetch Shield
       });
 
       await prefs.setString('pending_overlay_tx', txData);
@@ -299,6 +326,7 @@ class OverlayProvider with ChangeNotifier {
         "walletId": newTransaction.walletId,
         "amount": totalDeduction,
         "isSend": isSend,
+        "blockAutoFetch": true, // Principle 6: Fetch Shield
       });
 
       // 9. Close Overlay — MUST be the very last await in the try block

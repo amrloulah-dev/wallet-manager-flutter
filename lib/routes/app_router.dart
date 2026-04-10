@@ -30,6 +30,7 @@ import '../presentation/screens/settings/settings_screen.dart';
 import '../presentation/screens/settings/upgrade_screen.dart';
 import '../presentation/screens/employees/add_employee_screen.dart';
 import '../presentation/screens/employees/manage_employees_screen.dart';
+import '../presentation/screens/subscription/subscription_details_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -152,6 +153,9 @@ class AppRouter {
       case RouteConstants.upgradeScreen:
         final isTrial = settings.arguments as bool? ?? false;
         return _buildRoute(UpgradeScreen(isTrial: isTrial), settings);
+
+      case RouteConstants.subscriptionDetails:
+        return _buildRoute(const SubscriptionDetailsScreen(), settings);
 
       case RouteConstants.addEmployee:
       case RouteConstants.manageEmployees:

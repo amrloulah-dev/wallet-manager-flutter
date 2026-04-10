@@ -59,7 +59,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     final phone = _phoneController.text.trim();
 
-    final maxEmployees = authProvider.currentStore?.settings.maxEmployees ?? 5;
+    final maxEmployees = authProvider.currentStore?.subscription.maxEmployees ?? 5;
     if (employeeProvider.employeesCount >= maxEmployees) {
       ToastUtils.showError('لقد وصلت إلى الحد الأقصى لعدد الموظفين');
       return;
@@ -127,7 +127,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, employeeProvider, authProvider, _) {
         final currentCount = employeeProvider.employeesCount;
         final maxEmployees =
-            authProvider.currentStore?.settings.maxEmployees ?? 5;
+            authProvider.currentStore?.subscription.maxEmployees ?? 5;
         final isAtLimit = currentCount >= maxEmployees;
 
         return Container(
@@ -288,7 +288,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, provider, _) {
 // ... existing code ...
         final isAtLimit = provider.employeesCount >=
-            (context.read<AuthProvider>().currentStore?.settings.maxEmployees ??
+            (context.read<AuthProvider>().currentStore?.subscription.maxEmployees ??
                 5);
 
         return CustomButton(

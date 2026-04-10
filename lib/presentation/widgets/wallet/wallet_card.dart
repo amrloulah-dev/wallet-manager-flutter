@@ -78,9 +78,12 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildHeader(BuildContext context, WalletModel wallet) {
+    final provider = context.watch<WalletProvider>();
+    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
+    
     return Row(
       children: [
-        Icon(wallet.walletTypeIcon, size: 32, color: AppColors.primary),
+        Icon(wallet.walletTypeIcon, size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -88,7 +91,10 @@ class _WalletCardState extends State<WalletCard> {
             children: [
               Text(
                 NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
-                style: AppTextStyles.h3,
+                style: AppTextStyles.h3.copyWith(
+                  color: isFrozen ? Colors.grey : null,
+                  decoration: isFrozen ? TextDecoration.lineThrough : null,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -100,25 +106,48 @@ class _WalletCardState extends State<WalletCard> {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: (wallet.walletStatus == 'new'
+        if (isFrozen)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock, size: 14, color: Colors.red),
+                const SizedBox(width: 4),
+                Text(
+                  'مُجمدة',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: (wallet.walletStatus == 'new'
+                      ? AppColors.warning
+                      : AppColors.success)
+                  .withAlpha((0.15 * 255).round()),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              wallet.walletStatusDisplayName,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: wallet.walletStatus == 'new'
                     ? AppColors.warning
-                    : AppColors.success)
-                .withAlpha((0.15 * 255).round()),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            wallet.walletStatusDisplayName,
-            style: AppTextStyles.labelSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: wallet.walletStatus == 'new'
-                  ? AppColors.warning
-                  : AppColors.success,
+                    : AppColors.success,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

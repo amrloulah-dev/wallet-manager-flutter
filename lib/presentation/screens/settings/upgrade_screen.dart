@@ -130,7 +130,7 @@ class UpgradeScreen extends StatelessWidget {
         final licenseKey = authProvider.licenseKey;
         final expiryDate = authProvider.licenseExpiryDate;
         final daysRemaining =
-            authProvider.currentStore?.license.daysRemaining ?? 0;
+            authProvider.currentStore?.subscription.daysRemaining ?? 0;
 
         return Column(
           children: [

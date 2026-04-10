@@ -18,10 +18,14 @@ import 'providers/transaction_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'l10n/arb/app_localizations.dart';
 import 'providers/auth_provider.dart';
+import 'providers/subscription_provider.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 import 'routes/app_router.dart';
+import 'data/repositories/system_config_repository.dart';
+import 'providers/system_config_provider.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
-import 'presentation/screens/auth/license_expired_screen.dart';
+import 'presentation/screens/subscription/paywall_screen.dart';
+import 'presentation/screens/subscription/admin_block_screen.dart';
 import 'core/services/analytics_service.dart';
 import 'package:walletmanager/core/widgets/global_overlay_listener.dart'; // Added
 import 'data/services/transaction_validator_service.dart';
@@ -37,18 +41,37 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
         ChangeNotifierProvider(
+          create: (_) => SystemConfigProvider(
+              repository: SystemConfigRepository()),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, SubscriptionProvider>(
+          create: (context) => SubscriptionProvider(
+              authProvider: Provider.of<AuthProvider>(context, listen: false)),
+          update: (_, auth, previous) => (previous ?? SubscriptionProvider(authProvider: auth))
+            ..updateAuthProvider(auth),
+        ),
+        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider, EmployeeProvider>(
             create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository())),
+                EmployeeProvider(employeeRepository: EmployeeRepository()),
+            update: (_, auth, subscription, previous) => (previous ??
+                EmployeeProvider(employeeRepository: EmployeeRepository()))
+              ..updateSubscriptionProvider(subscription)
+              ..setStoreId(auth.currentStoreId),
+        ),
         Provider(create: (_) => TransactionValidatorService()),
-        ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
+        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider, WalletProvider>(
           lazy: false,
           create: (context) => WalletProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false),
+              subscriptionProvider: Provider.of<SubscriptionProvider>(context, listen: false),
               walletRepository: WalletRepository()),
-          update: (_, auth, previous) => (previous ??
+          update: (_, auth, subscription, previous) => (previous ??
               WalletProvider(
-                  authProvider: auth, walletRepository: WalletRepository()))
-            ..updateAuthState(auth),
+                  authProvider: auth, 
+                  subscriptionProvider: subscription,
+                  walletRepository: WalletRepository()))
+            ..updateAuthState(auth)
+            ..updateSubscriptionProvider(subscription),
         ),
         ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
           create: (context) => DebtProvider(
@@ -142,12 +165,17 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           );
         }
 
-        // 1. Guard against Expired License (Prioritize this check)
-        if (auth.isSubscriptionExpired) {
-          return const LicenseExpiredScreen();
+        // 1. Guard against Admin Block
+        if (auth.currentStore?.isSuspended == true) {
+          return const AdminBlockScreen();
         }
 
-        // 2. Check Authentication
+        // 2. Guard against Expired License
+        if (auth.isSubscriptionExpired && auth.currentStore?.subscription.planId != 'lifetime') {
+          return const PaywallScreen();
+        }
+
+        // 3. Check Authentication
         if (auth.isAuthenticated) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
