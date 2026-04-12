@@ -26,6 +26,8 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 import 'package:walletmanager/presentation/widgets/dashboard/app_drawer.dart';
 import '../dashboard/widgets/subscription_banner.dart';
+import '../../../providers/subscription_provider.dart';
+import '../subscription/payment_success_modal.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   const MainDashboardScreen({super.key});
@@ -40,7 +42,40 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     super.initState();
     Future.microtask(() {
       _fetchInitialData();
+      // H010: Listen for payment success modal trigger
+      _checkPaymentSuccessModal();
     });
+  }
+
+  /// H010: Check if SubscriptionProvider signals an unseen payment success.
+  /// Shows the PaymentSuccessModal and marks it as seen so it won't fire again.
+  void _checkPaymentSuccessModal() {
+    if (!mounted) return;
+    try {
+      final subProvider = context.read<SubscriptionProvider>();
+      // Initial check
+      _maybeShowSuccessModal(subProvider);
+      // Ongoing listener for real-time transitions
+      subProvider.addListener(() => _maybeShowSuccessModal(subProvider));
+    } catch (_) {
+      // SubscriptionProvider not available — skip
+    }
+  }
+
+  void _maybeShowSuccessModal(SubscriptionProvider subProvider) {
+    if (!mounted) return;
+    if (!subProvider.hasSeenSuccessModal) {
+      // Verify the user actually upgraded (not just a flag reset)
+      final planId = context.read<AuthProvider>().currentStore?.subscription.planId;
+      if (planId == 'pro_yearly' || planId == 'lifetime') {
+        subProvider.markSuccessModalSeen();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            PaymentSuccessModal.show(context);
+          }
+        });
+      }
+    }
   }
 
   @override

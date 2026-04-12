@@ -191,7 +191,7 @@ Migrate the client application from a license-key activation model to a multi-ti
 ### FR-01: Store Data Model Transition
 - The legacy license activation fields (license key, license key ID, license object) must be removed from the store data model.
 - The legacy `maxEmployees` setting must be removed from settings.
-- A new subscription object must be embedded in the store record containing: plan identifier, status, pending-request flag, start date, end date, trial-consumed flag, and a features sub-object with wallet limit, employee limit, and SMS enablement.
+- A new subscription object must be embedded in the store record containing: plan identifier, status, `pendingRequestDate` (nullable timestamp — non-null value indicates a pending payment request; null means no pending request), start date, end date, trial-consumed flag, and a features sub-object with wallet limit, employee limit, and SMS enablement.
 - Feature limits by plan tier:
   - **Free:** maxWallets = 3, maxEmployees = 1, isSmsEnabled = false.
   - **Trial:** maxWallets = 999, maxEmployees = 999, isSmsEnabled = true.
@@ -200,7 +200,7 @@ Migrate the client application from a license-key activation model to a multi-ti
 
 ### FR-02: Subscription Request Lifecycle
 - A new subscription request record type must support: unique ID, store reference, requested plan, payment method, payment reference string, amount, status (pending/approved/rejected), creation timestamp, processing timestamp, and processor identity.
-- Creating a request must atomically set the store's pending-request flag to true.
+- Creating a request must atomically write `pendingRequestDate` as a Firestore server timestamp onto the store document. No separate boolean flag is written or read — pending state is derived exclusively from the nullability of `pendingRequestDate`.
 - Only one active (pending) request may exist per store at any time.
 
 ### FR-03: System Configuration
@@ -310,7 +310,7 @@ Migrate the client application from a license-key activation model to a multi-ti
 
 ### Scenario 5: Expired Plan with Pending Payment
 1. A user's Pro Yearly plan expires.
-2. The user has a pending upgrade request (hasPendingRequest = true).
+2. The user has a pending upgrade request (`pendingRequestDate != null`).
 3. The system grants a 48-hour grace period.
 4. The Arabic grace banner is displayed.
 5. If 48 hours pass without approval, the local plan drops to "free".

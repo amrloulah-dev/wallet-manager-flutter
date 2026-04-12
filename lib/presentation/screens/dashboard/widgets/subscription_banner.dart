@@ -4,7 +4,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
 
 class SubscriptionBanner extends StatelessWidget {
-  const SubscriptionBanner({Key? key}) : super(key: key);
+  const SubscriptionBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,17 +24,23 @@ class SubscriptionBanner extends StatelessWidget {
           color: Colors.orange,
           message: 'يتم الآن مراجعة طلب الاشتراك الخاص بك. لن ينقطع الخدمة خلال هذه الفترة.',
         );
-      } else if (latestRequest.status == 'approved' && !subscription.isExpired) {
+      } else if (latestRequest.status == 'approved' && !subProvider.isExpired) {
         // Technically if it's approved, the cloud function updates the subscription.
         // But if we want to show a short banner, we can just optionally show it.
         // It mostly matters for rejection.
       } else if (latestRequest.status == 'rejected') {
-        return _buildBanner(
-          context,
-          icon: Icons.error,
-          color: Colors.red,
-          message: 'تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم أو تقديم طلب جديد.',
-        );
+        // H009: Dismissible rejection banner
+        if (subProvider.hasDismissedRejection) {
+          // User dismissed this rejection banner — don't show it
+        } else {
+          return _buildBanner(
+            context,
+            icon: Icons.error,
+            color: Colors.red,
+            message: 'تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم أو تقديم طلب جديد.',
+            onDismiss: () => subProvider.dismissRejectionBanner(),
+          );
+        }
       }
     } else if (subscription.pendingRequestDate != null) {
       // Fallback if latestRequest isn't available yet or something
@@ -47,7 +53,7 @@ class SubscriptionBanner extends StatelessWidget {
     }
     
     // Check if expired
-    if (subscription.isExpired) {
+    if (subProvider.isExpired) {
        return _buildBanner(
          context, 
          icon: Icons.warning_rounded, 
@@ -72,16 +78,16 @@ class SubscriptionBanner extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  Widget _buildBanner(BuildContext context, {required IconData icon, required Color color, required String message}) {
+  Widget _buildBanner(BuildContext context, {required IconData icon, required Color color, required String message, VoidCallback? onDismiss}) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withAlpha((0.1 * 255).round()),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withAlpha((0.5 * 255).round())),
         ),
         child: Row(
           children: [
@@ -97,6 +103,15 @@ class SubscriptionBanner extends StatelessWidget {
                 ),
               ),
             ),
+            // H009: Dismiss button for rejection banner
+            if (onDismiss != null)
+              IconButton(
+                icon: Icon(Icons.close, color: color, size: 20),
+                onPressed: onDismiss,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'إخفاء',
+              ),
           ],
         ),
       ),

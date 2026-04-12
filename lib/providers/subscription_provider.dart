@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../data/models/store_model.dart';
 import '../data/services/local_storage_service.dart';
+import '../services/time_service.dart';
 import 'auth_provider.dart';
 import '../data/repositories/subscription_repository.dart';
 import '../data/models/subscription_request_model.dart';
@@ -41,7 +42,7 @@ class SubscriptionProvider extends ChangeNotifier {
       final wasPending = _previousSubscription!.pendingRequestDate != null;
       final isNowPending = currentSub.pendingRequestDate != null;
       
-      if (wasPending && !isNowPending && (currentSub.planId == 'pro_yearly' || currentSub.planId == 'lifetime')) {
+      if (wasPending && !isNowPending && currentSub.status == SubscriptionStatus.active && (currentSub.planId == 'pro_yearly' || currentSub.planId == 'lifetime')) {
         // Dependably trigger success modal state
         LocalStorageService.instance.setHasSeenSuccessModal(false);
       }
@@ -104,6 +105,9 @@ class SubscriptionProvider extends ChangeNotifier {
     // Store previous states for rollback
     final previousRequest = _latestRequest;
     
+    // Reset modal flag whenever a new upgrade request is submitted
+    LocalStorageService.instance.setHasSeenSuccessModal(false);
+    
     // Optimistic UI update
     _latestRequest = SubscriptionRequestModel(
       id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
@@ -139,28 +143,41 @@ class SubscriptionProvider extends ChangeNotifier {
         endDateMs: sub.endDate?.millisecondsSinceEpoch,
         isLifetime: sub.planId == 'lifetime',
         smsEnabled: sub.smsEnabled,
-        isSuspended: sub.status == 'suspended',
+        isSuspended: sub.status == SubscriptionStatus.suspended,
       );
     }
   }
   
+  /// T058: Single point of time resolution for the entire domain layer.
+  /// All expiration checks MUST go through this method.
+  DateTime _serverNow() => TimeService.now();
+
   int get maxWallets => _subscription?.maxWallets ?? 3;
   int get maxEmployees => _subscription?.maxEmployees ?? 1;
   bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
-  
-  bool get isSuspended => _subscription?.status == 'suspended';
+
+  bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;
+
+  /// T058: Expiration evaluated in the domain layer using NTP-resolved time.
+  bool get isExpired => _subscription?.isExpiredAt(_serverNow()) ?? false;
+
+  /// T058: Pending payment state derived purely from pendingRequestDate nullability (I2).
+  bool get hasPendingRequest => _subscription?.pendingRequestDate != null;
+
+  /// T058: Days remaining computed with server-resolved time.
+  int? get daysRemaining => _subscription?.daysRemainingAt(_serverNow());
   
   bool canAddWallet(int currentWalletCount) {
-    // T053: Enhance local gatekeeper fallback explicitly
-    if (_subscription != null && _subscription!.isExpired && _subscription!.pendingRequestDate == null) {
+    // T053: Fallback to Free tier caps when explicitly expired with no pending request
+    if (_subscription != null && isExpired && !hasPendingRequest) {
       return currentWalletCount < 3;
     }
     return currentWalletCount < maxWallets;
   }
   
   bool canAddEmployee(int currentEmployeeCount) {
-    // T053: Enhance local gatekeeper fallback explicitly
-    if (_subscription != null && _subscription!.isExpired && _subscription!.pendingRequestDate == null) {
+    // T053: Fallback to Free tier caps when explicitly expired with no pending request
+    if (_subscription != null && isExpired && !hasPendingRequest) {
       return currentEmployeeCount < 1;
     }
     return currentEmployeeCount < maxEmployees;

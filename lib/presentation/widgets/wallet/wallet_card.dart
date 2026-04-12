@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../../providers/wallet_provider.dart';
@@ -31,20 +32,20 @@ class _WalletCardState extends State<WalletCard> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WalletProvider>();
+    final isFrozen = provider.isWalletFrozenSync(widget.wallet.walletId);
     final reactiveWallet = provider.wallets.firstWhere((w) => w.walletId == widget.wallet.walletId, orElse: () => widget.wallet);
 
     final elevation = _isHighlighted ? 8.0 : 2.0;
     final scale = _isHighlighted ? 0.98 : 1.0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
-      child: Card(
-        elevation: elevation,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: widget.onTap,
+    Widget cardContent = Card(
+      elevation: elevation,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: isFrozen 
+            ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+            : widget.onTap,
           onHighlightChanged: (isHighlighted) {
             setState(() {
               _isHighlighted = isHighlighted;
@@ -56,7 +57,7 @@ class _WalletCardState extends State<WalletCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, reactiveWallet),
+                _buildHeader(context, reactiveWallet, isFrozen),
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
@@ -73,11 +74,28 @@ class _WalletCardState extends State<WalletCard> {
             ),
           ),
         ),
+      );
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      transform: Matrix4.identity()..scale(scale, scale),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Opacity(
+            opacity: isFrozen ? 0.5 : 1.0,
+            child: cardContent,
+          ),
+          if (isFrozen)
+            const Positioned(
+              child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, WalletModel wallet) {
+  Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
     final provider = context.watch<WalletProvider>();
     final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
     

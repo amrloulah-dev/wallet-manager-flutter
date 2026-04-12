@@ -122,6 +122,7 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
           itemBuilder: (context, index) {
             final employee = employees[index];
             return EmployeeCard(
+              key: ValueKey('${employee.userId}_${employee.isActive}_${context.read<EmployeeProvider>().isEmployeeFrozen(employee)}'),
               employee: employee,
               onDelete: employee.isActive
                   ? () => _showDeactivateDialog(employee)

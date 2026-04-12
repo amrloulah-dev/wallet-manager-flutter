@@ -3,6 +3,7 @@ import '../../../data/repositories/subscription_repository.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/validators.dart';
 
 class PaymentModalScreen extends StatefulWidget {
   final String planId; // 'pro_yearly' or 'lifetime'
@@ -145,7 +146,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'هذا الحقل مطلوب';
                     }
-                    return null;
+                    return Validators.validatePhoneNumber(value.trim());
                   },
                 ),
                 const SizedBox(height: 32),

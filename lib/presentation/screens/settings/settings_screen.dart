@@ -10,6 +10,7 @@ import '../../../core/utils/date_helper.dart';
 import '../../../data/models/store_model.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/subscription_provider.dart';
 import '../../../providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
@@ -166,11 +167,12 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLicenseCard(BuildContext context, StoreSubscription subscription) {
-    return Consumer<AuthProvider>(builder: (context, authProvider, _) {
+    return Consumer2<AuthProvider, SubscriptionProvider>(builder: (context, authProvider, subProvider, _) {
       final isTrial = authProvider.isTrial;
-      final isExpired = subscription.isExpired;
+      // T058: Read expiration state from SubscriptionProvider (domain layer owns time resolution)
+      final isExpired = subProvider.isExpired;
       final daysRemaining =
-          isTrial ? authProvider.trialDaysRemaining : subscription.daysRemaining;
+          isTrial ? authProvider.trialDaysRemaining : subProvider.daysRemaining;
       final isDark = Theme.of(context).brightness == Brightness.dark;
 
       final cardColor = AppColors.licenseCardBg(context,

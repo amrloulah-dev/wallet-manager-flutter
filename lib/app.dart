@@ -23,6 +23,7 @@ import 'package:walletmanager/routes/navigation_service.dart';
 import 'routes/app_router.dart';
 import 'data/repositories/system_config_repository.dart';
 import 'providers/system_config_provider.dart';
+import 'data/models/store_model.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/subscription/paywall_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
@@ -165,8 +166,8 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           );
         }
 
-        // 1. Guard against Admin Block
-        if (auth.currentStore?.isSuspended == true) {
+        // 1. Guard against Admin Block (H004: use subscription.status, not deprecated root-level isSuspended)
+        if (auth.currentStore?.subscription.status == SubscriptionStatus.suspended) {
           return const AdminBlockScreen();
         }
 

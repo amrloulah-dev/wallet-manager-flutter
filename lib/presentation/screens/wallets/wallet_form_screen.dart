@@ -14,6 +14,8 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../../core/constants/route_constants.dart';
+import '../../../providers/subscription_provider.dart';
 
 class WalletFormScreen extends StatefulWidget {
   const WalletFormScreen({super.key});
@@ -83,6 +85,16 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     walletProvider.clearError();
+
+    // H006 (Tightened): Preemptive hard-stop paywall check — BEFORE form validation
+    if (!_isEditMode) {
+      final subProvider = Provider.of<SubscriptionProvider>(context, listen: false);
+      final currentCount = walletProvider.wallets.length;
+      if (!subProvider.canAddWallet(currentCount)) {
+        Navigator.pushNamed(context, RouteConstants.upgradeScreen);
+        return;
+      }
+    }
 
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;

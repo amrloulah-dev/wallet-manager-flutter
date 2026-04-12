@@ -5,6 +5,7 @@ import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
 import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
+import '../../services/time_service.dart';
 
 
 /// Repository for all Firestore operations related to the 'stores' collection.
@@ -32,23 +33,38 @@ class StoreRepository {
   /// **NOTE:** This method now enforces a "Trial Mode" for all new stores.
   /// It overwrites any license information passed in the [store] object with
   /// a generated trial license.
-  Future<void> createStore(StoreModel store) async {
+  Future<void> createStore(StoreModel store, {bool isEligibleForTrial = true}) async {
     try {
       final batch = _firestore.batch();
 
-      // --- Generate Trial Subscription ---
-      final trialSubscription = StoreSubscription(
-        planId: 'trial',
-        status: 'active',
-        endDate: DateTime.now().add(const Duration(days: 14)),
-        trialConsumed: true,
-        maxWallets: 3,
-        maxEmployees: 1,
-        smsEnabled: false,
-      );
+      // --- Generate Subscription based on trial eligibility ---
+      final StoreSubscription subscription;
+      if (isEligibleForTrial) {
+        // H001: Trial tier gets generous limits
+        subscription = StoreSubscription(
+          planId: 'trial',
+          status: SubscriptionStatus.active,
+          endDate: DateTime.now().add(const Duration(days: 14)),
+          trialConsumed: false,
+          maxWallets: 999,
+          maxEmployees: 999,
+          smsEnabled: true,
+        );
+      } else {
+        // H002: Device-ineligible users land on Free tier directly
+        subscription = StoreSubscription(
+          planId: 'free',
+          status: SubscriptionStatus.active,
+          endDate: null,
+          trialConsumed: true,
+          maxWallets: 3,
+          maxEmployees: 1,
+          smsEnabled: false,
+        );
+      }
 
       final storeWithTrial = store.copyWith(
-        subscription: trialSubscription,
+        subscription: subscription,
       );
       // -----------------------------
 
@@ -252,17 +268,19 @@ class StoreRepository {
     try {
       final store = await getStoreById(storeId);
       if (store == null) return false;
-      return store.subscription.status == 'active' && !store.subscription.isExpired;
+      // T058: Pure POJO — time resolved here rather than inside StoreSubscription
+      return store.subscription.status == SubscriptionStatus.active &&
+          !store.subscription.isExpiredAt(TimeService.now());
     } catch (e) {
       return false;
     }
   }
 
   /// Updates the status of a store's subscription.
-  Future<void> updateSubscriptionStatus(String storeId, String status) async {
+  Future<void> updateSubscriptionStatus(String storeId, SubscriptionStatus status) async {
     try {
       await _storesCollection.doc(storeId).update({
-        'subscription.status': status,
+        'subscription.status': status.name,
       });
     } on FirebaseException catch (e) {
       throw ServerException('فشل تحديث حالة الاشتراك: ${e.message}',

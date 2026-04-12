@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/store_model.dart';
+import '../../../providers/employee_provider.dart';
 
 class SubscriptionDetailsScreen extends StatelessWidget {
   const SubscriptionDetailsScreen({Key? key}) : super(key: key);
@@ -56,7 +58,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               _buildLimitItem(
                 context,
                 title: 'حسابات الموظفين',
-                current: 1, // Example calculation: replace with actual employee count 
+                current: context.watch<EmployeeProvider>().employeesCount, // dynamic employee count
                 max: subscription.maxEmployees,
                 icon: Icons.people,
               ),
@@ -116,7 +118,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  subscription.status == 'active' ? 'نشط' : 'معلق',
+                  subscription.status == SubscriptionStatus.active ? 'نشط' : 'معلق',
                   style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                 ),
               ),

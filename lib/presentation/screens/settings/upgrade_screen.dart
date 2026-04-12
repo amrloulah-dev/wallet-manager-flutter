@@ -6,6 +6,7 @@ import 'package:walletmanager/core/theme/app_text_styles.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 
@@ -125,12 +126,12 @@ class UpgradeScreen extends StatelessWidget {
   }
 
   Widget _buildPremiumUI(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
+    return Consumer2<AuthProvider, SubscriptionProvider>(
+      builder: (context, authProvider, subProvider, _) {
         final licenseKey = authProvider.licenseKey;
         final expiryDate = authProvider.licenseExpiryDate;
-        final daysRemaining =
-            authProvider.currentStore?.subscription.daysRemaining ?? 0;
+        // T058: Days remaining resolved via SubscriptionProvider (NTP-aware)
+        final daysRemaining = subProvider.daysRemaining ?? 0;
 
         return Column(
           children: [

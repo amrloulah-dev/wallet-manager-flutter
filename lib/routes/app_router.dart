@@ -27,7 +27,7 @@ import '../presentation/screens/debts/add_debt_screen.dart';
 import '../presentation/screens/debts/debts_list_screen.dart';
 import '../presentation/screens/statistics/general_statistics_screen.dart';
 import '../presentation/screens/settings/settings_screen.dart';
-import '../presentation/screens/settings/upgrade_screen.dart';
+import '../presentation/screens/subscription/paywall_screen.dart';
 import '../presentation/screens/employees/add_employee_screen.dart';
 import '../presentation/screens/employees/manage_employees_screen.dart';
 import '../presentation/screens/subscription/subscription_details_screen.dart';
@@ -151,8 +151,8 @@ class AppRouter {
         return _buildRoute(const SettingsScreen(), settings);
 
       case RouteConstants.upgradeScreen:
-        final isTrial = settings.arguments as bool? ?? false;
-        return _buildRoute(UpgradeScreen(isTrial: isTrial), settings);
+        // H005: Route to new PaywallScreen instead of legacy UpgradeScreen
+        return _buildRoute(const PaywallScreen(), settings);
 
       case RouteConstants.subscriptionDetails:
         return _buildRoute(const SubscriptionDetailsScreen(), settings);

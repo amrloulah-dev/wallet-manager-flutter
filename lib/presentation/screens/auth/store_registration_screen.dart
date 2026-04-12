@@ -98,8 +98,6 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           storePassword: _storePasswordController.text,
         );
       }
-    } on DeviceLimitExceededException catch (e) {
-      ToastUtils.showError(e.message);
     } on EmailAlreadyInUseException catch (e) {
       ToastUtils.showError(e.message);
     } on WeakPasswordException catch (e) {

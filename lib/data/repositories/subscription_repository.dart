@@ -90,5 +90,26 @@ class SubscriptionRepository {
     });
     await batch.commit();
   }
+  /// Anti-Fraud: Read-before-Write guard.
+  /// Checks the hardware device_registry subcollection across ALL stores
+  /// to determine if this physical device has already consumed a trial.
+  /// Returns true if the device has been previously registered (trial consumed).
+  Future<bool> hasDeviceConsumedTrial() async {
+    final deviceId = await DeviceTrackingService.getDeviceId();
+    
+    // Query the root-level device_registry for this hardware device
+    final docSnapshot = await _firestore
+        .collection('device_registry')
+        .doc(deviceId)
+        .get();
+    
+    if (!docSnapshot.exists) return false;
+    
+    final data = docSnapshot.data();
+    if (data == null) return false;
+    
+    // If trialCount >= 1, this device has already consumed a trial
+    final trialCount = data['trialCount'] as int? ?? 0;
+    return trialCount >= 1;
+  }
 }
-

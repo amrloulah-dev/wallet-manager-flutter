@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/time_service.dart';
 
 // ===========================
 // Main Store Model
@@ -158,9 +157,11 @@ class StoreModel {
 // Nested: Store Subscription
 // ===========================
 
+enum SubscriptionStatus { active, expired, suspended, pending }
+
 class StoreSubscription {
   final String planId; // 'free', 'trial', 'pro_yearly', 'lifetime'
-  final String status; // 'active', 'suspended'
+  final SubscriptionStatus status;
   final DateTime? endDate; // null for lifetime
   final bool trialConsumed; // true if trial was used
   final int maxWallets; // e.g., 3 or 999
@@ -179,31 +180,32 @@ class StoreSubscription {
     this.pendingRequestDate,
   });
 
-  bool get isExpired {
-    if (endDate == null) return planId != 'lifetime';
-    
-    // T026: 48-hour grace period if there is an active pending request
+  /// T058: Pure POJO — accepts a pre-resolved server timestamp from SubscriptionProvider.
+  /// Never call TimeService directly from within this model.
+  bool isExpiredAt(DateTime serverNow) {
+    if (planId == 'lifetime') return false;
+    if (endDate == null) return false;
+
+    // T026/T044: 48-hour grace period anchored to pendingRequestDate
     if (pendingRequestDate != null) {
       final graceEnd = pendingRequestDate!.add(const Duration(hours: 48));
-      if (TimeService.now().isBefore(graceEnd)) {
-        return false;
-      }
+      if (serverNow.isBefore(graceEnd)) return false;
     }
-    
-    // T013 Uses NTP time_service offset
-    return TimeService.now().isAfter(endDate!);
+
+    return serverNow.isAfter(endDate!);
   }
 
-  int? get daysRemaining {
-    if (endDate == null) return null; // Lifetime or no end date
-    final remaining = endDate!.difference(TimeService.now());
+  /// T058: Days remaining computed from a pre-resolved server timestamp.
+  int? daysRemainingAt(DateTime serverNow) {
+    if (endDate == null) return null; // Lifetime — no end date
+    final remaining = endDate!.difference(serverNow);
     return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
   }
 
   factory StoreSubscription.migratedLifetime() {
     return StoreSubscription(
       planId: 'lifetime',
-      status: 'active',
+      status: SubscriptionStatus.active,
       endDate: null,
       trialConsumed: true,
       maxWallets: 999,
@@ -216,7 +218,10 @@ class StoreSubscription {
   factory StoreSubscription.fromMap(Map<String, dynamic> map) {
     return StoreSubscription(
       planId: map['planId'] ?? 'free',
-      status: map['status'] ?? 'active',
+      status: SubscriptionStatus.values.firstWhere(
+        (e) => e.name == (map['status'] ?? 'active'),
+        orElse: () => SubscriptionStatus.active,
+      ),
       endDate: map['endDate'] != null 
           ? (map['endDate'] as Timestamp).toDate() 
           : null,
@@ -233,7 +238,7 @@ class StoreSubscription {
   Map<String, dynamic> toMap() {
     return {
       'planId': planId,
-      'status': status,
+      'status': status.name,
       'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'trialConsumed': trialConsumed,
       'maxWallets': maxWallets,
@@ -245,7 +250,7 @@ class StoreSubscription {
 
   StoreSubscription copyWith({
     String? planId,
-    String? status,
+    SubscriptionStatus? status,
     DateTime? endDate,
     bool? trialConsumed,
     int? maxWallets,
