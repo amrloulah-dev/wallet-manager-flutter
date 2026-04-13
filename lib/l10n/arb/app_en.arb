@@ -106,6 +106,7 @@
   "debts": "Debts",
   "statistics": "Statistics",
   "manageEmployees": "Manage Employees",
+  "mySubscription": "My Subscription",
   "errorLoadingStats": "Cannot load statistics",
   "totalWallets": "Total Wallets",
   "totalTransactions": "Total Transactions",

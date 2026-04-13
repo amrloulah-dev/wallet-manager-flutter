@@ -45,7 +45,7 @@ class DeviceRepository {
   Future<bool> checkDeviceEligibility(String deviceId) async {
     try {
       final docSnapshot = await _firestore
-          .collection('device_registrations')
+          .collection('device_registry')
           .doc(deviceId)
           .get();
 
@@ -71,7 +71,7 @@ class DeviceRepository {
   ///
   /// Increments `trialCount` and adds `newStoreId` to `associatedStoreIds`.
   Future<void> registerDeviceUsage(String deviceId, String newStoreId) async {
-    final docRef = _firestore.collection('device_registrations').doc(deviceId);
+    final docRef = _firestore.collection('device_registry').doc(deviceId);
 
     try {
       await docRef.set({

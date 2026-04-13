@@ -5,8 +5,10 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/employee_provider.dart';
+import '../../../providers/subscription_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../../data/models/user_permissions.dart';
@@ -52,18 +54,19 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   }
 
   Future<void> _submitForm() async {
-    final authProvider = context.read<AuthProvider>();
     final employeeProvider = context.read<EmployeeProvider>();
+
+    // H007 (Tightened): Preemptive hard-stop paywall check — BEFORE form validation
+    final subProvider = context.read<SubscriptionProvider>();
+    final currentCount = employeeProvider.employeesCount;
+    if (!subProvider.canAddEmployee(currentCount)) {
+      Navigator.pushNamed(context, RouteConstants.upgradeScreen);
+      return;
+    }
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final phone = _phoneController.text.trim();
-
-    final maxEmployees = authProvider.currentStore?.settings.maxEmployees ?? 5;
-    if (employeeProvider.employeesCount >= maxEmployees) {
-      ToastUtils.showError('لقد وصلت إلى الحد الأقصى لعدد الموظفين');
-      return;
-    }
 
     setState(() => _isSubmitting = true);
 
@@ -127,7 +130,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, employeeProvider, authProvider, _) {
         final currentCount = employeeProvider.employeesCount;
         final maxEmployees =
-            authProvider.currentStore?.settings.maxEmployees ?? 5;
+            authProvider.currentStore?.subscription.maxEmployees ?? 5;
         final isAtLimit = currentCount >= maxEmployees;
 
         return Container(
@@ -288,7 +291,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, provider, _) {
 // ... existing code ...
         final isAtLimit = provider.employeesCount >=
-            (context.read<AuthProvider>().currentStore?.settings.maxEmployees ??
+            (context.read<AuthProvider>().currentStore?.subscription.maxEmployees ??
                 5);
 
         return CustomButton(

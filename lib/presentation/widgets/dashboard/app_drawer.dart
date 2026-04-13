@@ -175,6 +175,19 @@ class AppDrawer extends StatelessWidget {
                       }
                     },
                   ),
+                  _DrawerMenuTile(
+                    title: AppLocalizations.of(context)!.mySubscription,
+                    icon: Icons.card_membership_outlined,
+                    onTap: () {
+                      Navigator.pop(context);
+                      if (authProvider.isOwner) {
+                        Navigator.pushNamed(
+                            context, RouteConstants.subscriptionDetails);
+                      } else {
+                        ToastUtils.showError('هذه الخاصية للمالك فقط');
+                      }
+                    },
+                  ),
                 ],
               ),
             ),

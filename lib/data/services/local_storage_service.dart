@@ -145,6 +145,54 @@ class LocalStorageService {
   static const String _kSmsAutomationEnabled = 'sms_automation_enabled';
   static const String _kSimMappings = 'sim_wallet_mappings';
 
+  // Subscription background sync keys
+  static const String _kSubEndDateMs = 'sub_end_date_ms';
+  static const String _kIsSubLifetime = 'is_sub_lifetime';
+  static const String _kSubSmsEnabled = 'sub_sms_enabled';
+  static const String _kSubIsSuspended = 'sub_is_suspended';
+
+  /// Syncs subscription limits to SharedPreferences for background isolates.
+  Future<void> saveSubscriptionLimits({
+    required int? endDateMs,
+    required bool isLifetime,
+    required bool smsEnabled,
+    required bool isSuspended,
+  }) async {
+    _ensureInitialized();
+    if (endDateMs != null) {
+      await _prefs!.setInt(_kSubEndDateMs, endDateMs);
+    } else {
+      await _prefs!.remove(_kSubEndDateMs);
+    }
+    await _prefs!.setBool(_kIsSubLifetime, isLifetime);
+    await _prefs!.setBool(_kSubSmsEnabled, smsEnabled);
+    await _prefs!.setBool(_kSubIsSuspended, isSuspended);
+  }
+
+  int? get subEndDateMs => _prefs?.getInt(_kSubEndDateMs);
+  bool get isSubLifetime => _prefs?.getBool(_kIsSubLifetime) ?? false;
+  bool get subSmsEnabled => _prefs?.getBool(_kSubSmsEnabled) ?? false;
+  bool get subIsSuspended => _prefs?.getBool(_kSubIsSuspended) ?? false;
+
+  // Subscription UI states
+  static const String _kHasSeenSuccessModal = 'has_seen_success_modal';
+  static const String _kHasDismissedRejection = 'has_dismissed_rejection';
+
+  Future<void> setHasSeenSuccessModal(bool seen) async {
+    _ensureInitialized();
+    await _prefs!.setBool(_kHasSeenSuccessModal, seen);
+  }
+
+  bool get hasSeenSuccessModal => _prefs?.getBool(_kHasSeenSuccessModal) ?? false;
+
+  Future<void> setHasDismissedRejection(bool dismissed) async {
+    _ensureInitialized();
+    await _prefs!.setBool(_kHasDismissedRejection, dismissed);
+  }
+
+  bool get hasDismissedRejection => _prefs?.getBool(_kHasDismissedRejection) ?? false;
+
+
   /// Sets whether SMS automation is enabled.
   Future<void> setSmsAutomationEnabled(bool enabled) async {
     _ensureInitialized();

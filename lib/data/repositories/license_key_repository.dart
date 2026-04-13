@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/license_key_model.dart';
+import '../models/store_model.dart';
 import '../../core/errors/app_exceptions.dart';
 
 class LicenseKeyRepository {
@@ -76,12 +77,9 @@ class LicenseKeyRepository {
 
         // 3. Update Store Doc
         transaction.update(storeRef, {
-          'licenseKeyId': keyId,
-          'activeLicenseKey': licenseKeyString,
-          'license.licenseKey': licenseKeyString,
-          'license.licenseType': 'premium',
-          'license.status': 'active',
-          'license.expiryDate': Timestamp.fromDate(newExpiryDate),
+          'subscription.planId': 'premium',
+          'subscription.status': SubscriptionStatus.active.name,
+          'subscription.endDate': Timestamp.fromDate(newExpiryDate),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       });

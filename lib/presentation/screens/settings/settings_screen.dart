@@ -10,6 +10,7 @@ import '../../../core/utils/date_helper.dart';
 import '../../../data/models/store_model.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/subscription_provider.dart';
 import '../../../providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
@@ -154,19 +155,24 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             // License Card (Owner only)
             if (user?.isOwner == true && store != null)
-              _buildLicenseCard(context, store.license),
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(
+                    context, RouteConstants.subscriptionDetails),
+                child: _buildLicenseCard(context, store.subscription),
+              ),
           ],
         );
       },
     );
   }
 
-  Widget _buildLicenseCard(BuildContext context, StoreLicense license) {
-    return Consumer<AuthProvider>(builder: (context, authProvider, _) {
+  Widget _buildLicenseCard(BuildContext context, StoreSubscription subscription) {
+    return Consumer2<AuthProvider, SubscriptionProvider>(builder: (context, authProvider, subProvider, _) {
       final isTrial = authProvider.isTrial;
-      final isExpired = license.isExpired;
+      // T058: Read expiration state from SubscriptionProvider (domain layer owns time resolution)
+      final isExpired = subProvider.isExpired;
       final daysRemaining =
-          isTrial ? authProvider.trialDaysRemaining : license.daysRemaining;
+          isTrial ? authProvider.trialDaysRemaining : subProvider.daysRemaining;
       final isDark = Theme.of(context).brightness == Brightness.dark;
 
       final cardColor = AppColors.licenseCardBg(context,
@@ -228,12 +234,12 @@ class SettingsScreen extends StatelessWidget {
               _buildInfoRow(
                   context: context,
                   label: AppLocalizations.of(context)!.licenseKey,
-                  value: isTrial ? 'TRIAL' : license.licenseKey),
+                  value: isTrial ? 'TRIAL' : 'PREMIUM'),
               const SizedBox(height: 12),
               _buildInfoRow(
                   context: context,
                   label: AppLocalizations.of(context)!.expiryDate,
-                  value: DateHelper.formatDateTime(license.expiryDate)),
+                  value: subscription.endDate != null ? DateHelper.formatDateTime(subscription.endDate!) : 'Lifetime'),
               if (!isExpired) ...[
                 const SizedBox(height: 12),
                 Row(
@@ -363,20 +369,15 @@ class SettingsScreen extends StatelessWidget {
           child: Column(
             children: [
               ListTile(
-                leading: Icon(Icons.vpn_key_outlined,
-                    color: AppColors.textSecondary(context)),
-                title: Text(
-                    context.read<AuthProvider>().isTrial
-                        ? 'ترقية'
-                        : 'عرض الترخيص', // "Upgrade" or "View License"
+                leading: const Icon(Icons.card_membership_outlined,
+                    color: AppColors.primary),
+                title: Text(AppLocalizations.of(context)!.mySubscription,
                     style: AppTextStyles.bodyLarge),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  final isTrial = context.read<AuthProvider>().isTrial;
                   Navigator.pushNamed(
                     context,
-                    RouteConstants.upgradeScreen,
-                    arguments: isTrial,
+                    RouteConstants.subscriptionDetails,
                   );
                 },
               ),

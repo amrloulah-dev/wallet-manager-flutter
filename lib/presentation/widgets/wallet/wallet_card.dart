@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../../providers/wallet_provider.dart';
@@ -31,20 +32,20 @@ class _WalletCardState extends State<WalletCard> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WalletProvider>();
+    final isFrozen = provider.isWalletFrozenSync(widget.wallet.walletId);
     final reactiveWallet = provider.wallets.firstWhere((w) => w.walletId == widget.wallet.walletId, orElse: () => widget.wallet);
 
     final elevation = _isHighlighted ? 8.0 : 2.0;
     final scale = _isHighlighted ? 0.98 : 1.0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
-      child: Card(
-        elevation: elevation,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: widget.onTap,
+    Widget cardContent = Card(
+      elevation: elevation,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: isFrozen 
+            ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+            : widget.onTap,
           onHighlightChanged: (isHighlighted) {
             setState(() {
               _isHighlighted = isHighlighted;
@@ -56,7 +57,7 @@ class _WalletCardState extends State<WalletCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, reactiveWallet),
+                _buildHeader(context, reactiveWallet, isFrozen),
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
@@ -73,14 +74,34 @@ class _WalletCardState extends State<WalletCard> {
             ),
           ),
         ),
+      );
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      transform: Matrix4.identity()..scale(scale, scale),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Opacity(
+            opacity: isFrozen ? 0.5 : 1.0,
+            child: cardContent,
+          ),
+          if (isFrozen)
+            const Positioned(
+              child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, WalletModel wallet) {
+  Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
+    final provider = context.watch<WalletProvider>();
+    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
+    
     return Row(
       children: [
-        Icon(wallet.walletTypeIcon, size: 32, color: AppColors.primary),
+        Icon(wallet.walletTypeIcon, size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -88,7 +109,10 @@ class _WalletCardState extends State<WalletCard> {
             children: [
               Text(
                 NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
-                style: AppTextStyles.h3,
+                style: AppTextStyles.h3.copyWith(
+                  color: isFrozen ? Colors.grey : null,
+                  decoration: isFrozen ? TextDecoration.lineThrough : null,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -100,25 +124,48 @@ class _WalletCardState extends State<WalletCard> {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: (wallet.walletStatus == 'new'
+        if (isFrozen)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock, size: 14, color: Colors.red),
+                const SizedBox(width: 4),
+                Text(
+                  'مُجمدة',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: (wallet.walletStatus == 'new'
+                      ? AppColors.warning
+                      : AppColors.success)
+                  .withAlpha((0.15 * 255).round()),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              wallet.walletStatusDisplayName,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: wallet.walletStatus == 'new'
                     ? AppColors.warning
-                    : AppColors.success)
-                .withAlpha((0.15 * 255).round()),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            wallet.walletStatusDisplayName,
-            style: AppTextStyles.labelSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: wallet.walletStatus == 'new'
-                  ? AppColors.warning
-                  : AppColors.success,
+                    : AppColors.success,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

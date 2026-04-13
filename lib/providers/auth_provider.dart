@@ -8,12 +8,14 @@ import '../data/repositories/store_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/device_repository.dart';
 import '../data/repositories/license_key_repository.dart';
+import '../data/repositories/subscription_repository.dart';
 import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import '../data/services/local_storage_service.dart';
 import '../core/errors/app_exceptions.dart';
 import '../core/services/analytics_service.dart';
+import '../services/time_service.dart';
 
 enum AuthStatus {
   idle,
@@ -135,18 +137,22 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // License Getters
-  String get licenseKey => _currentStore?.license.licenseKey ?? 'N/A';
+  String get licenseKey => _currentStore?.subscription.planId ?? 'N/A';
   DateTime get licenseExpiryDate =>
-      _currentStore?.license.expiryDate ?? DateTime.now();
+      _currentStore?.subscription.endDate ?? DateTime.now();
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
+
+  /// T058: Single time-resolution entry point for expiry checks in AuthProvider.
+  /// Keeps StoreSubscription a pure POJO — never call sub.isExpiredAt() directly outside here.
+  bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());
 
   // Helper Getters
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isSubscriptionExpired =>
       _status == AuthStatus.expired ||
-      (_currentStore?.license.isExpired ?? false);
+      (_currentStore != null && _isSubExpired(_currentStore!.subscription));
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
@@ -154,11 +160,12 @@ class AuthProvider extends ChangeNotifier {
   String? get currentStoreId => _currentStore?.storeId;
 
   // Trial Status
-  bool get isTrial => _currentStore?.license.licenseType == 'trial';
+  bool get isTrial => _currentStore?.subscription.planId == 'trial';
   int? get trialDaysRemaining {
-    if (!isTrial) return null;
-    final expiry = _currentStore!.license.expiryDate;
-    final remaining = expiry.difference(DateTime.now());
+    if (!isTrial || _currentStore?.subscription.endDate == null) return null;
+    final expiry = _currentStore!.subscription.endDate!;
+    // T058: Use NTP-resolved server time for trial countdown
+    final remaining = expiry.difference(TimeService.now());
     return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
   }
 
@@ -200,7 +207,7 @@ class AuthProvider extends ChangeNotifier {
             _currentUser = user;
             _currentStore = store;
 
-            if (store.license.isExpired) {
+            if (store.subscription.isExpiredAt(TimeService.now())) {
               _setStatus(AuthStatus.expired);
               return;
             }
@@ -265,12 +272,17 @@ class AuthProvider extends ChangeNotifier {
       }
       _firebaseUser = googleUser;
 
-      // 1. Check Device Eligibility
+      // 1. Check Device Eligibility (H002: no longer throws, passes flag instead)
       final deviceId = await _deviceRepository.getDeviceId();
-      final isEligible =
+      var isEligibleForTrial =
           await _deviceRepository.checkDeviceEligibility(deviceId);
-      if (!isEligible) {
-        throw DeviceLimitExceededException();
+
+      // Anti-Fraud: Read-before-Write cross-validation via SubscriptionRepository
+      if (isEligibleForTrial) {
+        final hasConsumed = await SubscriptionRepository().hasDeviceConsumedTrial();
+        if (hasConsumed) {
+          isEligibleForTrial = false;
+        }
       }
 
       final existingStore =
@@ -286,6 +298,7 @@ class AuthProvider extends ChangeNotifier {
         photoUrl: googleUser.photoURL,
         storeName: storeName,
         storePassword: storePassword,
+        isEligibleForTrial: isEligibleForTrial,
       );
 
       AnalyticsService.logSignUp('google');
@@ -293,6 +306,8 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage (Best effort)
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+        // T050: Explicitly record device hardware identifier
+        await SubscriptionRepository().verifyDevice(storeId);
       } catch (e) {
         // Log error but don't fail the whole registration as store is already created
       }
@@ -303,7 +318,7 @@ class AuthProvider extends ChangeNotifier {
       await logout();
 
       // Propagate specific exceptions to UI
-      if (e is DeviceLimitExceededException || e is StoreInactiveException) {
+      if (e is StoreInactiveException) {
         rethrow;
       }
 
@@ -321,13 +336,17 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _setStatus(AuthStatus.loading);
     try {
-      // 1. Check Device Eligibility BEFORE creating auth user if possible,
-      // but usually we need to do it early.
+      // 1. Check Device Eligibility (H002: no longer throws, passes flag instead)
       final deviceId = await _deviceRepository.getDeviceId();
-      final isEligible =
+      var isEligibleForTrial =
           await _deviceRepository.checkDeviceEligibility(deviceId);
-      if (!isEligible) {
-        throw DeviceLimitExceededException();
+
+      // Anti-Fraud: Read-before-Write cross-validation via SubscriptionRepository
+      if (isEligibleForTrial) {
+        final hasConsumed = await SubscriptionRepository().hasDeviceConsumedTrial();
+        if (hasConsumed) {
+          isEligibleForTrial = false;
+        }
       }
 
       UserCredential userCredential;
@@ -355,6 +374,7 @@ class AuthProvider extends ChangeNotifier {
         photoUrl: null,
         storeName: storeName,
         storePassword: storePassword,
+        isEligibleForTrial: isEligibleForTrial,
       );
 
       AnalyticsService.logSignUp('email');
@@ -362,6 +382,8 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
+        // T050: Explicitly record device hardware identifier
+        await SubscriptionRepository().verifyDevice(storeId);
       } catch (e) {}
 
       return storeId;
@@ -369,8 +391,7 @@ class AuthProvider extends ChangeNotifier {
       await logout();
 
       // Propagate specific exceptions to UI
-      if (e is DeviceLimitExceededException ||
-          e is EmailAlreadyInUseException ||
+      if (e is EmailAlreadyInUseException ||
           e is WeakPasswordException) {
         rethrow;
       }
@@ -386,20 +407,22 @@ class AuthProvider extends ChangeNotifier {
     required String? photoUrl,
     required String storeName,
     required String storePassword,
+    bool isEligibleForTrial = true,
   }) async {
     final storeId = uid;
     final userId = uid;
 
     // NOTE: License details here are DUMMY PLACEHOLDERS.
     // The StoreRepository.createStore method will overwrite these with
-    // the canonical Trial License.
-    final placeholderLicense = StoreLicense(
-      licenseKey: "PENDING",
-      licenseType: "trial",
-      status: "pending",
-      startDate: DateTime.now(),
-      expiryDate: DateTime.now(),
-      lastCheck: DateTime.now(),
+    // the canonical Trial or Free tier based on isEligibleForTrial.
+    final placeholderSubscription = StoreSubscription(
+      planId: "trial",
+      status: SubscriptionStatus.active,
+      endDate: DateTime.now().add(const Duration(days: 14)),
+      trialConsumed: false,
+      maxWallets: 999,
+      maxEmployees: 999,
+      smsEnabled: true,
     );
 
     final newStore = StoreModel(
@@ -411,7 +434,7 @@ class AuthProvider extends ChangeNotifier {
       ownerEmail: email,
       ownerPhoto: photoUrl,
       createdAt: Timestamp.now(),
-      license: placeholderLicense,
+      subscription: placeholderSubscription,
       settings: StoreSettings(),
       stats: StoreStats(
         totalWallets: 0,
@@ -420,8 +443,6 @@ class AuthProvider extends ChangeNotifier {
         totalCommissionToday: 0.0,
         lastUpdated: Timestamp.now(),
       ),
-      activeLicenseKey: "PENDING",
-      licenseKeyId: "PENDING",
     );
 
     final newOwner = UserModel(
@@ -435,7 +456,7 @@ class AuthProvider extends ChangeNotifier {
       lastLogin: Timestamp.now(),
     );
 
-    await _storeRepository.createStore(newStore);
+    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial);
     await _userRepository.createUser(newOwner);
 
     // 2. Direct Fetch (Bypass internal provider state checks)
@@ -503,7 +524,7 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = userModel;
     _currentStore = store;
 
-    if (store.license.isExpired) {
+    if (_isSubExpired(store.subscription)) {
       _setStatus(AuthStatus.expired);
       return true; // Login successful but expired
     }
@@ -533,7 +554,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = employee;
       _currentStore = store;
 
-      if (store.license.isExpired) {
+      if (_isSubExpired(store.subscription)) {
         _setStatus(AuthStatus.expired);
         return true;
       }
@@ -614,7 +635,7 @@ class AuthProvider extends ChangeNotifier {
       _currentStore = store;
 
       // License check
-      if (store.license.isExpired) {
+      if (_isSubExpired(store.subscription)) {
         _setStatus(AuthStatus.expired);
         return true;
       }
@@ -700,7 +721,7 @@ class AuthProvider extends ChangeNotifier {
       _currentStore = store;
 
       // License check
-      if (store.license.isExpired) {
+      if (_isSubExpired(store.subscription)) {
         _setStatus(AuthStatus.expired);
         return;
       }
@@ -754,7 +775,7 @@ class AuthProvider extends ChangeNotifier {
       await refreshUserData();
 
       AnalyticsService.logLicenseUpgraded(
-          _currentStore?.license.licenseType ?? 'premium');
+          _currentStore?.subscription.planId ?? 'premium');
 
       _setLoading(false);
     } catch (e) {

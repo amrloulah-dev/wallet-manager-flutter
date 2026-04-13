@@ -205,7 +205,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
                         }
                         final wallet = filteredWallets[index];
                         return WalletCard(
-                          key: ValueKey('${wallet.walletId}_${wallet.balance}'),
+                          key: ValueKey('${wallet.walletId}_${wallet.balance}_${context.read<WalletProvider>().isWalletFrozenSync(wallet.walletId)}'),
                           wallet: wallet,
                           onTap: () =>
                               _navigateToWalletDetails(wallet.walletId),

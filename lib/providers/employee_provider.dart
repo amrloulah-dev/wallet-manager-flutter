@@ -4,11 +4,14 @@ import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
 import '../data/models/user_permissions.dart'; // Added import
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'subscription_provider.dart';
 
 enum EmployeeStatus { initial, loading, loaded, error }
 
 class EmployeeProvider extends ChangeNotifier {
   final EmployeeRepository _employeeRepository;
+  SubscriptionProvider? _subscriptionProvider;
 
   List<UserModel> _employees = [];
   EmployeeStatus _status = EmployeeStatus.initial;
@@ -16,6 +19,8 @@ class EmployeeProvider extends ChangeNotifier {
   String? _currentStoreId;
   String _searchQuery = '';
   bool _showActiveOnly = true;
+
+  Set<String> _suspendedEmployeeIds = {};
 
   StreamSubscription? _employeeStreamSubscription;
 
@@ -38,7 +43,8 @@ class EmployeeProvider extends ChangeNotifier {
     }).toList();
   }
 
-  int get employeesCount => _employees.where((e) => e.isActive).length;
+  int get employeesCount =>
+      _employees.where((e) => e.isActive && e.role != 'owner').length;
   List<UserModel> get activeEmployees =>
       _employees.where((e) => e.isActive).toList();
   List<UserModel> get inactiveEmployees =>
@@ -46,6 +52,10 @@ class EmployeeProvider extends ChangeNotifier {
 
   EmployeeProvider({required EmployeeRepository employeeRepository})
       : _employeeRepository = employeeRepository;
+
+  void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
+    _subscriptionProvider = subscriptionProvider;
+  }
 
   @override
   void dispose() {
@@ -82,6 +92,7 @@ class EmployeeProvider extends ChangeNotifier {
         _employeeRepository.watchEmployees(storeId).listen(
       (employees) {
         _employees = employees;
+        _recalculateSuspendedEmployees();
         _setStatus(EmployeeStatus.loaded);
       },
       onError: (error) {
@@ -101,6 +112,11 @@ class EmployeeProvider extends ChangeNotifier {
       return false;
     }
     // Redundant validation removed. The UI layer's Form validation handles this.
+
+    if (_subscriptionProvider != null && !_subscriptionProvider!.canAddEmployee(employeesCount)) {
+      _setError('تم الوصول للحد الأقصى للموظفين (${_subscriptionProvider!.maxEmployees})');
+      return false;
+    }
 
     _setStatus(EmployeeStatus.loading);
     try {
@@ -142,6 +158,12 @@ class EmployeeProvider extends ChangeNotifier {
 
       if (employee == null) {
         _setError('الرقم السري غير صحيح');
+        return null;
+      }
+
+      if (isEmployeeFrozen(employee)) {
+        _setError('هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك');
+        return null;
       }
 
       return employee;
@@ -153,6 +175,30 @@ class EmployeeProvider extends ChangeNotifier {
       }
       return null;
     }
+  }
+
+  void _recalculateSuspendedEmployees() {
+    _suspendedEmployeeIds.clear();
+    if (_subscriptionProvider == null || _currentStoreId == null) return;
+    final maxEmployees = _subscriptionProvider!.maxEmployees;
+    
+    final activeStaff = _employees
+        .where((e) => e.isActive && e.role != 'owner')
+        .toList()
+      ..sort((a, b) => (a.createdAt ?? Timestamp.now())
+          .compareTo(b.createdAt ?? Timestamp.now()));
+
+    if (activeStaff.length <= maxEmployees) return;
+
+    for (int i = maxEmployees; i < activeStaff.length; i++) {
+      _suspendedEmployeeIds.add(activeStaff[i].userId);
+    }
+  }
+
+  bool isEmployeeFrozen(UserModel employee) {
+    if (employee.role == 'owner') return false;
+    if (!employee.isActive) return false;
+    return _suspendedEmployeeIds.contains(employee.userId);
   }
 
   Future<bool> deactivateEmployee(String userId) async {

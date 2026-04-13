@@ -13,6 +13,7 @@ import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import 'auth_provider.dart';
+import 'subscription_provider.dart'; // Added import
 import 'package:walletmanager/data/services/local_storage_service.dart';
 
 enum WalletStatusState {
@@ -34,8 +35,10 @@ class WalletProvider extends ChangeNotifier {
   String? _currentStoreId;
 
   final AuthProvider _authProvider; // Made final and non-nullable
+  SubscriptionProvider? _subscriptionProvider;
   List<WalletModel> _wallets = [];
   Map<String, WalletModel> _walletMap = {};
+  Set<String> _frozenWalletIds = {};
   DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
   bool _fetchShieldActive = false;
@@ -69,10 +72,12 @@ class WalletProvider extends ChangeNotifier {
   // Constructor
   WalletProvider({
     required AuthProvider authProvider, // Required authProvider
+    SubscriptionProvider? subscriptionProvider,
     WalletRepository? walletRepository,
     TransactionRepository? transactionRepository,
     String? storeId,
   })  : _authProvider = authProvider,
+        _subscriptionProvider = subscriptionProvider,
         _walletRepository = walletRepository ?? WalletRepository(),
         _transactionRepository =
             transactionRepository ?? TransactionRepository(),
@@ -221,6 +226,10 @@ class WalletProvider extends ChangeNotifier {
     if (_currentStoreId != auth.currentStoreId) {
       setStoreId(auth.currentStoreId ?? '');
     }
+  }
+
+  void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
+    _subscriptionProvider = subscriptionProvider;
   }
 
   /// Robust permission check that ensures user is loaded
@@ -453,6 +462,14 @@ class WalletProvider extends ChangeNotifier {
       if (_currentStoreId == null)
         throw ValidationException('Store ID not found.');
 
+      if (_subscriptionProvider != null) {
+        final currentCount = await _walletRepository.getWalletsCount(_currentStoreId!);
+        if (!_subscriptionProvider!.canAddWallet(currentCount)) {
+          _setError('تم الوصول للحد الأقصى للمحافظ (${_subscriptionProvider!.maxWallets})');
+          return false;
+        }
+      }
+
       final newWallet = WalletModel.fromWalletStatus(
         walletId: FirebaseFirestore.instance.collection('wallets').doc().id,
         storeId: _currentStoreId!,
@@ -493,6 +510,14 @@ class WalletProvider extends ChangeNotifier {
     _setStatus(WalletStatusState.updating);
     try {
       await _validateUserAndPermission((p) => p.editWallet);
+
+      if (_currentStoreId == null) return false;
+
+      // Check FIFO freeze
+      if (await _isWalletFrozen(walletId)) {
+        _setError('هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية');
+        return false;
+      }
 
       final oldWallet = _walletMap[walletId];
       if (oldWallet == null) return false;
@@ -543,6 +568,11 @@ class WalletProvider extends ChangeNotifier {
       if (amount <= 0) throw ValidationException('Amount must be positive.');
       if (_currentStoreId == null)
         throw ValidationException('Store ID not found.');
+
+      // Check FIFO freeze
+      if (await _isWalletFrozen(walletId)) {
+        throw ValidationException('هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية');
+      }
 
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.transactionsCollection.doc().id,
@@ -714,5 +744,28 @@ class WalletProvider extends ChangeNotifier {
     _walletMap = {
       for (final wallet in _wallets) wallet.walletId: wallet,
     };
+    _recalculateFrozenWallets();
+  }
+
+  void _recalculateFrozenWallets() {
+    _frozenWalletIds.clear();
+    if (_subscriptionProvider == null || _currentStoreId == null) return;
+    final maxWallets = _subscriptionProvider!.maxWallets;
+    if (_wallets.length <= maxWallets) return;
+
+    final sortedWallets = List<WalletModel>.from(_wallets);
+    sortedWallets.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    for (int i = maxWallets; i < sortedWallets.length; i++) {
+      _frozenWalletIds.add(sortedWallets[i].walletId);
+    }
+  }
+
+  Future<bool> _isWalletFrozen(String walletId) async {
+    return _frozenWalletIds.contains(walletId);
+  }
+
+  // Synchronous check for UI bindings based on local RAM loaded items
+  bool isWalletFrozenSync(String walletId) {
+    return _frozenWalletIds.contains(walletId);
   }
 }

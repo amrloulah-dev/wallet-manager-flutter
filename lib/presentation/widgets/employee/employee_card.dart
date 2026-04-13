@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
 import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/providers/employee_provider.dart';
+import 'package:walletmanager/core/constants/route_constants.dart';
 
 class EmployeeCard extends StatelessWidget {
   final UserModel employee;
@@ -18,7 +21,10 @@ class EmployeeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isActive = employee.isActive;
-    return Container(
+    final provider = context.watch<EmployeeProvider>();
+    final isFrozen = provider.isEmployeeFrozen(employee);
+
+    Widget cardContent = Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isActive
@@ -40,7 +46,9 @@ class EmployeeCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: isFrozen 
+              ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+              : onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -88,6 +96,39 @@ class EmployeeCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Badge for Frozen state
+                Builder(
+                  builder: (context) {
+                    final provider = context.watch<EmployeeProvider>();
+                    if (provider.isEmployeeFrozen(employee)) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lock, size: 12, color: Colors.red),
+                              const SizedBox(width: 4),
+                              Text(
+                                'مُجمد',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 if (onDelete != null) ...[
                   const SizedBox(width: 8),
                   IconButton(
@@ -115,6 +156,20 @@ class EmployeeCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Opacity(
+          opacity: isFrozen ? 0.5 : 1.0,
+          child: cardContent,
+        ),
+        if (isFrozen)
+          const Positioned(
+            child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+          ),
+      ],
     );
   }
 }

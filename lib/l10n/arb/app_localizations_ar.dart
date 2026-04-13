@@ -335,6 +335,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get manageEmployees => 'إدارة الموظفين';
 
   @override
+  String get mySubscription => 'اشتراكي';
+
+  @override
   String get errorLoadingStats => 'لا يمكن تحميل الإحصائيات';
 
   @override
