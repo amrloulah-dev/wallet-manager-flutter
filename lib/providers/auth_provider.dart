@@ -13,6 +13,9 @@ import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import '../data/services/local_storage_service.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
+import '../core/services/identity_service.dart';
 import '../core/errors/app_exceptions.dart';
 import '../core/services/analytics_service.dart';
 import '../services/time_service.dart';
@@ -551,6 +554,45 @@ class AuthProvider extends ChangeNotifier {
     try {
       if (!store.isActive) throw StoreInactiveException();
 
+      bool identityAuthSuccess = false;
+      if (employee.firebaseUid != null && employee.firebaseUid!.isNotEmpty) {
+        final uid = await IdentityService.authenticateEmployee(
+          phone: employee.phone ?? '',
+          storeId: store.storeId,
+          pin: employee.pin ?? '',
+        );
+
+        if (uid != null) {
+          identityAuthSuccess = true;
+        } else {
+          AppErrorHandler.handle(
+            Exception('فشل مصادقة الموظف في خدمة الهوية'),
+            severity: ErrorSeverity.critical,
+            operation: 'AuthProvider.loginAsEmployee',
+          );
+        }
+      }
+
+      if (!identityAuthSuccess && (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
+        // Attempt lazy provisioning in background
+        IdentityService.provisionIdentity(
+          phone: employee.phone ?? '',
+          storeId: employee.storeId,
+          pin: employee.pin ?? '',
+        ).then((newUid) {
+          if (newUid != null) {
+            _userRepository.updateUser(employee.userId, {'firebaseUid': newUid});
+          }
+        }).catchError((e, stack) {
+          AppErrorHandler.handle(
+            Exception('فشل التزويد المتأخر للهوية: \$e'),
+            stackTrace: stack,
+            severity: ErrorSeverity.low,
+            operation: 'AuthProvider.lazyProvision',
+          );
+        });
+      }
+
       _currentUser = employee;
       _currentStore = store;
 
@@ -577,8 +619,15 @@ class AuthProvider extends ChangeNotifier {
       appEvents.fireTransactionsChanged();
       appEvents.fireDebtsChanged();
       return true;
-    } catch (e) {
-      _setError(e is AppException ? e.message : 'فشل تسجيل دخول الموظف.');
+    } catch (e, stack) {
+      final msg = e is AppException ? e.message : 'فشل تسجيل دخول الموظف.';
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.critical,
+        operation: 'AuthProvider.loginAsEmployee',
+      );
+      _setError(msg);
       await logout();
       return false;
     }

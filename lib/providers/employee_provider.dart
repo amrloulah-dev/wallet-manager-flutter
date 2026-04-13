@@ -120,13 +120,16 @@ class EmployeeProvider extends ChangeNotifier {
 
     _setStatus(EmployeeStatus.loading);
     try {
-      await _employeeRepository.addEmployee(
+      final newEmployee = await _employeeRepository.addEmployee(
         storeId: _currentStoreId!,
         fullName: fullName,
         phone: phone,
         pin: pin,
         permissions: permissions, // Pass permissions
       );
+      
+      _employeeRepository.provisionIdentity(newEmployee);
+      
       // No longer need to fire event, stream will update automatically
       _errorMessage = null;
       _setStatus(EmployeeStatus.loaded);
@@ -204,7 +207,13 @@ class EmployeeProvider extends ChangeNotifier {
   Future<bool> deactivateEmployee(String userId) async {
     _setStatus(EmployeeStatus.loading);
     try {
+      final employee = getEmployeeById(userId);
       await _employeeRepository.deactivateEmployee(userId);
+      
+      if (employee != null) {
+        _employeeRepository.cleanupIdentity(employee);
+      }
+      
       // No longer need to fire event, stream will update automatically
       _setStatus(EmployeeStatus.loaded);
       return true;
@@ -224,8 +233,14 @@ class EmployeeProvider extends ChangeNotifier {
     }
     _setStatus(EmployeeStatus.loading);
     try {
-      return await _employeeRepository.resetEmployeePIN(
+      final employee = getEmployeeById(userId);
+      final success = await _employeeRepository.resetEmployeePIN(
           userId: userId, newPin: newPin);
+          
+      if (success && employee != null) {
+        _employeeRepository.syncCredential(employee, newPin);
+      }
+      return success;
     } on ValidationException catch (e) {
       _setError(e.message);
       return false;

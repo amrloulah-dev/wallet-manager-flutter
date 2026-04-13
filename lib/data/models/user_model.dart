@@ -19,7 +19,7 @@ class UserModel {
   final String? photoURL;
 
   // Authentication
-  final String firebaseUid;
+  final String? firebaseUid;
   final String? pin; // Hashed PIN for employees
 
   // Status
@@ -44,7 +44,7 @@ class UserModel {
     this.email,
     this.phone,
     this.photoURL,
-    required this.firebaseUid,
+    this.firebaseUid,
     this.pin,
     this.isActive = true,
     required this.createdAt,
@@ -83,7 +83,7 @@ class UserModel {
       email: data['email'],
       phone: data['phone'],
       photoURL: data['photoURL'],
-      firebaseUid: data['firebaseUid'] ?? '',
+      firebaseUid: data['firebaseUid'], // Default to null for backward compat
       pin: data['pin'],
       isActive: data['isActive'] ?? true,
       createdAt: data['createdAt'] ?? Timestamp.now(),

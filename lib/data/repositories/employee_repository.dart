@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
+import '../../core/errors/error_severity.dart';
+import '../../core/services/identity_service.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_permissions.dart';
 
@@ -61,12 +64,12 @@ class EmployeeRepository {
     }
   }
 
-  Future<void> addEmployee({
+  Future<UserModel> addEmployee({
     required String storeId,
     required String fullName,
     required String phone,
     required String pin,
-    required UserPermissions permissions, // Added parameter
+    required UserPermissions permissions,
   }) async {
     final newUserId = _usersCollection.doc().id;
     final hashedPin = PasswordHasher.hashPassword(pin);
@@ -78,12 +81,12 @@ class EmployeeRepository {
       fullName: fullName,
       email: null,
       phone: phone,
-      firebaseUid: '', // Initially empty
+      firebaseUid: null,
       pin: hashedPin,
       isActive: true,
       createdAt: Timestamp.now(),
       lastLogin: Timestamp.now(),
-      permissions: permissions, // Use passed permissions
+      permissions: permissions,
       stats: UserStats(),
     );
 
@@ -98,20 +101,16 @@ class EmployeeRepository {
       }
 
       final storeData = storeSnap.data()!;
-      final maxEmployees = storeData['settings']?['maxEmployees'] ?? 5;
+      final maxEmployees = storeData['subscription'] != null
+          ? storeData['subscription']['maxEmployees'] ?? 0
+          : 0;
+      final currentEmployees = storeData['stats'] != null
+          ? storeData['stats']['totalEmployees'] ?? 0
+          : 0;
 
-      // We need to get the current count of employees within the transaction
-      final employeesQuery = await _usersCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role,
-              isEqualTo: FirebaseConstants.employeeRole)
-          .where(FirebaseConstants.isActive, isEqualTo: true)
-          .get();
-
-      final currentCount = employeesQuery.docs.length;
-
-      if (currentCount >= maxEmployees) {
-        throw ServerException('تم الوصول للحد الأقصى من الموظفين');
+      if (currentEmployees >= maxEmployees && maxEmployees != -1) {
+        throw ServerException(
+            'تم الوصول للحد الأقصى للموظفين (${maxEmployees})');
       }
 
       // Ensure PIN uniqueness within the transaction
@@ -129,6 +128,8 @@ class EmployeeRepository {
       transaction
           .update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
     });
+    
+    return newUser;
   }
 
   Future<int> getEmployeesCount(String storeId) async {
@@ -234,5 +235,68 @@ class EmployeeRepository {
       // Silently handle stream errors or use a proper logger in a real app
       return <UserModel>[];
     });
+  }
+
+  Future<void> provisionIdentity(UserModel employee) async {
+    try {
+      if (employee.phone == null || employee.pin == null) return;
+      
+      final uid = await IdentityService.provisionIdentity(
+        phone: employee.phone!,
+        storeId: employee.storeId,
+        pin: employee.pin!,
+      );
+
+      if (uid != null) {
+        await _usersCollection.doc(employee.userId).update({
+          'firebaseUid': uid,
+        });
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'EmployeeRepository.provisionIdentity',
+      );
+    }
+  }
+
+  Future<void> syncCredential(UserModel employee, String newPin) async {
+    try {
+      if (employee.phone == null) return;
+      
+      final hashedPin = newPin.length == 4 ? PasswordHasher.hashPassword(newPin) : newPin;
+      
+      await IdentityService.updateCredential(
+        phone: employee.phone!,
+        storeId: employee.storeId,
+        newPin: hashedPin, 
+      );
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'EmployeeRepository.syncCredential',
+      );
+    }
+  }
+
+  Future<void> cleanupIdentity(UserModel employee) async {
+    try {
+      if (employee.phone == null) return;
+      await IdentityService.deleteIdentity(
+        phone: employee.phone!,
+        storeId: employee.storeId,
+      );
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'EmployeeRepository.cleanupIdentity',
+      );
+    }
   }
 }
