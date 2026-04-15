@@ -8,6 +8,8 @@ import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/providers/app_events.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
 
 enum StatsMode { dashboard, filtered }
 
@@ -102,6 +104,10 @@ class StatisticsProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
+  }
+
   void setStoreId(String? storeId) {
     if (_storeId != storeId) {
       _storeId = storeId;
@@ -112,7 +118,7 @@ class StatisticsProvider extends ChangeNotifier {
         _todayStats = null;
         _cachedSummary = null;
         _cacheTimestamp = null;
-        notifyListeners();
+        _safeNotify();
       }
     }
   }
@@ -131,13 +137,13 @@ class StatisticsProvider extends ChangeNotifier {
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
         _dashboardSummary = _cachedSummary;
-        notifyListeners();
+        _safeNotify();
       }
       return;
     }
 
     _isLoading = true;
-    notifyListeners();
+    _safeNotify();
 
     try {
       final results = await Future.wait([
@@ -156,12 +162,14 @@ class StatisticsProvider extends ChangeNotifier {
       _isLoading = false;
       _errorMessage = null;
       _activateFetchShield();
-      notifyListeners();
-    } catch (e) {
+    } catch (e, stack) {
       _dashboardSummary = null;
-      _isLoading = false;
-      _errorMessage = "Failed to load dashboard stats.";
-      notifyListeners();
+      _setError("فشل تحميل إحصائيات لوحة التحكم.", e, stack);
+    } finally {
+      if (_isLoading) {
+        _isLoading = false;
+      }
+      _safeNotify();
     }
   }
 
@@ -171,7 +179,7 @@ class StatisticsProvider extends ChangeNotifier {
     _mode = StatsMode.filtered;
     _errorMessage = null;
     _filteredStats = null;
-    notifyListeners();
+    _safeNotify();
 
     try {
       if (_storeId == null) throw Exception("Store ID not found");
@@ -199,12 +207,12 @@ class StatisticsProvider extends ChangeNotifier {
         ...transactionSummary as Map<String, dynamic>,
         ...debtSummary as Map<String, dynamic>,
       };
-    } catch (e) {
-      _errorMessage = "Failed to fetch filtered statistics.";
+    } catch (e, stack) {
+      _setError("فشل جلب الإحصائيات المفلترة.", e, stack);
       _filteredStats = null;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -213,7 +221,7 @@ class StatisticsProvider extends ChangeNotifier {
     _filteredStats = null;
     _filteredDateRange = null;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotify();
   }
 
   Future<void> refreshDashboardStats() async {
@@ -262,6 +270,15 @@ class StatisticsProvider extends ChangeNotifier {
       totalAmount: _todayStats!.totalAmount + amount,
     );
 
-    notifyListeners();
+    _safeNotify();
+  }
+
+  void _setError(String message, [Object? error, StackTrace? stack]) {
+    _errorMessage = message;
+    AppErrorHandler.handle(error ?? message,
+        severity: ErrorSeverity.medium,
+        operation: 'statistics_operation',
+        stackTrace: stack);
+    // Note: notifyListeners() is now handled by the calling method's finally block
   }
 }

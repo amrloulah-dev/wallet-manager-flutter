@@ -23,6 +23,8 @@ class WalletRepository {
   CollectionReference get _walletsCollection =>
       _firestore.collection(FirebaseConstants.walletsCollection);
 
+  String generateId() => _walletsCollection.doc().id;
+
   // 1️⃣ CREATE Methods
   Future<void> createWallet(WalletModel wallet) async {
     try {

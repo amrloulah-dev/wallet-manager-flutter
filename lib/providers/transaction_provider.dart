@@ -8,8 +8,11 @@ import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import '../core/services/analytics_service.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
 enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
 
 class TransactionProvider extends ChangeNotifier {
@@ -54,7 +57,7 @@ class TransactionProvider extends ChangeNotifier {
     TransactionRepository? transactionRepository,
     String? storeId,
   })  : _transactionRepository =
-            transactionRepository ?? TransactionRepository(),
+            transactionRepository ?? sl<TransactionRepository>(),
         _currentStoreId = storeId {
     _dataChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
       if (_currentStoreId != null && !isLoading && !isLoadingMore && !_fetchShieldActive) {
@@ -137,15 +140,18 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<void> selectTransaction(String transactionId) async {
-    _setStatus(TransactionStatus.loading);
+    _updateStatus(TransactionStatus.loading);
+    _safeNotify();
     try {
       _selectedTransaction =
           await _transactionRepository.getTransactionById(transactionId);
-      _setStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionStatus.loaded);
     } on ServerException catch (e) {
       _setError(e.message);
-    } catch (e) {
-      _setError('Failed to fetch transaction details.');
+    } catch (e, stack) {
+      _setError('فشل جلب تفاصيل المعاملة.', e, stack);
+    } finally {
+      _safeNotify();
     }
   }
 
@@ -153,20 +159,21 @@ class TransactionProvider extends ChangeNotifier {
     if (_currentStoreId == null) return;
     if (_fetchShieldActive) return;
 
+    final now = DateTime.now();
     if (!forceRefresh &&
         _lastOptimisticUpdate != null &&
-        DateTime.now().difference(_lastOptimisticUpdate!).inSeconds < 10) {
+        now.difference(_lastOptimisticUpdate!).inSeconds < 10) {
       return;
     }
 
-    final now = DateTime.now();
     if (!forceRefresh &&
         _cachedTransactions != null &&
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       _transactions = _cachedTransactions!;
       if (status != TransactionStatus.loaded) {
-        _setStatus(TransactionStatus.loaded);
+        _updateStatus(TransactionStatus.loaded);
+        _safeNotify();
       }
       return;
     }
@@ -175,7 +182,7 @@ class TransactionProvider extends ChangeNotifier {
         FirebasePerformance.instance.newTrace('fetch_initial_transactions');
     await trace.start();
 
-    _setStatus(TransactionStatus.loading);
+    _updateStatus(TransactionStatus.loading);
     _lastDocument = null;
     _hasMore = true;
 
@@ -197,13 +204,17 @@ class TransactionProvider extends ChangeNotifier {
       _cachedTransactions = _transactions;
       _cacheTimestamp = now;
       _calculateSummary();
-      _setStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionStatus.loaded);
     } on ServerException catch (e) {
       _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching transactions.');
+    } catch (e, stack) {
+      _setError('حدث خطأ غير متوقع أثناء جلب المعاملات.', e, stack);
     } finally {
       await trace.stop();
+      if (_status == TransactionStatus.loading) {
+        _updateStatus(TransactionStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
@@ -212,7 +223,8 @@ class TransactionProvider extends ChangeNotifier {
       return;
     }
 
-    _setStatus(TransactionStatus.loadingMore);
+    _updateStatus(TransactionStatus.loadingMore);
+    _safeNotify();
 
     try {
       final result =
@@ -232,12 +244,16 @@ class TransactionProvider extends ChangeNotifier {
       _lastDocument = result['lastDoc'];
       _hasMore = newTransactions.length == 20;
       _calculateSummary();
-      _setStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionStatus.loaded);
     } on ServerException catch (e) {
       _setError(e.message);
-    } catch (e) {
-      _setError(
-          'An unexpected error occurred while fetching more transactions.');
+    } catch (e, stack) {
+      _setError('حدث خطأ غير متوقع أثناء جلب المزيد من المعاملات.', e, stack);
+    } finally {
+      if (_status == TransactionStatus.loadingMore) {
+        _updateStatus(TransactionStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
@@ -280,7 +296,8 @@ class TransactionProvider extends ChangeNotifier {
     String paymentStatus = 'paid',
     String? notes,
   }) async {
-    _setStatus(TransactionStatus.creating);
+    _updateStatus(TransactionStatus.creating);
+    _safeNotify();
     try {
       // Check Permission
       if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
@@ -294,7 +311,7 @@ class TransactionProvider extends ChangeNotifier {
       if (amount <= 0) throw ValidationException('Amount must be positive.');
 
       final newTransaction = TransactionModel(
-        transactionId: _transactionRepository.transactionsCollection.doc().id,
+        transactionId: _transactionRepository.generateId(),
         storeId: _currentStoreId!,
         walletId: walletId,
         transactionType: transactionType,
@@ -321,9 +338,14 @@ class TransactionProvider extends ChangeNotifier {
     } on AppException catch (e) {
       _setError(e.message);
       return false;
-    } catch (e) {
-      _setError('Failed to create transaction.');
+    } catch (e, stack) {
+      _setError('فشل في إنشاء المعاملة.', e, stack);
       return false;
+    } finally {
+      if (_status == TransactionStatus.creating) {
+        _updateStatus(TransactionStatus.idle);
+      }
+      _safeNotify();
     }
   }
 
@@ -336,31 +358,38 @@ class TransactionProvider extends ChangeNotifier {
         startDate,
         endDate,
       );
-    } catch (e) {
-      _setError('Failed to fetch transactions for date range.');
+    } catch (e, stack) {
+      _setError('فشل جلب معاملات هذه الفترة.', e, stack);
       return [];
     }
   }
 
   // Helper Methods
-  void _setStatus(TransactionStatus status) {
+  void _updateStatus(TransactionStatus status) {
     if (_isDisposed) return;
     _status = status;
-    notifyListeners();
   }
 
-  void _setError(String message) {
+  void _setError(String message, [Object? error, StackTrace? stack]) {
     if (_isDisposed) return;
     _errorMessage = message;
     _status = TransactionStatus.error;
-    notifyListeners();
+    AppErrorHandler.handle(error ?? message,
+        severity: ErrorSeverity.medium,
+        operation: 'transaction_operation',
+        stackTrace: stack);
+    // Note: notifyListeners() is now handled by the calling method's finally block
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
   }
 
   void clearError() {
     if (_isDisposed) return;
     _errorMessage = null;
     _status = TransactionStatus.idle;
-    notifyListeners();
+    _safeNotify();
   }
 
   void insertTransactionLocally(Map<String, dynamic> data) {
@@ -368,7 +397,9 @@ class TransactionProvider extends ChangeNotifier {
       if (_currentStoreId == null) return;
       if (data['walletId'] == null ||
           data['amount'] == null ||
-          data['type'] == null) return;
+          data['type'] == null) {
+        return;
+      }
 
       final type = data['type'] as String; // 'credit' | 'debit'
       String transactionType = 'receive';
@@ -402,7 +433,7 @@ class TransactionProvider extends ChangeNotifier {
         createdByName: _currentUser?.fullName,
         creatorRole: _currentUser?.role,
         isDeleted: false,
-        notes: 'Automated via SMS',
+        notes: 'آلي عبر الرسائل القصيرة',
       );
 
       _transactions.insert(0, newTransaction);
@@ -411,8 +442,12 @@ class TransactionProvider extends ChangeNotifier {
       _calculateSummary();
       _lastOptimisticUpdate = DateTime.now();
       _activateFetchShield();
-      notifyListeners();
-    } catch (e) {
+      _safeNotify();
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'transaction_local_insert',
+          stackTrace: stack);
     }
   }
 }

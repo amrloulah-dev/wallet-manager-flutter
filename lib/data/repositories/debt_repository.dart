@@ -24,6 +24,8 @@ class DebtRepository {
   CollectionReference get _debtsCollection =>
       _firestore.collection(FirebaseConstants.debts);
 
+  String generateId() => _debtsCollection.doc().id;
+
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
     try {

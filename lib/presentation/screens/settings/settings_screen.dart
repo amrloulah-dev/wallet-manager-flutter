@@ -725,7 +725,7 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
                   style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
                 ),
                 value: _isEnabled,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: _toggleSmsAutomation,
               ),
               if (_isEnabled) ...[
@@ -760,7 +760,7 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
   Widget _buildSimDropdown(
       int slot, String label, SimWalletConfig? currentConfig) {
     return DropdownButtonFormField<String>(
-      value: currentConfig?.walletId,
+      initialValue: currentConfig?.walletId,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

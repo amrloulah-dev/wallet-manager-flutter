@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/providers/app_events.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import '../core/utils/password_hasher.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/store_repository.dart';
@@ -42,6 +43,7 @@ class AuthProvider extends ChangeNotifier {
   User? _firebaseUser;
   UserModel? _currentUser;
   StoreModel? _currentStore;
+  bool _isDisposed = false;
 
   // Status
   AuthStatus _status = AuthStatus.idle;
@@ -55,12 +57,13 @@ class AuthProvider extends ChangeNotifier {
     DeviceRepository? deviceRepository,
     LicenseKeyRepository? licenseKeyRepository,
     LocalStorageService? localStorage,
-  })  : _authRepository = authRepository ?? AuthRepository(),
-        _storeRepository = storeRepository ?? StoreRepository(),
-        _userRepository = userRepository ?? UserRepository(),
-        _deviceRepository = deviceRepository ?? DeviceRepository(),
-        _licenseKeyRepository = licenseKeyRepository ?? LicenseKeyRepository(),
-        _localStorage = localStorage ?? LocalStorageService() {
+  })  : _authRepository = authRepository ?? sl<AuthRepository>(),
+        _storeRepository = storeRepository ?? sl<StoreRepository>(),
+        _userRepository = userRepository ?? sl<UserRepository>(),
+        _deviceRepository = deviceRepository ?? sl<DeviceRepository>(),
+        _licenseKeyRepository =
+            licenseKeyRepository ?? sl<LicenseKeyRepository>(),
+        _localStorage = localStorage ?? sl<LocalStorageService>() {
     tryAutoLogin();
   }
 
@@ -118,8 +121,14 @@ class AuthProvider extends ChangeNotifier {
         _updateLocalState(user);
         return user;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, severity: ErrorSeverity.medium, operation: 'auto_login', stackTrace: stack);
       // Silent error handling - user will be prompted to login if needed
+    } finally {
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle); // Without overriding actual loaded state if we use idle
+      }
+      _safeNotify();
     }
     return null;
   }
@@ -133,10 +142,10 @@ class AuthProvider extends ChangeNotifier {
     if (_currentStore == null) {
       _storeRepository.getStoreById(user.storeId).then((store) {
         _currentStore = store;
-        notifyListeners();
+        _safeNotify();
       });
     }
-    notifyListeners();
+    // Note: notifyListeners() batching assumes _safeNotify() will be called at the end of the public method
   }
 
   // License Getters
@@ -243,7 +252,8 @@ class AuthProvider extends ChangeNotifier {
 
       // If all attempts fail
       _setStatus(AuthStatus.unauthenticated);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, severity: ErrorSeverity.medium, operation: 'check_auth_status', stackTrace: stack);
       await logout();
       _setStatus(AuthStatus.unauthenticated);
     }
@@ -311,7 +321,8 @@ class AuthProvider extends ChangeNotifier {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
         // T050: Explicitly record device hardware identifier
         await SubscriptionRepository().verifyDevice(storeId);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'cache_write', stackTrace: stack);
         // Log error but don't fail the whole registration as store is already created
       }
 
@@ -385,9 +396,9 @@ class AuthProvider extends ChangeNotifier {
       // 2. Register Device Usage
       try {
         await _deviceRepository.registerDeviceUsage(deviceId, storeId);
-        // T050: Explicitly record device hardware identifier
-        await SubscriptionRepository().verifyDevice(storeId);
-      } catch (e) {}
+      } catch (e, stack) {
+        AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'device_registration', stackTrace: stack);
+      }
 
       return storeId;
     } catch (e) {
@@ -504,8 +515,9 @@ class AuthProvider extends ChangeNotifier {
         throw WrongPasswordException();
       }
       throw AuthException('فشل تسجيل الدخول: ${e.message}');
-    } catch (e) {
+    } catch (e, stack) {
       _setError(e is AppException ? e.message : 'فشل تسجيل الدخول.');
+      AppErrorHandler.handle(e, severity: ErrorSeverity.critical, operation: 'owner_login', stackTrace: stack);
       await _authRepository.signOut();
       rethrow;
     }
@@ -570,6 +582,8 @@ class AuthProvider extends ChangeNotifier {
             severity: ErrorSeverity.critical,
             operation: 'AuthProvider.loginAsEmployee',
           );
+          _setError('كلمة المرور أو رقم الجوال غير صحيح.');
+          return false;
         }
       }
 
@@ -704,7 +718,11 @@ class AuthProvider extends ChangeNotifier {
 
       _setStatus(AuthStatus.authenticated);
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'google_login_or_null',
+          stackTrace: stack);
       await _authRepository.signOut();
       _setStatus(AuthStatus.unauthenticated);
       return false;
@@ -848,7 +866,7 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     if (_errorMessage != null) {
       _errorMessage = null;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -858,9 +876,10 @@ class AuthProvider extends ChangeNotifier {
         _currentUser = await _userRepository.getUserById(_currentUser!.userId);
         _currentStore =
             await _storeRepository.getStoreById(_currentStore!.storeId);
-        notifyListeners();
       } catch (e) {
         _setError('فشل تحديث البيانات.');
+      } finally {
+        _safeNotify();
       }
     }
   }
@@ -884,18 +903,29 @@ class AuthProvider extends ChangeNotifier {
     if (status != AuthStatus.error) {
       _errorMessage = null;
     }
-    notifyListeners();
+    // notifyListeners() removed for batching
   }
 
   void _setLoading(bool loading) {
     _status = loading ? AuthStatus.loading : AuthStatus.idle;
-    notifyListeners();
+    // notifyListeners() removed for batching
   }
 
-  void _setError(String message) {
+  void _setError(String message, [Object? error, StackTrace? stack]) {
     _errorMessage = message;
     _status = AuthStatus.error;
-    notifyListeners();
+    AppErrorHandler.handle(error ?? message, severity: ErrorSeverity.medium, operation: 'auth_operation', stackTrace: stack);
+    // notifyListeners() removed for batching
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   void _clearState() {

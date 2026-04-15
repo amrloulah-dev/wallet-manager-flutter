@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/system_config_provider.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
 
 class PaywallScreen extends StatelessWidget {
-  const PaywallScreen({Key? key}) : super(key: key);
+  const PaywallScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -119,12 +117,12 @@ class PaywallScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isPopular ? Colors.amber : (isDisabled ? Colors.grey : themeColor.withOpacity(0.3)),
+          color: isPopular ? Colors.amber : (isDisabled ? Colors.grey : themeColor.withValues(alpha: 0.3)),
           width: isPopular ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDisabled ? Colors.transparent : themeColor.withOpacity(0.1),
+            color: isDisabled ? Colors.transparent : themeColor.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -134,7 +132,7 @@ class PaywallScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).cardColor,
-            isDisabled ? Colors.grey.withOpacity(0.05) : themeColor.withOpacity(0.05),
+            isDisabled ? Colors.grey.withValues(alpha: 0.05) : themeColor.withValues(alpha: 0.05),
           ],
         ),
       ),

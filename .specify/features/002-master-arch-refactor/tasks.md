@@ -104,26 +104,26 @@
 
 #### Provider Error Remediation
 
-- [ ] T019 [US-03] Audit and remediate all silent catches in `WalletProvider` (`lib/providers/wallet_provider.dart`): replace `catch (e) {}` at line ~370 with `AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'wallet_cache_write')`. Audit all `_setError()` calls to also route through `AppErrorHandler.handle()` at Medium severity. Skip line 156 (`catch (_)` — legitimate stream guard). Ensure all error messages are Arabic.
-- [ ] T020 [P] [US-03] Audit and remediate all silent catches in `AuthProvider` (`lib/providers/auth_provider.dart`): route login failures through `AppErrorHandler` at Critical severity, auto-login failures at Medium, cache write failures at Low. All messages Arabic.
-- [ ] T021 [P] [US-03] Audit and remediate silent catch in `TransactionProvider` (`lib/providers/transaction_provider.dart`): replace `catch (e) {}` at lines 415-416 in `insertTransactionLocally()` with `AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'transaction_local_insert')`. Audit remaining catch blocks.
-- [ ] T022 [P] [US-03] Audit and remediate all silent catches in `EmployeeProvider` (`lib/providers/employee_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels and Arabic messages.
-- [ ] T023 [P] [US-03] Audit and remediate all silent catches in `DebtProvider` (`lib/providers/debt_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels and Arabic messages.
-- [ ] T024 [P] [US-03] Audit and remediate all silent catches in `StatisticsProvider` (`lib/providers/statistics_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels.
-- [ ] T025 [P] [US-03] Audit and remediate all silent catches in `SubscriptionProvider` (`lib/providers/subscription_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels.
+- [x] T019 [US-03] Audit and remediate all silent catches in `WalletProvider` (`lib/providers/wallet_provider.dart`): replace `catch (e) {}` at line ~370 with `AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'wallet_cache_write')`. Audit all `_setError()` calls to also route through `AppErrorHandler.handle()` at Medium severity. Skip line 156 (`catch (_)` — legitimate stream guard). Ensure all error messages are Arabic.
+- [x] T020 [P] [US-03] Audit and remediate all silent catches in `AuthProvider` (`lib/providers/auth_provider.dart`): route login failures through `AppErrorHandler` at Critical severity, auto-login failures at Medium, cache write failures at Low. All messages Arabic.
+- [x] T021 [P] [US-03] Audit and remediate silent catch in `TransactionProvider` (`lib/providers/transaction_provider.dart`): replace `catch (e) {}` at lines 415-416 in `insertTransactionLocally()` with `AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'transaction_local_insert')`. Audit remaining catch blocks.
+- [x] T022 [P] [US-03] Audit and remediate all silent catches in `EmployeeProvider` (`lib/providers/employee_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels and Arabic messages.
+- [x] T023 [P] [US-03] Audit and remediate all silent catches in `DebtProvider` (`lib/providers/debt_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels and Arabic messages.
+- [x] T024 [P] [US-03] Audit and remediate all silent catches in `StatisticsProvider` (`lib/providers/statistics_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels.
+- [x] T025 [P] [US-03] Audit and remediate all silent catches in `SubscriptionProvider` (`lib/providers/subscription_provider.dart`): route all errors through `AppErrorHandler` with appropriate severity levels.
 
 #### SMS Pipeline Error Isolation
 
-- [ ] T026 [US-04] Add structured diagnostic logging inside the top-level `catch (_)` in `handleIncomingSms()` in `lib/core/services/sms_processing_pipeline.dart` (line 210). Use `debugPrint` with structured format: `[ERROR] [low] [sms_pipeline] $error`. Continue swallowing the error — isolate must not crash.
-- [ ] T027 [P] [US-04] Add structured diagnostic logging inside the `catch (_)` in `_backgroundSmsCallback()` in `lib/core/services/background_service.dart` (line 108). Same format as T026. Continue swallowing.
+- [x] T026 [US-04] Add structured diagnostic logging inside the top-level `catch (_)` in `handleIncomingSms()` in `lib/core/services/sms_processing_pipeline.dart` (line 210). Use `debugPrint` with structured format: `[ERROR] [low] [sms_pipeline] $error`. Continue swallowing the error — isolate must not crash.
+- [x] T027 [P] [US-04] Add structured diagnostic logging inside the `catch (_)` in `_backgroundSmsCallback()` in `lib/core/services/background_service.dart` (line 108). Same format as T026. Continue swallowing.
 
 #### Loading State Consistency
 
-- [ ] T028 [US-03] Audit all providers for loading state consistency (FR-05): ensure every async operation that sets a loading status clears it in a `finally` block. Pattern: `if (_status == SomeStatus.loading) { _status = SomeStatus.idle; }` in `finally`. Apply to `WalletProvider`, `TransactionProvider`, `DebtProvider`, `EmployeeProvider`, `StatisticsProvider`, `SubscriptionProvider`.
+- [x] T028 [US-03] Audit all providers for loading state consistency (FR-05): ensure every async operation that sets a loading status clears it in a `finally` block. Pattern: `if (_status == SomeStatus.loading) { _status = SomeStatus.idle; }` in `finally`. Apply to `WalletProvider`, `TransactionProvider`, `DebtProvider`, `EmployeeProvider`, `StatisticsProvider`, `SubscriptionProvider`.
 
 #### Verification
 
-- [ ] T029 Run `grep -r "catch.*{}" lib/providers/` and `grep -r "catch (_)" lib/` to verify zero silent catches remain (except documented SMS isolate guards which now log diagnostics). Document any remaining legitimate guards.
+- [x] T029 Run `grep -r "catch.*{}" lib/providers/` and `grep -r "catch (_)" lib/` to verify zero silent catches remain (except documented SMS isolate guards which now log diagnostics). Document any remaining legitimate guards.
 
 ---
 
@@ -147,32 +147,32 @@
 
 #### DI Container Setup
 
-- [ ] T030 [US-05] Add `get_it: ^8.0.3` to `dependencies` in `pubspec.yaml` and run `flutter pub get`
-- [ ] T031 [US-05] Create `lib/core/di/service_locator.dart` with `final GetIt sl = GetIt.instance;` and `Future<void> setupServiceLocator()` that registers all 12 repositories as lazy singletons: `AuthRepository`, `WalletRepository`, `TransactionRepository`, `DebtRepository`, `EmployeeRepository`, `StoreRepository`, `StatsRepository`, `SubscriptionRepository`, `SystemConfigRepository`, `DeviceRepository`, `LicenseKeyRepository`, `UserRepository`
-- [ ] T032 [US-05] Update `lib/main.dart` to call `await setupServiceLocator()` before `runApp()`
+- [x] T030 [US-05] Add `get_it: ^8.0.3` to `dependencies` in `pubspec.yaml` and run `flutter pub get`
+- [x] T031 [US-05] Create `lib/core/di/service_locator.dart` with `final GetIt sl = GetIt.instance;` and `Future<void> setupServiceLocator()` that registers all 12 repositories as lazy singletons: `AuthRepository`, `WalletRepository`, `TransactionRepository`, `DebtRepository`, `EmployeeRepository`, `StoreRepository`, `StatsRepository`, `SubscriptionRepository`, `SystemConfigRepository`, `DeviceRepository`, `LicenseKeyRepository`, `UserRepository`
+- [x] T032 [US-05] Update `lib/main.dart` to call `await setupServiceLocator()` before `runApp()`
 
 #### Provider Constructor Migration
 
-- [ ] T033 [US-05] Update `lib/app.dart` MultiProvider: replace all direct `Repository()` instantiations with `sl<Repository>()` lookups. Targets: `EmployeeRepository()` (lines 56, 58), `WalletRepository()` (lines 68, 73), `DebtRepository()` (lines 80, 83), `TransactionRepository()` (line 93), `StatsRepository()` (line 95), `SystemConfigRepository()` (line 46). Also fix `update:` callbacks that re-instantiate repositories — these must reuse the existing provider instance, not create new repos.
+- [x] T033 [US-05] Update `lib/app.dart` MultiProvider: replace all direct `Repository()` instantiations with `sl<Repository>()` lookups. Targets: `EmployeeRepository()` (lines 56, 58), `WalletRepository()` (lines 68, 73), `DebtRepository()` (lines 80, 83), `TransactionRepository()` (line 93), `StatsRepository()` (line 95), `SystemConfigRepository()` (line 46). Also fix `update:` callbacks that re-instantiate repositories — these must reuse the existing provider instance, not create new repos.
 
 #### Residual Firestore Call Elimination
 
-- [ ] T034 [P] [US-05] Add `String generateId()` method to `WalletRepository` in `lib/data/repositories/wallet_repository.dart` returning `walletsCollection.doc().id`. Update `WalletProvider` (`lib/providers/wallet_provider.dart` line 474) to replace `FirebaseFirestore.instance.collection('wallets').doc().id` with `_walletRepository.generateId()`.
-- [ ] T035 [P] [US-05] Add `String generateId()` method to `DebtRepository` in `lib/data/repositories/debt_repository.dart` returning `debtsCollection.doc().id`. Update `DebtProvider` (`lib/providers/debt_provider.dart` line 303) to replace `FirebaseFirestore.instance.collection('debts').doc().id` with `_debtRepository.generateId()`.
+- [x] T034 [P] [US-05] Add `String generateId()` method to `WalletRepository` in `lib/data/repositories/wallet_repository.dart` returning `walletsCollection.doc().id`. Update `WalletProvider` (`lib/providers/wallet_provider.dart` line 474) to replace `FirebaseFirestore.instance.collection('wallets').doc().id` with `_walletRepository.generateId()`.
+- [x] T035 [P] [US-05] Add `String generateId()` method to `DebtRepository` in `lib/data/repositories/debt_repository.dart` returning `debtsCollection.doc().id`. Update `DebtProvider` (`lib/providers/debt_provider.dart` line 303) to replace `FirebaseFirestore.instance.collection('debts').doc().id` with `_debtRepository.generateId()`.
 
 #### Dashboard Decomposition
 
-- [ ] T036 [P] [US-05] Extract `_buildWelcomeHeader()` from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_welcome_header.dart` as a `StatelessWidget`. Subscribe to `AuthProvider` via `Selector<AuthProvider, String>` for `fullName` only.
-- [ ] T037 [P] [US-05] Extract statistics card section from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_quick_stats.dart` as a `StatelessWidget`. Subscribe to `StatisticsProvider` via `Selector` for summary map data.
-- [ ] T038 [P] [US-05] Extract quick-action buttons from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_quick_actions.dart` as a `StatelessWidget`. Subscribe to `StatisticsProvider` via `Selector` for pending debts count (badge).
-- [ ] T039 [P] [US-05] Extract alerts section from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_alerts.dart` as a `StatelessWidget`. Subscribe to `WalletProvider` + `DebtProvider` via `Selector2` for alert counts.
-- [ ] T040 [P] [US-05] Extract recent transactions list from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_recent_txns.dart` as a `StatelessWidget`. Subscribe to `TransactionProvider` via `Selector` for `todayTransactions`.
-- [ ] T041 [US-05] Refactor `MainDashboardScreen` in `lib/presentation/screens/home/main_dashboard_screen.dart` to be a composition root (~100-150 lines) that assembles the 5 extracted components. Remove all extracted build methods. Verify the screen renders correctly.
+- [x] T036 [P] [US-05] Extract `_buildWelcomeHeader()` from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_welcome_header.dart` as a `StatelessWidget`. Subscribe to `AuthProvider` via `Selector<AuthProvider, String>` for `fullName` only.
+- [x] T037 [P] [US-05] Extract statistics card section from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_quick_stats.dart` as a `StatelessWidget`. Subscribe to `StatisticsProvider` via `Selector` for summary map data.
+- [x] T038 [P] [US-05] Extract quick-action buttons from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_quick_actions.dart` as a `StatelessWidget`. Subscribe to `StatisticsProvider` via `Selector` for pending debts count (badge).
+- [x] T039 [P] [US-05] Extract alerts section from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_alerts.dart` as a `StatelessWidget`. Subscribe to `WalletProvider` + `DebtProvider` via `Selector2` for alert counts.
+- [x] T040 [P] [US-05] Extract recent transactions list from `MainDashboardScreen` into `lib/presentation/screens/home/widgets/dashboard_recent_txns.dart` as a `StatelessWidget`. Subscribe to `TransactionProvider` via `Selector` for `todayTransactions`.
+- [x] T041 [US-05] Refactor `MainDashboardScreen` in `lib/presentation/screens/home/main_dashboard_screen.dart` to be a composition root (~100-150 lines) that assembles the 5 extracted components. Remove all extracted build methods. Verify the screen renders correctly.
 
 #### Tests
 
-- [ ] T042 [P] [US-05] Create unit tests in `test/core/di/service_locator_test.dart`: `setupServiceLocator` registers all 12 repos, `sl<T>()` returns same singleton instance on repeated calls
-- [ ] T043 [US-05] Run `flutter analyze` and `flutter test` to verify zero errors after DI migration and dashboard decomposition
+- [x] T042 [P] [US-05] Create unit tests in `test/core/di/service_locator_test.dart`: `setupServiceLocator` registers all 12 repos, `sl<T>()` returns same singleton instance on repeated calls
+- [x] T043 [US-05] Run `flutter analyze` and `flutter test` to verify zero errors after DI migration and dashboard decomposition
 
 ---
 
@@ -194,24 +194,24 @@
 
 #### Notification Batching
 
-- [ ] T044 [US-06] Refactor `WalletProvider` (`lib/providers/wallet_provider.dart`): replace `_setStatus()` helper (which calls `notifyListeners()`) with a private `_updateStatus()` that only sets the field. Move all `notifyListeners()` calls to fire exactly once at the end of each public method (in `finally` block via `_safeNotify()`). Target: reduce from ~19 to ~9 notification calls.
-- [ ] T045 [P] [US-06] Refactor `TransactionProvider` (`lib/providers/transaction_provider.dart`): same pattern — replace `_setStatus()`/`_setError()` with non-notifying setters, add single `_safeNotify()` at end of each operation.
-- [ ] T046 [P] [US-06] Refactor `StatisticsProvider` (`lib/providers/statistics_provider.dart`): same notification batching pattern. Target: reduce from ~9 to ~5 notification calls.
-- [ ] T047 [P] [US-06] Refactor `SubscriptionProvider` (`lib/providers/subscription_provider.dart`): same notification batching pattern. Target: reduce from ~7 to ~4 notification calls.
-- [ ] T048 [P] [US-06] Refactor `EmployeeProvider` (`lib/providers/employee_provider.dart`): same notification batching pattern. Target: reduce from ~5 to ~3 notification calls.
-- [ ] T049 [P] [US-06] Refactor `DebtProvider` (`lib/providers/debt_provider.dart`): same notification batching pattern.
-- [ ] T050 [P] [US-06] Refactor `AuthProvider` (`lib/providers/auth_provider.dart`): same notification batching pattern. Be extra careful with the login/logout flows — ensure single notification after all state mutations complete.
+- [x] T044 [US-06] Refactor `WalletProvider` (`lib/providers/wallet_provider.dart`): replace `_setStatus()` helper (which calls `notifyListeners()`) with a private `_updateStatus()` that only sets the field. Move all `notifyListeners()` calls to fire exactly once at the end of each public method (in `finally` block via `_safeNotify()`). Target: reduce from ~19 to ~9 notification calls.
+- [x] T045 [P] [US-06] Refactor `TransactionProvider` (`lib/providers/transaction_provider.dart`): same pattern — replace `_setStatus()`/`_setError()` with non-notifying setters, add single `_safeNotify()` at end of each operation.
+- [x] T046 [P] [US-06] Refactor `StatisticsProvider` (`lib/providers/statistics_provider.dart`): same notification batching pattern. Target: reduce from ~9 to ~5 notification calls.
+- [x] T047 [P] [US-06] Refactor `SubscriptionProvider` (`lib/providers/subscription_provider.dart`): same notification batching pattern. Target: reduce from ~7 to ~4 notification calls.
+- [x] T048 [P] [US-06] Refactor `EmployeeProvider` (`lib/providers/employee_provider.dart`): same notification batching pattern. Target: reduce from ~5 to ~3 notification calls.
+- [x] T049 [P] [US-06] Refactor `DebtProvider` (`lib/providers/debt_provider.dart`): same notification batching pattern.
+- [x] T050 [P] [US-06] Refactor `AuthProvider` (`lib/providers/auth_provider.dart`): same notification batching pattern. Be extra careful with the login/logout flows — ensure single notification after all state mutations complete.
 
 #### Targeted UI Rebuild Verification
 
-- [ ] T051 [US-06] Verify all 5 dashboard components (from Phase 5) use `Selector` (not `Consumer` or `context.watch`). Fix any that don't. Each component must rebuild ONLY when its specific data field changes.
-- [ ] T052 [US-06] Audit wallet list screen for root-level `Consumer<WalletProvider>` or `context.watch<WalletProvider>()`. Replace with `Selector<WalletProvider, (List<WalletModel>, WalletStatus)>` subscribing only to `wallets` list and `status`.
+- [x] T051 [US-06] Verify all 5 dashboard components (from Phase 5) use `Selector` (not `Consumer` or `context.watch`). Fix any that don't. Each component must rebuild ONLY when its specific data field changes.
+- [x] T052 [US-06] Audit wallet list screen for root-level `Consumer<WalletProvider>` or `context.watch<WalletProvider>()`. Replace with `Selector<WalletProvider, (List<WalletModel>, WalletStatus)>` subscribing only to `wallets` list and `status`.
 
 #### Tests & Verification
 
-- [ ] T053 [P] [US-06] Create notification batching tests in `test/providers/notification_batching_test.dart`: verify `createWallet` fires exactly 1 `notifyListeners()`, `fetchWallets` fires exactly 1, `createTransaction` fires exactly 1, error path fires exactly 1
-- [ ] T054 [US-06] Run `flutter analyze` to verify zero errors after batching refactor
-- [ ] T055 [US-06] Run full test suite: `flutter test` — all tests must pass
+- [x] T053 [P] [US-06] Create notification batching tests in `test/providers/notification_batching_test.dart`: verify `createWallet` fires exactly 1 `notifyListeners()`, `fetchWallets` fires exactly 1, `createTransaction` fires exactly 1, error path fires exactly 1
+- [x] T054 [US-06] Run `flutter analyze` to verify zero errors after batching refactor
+- [x] T055 [US-06] Run full test suite: `flutter test` — all tests must pass
 
 ---
 
@@ -219,15 +219,15 @@
 
 > Final verification sweep to confirm all success criteria are met.
 
-- [ ] T056 Run `flutter analyze` — must report zero errors and zero warnings
-- [ ] T057 Run `flutter test` — all tests must pass (zero failures)
-- [ ] T058 Verify Success Criterion 4: run `grep -rn "catch.*{}" lib/providers/` — must return zero results (no silent catches in providers)
-- [ ] T059 Verify Success Criterion 7: run `grep -rn "FirebaseFirestore.instance" lib/providers/` — must return zero results (no direct Firestore calls in providers)
-- [ ] T060 Verify Success Criterion 8: count files in `lib/presentation/screens/home/widgets/` — must contain ≥4 dashboard component files
-- [ ] T061 Verify `MainDashboardScreen` line count — must be ≤150 lines (composition root only)
-- [ ] T062 Manual verification: create an employee → confirm `firebaseUid` field appears in Firestore document
-- [ ] T063 Manual verification: force a wallet save error → confirm Arabic error banner appears
-- [ ] T064 Manual verification: scroll dashboard and wallet list → confirm smooth 60fps, no visible jank
+- [x] T056 Run `flutter analyze` — must report zero errors and zero warnings
+- [x] T057 Run `flutter test` — all tests must pass (zero failures)
+- [x] T058 Verify Success Criterion 4: run `grep -rn "catch.*{}" lib/providers/` — must return zero results (no silent catches in providers)
+- [x] T059 Verify Success Criterion 7: run `grep -rn "FirebaseFirestore.instance" lib/providers/` — must return zero results (no direct Firestore calls in providers)
+- [x] T060 Verify Success Criterion 8: count files in `lib/presentation/screens/home/widgets/` — must contain ≥4 dashboard component files
+- [x] T061 Verify `MainDashboardScreen` line count — must be ≤150 lines (composition root only)
+- [x] T062 Manual verification: create an employee → confirm `firebaseUid` field appears in Firestore document
+- [x] T063 Manual verification: force a wallet save error → confirm Arabic error banner appears
+- [x] T064 Manual verification: scroll dashboard and wallet list → confirm smooth 60fps, no visible jank
 
 ---
 

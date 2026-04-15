@@ -10,7 +10,7 @@ import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 
 class TransactionOverlayScreen extends StatelessWidget {
-  const TransactionOverlayScreen({Key? key}) : super(key: key);
+  const TransactionOverlayScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class TransactionOverlayScreen extends StatelessWidget {
 }
 
 class _OverlayContent extends StatefulWidget {
-  const _OverlayContent({Key? key}) : super(key: key);
+  const _OverlayContent();
 
   @override
   State<_OverlayContent> createState() => _OverlayContentState();

@@ -110,7 +110,7 @@ class EmployeeRepository {
 
       if (currentEmployees >= maxEmployees && maxEmployees != -1) {
         throw ServerException(
-            'تم الوصول للحد الأقصى للموظفين (${maxEmployees})');
+            'تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
       }
 
       // Ensure PIN uniqueness within the transaction

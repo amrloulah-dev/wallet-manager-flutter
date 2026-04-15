@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:walletmanager/core/services/identity_service.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/services/analytics_service.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockUserCredential extends Mock implements UserCredential {}
@@ -13,6 +15,8 @@ void main() {
   late MockUser mockUser;
 
   setUp(() {
+    AppErrorHandler.isTestMode = true;
+    AnalyticsService.isTestMode = true;
     mockAuth = MockFirebaseAuth();
     mockUserCredential = MockUserCredential();
     mockUser = MockUser();

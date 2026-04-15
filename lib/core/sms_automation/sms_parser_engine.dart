@@ -1,5 +1,6 @@
 import 'package:walletmanager/core/sms_automation/utils/text_normalizer.dart';
-
+import '../errors/app_error_handler.dart';
+import '../errors/error_severity.dart';
 import 'models/parsed_sms_dto.dart';
 import 'strategies/sms_parser_strategy.dart';
 import 'strategies/vodafone_cash_strategy.dart';
@@ -43,7 +44,11 @@ class SmsParserEngine {
           if (result != null) {
             return result;
           }
-        } catch (e) {
+        } catch (e, stack) {
+          AppErrorHandler.handle(e,
+              severity: ErrorSeverity.low,
+              operation: 'sms_parsing_strategy',
+              stackTrace: stack);
         }
       }
     }
@@ -55,8 +60,12 @@ class SmsParserEngine {
         if (result != null) {
           return result;
         }
-      } catch (e) {
-        // Ignore failures in fallback loop
+      } catch (e, stack) {
+        // Log low severity but continue loop
+        AppErrorHandler.handle(e,
+            severity: ErrorSeverity.low,
+            operation: 'sms_parsing_fallback',
+            stackTrace: stack);
       }
     }
 

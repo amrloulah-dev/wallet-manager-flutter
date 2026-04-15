@@ -105,7 +105,8 @@ void _backgroundSmsCallback(SmsMessage message) async {
     await storage.initialize();
 
     await handleIncomingSms(message, storage);
-  } catch (_) {
+  } catch (e) {
+    debugPrint('[ERROR] [low] [background_sms_callback] $e');
     // Swallow — background isolate must never crash
   }
 }

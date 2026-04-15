@@ -4,22 +4,28 @@ import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.d
 import 'app.dart';
 import 'data/services/firebase_service.dart';
 import 'data/services/local_storage_service.dart';
+import 'core/di/service_locator.dart';
 import 'core/services/sms_service.dart';
 import 'core/services/background_service.dart';
+import 'core/errors/app_error_handler.dart';
+import 'core/errors/error_severity.dart';
 
 void main() async {
   // Ensure all bindings are initialized before async operations.
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Error Handler early
+  AppErrorHandler.init();
+
   try {
     // Step 1: Initialize Firebase.
     await FirebaseService().initialize();
 
-    // Step 2: Initialize Local Storage.
-    await LocalStorageService().initialize();
+    // Step 2: Setup Dependency Injection.
+    await setupServiceLocator();
 
     // Step 3: Check and initialize SMS automation if enabled
-    if (LocalStorageService.instance.isSmsAutomationEnabled) {
+    if (sl<LocalStorageService>().isSmsAutomationEnabled) {
       await SmsService().init(); // Permissions only
     }
 
@@ -29,14 +35,13 @@ void main() async {
     // across app kills.
     await initializeBackgroundService();
 
-    // Add global error catcher
-    FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details);
-    };
-
     // Step 5: Run the application.
     runApp(const MyApp());
   } catch (e, stackTrace) {
+    AppErrorHandler.handle(e,
+        severity: ErrorSeverity.critical,
+        operation: 'app_initialization',
+        stackTrace: stackTrace);
     debugPrint("🚨 INIT ERROR: $e");
     debugPrint("🚨 STACKTRACE: $stackTrace");
     runApp(
@@ -88,8 +93,8 @@ void overlayMain() async {
   } catch (e) {
   }
 
-  // 2. Initialize Storage (Crucial for reading wallet data)
-  await LocalStorageService.instance.initialize();
+  // 2. Initialize Dependency Injection (Includes Storage init)
+  await setupServiceLocator();
 
   runApp(const TransactionOverlayApp());
 }
@@ -99,9 +104,10 @@ class TransactionOverlayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Read cached values from LocalStorage. Fallback to light and 'ar' if not found.
-    final bool isDark = LocalStorageService.instance.isDarkMode;
-    final String lang = LocalStorageService.instance.languageCode;
+    // Read cached values from LocalStorage via locator
+    final storage = sl<LocalStorageService>();
+    final bool isDark = storage.isDarkMode;
+    final String lang = storage.languageCode;
     final TextDirection direction =
         lang == 'ar' ? TextDirection.rtl : TextDirection.ltr;
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/services/local_storage_service.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
 
 class ThemeProvider extends ChangeNotifier {
   final LocalStorageService _localStorage;
@@ -54,9 +56,12 @@ class ThemeProvider extends ChangeNotifier {
           break;
       }
       notifyListeners();
-    } catch (e) {
+    } catch (e, stack) {
       _themeMode = ThemeMode.system;
-      // Optionally log the error
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'load_theme_mode',
+          stackTrace: stack);
     }
   }
 

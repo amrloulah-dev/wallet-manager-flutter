@@ -178,7 +178,7 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
       title: Text(title, style: AppTextStyles.bodyMedium),
       value: value,
       onChanged: onChanged,
-      activeColor: AppColors.primary,
+      activeThumbColor: AppColors.primary,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       dense: true,
     );

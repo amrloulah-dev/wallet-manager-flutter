@@ -63,6 +63,7 @@ dependencies:
   flutter_background_service_android: ^6.3.1
   flutter_local_notifications: ^18.0.1
   ntp: ^2.0.0
+  get_it: ^9.2.1
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +79,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   fake_cloud_firestore: ^3.1.0
+  firebase_core_platform_interface: ^6.0.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

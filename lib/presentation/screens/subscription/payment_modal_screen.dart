@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../data/repositories/subscription_repository.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +7,7 @@ import '../../../core/utils/validators.dart';
 class PaymentModalScreen extends StatefulWidget {
   final String planId; // 'pro_yearly' or 'lifetime'
 
-  const PaymentModalScreen({Key? key, required this.planId}) : super(key: key);
+  const PaymentModalScreen({super.key, required this.planId});
 
   static void show(BuildContext context, String planId) {
     showModalBottomSheet(

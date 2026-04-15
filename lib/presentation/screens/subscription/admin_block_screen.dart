@@ -3,7 +3,7 @@ import '../../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class AdminBlockScreen extends StatelessWidget {
-  const AdminBlockScreen({Key? key}) : super(key: key);
+  const AdminBlockScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

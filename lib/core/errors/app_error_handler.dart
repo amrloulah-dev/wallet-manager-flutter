@@ -1,17 +1,53 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import '../../routes/navigation_service.dart';
+import '../services/analytics_service.dart';
 import 'error_severity.dart';
 
 class AppErrorHandler {
+  static bool isTestMode = false;
+  
+  /// High-level initialization to hook into Flutter's global error reporting.
+  static void init() {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      handle(
+        details.exception,
+        stackTrace: details.stack,
+        severity: ErrorSeverity.critical,
+        operation: 'flutter_global_error',
+      );
+    };
+
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      handle(
+        error,
+        stackTrace: stack,
+        severity: ErrorSeverity.critical,
+        operation: 'platform_dispatcher_error',
+      );
+      return true;
+    };
+  }
+
   static void handle(
     Object error, {
-    required ErrorSeverity severity,
-    required String operation,
+    ErrorSeverity severity = ErrorSeverity.medium,
+    String operation = 'unspecified',
     StackTrace? stackTrace,
   }) {
+    if (isTestMode) return;
+    
     final message = error.toString();
     _logDiagnostic(severity, operation, message, stackTrace);
+
+    // Report to Analytics
+    AnalyticsService.logError(
+      message,
+      severity: severity.name,
+      operation: operation,
+    );
 
     switch (severity) {
       case ErrorSeverity.low:

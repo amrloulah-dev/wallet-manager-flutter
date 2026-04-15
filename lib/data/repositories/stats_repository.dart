@@ -194,6 +194,28 @@ class StatsRepository {
     await docRef.update(updates);
   }
 
+  Future<void> reconcileStatsFromWallets(String storeId) async {
+    try {
+      final snapshots = await _firestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('wallets')
+          .get();
+      double totalBalance = snapshots.docs
+          .fold(0, (sum, doc) => sum + (doc.data()['balance'] as num).toDouble());
+      int totalWallets = snapshots.docs.length;
+
+      final summaryRef = _getSummaryDocRef(storeId);
+      await summaryRef.update({
+        'totalWallets': totalWallets,
+        'totalBalance': totalBalance,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> reconcileStatsFromDebts(String storeId) async {
     try {
       // 1. Get all debt documents for the store
@@ -205,11 +227,6 @@ class StatsRepository {
       int openDebtsCount = 0;
       double totalOpenAmount = 0.0;
       int paidDebtsCount = 0;
-      // totalPaidAmount is a write-only accumulator based on payments.
-      // It cannot be derived from the debt collection alone.
-      // The safest action is to leave it as is or reset it if it's known to be corrupt.
-      // For this fix, we will recalculate what we can and leave paid amount.
-      // A more advanced reconciliation could use transaction logs.
 
       for (final doc in debtSnapshot.docs) {
         final debt = DebtModel.fromFirestore(doc);
@@ -222,11 +239,6 @@ class StatsRepository {
       }
 
       final summaryRef = _getSummaryDocRef(storeId);
-      final currentSummaryDoc = await summaryRef.get();
-      final currentSummary = currentSummaryDoc.exists
-          ? StatsSummaryModel.fromMap(
-              currentSummaryDoc.data()! as Map<String, dynamic>)
-          : StatsSummaryModel.empty();
 
       // 4. Atomically write the new values
       final reconciledStats = {

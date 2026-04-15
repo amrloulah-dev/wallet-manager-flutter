@@ -2,34 +2,40 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:walletmanager/data/repositories/employee_repository.dart';
-import 'package:walletmanager/providers/employee_provider.dart';
-import 'package:walletmanager/providers/theme_provider.dart';
-import 'package:walletmanager/providers/localization_provider.dart';
+
+import 'core/di/service_locator.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/route_constants.dart';
+import 'core/services/analytics_service.dart';
+import 'core/widgets/global_overlay_listener.dart';
+
+import 'data/models/store_model.dart';
+import 'data/services/transaction_validator_service.dart';
+import 'data/repositories/system_config_repository.dart';
+import 'data/repositories/employee_repository.dart';
 import 'data/repositories/wallet_repository.dart';
-import 'data/repositories/debt_repository.dart';
 import 'data/repositories/transaction_repository.dart';
+import 'data/repositories/debt_repository.dart';
 import 'data/repositories/stats_repository.dart';
+
+import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
+import 'providers/localization_provider.dart';
+import 'providers/employee_provider.dart';
 import 'providers/wallet_provider.dart';
 import 'providers/debt_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/statistics_provider.dart';
-import 'l10n/arb/app_localizations.dart';
-import 'providers/auth_provider.dart';
 import 'providers/subscription_provider.dart';
-import 'package:walletmanager/routes/navigation_service.dart';
-import 'routes/app_router.dart';
-import 'data/repositories/system_config_repository.dart';
 import 'providers/system_config_provider.dart';
-import 'data/models/store_model.dart';
+
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/subscription/paywall_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
-import 'core/services/analytics_service.dart';
-import 'package:walletmanager/core/widgets/global_overlay_listener.dart'; // Added
-import 'data/services/transaction_validator_service.dart';
+
+import 'l10n/arb/app_localizations.dart';
+import 'routes/navigation_service.dart';
+import 'routes/app_router.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -43,7 +49,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
         ChangeNotifierProvider(
           create: (_) => SystemConfigProvider(
-              repository: SystemConfigRepository()),
+              repository: sl<SystemConfigRepository>()),
         ),
         ChangeNotifierProxyProvider<AuthProvider, SubscriptionProvider>(
           create: (context) => SubscriptionProvider(
@@ -53,9 +59,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider, EmployeeProvider>(
             create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository()),
+                EmployeeProvider(employeeRepository: sl<EmployeeRepository>()),
             update: (_, auth, subscription, previous) => (previous ??
-                EmployeeProvider(employeeRepository: EmployeeRepository()))
+                EmployeeProvider(employeeRepository: sl<EmployeeRepository>()))
               ..updateSubscriptionProvider(subscription)
               ..setStoreId(auth.currentStoreId),
         ),
@@ -65,22 +71,22 @@ class MyApp extends StatelessWidget {
           create: (context) => WalletProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false),
               subscriptionProvider: Provider.of<SubscriptionProvider>(context, listen: false),
-              walletRepository: WalletRepository()),
+              walletRepository: sl<WalletRepository>()),
           update: (_, auth, subscription, previous) => (previous ??
               WalletProvider(
                   authProvider: auth, 
                   subscriptionProvider: subscription,
-                  walletRepository: WalletRepository()))
+                  walletRepository: sl<WalletRepository>()))
             ..updateAuthState(auth)
             ..updateSubscriptionProvider(subscription),
         ),
         ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
           create: (context) => DebtProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false),
-              debtRepository: DebtRepository()),
+              debtRepository: sl<DebtRepository>()),
           update: (_, auth, previous) => (previous ??
               DebtProvider(
-                  authProvider: auth, debtRepository: DebtRepository()))
+                  authProvider: auth, debtRepository: sl<DebtRepository>()))
             ..updateAuthState(auth),
         ),
         ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
@@ -89,10 +95,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
           create: (_) => StatisticsProvider(
-            walletRepository: WalletRepository(),
-            transactionRepository: TransactionRepository(),
-            debtRepository: DebtRepository(),
-            statsRepository: StatsRepository(),
+            walletRepository: sl<WalletRepository>(),
+            transactionRepository: sl<TransactionRepository>(),
+            debtRepository: sl<DebtRepository>(),
+            statsRepository: sl<StatsRepository>(),
           ),
           update: (_, auth, previous) =>
               previous!..setStoreId(auth.currentStoreId),

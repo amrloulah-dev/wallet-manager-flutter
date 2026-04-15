@@ -34,7 +34,7 @@ class _DebtCardState extends State<DebtCard> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
+      transform: Matrix4.diagonal3Values(scale, scale, 1.0),
       child: Card(
         elevation: elevation,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

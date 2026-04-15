@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../data/models/store_model.dart';
 import '../../../providers/employee_provider.dart';
 
 class SubscriptionDetailsScreen extends StatelessWidget {
-  const SubscriptionDetailsScreen({Key? key}) : super(key: key);
+  const SubscriptionDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,9 +96,9 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +113,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -160,7 +159,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

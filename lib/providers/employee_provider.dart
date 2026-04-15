@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
-import '../data/models/user_permissions.dart'; // Added import
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
+import '../data/models/user_permissions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subscription_provider.dart';
 
@@ -20,7 +22,7 @@ class EmployeeProvider extends ChangeNotifier {
   String _searchQuery = '';
   bool _showActiveOnly = true;
 
-  Set<String> _suspendedEmployeeIds = {};
+  final Set<String> _suspendedEmployeeIds = {};
 
   StreamSubscription? _employeeStreamSubscription;
 
@@ -57,10 +59,17 @@ class EmployeeProvider extends ChangeNotifier {
     _subscriptionProvider = subscriptionProvider;
   }
 
+  bool _isDisposed = false;
+
   @override
   void dispose() {
+    _isDisposed = true;
     _employeeStreamSubscription?.cancel();
     super.dispose();
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
   }
 
   void setStoreId(String? storeId) {
@@ -75,7 +84,7 @@ class EmployeeProvider extends ChangeNotifier {
       if (storeId != null) {
         _listenToEmployees(storeId);
       } else {
-        notifyListeners();
+        _safeNotify();
       }
     }
   }
@@ -87,16 +96,19 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   void _listenToEmployees(String storeId) {
-    _setStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeStatus.loading);
+    _safeNotify();
     _employeeStreamSubscription =
         _employeeRepository.watchEmployees(storeId).listen(
       (employees) {
         _employees = employees;
         _recalculateSuspendedEmployees();
-        _setStatus(EmployeeStatus.loaded);
+        _updateStatus(EmployeeStatus.loaded);
+        _safeNotify();
       },
       onError: (error) {
-        _setError('Failed to load employees.');
+        _setError('فشل جلب الموظفين.', error);
+        _safeNotify();
       },
     );
   }
@@ -105,34 +117,37 @@ class EmployeeProvider extends ChangeNotifier {
     required String fullName,
     required String phone,
     required String pin,
-    required UserPermissions permissions, // Added parameter
+    required UserPermissions permissions,
   }) async {
     if (_currentStoreId == null) {
-      _setError('Store ID not set');
-      return false;
-    }
-    // Redundant validation removed. The UI layer's Form validation handles this.
-
-    if (_subscriptionProvider != null && !_subscriptionProvider!.canAddEmployee(employeesCount)) {
-      _setError('تم الوصول للحد الأقصى للموظفين (${_subscriptionProvider!.maxEmployees})');
+      _setError('لم يتم تعيين المتجر');
+      _safeNotify();
       return false;
     }
 
-    _setStatus(EmployeeStatus.loading);
+    if (_subscriptionProvider != null &&
+        !_subscriptionProvider!.canAddEmployee(employeesCount)) {
+      _setError(
+          'تم الوصول للحد الأقصى للموظفين (${_subscriptionProvider!.maxEmployees})');
+      _safeNotify();
+      return false;
+    }
+
+    _updateStatus(EmployeeStatus.loading);
+    _safeNotify();
     try {
       final newEmployee = await _employeeRepository.addEmployee(
         storeId: _currentStoreId!,
         fullName: fullName,
         phone: phone,
         pin: pin,
-        permissions: permissions, // Pass permissions
+        permissions: permissions,
       );
-      
+
       _employeeRepository.provisionIdentity(newEmployee);
-      
-      // No longer need to fire event, stream will update automatically
+
       _errorMessage = null;
-      _setStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeStatus.loaded);
       return true;
     } on ValidationException catch (e) {
       _setError(e.message);
@@ -140,6 +155,14 @@ class EmployeeProvider extends ChangeNotifier {
     } on ServerException catch (e) {
       _setError(e.message);
       return false;
+    } catch (e, stack) {
+      _setError('حدث خطأ أثناء إضافة الموظف', e, stack);
+      return false;
+    } finally {
+      if (_status == EmployeeStatus.loading) {
+        _updateStatus(EmployeeStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
@@ -147,9 +170,9 @@ class EmployeeProvider extends ChangeNotifier {
     required String storeId,
     required String pin,
   }) async {
-    // Validate PIN
     if (pin.length != 4 || !_isNumeric(pin)) {
       _setError('الرقم السري يجب أن يكون 4 أرقام');
+      _safeNotify();
       return null;
     }
 
@@ -161,21 +184,24 @@ class EmployeeProvider extends ChangeNotifier {
 
       if (employee == null) {
         _setError('الرقم السري غير صحيح');
+        _safeNotify();
         return null;
       }
 
       if (isEmployeeFrozen(employee)) {
         _setError('هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك');
+        _safeNotify();
         return null;
       }
 
       return employee;
-    } catch (e) {
+    } catch (e, stack) {
       if (e is ServerException) {
         _setError(e.message);
       } else {
-        _setError('حدث خطأ أثناء التحقق من الرقم السري');
+        _setError('حدث خطأ أثناء التحقق من الرقم السري', e, stack);
       }
+      _safeNotify();
       return null;
     }
   }
@@ -184,7 +210,7 @@ class EmployeeProvider extends ChangeNotifier {
     _suspendedEmployeeIds.clear();
     if (_subscriptionProvider == null || _currentStoreId == null) return;
     final maxEmployees = _subscriptionProvider!.maxEmployees;
-    
+
     final activeStaff = _employees
         .where((e) => e.isActive && e.role != 'owner')
         .toList()
@@ -205,21 +231,27 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   Future<bool> deactivateEmployee(String userId) async {
-    _setStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeStatus.loading);
+    _safeNotify();
     try {
       final employee = getEmployeeById(userId);
       await _employeeRepository.deactivateEmployee(userId);
-      
+
       if (employee != null) {
         _employeeRepository.cleanupIdentity(employee);
       }
-      
+
       // No longer need to fire event, stream will update automatically
-      _setStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeStatus.loaded);
       return true;
     } on ServerException catch (e) {
       _setError(e.message);
       return false;
+    } finally {
+      if (_status == EmployeeStatus.loading) {
+        _updateStatus(EmployeeStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
@@ -228,15 +260,17 @@ class EmployeeProvider extends ChangeNotifier {
     required String newPin,
   }) async {
     if (newPin.length != 4 || !_isNumeric(newPin)) {
-      _setError('PIN must be 4 digits');
+      _setError('الرقم السري يجب أن يكون 4 أرقام');
+      _safeNotify();
       return false;
     }
-    _setStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeStatus.loading);
+    _safeNotify();
     try {
       final employee = getEmployeeById(userId);
       final success = await _employeeRepository.resetEmployeePIN(
           userId: userId, newPin: newPin);
-          
+
       if (success && employee != null) {
         _employeeRepository.syncCredential(employee, newPin);
       }
@@ -247,61 +281,79 @@ class EmployeeProvider extends ChangeNotifier {
     } on ServerException catch (e) {
       _setError(e.message);
       return false;
+    } finally {
+      if (_status == EmployeeStatus.loading) {
+        _updateStatus(EmployeeStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
   Future<bool> updateEmployeePermissions(
       String userId, UserPermissions permissions) async {
-    _setStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeStatus.loading);
+    _safeNotify();
     try {
       await _employeeRepository.updateEmployeePermissions(
         userId: userId,
         permissions: permissions,
       );
       // No need to refresh locally as stream will update
-      _setStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeStatus.loaded);
       return true;
-    } on ServerException catch (e) {
-      _setError(e.message);
+    } catch (e, stack) {
+      _setError('فشل تحديث الصلاحيات.', e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to update permissions.');
-      return false;
+    } finally {
+      if (_status == EmployeeStatus.loading) {
+        _updateStatus(EmployeeStatus.loaded);
+      }
+      _safeNotify();
     }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    notifyListeners();
+    _safeNotify();
   }
 
   void toggleActiveFilter() {
     _showActiveOnly = !_showActiveOnly;
-    notifyListeners();
+    _safeNotify();
   }
 
   void clearSearch() {
     _searchQuery = '';
-    notifyListeners();
+    _safeNotify();
   }
 
   UserModel? getEmployeeById(String userId) {
     try {
-      return _employees.firstWhere((e) => e.userId == userId);
-    } catch (e) {
+      final index = _employees.indexWhere((e) => e.userId == userId);
+      return index != -1 ? _employees[index] : null;
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'get_employee_by_id',
+          stackTrace: stack);
       return null;
     }
   }
 
-  void _setStatus(EmployeeStatus status) {
+  void _updateStatus(EmployeeStatus status) {
+    if (_isDisposed) return;
     _status = status;
-    notifyListeners();
   }
 
-  void _setError(String message) {
+  void _setError(String message, [Object? error, StackTrace? stack]) {
+    if (_isDisposed) return;
     _errorMessage = message;
     _status = EmployeeStatus.error;
-    notifyListeners();
+    AppErrorHandler.handle(error ?? message,
+        severity: ErrorSeverity.medium,
+        operation: 'employee_operation',
+        stackTrace: stack);
+    // Note: notifyListeners() is now handled by the calling method's finally block
   }
 
   bool _isNumeric(String str) {
@@ -309,8 +361,9 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   void clearError() {
+    if (_isDisposed) return;
     _errorMessage = null;
     _status = EmployeeStatus.loaded;
-    notifyListeners();
+    _safeNotify();
   }
 }

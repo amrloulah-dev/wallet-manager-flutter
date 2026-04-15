@@ -351,11 +351,6 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     Navigator.pushNamed(context, RouteConstants.walletForm, arguments: wallet);
   }
 
-  void _navigateToCreateTransaction(BuildContext context, WalletModel wallet) {
-    Navigator.pushNamed(context, RouteConstants.createTransaction,
-        arguments: wallet.walletId);
-  }
-
   void _showDeleteDialog(WalletModel wallet) async {
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
@@ -368,6 +363,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
     if (confirmed == true) {
       final walletProvider = context.read<WalletProvider>();
+      final localizations = AppLocalizations.of(context)!;
       final navigator = Navigator.of(context);
 
       final success = await walletProvider.deleteWallet(wallet.walletId);
@@ -375,12 +371,11 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       if (!mounted) return;
 
       if (success) {
-        ToastUtils.showSuccess(
-            AppLocalizations.of(context)!.walletDeletedSuccessfully);
+        ToastUtils.showSuccess(localizations.walletDeletedSuccessfully);
         navigator.pop(); // Go back from details screen
       } else {
-        ToastUtils.showError(walletProvider.errorMessage ??
-            AppLocalizations.of(context)!.walletDeletionFailed);
+        ToastUtils.showError(
+            walletProvider.errorMessage ?? localizations.walletDeletionFailed);
       }
     }
   }

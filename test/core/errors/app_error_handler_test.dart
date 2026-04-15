@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/errors/error_severity.dart';
+import 'package:walletmanager/core/services/analytics_service.dart';
 
 void main() {
   late List<String> printLogs;
   late void Function(String?, {int? wrapWidth}) originalDebugPrint;
 
   setUp(() {
+    AnalyticsService.isTestMode = true;
     printLogs = [];
     originalDebugPrint = debugPrint;
     debugPrint = (String? message, {int? wrapWidth}) {

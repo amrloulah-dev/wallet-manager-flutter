@@ -10,14 +10,21 @@ import 'package:walletmanager/data/repositories/store_repository.dart';
 import 'package:walletmanager/core/services/identity_service.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/app_events.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/data/repositories/auth_repository.dart';
+import 'package:walletmanager/data/repositories/device_repository.dart';
+import 'package:walletmanager/data/repositories/license_key_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:walletmanager/core/services/analytics_service.dart';
 class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 class MockAppEvents extends Mock implements AppEvents {}
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockUserCredential extends Mock implements UserCredential {}
+class MockAuthRepository extends Mock implements AuthRepository {}
+class MockDeviceRepository extends Mock implements DeviceRepository {}
+class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
 class MockUser extends Mock implements User {}
 
 void main() {
@@ -26,6 +33,9 @@ void main() {
   late MockLocalStorageService mockStorage;
   late MockAppEvents mockEvents;
   late AuthProvider authProvider;
+  late MockAuthRepository mockAuthRepo;
+  late MockDeviceRepository mockDeviceRepo;
+  late MockLicenseKeyRepository mockLicenseRepo;
   
   late MockFirebaseAuth mockAuth;
   late MockUserCredential mockUserCredential;
@@ -35,17 +45,26 @@ void main() {
   late StoreModel mockStore;
 
   setUp(() {
+    AppErrorHandler.isTestMode = true;
+    AnalyticsService.isTestMode = true;
     mockUserRepo = MockUserRepository();
     mockStoreRepo = MockStoreRepository();
     mockStorage = MockLocalStorageService();
     mockEvents = MockAppEvents();
+    mockAuthRepo = MockAuthRepository();
+    mockDeviceRepo = MockDeviceRepository();
+    mockLicenseRepo = MockLicenseKeyRepository();
     
+    when(() => mockAuthRepo.getCurrentUser()).thenReturn(null);
+
     authProvider = AuthProvider(
+      authRepository: mockAuthRepo,
+      deviceRepository: mockDeviceRepo,
+      licenseKeyRepository: mockLicenseRepo,
       userRepository: mockUserRepo,
       storeRepository: mockStoreRepo,
       localStorage: mockStorage,
     );
-    
     mockAuth = MockFirebaseAuth();
     mockUserCredential = MockUserCredential();
     mockUser = MockUser();
@@ -111,7 +130,7 @@ void main() {
   group('AuthProvider Employee Login', () {
     test('login with firebaseUid authenticates via IdentityService', () async {
       when(() => mockAuth.signInWithEmailAndPassword(
-            email: 'emp_\${mockEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${mockEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).thenAnswer((_) async => mockUserCredential);
 
@@ -120,7 +139,7 @@ void main() {
       expect(success, isTrue);
       // It attempts signIn instead of just local pin check
       verify(() => mockAuth.signInWithEmailAndPassword(
-            email: 'emp_\${mockEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${mockEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).called(1);
     });
@@ -130,7 +149,7 @@ void main() {
       final legacyEmployee = mockEmployee.copyWith(firebaseUid: '');
       
       when(() => mockAuth.createUserWithEmailAndPassword(
-            email: 'emp_\${legacyEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${legacyEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).thenAnswer((_) async => mockUserCredential);
           
@@ -142,7 +161,7 @@ void main() {
       
       // Should not call signIn since uid was not present at start
       verifyNever(() => mockAuth.signInWithEmailAndPassword(
-            email: 'emp_\${legacyEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${legacyEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           ));
           
@@ -150,14 +169,14 @@ void main() {
       // We need a short delay since it's fire-and-forget
       await Future.delayed(const Duration(milliseconds: 50));
       verify(() => mockAuth.createUserWithEmailAndPassword(
-            email: 'emp_\${legacyEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${legacyEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).called(1);
     });
 
     test('failed login shows user-visible error via AppErrorHandler', () async {
       when(() => mockAuth.signInWithEmailAndPassword(
-            email: 'emp_\${mockEmployee.phone}_\${mockStore.storeId}@store.com',
+            email: 'emp_${mockEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).thenThrow(FirebaseAuthException(code: 'wrong-password'));
 

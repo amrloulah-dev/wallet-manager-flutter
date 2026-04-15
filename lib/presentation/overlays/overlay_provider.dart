@@ -10,10 +10,16 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 // BotToast is NOT initialized in the overlay isolate — do not use here.
 
 class OverlayProvider with ChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
+  final TransactionRepository _transactionRepository;
+
+  OverlayProvider({TransactionRepository? transactionRepository})
+      : _transactionRepository =
+            transactionRepository ?? sl<TransactionRepository>();
 
   bool _isLoading = false;
   bool _isStorageInitialized = false; // Only guards one-time storage init
@@ -231,7 +237,7 @@ class OverlayProvider with ChangeNotifier {
 
       String transactionType = _type == 'debit' ? 'send' : 'receive';
       final now = Timestamp.now();
-      final txId = DateTime.now().millisecondsSinceEpoch.toString();
+      final txId = _transactionRepository.generateId();
 
       final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
             (w) => w?['id'] == _selectedWalletId,
@@ -270,7 +276,7 @@ class OverlayProvider with ChangeNotifier {
           'type=$transactionType, amount=$_amount, commission=$_commission, '
           'sender=$_sender, storeId=$storeId');
 
-      await TransactionRepository().createTransaction(newTransaction);
+      await _transactionRepository.createTransaction(newTransaction);
 
       // 6. Save to Vault
       final prefs = await SharedPreferences.getInstance();

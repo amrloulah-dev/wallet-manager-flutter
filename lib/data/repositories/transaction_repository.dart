@@ -27,7 +27,7 @@ class TransactionRepository {
   CollectionReference get _transactionsCollection =>
       _firestore.collection(FirebaseConstants.transactions);
 
-  CollectionReference get transactionsCollection => _transactionsCollection;
+  String generateId() => _transactionsCollection.doc().id;
 
   // 1️⃣ CREATE
   Future<void> createTransaction(TransactionModel transaction) async {

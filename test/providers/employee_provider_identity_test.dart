@@ -5,15 +5,25 @@ import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/services/analytics_service.dart';
 
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
+
+class FakeUserPermissions extends Fake implements UserPermissions {}
 
 void main() {
   late MockEmployeeRepository mockRepository;
   late EmployeeProvider employeeProvider;
   late UserModel mockEmployee;
 
+  setUpAll(() {
+    registerFallbackValue(FakeUserPermissions());
+  });
+
   setUp(() {
+    AppErrorHandler.isTestMode = true;
+    AnalyticsService.isTestMode = true;
     mockRepository = MockEmployeeRepository();
     employeeProvider = EmployeeProvider(employeeRepository: mockRepository);
     
@@ -37,6 +47,10 @@ void main() {
     );
 
     registerFallbackValue(mockEmployee);
+    
+    // Seed the internal list of employees
+    when(() => mockRepository.watchEmployees(any())).thenAnswer((_) => Stream.value([mockEmployee]));
+    employeeProvider.setStoreId('store-123');
   });
 
   group('EmployeeProvider Identity Orchestration', () {
@@ -85,14 +99,12 @@ void main() {
     });
 
     test('resetEmployeePIN calls syncCredential after success', () async {
+      await Future.delayed(Duration.zero); // wait for stream
       when(() => mockRepository.resetEmployeePIN(userId: any(named: 'userId'), newPin: any(named: 'newPin')))
           .thenAnswer((_) async => true);
       when(() => mockRepository.syncCredential(any(), any()))
           .thenAnswer((_) async {});
 
-      // Note: testing syncCredential requires employee to exist in provider's internal list,
-      // which we skip here due to stream mocking complexity in this simple test.
-      // We just call it to ensure it compiles.
       await employeeProvider.resetEmployeePIN(userId: mockEmployee.userId, newPin: '4321');
 
       verify(() => mockRepository.resetEmployeePIN(userId: mockEmployee.userId, newPin: any(named: 'newPin'))).called(1);
@@ -100,6 +112,7 @@ void main() {
     });
 
     test('deactivateEmployee calls cleanupIdentity after success', () async {
+       await Future.delayed(Duration.zero); // wait for stream
        when(() => mockRepository.deactivateEmployee(any()))
           .thenAnswer((_) async {});
        when(() => mockRepository.cleanupIdentity(any()))

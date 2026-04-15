@@ -11,6 +11,7 @@ class IdentityService {
   static FirebaseAuth? authOverride;
 
   static Future<void> _ensureInitialized() async {
+    if (authOverride != null) return;
     if (_secondaryApp != null) return;
     try {
       _secondaryApp = Firebase.app('employeeAuth');
@@ -31,7 +32,7 @@ class IdentityService {
   }
 
   static String _generateEmail(String phone, String storeId) {
-    return 'emp_\${phone}_\$storeId@store.com';
+    return 'emp_${phone}_$storeId@store.com';
   }
 
   static Future<String?> provisionIdentity({
@@ -41,7 +42,7 @@ class IdentityService {
   }) async {
     try {
       await _ensureInitialized();
-      if (_secondaryApp == null) return null;
+      if (_secondaryApp == null && authOverride == null) return null;
 
       final email = _generateEmail(phone, storeId);
       final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
@@ -81,7 +82,7 @@ class IdentityService {
   }) async {
     try {
       await _ensureInitialized();
-      if (_secondaryApp == null) return false;
+      if (_secondaryApp == null && authOverride == null) return false;
 
       final email = _generateEmail(phone, storeId);
       final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
@@ -127,7 +128,7 @@ class IdentityService {
   }) async {
     try {
       await _ensureInitialized();
-      if (_secondaryApp == null) return false;
+      if (_secondaryApp == null && authOverride == null) return false;
 
       final email = _generateEmail(phone, storeId);
       final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
@@ -156,7 +157,7 @@ class IdentityService {
   }) async {
     try {
       await _ensureInitialized();
-      if (_secondaryApp == null) return null;
+      if (_secondaryApp == null && authOverride == null) return null;
 
       final email = _generateEmail(phone, storeId);
       final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);

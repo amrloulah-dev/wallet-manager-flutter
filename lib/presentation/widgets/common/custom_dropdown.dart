@@ -32,7 +32,7 @@ class CustomDropdown<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<T>(
-          value: value, // تم التعديل من initialValue إلى value لتعمل بشكل صحيح
+          initialValue: value, 
           isExpanded: true,
           onChanged: onChanged,
           validator: validator,

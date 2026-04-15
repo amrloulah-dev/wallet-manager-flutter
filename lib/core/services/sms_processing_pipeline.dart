@@ -124,7 +124,6 @@ Future<void> handleIncomingSms(
     final mappings = storage.getSimMappings();
     String? matchedWalletId;
 
-
     if (mappings.isNotEmpty) {
       try {
         // 1. Standard Matching (For compliant Android devices)
@@ -136,17 +135,30 @@ Future<void> handleIncomingSms(
 
         // Safely check slot, since it's missing on some OS versions for another_telephony
         String? slotStr;
-        try { slotStr = (message as dynamic).slot?.toString(); } catch(_) {}
+        try {
+          slotStr = (message as dynamic).slot?.toString();
+        } catch (_) {}
 
-        if (matchedWalletId == null && slotStr != null && slotStr != "null" && slotStr != "NOT_ACCESSIBLE_ON_THIS_OS_PLATFORM") {
-          final match = mappings.where((c) => c.simSlotIndex.toString() == slotStr || (c.simSlotIndex - 1).toString() == slotStr).firstOrNull;
+        if (matchedWalletId == null &&
+            slotStr != null &&
+            slotStr != "null" &&
+            slotStr != "NOT_ACCESSIBLE_ON_THIS_OS_PLATFORM") {
+          final match = mappings
+              .where((c) =>
+                  c.simSlotIndex.toString() == slotStr ||
+                  (c.simSlotIndex - 1).toString() == slotStr)
+              .firstOrNull;
           if (match != null) matchedWalletId = match.walletId;
         }
 
         // Fallback: match by serviceProvider inferred from the SMS content
         if (matchedWalletId == null && dto.serviceProvider.isNotEmpty) {
-           final match = mappings.where((c) => c.serviceProvider.toLowerCase() == dto.serviceProvider.toLowerCase()).firstOrNull;
-           if (match != null) matchedWalletId = match.walletId;
+          final match = mappings
+              .where((c) =>
+                  c.serviceProvider.toLowerCase() ==
+                  dto.serviceProvider.toLowerCase())
+              .firstOrNull;
+          if (match != null) matchedWalletId = match.walletId;
         }
 
         // 2. SMART FALLBACK (For restrictive OEMs like Huawei/Xiaomi)
@@ -155,14 +167,14 @@ Future<void> handleIncomingSms(
           if (uniqueWallets.length == 1) {
             // User mapped all SIMs to the same wallet, or only has 1 mapping. Safe to auto-select!
             matchedWalletId = uniqueWallets.first;
-            debugPrint("🧠 SMART FALLBACK: OS hid SIM info, but unique wallet found -> $matchedWalletId");
+            debugPrint(
+                "🧠 SMART FALLBACK: OS hid SIM info, but unique wallet found -> $matchedWalletId");
           }
         }
-      } catch (e) {
-        debugPrint("Matcher Error: $e");
+      } catch (e, stack) {
+        debugPrint('[ERROR] [low] [sms_pipeline_matching] $e\nStack: $stack');
       }
     }
-
 
     // ── Build overlay arguments ─────────────────────────────
     final Map<String, dynamic> overlayArgs = {
@@ -207,7 +219,8 @@ Future<void> handleIncomingSms(
 
     // ── Share data with the overlay UI ──────────────────────
     await FlutterOverlayWindow.shareData(overlayArgs);
-  } catch (_) {
+  } catch (e, stack) {
+    debugPrint('[ERROR] [low] [sms_pipeline] $e\nStack: $stack');
     // Swallow — must never crash any isolate
   }
 }
