@@ -6,7 +6,6 @@ import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/providers/app_events.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
@@ -35,10 +34,8 @@ class StatisticsProvider extends ChangeNotifier {
   StatsSummaryModel? _cachedSummary;
   DateTime? _cacheTimestamp;
 
-  StreamSubscription? _debtsChangedSubscription;
-  StreamSubscription? _walletsChangedSubscription;
-  StreamSubscription? _transactionsChangedSubscription;
-  StreamSubscription? _statsRefreshSubscription;
+  StreamSubscription? _summarySubscription;
+  StreamSubscription? _todayStatsSubscription;
   bool _isDisposed = false;
 
   Timer? _fetchShieldTimer;
@@ -70,36 +67,16 @@ class StatisticsProvider extends ChangeNotifier {
         _transactionRepository = transactionRepository,
         _debtRepository = debtRepository,
         _statsRepository = statsRepository {
-    _debtsChangedSubscription = appEvents.onDebtsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _walletsChangedSubscription = appEvents.onWalletsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _transactionsChangedSubscription =
-        appEvents.onTransactionsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _statsRefreshSubscription = appEvents.onStatsRefresh.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
+    // ── Streams-Driven Sync (Phase 1) ──
+    // Manual AppEvents listener removed. Data sync is now handled by _summarySubscription
+    // and _todayStatsSubscription established in fetchDashboardStats().
   }
 
   @override
   void dispose() {
     _isDisposed = true;
-    _debtsChangedSubscription?.cancel();
-    _walletsChangedSubscription?.cancel();
-    _transactionsChangedSubscription?.cancel();
-    _statsRefreshSubscription?.cancel();
+    _summarySubscription?.cancel();
+    _todayStatsSubscription?.cancel();
     _fetchShieldTimer?.cancel();
     super.dispose();
   }
@@ -114,6 +91,8 @@ class StatisticsProvider extends ChangeNotifier {
       if (storeId != null) {
         fetchDashboardStats();
       } else {
+        _summarySubscription?.cancel();
+        _todayStatsSubscription?.cancel();
         _dashboardSummary = null;
         _todayStats = null;
         _cachedSummary = null;
@@ -142,35 +121,38 @@ class StatisticsProvider extends ChangeNotifier {
       return;
     }
 
+    // Cancel old subscriptions
+    _summarySubscription?.cancel();
+    _todayStatsSubscription?.cancel();
+
     _isLoading = true;
     _safeNotify();
 
-    try {
-      final results = await Future.wait([
-        _statsRepository.getStatsSummary(_storeId!),
-        _statsRepository.fetchTodayStats(_storeId!),
-      ]);
+    _activateFetchShield();
 
-      final summary = results[0] as StatsSummaryModel;
-      final daily = results[1] as DailyStatsModel;
-
+    // 1. Establish Summary Stream
+    _summarySubscription = _statsRepository
+        .watchStatsSummary(_storeId!)
+        .listen((summary) {
       _dashboardSummary = summary;
-      _todayStats = daily;
-
       _cachedSummary = summary;
-      _cacheTimestamp = now;
+      _cacheTimestamp = DateTime.now();
       _isLoading = false;
-      _errorMessage = null;
-      _activateFetchShield();
-    } catch (e, stack) {
-      _dashboardSummary = null;
-      _setError("فشل تحميل إحصائيات لوحة التحكم.", e, stack);
-    } finally {
-      if (_isLoading) {
-        _isLoading = false;
-      }
       _safeNotify();
-    }
+    }, onError: (e, stack) {
+      _setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
+    });
+
+    // 2. Establish Today Stats Stream
+    _todayStatsSubscription = _statsRepository
+        .watchTodayStats(_storeId!)
+        .listen((today) {
+      _todayStats = today;
+      _isLoading = false;
+      _safeNotify();
+    }, onError: (e, stack) {
+      _setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
+    });
   }
 
   Future<void> fetchFilteredStats(DateTimeRange dateRange) async {
@@ -273,12 +255,15 @@ class StatisticsProvider extends ChangeNotifier {
     _safeNotify();
   }
 
-  void _setError(String message, [Object? error, StackTrace? stack]) {
+  void _setError(String message, [dynamic e, StackTrace? stack]) {
     _errorMessage = message;
-    AppErrorHandler.handle(error ?? message,
-        severity: ErrorSeverity.medium,
-        operation: 'statistics_operation',
-        stackTrace: stack);
-    // Note: notifyListeners() is now handled by the calling method's finally block
+    _isLoading = false;
+    if (e != null) {
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'stats_operation',
+          stackTrace: stack);
+    }
+    _safeNotify();
   }
 }

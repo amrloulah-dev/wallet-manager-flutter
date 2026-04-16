@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:firebase_performance/firebase_performance.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
-import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
@@ -13,6 +11,7 @@ import 'auth_provider.dart';
 import '../core/services/analytics_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
+
 enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
 
 class TransactionProvider extends ChangeNotifier {
@@ -26,12 +25,9 @@ class TransactionProvider extends ChangeNotifier {
   List<TransactionModel> _todayTransactions = [];
   Map<String, dynamic> _summary = {};
 
-  // Fetch Shield
-  Timer? _fetchShieldTimer;
-  bool _fetchShieldActive = false;
-  DocumentSnapshot? _lastDocument;
+  int _currentLimit = 20;
   bool _hasMore = true;
-  final DateTimeRange _dateRange = DateTimeRange(
+  DateTimeRange _dateRange = DateTimeRange(
       start: DateHelper.getStartOfDay(DateTime.now()),
       end: DateHelper.getEndOfDay(DateTime.now()));
 
@@ -44,13 +40,11 @@ class TransactionProvider extends ChangeNotifier {
   // Filter
   String? _filterType;
 
-  // Cache
-  List<TransactionModel>? _cachedTransactions;
-  DateTime? _cacheTimestamp;
-  DateTime? _lastOptimisticUpdate;
-
-  StreamSubscription? _dataChangedSubscription;
+  StreamSubscription? _transactionsSubscription;
   bool _isDisposed = false;
+
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
 
   // Constructor
   TransactionProvider({
@@ -59,18 +53,16 @@ class TransactionProvider extends ChangeNotifier {
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
         _currentStoreId = storeId {
-    _dataChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore && !_fetchShieldActive) {
-        fetchInitialTransactions(forceRefresh: true);
-      }
-    });
+    // ── Streams-Driven Sync (Phase 1) ──
+    // Manual AppEvents listener removed. Data sync is now handled by _transactionsSubscription
+    // established in fetchInitialTransactions().
   }
 
   @override
   void dispose() {
-    _fetchShieldTimer?.cancel();
     _isDisposed = true;
-    _dataChangedSubscription?.cancel();
+    _transactionsSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
@@ -106,6 +98,7 @@ class TransactionProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
   String? get filterType => _filterType;
   TransactionModel? get selectedTransaction => _selectedTransaction;
+  DateTimeRange get dateRange => _dateRange;
 
   // Helper Getters
   bool get isLoading => _status == TransactionStatus.loading;
@@ -114,202 +107,145 @@ class TransactionProvider extends ChangeNotifier {
   bool get hasError => _status == TransactionStatus.error;
 
   // Methods
-  void updateAuthState(AuthProvider auth) {
-    if (_currentStoreId != auth.currentStoreId ||
-        _currentUser != auth.currentUser) {
-      _currentStoreId = auth.currentStoreId;
-      _currentUser = auth.currentUser;
 
-      // Only refresh if store changed (user change doesn't invalidate transaction list usually)
-      if (auth.currentStoreId != _currentStoreId) {
-        _cachedTransactions = null;
-        _cacheTimestamp = null;
-        fetchInitialTransactions();
-      } else if (_transactions.isEmpty && _currentStoreId != null) {
-        // Initial fetch if we have store but no data
+  void updateAuthState(AuthProvider auth) {
+    if (_currentStoreId != auth.currentStoreId) {
+      setStoreId(auth.currentStoreId);
+    }
+    _currentUser = auth.currentUser;
+  }
+
+  void setStoreId(String? storeId) {
+    if (_currentStoreId != storeId) {
+      _currentStoreId = storeId;
+      if (storeId != null) {
         fetchInitialTransactions();
       }
     }
   }
 
-  void setFilter(String? type) {
-    if (_filterType != type) {
-      _filterType = type;
-      fetchInitialTransactions(forceRefresh: true);
-    }
+  void setDateRange(DateTimeRange range) {
+    _dateRange = range;
+    _currentLimit = 20;
+    fetchInitialTransactions();
   }
 
-  Future<void> selectTransaction(String transactionId) async {
-    _updateStatus(TransactionStatus.loading);
-    _safeNotify();
-    try {
-      _selectedTransaction =
-          await _transactionRepository.getTransactionById(transactionId);
-      _updateStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e, stack) {
-      _setError('فشل جلب تفاصيل المعاملة.', e, stack);
-    } finally {
-      _safeNotify();
+  void setFilterType(String? type) {
+    _filterType = type;
+    _currentLimit = 20;
+    fetchInitialTransactions();
+  }
+
+  // Alias for setFilterType to fix analyze error
+  void setFilter(String? type) => setFilterType(type);
+
+  void _updateStatus(TransactionStatus status) {
+    if (_isDisposed) return;
+    _status = status;
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
+  }
+
+  void _setError(String message, [dynamic e, StackTrace? stack]) {
+    if (_isDisposed) return;
+    _errorMessage = message;
+    _status = TransactionStatus.error;
+    if (e != null) {
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'transaction_operation',
+          stackTrace: stack);
     }
+    _safeNotify();
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
-    if (_fetchShieldActive) return;
 
-    final now = DateTime.now();
-    if (!forceRefresh &&
-        _lastOptimisticUpdate != null &&
-        now.difference(_lastOptimisticUpdate!).inSeconds < 10) {
-      return;
-    }
+    if (!forceRefresh && _fetchShieldActive) return;
 
-    if (!forceRefresh &&
-        _cachedTransactions != null &&
-        _cacheTimestamp != null &&
-        now.difference(_cacheTimestamp!).inMinutes < 2) {
-      _transactions = _cachedTransactions!;
-      if (status != TransactionStatus.loaded) {
-        _updateStatus(TransactionStatus.loaded);
-        _safeNotify();
-      }
-      return;
-    }
+    debugPrint('🔥 [TX_FLOW] [transaction_provider] -> fetchInitialTransactions: '
+        'Establishing stream subscription | storeId=$_currentStoreId, limit=$_currentLimit');
 
-    final trace =
-        FirebasePerformance.instance.newTrace('fetch_initial_transactions');
-    await trace.start();
-
+    _transactionsSubscription?.cancel();
     _updateStatus(TransactionStatus.loading);
-    _lastDocument = null;
-    _hasMore = true;
+    _safeNotify();
 
-    try {
-      final result =
-          await _transactionRepository.getTransactionsByDateRangePaginated(
-        _currentStoreId!,
-        _dateRange.start,
-        _dateRange.end,
-        transactionType: _filterType,
-        limit: 20,
-      );
-
-      _transactions = result['transactions'];
+    _transactionsSubscription = _transactionRepository
+        .getTransactionsStream(
+      _currentStoreId!,
+      _dateRange.start,
+      _dateRange.end,
+      transactionType: _filterType,
+      limit: _currentLimit,
+    )
+        .listen((fetchedTransactions) {
+      _transactions = List<TransactionModel>.from(fetchedTransactions);
+      _hasMore = fetchedTransactions.length >= _currentLimit;
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
-      _lastDocument = result['lastDoc'];
-      _hasMore = _transactions.length == 20;
-      _cachedTransactions = _transactions;
-      _cacheTimestamp = now;
       _calculateSummary();
       _updateStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e, stack) {
-      _setError('حدث خطأ غير متوقع أثناء جلب المعاملات.', e, stack);
-    } finally {
-      await trace.stop();
-      if (_status == TransactionStatus.loading) {
-        _updateStatus(TransactionStatus.loaded);
-      }
       _safeNotify();
-    }
+    }, onError: (e, stack) {
+      _setError('حدث خطأ في تيار المعاملات.', e, stack);
+    });
   }
 
-  Future<void> fetchMoreTransactions() async {
+  void fetchMoreTransactions() {
     if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
     }
 
+    debugPrint('🔥 [TX_FLOW] [transaction_provider] -> fetchMoreTransactions: '
+        'Increasing limit | oldLimit=$_currentLimit');
+
+    _currentLimit += 20;
     _updateStatus(TransactionStatus.loadingMore);
-    _safeNotify();
-
-    try {
-      final result =
-          await _transactionRepository.getTransactionsByDateRangePaginated(
-        _currentStoreId!,
-        _dateRange.start,
-        _dateRange.end,
-        transactionType: _filterType,
-        limit: 20,
-        lastDoc: _lastDocument,
-      );
-
-      final newTransactions = result['transactions'] as List<TransactionModel>;
-      _transactions.addAll(newTransactions);
-      _rebuildTransactionMap();
-      _recomputeTodayTransactions();
-      _lastDocument = result['lastDoc'];
-      _hasMore = newTransactions.length == 20;
-      _calculateSummary();
-      _updateStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e, stack) {
-      _setError('حدث خطأ غير متوقع أثناء جلب المزيد من المعاملات.', e, stack);
-    } finally {
-      if (_status == TransactionStatus.loadingMore) {
-        _updateStatus(TransactionStatus.loaded);
-      }
-      _safeNotify();
-    }
+    fetchInitialTransactions();
   }
 
   void _calculateSummary() {
+    double totalCommission = 0;
+    double totalAmount = 0;
     int sendCount = 0;
     int receiveCount = 0;
-    double totalSendAmount = 0.0;
-    double totalReceiveAmount = 0.0;
-    double totalCommission = 0.0;
 
-    for (final tx in _transactions) {
-      if (tx.isSend) {
-        sendCount++;
-        totalSendAmount += tx.amount;
-      } else {
-        receiveCount++;
-        totalReceiveAmount += tx.amount;
-      }
+    for (var tx in _transactions) {
       totalCommission += tx.commission;
+      totalAmount += tx.amount;
+      if (tx.isSend) sendCount++;
+      if (tx.isReceive) receiveCount++;
     }
 
     _summary = {
       'totalTransactions': _transactions.length,
+      'totalCommission': totalCommission,
+      'totalAmount': totalAmount,
       'sendCount': sendCount,
       'receiveCount': receiveCount,
-      'totalSendAmount': totalSendAmount,
-      'totalReceiveAmount': totalReceiveAmount,
-      'totalCommission': totalCommission,
     };
   }
 
   Future<bool> createTransaction({
     required String walletId,
     required String transactionType,
-    String? customerPhone,
-    String? customerName,
     required double amount,
     required double commission,
     double serviceFee = 0.0,
     String paymentStatus = 'paid',
+    String? customerPhone,
+    String? customerName,
     String? notes,
   }) async {
+    if (_currentStoreId == null) return false;
+
     _updateStatus(TransactionStatus.creating);
     _safeNotify();
+
     try {
-      // Check Permission
-      if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
-      if (!_currentUser!.hasPermission((p) => p.createTransaction)) {
-        throw PermissionException();
-      }
-
-      if (_currentStoreId == null) {
-        throw ValidationException('Store ID not found.');
-      }
-      if (amount <= 0) throw ValidationException('Amount must be positive.');
-
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.generateId(),
         storeId: _currentStoreId!,
@@ -324,16 +260,14 @@ class TransactionProvider extends ChangeNotifier {
         notes: notes,
         transactionDate: Timestamp.now(),
         createdAt: Timestamp.now(),
-        createdBy: _currentUser?.userId ?? '',
-        createdById: _currentUser?.userId,
-        createdByName: _currentUser?.fullName,
-        creatorRole: _currentUser?.role,
+        createdBy: _currentUser?.userId ?? 'unknown',
       );
 
       await _transactionRepository.createTransaction(newTransaction);
       AnalyticsService.logTransactionCreated(transactionType);
-      appEvents.fireTransactionsChanged();
-      appEvents.fireWalletsChanged();
+      
+      _activateFetchShield();
+      _updateStatus(TransactionStatus.loaded);
       return true;
     } on AppException catch (e) {
       _setError(e.message);
@@ -343,111 +277,36 @@ class TransactionProvider extends ChangeNotifier {
       return false;
     } finally {
       if (_status == TransactionStatus.creating) {
-        _updateStatus(TransactionStatus.idle);
+        _updateStatus(TransactionStatus.loaded);
       }
       _safeNotify();
     }
   }
 
-  Future<List<TransactionModel>> fetchTransactionsForDateRange(
-      DateTime startDate, DateTime endDate) async {
-    if (_currentStoreId == null) return [];
-    try {
-      return await _transactionRepository.getTransactionsByDateRange(
-        _currentStoreId!,
-        startDate,
-        endDate,
-      );
-    } catch (e, stack) {
-      _setError('فشل جلب معاملات هذه الفترة.', e, stack);
-      return [];
-    }
-  }
-
-  // Helper Methods
-  void _updateStatus(TransactionStatus status) {
+  void insertTransactionLocally(TransactionModel transaction) {
     if (_isDisposed) return;
-    _status = status;
-  }
+    
+    // Check if it already exists
+    if (_transactionMap.containsKey(transaction.transactionId)) return;
 
-  void _setError(String message, [Object? error, StackTrace? stack]) {
-    if (_isDisposed) return;
-    _errorMessage = message;
-    _status = TransactionStatus.error;
-    AppErrorHandler.handle(error ?? message,
-        severity: ErrorSeverity.medium,
-        operation: 'transaction_operation',
-        stackTrace: stack);
-    // Note: notifyListeners() is now handled by the calling method's finally block
-  }
-
-  void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
-  }
-
-  void clearError() {
-    if (_isDisposed) return;
-    _errorMessage = null;
-    _status = TransactionStatus.idle;
+    _transactions.add(transaction);
+    // Sort by transactionDate descending to maintain consistency with Firestore stream
+    _transactions.sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+    
+    _rebuildTransactionMap();
+    _recomputeTodayTransactions();
+    _calculateSummary();
+    _activateFetchShield();
     _safeNotify();
   }
 
-  void insertTransactionLocally(Map<String, dynamic> data) {
+  Future<void> selectTransaction(String transactionId) async {
     try {
-      if (_currentStoreId == null) return;
-      if (data['walletId'] == null ||
-          data['amount'] == null ||
-          data['type'] == null) {
-        return;
-      }
-
-      final type = data['type'] as String; // 'credit' | 'debit'
-      String transactionType = 'receive';
-      if (type == 'debit') {
-        transactionType = 'send';
-      }
-
-      // Parse the new fields passed via Vault + Ping
-      final transactionId = data['transactionId'] as String? ?? 
-          DateTime.now().millisecondsSinceEpoch.toString();
-          
-      DateTime parsedDate = DateTime.now();
-      if (data['transactionDate'] != null) {
-        parsedDate = DateTime.tryParse(data['transactionDate'].toString()) ?? DateTime.now();
-      }
-      
-      final storeId = data['storeId'] as String? ?? _currentStoreId!;
-
-      final newTransaction = TransactionModel(
-        transactionId: transactionId,
-        storeId: storeId,
-        walletId: data['walletId'] as String,
-        transactionType: transactionType,
-        customerPhone: data['sender'] as String?,
-        amount: (data['amount'] as num).toDouble(),
-        commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
-        transactionDate: Timestamp.fromDate(parsedDate),
-        createdAt: Timestamp.now(),
-        createdBy: _currentUser?.fullName ?? 'SMS Auto',
-        createdById: _currentUser?.userId,
-        createdByName: _currentUser?.fullName,
-        creatorRole: _currentUser?.role,
-        isDeleted: false,
-        notes: 'آلي عبر الرسائل القصيرة',
-      );
-
-      _transactions.insert(0, newTransaction);
-      _rebuildTransactionMap();
-      _recomputeTodayTransactions();
-      _calculateSummary();
-      _lastOptimisticUpdate = DateTime.now();
-      _activateFetchShield();
+      final tx = await _transactionRepository.getTransactionById(transactionId);
+      _selectedTransaction = tx;
       _safeNotify();
     } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          severity: ErrorSeverity.low,
-          operation: 'transaction_local_insert',
-          stackTrace: stack);
+      _setError('فشل في جلب تفاصيل المعاملة.', e, stack);
     }
   }
 }

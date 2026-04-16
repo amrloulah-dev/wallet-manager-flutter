@@ -65,6 +65,37 @@ class TransactionRepository {
   }
 
   // 2️⃣ READ
+  Stream<List<TransactionModel>> getTransactionsStream(
+    String storeId,
+    DateTime startDate,
+    DateTime endDate, {
+    String? transactionType,
+    int limit = 20,
+  }) {
+    try {
+      Query query = _transactionsCollection
+          .where(FirebaseConstants.storeId, isEqualTo: storeId)
+          .where('transactionDate',
+              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
+          .where('transactionDate',
+              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
+          .where('isDeleted', isEqualTo: false)
+          .orderBy('transactionDate', descending: true);
+
+      if (transactionType != null) {
+        query = query.where('transactionType', isEqualTo: transactionType);
+      }
+
+      return query.limit(limit).snapshots().map((snapshot) {
+        return snapshot.docs
+            .map((doc) => TransactionModel.fromFirestore(doc))
+            .toList();
+      });
+    } catch (e) {
+      return Stream.error(ServerException('فشل الحصول على تيار المعاملات: $e'));
+    }
+  }
+
   Future<TransactionModel?> getTransactionById(String transactionId) async {
     final cacheKey = 'transaction_details_$transactionId';
     final cachedTx = _cacheManager.get<TransactionModel>(cacheKey);
@@ -84,66 +115,6 @@ class TransactionRepository {
           'An unexpected error occurred while fetching the transaction.');
     }
   }
-
-  Future<Map<String, dynamic>> getTransactionsByDateRangePaginated(
-    String storeId,
-    DateTime startDate,
-    DateTime endDate, {
-    String? transactionType,
-    int limit = 15,
-    DocumentSnapshot? lastDoc,
-  }) async {
-    final cacheKey =
-        'transactions_page_0_${storeId}_${startDate.toIso8601String()}_${endDate.toIso8601String()}_$transactionType';
-    if (lastDoc == null) {
-      final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
-      if (cachedResult != null) return cachedResult;
-    }
-
-    try {
-      Query query = _transactionsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where('transactionDate',
-              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
-          .where('transactionDate',
-              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
-          .where('isDeleted', isEqualTo: false)
-          .orderBy('transactionDate', descending: true);
-
-      if (transactionType != null) {
-        query = query.where('transactionType', isEqualTo: transactionType);
-      }
-
-      if (lastDoc != null) {
-        query = query.startAfterDocument(lastDoc);
-      }
-
-      final snapshot = await query.limit(limit).get();
-      final transactions = snapshot.docs
-          .map((doc) => TransactionModel.fromFirestore(doc))
-          .toList();
-      final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-
-      final result = {
-        'transactions': transactions,
-        'lastDoc': newLastDoc,
-      };
-
-      if (lastDoc == null) {
-        _cacheManager.set(cacheKey, result);
-      }
-
-      return result;
-    } on FirebaseException catch (e) {
-      throw ServerException(
-          'Failed to get paginated transactions: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching paginated transactions.');
-    }
-  }
-
   Future<List<TransactionModel>> getTransactionsByDateRange(
       String storeId, DateTime startDate, DateTime endDate) async {
     try {

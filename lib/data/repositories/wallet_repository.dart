@@ -32,6 +32,7 @@ class WalletRepository {
       await _statsRepository.updateStatsOnWalletChange(
         wallet.storeId,
         countChange: 1,
+        activeCountChange: wallet.isActive ? 1 : 0,
         balanceChange: wallet.balance,
       );
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
@@ -41,59 +42,37 @@ class WalletRepository {
   }
 
   // 2️⃣ READ Methods
-  Future<Map<String, dynamic>> getWalletsByStoreIdPaginated(
+  Stream<List<WalletModel>> getWalletsStream(
     String storeId, {
     bool activeOnly = true,
-    int limit = 15,
-    DocumentSnapshot? lastDoc,
+    int limit = 20,
     String? walletType,
     String? walletStatus,
-  }) async {
-    final cacheKey = 'wallets_page_0_${storeId}_${walletType}_$walletStatus';
-    // Only use cache for the first page
-    if (lastDoc == null) {
-      final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
-      if (cachedResult != null) {
-        return cachedResult;
-      }
-    }
-
+  }) {
     try {
       Query query = _walletsCollection.where(FirebaseConstants.storeId,
           isEqualTo: storeId);
+      
       if (activeOnly) {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
       }
+      
       if (walletType != null) {
-        query =
-            query.where(FirebaseConstants.walletType, isEqualTo: walletType);
+        query = query.where(FirebaseConstants.walletType, isEqualTo: walletType);
       }
+      
       if (walletStatus != null) {
-        query = query.where(FirebaseConstants.walletStatus,
-            isEqualTo: walletStatus);
+        query = query.where(FirebaseConstants.walletStatus, isEqualTo: walletStatus);
       }
 
-      if (lastDoc != null) {
-        query = query.startAfterDocument(lastDoc);
-      }
+      // Always order by createdAt to ensure consistent stream results
+      query = query.orderBy(FirebaseConstants.createdAt, descending: true);
 
-      final snapshot = await query.limit(limit).get(const GetOptions(source: Source.server));
-      final wallets =
-          snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
-      final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-
-      final result = {
-        'wallets': wallets,
-        'lastDoc': newLastDoc,
-      };
-
-      if (lastDoc == null) {
-        _cacheManager.set(cacheKey, result);
-      }
-
-      return result;
+      return query.limit(limit).snapshots().map((snapshot) {
+        return snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
+      });
     } catch (e) {
-      throw ServerException('فشل استرجاع المحافظ: $e');
+      return Stream.error(ServerException('فشل الحصول على تيار المحافظ: $e'));
     }
   }
 
@@ -208,6 +187,7 @@ class WalletRepository {
       await _statsRepository.updateStatsOnWalletChange(
         wallet.storeId,
         countChange: isActive ? 1 : -1,
+        activeCountChange: isActive ? 1 : -1,
         balanceChange: isActive ? wallet.balance : -wallet.balance,
       );
     } catch (e) {

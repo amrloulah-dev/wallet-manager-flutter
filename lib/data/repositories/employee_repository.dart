@@ -127,6 +127,20 @@ class EmployeeRepository {
       transaction.set(_usersCollection.doc(newUserId), newUser.toFirestore());
       transaction
           .update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
+
+      // Update Store Stats Summary Document
+      final statsSummaryRef = _firestore
+          .collection(FirebaseConstants.storesCollection)
+          .doc(storeId)
+          .collection('stats')
+          .doc('summary');
+      transaction.set(
+          statsSummaryRef,
+          {
+            'totalEmployees': FieldValue.increment(1),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
     
     return newUser;
@@ -170,6 +184,20 @@ class EmployeeRepository {
             .doc(storeId);
         transaction.update(
             storeRef, {'stats.totalEmployees': FieldValue.increment(-1)});
+
+        // Update Store Stats Summary Document
+        final statsSummaryRef = _firestore
+            .collection(FirebaseConstants.storesCollection)
+            .doc(storeId)
+            .collection('stats')
+            .doc('summary');
+        transaction.set(
+            statsSummaryRef,
+            {
+              'totalEmployees': FieldValue.increment(-1),
+              'lastUpdated': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true));
       }
     });
   }

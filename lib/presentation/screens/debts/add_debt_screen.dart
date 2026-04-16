@@ -48,8 +48,6 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     final debtProvider = context.read<DebtProvider>();
     final authProvider = context.read<AuthProvider>();
 
-    debtProvider.clearError();
-
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
@@ -244,7 +242,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (provider.hasError && provider.errorMessage != null)
+            if (provider.errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),

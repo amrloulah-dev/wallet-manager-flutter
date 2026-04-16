@@ -1,9 +1,7 @@
-import 'package:firebase_performance/firebase_performance.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/providers/app_events.dart';
 import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -27,33 +25,64 @@ enum DebtStatus {
 
 class DebtProvider extends ChangeNotifier {
   final DebtRepository _debtRepository;
+  AuthProvider _authProvider;
 
+  // State
   String? _currentStoreId;
-  final AuthProvider _authProvider;
   List<DebtModel> _debts = [];
   Map<String, DebtModel> _debtMap = {};
   Map<String, dynamic> _summary = {};
-  DocumentSnapshot? _lastDocument;
-  bool _hasMore = true;
-
-  Timer? _fetchShieldTimer;
-  bool _fetchShieldActive = false;
-
-  void _activateFetchShield() {
-    _fetchShieldActive = true;
-    _fetchShieldTimer?.cancel();
-    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
-      _fetchShieldActive = false;
-    });
-  }
-
-  void _rebuildDebtMap() {
-    _debtMap = {for (var debt in _debts) debt.debtId: debt};
-  }
 
   // Status
   DebtStatus _status = DebtStatus.idle;
   String? _errorMessage;
+
+  // Filter
+  String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
+  String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
+
+  int _currentLimit = 20;
+  bool _hasMore = true;
+
+  StreamSubscription? _debtsSubscription;
+  bool _isDisposed = false;
+
+  // Constructor
+  DebtProvider({
+    required AuthProvider authProvider,
+    DebtRepository? debtRepository,
+    String? storeId,
+  })  : _authProvider = authProvider,
+        _debtRepository = debtRepository ?? sl<DebtRepository>(),
+        _currentStoreId = storeId {
+    // ── Streams-Driven Sync (Phase 1) ──
+    // Manual AppEvents listener removed. Data sync is now handled by _debtsSubscription
+    // established in fetchInitialDebts().
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _debtsSubscription?.cancel();
+    super.dispose();
+  }
+
+  // Getters
+  List<DebtModel> get debts => _debts;
+  Map<String, DebtModel> get debtMap => _debtMap;
+  Map<String, dynamic> get summary => _summary;
+  DebtStatus get status => _status;
+  String? get errorMessage => _errorMessage;
+  String get currentFilter => _currentFilter;
+  String get currentDebtType => _currentDebtType;
+  bool get isLoading => _status == DebtStatus.loading;
+  bool get isLoadingMore => _status == DebtStatus.loadingMore;
+  bool get isCreating => _status == DebtStatus.creating;
+  bool get isUpdating => _status == DebtStatus.updating;
+
+  void _rebuildDebtMap() {
+    _debtMap = {for (var debt in _debts) debt.debtId: debt};
+  }
 
   void _updateStatus(DebtStatus status) {
     if (_isDisposed) return;
@@ -74,200 +103,78 @@ class DebtProvider extends ChangeNotifier {
           operation: 'debt_operation',
           stackTrace: stack);
     }
+    _safeNotify();
   }
 
-  // Filter
-  String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
-  String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
-
-  // Cache
-  List<DebtModel>? _cachedDebts;
-  DateTime? _cacheTimestamp;
-
-  StreamSubscription? _dataChangedSubscription;
-  bool _isDisposed = false;
-
-  // Constructor
-  DebtProvider({
-    required AuthProvider authProvider,
-    DebtRepository? debtRepository,
-    String? storeId,
-  })  : _authProvider = authProvider,
-        _debtRepository = debtRepository ?? sl<DebtRepository>(),
-        _currentStoreId = storeId {
-    _dataChangedSubscription = appEvents.onDebtsChanged.listen((_) {
-      if (_currentStoreId != null &&
-          !isLoading &&
-          !isLoadingMore &&
-          !_fetchShieldActive) {
-        fetchInitialDebts(forceRefresh: true);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    _dataChangedSubscription?.cancel();
-    _fetchShieldTimer?.cancel();
-    super.dispose();
-  }
-
-  // Getters
-  List<DebtModel> get debts => _debts;
-  Map<String, DebtModel> get debtMap => _debtMap;
-  Map<String, dynamic> get summary => _summary;
-  DebtStatus get status => _status;
-  String? get errorMessage => _errorMessage;
-  String get currentFilter => _currentFilter;
-  String get currentDebtType => _currentDebtType;
-  String? get currentStoreId => _currentStoreId;
-  bool get hasMore => _hasMore;
-
-  // Helper getters
-  bool get isLoading => _status == DebtStatus.loading;
-  bool get isLoadingMore => _status == DebtStatus.loadingMore;
-  bool get isCreating => _status == DebtStatus.creating;
-  bool get isUpdating => _status == DebtStatus.updating;
-  bool get hasError => _status == DebtStatus.error;
-
-  // Methods
-
-  void updateAuthState(AuthProvider auth) {
-    _currentStoreId = auth.currentStoreId;
-  }
-
-  Future<UserModel> _validateUserAndPermission(
-      bool Function(UserPermissions) selector) async {
-    final user = await _authProvider.ensureUserLoaded();
-
-    if (user == null) {
-      throw AuthException(
-          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
-    }
-
-    if (user.isOwner) return user;
-
-    if (!user.hasPermission(selector)) {
-      throw PermissionException();
-    }
-
-    return user;
-  }
-
-  void setStoreId(String storeId) {
+  void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _cachedDebts = null;
-      _cacheTimestamp = null;
+      _currentLimit = 20;
       fetchInitialDebts();
     }
+  }
+
+  void updateAuthState(AuthProvider auth) {
+    _authProvider = auth;
+    setStoreId(auth.currentStoreId);
   }
 
   void setDebtType(String type) {
     if (_currentDebtType != type) {
       _currentDebtType = type;
-      _cachedDebts = null;
-      _cacheTimestamp = null;
-      fetchInitialDebts(forceRefresh: true);
+      _currentLimit = 20;
+      fetchInitialDebts();
+    }
+  }
+
+  void setFilter(String filter) {
+    if (_currentFilter != filter) {
+      _currentFilter = filter;
+      _currentLimit = 20;
+      fetchInitialDebts();
     }
   }
 
   Future<void> fetchInitialDebts({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
 
-    final now = DateTime.now();
-    if (!forceRefresh && _fetchShieldActive) {
-      return;
-    }
+    debugPrint('🔥 [TX_FLOW] [debt_provider] -> fetchInitialDebts: '
+        'Establishing stream subscription | storeId=$_currentStoreId, limit=$_currentLimit');
 
-    if (!forceRefresh &&
-        _cachedDebts != null &&
-        _cacheTimestamp != null &&
-        now.difference(_cacheTimestamp!).inMinutes < 2) {
-      _debts = _cachedDebts!;
-      _rebuildDebtMap();
-      if (status != DebtStatus.loaded) {
-        _updateStatus(DebtStatus.loaded);
-        _safeNotify();
-      }
-      return;
-    }
-
-    final trace = FirebasePerformance.instance.newTrace('fetch_initial_debts');
-    await trace.start();
-
+    _debtsSubscription?.cancel();
     _updateStatus(DebtStatus.loading);
-    _lastDocument = null;
-    _hasMore = true;
-    _errorMessage = null;
     _safeNotify();
 
-    try {
-      final result = await _debtRepository.getDebtsByStoreIdPaginated(
-        _currentStoreId!,
-        status: _currentFilter == 'all' ? null : _currentFilter,
-        type: _currentDebtType,
-        limit: 20,
-      );
-
-      _debts = result['debts'];
+    _debtsSubscription = _debtRepository
+        .getDebtsStream(
+      _currentStoreId!,
+      status: _currentFilter == 'all' ? null : _currentFilter,
+      type: _currentDebtType,
+      limit: _currentLimit,
+    )
+        .listen((fetchedDebts) {
+      _debts = List<DebtModel>.from(fetchedDebts);
+      _hasMore = fetchedDebts.length >= _currentLimit;
       _rebuildDebtMap();
-      _lastDocument = result['lastDoc'];
-      _hasMore = _debts.length == 20;
-      _cachedDebts = _debts;
-      _cacheTimestamp = now;
-
-      await _fetchSummary();
-      _activateFetchShield();
+      _fetchSummary(); // Still fetch summary separately as it's an aggregate
       _updateStatus(DebtStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e, stack) {
-      _setError('حدث خطأ غير متوقع أثناء جلب الديون.', e, stack);
-    } finally {
-      await trace.stop();
-      if (_status == DebtStatus.loading) {
-        _updateStatus(DebtStatus.loaded);
-      }
       _safeNotify();
-    }
+    }, onError: (e, stack) {
+      _setError('حدث خطأ في تيار الديون.', e, stack);
+    });
   }
 
-  Future<void> fetchMoreDebts() async {
+  void fetchMoreDebts() {
     if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
     }
 
+    debugPrint('🔥 [TX_FLOW] [debt_provider] -> fetchMoreDebts: '
+        'Increasing limit | oldLimit=$_currentLimit');
+
+    _currentLimit += 20;
     _updateStatus(DebtStatus.loadingMore);
-    _safeNotify();
-
-    try {
-      final result = await _debtRepository.getDebtsByStoreIdPaginated(
-        _currentStoreId!,
-        status: _currentFilter == 'all' ? null : _currentFilter,
-        type: _currentDebtType,
-        limit: 20,
-        lastDoc: _lastDocument,
-      );
-
-      final newDebts = result['debts'];
-      _debts.addAll(newDebts);
-      _rebuildDebtMap();
-      _lastDocument = result['lastDoc'];
-      _hasMore = newDebts.length == 20;
-
-      _updateStatus(DebtStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e, stack) {
-      _setError('حدث خطأ غير متوقع أثناء جلب المزيد من الديون.', e, stack);
-    } finally {
-      if (_status == DebtStatus.loadingMore) {
-        _updateStatus(DebtStatus.loaded);
-      }
-      _safeNotify();
-    }
+    fetchInitialDebts();
   }
 
   Future<void> _fetchSummary() async {
@@ -286,6 +193,7 @@ class DebtProvider extends ChangeNotifier {
         'totalOpenAmount': stats['openTotal'],
         'totalPaidAmount': stats['paidTotal'],
       };
+      _safeNotify();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.low,
@@ -332,14 +240,9 @@ class DebtProvider extends ChangeNotifier {
           createdBy: user.userId,
         );
 
-        _debts.insert(0, newDebt);
-        _rebuildDebtMap();
-
         try {
           await _debtRepository.createDebt(newDebt);
         } catch (e, stack) {
-          _debts.remove(newDebt);
-          _rebuildDebtMap();
           AppErrorHandler.handle(e,
               severity: ErrorSeverity.medium,
               operation: 'debt_create',
@@ -357,8 +260,6 @@ class DebtProvider extends ChangeNotifier {
         );
       }
 
-      appEvents.fireDebtsChanged();
-      _activateFetchShield();
       _updateStatus(DebtStatus.loaded); // Reset status
       return true;
     } on AppException catch (e) {
@@ -382,29 +283,12 @@ class DebtProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
-      final index = _debts.indexWhere((d) => d.debtId == debtId);
-      final oldDebt = index >= 0 ? _debts[index] : null;
-
-      if (index >= 0) {
-        _debts[index] = _debts[index].copyWith(
-          amountDue: _debts[index].amountDue + amountToAdd,
-          totalAmount: _debts[index].totalAmount + amountToAdd,
-        );
-        _rebuildDebtMap();
-      }
-
       try {
         await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
       } catch (e) {
-        if (oldDebt != null) {
-          _debts[index] = oldDebt;
-          _rebuildDebtMap();
-        }
         rethrow;
       }
 
-      appEvents.fireDebtsChanged();
-      _activateFetchShield();
       return true;
     } on AppException catch (e) {
       _setError(e.message);
@@ -424,44 +308,14 @@ class DebtProvider extends ChangeNotifier {
     _updateStatus(DebtStatus.updating);
     _safeNotify();
     try {
-      // No specific permission for generic update, assuming createDebt or manageDebt covers it
-      // If a specific permission is needed, it should be added here.
-      // For now we will replicate the check if feasible or leave it if it was open.
-      // User requested "Refactor all Write methods", so I'll add a safe check for createDebt as a baseline
       await _validateUserAndPermission((p) => p.createDebt);
-
-      final index = _debts.indexWhere((d) => d.debtId == debtId);
-      final oldDebt = index >= 0 ? _debts[index] : null;
-
-      if (index >= 0) {
-        // Since we don't know exactly what changed, we can't fully optimistically apply the map for everything
-        // But we can attempt for typical fields
-        if (data.containsKey('customerName')) {
-          _debts[index] =
-              _debts[index].copyWith(customerName: data['customerName']);
-        }
-        if (data.containsKey('customerPhone')) {
-          _debts[index] =
-              _debts[index].copyWith(customerPhone: data['customerPhone']);
-        }
-        if (data.containsKey('notes')) {
-          _debts[index] = _debts[index].copyWith(notes: data['notes']);
-        }
-        _rebuildDebtMap();
-      }
 
       try {
         await _debtRepository.updateDebt(debtId, data);
       } catch (e) {
-        if (oldDebt != null) {
-          _debts[index] = oldDebt;
-          _rebuildDebtMap();
-        }
         rethrow;
       }
 
-      appEvents.fireDebtsChanged();
-      _activateFetchShield();
       return true;
     } on ServerException catch (e) {
       _setError(e.message);
@@ -482,38 +336,20 @@ class DebtProvider extends ChangeNotifier {
     _updateStatus(DebtStatus.updating);
     _safeNotify();
     try {
-      await _validateUserAndPermission((p) => p.collectDebt);
-
-      final index = _debts.indexWhere((d) => d.debtId == debtId);
-      final oldDebt = index >= 0 ? _debts[index] : null;
-
-      if (index >= 0) {
-        final newDue = _debts[index].amountDue - amountToPay;
-        _debts[index] = _debts[index].copyWith(
-          amountDue: newDue < 0 ? 0 : newDue,
-          debtStatus: newDue <= 0 ? 'paid' : 'open',
-        );
-        _rebuildDebtMap();
-      }
+      await _validateUserAndPermission((p) => p.createDebt);
 
       try {
         await _debtRepository.processPayment(debtId, amountToPay, userId);
       } catch (e) {
-        if (oldDebt != null) {
-          _debts[index] = oldDebt;
-          _rebuildDebtMap();
-        }
         rethrow;
       }
 
-      appEvents.fireDebtsChanged();
-      _activateFetchShield();
       return true;
     } on AppException catch (e) {
       _setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في معالجة الدفعة.', e, stack);
+      _setError('فشل في تسديد الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.updating) {
@@ -529,32 +365,14 @@ class DebtProvider extends ChangeNotifier {
     try {
       await _validateUserAndPermission((p) => p.deleteDebt);
 
-      final index = _debts.indexWhere((element) => element.debtId == debtId);
-      final oldDebt = index >= 0 ? _debts[index] : null;
-
-      if (index >= 0) {
-        _debts.removeAt(index);
-        _rebuildDebtMap();
-      }
-
       try {
         await _debtRepository.deleteDebt(debtId);
       } catch (e) {
-        if (oldDebt != null) {
-          _debts.insert(index, oldDebt);
-          _rebuildDebtMap();
-        }
         rethrow;
       }
 
-      // Refresh statistics as totals changed
-      await _fetchSummary();
-
-      _activateFetchShield();
-      _updateStatus(DebtStatus.loaded);
-      appEvents.fireStatsRefresh();
       return true;
-    } on AppException catch (e) {
+    } on ServerException catch (e) {
       _setError(e.message);
       return false;
     } catch (e, stack) {
@@ -568,30 +386,17 @@ class DebtProvider extends ChangeNotifier {
     }
   }
 
-  void setFilter(String filter) {
-    if (['all', 'open', 'paid'].contains(filter) && _currentFilter != filter) {
-      _currentFilter = filter;
-      fetchInitialDebts(forceRefresh: true);
-    }
-  }
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) permissionCheck) async {
+    final user = _authProvider.currentUser;
+    if (user == null) throw AuthException('يجب تسجيل الدخول أولاً.');
 
-  void clearError() {
-    _errorMessage = null;
-    _status = DebtStatus.idle;
-    _safeNotify();
-  }
+    // Owners have all permissions
+    if (user.isOwner) return user;
 
-  Future<List<DebtModel>> fetchDebtsForDateRange(
-      DateTime startDate, DateTime endDate) async {
-    if (_currentStoreId == null) return [];
-    try {
-      return await _debtRepository.getDebtsByDateRange(
-          _currentStoreId!, startDate, endDate);
-    } catch (e, stack) {
-      _setError('فشل جلب ديون هذه الفترة.', e, stack);
-      _safeNotify();
-      return [];
+    if (user.permissions == null || !permissionCheck(user.permissions!)) {
+      throw PermissionException();
     }
+    return user;
   }
 }
-

@@ -98,7 +98,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     final statsProvider = context.read<StatisticsProvider>();
     await Future.wait([
       statsProvider.fetchDashboardStats(forceRefresh: true),
-      context.read<WalletProvider>().fetchInitialWallets(forceRefresh: true),
+      context.read<WalletProvider>().refresh(),
       context
           .read<TransactionProvider>()
           .fetchInitialTransactions(forceRefresh: true),

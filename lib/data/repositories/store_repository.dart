@@ -203,28 +203,30 @@ class StoreRepository {
   /// Updates the statistics for a specific store.
   Future<void> updateStoreStats({
     required String storeId,
-    int? totalWallets,
-    int? activeWallets,
-    int? totalTransactionsToday,
-    double? totalCommissionToday,
+    int? incrementTotalWallets,
+    int? incrementActiveWallets,
+    int? incrementTotalTransactionsToday,
+    double? incrementTotalCommissionToday,
   }) async {
     try {
       final Map<String, dynamic> statsData = {
-        FirebaseConstants.statsLastUpdated: FieldValue.serverTimestamp(),
+        '${FirebaseConstants.stats}.lastUpdated': FieldValue.serverTimestamp(),
       };
-      if (totalWallets != null) {
-        statsData[FirebaseConstants.totalWallets] = totalWallets;
+      if (incrementTotalWallets != null) {
+        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalWallets}'] =
+            FieldValue.increment(incrementTotalWallets);
       }
-      if (activeWallets != null) {
-        statsData[FirebaseConstants.activeWallets] = activeWallets;
+      if (incrementActiveWallets != null) {
+        statsData['${FirebaseConstants.stats}.${FirebaseConstants.activeWallets}'] =
+            FieldValue.increment(incrementActiveWallets);
       }
-      if (totalTransactionsToday != null) {
-        statsData[FirebaseConstants.totalTransactionsToday] =
-            totalTransactionsToday;
+      if (incrementTotalTransactionsToday != null) {
+        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}'] =
+            FieldValue.increment(incrementTotalTransactionsToday);
       }
-      if (totalCommissionToday != null) {
-        statsData[FirebaseConstants.totalCommissionToday] =
-            totalCommissionToday;
+      if (incrementTotalCommissionToday != null) {
+        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}'] =
+            FieldValue.increment(incrementTotalCommissionToday);
       }
       await _storesCollection.doc(storeId).update(statsData);
     } on FirebaseException catch (e) {

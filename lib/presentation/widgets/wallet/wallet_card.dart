@@ -68,7 +68,7 @@ class _WalletCardState extends State<WalletCard> {
                 _buildStats(context, reactiveWallet),
                 if (widget.onEdit != null || widget.onDelete != null) ...[
                   const SizedBox(height: 12),
-                  _buildActions(),
+                  _buildActions(isFrozen),
                 ]
               ],
             ),
@@ -96,9 +96,6 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
-    final provider = context.watch<WalletProvider>();
-    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
-    
     return Row(
       children: [
         Icon(wallet.walletTypeIcon, size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
@@ -251,13 +248,13 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildActions() {
+  Widget _buildActions(bool isFrozen) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         if (widget.onEdit != null)
           ElevatedButton.icon(
-            onPressed: widget.onEdit,
+            onPressed: isFrozen ? null : widget.onEdit,
             icon:
                 const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
             label: const Text(
@@ -265,7 +262,7 @@ class _WalletCardState extends State<WalletCard> {
               style: TextStyle(color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: isFrozen ? Colors.grey : AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
           ),
@@ -275,10 +272,10 @@ class _WalletCardState extends State<WalletCard> {
         if (widget.onDelete != null)
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: isFrozen ? Colors.grey : AppColors.error,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            onPressed: widget.onDelete,
+            onPressed: isFrozen ? null : widget.onDelete,
             icon:
                 const Icon(Icons.delete_outline, size: 18, color: Colors.white),
             label: const Text(

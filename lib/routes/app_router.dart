@@ -125,7 +125,7 @@ class AppRouter {
                     Provider.of<AuthProvider>(context, listen: false)),
             update: (_, auth, prev) =>
                 (prev ?? DebtProvider(authProvider: auth))
-                  ..updateAuthState(auth),
+                  ..setStoreId(auth.currentStoreId),
             child: _getPageForDebtRoute(settings),
           ),
           settings,

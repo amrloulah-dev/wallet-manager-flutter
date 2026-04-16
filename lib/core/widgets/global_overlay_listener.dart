@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GlobalOverlayListener extends StatefulWidget {
   final Widget child;
@@ -57,7 +59,25 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
 
       if (mounted) {
         context.read<StatisticsProvider>().addTransactionOptimistically(data);
-        context.read<TransactionProvider>().insertTransactionLocally(data);
+
+        final String nowStr = data['transactionDate']?.toString() ?? DateTime.now().toIso8601String();
+        final tx = TransactionModel(
+          transactionId: data['transactionId']?.toString() ?? '',
+          storeId: data['storeId']?.toString() ?? '',
+          walletId: data['walletId']?.toString() ?? '',
+          transactionType: data['type'] == 'debit' ? 'send' : 'receive',
+          customerPhone: data['sender']?.toString(),
+          customerName: data['customerName']?.toString(),
+          amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+          commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+          serviceFee: 0.0, 
+          paymentStatus: data['paymentStatus']?.toString() ?? 'paid',
+          transactionDate: Timestamp.fromDate(DateTime.parse(nowStr)),
+          createdAt: Timestamp.fromDate(DateTime.parse(nowStr)),
+          createdBy: 'SMS Auto',
+        );
+        
+        context.read<TransactionProvider>().insertTransactionLocally(tx);
 
         // ── Zero-cost local wallet mutation ──
         // Apply the balance deduction directly to RAM.

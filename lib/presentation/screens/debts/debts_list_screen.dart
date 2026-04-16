@@ -157,7 +157,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         }
 
         return Selector<DebtProvider, bool>(
-          selector: (context, provider) => provider.hasError,
+          selector: (context, provider) => provider.errorMessage != null,
           builder: (context, hasError, child) {
             if (hasError) {
               final provider = context.read<DebtProvider>();

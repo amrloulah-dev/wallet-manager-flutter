@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
@@ -51,6 +50,24 @@ class StatsRepository {
     }
   }
 
+  Stream<DailyStatsModel> watchTodayStats(String storeId) {
+    final todayDate = DateHelper.getCurrentDateString();
+    return _firestore
+        .collection('stores')
+        .doc(storeId)
+        .collection('daily_stats')
+        .doc(todayDate)
+        .snapshots()
+        .map((doc) {
+      if (doc.exists) {
+        return DailyStatsModel.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
+      } else {
+        return DailyStatsModel.empty(todayDate);
+      }
+    });
+  }
+
   Stream<StatsSummaryModel> watchStatsSummary(String storeId) {
     return _getSummaryDocRef(storeId).snapshots().map((doc) {
       if (doc.exists) {
@@ -75,7 +92,9 @@ class StatsRepository {
     final docRef = _getSummaryDocRef(storeId);
     final Map<String, dynamic> updates = {
       'totalTransactions': FieldValue.increment(1),
+      'totalTransactionsToday': FieldValue.increment(1),
       'totalCommission': FieldValue.increment(tx.commission),
+      'totalCommissionToday': FieldValue.increment(tx.commission),
       'lastUpdated': FieldValue.serverTimestamp(),
     };
 
@@ -98,7 +117,6 @@ class StatsRepository {
     });
   }
 
-  @visibleForTesting
   Future<void> updateStatsOnDebtUpdate({
     required Transaction firestoreTransaction,
     required String storeId,
@@ -147,39 +165,17 @@ class StatsRepository {
 
     if (updates.length > 1) {
       // more than just lastUpdated
-      final summaryDoc = await firestoreTransaction.get(summaryRef);
-
-      if (!summaryDoc.exists) {
-        final initialStats = StatsSummaryModel.empty();
-        final initialMap = initialStats.toMap();
-
-        // Apply increments manually to the initial map
-        updates.forEach((key, value) {
-          if (value.toString().contains('Increment')) {
-            // This is a bit of a hack to get the increment value.
-            // A better solution would be to not use FieldValue here, but this keeps the logic consistent.
-            final incrementValue = double.tryParse(
-                    value.toString().split('(').last.split(')').first) ??
-                0.0;
-            if (initialMap[key] is int) {
-              initialMap[key] =
-                  (initialMap[key] as int) + incrementValue.toInt();
-            } else if (initialMap[key] is double) {
-              initialMap[key] = (initialMap[key] as double) + incrementValue;
-            }
-          }
-        });
-        initialMap['lastUpdated'] = FieldValue.serverTimestamp();
-        firestoreTransaction.set(summaryRef, initialMap..remove('lastUpdated'));
-      } else {
-        firestoreTransaction.update(summaryRef, updates);
-      }
+      firestoreTransaction.set(summaryRef, updates, SetOptions(merge: true));
     }
   }
 
   Future<void> updateStatsOnWalletChange(String storeId,
-      {int countChange = 0, double balanceChange = 0.0}) async {
-    if (countChange == 0 && balanceChange == 0.0) return;
+      {int countChange = 0,
+      int activeCountChange = 0,
+      double balanceChange = 0.0}) async {
+    if (countChange == 0 && activeCountChange == 0 && balanceChange == 0.0) {
+      return;
+    }
 
     final docRef = _getSummaryDocRef(storeId);
     final Map<String, dynamic> updates = {
@@ -188,10 +184,27 @@ class StatsRepository {
     if (countChange != 0) {
       updates['totalWallets'] = FieldValue.increment(countChange);
     }
+    if (activeCountChange != 0) {
+      updates['activeWallets'] = FieldValue.increment(activeCountChange);
+    }
     if (balanceChange != 0.0) {
       updates['totalBalance'] = FieldValue.increment(balanceChange);
     }
     await docRef.update(updates);
+
+    // Also update Store Document root stats field (Legacy support)
+    final storeRef = _firestore.collection('stores').doc(storeId);
+    final Map<String, dynamic> storeUpdates = {
+      'stats.lastUpdated': FieldValue.serverTimestamp(),
+    };
+    if (countChange != 0) {
+      storeUpdates['stats.totalWallets'] = FieldValue.increment(countChange);
+    }
+    if (activeCountChange != 0) {
+      storeUpdates['stats.activeWallets'] =
+          FieldValue.increment(activeCountChange);
+    }
+    await storeRef.update(storeUpdates);
   }
 
   Future<void> reconcileStatsFromWallets(String storeId) async {
@@ -201,8 +214,8 @@ class StatsRepository {
           .doc(storeId)
           .collection('wallets')
           .get();
-      double totalBalance = snapshots.docs
-          .fold(0, (sum, doc) => sum + (doc.data()['balance'] as num).toDouble());
+      double totalBalance = snapshots.docs.fold(
+          0, (acc, doc) => acc + (doc.data()['balance'] as num).toDouble());
       int totalWallets = snapshots.docs.length;
 
       final summaryRef = _getSummaryDocRef(storeId);

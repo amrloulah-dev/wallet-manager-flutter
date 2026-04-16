@@ -195,6 +195,39 @@ class TransactionValidatorService {
       // Commit Wallet Updates
       tx.update(walletRef, walletUpdateData);
 
+      // Update Store Stats Summary Document
+      final statsSummaryRef = _firestore
+          .collection('stores')
+          .doc(transaction.storeId)
+          .collection('stats')
+          .doc('summary');
+
+      final Map<String, dynamic> summaryUpdates = {
+        'totalTransactions': FieldValue.increment(1),
+        'totalTransactionsToday': FieldValue.increment(1),
+        'totalCommission': FieldValue.increment(transaction.commission),
+        'totalCommissionToday': FieldValue.increment(transaction.commission),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+
+      if (transaction.isSend) {
+        summaryUpdates['sendCount'] = FieldValue.increment(1);
+        summaryUpdates['totalSentAmount'] = FieldValue.increment(transaction.amount);
+      } else if (transaction.isReceive) {
+        summaryUpdates['receiveCount'] = FieldValue.increment(1);
+        summaryUpdates['totalReceivedAmount'] = FieldValue.increment(transaction.amount);
+      }
+
+      tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
+
+      // Update Store Document's root stats field (Legacy support)
+      final storeRef = _firestore.collection('stores').doc(transaction.storeId);
+      tx.update(storeRef, {
+        'stats.totalTransactionsToday': FieldValue.increment(1),
+        'stats.totalCommissionToday': FieldValue.increment(transaction.commission),
+        'stats.lastUpdated': FieldValue.serverTimestamp(),
+      });
+
       // Update Daily Stats Document
       final dailyStatsRef = _firestore
           .collection('stores')

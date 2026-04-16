@@ -158,7 +158,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
           return CustomErrorWidget(
             message: errorMessage ??
                 AppLocalizations.of(context)!.somethingWentWrong,
-            onRetry: context.read<WalletProvider>().fetchInitialWallets,
+            onRetry: () => context.read<WalletProvider>().fetchInitialWallets(forceRefresh: true),
           );
         }
 
@@ -184,7 +184,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
             }
 
             return RefreshIndicator(
-              onRefresh: context.read<WalletProvider>().fetchInitialWallets,
+              onRefresh: () => context.read<WalletProvider>().refresh(),
               child: Column(
                 children: [
                   _buildSummaryCard(filteredWallets),

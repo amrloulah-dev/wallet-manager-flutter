@@ -53,6 +53,33 @@ class DebtRepository {
   }
 
   // 2️⃣ READ
+  Stream<List<DebtModel>> getDebtsStream(
+    String storeId, {
+    String? status,
+    String? type,
+    int limit = 20,
+  }) {
+    try {
+      Query query = _debtsCollection
+          .where(FirebaseConstants.storeId, isEqualTo: storeId)
+          .orderBy('debtDate', descending: true);
+
+      if (status != null) {
+        query = query.where('debtStatus', isEqualTo: status);
+      }
+
+      if (type != null) {
+        query = query.where('debtType', isEqualTo: type);
+      }
+
+      return query.limit(limit).snapshots().map((snapshot) {
+        return snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+      });
+    } catch (e) {
+      return Stream.error(ServerException('فشل الحصول على تيار الديون: $e'));
+    }
+  }
+
   Future<DebtModel?> getDebtById(String debtId) async {
     final cacheKey = 'debt_details_$debtId';
     final cachedDebt = _cacheManager.get<DebtModel>(cacheKey);
@@ -72,64 +99,6 @@ class DebtRepository {
     } catch (e) {
       throw ServerException(
           'An unexpected error occurred while fetching the debt.');
-    }
-  }
-
-  Future<Map<String, dynamic>> getDebtsByStoreIdPaginated(
-    String storeId, {
-    String? status,
-    String? type,
-    int limit = 15,
-    DocumentSnapshot? lastDoc,
-  }) async {
-    // Caching logic remains the same
-    if (lastDoc == null) {
-      final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
-      final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
-      if (cachedResult != null) {
-        return cachedResult;
-      }
-    }
-
-    try {
-      Query query = _debtsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .orderBy('debtDate', descending: true);
-
-      if (status != null) {
-        query = query.where('debtStatus', isEqualTo: status);
-      }
-
-      if (type != null) {
-        query = query.where('debtType', isEqualTo: type);
-      }
-
-      if (lastDoc != null) {
-        query = query.startAfterDocument(lastDoc);
-      }
-
-      final snapshot = await query.limit(limit).get();
-      final debts =
-          snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
-      final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-
-      final result = {
-        'debts': debts,
-        'lastDoc': newLastDoc,
-      };
-
-      if (lastDoc == null) {
-        final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
-        _cacheManager.set(cacheKey, result);
-      }
-
-      return result;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to get store debts: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching store debts.');
     }
   }
 

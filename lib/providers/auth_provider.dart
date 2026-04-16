@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/providers/app_events.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../core/utils/password_hasher.dart';
 import '../data/repositories/auth_repository.dart';
@@ -232,10 +231,10 @@ class AuthProvider extends ChangeNotifier {
 
             _setStatus(AuthStatus.authenticated);
 
-            // Fire events to load data
-            appEvents.fireWalletsChanged();
-            appEvents.fireTransactionsChanged();
-            appEvents.fireDebtsChanged();
+            // ── Streams-Driven Sync (Phase 1) ──
+            // Manual AppEvents listener removed. Data sync is now handled by stream listeners
+            // established in respective providers.
+
             return;
           }
         }
@@ -492,9 +491,6 @@ class AuthProvider extends ChangeNotifier {
     );
 
     _setStatus(AuthStatus.authenticated);
-    appEvents.fireWalletsChanged();
-    appEvents.fireTransactionsChanged();
-    appEvents.fireDebtsChanged();
 
     return storeId;
   }
@@ -587,24 +583,20 @@ class AuthProvider extends ChangeNotifier {
         }
       }
 
-      if (!identityAuthSuccess && (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
-        // Attempt lazy provisioning in background
-        IdentityService.provisionIdentity(
-          phone: employee.phone ?? '',
-          storeId: employee.storeId,
-          pin: employee.pin ?? '',
-        ).then((newUid) {
-          if (newUid != null) {
-            _userRepository.updateUser(employee.userId, {'firebaseUid': newUid});
-          }
-        }).catchError((e, stack) {
-          AppErrorHandler.handle(
-            Exception('فشل التزويد المتأخر للهوية: \$e'),
-            stackTrace: stack,
-            severity: ErrorSeverity.low,
-            operation: 'AuthProvider.lazyProvision',
-          );
-        });
+      if (!identityAuthSuccess &&
+          (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
+        // Secure the Login Flow (Feature 004): Await provisioning
+        try {
+          final newUid = await _lazyProvision(employee);
+          await _userRepository
+              .updateUser(employee.userId, {'firebaseUid': newUid});
+          // Update the local object so subsequent logic has the UID
+          employee = employee.copyWith(firebaseUid: newUid);
+        } catch (e) {
+          // Cleanup incomplete session
+          await FirebaseAuth.instance.signOut();
+          rethrow; // Re-throw for UI/Catch block to handle
+        }
       }
 
       _currentUser = employee;
@@ -629,9 +621,6 @@ class AuthProvider extends ChangeNotifier {
       );
 
       _setStatus(AuthStatus.authenticated);
-      appEvents.fireWalletsChanged();
-      appEvents.fireTransactionsChanged();
-      appEvents.fireDebtsChanged();
       return true;
     } catch (e, stack) {
       final msg = e is AppException ? e.message : 'فشل تسجيل دخول الموظف.';
@@ -644,6 +633,12 @@ class AuthProvider extends ChangeNotifier {
       _setError(msg);
       await logout();
       return false;
+    } finally {
+      // Ensure loading is false (Task 2)
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle);
+      }
+      _safeNotify();
     }
   }
 
@@ -804,9 +799,6 @@ class AuthProvider extends ChangeNotifier {
       await _userRepository.updateLastLogin(updatedEmployee.userId);
 
       _setStatus(AuthStatus.authenticated);
-      appEvents.fireWalletsChanged();
-      appEvents.fireTransactionsChanged();
-      appEvents.fireDebtsChanged();
     } catch (e) {
       _setError(e is AppException
           ? e.message
@@ -896,6 +888,43 @@ class AuthProvider extends ChangeNotifier {
       incrementCommission: incrementCommission,
       incrementDebts: incrementDebts,
     );
+  }
+
+  /// Refactor Provisioning Logic (Feature 004)
+  /// Implements a single retry followed by a fail-fast block.
+  Future<String> _lazyProvision(UserModel employee) async {
+    final phone = employee.phone ?? '';
+    final storeId = employee.storeId;
+    final pin = employee.pin ?? '';
+
+    try {
+      // Attempt 1
+      final uid = await IdentityService.provisionIdentity(
+        phone: phone,
+        storeId: storeId,
+        pin: pin,
+      );
+      if (uid != null) return uid;
+      throw Exception('Initial provisioning returned null');
+    } catch (e) {
+      // Smart Retry: wait 1 second
+      await Future.delayed(const Duration(seconds: 1));
+
+      try {
+        // Attempt 2
+        final uid = await IdentityService.provisionIdentity(
+          phone: phone,
+          storeId: storeId,
+          pin: pin,
+        );
+        if (uid != null) return uid;
+        throw Exception('Retry provisioning returned null');
+      } catch (retryError) {
+        // Fail-Fast: throw explicit exception to block login
+        throw Exception(
+            'Failed to provision employee identity. Please check your internet connection and try again.');
+      }
+    }
   }
 
   void _setStatus(AuthStatus status) {

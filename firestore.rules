@@ -3,76 +3,111 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- دوال مساعدة ---
-    function isOwner(storeId) {
-      return request.auth != null && request.auth.uid == storeId;
+    // ==========================================
+    // 1. دوال مساعدة أمنية (Security Helpers)
+    // ==========================================
+    
+    // هل المستخدم مسجل دخول؟
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // --- (جديد) قاعدة سجل الأجهزة ---
-    // هذا الكولكشن يستخدم لفحص أهلية الجهاز قبل التسجيل
+    // هل المستخدم هو "صاحب المتجر"؟ (بافتراض أن storeId هو نفس الـ UID الخاص بالمالك)
+    function isStoreOwner(storeId) {
+      return isAuthenticated() && request.auth.uid == storeId;
+    }
+
+    // هل المستخدم "موظف" في هذا المتجر؟ 
+    // (نقوم بقراءة مستند المستخدم من قاعدة البيانات بأمان للتحقق من المتجر التابع له)
+    function isStoreEmployee(storeId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.storeId == storeId;
+    }
+
+    // هل يحق للمستخدم الوصول؟ (إما صاحب المتجر أو موظف فيه)
+    function canAccessStore(storeId) {
+      return isStoreOwner(storeId) || isStoreEmployee(storeId);
+    }
+
+    // ==========================================
+    // 2. القواعد الأساسية (The Rules)
+    // ==========================================
+
+    // --- سجل الأجهزة (مكافحة الاحتيال) ---
     match /device_registrations/{deviceId} {
-      // القراءة: مسموح للجميع (عشان نفحص هل الجهاز موجود ولا لأ)
-      allow read: if true;
-      
-      // الكتابة (الإنشاء/التحديث): مسموح للجميع (عشان نسجل الجهاز الجديد)
-      // الحماية هنا بتتم عن طريق الكود (Logic) مش الـ Rules لأن المستخدم لسه ملوش هوية
-      allow create, update: if true;
-      
-      // الحذف: ممنوع نهائياً
-      allow delete: if false;
+      // ممنوع قراءة كل الأجهزة (list: false). مسموح فقط قراءة أو إنشاء جهاز محدد إذا كنت مسجل دخول
+      allow get: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['deviceId']);
+      allow update, delete, list: if false; // سجل ثابت لا يمكن التلاعب فيه
     }
 
-    // --- باقي القواعد كما هي ---
-
-    // 1. المتاجر (Stores)
-    match /stores/{storeId} {
-      allow read: if true;
-      allow create: if request.auth.uid == storeId;
-      allow update: if isOwner(storeId);
-      allow delete: if false;
-
-      match /stats/summary {
-        allow read: if true;
-        allow create, update: if true;
-      }
-      
-      match /daily_stats/{day} {
-        allow read, write: if true;
-      }
-    }
-
-    // 2. المستخدمين
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if true; 
-      allow update: if true; 
-      allow delete: if isOwner(resource.data.storeId);
-    }
-
-    // 3. مفاتيح الترخيص
+    // --- مفاتيح الترخيص القديمة ---
     match /license_keys/{keyId} {
-      allow read: if true;
-      allow update: if request.auth != null;
-      allow create, delete: if false;
+      // مسموح قراءة أو تحديث مفتاح محدد فقط (لمنع سحب كل المفاتيح)
+      allow get, update: if isAuthenticated(); 
+      allow create, delete, list: if false;
     }
 
-    // 4. العمليات المالية
+    // --- المستخدمين والموظفين ---
+    match /users/{userId} {
+      // المستخدم يقدر يشوف ويعدل بياناته هو شخصياً
+      allow get, update: if isAuthenticated() && request.auth.uid == userId;
+      // صاحب المتجر يقدر يقرأ، يضيف، أو يحذف الموظفين اللي تبع متجره
+      allow read, write: if isAuthenticated() && isStoreOwner(resource.data.storeId);
+      // السماح بإنشاء حساب لنفسك
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // --- المتاجر والإحصائيات ---
+    match /stores/{storeId} {
+      // القراءة للمالك والموظف
+      allow read: if canAccessStore(storeId);
+      
+      // الإنشاء للمالك فقط
+      allow create: if isStoreOwner(storeId);
+      
+      // التعديل للمالك فقط! (حماية لمنع الموظفين من ترقية الباقة أو تغيير اسم المتجر)
+      allow update: if isStoreOwner(storeId); 
+      allow delete: if false;
+
+      // الإحصائيات الفرعية
+      match /stats/summary {
+        allow read, write: if canAccessStore(storeId);
+      }
+      match /daily_stats/{day} {
+        allow read, write: if canAccessStore(storeId);
+      }
+    }
+
+    // ==========================================
+    // 3. العمليات المالية (المنطقة الحمراء)
+    // ==========================================
+    // هنا يجب التأكد أن المستند نفسه يحتوي على storeId وأن المستخدم ينتمي لهذا المتجر
+    
     match /wallets/{walletId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isOwner(resource.data.storeId);
+      allow read: if canAccessStore(resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId);
+      // نمنع نقل المحفظة من متجر لمتجر آخر أثناء التحديث
+      allow update: if canAccessStore(resource.data.storeId) && 
+                       request.resource.data.storeId == resource.data.storeId;
+      allow delete: if canAccessStore(resource.data.storeId);
     }
 
     match /transactions/{transactionId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isOwner(resource.data.storeId);
+      allow read: if canAccessStore(resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId);
+      allow update: if canAccessStore(resource.data.storeId) && 
+                       request.resource.data.storeId == resource.data.storeId;
+      // الحذف ممنوع نهائياً لضمان سلامة السجلات المالية
+      allow delete: if false; 
     }
 
     match /debts/{debtId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isOwner(resource.data.storeId);
+      allow read: if canAccessStore(resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId);
+      allow update: if canAccessStore(resource.data.storeId) && 
+                       request.resource.data.storeId == resource.data.storeId;
+      allow delete: if canAccessStore(resource.data.storeId);
     }
   }
 }

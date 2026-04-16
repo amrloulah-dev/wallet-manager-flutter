@@ -1,4 +1,6 @@
 import 'package:walletmanager/core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/errors/error_severity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -131,9 +133,14 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
           ToastUtils.showError(authProvider.errorMessage!);
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (mounted) {
-        ToastUtils.showError(e is AppException ? e.message : e.toString());
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          severity: ErrorSeverity.critical,
+          operation: 'EmployeeLogin._handleLogin',
+        );
       }
     } finally {
       _setLoading(false);
