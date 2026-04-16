@@ -1,15 +1,4 @@
-import 'package:walletmanager/data/repositories/stats_repository.dart';
-import 'package:walletmanager/data/repositories/wallet_repository.dart';
-import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:walletmanager/data/repositories/employee_repository.dart';
-import 'package:walletmanager/providers/auth_provider.dart';
-import 'package:walletmanager/providers/debt_provider.dart';
-import 'package:walletmanager/providers/employee_provider.dart';
-import 'package:walletmanager/providers/statistics_provider.dart';
-import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import '../core/constants/route_constants.dart';
 import '../presentation/screens/auth/login_landing_screen.dart';
@@ -43,109 +32,30 @@ class AppRouter {
 
       case RouteConstants.employeeLogin:
         final store = settings.arguments as StoreModel;
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository()),
-            update: (_, auth, previous) =>
-                previous!..setStoreId(auth.currentStoreId),
-            child: EmployeeLoginScreen(store: store),
-          ),
-          settings,
-        );
+        return _buildRoute(EmployeeLoginScreen(store: store), settings);
 
       case RouteConstants.ownerDashboard:
-        // ✅ NO local providers — inherits global instances from app.dart's MultiProvider
         return _buildRoute(const MainDashboardScreen(), settings);
 
       case RouteConstants.walletsList:
       case RouteConstants.walletForm:
       case RouteConstants.walletDetails:
       case RouteConstants.addBalance:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-            create: (context) => WalletProvider(
-                authProvider:
-                    Provider.of<AuthProvider>(context, listen: false)),
-            update: (_, auth, prev) =>
-                (prev ?? WalletProvider(authProvider: auth))
-                  ..updateAuthState(auth),
-            child: _getPageForWalletRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForWalletRoute(settings), settings);
 
       case RouteConstants.createTransaction:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-            create: (context) => WalletProvider(
-                authProvider:
-                    Provider.of<AuthProvider>(context, listen: false)),
-            update: (_, auth, prev) =>
-                (prev ?? WalletProvider(authProvider: auth))
-                  ..updateAuthState(auth),
-            // ✅ TransactionProvider inherited from global app.dart
-            child: const CreateTransactionScreen(),
-          ),
-          settings,
-        );
+        return _buildRoute(const CreateTransactionScreen(), settings);
 
       case RouteConstants.todayTransactions:
       case RouteConstants.transactionDetails:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              // ✅ TransactionProvider REMOVED — inherited from global app.dart
-              ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-                create: (_) =>
-                    EmployeeProvider(employeeRepository: EmployeeRepository()),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId),
-              ),
-            ],
-            child: _getPageForTransactionRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForTransactionRoute(settings), settings);
 
       case RouteConstants.debtsList:
       case RouteConstants.addDebt:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-            create: (context) => DebtProvider(
-                authProvider:
-                    Provider.of<AuthProvider>(context, listen: false)),
-            update: (_, auth, prev) =>
-                (prev ?? DebtProvider(authProvider: auth))
-                  ..setStoreId(auth.currentStoreId),
-            child: _getPageForDebtRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForDebtRoute(settings), settings);
 
       case RouteConstants.generalStatistics:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
-            create: (_) => StatisticsProvider(
-              walletRepository: WalletRepository(),
-              transactionRepository: TransactionRepository(),
-              debtRepository: DebtRepository(),
-              statsRepository: StatsRepository(),
-            ),
-            update: (_, auth, previous) =>
-                previous!..setStoreId(auth.currentStoreId),
-            child: const GeneralStatisticsScreen(),
-          ),
-          settings,
-        );
+        return _buildRoute(const GeneralStatisticsScreen(), settings);
 
       case RouteConstants.settings:
         return _buildRoute(const SettingsScreen(), settings);
@@ -159,15 +69,7 @@ class AppRouter {
 
       case RouteConstants.addEmployee:
       case RouteConstants.manageEmployees:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository()),
-            update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId),
-            child: _getPageForEmployeeRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForEmployeeRoute(settings), settings);
 
       default:
         return MaterialPageRoute(

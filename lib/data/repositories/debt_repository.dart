@@ -1,6 +1,5 @@
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/data/repositories/stats_repository.dart';
 
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -10,15 +9,12 @@ import '../services/firebase_service.dart';
 class DebtRepository {
   final FirebaseService _firebaseService;
   final CacheManager _cacheManager;
-  final StatsRepository _statsRepository;
 
   DebtRepository({
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
-    StatsRepository? statsRepository,
   })  : _firebaseService = firebaseService ?? FirebaseService(),
-        _cacheManager = cacheManager ?? CacheManager(),
-        _statsRepository = statsRepository ?? StatsRepository();
+        _cacheManager = cacheManager ?? CacheManager();
 
   FirebaseFirestore get _firestore => _firebaseService.firestore;
   CollectionReference get _debtsCollection =>
@@ -30,17 +26,22 @@ class DebtRepository {
   Future<void> createDebt(DebtModel debt) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        // 1. Perform all reads first
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: debt.storeId,
-          oldDebt: null, // Indicates creation
-          newDebt: debt,
-        );
+        final statsRef = _firestore
+            .collection('stores')
+            .doc(debt.storeId)
+            .collection('stats')
+            .doc('summary');
+
+        final Map<String, dynamic> statsUpdates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'openDebtsCount': FieldValue.increment(1),
+          'totalOpenAmount': FieldValue.increment(debt.amountDue),
+        };
 
         // 2. Perform all writes after all reads
         final debtDocRef = _debtsCollection.doc(debt.debtId);
         transaction.set(debtDocRef, debt.toFirestore());
+        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
     } on FirebaseException catch (e) {
@@ -175,35 +176,37 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        DebtModel newDebt;
+        final statsRef = _firestore
+            .collection('stores')
+            .doc(oldDebt.storeId)
+            .collection('stats')
+            .doc('summary');
+
+        final Map<String, dynamic> statsUpdates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
 
         if (isFullPayment) {
           updateData['amountDue'] = 0.0;
           updateData['debtStatus'] = 'paid';
           updateData['paidDate'] = FieldValue.serverTimestamp();
           updateData['markedPaidBy'] = userId;
-          newDebt = oldDebt.copyWith(
-            amountDue: 0.0,
-            debtStatus: 'paid',
-          );
+
+          statsUpdates['openDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['totalOpenAmount'] =
+              FieldValue.increment(-oldDebt.amountDue);
+          statsUpdates['paidDebtsCount'] = FieldValue.increment(1);
+          statsUpdates['totalPaidAmount'] =
+              FieldValue.increment(oldDebt.totalAmount);
         } else {
           updateData['amountDue'] = FieldValue.increment(-amountToPay);
-          newDebt = oldDebt.copyWith(
-            amountDue: oldDebt.amountDue - amountToPay,
-          );
+
+          statsUpdates['totalOpenAmount'] = FieldValue.increment(-amountToPay);
         }
-
-        // Note: For payments, we do NOT change totalAmount.
-
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: oldDebt.storeId,
-          oldDebt: oldDebt,
-          newDebt: newDebt,
-        );
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
+        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
@@ -245,26 +248,28 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        // If a paid debt is being reopened, update its status
+        final statsRef = _firestore
+            .collection('stores')
+            .doc(oldDebt.storeId)
+            .collection('stats')
+            .doc('summary');
+
+        final Map<String, dynamic> statsUpdates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'totalOpenAmount': FieldValue.increment(amountToAdd),
+        };
+
         if (wasPaid) {
           updateData['debtStatus'] = 'open';
+          statsUpdates['openDebtsCount'] = FieldValue.increment(1);
+          statsUpdates['paidDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['totalPaidAmount'] =
+              FieldValue.increment(-oldDebt.totalAmount);
         }
-
-        final newDebt = oldDebt.copyWith(
-          amountDue: oldDebt.amountDue + amountToAdd,
-          totalAmount: oldDebt.totalAmount + amountToAdd,
-          debtStatus: wasPaid ? 'open' : oldDebt.debtStatus,
-        );
-
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: oldDebt.storeId,
-          oldDebt: oldDebt,
-          newDebt: newDebt,
-        );
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
+        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));

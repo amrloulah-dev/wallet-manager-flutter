@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
@@ -117,6 +118,7 @@ class StatsRepository {
     });
   }
 
+  @visibleForTesting
   Future<void> updateStatsOnDebtUpdate({
     required Transaction firestoreTransaction,
     required String storeId,
