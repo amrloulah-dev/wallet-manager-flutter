@@ -14,8 +14,6 @@ enum StatsMode { dashboard, filtered }
 
 class StatisticsProvider extends ChangeNotifier {
   final WalletRepository _walletRepository;
-  final TransactionRepository _transactionRepository;
-  final DebtRepository _debtRepository;
   final StatsRepository _statsRepository;
 
   String? _storeId;
@@ -60,12 +58,8 @@ class StatisticsProvider extends ChangeNotifier {
 
   StatisticsProvider({
     required WalletRepository walletRepository,
-    required TransactionRepository transactionRepository,
-    required DebtRepository debtRepository,
     required StatsRepository statsRepository,
   })  : _walletRepository = walletRepository,
-        _transactionRepository = transactionRepository,
-        _debtRepository = debtRepository,
         _statsRepository = statsRepository {
     // ── Streams-Driven Sync (Phase 1) ──
     // Manual AppEvents listener removed. Data sync is now handled by _summarySubscription
@@ -166,28 +160,28 @@ class StatisticsProvider extends ChangeNotifier {
     try {
       if (_storeId == null) throw Exception("Store ID not found");
 
-      final startDate = DateHelper.getStartOfDay(dateRange.start);
-      final endDate = DateHelper.getEndOfDay(dateRange.end);
-
       final List<dynamic> results = await Future.wait([
-        _transactionRepository.getTransactionAggregates(_storeId!,
-            startDate: startDate, endDate: endDate),
-        _debtRepository.getDebtAggregates(_storeId!,
-            startDate: startDate, endDate: endDate),
         _walletRepository.getTotalBalance(_storeId!),
         _walletRepository.getWalletsCount(_storeId!),
       ]);
 
-      final transactionSummary = results[0];
-      final debtSummary = results[1];
-      final totalBalance = results[2];
-      final walletsCount = results[3];
+      final totalBalance = results[0];
+      final walletsCount = results[1];
 
       _filteredStats = {
         'totalBalance': totalBalance,
         'totalWallets': walletsCount,
-        ...transactionSummary as Map<String, dynamic>,
-        ...debtSummary as Map<String, dynamic>,
+        'totalTransactions': 0,
+        'totalCommission': 0.0,
+        'sendCount': 0,
+        'totalSentAmount': 0.0,
+        'receiveCount': 0,
+        'totalReceivedAmount': 0.0,
+        'openDebtsCount': 0,
+        'totalOpenAmount': 0.0,
+        'paidDebtsCount': 0,
+        'totalPaidAmount': 0.0,
+        'totalDebtsCount': 0,
       };
     } catch (e, stack) {
       _setError("فشل جلب الإحصائيات المفلترة.", e, stack);

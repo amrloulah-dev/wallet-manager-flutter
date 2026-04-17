@@ -298,55 +298,6 @@ class DebtRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getDebtAggregates(String storeId,
-      {DateTime? startDate, DateTime? endDate}) async {
-    try {
-      Query query =
-          _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
-
-      if (startDate != null) {
-        query = query.where('debtDate', isGreaterThanOrEqualTo: startDate);
-      }
-      if (endDate != null) {
-        query = query.where('debtDate', isLessThanOrEqualTo: endDate);
-      }
-
-      final snapshot = await query.get();
-
-      int openDebtsCount = 0;
-      double totalOpenAmount = 0.0;
-      int paidDebtsCount = 0;
-      double totalPaidAmount = 0.0;
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (data['debtStatus'] == 'open') {
-          openDebtsCount++;
-          totalOpenAmount += (data['amountDue'] ?? 0.0).toDouble();
-        } else if (data['debtStatus'] == 'paid') {
-          paidDebtsCount++;
-          totalPaidAmount += (data['amountDue'] ?? 0.0).toDouble();
-        }
-      }
-
-      return {
-        'openDebtsCount': openDebtsCount,
-        'totalOpenAmount': totalOpenAmount,
-        'paidDebtsCount': paidDebtsCount,
-        'totalPaidAmount': totalPaidAmount,
-        'totalDebtsCount': openDebtsCount + paidDebtsCount,
-      };
-    } catch (e) {
-      return {
-        'openDebtsCount': 0,
-        'totalOpenAmount': 0.0,
-        'paidDebtsCount': 0,
-        'totalPaidAmount': 0.0,
-        'totalDebtsCount': 0,
-      };
-    }
-  }
-
   Future<List<DebtModel>> getDebtsByDateRange(
       String storeId, DateTime startDate, DateTime endDate) async {
     try {
