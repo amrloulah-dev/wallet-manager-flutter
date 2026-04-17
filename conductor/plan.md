@@ -15,7 +15,7 @@
     - [x] Ensure clean code structure after deletions.
 - [x] Task: Conductor - User Manual Verification 'Eradicate Client-Side Aggregation' (Protocol in workflow.md)
 
-## Phase 2: Implement Cursor-Based Pagination
+## Phase 2: Implement Cursor-Based Pagination [checkpoint: 4bc93a1]
 - [x] Task: Write Failing Tests
     - [x] Write tests verifying `getAllTransactions` and `getTransactionsByDateRange` accept a `DocumentSnapshot?` cursor and return a list limited to 20 documents along with the last cursor.
     - [x] Write tests for `getAllWallets` pagination limits.
@@ -29,7 +29,7 @@
     - [x] Refactor generic pagination logic if repetitive.
 - [x] Task: Conductor - User Manual Verification 'Implement Cursor-Based Pagination' (Protocol in workflow.md)
 
-## Phase 3: Single Source of Truth Subscription
+## Phase 3: Single Source of Truth Subscription [checkpoint: 4bc93a1]
 - [x] Task: Write Failing Tests
     - [x] Write tests to verify the Dashboard UI Provider depends on `summary` and `daily_stats` streams instead of aggregation methods.
 - [x] Task: Implement to Pass Tests (Dashboard Streams)
@@ -41,11 +41,11 @@
 - [x] Task: Conductor - User Manual Verification 'Single Source of Truth Subscription' (Protocol in workflow.md)
 
 ## Phase 4: Enforce Atomic Writes
-- [ ] Task: Write Failing Tests
-    - [ ] Write tests in `TransactionValidatorService` ensuring `FieldValue.increment()` is used within `WriteBatch` or `Transaction`.
-- [ ] Task: Implement to Pass Tests (Atomic Increments)
-    - [ ] Refactor `TransactionValidatorService` to strictly use `FieldValue.increment()` for all `summary` and `daily_stats` values (amounts and counts).
-    - [ ] Remove any manual arithmetic reading existing fields first (e.g., `total = old + new`).
-- [ ] Task: Refactor (Optional)
-    - [ ] Run `flutter analyze` and resolve all issues to ensure 0 errors.
-- [ ] Task: Conductor - User Manual Verification 'Enforce Atomic Writes' (Protocol in workflow.md)
+- [x] Task: Write Failing Tests
+    - [x] Write tests in `TransactionValidatorService` ensuring `FieldValue.increment()` is used within `WriteBatch` or `Transaction`.
+- [x] Task: Implement to Pass Tests (Atomic Increments)
+    - [x] Refactor `TransactionValidatorService` to strictly use `FieldValue.increment()` for all `summary` and `daily_stats` values (amounts and counts).
+    - [x] Remove any manual arithmetic reading existing fields first (e.g., `total = old + new`).
+- [x] Task: Refactor (Optional)
+    - [x] Run `flutter analyze` and resolve all issues to ensure 0 errors.
+- [x] Task: Conductor - User Manual Verification 'Enforce Atomic Writes' (Protocol in workflow.md)
