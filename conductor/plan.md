@@ -1,6 +1,6 @@
 # Implementation Plan: Firestore Cost Optimization & Architecture Refactor
 
-## Phase 1: Eradicate Client-Side Aggregation
+## Phase 1: Eradicate Client-Side Aggregation [checkpoint: 290da2c]
 - [x] Task: Write Failing Tests
     - [x] Create/Update tests for `TransactionRepository` to expect the absence of `getTransactionAggregates`.
     - [x] Create/Update tests for `StatsRepository` to expect the absence of `reconcileStatsFromWallets` and `reconcileStatsFromDebts`.
@@ -13,7 +13,7 @@
     - [x] Refactor Providers/Controllers calling these methods.
 - [x] Task: Refactor (Optional)
     - [x] Ensure clean code structure after deletions.
-- [ ] Task: Conductor - User Manual Verification 'Eradicate Client-Side Aggregation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Eradicate Client-Side Aggregation' (Protocol in workflow.md)
 
 ## Phase 2: Implement Cursor-Based Pagination
 - [ ] Task: Write Failing Tests
