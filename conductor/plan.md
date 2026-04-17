@@ -16,29 +16,29 @@
 - [x] Task: Conductor - User Manual Verification 'Eradicate Client-Side Aggregation' (Protocol in workflow.md)
 
 ## Phase 2: Implement Cursor-Based Pagination
-- [ ] Task: Write Failing Tests
-    - [ ] Write tests verifying `getAllTransactions` and `getTransactionsByDateRange` accept a `DocumentSnapshot?` cursor and return a list limited to 20 documents along with the last cursor.
-    - [ ] Write tests for `getAllWallets` pagination limits.
-    - [ ] Write tests for `getDebtsByDateRange` pagination limits.
-- [ ] Task: Implement to Pass Tests (Pagination)
-    - [ ] Modify `getAllTransactions` and `getTransactionsByDateRange` in `transaction_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
-    - [ ] Modify `getAllWallets` in `wallet_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
-    - [ ] Modify `getDebtsByDateRange` in `debt_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
-    - [ ] Implement Standard Spinner UI and "Show Error" logic for missing cursors in corresponding UI providers.
-- [ ] Task: Refactor (Optional)
-    - [ ] Refactor generic pagination logic if repetitive.
-- [ ] Task: Conductor - User Manual Verification 'Implement Cursor-Based Pagination' (Protocol in workflow.md)
+- [x] Task: Write Failing Tests
+    - [x] Write tests verifying `getAllTransactions` and `getTransactionsByDateRange` accept a `DocumentSnapshot?` cursor and return a list limited to 20 documents along with the last cursor.
+    - [x] Write tests for `getAllWallets` pagination limits.
+    - [x] Write tests for `getDebtsByDateRange` pagination limits.
+- [x] Task: Implement to Pass Tests (Pagination)
+    - [x] Modify `getAllTransactions` and `getTransactionsByDateRange` in `transaction_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
+    - [x] Modify `getAllWallets` in `wallet_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
+    - [x] Modify `getDebtsByDateRange` in `debt_repository.dart` with `limit(20)` and `startAfterDocument(lastDocument)`.
+    - [x] Implement Standard Spinner UI and "Show Error" logic for missing cursors in corresponding UI providers.
+- [x] Task: Refactor (Optional)
+    - [x] Refactor generic pagination logic if repetitive.
+- [x] Task: Conductor - User Manual Verification 'Implement Cursor-Based Pagination' (Protocol in workflow.md)
 
 ## Phase 3: Single Source of Truth Subscription
-- [ ] Task: Write Failing Tests
-    - [ ] Write tests to verify the Dashboard UI Provider depends on `summary` and `daily_stats` streams instead of aggregation methods.
-- [ ] Task: Implement to Pass Tests (Dashboard Streams)
-    - [ ] Subscribe to `stores/{storeId}/stats/summary` in `StatisticsProvider`.
-    - [ ] Subscribe to `stores/{storeId}/daily_stats/{date}` in `StatisticsProvider`.
-    - [ ] Update Dashboard UI to read Total Balance, Total Commission, and Transaction counts from these streams.
-- [ ] Task: Refactor (Optional)
-    - [ ] Optimize stream handling and memory management.
-- [ ] Task: Conductor - User Manual Verification 'Single Source of Truth Subscription' (Protocol in workflow.md)
+- [x] Task: Write Failing Tests
+    - [x] Write tests to verify the Dashboard UI Provider depends on `summary` and `daily_stats` streams instead of aggregation methods.
+- [x] Task: Implement to Pass Tests (Dashboard Streams)
+    - [x] Subscribe to `stores/{storeId}/stats/summary` in `StatisticsProvider`.
+    - [x] Subscribe to `stores/{storeId}/daily_stats/{date}` in `StatisticsProvider`.
+    - [x] Update Dashboard UI to read Total Balance, Total Commission, and Transaction counts from these streams.
+- [x] Task: Refactor (Optional)
+    - [x] Optimize stream handling and memory management.
+- [x] Task: Conductor - User Manual Verification 'Single Source of Truth Subscription' (Protocol in workflow.md)
 
 ## Phase 4: Enforce Atomic Writes
 - [ ] Task: Write Failing Tests

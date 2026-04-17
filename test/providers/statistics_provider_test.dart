@@ -1,45 +1,47 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
-import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class MockWalletRepository extends Mock implements WalletRepository {}
 class MockStatsRepository extends Mock implements StatsRepository {}
 
 void main() {
   late StatisticsProvider provider;
-  late MockWalletRepository mockWalletRepo;
   late MockStatsRepository mockStatsRepo;
 
   const storeId = 'test_store';
 
   setUp(() {
-    mockWalletRepo = MockWalletRepository();
     mockStatsRepo = MockStatsRepository();
     
     // Setup default mock behaviors
-    when(() => mockStatsRepo.watchStatsSummary(any())).thenAnswer((_) => const Stream.empty());
-    when(() => mockStatsRepo.watchTodayStats(any())).thenAnswer((_) => const Stream.empty());
+    final summary = StatsSummaryModel.empty().copyWith(
+      totalBalance: 1000.0,
+      totalWallets: 5,
+    );
+
+    when(() => mockStatsRepo.watchStatsSummary(storeId)).thenAnswer((_) => Stream.value(summary));
+    when(() => mockStatsRepo.watchTodayStats(storeId)).thenAnswer((_) => const Stream.empty());
 
     provider = StatisticsProvider(
-      walletRepository: mockWalletRepo,
       statsRepository: mockStatsRepo,
     );
   });
 
-  group('StatisticsProvider Phase 1 Refactor', () {
-    test('should be instantiated with only two repositories', () {
+  group('StatisticsProvider Phase 3 Refactor', () {
+    test('should be instantiated with stats repository', () {
       expect(provider, isNotNull);
     });
 
-    test('fetchFilteredStats should return zeros for deleted aggregations', () async {
-      when(() => mockWalletRepo.getTotalBalance(storeId)).thenAnswer((_) async => 1000.0);
-      when(() => mockWalletRepo.getWalletsCount(storeId)).thenAnswer((_) async => 5);
-      
+    test('fetchFilteredStats should use pre-aggregated summary data', () async {
       provider.setStoreId(storeId);
       
+      // Wait for the stream to emit and update the provider state
+      await Future.delayed(Duration.zero);
+
       final dateRange = DateTimeRange(
         start: DateTime.now().subtract(const Duration(days: 7)),
         end: DateTime.now(),
@@ -50,8 +52,6 @@ void main() {
       expect(provider.filteredStats, isNotNull);
       expect(provider.filteredStats!['totalBalance'], 1000.0);
       expect(provider.filteredStats!['totalWallets'], 5);
-      expect(provider.filteredStats!['totalTransactions'], 0);
-      expect(provider.filteredStats!['totalCommission'], 0.0);
     });
   });
 }

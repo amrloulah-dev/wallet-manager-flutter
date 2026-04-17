@@ -13,7 +13,6 @@ import '../core/errors/error_severity.dart';
 enum StatsMode { dashboard, filtered }
 
 class StatisticsProvider extends ChangeNotifier {
-  final WalletRepository _walletRepository;
   final StatsRepository _statsRepository;
 
   String? _storeId;
@@ -57,10 +56,8 @@ class StatisticsProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   StatisticsProvider({
-    required WalletRepository walletRepository,
     required StatsRepository statsRepository,
-  })  : _walletRepository = walletRepository,
-        _statsRepository = statsRepository {
+  })  : _statsRepository = statsRepository {
     // ── Streams-Driven Sync (Phase 1) ──
     // Manual AppEvents listener removed. Data sync is now handled by _summarySubscription
     // and _todayStatsSubscription established in fetchDashboardStats().
@@ -160,29 +157,29 @@ class StatisticsProvider extends ChangeNotifier {
     try {
       if (_storeId == null) throw Exception("Store ID not found");
 
-      final List<dynamic> results = await Future.wait([
-        _walletRepository.getTotalBalance(_storeId!),
-        _walletRepository.getWalletsCount(_storeId!),
-      ]);
+      // Check if it's today's range
+      final isToday = DateHelper.isToday(dateRange.start) && DateHelper.isToday(dateRange.end);
 
-      final totalBalance = results[0];
-      final walletsCount = results[1];
-
-      _filteredStats = {
-        'totalBalance': totalBalance,
-        'totalWallets': walletsCount,
-        'totalTransactions': 0,
-        'totalCommission': 0.0,
-        'sendCount': 0,
-        'totalSentAmount': 0.0,
-        'receiveCount': 0,
-        'totalReceivedAmount': 0.0,
-        'openDebtsCount': 0,
-        'totalOpenAmount': 0.0,
-        'paidDebtsCount': 0,
-        'totalPaidAmount': 0.0,
-        'totalDebtsCount': 0,
-      };
+      if (isToday && _todayStats != null && _dashboardSummary != null) {
+        _filteredStats = {
+          'totalBalance': _dashboardSummary!.totalBalance,
+          'totalWallets': _dashboardSummary!.totalWallets,
+          'totalTransactions': _todayStats!.transactionCount,
+          'totalCommission': _todayStats!.totalCommission,
+          'sendCount': 0, // Breakdown not in daily_stats yet
+          'totalSentAmount': _todayStats!.totalAmount, // Assuming total for today
+          'receiveCount': 0,
+          'totalReceivedAmount': 0.0,
+          'openDebtsCount': _dashboardSummary!.openDebtsCount,
+          'totalOpenAmount': _dashboardSummary!.totalOpenAmount,
+          'paidDebtsCount': _dashboardSummary!.paidDebtsCount,
+          'totalPaidAmount': _dashboardSummary!.totalPaidAmount,
+          'totalDebtsCount': _dashboardSummary!.openDebtsCount + _dashboardSummary!.paidDebtsCount,
+        };
+      } else if (_dashboardSummary != null) {
+        // Fallback to global summary for other ranges (Phase 3 constraint)
+        _filteredStats = _dashboardSummary!.toMap();
+      }
     } catch (e, stack) {
       _setError("فشل جلب الإحصائيات المفلترة.", e, stack);
       _filteredStats = null;

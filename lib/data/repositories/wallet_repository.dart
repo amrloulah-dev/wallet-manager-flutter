@@ -5,6 +5,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/wallet_model.dart';
 import '../services/firebase_service.dart';
+import '../models/paginated_result.dart';
 
 class WalletRepository {
   final FirebaseService _firebaseService;
@@ -95,15 +96,23 @@ class WalletRepository {
     }
   }
 
-  Future<List<WalletModel>> getAllWallets(String storeId) async {
+  Future<PaginatedResult<WalletModel>> getAllWallets(String storeId, {DocumentSnapshot? lastDocument}) async {
     try {
-      final snapshot = await _walletsCollection
+      Query query = _walletsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.isActive, isEqualTo: true)
-          .get();
-      return snapshot.docs
+          .where(FirebaseConstants.isActive, isEqualTo: true);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final snapshot = await query.limit(20).get();
+      final items = snapshot.docs
           .map((doc) => WalletModel.fromFirestore(doc))
           .toList();
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+      return PaginatedResult(items: items, lastDocument: lastDoc);
     } catch (e) {
       throw ServerException('فشل استرجاع كل المحافظ: $e');
     }

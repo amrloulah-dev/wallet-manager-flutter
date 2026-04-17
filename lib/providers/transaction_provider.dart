@@ -25,7 +25,7 @@ class TransactionProvider extends ChangeNotifier {
   List<TransactionModel> _todayTransactions = [];
   Map<String, dynamic> _summary = {};
 
-  int _currentLimit = 20;
+  DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
   DateTimeRange _dateRange = DateTimeRange(
       start: DateHelper.getStartOfDay(DateTime.now()),
@@ -40,7 +40,6 @@ class TransactionProvider extends ChangeNotifier {
   // Filter
   String? _filterType;
 
-  StreamSubscription? _transactionsSubscription;
   bool _isDisposed = false;
 
   Timer? _fetchShieldTimer;
@@ -52,16 +51,11 @@ class TransactionProvider extends ChangeNotifier {
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
-        _currentStoreId = storeId {
-    // ── Streams-Driven Sync (Phase 1) ──
-    // Manual AppEvents listener removed. Data sync is now handled by _transactionsSubscription
-    // established in fetchInitialTransactions().
-  }
+        _currentStoreId = storeId;
 
   @override
   void dispose() {
     _isDisposed = true;
-    _transactionsSubscription?.cancel();
     _fetchShieldTimer?.cancel();
     super.dispose();
   }
@@ -126,13 +120,11 @@ class TransactionProvider extends ChangeNotifier {
 
   void setDateRange(DateTimeRange range) {
     _dateRange = range;
-    _currentLimit = 20;
     fetchInitialTransactions();
   }
 
   void setFilterType(String? type) {
     _filterType = type;
-    _currentLimit = 20;
     fetchInitialTransactions();
   }
 
@@ -163,48 +155,67 @@ class TransactionProvider extends ChangeNotifier {
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
-
     if (!forceRefresh && _fetchShieldActive) return;
 
-    debugPrint('🔥 [TX_FLOW] [transaction_provider] -> fetchInitialTransactions: '
-        'Establishing stream subscription | storeId=$_currentStoreId, limit=$_currentLimit');
-
-    _transactionsSubscription?.cancel();
     _updateStatus(TransactionStatus.loading);
+    _errorMessage = null;
     _safeNotify();
 
-    _transactionsSubscription = _transactionRepository
-        .getTransactionsStream(
-      _currentStoreId!,
-      _dateRange.start,
-      _dateRange.end,
-      transactionType: _filterType,
-      limit: _currentLimit,
-    )
-        .listen((fetchedTransactions) {
-      _transactions = List<TransactionModel>.from(fetchedTransactions);
-      _hasMore = fetchedTransactions.length >= _currentLimit;
+    try {
+      final result = await _transactionRepository.getTransactionsByDateRange(
+        _currentStoreId!,
+        _dateRange.start,
+        _dateRange.end,
+      );
+
+      _transactions = result.items;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
       _calculateSummary();
       _updateStatus(TransactionStatus.loaded);
+    } catch (e, stack) {
+      _setError('فشل في جلب المعاملات.', e, stack);
+    } finally {
       _safeNotify();
-    }, onError: (e, stack) {
-      _setError('حدث خطأ في تيار المعاملات.', e, stack);
-    });
+    }
   }
 
-  void fetchMoreTransactions() {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+  Future<void> fetchMoreTransactions() async {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
       return;
     }
 
-    debugPrint('🔥 [TX_FLOW] [transaction_provider] -> fetchMoreTransactions: '
-        'Increasing limit | oldLimit=$_currentLimit');
-
-    _currentLimit += 20;
     _updateStatus(TransactionStatus.loadingMore);
-    fetchInitialTransactions();
+    _safeNotify();
+
+    try {
+      final result = await _transactionRepository.getTransactionsByDateRange(
+        _currentStoreId!,
+        _dateRange.start,
+        _dateRange.end,
+        lastDocument: _lastDocument,
+      );
+
+      if (result.items.isEmpty) {
+        _hasMore = false;
+      } else {
+        _transactions.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
+      }
+
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
+      _calculateSummary();
+      _updateStatus(TransactionStatus.loaded);
+    } catch (e, stack) {
+      _setError('فشل في جلب المزيد من المعاملات.', e, stack);
+    } finally {
+      _safeNotify();
+    }
   }
 
   void _calculateSummary() {

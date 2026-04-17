@@ -40,7 +40,7 @@ class WalletProvider extends ChangeNotifier {
   List<WalletModel> _wallets = [];
   Map<String, WalletModel> _walletMap = {};
   final Set<String> _frozenWalletIds = {};
-  int _currentLimit = 20;
+  DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
 
   // Status
@@ -52,7 +52,6 @@ class WalletProvider extends ChangeNotifier {
   String? _filterByType;
   String? _filterByStatus;
 
-  StreamSubscription? _walletsSubscription;
   StreamSubscription? _overlayDataSubscription;
   bool _isDisposed = false;
 
@@ -156,7 +155,6 @@ class WalletProvider extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
-    _walletsSubscription?.cancel();
     _overlayDataSubscription?.cancel();
     super.dispose();
   }
@@ -221,7 +219,6 @@ class WalletProvider extends ChangeNotifier {
   void setStoreId(String storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _currentLimit = 20;
       fetchInitialWallets();
     }
   }
@@ -230,45 +227,37 @@ class WalletProvider extends ChangeNotifier {
     fetchInitialWallets(forceRefresh: true);
   }
 
-  void fetchInitialWallets({bool forceRefresh = false}) {
+  Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
-
     if (!forceRefresh && _fetchShieldActive) return;
 
-    debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchInitialWallets: '
-        'Establishing stream subscription | storeId=$_currentStoreId, limit=$_currentLimit');
-
-    _walletsSubscription?.cancel();
     _updateStatus(WalletStatusState.loading);
+    _errorMessage = null;
+    _safeNotify();
 
-    _walletsSubscription = _walletRepository
-        .getWalletsStream(
-      _currentStoreId!,
-      limit: _currentLimit,
-      walletType: _filterByType,
-      walletStatus: _filterByStatus,
-    )
-        .listen((fetchedWallets) async {
-      // 1. Check which of the fetched wallets need a reset
-      final walletsNeedingReset = fetchedWallets
+    try {
+      final result = await _walletRepository.getAllWallets(
+        _currentStoreId!,
+      );
+
+      _wallets = result.items;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+
+      // Check which of the fetched wallets need a reset
+      final walletsNeedingReset = _wallets
           .where((w) => w.needsDailyReset || w.needsMonthlyReset)
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
-        // 2. Trigger the backend update asynchronously (fire-and-forget)
+        // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
-        // Note: The UI will update automatically when the stream pushes the new values
-        // after the server-side reset completes.
       }
 
-      // 3. Update state
-      _wallets = List<WalletModel>.from(fetchedWallets);
-      _hasMore = fetchedWallets.length >= _currentLimit;
       _rebuildWalletMap();
       _updateStatus(WalletStatusState.loaded);
-      _safeNotify();
 
-      // 4. Cache the wallets locally for SMS Automation
+      // Cache the wallets locally for SMS Automation
       try {
         await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       } catch (e, stack) {
@@ -277,22 +266,42 @@ class WalletProvider extends ChangeNotifier {
             operation: 'wallet_cache_write',
             stackTrace: stack);
       }
-    }, onError: (e, stack) {
-      _setError('حدث خطأ في تيار المحافظ.', e, stack);
-    });
+    } catch (e, stack) {
+      _setError('حدث خطأ في جلب المحافظ.', e, stack);
+    } finally {
+      _safeNotify();
+    }
   }
 
-  void fetchMoreWallets() {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+  Future<void> fetchMoreWallets() async {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
       return;
     }
 
-    debugPrint('🔥 [TX_FLOW] [wallet_provider] -> fetchMoreWallets: '
-        'Increasing limit | oldLimit=$_currentLimit');
-    
-    _currentLimit += 20;
     _updateStatus(WalletStatusState.loadingMore);
-    fetchInitialWallets();
+    _safeNotify();
+
+    try {
+      final result = await _walletRepository.getAllWallets(
+        _currentStoreId!,
+        lastDocument: _lastDocument,
+      );
+
+      if (result.items.isEmpty) {
+        _hasMore = false;
+      } else {
+        _wallets.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
+      }
+
+      _rebuildWalletMap();
+      _updateStatus(WalletStatusState.loaded);
+    } catch (e, stack) {
+      _setError('حدث خطأ في جلب المزيد من المحافظ.', e, stack);
+    } finally {
+      _safeNotify();
+    }
   }
 
   Future<bool> createWallet({

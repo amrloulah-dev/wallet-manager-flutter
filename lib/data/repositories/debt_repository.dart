@@ -5,6 +5,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/debt_model.dart';
 import '../services/firebase_service.dart';
+import '../models/paginated_result.dart';
 
 class DebtRepository {
   final FirebaseService _firebaseService;
@@ -298,15 +299,24 @@ class DebtRepository {
     }
   }
 
-  Future<List<DebtModel>> getDebtsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate) async {
+  Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
     try {
-      final snapshot = await _debtsCollection
+      Query query = _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('createdAt', isGreaterThanOrEqualTo: startDate)
           .where('createdAt', isLessThanOrEqualTo: endDate)
-          .get();
-      return snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+          .orderBy('createdAt', descending: true);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final snapshot = await query.limit(20).get();
+      final items = snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+      return PaginatedResult(items: items, lastDocument: lastDoc);
     } on FirebaseException catch (e) {
       throw ServerException('Failed to get debts by date range: ${e.message}',
           code: e.code);

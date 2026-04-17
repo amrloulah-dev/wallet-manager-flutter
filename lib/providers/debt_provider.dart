@@ -33,6 +33,9 @@ class DebtProvider extends ChangeNotifier {
   Map<String, DebtModel> _debtMap = {};
   Map<String, dynamic> _summary = {};
 
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
+
   // Status
   DebtStatus _status = DebtStatus.idle;
   String? _errorMessage;
@@ -41,10 +44,6 @@ class DebtProvider extends ChangeNotifier {
   String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
   String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
 
-  int _currentLimit = 20;
-  bool _hasMore = true;
-
-  StreamSubscription? _debtsSubscription;
   bool _isDisposed = false;
 
   // Constructor
@@ -54,16 +53,11 @@ class DebtProvider extends ChangeNotifier {
     String? storeId,
   })  : _authProvider = authProvider,
         _debtRepository = debtRepository ?? sl<DebtRepository>(),
-        _currentStoreId = storeId {
-    // ── Streams-Driven Sync (Phase 1) ──
-    // Manual AppEvents listener removed. Data sync is now handled by _debtsSubscription
-    // established in fetchInitialDebts().
-  }
+        _currentStoreId = storeId;
 
   @override
   void dispose() {
     _isDisposed = true;
-    _debtsSubscription?.cancel();
     super.dispose();
   }
 
@@ -75,6 +69,7 @@ class DebtProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get currentFilter => _currentFilter;
   String get currentDebtType => _currentDebtType;
+  bool get hasMore => _hasMore;
   bool get isLoading => _status == DebtStatus.loading;
   bool get isLoadingMore => _status == DebtStatus.loadingMore;
   bool get isCreating => _status == DebtStatus.creating;
@@ -109,7 +104,6 @@ class DebtProvider extends ChangeNotifier {
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _currentLimit = 20;
       fetchInitialDebts();
     }
   }
@@ -122,7 +116,6 @@ class DebtProvider extends ChangeNotifier {
   void setDebtType(String type) {
     if (_currentDebtType != type) {
       _currentDebtType = type;
-      _currentLimit = 20;
       fetchInitialDebts();
     }
   }
@@ -130,7 +123,6 @@ class DebtProvider extends ChangeNotifier {
   void setFilter(String filter) {
     if (_currentFilter != filter) {
       _currentFilter = filter;
-      _currentLimit = 20;
       fetchInitialDebts();
     }
   }
@@ -138,43 +130,63 @@ class DebtProvider extends ChangeNotifier {
   Future<void> fetchInitialDebts({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
 
-    debugPrint('🔥 [TX_FLOW] [debt_provider] -> fetchInitialDebts: '
-        'Establishing stream subscription | storeId=$_currentStoreId, limit=$_currentLimit');
-
-    _debtsSubscription?.cancel();
     _updateStatus(DebtStatus.loading);
+    _errorMessage = null;
     _safeNotify();
 
-    _debtsSubscription = _debtRepository
-        .getDebtsStream(
-      _currentStoreId!,
-      status: _currentFilter == 'all' ? null : _currentFilter,
-      type: _currentDebtType,
-      limit: _currentLimit,
-    )
-        .listen((fetchedDebts) {
-      _debts = List<DebtModel>.from(fetchedDebts);
-      _hasMore = fetchedDebts.length >= _currentLimit;
+    try {
+      // Use getDebtsByDateRange for pagination, passing far-past/future dates for "all"
+      final result = await _debtRepository.getDebtsByDateRange(
+        _currentStoreId!,
+        DateTime(2020),
+        DateTime(2100),
+      );
+
+      _debts = result.items;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+      
       _rebuildDebtMap();
-      _fetchSummary(); // Still fetch summary separately as it's an aggregate
+      await _fetchSummary();
       _updateStatus(DebtStatus.loaded);
+    } catch (e, stack) {
+      _setError('فشل في جلب الديون.', e, stack);
+    } finally {
       _safeNotify();
-    }, onError: (e, stack) {
-      _setError('حدث خطأ في تيار الديون.', e, stack);
-    });
+    }
   }
 
-  void fetchMoreDebts() {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+  Future<void> fetchMoreDebts() async {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
       return;
     }
 
-    debugPrint('🔥 [TX_FLOW] [debt_provider] -> fetchMoreDebts: '
-        'Increasing limit | oldLimit=$_currentLimit');
-
-    _currentLimit += 20;
     _updateStatus(DebtStatus.loadingMore);
-    fetchInitialDebts();
+    _safeNotify();
+
+    try {
+      final result = await _debtRepository.getDebtsByDateRange(
+        _currentStoreId!,
+        DateTime(2020),
+        DateTime(2100),
+        lastDocument: _lastDocument,
+      );
+
+      if (result.items.isEmpty) {
+        _hasMore = false;
+      } else {
+        _debts.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
+      }
+
+      _rebuildDebtMap();
+      _updateStatus(DebtStatus.loaded);
+    } catch (e, stack) {
+      _setError('فشل في جلب المزيد من الديون.', e, stack);
+    } finally {
+      _safeNotify();
+    }
   }
 
   Future<void> _fetchSummary() async {

@@ -95,7 +95,6 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
           create: (_) => StatisticsProvider(
-            walletRepository: sl<WalletRepository>(),
             statsRepository: sl<StatsRepository>(),
           ),
           update: (_, auth, previous) =>
