@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walletmanager/presentation/widgets/common/animated_hover_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/dialog_utils.dart';
@@ -7,8 +8,9 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/debt_model.dart';
 import '../../../providers/debt_provider.dart';
 import '../../../providers/statistics_provider.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
-class DebtCard extends StatefulWidget {
+class DebtCard extends StatelessWidget {
   final DebtModel debt;
   final VoidCallback? onTap;
   final VoidCallback? onMarkPaid;
@@ -21,102 +23,76 @@ class DebtCard extends StatefulWidget {
   });
 
   @override
-  State<DebtCard> createState() => _DebtCardState();
-}
-
-class _DebtCardState extends State<DebtCard> {
-  bool _isHighlighted = false;
-
-  @override
   Widget build(BuildContext context) {
-    final elevation = _isHighlighted ? 8.0 : 2.0;
-    final scale = _isHighlighted ? 0.98 : 1.0;
+    return AnimatedHoverCard(
+      onTap: onTap ?? () {},
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1️⃣ Header Row (Status + Date)
+            _buildHeader(context),
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.diagonal3Values(scale, scale, 1.0),
-      child: Card(
-        elevation: elevation,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: widget.onTap,
-          onHighlightChanged: (isHighlighted) {
-            setState(() {
-              _isHighlighted = isHighlighted;
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1️⃣ Header Row (Status + Date)
-                _buildHeader(context),
+            const SizedBox(height: 12),
+            const Divider(),
 
-                const SizedBox(height: 12),
-                const Divider(),
+            // 2️⃣ Customer Info
+            _buildCustomerInfo(context),
 
-                // 2️⃣ Customer Info
-                _buildCustomerInfo(context),
+            const SizedBox(height: 12),
+            const Divider(),
 
-                const SizedBox(height: 12),
-                const Divider(),
+            // 3️⃣ Amount Row
+            _buildAmountSection(context),
 
-                // 3️⃣ Amount Row
-                _buildAmountSection(context),
+            // 4️⃣ Debt Type (if applicable)
+            _buildDebtType(context),
 
-                // 4️⃣ Debt Type (if applicable)
-                if (widget.debt.debtTypeDisplay.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _buildDebtType(context),
-                ],
+            // 5️⃣ Notes (if exists)
+            if (debt.notes != null && debt.notes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildNotesSection(context),
+            ],
 
-                // 5️⃣ Notes (if exists)
-                if (widget.debt.notes != null &&
-                    widget.debt.notes!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _buildNotesSection(context),
-                ],
-
-                // 6️⃣ Mark as Paid Button
-                if (widget.onMarkPaid != null && widget.debt.isOpen) ...[
-                  const SizedBox(height: 16),
-                  _buildMarkAsPaidButton(),
-                ],
-              ],
-            ),
-          ),
+            // 6️⃣ Mark as Paid Button
+            if (onMarkPaid != null && debt.isOpen) ...[
+              const SizedBox(height: 16),
+              _buildMarkAsPaidButton(context),
+            ],
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final displayStatus = debt.getDebtStatusDisplay(l10n);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: widget.debt.statusColor.withAlpha((0.1 * 255).round()),
+            color: debt.statusColor.withAlpha((0.1 * 255).round()),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                widget.debt.isOpen ? Icons.circle : Icons.check_circle,
+                debt.isOpen ? Icons.circle : Icons.check_circle,
                 size: 14,
-                color: widget.debt.statusColor,
+                color: debt.statusColor,
               ),
               const SizedBox(width: 4),
               Text(
-                widget.debt.debtStatusDisplay,
+                displayStatus,
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: widget.debt.statusColor,
+                  color: debt.statusColor,
                 ),
               ),
             ],
@@ -125,7 +101,7 @@ class _DebtCardState extends State<DebtCard> {
         Row(
           children: [
             Text(
-              widget.debt.relativeDebtDate, // Example: "منذ 3 أيام"
+              debt.getRelativeDebtDate(l10n),
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary(context),
               ),
@@ -135,10 +111,9 @@ class _DebtCardState extends State<DebtCard> {
               onTap: () async {
                 final confirm = await DialogUtils.showConfirmDialog(
                   context,
-                  title: 'حذف الدين',
-                  message:
-                      'هل أنت متأكد من حذف هذا الدين؟ لا يمكن التراجع عن هذا الإجراء.',
-                  confirmText: 'حذف',
+                  title: l10n.deleteDebt,
+                  message: l10n.deleteDebtConfirmation,
+                  confirmText: l10n.delete,
                   type: DialogType.danger,
                 );
 
@@ -146,7 +121,7 @@ class _DebtCardState extends State<DebtCard> {
                   if (context.mounted) {
                     final success =
                         await Provider.of<DebtProvider>(context, listen: false)
-                            .deleteDebt(widget.debt.debtId);
+                            .deleteDebt(debt.debtId);
 
                     if (success && context.mounted) {
                       context
@@ -182,12 +157,12 @@ class _DebtCardState extends State<DebtCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.debt.customerName,
+                debt.customerName,
                 style: AppTextStyles.h3,
               ),
               const SizedBox(height: 2),
               Text(
-                NumberFormatter.formatPhoneNumber(widget.debt.customerPhone),
+                NumberFormatter.formatPhoneNumber(debt.customerPhone),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary(context),
                 ),
@@ -200,10 +175,11 @@ class _DebtCardState extends State<DebtCard> {
   }
 
   Widget _buildAmountSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: widget.debt.isOpen
+        color: debt.isOpen
             ? AppColors.error.withAlpha((0.05 * 255).round())
             : AppColors.success.withAlpha((0.05 * 255).round()),
         borderRadius: BorderRadius.circular(8),
@@ -212,14 +188,14 @@ class _DebtCardState extends State<DebtCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'المبلغ المستحق:',
+            l10n.amountDue,
             style: AppTextStyles.labelMedium.copyWith(
               color: AppColors.textSecondary(context),
             ),
           ),
           Text(
-            NumberFormatter.formatAmount(widget.debt.amountDue),
-            style: AppTextStyles.h2.copyWith(color: widget.debt.statusColor),
+            NumberFormatter.formatAmount(debt.amountDue),
+            style: AppTextStyles.h2.copyWith(color: debt.statusColor),
           ),
         ],
       ),
@@ -227,21 +203,27 @@ class _DebtCardState extends State<DebtCard> {
   }
 
   Widget _buildDebtType(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          widget.debt.debtTypeIcon,
-          size: 16,
-          color: AppColors.textSecondary(context),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          widget.debt.debtTypeDisplay,
-          style: AppTextStyles.bodySmall.copyWith(
+    final l10n = AppLocalizations.of(context)!;
+    final displayType = debt.isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0),
+      child: Row(
+        children: [
+          Icon(
+            debt.debtTypeIcon,
+            size: 16,
             color: AppColors.textSecondary(context),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            displayType,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -259,7 +241,7 @@ class _DebtCardState extends State<DebtCard> {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              widget.debt.notes!,
+              debt.notes!,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary(context),
               ),
@@ -272,13 +254,14 @@ class _DebtCardState extends State<DebtCard> {
     );
   }
 
-  Widget _buildMarkAsPaidButton() {
+  Widget _buildMarkAsPaidButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: widget.onMarkPaid,
+        onPressed: onMarkPaid,
         icon: const Icon(Icons.check_circle_outline, size: 18),
-        label: const Text('تسديد الدين'),
+        label: Text(l10n.payDebt),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.success,
           foregroundColor: Colors.white,

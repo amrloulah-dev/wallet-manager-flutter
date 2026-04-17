@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
+import 'package:walletmanager/presentation/widgets/common/animated_hover_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../../providers/wallet_provider.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
-class WalletCard extends StatefulWidget {
+class WalletCard extends StatelessWidget {
   final WalletModel wallet;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
@@ -23,68 +25,43 @@ class WalletCard extends StatefulWidget {
   });
 
   @override
-  State<WalletCard> createState() => _WalletCardState();
-}
-
-class _WalletCardState extends State<WalletCard> {
-  bool _isHighlighted = false;
-
-  @override
   Widget build(BuildContext context) {
     final provider = context.watch<WalletProvider>();
-    final isFrozen = provider.isWalletFrozenSync(widget.wallet.walletId);
-    final reactiveWallet = provider.wallets.firstWhere((w) => w.walletId == widget.wallet.walletId, orElse: () => widget.wallet);
+    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
+    final reactiveWallet = provider.wallets.firstWhere(
+        (w) => w.walletId == wallet.walletId,
+        orElse: () => wallet);
 
-    final elevation = _isHighlighted ? 8.0 : 2.0;
-    final scale = _isHighlighted ? 0.98 : 1.0;
-
-    Widget cardContent = Card(
-      elevation: elevation,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: isFrozen 
-            ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
-            : widget.onTap,
-          onHighlightChanged: (isHighlighted) {
-            setState(() {
-              _isHighlighted = isHighlighted;
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(context, reactiveWallet, isFrozen),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildLimits(reactiveWallet),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildStats(context, reactiveWallet),
-                if (widget.onEdit != null || widget.onDelete != null) ...[
-                  const SizedBox(height: 12),
-                  _buildActions(isFrozen),
-                ]
-              ],
-            ),
-          ),
-        ),
-      );
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
+    return AnimatedHoverCard(
+      onTap: isFrozen
+          ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+          : onTap,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Opacity(
             opacity: isFrozen ? 0.5 : 1.0,
-            child: cardContent,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context, reactiveWallet, isFrozen),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  _buildLimits(context, reactiveWallet),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  _buildStats(context, reactiveWallet),
+                  if (onEdit != null || onDelete != null) ...[
+                    const SizedBox(height: 12),
+                    _buildActions(context, isFrozen),
+                  ]
+                ],
+              ),
+            ),
           ),
           if (isFrozen)
             const Positioned(
@@ -96,9 +73,11 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Icon(wallet.walletTypeIcon, size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
+        Icon(wallet.walletTypeIcon,
+            size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -125,7 +104,7 @@ class _WalletCardState extends State<WalletCard> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -134,7 +113,7 @@ class _WalletCardState extends State<WalletCard> {
                 const Icon(Icons.lock, size: 14, color: Colors.red),
                 const SizedBox(width: 4),
                 Text(
-                  'مُجمدة',
+                  l10n.frozen,
                   style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.red,
@@ -167,7 +146,8 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildLimits(WalletModel wallet) {
+  Widget _buildLimits(BuildContext context, WalletModel wallet) {
+    final l10n = AppLocalizations.of(context)!;
     final sendLimits = wallet.getLimits();
     final receiveLimits = wallet.getReceiveLimits();
 
@@ -175,7 +155,7 @@ class _WalletCardState extends State<WalletCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WalletLimitBar(
-          label: 'إرسال يومي',
+          label: l10n.sendDaily,
           used: sendLimits.dailyUsed,
           limit: sendLimits.dailyLimit,
           percentage: sendLimits.dailyPercentage,
@@ -183,7 +163,7 @@ class _WalletCardState extends State<WalletCard> {
         ),
         const SizedBox(height: 8),
         WalletLimitBar(
-          label: 'استقبال يومي',
+          label: l10n.receiveDaily,
           used: receiveLimits.dailyUsed,
           limit: receiveLimits.dailyLimit,
           percentage: receiveLimits.dailyPercentage,
@@ -195,6 +175,7 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildStats(BuildContext context, WalletModel wallet) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Row(
@@ -205,7 +186,7 @@ class _WalletCardState extends State<WalletCard> {
                 const Icon(Icons.account_balance_wallet_outlined,
                     size: 16, color: AppColors.primary),
                 const SizedBox(width: 4),
-                Text('الرصيد الحالي', style: AppTextStyles.bodySmall),
+                Text(l10n.currentBalance, style: AppTextStyles.bodySmall),
               ],
             ),
             Text(
@@ -225,7 +206,7 @@ class _WalletCardState extends State<WalletCard> {
                     size: 16, color: AppColors.textSecondary(context)),
                 const SizedBox(width: 4),
                 Text(
-                  'معاملات: ${NumberFormatter.formatNumber(wallet.stats.totalTransactions)}',
+                  '${l10n.transactions}: ${NumberFormatter.formatNumber(wallet.stats.totalTransactions)}',
                   style: AppTextStyles.bodySmall,
                 ),
               ],
@@ -236,7 +217,7 @@ class _WalletCardState extends State<WalletCard> {
                     size: 16, color: AppColors.textSecondary(context)),
                 const SizedBox(width: 4),
                 Text(
-                  'عمولة: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
+                  '${l10n.commission}: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.success),
                 ),
@@ -248,39 +229,39 @@ class _WalletCardState extends State<WalletCard> {
     );
   }
 
-  Widget _buildActions(bool isFrozen) {
+  Widget _buildActions(BuildContext context, bool isFrozen) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        if (widget.onEdit != null)
+        if (onEdit != null)
           ElevatedButton.icon(
-            onPressed: isFrozen ? null : widget.onEdit,
-            icon:
-                const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
-            label: const Text(
-              'تعديل',
-              style: TextStyle(color: Colors.white),
+            onPressed: isFrozen ? null : onEdit,
+            icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
+            label: Text(
+              l10n.edit,
+              style: const TextStyle(color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: isFrozen ? Colors.grey : AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
           ),
-        SizedBox(
+        const SizedBox(
           width: 15,
         ),
-        if (widget.onDelete != null)
+        if (onDelete != null)
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: isFrozen ? Colors.grey : AppColors.error,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            onPressed: isFrozen ? null : widget.onDelete,
+            onPressed: isFrozen ? null : onDelete,
             icon:
                 const Icon(Icons.delete_outline, size: 18, color: Colors.white),
-            label: const Text(
-              'حذف',
-              style: TextStyle(color: Colors.white),
+            label: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
       ],

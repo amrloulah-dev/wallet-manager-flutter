@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
+import '../../../../l10n/arb/app_localizations.dart';
 
 class SubscriptionBanner extends StatelessWidget {
   const SubscriptionBanner({super.key});
@@ -12,6 +13,7 @@ class SubscriptionBanner extends StatelessWidget {
     final subProvider = Provider.of<SubscriptionProvider>(context);
     final subscription = authProvider.currentStore?.subscription;
     final latestRequest = subProvider.latestRequest;
+    final l10n = AppLocalizations.of(context)!;
 
     if (subscription == null) return const SizedBox.shrink();
 
@@ -22,7 +24,7 @@ class SubscriptionBanner extends StatelessWidget {
           context,
           icon: Icons.access_time_filled,
           color: Colors.orange,
-          message: 'يتم الآن مراجعة طلب الاشتراك الخاص بك. لن ينقطع الخدمة خلال هذه الفترة.',
+          message: l10n.pendingSubscriptionReview,
         );
       } else if (latestRequest.status == 'approved' && !subProvider.isExpired) {
         // Technically if it's approved, the cloud function updates the subscription.
@@ -37,7 +39,7 @@ class SubscriptionBanner extends StatelessWidget {
             context,
             icon: Icons.error,
             color: Colors.red,
-            message: 'تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم أو تقديم طلب جديد.',
+            message: l10n.rejectedSubscriptionRequest,
             onDismiss: () => subProvider.dismissRejectionBanner(),
           );
         }
@@ -48,7 +50,7 @@ class SubscriptionBanner extends StatelessWidget {
         context, 
         icon: Icons.access_time_filled, 
         color: Colors.orange, 
-        message: 'يتم الآن مراجعة طلب الاشتراك الخاص بك. لن ينقطع الخدمة خلال هذه الفترة.',
+        message: l10n.pendingSubscriptionReview,
       );
     }
     
@@ -58,7 +60,7 @@ class SubscriptionBanner extends StatelessWidget {
          context, 
          icon: Icons.warning_rounded, 
          color: Colors.redAccent, 
-         message: 'انتهت صلاحية اشتراكك. يرجى التجديد لتجنب إيقاف الخدمة.',
+         message: l10n.subscriptionExpiredRenew,
        );
     }
     
@@ -70,7 +72,7 @@ class SubscriptionBanner extends StatelessWidget {
          context, 
          icon: Icons.info_outline, 
          color: Colors.blueAccent, 
-         message: 'باقي $daysLeft يوم على انتهاء الفترة التجريبية. قم بالترقية الآن.',
+         message: l10n.trialEndingSoon(daysLeft),
        );
       }
     }
@@ -79,6 +81,7 @@ class SubscriptionBanner extends StatelessWidget {
   }
 
   Widget _buildBanner(BuildContext context, {required IconData icon, required Color color, required String message, VoidCallback? onDismiss}) {
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
@@ -110,7 +113,7 @@ class SubscriptionBanner extends StatelessWidget {
                 onPressed: onDismiss,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                tooltip: 'إخفاء',
+                tooltip: l10n.hide,
               ),
           ],
         ),

@@ -4,12 +4,14 @@ import '../../../providers/debt_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class DebtSummaryCard extends StatelessWidget {
   const DebtSummaryCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer<DebtProvider>(
       builder: (context, provider, child) {
         final summary = provider.summary;
@@ -34,7 +36,7 @@ class DebtSummaryCard extends StatelessWidget {
                     const Icon(Icons.credit_card,
                         color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
-                    Text('ملخص الديون', style: AppTextStyles.h3),
+                    Text(l10n.debtSummary, style: AppTextStyles.h3),
                   ],
                 ),
 
@@ -47,7 +49,7 @@ class DebtSummaryCard extends StatelessWidget {
                     // 🔹 Open Debts
                     _buildSummaryBox(
                       context: context,
-                      title: 'ديون مفتوحة',
+                      title: l10n.openDebts,
                       count: openDebtsCount,
                       amount: totalOpenAmount,
                       color: AppColors.error,
@@ -59,7 +61,7 @@ class DebtSummaryCard extends StatelessWidget {
                     // 🔸 Paid Debts
                     _buildSummaryBox(
                       context: context,
-                      title: 'ديون مسددة',
+                      title: l10n.paidDebts,
                       count: paidDebtsCount,
                       amount: totalPaidAmount,
                       color: AppColors.success,

@@ -335,3 +335,4 @@ void main() {
     });
   });
 }
+// ignore_for_file: subtype_of_sealed_class

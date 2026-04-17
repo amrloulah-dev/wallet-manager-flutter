@@ -8,6 +8,8 @@ import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TransactionOverlayScreen extends StatelessWidget {
   const TransactionOverlayScreen({super.key});
@@ -15,18 +17,25 @@ class TransactionOverlayScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determine language from local storage (defaulting to Arabic if not English)
-    final isAr = LocalStorageService.instance.languageCode != 'en';
+    final languageCode = LocalStorageService.instance.languageCode ?? 'ar';
+    final isAr = languageCode != 'en';
 
     return ChangeNotifierProvider(
       create: (_) => OverlayProvider(),
-      // Wrap in a MaterialApp to provide Theme and Localization context to the overlay,
-      // as overlays are detached from the main app's widget tree.
       child: Theme(
         data: ThemeData.light(),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(), // Enforce explicitly light theme
+          theme: ThemeData.light(),
           themeMode: ThemeMode.light,
+          locale: Locale(languageCode),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) {
             return Directionality(
               textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -62,23 +71,13 @@ class _OverlayContentState extends State<_OverlayContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider = Provider.of<OverlayProvider>(context, listen: false);
 
-      // -----------------------------------------------------------------------
-      // STREAM LISTENER — Parse every overlay event through ingestNewEvent().
-      // This guarantees a full state reset before applying new SMS data,
-      // even when the Flutter engine is kept warm between activations.
-      // -----------------------------------------------------------------------
       _overlaySubscription =
           FlutterOverlayWindow.overlayListener.listen((event) {
-
         if (event != null && event is Map) {
           _provider.ingestNewEvent(event);
-        } else {
-
         }
       });
 
-      // Request focus after a short delay so the Android WindowManager has
-      // fully attached the overlay window and granted it IME focus.
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           _commissionFocusNode.requestFocus();
@@ -97,16 +96,27 @@ class _OverlayContentState extends State<_OverlayContent> {
   @override
   Widget build(BuildContext context) {
     _provider = Provider.of<OverlayProvider>(context);
-    final theme = ThemeData.light(); // Explicit Light Mode
+    final theme = ThemeData.light();
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     // Error Snackbar
     if (_provider.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Map hardcoded technical errors to localized ones if possible
+        String displayError = _provider.errorMessage!;
+        if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
+           displayError = l10n.transactionExceedsLimitWarning;
+        } else if (displayError == 'Please select a wallet') {
+           displayError = l10n.pleaseSelectWallet;
+        } else if (displayError == 'Session invalid. Please login again inside the app.') {
+           displayError = l10n.authErrorRelogin;
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_provider.errorMessage!,
+            content: Text(displayError,
                 style:
                     textTheme.bodyMedium?.copyWith(color: colorScheme.onError)),
             backgroundColor: colorScheme.error,
@@ -115,32 +125,20 @@ class _OverlayContentState extends State<_OverlayContent> {
       });
     }
 
-    final isAr = LocalStorageService.instance.languageCode != 'en';
-
-    // Localized Strings
-    final txtTitle = isAr ? 'معاملة جديدة' : 'New Transaction';
-    final txtAmount = isAr ? 'المبلغ' : 'Amount';
-    final txtSender = isAr ? 'الراسل' : 'Sender';
-    final txtWallet = isAr ? 'اختر المحفظة' : 'Select Wallet';
-    final txtCommission = isAr ? 'العمولة' : 'Commission (EGP)';
-    final txtSave = isAr ? 'تأكيد وحفظ' : 'Confirm & Save';
-    final txtUnknown = isAr ? 'غير معروف' : 'Unknown';
-
     return Theme(
       data: ThemeData.light(),
       child: Scaffold(
         backgroundColor:
-            const Color(0x00000000), // Transparent overlay background
+            const Color(0x00000000),
         body: Center(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors
-                  .white, // dynamically adapt to dark/light -> Explicit light mode
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withAlpha((0.15 * 255).round()),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -156,37 +154,37 @@ class _OverlayContentState extends State<_OverlayContent> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _HeaderWidget(
-                      title: txtTitle,
+                      title: l10n.newTransaction,
                       onClose: _provider.close,
                     ),
                     Divider(height: 24, color: Colors.grey.shade300),
                     if (!_provider.isLoading ||
                         _provider.availableWallets.isNotEmpty) ...[
                       _HeroAmountWidget(
-                        txtAmount: txtAmount,
+                        txtAmount: l10n.amount,
                         amount: _provider.amount.toString(),
                         type: _provider.type,
                       ),
                       const SizedBox(height: 16),
                       _SenderDisplayWidget(
-                        txtSender: txtSender,
+                        txtSender: l10n.send,
                         sender: _provider.sender,
                       ),
                       const SizedBox(height: 16),
                       _WalletDropdownWidget(
                         provider: _provider,
-                        txtWallet: txtWallet,
-                        txtUnknown: txtUnknown,
+                        txtWallet: l10n.selectWallet,
+                        txtUnknown: l10n.unknown,
                       ),
                       const SizedBox(height: 16),
                       _CommissionFieldWidget(
                         provider: _provider,
-                        txtCommission: txtCommission,
+                        txtCommission: l10n.commission,
                         focusNode: _commissionFocusNode,
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: txtSave,
+                        text: l10n.confirmPayment,
                         isLoading: _provider.isLoading,
                         onPressed: _provider.submitTransaction,
                         fullWidth: true,
@@ -208,11 +206,6 @@ class _OverlayContentState extends State<_OverlayContent> {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Small Reusable Widgets
-// -----------------------------------------------------------------------------
-
-/// Header for the Overlay containing title and close button
 class _HeaderWidget extends StatelessWidget {
   final String title;
   final VoidCallback onClose;
@@ -250,7 +243,6 @@ class _HeaderWidget extends StatelessWidget {
   }
 }
 
-/// Hero section displaying the transaction amount
 class _HeroAmountWidget extends StatelessWidget {
   final String txtAmount;
   final String amount;
@@ -264,7 +256,6 @@ class _HeroAmountWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use specific colors: green for credit, red for debit
     final amountColor = (type == 'credit') ? Colors.green : Colors.red;
 
     return Column(
@@ -282,7 +273,7 @@ class _HeroAmountWidget extends StatelessWidget {
           '$amount EGP',
           textAlign: TextAlign.center,
           textDirection:
-              TextDirection.ltr, // Keep numeric correctly formatted in LTR
+              TextDirection.ltr,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
@@ -294,7 +285,6 @@ class _HeroAmountWidget extends StatelessWidget {
   }
 }
 
-/// Read-only display for the Sender information.
 class _SenderDisplayWidget extends StatelessWidget {
   final String txtSender;
   final String sender;
@@ -306,24 +296,23 @@ class _SenderDisplayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Replace CustomTextField with a visual read-only Container.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100, // light grey background
-        borderRadius: BorderRadius.circular(12), // rounded border
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Row(
         children: [
           const Icon(Icons.person_outline,
-              color: Colors.black54), // person icon
+              color: Colors.black54),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              sender, // displaying parsed phone number/sender
+              sender,
               style: const TextStyle(
-                color: Colors.black87, // black/dark grey text
+                color: Colors.black87,
                 fontSize: 16,
               ),
             ),
@@ -334,7 +323,6 @@ class _SenderDisplayWidget extends StatelessWidget {
   }
 }
 
-/// Dropdown for selecting a wallet
 class _WalletDropdownWidget extends StatelessWidget {
   final OverlayProvider provider;
   final String txtWallet;
@@ -369,7 +357,6 @@ class _WalletDropdownWidget extends StatelessWidget {
   }
 }
 
-/// Text field for entering commission with focus management
 class _CommissionFieldWidget extends StatelessWidget {
   final OverlayProvider provider;
   final String txtCommission;
@@ -388,7 +375,7 @@ class _CommissionFieldWidget extends StatelessWidget {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       labelText: txtCommission,
       prefixIcon: const Icon(Icons
-          .attach_money), // Use prefixIcon instead of suffixIcon for RTL right alignment
+          .attach_money),
       onChanged: provider.setCommission,
     );
   }

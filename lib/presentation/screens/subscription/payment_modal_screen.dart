@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import 'package:provider/provider.dart';
@@ -45,15 +46,17 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
       await authProvider.tryAutoLogin(); 
       
       if (mounted) {
+        final loc = AppLocalizations.of(context)!;
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إرسال طلب الاشتراك بنجاح. يرجى الانتظار للمراجعة.')),
+          SnackBar(content: Text(loc.subscriptionRequestSent)),
         );
       }
     } catch (e) {
       if (mounted) {
+        final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e')),
+          SnackBar(content: Text('${loc.errorOccurred} $e')),
         );
       }
     } finally {
@@ -65,8 +68,9 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final planName = widget.planId == 'lifetime' ? 'مدى الحياة' : 'باقة برو السنوية';
+    final planName = widget.planId == 'lifetime' ? loc.lifetimePlan : loc.proYearlyTitle;
     
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -87,7 +91,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'تفاصيل الدفع',
+                  loc.paymentDetails,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -95,22 +99,22 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'الاشتراك المختار: $planName',
+                  loc.selectedPlan(planName),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                const Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(loc.paymentMethod, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildMethodSelector('vodafone_cash', 'فودافون كاش', Icons.phone_android),
+                      _buildMethodSelector('vodafone_cash', loc.vodafoneCash, Icons.phone_android),
                       const SizedBox(width: 12),
-                      _buildMethodSelector('instapay', 'إنستا باي', Icons.account_balance),
+                      _buildMethodSelector('instapay', loc.instaPay, Icons.account_balance),
                     ],
                   ),
                 ),
@@ -126,8 +130,8 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                     children: [
                       Text(
                         _selectedMethod == 'vodafone_cash'
-                            ? 'يرجى تحويل المبلغ إلى الرقم: 01000000000'
-                            : 'يرجى تحويل المبلغ إلى الحساب: instapay@bank',
+                            ? loc.transferToNumber
+                            : loc.transferToAccount,
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -136,14 +140,14 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _receiptController,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الإيصال / رقم العملية',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.receipt),
+                  decoration: InputDecoration(
+                    labelText: loc.receiptNumber,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.receipt),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'هذا الحقل مطلوب';
+                      return loc.fieldRequired;
                     }
                     return Validators.validatePhoneNumber(value.trim());
                   },
@@ -159,9 +163,9 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'تأكيد الدفع',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      : Text(
+                          loc.confirmPayment,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                 ),
               ],
@@ -184,7 +188,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: color!, width: 2),
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? color.withAlpha((0.1 * 255).round()) : Colors.transparent,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

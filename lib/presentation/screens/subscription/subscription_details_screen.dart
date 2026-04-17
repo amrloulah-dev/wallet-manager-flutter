@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
 import '../../../data/models/store_model.dart';
@@ -10,6 +11,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final authProvider = Provider.of<AuthProvider>(context);
     final subscription = authProvider.currentStore?.subscription;
     final stats = authProvider.currentStore?.stats;
@@ -22,16 +24,16 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     final isLifetime = subscription.planId == 'lifetime';
     final isTrial = subscription.planId == 'trial';
     
-    String planName = 'مجاني';
-    if (isPro) planName = 'برو (سنوي)';
-    if (isLifetime) planName = 'مدى الحياة VIP';
-    if (isTrial) planName = 'تجريبي';
+    String planName = loc.freePlan;
+    if (isPro) planName = loc.proYearlyPlan;
+    if (isLifetime) planName = loc.lifetimeVipPlan;
+    if (isTrial) planName = loc.trialPlan;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('تفاصيل الاشتراك'),
+          title: Text(loc.subscriptionDetails),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
@@ -39,16 +41,16 @@ class SubscriptionDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildStatusCard(context, planName, subscription, isLifetime),
+              _buildStatusCard(context, loc, planName, subscription, isLifetime),
               const SizedBox(height: 24),
-              const Text(
-                'الاستهلاك الحالي',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                loc.currentUsage,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _buildLimitItem(
                 context,
-                title: 'المحافظ النشطة',
+                title: loc.activeWallets,
                 current: stats?.activeWallets ?? 0,
                 max: subscription.maxWallets,
                 icon: Icons.account_balance_wallet,
@@ -56,7 +58,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _buildLimitItem(
                 context,
-                title: 'حسابات الموظفين',
+                title: loc.employeeAccounts,
                 current: context.watch<EmployeeProvider>().employeesCount, // dynamic employee count
                 max: subscription.maxEmployees,
                 icon: Icons.people,
@@ -73,7 +75,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.upgrade),
-                    label: const Text('ترقية الاشتراك'),
+                    label: Text(loc.upgradeSubscription),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: Colors.amber.shade700,
@@ -92,7 +94,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, String planName, dynamic subscription, bool isLifetime) {
+  Widget _buildStatusCard(BuildContext context, AppLocalizations loc, String planName, dynamic subscription, bool isLifetime) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -106,9 +108,9 @@ class SubscriptionDetailsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'الباقة الحالية',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+              Text(
+                loc.currentPlan,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -117,7 +119,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  subscription.status == SubscriptionStatus.active ? 'نشط' : 'معلق',
+                  subscription.status == SubscriptionStatus.active ? loc.active : loc.suspended,
                   style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -137,7 +139,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                  const Icon(Icons.event, size: 20, color: Colors.grey),
                  const SizedBox(width: 8),
                  Text(
-                   'تاريخ الانتهاء: ${subscription.endDate!.year}-${subscription.endDate!.month.toString().padLeft(2, '0')}-${subscription.endDate!.day.toString().padLeft(2, '0')}',
+                   loc.expiryDateValue('${subscription.endDate!.year}-${subscription.endDate!.month.toString().padLeft(2, '0')}-${subscription.endDate!.day.toString().padLeft(2, '0')}'),
                    style: const TextStyle(fontSize: 16),
                  ),
                ],

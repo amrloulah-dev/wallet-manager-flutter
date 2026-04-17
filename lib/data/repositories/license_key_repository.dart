@@ -59,7 +59,6 @@ class LicenseKeyRepository {
         }
 
         final expiryMonths = keyData['expiryMonths'] ?? 12; // Default to 1 year
-        final licenseKeyString = keyData['licenseKey'];
 
         // Calculate new expiry date
         // We add days: 30 * months as a standard approximation or use DateTime logic

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class PaymentSuccessModal extends StatelessWidget {
   const PaymentSuccessModal({super.key});
@@ -13,6 +14,8 @@ class PaymentSuccessModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Dialog(
@@ -25,7 +28,7 @@ class PaymentSuccessModal extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withAlpha((0.1 * 255).round()),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -35,9 +38,9 @@ class PaymentSuccessModal extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'تم تأكيد الدفع بنجاح!',
-                style: TextStyle(
+              Text(
+                loc.paymentConfirmedSuccess,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -45,7 +48,7 @@ class PaymentSuccessModal extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الاستمتاع بكافة الميزات الاحترافية.',
+                loc.subscriptionActivatedMessage,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[600],
@@ -68,9 +71,9 @@ class PaymentSuccessModal extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'متابعة',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  child: Text(
+                    loc.continueButton,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

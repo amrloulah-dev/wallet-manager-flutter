@@ -185,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
 
       if (isTrial) {
         statusColor = isDark ? Colors.amber.shade200 : Colors.amber.shade800;
-        statusText = 'فترة تجريبية';
+        statusText = AppLocalizations.of(context)!.trialPeriod;
       } else if (isExpired) {
         statusColor = AppColors.error;
         statusText = AppLocalizations.of(context)!.expired;
@@ -247,7 +247,7 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Text(
                         isTrial
-                            ? 'الأيام المتبقية'
+                            ? AppLocalizations.of(context)!.trialDaysRemaining
                             : AppLocalizations.of(context)!.daysRemaining,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.textSecondary(context),
@@ -277,7 +277,7 @@ class SettingsScreen extends StatelessWidget {
                   child: TextButton.icon(
                     icon: const Icon(Icons.new_releases_outlined),
                     label: Text(isTrial
-                        ? 'ترقية النسخة الكاملة'
+                        ? AppLocalizations.of(context)!.upgradeFullVersion
                         : AppLocalizations.of(context)!.contactToRenew),
                     onPressed: () {
                       Navigator.pushNamed(
@@ -626,8 +626,8 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
       if (!smsGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('يجب الموافقة على صلاحية الرسائل لتفعيل الميزة'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.smsPermissionRequired),
               backgroundColor: Colors.red,
             ),
           );
@@ -704,7 +704,7 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           child: Text(
-            'الأتمتة والرسائل', // Automation & Messages
+            AppLocalizations.of(context)!.automationAndMessages, // Automation & Messages
             style: AppTextStyles.h3.copyWith(color: AppColors.primary),
           ),
         ),
@@ -717,11 +717,11 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
             children: [
               SwitchListTile(
                 title: Text(
-                  'تفعيل قراءة الرسائل تلقائياً',
+                  AppLocalizations.of(context)!.enableAutoSmsReading,
                   style: AppTextStyles.bodyLarge,
                 ),
                 subtitle: Text(
-                  'اكتشاف المعاملات من البنوك والمحافظ تلقائياً',
+                  AppLocalizations.of(context)!.autoDetectTransactions,
                   style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
                 ),
                 value: _isEnabled,
@@ -736,16 +736,16 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ربط الشريحة بالمحفظة',
+                        AppLocalizations.of(context)!.linkSimToWallet,
                         style: AppTextStyles.bodyMedium
                             .copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
                       // SIM 1
-                      _buildSimDropdown(0, 'الشريحة 1 (SIM 1)', _sim1Config),
+                      _buildSimDropdown(0, AppLocalizations.of(context)!.sim1Label, _sim1Config),
                       const SizedBox(height: 12),
                       // SIM 2
-                      _buildSimDropdown(1, 'الشريحة 2 (SIM 2)', _sim2Config),
+                      _buildSimDropdown(1, AppLocalizations.of(context)!.sim2Label, _sim2Config),
                     ],
                   ),
                 ),
@@ -768,10 +768,10 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
       ),
       items: _availableWallets.isEmpty
           ? [
-              const DropdownMenuItem(
+              DropdownMenuItem(
                   value: null,
-                  child: Text('لا توجد محافظ محفوظة',
-                      style: TextStyle(fontSize: 12)))
+                  child: Text(AppLocalizations.of(context)!.noSavedWallets,
+                      style: const TextStyle(fontSize: 12)))
             ]
           : _availableWallets.map((w) {
               return DropdownMenuItem<String>(

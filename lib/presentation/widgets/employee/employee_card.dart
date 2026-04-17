@@ -5,6 +5,7 @@ import 'package:walletmanager/core/theme/app_text_styles.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class EmployeeCard extends StatelessWidget {
   final UserModel employee;
@@ -23,6 +24,7 @@ class EmployeeCard extends StatelessWidget {
     final bool isActive = employee.isActive;
     final provider = context.watch<EmployeeProvider>();
     final isFrozen = provider.isEmployeeFrozen(employee);
+    final l10n = AppLocalizations.of(context)!;
 
     Widget cardContent = Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -86,7 +88,7 @@ class EmployeeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        employee.phone ?? employee.email ?? 'No contact info',
+                        employee.phone ?? employee.email ?? l10n.notAvailable,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary(context),
                           decoration:
@@ -115,7 +117,7 @@ class EmployeeCard extends StatelessWidget {
                               const Icon(Icons.lock, size: 12, color: Colors.red),
                               const SizedBox(width: 4),
                               Text(
-                                'مُجمد',
+                                l10n.frozen,
                                 style: AppTextStyles.labelSmall.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.red,
@@ -135,7 +137,7 @@ class EmployeeCard extends StatelessWidget {
                     icon: const Icon(Icons.delete_outline,
                         color: AppColors.error, size: 20),
                     onPressed: onDelete,
-                    tooltip: 'Deactivate Employee',
+                    tooltip: l10n.deactivate,
                     // Compact constraints for tighter layout
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -143,7 +145,7 @@ class EmployeeCard extends StatelessWidget {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   // Trailing: Actions
                   Icon(
                     Icons.arrow_forward_ios_rounded,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/dialog_utils.dart';
 import 'package:walletmanager/core/utils/permission_helper.dart';
@@ -66,9 +67,9 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   Future<void> _showMarkPaidDialog(DebtModel debt) async {
     final bool? confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تسديد الدين',
-      message: 'هل أنت متأكد أنك تريد تسجيل هذا الدين كـ "مسدد"؟',
-      confirmText: 'تأكيد التسديد',
+      title: AppLocalizations.of(context)!.settleDebt,
+      message: AppLocalizations.of(context)!.settleDebtConfirmation,
+      confirmText: AppLocalizations.of(context)!.confirmSettlement,
     );
 
     if (confirmed == true) {
@@ -77,7 +78,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       final currentUserId = authProvider.currentUserId;
 
       if (currentUserId == null) {
-        ToastUtils.showError('خطأ: المستخدم غير مسجل');
+        ToastUtils.showError(AppLocalizations.of(context)!.userNotRegistered);
         return;
       }
 
@@ -85,9 +86,9 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
           debt.debtId, debt.amountDue, currentUserId);
 
       if (mounted && !success) {
-        ToastUtils.showError(debtProvider.errorMessage ?? 'فشل تسديد الدين');
+        ToastUtils.showError(debtProvider.errorMessage ?? AppLocalizations.of(context)!.debtSettlementFailed);
       } else {
-        ToastUtils.showSuccess('تم تسديد الدين بنجاح');
+        ToastUtils.showSuccess(AppLocalizations.of(context)!.debtSettledSuccess);
       }
     }
   }
@@ -118,7 +119,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الديون'),
+        title: Text(AppLocalizations.of(context)!.debtsTitle),
       ),
       body: Column(
         children: [
@@ -131,7 +132,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddDebt(context),
         icon: const Icon(Icons.add),
-        label: const Text('إضافة دين'),
+        label: Text(AppLocalizations.of(context)!.addDebt),
         foregroundColor: Colors.white,
         backgroundColor: AppColors.primary,
       ),
@@ -162,7 +163,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
             if (hasError) {
               final provider = context.read<DebtProvider>();
               return CustomErrorWidget(
-                message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الديون.',
+                message: provider.errorMessage ?? AppLocalizations.of(context)!.errorLoadingDebts,
                 onRetry: provider.fetchInitialDebts,
               );
             }
@@ -172,10 +173,10 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
               builder: (context, debts, child) {
                 if (debts.isEmpty) {
                   return EmptyStateWidget(
-                    message: 'لا توجد ديون مسجلة',
-                    description: 'سيتم عرض الديون المفتوحة والمسددة هنا.',
+                    message: AppLocalizations.of(context)!.noDebtsRecorded,
+                    description: AppLocalizations.of(context)!.debtsWillAppearHere,
                     icon: Icons.credit_card_off_outlined,
-                    actionText: 'إضافة دين جديد',
+                    actionText: AppLocalizations.of(context)!.addNewDebt,
                     onAction: () => _navigateToAddDebt(context),
                   );
                 }
@@ -234,7 +235,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 children: [
                   Expanded(
                     child: _FilterChip(
-                      label: 'الكل (${summary['totalDebtsCount'] ?? 0})',
+                      label: AppLocalizations.of(context)!.allWithCount(summary['totalDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'all',
                       onTap: () => context.read<DebtProvider>().setFilter('all'),
                       color: AppColors.primary,
@@ -243,7 +244,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _FilterChip(
-                      label: 'مفتوح (${summary['openDebtsCount'] ?? 0})',
+                      label: AppLocalizations.of(context)!.openWithCount(summary['openDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'open',
                       onTap: () => context.read<DebtProvider>().setFilter('open'),
                       color: AppColors.error,
@@ -252,7 +253,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _FilterChip(
-                      label: 'مسدد (${summary['paidDebtsCount'] ?? 0})',
+                      label: AppLocalizations.of(context)!.paidWithCount(summary['paidDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'paid',
                       onTap: () => context.read<DebtProvider>().setFilter('paid'),
                       color: AppColors.success,
@@ -283,7 +284,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
             children: [
               Expanded(
                 child: _TypeTab(
-                  label: 'تحويلات مالية',
+                  label: AppLocalizations.of(context)!.financialTransfers,
                   isSelected: currentDebtType == 'transaction',
                   onTap: () => context.read<DebtProvider>().setDebtType('transaction'),
                   icon: Icons.swap_horiz,
@@ -291,7 +292,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
               ),
               Expanded(
                 child: _TypeTab(
-                  label: 'مبيعات محل',
+                  label: AppLocalizations.of(context)!.storeSales,
                   isSelected: currentDebtType == 'store_sale',
                   onTap: () => context.read<DebtProvider>().setDebtType('store_sale'),
                   icon: Icons.storefront_outlined,

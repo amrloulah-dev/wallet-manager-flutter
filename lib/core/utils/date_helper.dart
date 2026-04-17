@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DateHelper {
   // ===========================
@@ -102,47 +103,75 @@ class DateHelper {
   }
 
   // ===========================
-  // Get Relative Time in Arabic
+  // Get Relative Time (Localized)
   // ===========================
-  /// Returns a user-friendly relative time string in Arabic.
-  static String getRelativeTime(DateTime date) {
+  /// Returns a user-friendly relative time string.
+  /// Needs AppLocalizations to support multi-language.
+  static String getRelativeTime(DateTime date, {AppLocalizations? l10n}) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
+    // Fallback if l10n is not provided (e.g. background tasks, though context is usually available in UI)
+    // If l10n is null, we might use a default or just return a simple formatted date.
+    if (l10n == null) {
+       return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    }
+
+    final isAr = l10n.localeName == 'ar';
+
     if (difference.inSeconds < 60) {
-      return 'الآن';
+      return isAr ? 'الآن' : 'Just now';
     } else if (difference.inMinutes < 60) {
       final minutes = difference.inMinutes;
-      if (minutes == 1) return 'منذ دقيقة';
-      if (minutes == 2) return 'منذ دقيقتين';
-      if (minutes <= 10) return 'منذ $minutes دقائق';
-      return 'منذ $minutes دقيقة';
+      if (isAr) {
+        if (minutes == 1) return 'منذ دقيقة';
+        if (minutes == 2) return 'منذ دقيقتين';
+        if (minutes <= 10) return 'منذ $minutes دقائق';
+        return 'منذ $minutes دقيقة';
+      }
+      return '$minutes minute${minutes == 1 ? '' : 's'} ago';
     } else if (difference.inHours < 24) {
       final hours = difference.inHours;
-      if (hours == 1) return 'منذ ساعة';
-      if (hours == 2) return 'منذ ساعتين';
-      if (hours <= 10) return 'منذ $hours ساعات';
-      return 'منذ $hours ساعة';
+      if (isAr) {
+        if (hours == 1) return 'منذ ساعة';
+        if (hours == 2) return 'منذ ساعتين';
+        if (hours <= 10) return 'منذ $hours ساعات';
+        return 'منذ $hours ساعة';
+      }
+      return '$hours hour${hours == 1 ? '' : 's'} ago';
     } else if (difference.inDays < 7) {
       final days = difference.inDays;
-      if (days == 1) return 'أمس';
-      if (days == 2) return 'منذ يومين';
-      return 'منذ $days أيام';
+      if (isAr) {
+        if (days == 1) return 'أمس';
+        if (days == 2) return 'منذ يومين';
+        return 'منذ $days أيام';
+      }
+      if (days == 1) return 'Yesterday';
+      return '$days days ago';
     } else if (difference.inDays < 30) {
       final weeks = (difference.inDays / 7).floor();
-      if (weeks == 1) return 'منذ أسبوع';
-      if (weeks == 2) return 'منذ أسبوعين';
-      return 'منذ $weeks أسابيع';
+      if (isAr) {
+        if (weeks == 1) return 'منذ أسبوع';
+        if (weeks == 2) return 'منذ أسبوعين';
+        return 'منذ $weeks أسابيع';
+      }
+      return '$weeks week${weeks == 1 ? '' : 's'} ago';
     } else if (difference.inDays < 365) {
       final months = (difference.inDays / 30).floor();
-      if (months == 1) return 'منذ شهر';
-      if (months == 2) return 'منذ شهرين';
-      return 'منذ $months أشهر';
+      if (isAr) {
+        if (months == 1) return 'منذ شهر';
+        if (months == 2) return 'منذ شهرين';
+        return 'منذ $months أشهر';
+      }
+      return '$months month${months == 1 ? '' : 's'} ago';
     } else {
       final years = (difference.inDays / 365).floor();
-      if (years == 1) return 'منذ سنة';
-      if (years == 2) return 'منذ سنتين';
-      return 'منذ $years سنوات';
+      if (isAr) {
+        if (years == 1) return 'منذ سنة';
+        if (years == 2) return 'منذ سنتين';
+        return 'منذ $years سنوات';
+      }
+      return '$years year${years == 1 ? '' : 's'} ago';
     }
   }
 

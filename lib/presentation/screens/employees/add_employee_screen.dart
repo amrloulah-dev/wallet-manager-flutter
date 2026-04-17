@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -79,11 +80,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     if (mounted) {
       if (success) {
-        ToastUtils.showSuccess('تمت إضافة الموظف بنجاح');
+        ToastUtils.showSuccess(AppLocalizations.of(context)!.employeeAddedSuccess);
         Navigator.pop(context, true);
       } else {
         ToastUtils.showError(
-            employeeProvider.errorMessage ?? 'حدث خطأ غير متوقع');
+            employeeProvider.errorMessage ?? AppLocalizations.of(context)!.unexpectedError);
       }
     }
 
@@ -94,7 +95,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة موظف جديد'),
+        title: Text(AppLocalizations.of(context)!.addNewEmployee),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -147,7 +148,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'الموظفين الحاليين: $currentCount / $maxEmployees',
+                AppLocalizations.of(context)!.currentEmployeesCount(currentCount, maxEmployees),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: isAtLimit ? AppColors.error : AppColors.primary,
                 ),
@@ -162,7 +163,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'تم الوصول للحد الأقصى',
+                    AppLocalizations.of(context)!.limitReached,
                     style:
                         AppTextStyles.labelSmall.copyWith(color: Colors.white),
                   ),
@@ -188,7 +189,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'سيستخدم الموظف رقم الهاتف والرقم السري لتسجيل الدخول.',
+              AppLocalizations.of(context)!.employeeLoginInfo,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.info),
             ),
           ),
@@ -204,8 +205,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         CustomTextField(
           controller: _fullNameController,
           focusNode: _fullNameFocus,
-          labelText: 'الاسم الكامل',
-          hintText: 'أدخل اسم الموظف',
+          labelText: AppLocalizations.of(context)!.fullName,
+          hintText: AppLocalizations.of(context)!.enterEmployeeName,
           prefixIcon: const Icon(Icons.person_outline),
           validator: (value) => Validators.validateName(value),
           textInputAction: TextInputAction.next,
@@ -216,7 +217,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         CustomTextField(
           controller: _phoneController,
           focusNode: _phoneFocus,
-          labelText: 'رقم الهاتف',
+          labelText: AppLocalizations.of(context)!.phoneNumber,
           hintText: '01xxxxxxxxx',
           prefixIcon: const Icon(Icons.phone_outlined),
           keyboardType: TextInputType.phone,
@@ -228,13 +229,13 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               FocusScope.of(context).requestFocus(_pinFocus),
         ),
         const SizedBox(height: 24),
-        Text('الرقم السري للموظف (PIN)', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.employeePinTitle, style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _pinController,
           focusNode: _pinFocus,
-          labelText: 'الرقم السري',
-          hintText: '4 أرقام',
+          labelText: AppLocalizations.of(context)!.pin,
+          hintText: AppLocalizations.of(context)!.fourDigits,
           prefixIcon: const Icon(Icons.pin_outlined),
           obscureText: _obscurePin,
           keyboardType: TextInputType.number,
@@ -253,8 +254,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         CustomTextField(
           controller: _confirmPinController,
           focusNode: _confirmPinFocus,
-          labelText: 'تأكيد الرقم السري',
-          hintText: 'أعد إدخال الرقم السري',
+          labelText: AppLocalizations.of(context)!.confirmPin,
+          hintText: AppLocalizations.of(context)!.reenterPin,
           prefixIcon: const Icon(Icons.lock_outline),
           obscureText: _obscureConfirmPin,
           keyboardType: TextInputType.number,
@@ -268,7 +269,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           ),
           validator: (value) {
             if (value != _pinController.text) {
-              return 'الرقمان غير متطابقان';
+              return AppLocalizations.of(context)!.pinsDoNotMatch;
             }
             return null;
           },
@@ -295,7 +296,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 5);
 
         return CustomButton(
-          text: 'إضافة الموظف',
+          text: AppLocalizations.of(context)!.addEmployeeAction,
           onPressed: _isSubmitting || isAtLimit ? null : _submitForm,
           isLoading: _isSubmitting,
           icon: const Icon(Icons.person_add_alt_1),

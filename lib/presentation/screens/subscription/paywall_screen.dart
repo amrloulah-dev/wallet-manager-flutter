@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/system_config_provider.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
@@ -8,13 +9,14 @@ class PaywallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final systemConfigs = context.watch<SystemConfigProvider>().configs;
     
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('ترقية الحساب'),
+          title: Text(loc.upgradeAccount),
           centerTitle: true,
           elevation: 0,
         ),
@@ -30,7 +32,7 @@ class PaywallScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'فتح إمكانيات متجرك',
+                loc.unlockStoreCapabilities,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -38,7 +40,7 @@ class PaywallScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.',
+                loc.paywallSubtitle,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -49,13 +51,14 @@ class PaywallScreen extends StatelessWidget {
               // Pro Yearly Plan
               _buildPlanCard(
                 context,
-                title: 'باقة برو السنوية',
-                price: '999 جنيه / سنة',
+                loc: loc,
+                title: loc.proYearlyTitle,
+                price: loc.proYearlyPrice,
                 features: [
-                  'مزامنة المعاملات تلقائيا',
-                  'إدارة حتى 50 محفظة',
-                  'إنشاء حسابات للموظفين',
-                  'دعم فني متخصص',
+                  loc.proFeature1,
+                  loc.proFeature2,
+                  loc.proFeature3,
+                  loc.proFeature4,
                 ],
                 isPopular: true,
                 onTap: () => PaymentModalScreen.show(context, 'pro_yearly'),
@@ -66,17 +69,18 @@ class PaywallScreen extends StatelessWidget {
               if (systemConfigs.lifetimePlanEnabled)
                 _buildPlanCard(
                   context,
-                  title: 'باقة مدى الحياة',
-                  price: '2999 جنيه فقط مره واحده',
+                  loc: loc,
+                  title: loc.lifetimeTitle,
+                  price: loc.lifetimePrice,
                   scarcityText: systemConfigs.remainingLifetimeSeats > 0
-                      ? 'متبقي ${systemConfigs.remainingLifetimeSeats} مقاعد فقط!'
-                      : 'نفدت الكمية',
+                      ? loc.remainingSeats(systemConfigs.remainingLifetimeSeats)
+                      : loc.soldOut,
                   isDisabled: systemConfigs.remainingLifetimeSeats <= 0,
                   features: [
-                    'عدد لا نهائي من المحافظ',
-                    'عدد لا نهائي من الموظفين',
-                    'إشعارات SMS للعملاء',
-                    'أولوية الدعم الفني VIP',
+                    loc.lifetimeFeature1,
+                    loc.lifetimeFeature2,
+                    loc.lifetimeFeature3,
+                    loc.lifetimeFeature4,
                   ],
                   isPopular: false,
                   color: Colors.purple.shade700,
@@ -87,10 +91,10 @@ class PaywallScreen extends StatelessWidget {
               if (systemConfigs.lifetimePlanEnabled)
                 const SizedBox(height: 32),
               
-              const Text(
-                'بمتابعة العملية أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا.',
+              Text(
+                loc.termsAgreement,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 24),
             ],
@@ -102,6 +106,7 @@ class PaywallScreen extends StatelessWidget {
 
   Widget _buildPlanCard(
     BuildContext context, {
+    required AppLocalizations loc,
     required String title,
     required String price,
     required List<String> features,
@@ -152,9 +157,9 @@ class PaywallScreen extends StatelessWidget {
                       bottomLeft: Radius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'الأكثر طلباً',
-                    style: TextStyle(
+                  child: Text(
+                    loc.mostPopular,
+                    style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -231,7 +236,7 @@ class PaywallScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(isDisabled ? 'غير متاح' : 'اشترك الآن', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text(isDisabled ? loc.unavailable : loc.subscribeNow, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

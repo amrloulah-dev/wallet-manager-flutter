@@ -65,7 +65,7 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('معاملات اليوم'),
+        title: Text(AppLocalizations.of(context)!.todayTransactions),
         actions: [
           Consumer<TransactionProvider>(
             builder: (context, provider, _) {
@@ -81,13 +81,13 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 elevation: 4,
                 itemBuilder: (BuildContext context) =>
                     <PopupMenuEntry<String?>>[
-                  _buildFilterMenuItem(null, 'الكل', provider.filterType,
+                  _buildFilterMenuItem(null, AppLocalizations.of(context)!.all, provider.filterType,
                       icon: Icons.clear_all),
                   const PopupMenuDivider(),
-                  _buildFilterMenuItem('send', 'إرسال', provider.filterType,
+                  _buildFilterMenuItem('send', AppLocalizations.of(context)!.send, provider.filterType,
                       icon: Icons.arrow_upward, color: AppColors.send),
                   _buildFilterMenuItem(
-                      'receive', 'استقبال', provider.filterType,
+                      'receive', AppLocalizations.of(context)!.receive, provider.filterType,
                       icon: Icons.arrow_downward, color: AppColors.receive),
                 ],
               );
@@ -179,7 +179,7 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
 
         if (hasError) {
           return CustomErrorWidget(
-            message: errorMessage ?? 'حدث خطأ أثناء تحميل المعاملات.',
+            message: errorMessage ?? AppLocalizations.of(context)!.errorLoadingTransactionsGeneric,
             onRetry: context.read<TransactionProvider>().fetchInitialTransactions,
           );
         }
@@ -190,11 +190,11 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
             if (transactions.isEmpty) {
               return EmptyStateWidget(
                 message: filterType == null
-                    ? 'لا توجد معاملات اليوم'
-                    : 'لا توجد معاملات بهذا الفلتر',
-                description: 'ابدأ بإضافة معاملة جديدة',
+                    ? AppLocalizations.of(context)!.noTransactionsTodayEmpty
+                    : AppLocalizations.of(context)!.noTransactionsWithFilter,
+                description: AppLocalizations.of(context)!.startAddingTransaction,
                 icon: Icons.receipt_long_outlined,
-                actionText: 'معاملة جديدة',
+                actionText: AppLocalizations.of(context)!.newTransaction,
                 onAction: () => _navigateToCreateTransaction(context),
               );
             }

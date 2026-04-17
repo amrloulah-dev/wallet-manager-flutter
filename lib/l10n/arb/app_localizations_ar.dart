@@ -160,8 +160,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'خطأ: مفتاح الترخيص غير متوفر. يرجى الرجوع والتحقق منه.';
 
   @override
-  String get activationFailed =>
-      'تم إنشاء الحساب ولكن فشل تفعيل مفتاح الترخيص. يرجى التواصل مع الدعم الفني.';
+  String get activationFailed => 'فشل التفعيل';
 
   @override
   String get loginSuccess => 'تم تسجيل الدخول بنجاح!';
@@ -281,10 +280,68 @@ class AppLocalizationsAr extends AppLocalizations {
       'يرجى تسجيل الدخول بحساب جوجل الخاص بالمتجر.';
 
   @override
-  String get unexpectedError => 'حدث خطأ غير متوقع.';
+  String get unexpectedError => 'حدث خطأ غير متوقع';
 
   @override
-  String get contactToRenewBtn => 'تواصل للتجديد';
+  String get loggingIn => 'جاري تسجيل الدخول...';
+
+  @override
+  String get employeeLoginSubtitle => 'تسجيل دخول الموظفين';
+
+  @override
+  String get enterStorePassword => 'أدخل كلمة مرور المتجر';
+
+  @override
+  String get requiredField => 'مطلوب';
+
+  @override
+  String get selectEmployee => 'اختر الموظف';
+
+  @override
+  String get selectEmployeeHint => 'اضغط للاختيار';
+
+  @override
+  String get pleaseSelectEmployee => 'يرجى اختيار الموظف';
+
+  @override
+  String get pinLabel => 'رقم التعريف الشخصي (PIN)';
+
+  @override
+  String get pinMustBe4Digits => 'يجب أن يكون 4 أرقام';
+
+  @override
+  String get loginAction => 'تسجيل الدخول';
+
+  @override
+  String get createStoreSubtitle =>
+      'قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية';
+
+  @override
+  String get ownerData => 'بيانات المالك';
+
+  @override
+  String get ownerNameLabel => 'اسم المالك';
+
+  @override
+  String get accountPassword => 'كلمة مرور الحساب';
+
+  @override
+  String get registerWithGoogle => 'تسجيل باستخدام Google';
+
+  @override
+  String get createAccountAction => 'إنشاء الحساب';
+
+  @override
+  String get authError => 'خطأ في المصادقة';
+
+  @override
+  String get pleaseSelectTransactionType => 'يرجى اختيار نوع المعاملة';
+
+  @override
+  String get edit => 'تعديل';
+
+  @override
+  String get payDebt => 'تسديد الدين';
 
   @override
   String get areYouOwner => 'هل أنت مالك المتجر؟ تسجيل الدخول من هنا';
@@ -549,9 +606,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get walletDetails => 'تفاصيل المحفظة';
 
   @override
-  String get edit => 'تعديل';
-
-  @override
   String get loadingWalletData => 'جاري تحميل بيانات المحفظة...';
 
   @override
@@ -648,4 +702,973 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accessDenied => 'تم رفض الوصول';
+
+  @override
+  String get frozen => 'مُجمد';
+
+  @override
+  String get sendDaily => 'إرسال يومي';
+
+  @override
+  String get receiveDaily => 'استقبال يومي';
+
+  @override
+  String get debt => 'دين';
+
+  @override
+  String get amountDue => 'المبلغ المستحق:';
+
+  @override
+  String get deleteDebt => 'حذف الدين';
+
+  @override
+  String get deleteDebtConfirmation =>
+      'هل أنت متأكد من حذف هذا الدين؟ لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get dailySummary => 'ملخص اليوم';
+
+  @override
+  String get sendAmount => 'مبلغ الإرسال';
+
+  @override
+  String get receiveAmount => 'مبلغ الاستقبال';
+
+  @override
+  String get transactionType => 'نوع المعاملة';
+
+  @override
+  String get amount => 'المبلغ';
+
+  @override
+  String get commission => 'العمولة';
+
+  @override
+  String get loadingDetails => 'جاري تحميل التفاصيل...';
+
+  @override
+  String get transactionNotFound => 'لم يتم العثور على المعاملة';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get totalAmount => 'إجمالي المبلغ';
+
+  @override
+  String get totalCommissionLabel => 'إجمالي العمولة';
+
+  @override
+  String get lastTransaction => 'آخر معاملة';
+
+  @override
+  String get debtSummary => 'ملخص الديون';
+
+  @override
+  String get totalDebts => 'إجمالي الديون';
+
+  @override
+  String get paidDebts => 'ديون مسددة';
+
+  @override
+  String get totalPaidAmount => 'إجمالي المبلغ المسدد';
+
+  @override
+  String get generalStats => 'الإحصائيات العامة';
+
+  @override
+  String get startDate => 'تاريخ البداية';
+
+  @override
+  String get endDate => 'تاريخ النهاية';
+
+  @override
+  String get applyFilter => 'تطبيق الفلتر';
+
+  @override
+  String get clearFilter => 'مسح الفلتر';
+
+  @override
+  String get filterDateError =>
+      'تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية';
+
+  @override
+  String get noDataInRange => 'لا توجد بيانات في هذا النطاق الزمني.';
+
+  @override
+  String get noStatsToShow => 'لا توجد إحصائيات لعرضها.';
+
+  @override
+  String get balance => 'الرصيد';
+
+  @override
+  String get totalWalletBalance => 'إجمالي الرصيد في المحافظ';
+
+  @override
+  String get sendTransactions => 'معاملات الإرسال';
+
+  @override
+  String get receiveTransactions => 'معاملات الاستقبال';
+
+  @override
+  String get amounts => 'المبالغ';
+
+  @override
+  String get totalAmountCombined => 'المبلغ الإجمالي';
+
+  @override
+  String get averageCommission => 'متوسط العمولة للمعاملة';
+
+  @override
+  String get openDebtsLabel => 'الديون المفتوحة';
+
+  @override
+  String get paidDebtsLabel => 'الديون المسددة';
+
+  @override
+  String get transactionDetails => 'تفاصيل المعاملة';
+
+  @override
+  String get total => 'الإجمالي';
+
+  @override
+  String get customerDetails => 'بيانات العميل';
+
+  @override
+  String get name => 'الاسم';
+
+  @override
+  String get usedWallet => 'المحفظة المستخدمة';
+
+  @override
+  String get walletNotFoundDetails => 'لا يمكن العثور على تفاصيل المحفظة.';
+
+  @override
+  String get walletNumber => 'رقم المحفظة';
+
+  @override
+  String get timeAndDate => 'الوقت والتاريخ';
+
+  @override
+  String get date => 'التاريخ';
+
+  @override
+  String get time => 'الوقت';
+
+  @override
+  String get since => 'منذ';
+
+  @override
+  String get transactionIsDebt => 'هذه المعاملة دين';
+
+  @override
+  String get debtWarningMessage =>
+      'لم يتم دفع المبلغ من قبل العميل وقت إنشاء المعاملة.';
+
+  @override
+  String get recordedNotes => 'الملاحظات المسجلة';
+
+  @override
+  String get transactionIdLabel => 'معرف المعاملة';
+
+  @override
+  String get createdBy => 'تم إنشاؤها بواسطة';
+
+  @override
+  String get unknown => 'غير معروف';
+
+  @override
+  String get ownerRoleSuffix => ' (المالك)';
+
+  @override
+  String get employeeRoleSuffix => ' (موظف)';
+
+  @override
+  String get forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get forgotPasswordMessage => 'نسيت كلمة المرور؟';
+
+  @override
+  String get comingSoon => 'قريباً';
+
+  @override
+  String get orLabel => 'أو';
+
+  @override
+  String get continueWithGoogle => 'المتابعة باستخدام Google';
+
+  @override
+  String get enterStoreEmailMessage =>
+      'أدخل البريد الإلكتروني للمتجر لتسجيل الدخول كموظف';
+
+  @override
+  String get storeEmail => 'بريد المتجر الإلكتروني';
+
+  @override
+  String get findStore => 'البحث عن المتجر';
+
+  @override
+  String get noAccountYet => 'ليس لديك حساب؟';
+
+  @override
+  String get createStoreNew => 'إنشاء متجر جديد';
+
+  @override
+  String get todayTransactions => 'معاملات اليوم';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get errorLoadingTransactionsGeneric =>
+      'حدث خطأ أثناء تحميل المعاملات.';
+
+  @override
+  String get noTransactionsTodayEmpty => 'لا توجد معاملات اليوم';
+
+  @override
+  String get noTransactionsWithFilter => 'لا توجد معاملات بهذا الفلتر';
+
+  @override
+  String get startAddingTransaction => 'ابدأ بإضافة معاملة جديدة';
+
+  @override
+  String get transactionCreatedSuccess => 'تم إنشاء المعاملة بنجاح';
+
+  @override
+  String get transactionCreationFailed => 'فشل إنشاء المعاملة';
+
+  @override
+  String get ok => 'حسناً';
+
+  @override
+  String get noWalletsAvailableAddFirst =>
+      'لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.';
+
+  @override
+  String get selectWalletForTransaction => 'اختر المحفظة لإجراء المعاملة';
+
+  @override
+  String get customerPhone => 'رقم موبايل العميل';
+
+  @override
+  String get customerNameOptional => 'اسم العميل (اختياري)';
+
+  @override
+  String get enterClientName => 'أدخل اسم العميل';
+
+  @override
+  String get amountAndCommission => 'المبلغ والعمولة';
+
+  @override
+  String get amountLabel => 'المبلغ';
+
+  @override
+  String get commissionLabel => 'العمولة';
+
+  @override
+  String get invalidValue => 'قيمة غير صالحة';
+
+  @override
+  String get totalLabel => 'الإجمالي';
+
+  @override
+  String get reviewWalletLimits => 'مراجعة حدود المحفظة';
+
+  @override
+  String get dailyLimitAfterTransaction => 'الحد اليومي (بعد المعاملة)';
+
+  @override
+  String get monthlyLimitAfterTransaction => 'الحد الشهري (بعد المعاملة)';
+
+  @override
+  String get walletLimitWarning =>
+      'تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.';
+
+  @override
+  String get additionalTransactionDetails => 'أي تفاصيل إضافية عن المعاملة';
+
+  @override
+  String get createTransactionButton => 'إنشاء المعاملة';
+
+  @override
+  String get transactionCreateFailed => 'فشل إنشاء المعاملة';
+
+  @override
+  String get errorTitle => 'خطأ';
+
+  @override
+  String get okButton => 'حسناً';
+
+  @override
+  String get debtsTitle => 'الديون';
+
+  @override
+  String get addDebt => 'إضافة دين';
+
+  @override
+  String get settleDebt => 'تسديد الدين';
+
+  @override
+  String get settleDebtConfirmation =>
+      'هل أنت متأكد أنك تريد تسجيل هذا الدين كـ \"مسدد\"؟';
+
+  @override
+  String get confirmSettlement => 'تأكيد التسديد';
+
+  @override
+  String get userNotRegistered => 'خطأ: المستخدم غير مسجل';
+
+  @override
+  String get debtSettlementFailed => 'فشل تسديد الدين';
+
+  @override
+  String get debtSettledSuccess => 'تم تسديد الدين بنجاح';
+
+  @override
+  String get errorLoadingDebts => 'حدث خطأ أثناء تحميل الديون.';
+
+  @override
+  String get noDebtsRecorded => 'لا توجد ديون مسجلة';
+
+  @override
+  String get debtsWillAppearHere => 'سيتم عرض الديون المفتوحة والمسددة هنا.';
+
+  @override
+  String get addNewDebt => 'إضافة دين جديد';
+
+  @override
+  String allWithCount(int count) {
+    return 'الكل ($count)';
+  }
+
+  @override
+  String openWithCount(int count) {
+    return 'مفتوح ($count)';
+  }
+
+  @override
+  String paidWithCount(int count) {
+    return 'مسدد ($count)';
+  }
+
+  @override
+  String get financialTransfers => 'تحويلات مالية';
+
+  @override
+  String get storeSales => 'مبيعات محل';
+
+  @override
+  String get addDebtTitle => 'إضافة دين جديد';
+
+  @override
+  String get customerName => 'اسم العميل';
+
+  @override
+  String get enterFullCustomerName => 'أدخل اسم العميل بالكامل';
+
+  @override
+  String get debtType => 'نوع الدين';
+
+  @override
+  String get walletTransaction => 'معاملة محفظة';
+
+  @override
+  String get walletTransactionSubtitle =>
+      'دين ناتج عن معاملة إرسال لم يتم دفعها';
+
+  @override
+  String get storeSale => 'بيع من المحل';
+
+  @override
+  String get storeSaleSubtitle => 'دين ناتج عن عملية بيع آجلة من المحل';
+
+  @override
+  String get amountDueTitle => 'المبلغ المستحق';
+
+  @override
+  String get debtWillBeAdded =>
+      'سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.';
+
+  @override
+  String get additionalDebtDetails => 'أي تفاصيل إضافية عن الدين';
+
+  @override
+  String get addDebtAction => 'إضافة الدين';
+
+  @override
+  String get debtAddedSuccess => 'تم إضافة الدين بنجاح';
+
+  @override
+  String get employeePermissions => 'صلاحيات الموظف';
+
+  @override
+  String get defineEmployeeActions => 'حدد ما يمكن للموظف القيام به';
+
+  @override
+  String get financialTransactionsSection => 'المعاملات المالية';
+
+  @override
+  String get createNewTransaction => 'إنشاء معاملة جديدة';
+
+  @override
+  String get viewAllTransactions => 'عرض جميع المعاملات';
+
+  @override
+  String get debtsSection => 'الديون';
+
+  @override
+  String get viewDebtsList => 'عرض قائمة الديون';
+
+  @override
+  String get addNewDebtPermission => 'إضافة دين جديد';
+
+  @override
+  String get collectDebt => 'تحصيل دين (دفع جزئي/كلي)';
+
+  @override
+  String get deleteDebtPermission => 'حذف دين';
+
+  @override
+  String get walletsSection => 'المحافظ';
+
+  @override
+  String get viewWalletsList => 'عرض قائمة المحافظ';
+
+  @override
+  String get addNewWalletPermission => 'إضافة محفظة جديدة';
+
+  @override
+  String get addBalanceToWalletPermission => 'شحن رصيد للمحفظة';
+
+  @override
+  String get editWalletData => 'تعديل بيانات المحفظة';
+
+  @override
+  String get viewWalletBalance => 'عرض رصيد المحافظ';
+
+  @override
+  String get dashboardSection => 'لوحة التحكم';
+
+  @override
+  String get viewStatsCharts => 'عرض الإحصائيات (المخططات)';
+
+  @override
+  String get editDebt => 'تعديل الدين';
+
+  @override
+  String get paymentMode => 'دفعة';
+
+  @override
+  String get additionMode => 'إضافة';
+
+  @override
+  String get currentAmount => 'المبلغ الحالي';
+
+  @override
+  String get pleaseEnterAmount => 'يرجى إدخل المبلغ';
+
+  @override
+  String get invalidAmount => 'مبلغ غير صحيح';
+
+  @override
+  String get amountMustBePositive => 'المبلغ يجب أن يكون أكبر من صفر';
+
+  @override
+  String get paymentExceedsDebt => 'المبلغ المدفوع أكبر من الدين';
+
+  @override
+  String get newAmount => 'المبلغ الجديد:';
+
+  @override
+  String get saveEdit => 'حفظ التعديل';
+
+  @override
+  String get debtUpdatedSuccess => 'تم تحديث الدين بنجاح';
+
+  @override
+  String get debtUpdateFailed => 'فشل تحديث الدين';
+
+  @override
+  String get retryAction => 'إعادة المحاولة';
+
+  @override
+  String get noPermissionWallets => 'ليس لديك صلاحية لعرض المحافظ';
+
+  @override
+  String get noPermissionTransactions => 'ليس لديك صلاحية لعرض المعاملات';
+
+  @override
+  String get noPermissionDebts => 'ليس لديك صلاحية لعرض الديون';
+
+  @override
+  String get noPermissionStats => 'ليس لديك صلاحية لعرض الإحصائيات';
+
+  @override
+  String get deactivateEmployeeAccount => 'تعطيل حساب الموظف';
+
+  @override
+  String deactivateEmployeeConfirmation(String name) {
+    return 'هل أنت متأكد أنك تريد تعطيل حساب $name؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.';
+  }
+
+  @override
+  String get deactivate => 'تعطيل';
+
+  @override
+  String get employeeDeactivated => 'تم تعطيل حساب الموظف';
+
+  @override
+  String get deactivationFailed => 'فشل تعطيل الحساب';
+
+  @override
+  String get loadingEmployees => 'جاري تحميل الموظفين...';
+
+  @override
+  String get errorLoadingEmployees => 'حدث خطأ أثناء تحميل الموظفين';
+
+  @override
+  String get noEmployees => 'لا يوجد موظفين';
+
+  @override
+  String get startAddingEmployees => 'ابدأ بإضافة موظف جديد لإدارة صلاحياته.';
+
+  @override
+  String get addEmployee => 'إضافة موظف';
+
+  @override
+  String get permissionsUpdatedSuccess => 'تم تحديث الصلاحيات بنجاح';
+
+  @override
+  String get employeeDetails => 'تفاصيل الموظف';
+
+  @override
+  String get editPermissions => 'تعديل الصلاحيات';
+
+  @override
+  String get inactive => 'معطل';
+
+  @override
+  String get employeeAddedSuccess => 'تمت إضافة الموظف بنجاح';
+
+  @override
+  String get addNewEmployee => 'إضافة موظف جديد';
+
+  @override
+  String currentEmployeesCount(int current, int max) {
+    return 'الموظفين الحاليين: $current / $max';
+  }
+
+  @override
+  String get limitReached => 'تم الوصول للحد الأقصى';
+
+  @override
+  String get employeeLoginInfo =>
+      'سيستخدم الموظف رقم الهاتف والرقم السري لتسجيل الدخول.';
+
+  @override
+  String get fullName => 'الاسم الكامل';
+
+  @override
+  String get enterEmployeeName => 'أدخل اسم الموظف';
+
+  @override
+  String get employeePinTitle => 'الرقم السري للموظف (PIN)';
+
+  @override
+  String get pin => 'الرقم السري';
+
+  @override
+  String get fourDigits => '4 أرقام';
+
+  @override
+  String get confirmPin => 'تأكيد الرقم السري';
+
+  @override
+  String get reenterPin => 'أعد إدخال الرقم السري';
+
+  @override
+  String get pinsDoNotMatch => 'الرقمان غير متطابقان';
+
+  @override
+  String get subscriptionDetails => 'تفاصيل الاشتراك';
+
+  @override
+  String get currentUsage => 'الاستهلاك الحالي';
+
+  @override
+  String get employeeAccounts => 'حسابات الموظفين';
+
+  @override
+  String get upgradeSubscription => 'ترقية الاشتراك';
+
+  @override
+  String get currentPlan => 'الباقة الحالية';
+
+  @override
+  String get suspended => 'معلق';
+
+  @override
+  String get freePlan => 'مجاني';
+
+  @override
+  String get proYearlyPlan => 'برو (سنوي)';
+
+  @override
+  String get lifetimeVipPlan => 'مدى الحياة VIP';
+
+  @override
+  String get trialPlan => 'تجريبي';
+
+  @override
+  String get upgradeAccount => 'ترقية الحساب';
+
+  @override
+  String get unlockStoreCapabilities => 'فتح إمكانيات متجرك';
+
+  @override
+  String get paywallSubtitle =>
+      'توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.';
+
+  @override
+  String get proYearlyTitle => 'باقة برو السنوية';
+
+  @override
+  String get proYearlyPrice => '999 جنيه / سنة';
+
+  @override
+  String get proFeature1 => 'مزامنة المعاملات تلقائيا';
+
+  @override
+  String get proFeature2 => 'إدارة حتى 50 محفظة';
+
+  @override
+  String get proFeature3 => 'إنشاء حسابات للموظفين';
+
+  @override
+  String get proFeature4 => 'دعم فني متخصص';
+
+  @override
+  String get lifetimeTitle => 'باقة مدى الحياة';
+
+  @override
+  String get lifetimePrice => '2999 جنيه فقط مره واحده';
+
+  @override
+  String get lifetimeFeature1 => 'عدد لا نهائي من المحافظ';
+
+  @override
+  String get lifetimeFeature2 => 'عدد لا نهائي من الموظفين';
+
+  @override
+  String get lifetimeFeature3 => 'إشعارات SMS للعملاء';
+
+  @override
+  String get lifetimeFeature4 => 'أولوية الدعم الفني VIP';
+
+  @override
+  String get mostPopular => 'الأكثر طلباً';
+
+  @override
+  String remainingSeats(int count) {
+    return 'متبقي $count مقاعد فقط!';
+  }
+
+  @override
+  String get soldOut => 'نفدت الكمية';
+
+  @override
+  String get subscribeNow => 'اشترك الآن';
+
+  @override
+  String get termsAgreement =>
+      'بمتابعة العملية أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا.';
+
+  @override
+  String get paymentDetails => 'تفاصيل الدفع';
+
+  @override
+  String selectedPlan(String plan) {
+    return 'الاشتراك المختار: $plan';
+  }
+
+  @override
+  String get paymentMethod => 'طريقة الدفع';
+
+  @override
+  String get transferToNumber => 'يرجى تحويل المبلغ إلى الرقم: 01000000000';
+
+  @override
+  String get transferToAccount => 'يرجى تحويل المبلغ إلى الحساب: instapay@bank';
+
+  @override
+  String get receiptNumber => 'رقم الإيصال / رقم العملية';
+
+  @override
+  String get fieldRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String get subscriptionRequestSent =>
+      'تم إرسال طلب الاشتراك بنجاح. يرجى الانتظار للمراجعة.';
+
+  @override
+  String get errorOccurred => 'حدث خطأ:';
+
+  @override
+  String get lifetimePlan => 'مدى الحياة';
+
+  @override
+  String get accountSuspended => 'تم إيقاف حسابك';
+
+  @override
+  String get accountSuspendedMessage =>
+      'لقد تم تعليق حسابك من قبل الإدارة. يرجى التواصل مع فريق الدعم الفني لحل هذه المشكلة واستعادة وصولك إلى النظام.';
+
+  @override
+  String get contactingSupportTeam => 'جاري الاتصال بالدعم الفني...';
+
+  @override
+  String get contactSupport => 'تواصل مع الدعم الفني';
+
+  @override
+  String get subscriptionActivatedMessage =>
+      'لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الاستمتاع بكافة الميزات الاحترافية.';
+
+  @override
+  String get continueButton => 'متابعة';
+
+  @override
+  String get subscriptionUnderReview =>
+      'يتم الآن مراجعة طلب الاشتراك الخاص بك.';
+
+  @override
+  String get subscriptionRejected =>
+      'تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم.';
+
+  @override
+  String get subscriptionExpiredMessage =>
+      'انتهت صلاحية اشتراكك. قم بالترقية للاستمرار.';
+
+  @override
+  String trialEndingSoon(int daysLeft) {
+    return 'باقي $daysLeft يوم على انتهاء الفترة التجريبية. قم بالترقية الآن.';
+  }
+
+  @override
+  String get upgradeToFullVersionTitle => 'الترقية للنسخة الكاملة';
+
+  @override
+  String get getActivationKey => 'للحصول على مفتاح التفعيل، يرجى التواصل معنا';
+
+  @override
+  String get contactViaWhatsapp => 'تواصل عبر واتساب';
+
+  @override
+  String get contactViaEmail => 'تواصل عبر البريد الإلكتروني';
+
+  @override
+  String get activateSubscription => 'تفعيل الاشتراك';
+
+  @override
+  String get activationKey => 'مفتاح التفعيل';
+
+  @override
+  String get enterActivationKeyHere => 'أدخل مفتاح التفعيل هنا';
+
+  @override
+  String get pleaseEnterActivationKey => 'الرجاء إدخال مفتاح التفعيل';
+
+  @override
+  String get activate => 'تفعيل';
+
+  @override
+  String get subscriptionActivatedSuccessfully => 'تم تفعيل الاشتراك بنجاح!';
+
+  @override
+  String get fullVersionActivated => 'النسخة الكاملة مفعلة';
+
+  @override
+  String daysRemainingCount(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String get renewSubscription => 'تجديد الاشتراك';
+
+  @override
+  String get renewWhatsappMessage =>
+      'مرحباً، أرغب في تجديد اشتراكي في تطبيق مدير المحفظة.';
+
+  @override
+  String get activationWhatsappMessage =>
+      'مرحباً، أرغب في الحصول على مفتاح تفعيل لتطبيق مدير المحفظة.';
+
+  @override
+  String get failedOpenWhatsApp => 'فشل فتح واتساب';
+
+  @override
+  String get activationEmailSubject => 'طلب تفعيل النسخة الكاملة';
+
+  @override
+  String get activationEmailBody =>
+      'مرحباً، أود الاستفسار عن كيفية الترقية للنسخة الكاملة.';
+
+  @override
+  String get failedOpenEmail => 'فشل فتح البريد الإلكتروني';
+
+  @override
+  String get newTransactionTitle => 'معاملة جديدة';
+
+  @override
+  String get noWalletsAvailableMessage =>
+      'لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.';
+
+  @override
+  String get selectWalletHint => 'اختر المحفظة لإجراء المعاملة';
+
+  @override
+  String get password => 'كلمة المرور';
+
+  @override
+  String get smsPermissionRequired => 'مطلوب صلاحية رسائل SMS';
+
+  @override
+  String get automationAndMessages => 'الأتمتة والرسائل';
+
+  @override
+  String get enableAutoSmsReading => 'تفعيل القراءة التلقائية للرسائل';
+
+  @override
+  String get autoDetectTransactions => 'اكتشاف المعاملات تلقائياً من الإشعارات';
+
+  @override
+  String get linkSimToWallet => 'ربط الشريحة بالمحفظة';
+
+  @override
+  String get sim1Label => 'شريحة 1';
+
+  @override
+  String get sim2Label => 'شريحة 2';
+
+  @override
+  String get noSavedWallets => 'لا توجد محافظ محفوظة';
+
+  @override
+  String get trialDaysRemainingLabel => 'أيام الفترة التجريبية المتبقية';
+
+  @override
+  String get logoutButton => 'تسجيل الخروج';
+
+  @override
+  String get instaPay => 'انستا باي';
+
+  @override
+  String get confirmPayment => 'تأكيد الدفع';
+
+  @override
+  String get paymentConfirmedSuccess => 'تم تأكيد الدفع بنجاح';
+
+  @override
+  String get unavailable => 'غير متوفر';
+
+  @override
+  String get send => 'إرسال';
+
+  @override
+  String get receive => 'استلام';
+
+  @override
+  String get clientData => 'بيانات العميل';
+
+  @override
+  String get clientPhoneNumber => 'رقم الهاتف';
+
+  @override
+  String get clientNameOptional => 'اسم العميل (اختياري)';
+
+  @override
+  String get pressBackAgainToExit => 'اضغط مرة أخرى للخروج';
+
+  @override
+  String get ownerOnlyFeature => 'هذه الميزة للمالك فقط';
+
+  @override
+  String expiryDateValue(String date) {
+    return 'تاريخ الانتهاء: $date';
+  }
+
+  @override
+  String get subscriptionExpiredRenew => 'انتهى اشتراكك. الرجاء التجديد.';
+
+  @override
+  String get hide => 'إخفاء';
+
+  @override
+  String get addEmployeeAction => 'إضافة موظف';
+
+  @override
+  String get dateAdded => 'تاريخ الإضافة';
+
+  @override
+  String get manageEmployeesTitle => 'إدارة الموظفين';
+
+  @override
+  String get activeEmployees => 'الموظفين النشطين';
+
+  @override
+  String get inactiveEmployees => 'الموظفين غير النشطين';
+
+  @override
+  String get noPermissionCreateTransaction => 'لا توجد صلاحية لإنشاء معاملة';
+
+  @override
+  String get noPermissionCreateWallet => 'لا توجد صلاحية لإنشاء محفظة';
+
+  @override
+  String get noPermissionCreateDebt => 'لا توجد صلاحية لإنشاء دين';
+
+  @override
+  String get noPermissionViewStats => 'لا توجد صلاحية لعرض الإحصائيات';
+
+  @override
+  String get noPermissionViewTransactionDetails =>
+      'لا توجد صلاحية لعرض تفاصيل المعاملة';
+
+  @override
+  String get trialPeriod => 'فترة تجريبية';
+
+  @override
+  String get trialDaysRemaining => 'أيام الفترة التجريبية المتبقية';
+
+  @override
+  String get upgradeFullVersion => 'ترقية للنسخة الكاملة';
+
+  @override
+  String get openDebt => 'دين مفتوح';
+
+  @override
+  String get paidDebt => 'دين مدفوع';
+
+  @override
+  String get deposit => 'إيداع';
+
+  @override
+  String get paid => 'مدفوع';
+
+  @override
+  String get transactionExceedsLimitWarning =>
+      'تحذير: هذه المعاملة ستتجاوز الحد المسموح به.';
+
+  @override
+  String get googleLoginError => 'خطأ في تسجيل الدخول بحساب جوجل';
+
+  @override
+  String get storeInfo => 'معلومات المتجر';
+
+  @override
+  String get pendingSubscriptionReview => 'مراجعة الاشتراك قيد الانتظار';
+
+  @override
+  String get rejectedSubscriptionRequest => 'تم رفض طلب الاشتراك';
 }

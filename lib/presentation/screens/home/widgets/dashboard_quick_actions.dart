@@ -18,6 +18,7 @@ class DashboardQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Selector<StatisticsProvider, int>(
       selector: (context, provider) => provider.dashboardSummary?.openDebtsCount ?? 0,
       builder: (context, openDebtsCount, child) {
@@ -47,7 +48,7 @@ class DashboardQuickActions extends StatelessWidget {
 
             final List<Widget> actions = [
               QuickActionCard(
-                title: AppLocalizations.of(context)!.newTransaction,
+                title: l10n.newTransaction,
                 icon: Icons.add_circle_outline,
                 color: AppColors.primary,
                 onTap: () {
@@ -56,12 +57,12 @@ class DashboardQuickActions extends StatelessWidget {
                       user.hasPermission((p) => p.createTransaction)) {
                     _navigateToCreateTransaction(context);
                   } else {
-                    ToastUtils.showError('ليس لديك صلاحية لإنشاء معاملة');
+                    ToastUtils.showError(l10n.noPermissionCreateTransaction);
                   }
                 },
               ),
               QuickActionCard(
-                title: AppLocalizations.of(context)!.newWallet,
+                title: l10n.newWallet,
                 icon: Icons.account_balance_wallet_outlined,
                 color: Colors.orange.shade700,
                 onTap: () {
@@ -69,12 +70,12 @@ class DashboardQuickActions extends StatelessWidget {
                   if (user != null && user.hasPermission((p) => p.createWallet)) {
                     Navigator.pushNamed(context, RouteConstants.walletForm);
                   } else {
-                    ToastUtils.showError('ليس لديك صلاحية لإنشاء محفظة');
+                    ToastUtils.showError(l10n.noPermissionCreateWallet);
                   }
                 },
               ),
               QuickActionCard(
-                title: '${AppLocalizations.of(context)!.newDebt} ($openDebtsCount)',
+                title: '${l10n.newDebt} ($openDebtsCount)',
                 icon: Icons.post_add_outlined,
                 color: AppColors.error,
                 onTap: () {
@@ -82,12 +83,12 @@ class DashboardQuickActions extends StatelessWidget {
                   if (user != null && user.hasPermission((p) => p.createDebt)) {
                     Navigator.pushNamed(context, RouteConstants.addDebt);
                   } else {
-                    ToastUtils.showError('ليس لديك صلاحية لإنشاء دين');
+                    ToastUtils.showError(l10n.noPermissionCreateDebt);
                   }
                 },
               ),
               QuickActionCard(
-                title: AppLocalizations.of(context)!.viewWallets,
+                title: l10n.viewWallets,
                 icon: Icons.wallet,
                 color: Colors.blue.shade700,
                 onTap: () {
@@ -98,13 +99,12 @@ class DashboardQuickActions extends StatelessWidget {
                   if (canAccess) {
                     Navigator.pushNamed(context, RouteConstants.walletsList);
                   } else {
-                    ToastUtils.showError(
-                        AppLocalizations.of(context)!.accessDenied);
+                    ToastUtils.showError(l10n.accessDenied);
                   }
                 },
               ),
               QuickActionCard(
-                title: AppLocalizations.of(context)!.statistics,
+                title: l10n.statistics,
                 icon: Icons.bar_chart,
                 color: Colors.purple.shade700,
                 onTap: () {
@@ -113,12 +113,12 @@ class DashboardQuickActions extends StatelessWidget {
                       user.hasPermission((p) => p.viewDashboardStats)) {
                     Navigator.pushNamed(context, RouteConstants.generalStatistics);
                   } else {
-                    ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
+                    ToastUtils.showError(l10n.noPermissionViewStats);
                   }
                 },
               ),
               QuickActionCard(
-                title: AppLocalizations.of(context)!.viewDebts,
+                title: l10n.viewDebts,
                 icon: Icons.credit_card,
                 color: Colors.red.shade700,
                 onTap: () {
@@ -129,13 +129,12 @@ class DashboardQuickActions extends StatelessWidget {
                   if (canAccess) {
                     Navigator.pushNamed(context, RouteConstants.debtsList);
                   } else {
-                    ToastUtils.showError(
-                        AppLocalizations.of(context)!.accessDenied);
+                    ToastUtils.showError(l10n.accessDenied);
                   }
                 },
               ),
               QuickActionCard(
-                title: AppLocalizations.of(context)!.manageEmployees,
+                title: l10n.manageEmployees,
                 icon: Icons.people_alt_outlined,
                 color: Colors.teal.shade700,
                 onTap: () {
@@ -143,7 +142,7 @@ class DashboardQuickActions extends StatelessWidget {
                   if (user != null && user.role == 'owner') {
                     Navigator.pushNamed(context, RouteConstants.manageEmployees);
                   } else {
-                    ToastUtils.showError('هذه الخاصية للمالك فقط');
+                    ToastUtils.showError(l10n.ownerOnlyFeature);
                   }
                 },
               ),
@@ -156,7 +155,7 @@ class DashboardQuickActions extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 24),
-                  SectionHeader(title: AppLocalizations.of(context)!.quickActions),
+                  SectionHeader(title: l10n.quickActions),
                   const SizedBox(height: 12),
                   GridView.count(
                     shrinkWrap: true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
@@ -34,10 +35,10 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
     final provider = context.read<EmployeeProvider>();
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تعطيل حساب الموظف',
+      title: AppLocalizations.of(context)!.deactivateEmployeeAccount,
       message:
-          'هل أنت متأكد أنك تريد تعطيل حساب ${employee.fullName}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.',
-      confirmText: 'تعطيل',
+          AppLocalizations.of(context)!.deactivateEmployeeConfirmation(employee.fullName),
+      confirmText: AppLocalizations.of(context)!.deactivate,
       type: DialogType.danger,
     );
 
@@ -45,9 +46,9 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       final success = await provider.deactivateEmployee(employee.userId);
       if (mounted) {
         if (success) {
-          ToastUtils.showSuccess('تم تعطيل حساب الموظف');
+          ToastUtils.showSuccess(AppLocalizations.of(context)!.employeeDeactivated);
         } else {
-          ToastUtils.showError(provider.errorMessage ?? 'فشل تعطيل الحساب');
+          ToastUtils.showError(provider.errorMessage ?? AppLocalizations.of(context)!.deactivationFailed);
         }
       }
     }
@@ -57,28 +58,28 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة الموظفين'),
+        title: Text(AppLocalizations.of(context)!.manageEmployeesTitle),
         centerTitle: true,
       ),
       body: Consumer<EmployeeProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.employees.isEmpty) {
-            return const LoadingIndicator(message: 'جاري تحميل الموظفين...');
+            return LoadingIndicator(message: AppLocalizations.of(context)!.loadingEmployees);
           }
 
           if (provider.hasError && provider.employees.isEmpty) {
             return CustomErrorWidget(
-              message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الموظفين',
+              message: provider.errorMessage ?? AppLocalizations.of(context)!.errorLoadingEmployees,
               onRetry: () => provider.refresh(),
             );
           }
 
           if (provider.employees.isEmpty) {
             return EmptyStateWidget(
-              message: 'لا يوجد موظفين',
-              description: 'ابدأ بإضافة موظف جديد لإدارة صلاحياته.',
+              message: AppLocalizations.of(context)!.noEmployees,
+              description: AppLocalizations.of(context)!.startAddingEmployees,
               icon: Icons.people_outline,
-              actionText: 'إضافة موظف',
+              actionText: AppLocalizations.of(context)!.addEmployee,
               onAction: _navigateToAddEmployee,
             );
           }
@@ -90,9 +91,9 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
             padding: const EdgeInsets.only(bottom: 80), // For FAB
             children: [
               if (activeEmployees.isNotEmpty)
-                _buildEmployeeSection('الموظفين النشطين', activeEmployees),
+                _buildEmployeeSection(AppLocalizations.of(context)!.activeEmployees, activeEmployees),
               if (inactiveEmployees.isNotEmpty)
-                _buildEmployeeSection('الموظفين المعطلين', inactiveEmployees),
+                _buildEmployeeSection(AppLocalizations.of(context)!.inactiveEmployees, inactiveEmployees),
             ],
           );
         },
@@ -100,7 +101,7 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddEmployee,
         icon: const Icon(Icons.add),
-        label: const Text('إضافة موظف'),
+        label: Text(AppLocalizations.of(context)!.addEmployee),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),

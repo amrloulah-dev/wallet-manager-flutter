@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String message;
@@ -34,7 +35,7 @@ class CustomErrorWidget extends StatelessWidget {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: onRetry,
-                  child: const Text('إعادة المحاولة'),
+                  child: Text(AppLocalizations.of(context)!.retryAction),
                 ),
               ],
             ],

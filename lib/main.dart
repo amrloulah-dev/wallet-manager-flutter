@@ -91,6 +91,7 @@ void overlayMain() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
+    debugPrint("Firebase init error in overlay: $e");
   }
 
   // 2. Initialize Dependency Injection (Includes Storage init)

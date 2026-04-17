@@ -73,7 +73,7 @@ class AppRouter {
 
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
+          builder: (ctx) => Scaffold(
             appBar: AppBar(
               title: const Text('خطأ'),
               centerTitle: true,
@@ -92,7 +92,7 @@ class AppRouter {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(_);
+                      Navigator.pop(ctx);
                     },
                     child: const Text('الرجوع'),
                   ),

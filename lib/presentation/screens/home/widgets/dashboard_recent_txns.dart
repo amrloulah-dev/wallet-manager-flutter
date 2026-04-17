@@ -17,6 +17,7 @@ class DashboardRecentTxns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Selector<TransactionProvider,
         ({bool isLoading, List<TransactionModel> recentFive})>(
       selector: (context, provider) => (
@@ -38,8 +39,8 @@ class DashboardRecentTxns extends StatelessWidget {
             children: [
               const SizedBox(height: 24),
               SectionHeader(
-                title: AppLocalizations.of(context)!.recentTransactions,
-                actionText: AppLocalizations.of(context)!.viewAll,
+                title: l10n.recentTransactions,
+                actionText: l10n.viewAll,
                 onActionTap: () {
                   final user = context.read<AuthProvider>().currentUser;
                   if (user != null &&
@@ -50,7 +51,7 @@ class DashboardRecentTxns extends StatelessWidget {
                         context, RouteConstants.todayTransactions);
                   } else {
                     ToastUtils.showError(
-                        AppLocalizations.of(context)!.accessDenied);
+                        l10n.accessDenied);
                   }
                 },
               ),
@@ -61,7 +62,7 @@ class DashboardRecentTxns extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Text(
-                    AppLocalizations.of(context)!.noTransactionsToday,
+                    l10n.noTransactionsToday,
                     style: AppTextStyles.bodyMedium,
                   ),
                 )
@@ -86,7 +87,7 @@ class DashboardRecentTxns extends StatelessWidget {
                           );
                         } else {
                           ToastUtils.showError(
-                              'ليس لديك صلاحية لعرض تفاصيل المعاملة');
+                              l10n.noPermissionViewTransactionDetails);
                         }
                       },
                     );

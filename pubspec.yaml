@@ -65,6 +65,7 @@ dependencies:
   ntp: ^2.0.0
   get_it: ^9.2.1
 
+  meta: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

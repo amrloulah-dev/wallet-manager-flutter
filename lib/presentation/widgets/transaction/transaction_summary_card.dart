@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class TransactionSummaryCard extends StatelessWidget {
   final int totalTransactions;
@@ -23,6 +24,7 @@ class TransactionSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 2,
       margin: const EdgeInsets.all(16),
@@ -38,7 +40,7 @@ class TransactionSummaryCard extends StatelessWidget {
                 const Icon(Icons.summarize, color: AppColors.primary, size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  'ملخص اليوم',
+                  l10n.dailySummary,
                   style: AppTextStyles.h3,
                 ),
               ],
@@ -56,39 +58,39 @@ class TransactionSummaryCard extends StatelessWidget {
               children: [
                 _SummaryItem(
                   icon: Icons.swap_horiz,
-                  label: 'المعاملات',
+                  label: l10n.transactions,
                   value: '$totalTransactions',
                   color: AppColors.primary,
                 ),
                 _SummaryItem(
                   icon: Icons.arrow_upward,
-                  label: 'إرسال',
+                  label: l10n.send,
                   value: '$sendCount',
                   color: AppColors.send,
                 ),
                 _SummaryItem(
                   icon: Icons.arrow_downward,
-                  label: 'استقبال',
+                  label: l10n.receive,
                   value: '$receiveCount',
                   color: AppColors.receive,
                 ),
                 _SummaryItem(
                   icon: Icons.arrow_upward,
-                  label: 'مبلغ الإرسال',
+                  label: l10n.sendAmount,
                   value: NumberFormatter.formatAmount(totalSendAmount,
                       showCurrency: false),
                   color: AppColors.send,
                 ),
                 _SummaryItem(
                   icon: Icons.arrow_downward,
-                  label: 'مبلغ الاستقبال',
+                  label: l10n.receiveAmount,
                   value: NumberFormatter.formatAmount(totalReceiveAmount,
                       showCurrency: false),
                   color: AppColors.receive,
                 ),
                 _SummaryItem(
                   icon: Icons.attach_money,
-                  label: 'العمولات',
+                  label: l10n.commission,
                   value: NumberFormatter.formatAmount(totalCommission),
                   color: AppColors.success,
                 ),

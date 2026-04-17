@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -64,7 +65,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
     final currentUserId = authProvider.currentUserId;
 
     if (currentUserId == null) {
-      ToastUtils.showError('خطأ: المستخدم غير مسجل');
+      ToastUtils.showError(AppLocalizations.of(context)!.userNotRegistered);
       return;
     }
 
@@ -93,10 +94,10 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
 
     if (mounted) {
       if (success) {
-        ToastUtils.showSuccess('تم تحديث الدين بنجاح');
+        ToastUtils.showSuccess(AppLocalizations.of(context)!.debtUpdatedSuccess);
         Navigator.pop(context);
       } else {
-        ToastUtils.showError(debtProvider.errorMessage ?? 'فشل تحديث الدين');
+        ToastUtils.showError(debtProvider.errorMessage ?? AppLocalizations.of(context)!.debtUpdateFailed);
       }
     }
   }
@@ -147,7 +148,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         ),
         const SizedBox(height: 16),
         Text(
-          'تعديل الدين',
+          AppLocalizations.of(context)!.editDebt,
           style: AppTextStyles.h3,
         ),
         const SizedBox(height: 8),
@@ -182,24 +183,24 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         borderColor: AppColors.divider(context),
         selectedBorderColor:
             _isPaymentMode ? AppColors.success : AppColors.error,
-        children: const <Widget>[
+        children: <Widget>[
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                Icon(Icons.arrow_downward),
-                SizedBox(width: 8),
-                Text('دفعة'),
+                const Icon(Icons.arrow_downward),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context)!.paymentMode),
               ],
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                Icon(Icons.arrow_upward),
-                SizedBox(width: 8),
-                Text('إضافة'),
+                const Icon(Icons.arrow_upward),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context)!.additionMode),
               ],
             ),
           ),
@@ -218,7 +219,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('المبلغ الحالي', style: AppTextStyles.labelLarge),
+          Text(AppLocalizations.of(context)!.currentAmount, style: AppTextStyles.labelLarge),
           Text(
             NumberFormatter.formatAmount(widget.debt.amountDue),
             style: AppTextStyles.h2.copyWith(color: AppColors.primary),
@@ -231,7 +232,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
   Widget _buildPaymentField() {
     return CustomTextField(
       controller: _amountController,
-      labelText: 'المبلغ',
+      labelText: AppLocalizations.of(context)!.amount,
       hintText: '0.00',
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
@@ -241,17 +242,17 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
       autofocus: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'يرجى إدخال المبلغ';
+          return AppLocalizations.of(context)!.pleaseEnterAmount;
         }
         final amount = double.tryParse(value);
         if (amount == null) {
-          return 'مبلغ غير صحيح';
+          return AppLocalizations.of(context)!.invalidAmount;
         }
         if (amount <= 0) {
-          return 'المبلغ يجب أن يكون أكبر من صفر';
+          return AppLocalizations.of(context)!.amountMustBePositive;
         }
         if (_isPaymentMode && amount > widget.debt.amountDue) {
-          return 'المبلغ المدفوع أكبر من الدين';
+          return AppLocalizations.of(context)!.paymentExceedsDebt;
         }
         return null;
       },
@@ -274,7 +275,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('المبلغ الجديد:', style: AppTextStyles.bodyMedium),
+              Text(AppLocalizations.of(context)!.newAmount, style: AppTextStyles.bodyMedium),
               Text(
                 NumberFormatter.formatAmount(newAmount),
                 style: AppTextStyles.labelLarge.copyWith(color: AppColors.info),
@@ -290,7 +291,7 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
     return Consumer<DebtProvider>(
       builder: (context, provider, child) {
         return CustomButton(
-          text: 'حفظ التعديل',
+          text: AppLocalizations.of(context)!.saveEdit,
           onPressed: _handleSave,
           isLoading: provider.isUpdating,
         );

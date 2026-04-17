@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DoubleBackToExitWrapper extends StatefulWidget {
   final Widget child;
@@ -24,6 +25,7 @@ class _DoubleBackToExitWrapperState extends State<DoubleBackToExitWrapper> {
           return;
         }
 
+        final l10n = AppLocalizations.of(context)!;
         final now = DateTime.now();
         final showExitWarning = _lastPressedTime == null ||
             now.difference(_lastPressedTime!) > const Duration(seconds: 2);
@@ -32,7 +34,7 @@ class _DoubleBackToExitWrapperState extends State<DoubleBackToExitWrapper> {
           setState(() {
             _lastPressedTime = now;
           });
-          ToastUtils.showInfo('اضغط مرة أخرى للخروج');
+          ToastUtils.showInfo(l10n.pressBackAgainToExit);
         } else {
           await SystemNavigator.pop();
         }

@@ -114,7 +114,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
     final currentUserId = authProvider.currentUserId;
     if (currentUserId == null) {
-      ToastUtils.showError('خطأ في المصادقة، يرجى تسجيل الدخول مرة أخرى');
+      ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
       return;
     }
 
@@ -131,26 +131,27 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
 
     if (mounted && success) {
-      ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
+      ToastUtils.showSuccess(AppLocalizations.of(context)!.transactionCreatedSuccess);
       Navigator.pop(context, true);
     } else if (mounted) {
       AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
         animType: AnimType.bottomSlide,
-        title: 'خطأ',
-        desc: transactionProvider.errorMessage ?? 'فشل إنشاء المعاملة',
+        title: AppLocalizations.of(context)!.errorTitle,
+        desc: transactionProvider.errorMessage ?? AppLocalizations.of(context)!.transactionCreateFailed,
         btnOkOnPress: () {},
         btnOkColor: Colors.red,
-        btnOkText: 'حسناً',
+        btnOkText: AppLocalizations.of(context)!.okButton,
       ).show();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('معاملة جديدة')),
+      appBar: AppBar(title: Text(l10n.newTransactionTitle)),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -159,21 +160,21 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildWalletSelection(),
+                _buildWalletSelection(l10n),
                 const SizedBox(height: 16),
                 if (_selectedWalletId != null) ...[
-                  _buildTransactionTypeSection(),
+                  _buildTransactionTypeSection(l10n),
                   const SizedBox(height: 24),
-                  _buildCustomerInfoSection(),
+                  _buildCustomerInfoSection(l10n),
                   const SizedBox(height: 24),
-                  _buildAmountSection(),
+                  _buildAmountSection(l10n),
                   const SizedBox(height: 24),
                   _buildFeeSection(),
-                  _buildLimitsPreview(),
+                  _buildLimitsPreview(l10n),
                   const SizedBox(height: 24),
-                  _buildNotesSection(),
+                  _buildNotesSection(l10n),
                   const SizedBox(height: 32),
-                  _buildCreateButton(),
+                  _buildCreateButton(l10n),
                 ],
               ],
             ),
@@ -183,7 +184,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildWalletSelection() {
+  Widget _buildWalletSelection(AppLocalizations l10n) {
     return Consumer<WalletProvider>(
       builder: (context, walletProvider, child) {
         if (walletProvider.isLoading) {
@@ -196,13 +197,13 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               color: AppColors.warning.withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text('لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.'),
+            child: Text(l10n.noWalletsAvailableMessage),
           );
         }
 
        return CustomDropdown<WalletModel>(
   value: _selectedWalletId != null ? walletProvider.walletMap[_selectedWalletId!] : null,
-  hint: 'اختر المحفظة لإجراء المعاملة',
+  hint: l10n.selectWalletHint,
   fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
   
   // 1. تمرير قائمة المحافظ (Data) مباشرة
@@ -219,23 +220,23 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       _updateTotal(); // Recalculate fees when wallet changes
     });
   },
-  validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
+  validator: (value) => value == null ? l10n.pleaseSelectWallet : null,
 );
       },
     );
   }
 
-  Widget _buildTransactionTypeSection() {
+  Widget _buildTransactionTypeSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('نوع المعاملة', style: AppTextStyles.labelMedium),
+        Text(l10n.transactionType, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: _TransactionTypeButton(
-                label: 'إرسال',
+                label: l10n.send,
                 icon: Icons.arrow_upward,
                 color: AppColors.send,
                 isSelected: _transactionType == 'send',
@@ -248,7 +249,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _TransactionTypeButton(
-                label: 'استقبال',
+                label: l10n.receive,
                 icon: Icons.arrow_downward,
                 color: AppColors.receive,
                 isSelected: _transactionType == 'receive',
@@ -264,7 +265,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0, right: 12),
             child: Text(
-              'يرجى اختيار نوع المعاملة',
+              l10n.pleaseSelectTransactionType,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
             ),
           ),
@@ -272,15 +273,15 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildCustomerInfoSection() {
+  Widget _buildCustomerInfoSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('بيانات العميل', style: AppTextStyles.labelMedium),
+        Text(l10n.clientData, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         CustomTextField(
           controller: _customerPhoneController,
-          labelText: 'رقم موبايل العميل',
+          labelText: l10n.clientPhoneNumber,
           hintText: '01xxxxxxxxx',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -291,8 +292,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         const SizedBox(height: 16),
         CustomTextField(
           controller: _customerNameController,
-          labelText: 'اسم العميل (اختياري)',
-          hintText: 'أدخل اسم العميل',
+          labelText: l10n.clientNameOptional,
+          hintText: l10n.enterClientName,
           keyboardType: TextInputType.name,
           prefixIcon: const Icon(Icons.person_outline),
         ),
@@ -300,11 +301,11 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildAmountSection() {
+  Widget _buildAmountSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المبلغ والعمولة', style: AppTextStyles.labelMedium),
+        Text(l10n.amountAndCommission, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,7 +313,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             Expanded(
               child: CustomTextField(
                 controller: _amountController,
-                labelText: 'المبلغ',
+                labelText: l10n.amountLabel,
                 hintText: '0.00',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
@@ -326,7 +327,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             Expanded(
               child: CustomTextField(
                 controller: _commissionController,
-                labelText: 'العمولة',
+                labelText: l10n.commissionLabel,
                 hintText: '0.00',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
@@ -334,7 +335,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                   if (val != null &&
                       val.isNotEmpty &&
                       (double.tryParse(val) ?? -1) < 0) {
-                    return 'قيمة غير صالحة';
+                    return l10n.invalidValue;
                   }
                   return null;
                 },
@@ -355,7 +356,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('الإجمالي', style: AppTextStyles.labelMedium),
+              Text(l10n.totalLabel, style: AppTextStyles.labelMedium),
               Text(
                 NumberFormatter.formatAmount(_totalAmount),
                 style: AppTextStyles.h3.copyWith(color: AppColors.primary),
@@ -422,7 +423,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildLimitsPreview() {
+  Widget _buildLimitsPreview(AppLocalizations l10n) {
     if (_selectedWalletId == null || _transactionType == null) {
       return const SizedBox.shrink();
     }
@@ -469,7 +470,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'مراجعة حدود المحفظة',
+                l10n.reviewWalletLimits,
                 style: AppTextStyles.labelMedium.copyWith(
                   color: willExceed ? AppColors.error : AppColors.info,
                 ),
@@ -478,7 +479,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           ),
           const Divider(height: 20),
           WalletLimitBar(
-            label: 'الحد اليومي (بعد المعاملة)',
+            label: l10n.dailyLimitAfterTransaction,
             used: newUsed,
             limit: limits.dailyLimit,
             percentage:
@@ -487,7 +488,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           ),
           const SizedBox(height: 16),
           WalletLimitBar(
-            label: 'الحد الشهري (بعد المعاملة)',
+            label: l10n.monthlyLimitAfterTransaction,
             used: newMonthlyUsed,
             limit: limits.monthlyLimit,
             percentage: limits.monthlyLimit > 0
@@ -499,7 +500,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 12.0),
               child: Text(
-                'تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.',
+                l10n.walletLimitWarning,
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
               ),
             ),
@@ -510,11 +511,11 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildNotesSection() {
+  Widget _buildNotesSection(AppLocalizations l10n) {
     return CustomTextField(
       controller: _notesController,
-      labelText: 'ملاحظات (اختياري)',
-      hintText: 'أي تفاصيل إضافية عن المعاملة',
+      labelText: l10n.notesOptional,
+      hintText: l10n.additionalTransactionDetails,
       maxLines: 3,
       maxLength: 200,
       validator: (value) => Validators.validateNotes(value, maxLength: 200),
@@ -522,7 +523,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildCreateButton() {
+  Widget _buildCreateButton(AppLocalizations l10n) {
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
         return Column(
@@ -551,7 +552,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 ),
               ),
             CustomButton(
-              text: 'إنشاء المعاملة',
+              text: l10n.createTransactionButton,
               onPressed: _handleCreate,
               isLoading: provider.isCreating,
               icon: const Icon(Icons.add_circle_outline),

@@ -10,7 +10,6 @@ import 'package:walletmanager/core/theme/app_text_styles.dart';
 
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
-// Removed unused LicenseKey imports
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
@@ -31,7 +30,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
 
   // Controllers
   final GlobalKey<FormState> _formKey =
-      GlobalKey<FormState>(); // Renamed from _formKeyStep2
+      GlobalKey<FormState>();
   final TextEditingController _storeNameController = TextEditingController();
   final TextEditingController _storePasswordController =
       TextEditingController();
@@ -44,10 +43,6 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   final TextEditingController _ownerPasswordController =
       TextEditingController();
 
-  // Logic
-  // LicenseKeyRepository _licenseKeyRepository = LicenseKeyRepository(); // Removed
-  // LicenseKeyModel? _verifiedKey; // Removed
-  // bool _isVerifyingLicense = false; // Removed
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -56,20 +51,20 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     _storeNameController.dispose();
     _storePasswordController.dispose();
     _confirmPasswordController.dispose();
+    _ownerNameController.dispose();
+    _ownerEmailController.dispose();
+    _ownerPasswordController.dispose();
     super.dispose();
   }
 
   // --- Actions ---
-
-  // Removed _verifyLicense method
 
   Future<void> _handleCreateAccount() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isLoading) return;
-
-    // License check removed
+    final l10n = AppLocalizations.of(context)!;
 
     String? storeId;
 
@@ -80,7 +75,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         final currentUser = FirebaseAuth.instance.currentUser;
 
         if (currentUser == null) {
-          ToastUtils.showError('فشل تسجيل الدخول بجوجل');
+          ToastUtils.showError(l10n.googleLoginError);
           return;
         }
 
@@ -108,13 +103,11 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       ToastUtils.showError(e.message);
     } catch (e) {
       ToastUtils.showError(
-          e is AppException ? e.message : "حدث خطأ غير متوقع: $e");
+          e is AppException ? e.message : "${l10n.unexpectedError}: $e");
     }
 
     // --- Success Handler ---
     if (storeId != null && mounted) {
-      // Activation logic removed as it's auto-trial now
-
       Navigator.of(context).pushNamedAndRemoveUntil(
           RouteConstants.ownerDashboard, (route) => false);
       ToastUtils.showSuccess(AppLocalizations.of(context)!.loginSuccess);
@@ -153,10 +146,9 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     );
   }
 
-  // Removed _buildStep1
-
   Widget _buildRegistrationForm() {
     final authProvider = Provider.of<AuthProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Form(
       key: _formKey,
@@ -164,14 +156,13 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'بيانات المتجر',
+            l10n.storeInfo,
             style: AppTextStyles.h1.copyWith(fontSize: 28),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const SizedBox(height: 8),
           Text(
-            'قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية',
+            l10n.createStoreSubtitle,
             style: AppTextStyles.bodyMedium
                 .copyWith(color: AppColors.textSecondary(context)),
             textAlign: TextAlign.center,
@@ -188,7 +179,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: _registrationMethod == 0
-                          ? AppColors.primary.withOpacity(0.1)
+                          ? AppColors.primary.withAlpha((0.1 * 255).round())
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -199,7 +190,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'البريد الإلكتروني',
+                      l10n.email,
                       style: TextStyle(
                         color: _registrationMethod == 0
                             ? AppColors.primary
@@ -218,7 +209,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: _registrationMethod == 1
-                          ? AppColors.primary.withOpacity(0.1)
+                          ? AppColors.primary.withAlpha((0.1 * 255).round())
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -254,14 +245,14 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           // Common Store Fields
           CustomTextField(
             controller: _storeNameController,
-            labelText: AppLocalizations.of(context)!.storeName,
+            labelText: l10n.storeName,
             prefixIcon: const Icon(Icons.store),
             validator: Validators.validateStoreName,
           ),
           const SizedBox(height: 16),
           CustomTextField(
             controller: _storePasswordController,
-            labelText: AppLocalizations.of(context)!.storePassword,
+            labelText: l10n.storePassword,
             prefixIcon: const Icon(Icons.lock),
             validator: Validators.validateStorePassword,
             keyboardType: TextInputType.number,
@@ -276,7 +267,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           const SizedBox(height: 16),
           CustomTextField(
             controller: _confirmPasswordController,
-            labelText: AppLocalizations.of(context)!.confirmPassword,
+            labelText: l10n.confirmPassword,
             prefixIcon: const Icon(Icons.lock_outline),
             validator: (val) => Validators.validateConfirmPassword(
                 val, _storePasswordController.text),
@@ -296,18 +287,18 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
-            Text('بيانات المالك', style: AppTextStyles.h3),
+            Text(l10n.ownerData, style: AppTextStyles.h3),
             const SizedBox(height: 16),
             CustomTextField(
               controller: _ownerNameController,
-              labelText: 'اسم المالك',
+              labelText: l10n.ownerNameLabel,
               prefixIcon: const Icon(Icons.person),
               validator: Validators.validateName,
             ),
             const SizedBox(height: 16),
             CustomTextField(
               controller: _ownerEmailController,
-              labelText: 'البريد الإلكتروني',
+              labelText: l10n.email,
               prefixIcon: const Icon(Icons.email),
               validator: Validators.validateEmail,
               keyboardType: TextInputType.emailAddress,
@@ -315,7 +306,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
             const SizedBox(height: 16),
             CustomTextField(
               controller: _ownerPasswordController,
-              labelText: 'كلمة مرور الحساب',
+              labelText: l10n.accountPassword,
               prefixIcon: const Icon(Icons.lock_outline),
               validator: Validators.validatePassword,
               obscureText: true,
@@ -325,8 +316,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           const SizedBox(height: 32),
           CustomButton(
             text: _registrationMethod == 1
-                ? 'تسجيل باستخدام Google'
-                : 'إنشاء الحساب',
+                ? l10n.registerWithGoogle
+                : l10n.createAccountAction,
             onPressed: authProvider.isLoading ? null : _handleCreateAccount,
             isLoading: authProvider.isLoading,
             icon: _registrationMethod == 1
@@ -337,12 +328,10 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancel),
           ),
         ],
       ),
     );
   }
-
-  // --- Helpers ---
 }

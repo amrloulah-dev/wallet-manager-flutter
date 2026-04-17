@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @activationFailed.
   ///
   /// In ar, this message translates to:
-  /// **'تم إنشاء الحساب ولكن فشل تفعيل مفتاح الترخيص. يرجى التواصل مع الدعم الفني.'**
+  /// **'فشل التفعيل'**
   String get activationFailed;
 
   /// No description provided for @loginSuccess.
@@ -629,14 +629,128 @@ abstract class AppLocalizations {
   /// No description provided for @unexpectedError.
   ///
   /// In ar, this message translates to:
-  /// **'حدث خطأ غير متوقع.'**
+  /// **'حدث خطأ غير متوقع'**
   String get unexpectedError;
 
-  /// No description provided for @contactToRenewBtn.
+  /// No description provided for @loggingIn.
   ///
   /// In ar, this message translates to:
-  /// **'تواصل للتجديد'**
-  String get contactToRenewBtn;
+  /// **'جاري تسجيل الدخول...'**
+  String get loggingIn;
+
+  /// No description provided for @employeeLoginSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل دخول الموظفين'**
+  String get employeeLoginSubtitle;
+
+  /// No description provided for @enterStorePassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل كلمة مرور المتجر'**
+  String get enterStorePassword;
+
+  /// No description provided for @requiredField.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب'**
+  String get requiredField;
+
+  /// No description provided for @selectEmployee.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر الموظف'**
+  String get selectEmployee;
+
+  /// No description provided for @selectEmployeeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط للاختيار'**
+  String get selectEmployeeHint;
+
+  /// No description provided for @pleaseSelectEmployee.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى اختيار الموظف'**
+  String get pleaseSelectEmployee;
+
+  /// No description provided for @pinLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم التعريف الشخصي (PIN)'**
+  String get pinLabel;
+
+  /// No description provided for @pinMustBe4Digits.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب أن يكون 4 أرقام'**
+  String get pinMustBe4Digits;
+
+  /// No description provided for @loginAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول'**
+  String get loginAction;
+
+  /// No description provided for @createStoreSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية'**
+  String get createStoreSubtitle;
+
+  /// No description provided for @ownerData.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات المالك'**
+  String get ownerData;
+
+  /// No description provided for @ownerNameLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المالك'**
+  String get ownerNameLabel;
+
+  /// No description provided for @accountPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة مرور الحساب'**
+  String get accountPassword;
+
+  /// No description provided for @registerWithGoogle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل باستخدام Google'**
+  String get registerWithGoogle;
+
+  /// No description provided for @createAccountAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء الحساب'**
+  String get createAccountAction;
+
+  /// No description provided for @authError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ في المصادقة'**
+  String get authError;
+
+  /// No description provided for @pleaseSelectTransactionType.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى اختيار نوع المعاملة'**
+  String get pleaseSelectTransactionType;
+
+  /// No description provided for @edit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل'**
+  String get edit;
+
+  /// No description provided for @payDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسديد الدين'**
+  String get payDebt;
 
   /// No description provided for @areYouOwner.
   ///
@@ -1148,12 +1262,6 @@ abstract class AppLocalizations {
   /// **'تفاصيل المحفظة'**
   String get walletDetails;
 
-  /// No description provided for @edit.
-  ///
-  /// In ar, this message translates to:
-  /// **'تعديل'**
-  String get edit;
-
   /// No description provided for @loadingWalletData.
   ///
   /// In ar, this message translates to:
@@ -1339,6 +1447,1854 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم رفض الوصول'**
   String get accessDenied;
+
+  /// No description provided for @frozen.
+  ///
+  /// In ar, this message translates to:
+  /// **'مُجمد'**
+  String get frozen;
+
+  /// No description provided for @sendDaily.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال يومي'**
+  String get sendDaily;
+
+  /// No description provided for @receiveDaily.
+  ///
+  /// In ar, this message translates to:
+  /// **'استقبال يومي'**
+  String get receiveDaily;
+
+  /// No description provided for @debt.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين'**
+  String get debt;
+
+  /// No description provided for @amountDue.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المستحق:'**
+  String get amountDue;
+
+  /// No description provided for @deleteDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف الدين'**
+  String get deleteDebt;
+
+  /// No description provided for @deleteDebtConfirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد من حذف هذا الدين؟ لا يمكن التراجع عن هذا الإجراء.'**
+  String get deleteDebtConfirmation;
+
+  /// No description provided for @dailySummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص اليوم'**
+  String get dailySummary;
+
+  /// No description provided for @sendAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ الإرسال'**
+  String get sendAmount;
+
+  /// No description provided for @receiveAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ الاستقبال'**
+  String get receiveAmount;
+
+  /// No description provided for @transactionType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع المعاملة'**
+  String get transactionType;
+
+  /// No description provided for @amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ'**
+  String get amount;
+
+  /// No description provided for @commission.
+  ///
+  /// In ar, this message translates to:
+  /// **'العمولة'**
+  String get commission;
+
+  /// No description provided for @loadingDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تحميل التفاصيل...'**
+  String get loadingDetails;
+
+  /// No description provided for @transactionNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم العثور على المعاملة'**
+  String get transactionNotFound;
+
+  /// No description provided for @retry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get retry;
+
+  /// No description provided for @totalAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المبلغ'**
+  String get totalAmount;
+
+  /// No description provided for @totalCommissionLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي العمولة'**
+  String get totalCommissionLabel;
+
+  /// No description provided for @lastTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر معاملة'**
+  String get lastTransaction;
+
+  /// No description provided for @debtSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص الديون'**
+  String get debtSummary;
+
+  /// No description provided for @totalDebts.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الديون'**
+  String get totalDebts;
+
+  /// No description provided for @paidDebts.
+  ///
+  /// In ar, this message translates to:
+  /// **'ديون مسددة'**
+  String get paidDebts;
+
+  /// No description provided for @totalPaidAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المبلغ المسدد'**
+  String get totalPaidAmount;
+
+  /// No description provided for @generalStats.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإحصائيات العامة'**
+  String get generalStats;
+
+  /// No description provided for @startDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ البداية'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ النهاية'**
+  String get endDate;
+
+  /// No description provided for @applyFilter.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق الفلتر'**
+  String get applyFilter;
+
+  /// No description provided for @clearFilter.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح الفلتر'**
+  String get clearFilter;
+
+  /// No description provided for @filterDateError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية'**
+  String get filterDateError;
+
+  /// No description provided for @noDataInRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد بيانات في هذا النطاق الزمني.'**
+  String get noDataInRange;
+
+  /// No description provided for @noStatsToShow.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد إحصائيات لعرضها.'**
+  String get noStatsToShow;
+
+  /// No description provided for @balance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد'**
+  String get balance;
+
+  /// No description provided for @totalWalletBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الرصيد في المحافظ'**
+  String get totalWalletBalance;
+
+  /// No description provided for @sendTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاملات الإرسال'**
+  String get sendTransactions;
+
+  /// No description provided for @receiveTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاملات الاستقبال'**
+  String get receiveTransactions;
+
+  /// No description provided for @amounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبالغ'**
+  String get amounts;
+
+  /// No description provided for @totalAmountCombined.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ الإجمالي'**
+  String get totalAmountCombined;
+
+  /// No description provided for @averageCommission.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط العمولة للمعاملة'**
+  String get averageCommission;
+
+  /// No description provided for @openDebtsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون المفتوحة'**
+  String get openDebtsLabel;
+
+  /// No description provided for @paidDebtsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون المسددة'**
+  String get paidDebtsLabel;
+
+  /// No description provided for @transactionDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل المعاملة'**
+  String get transactionDetails;
+
+  /// No description provided for @total.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي'**
+  String get total;
+
+  /// No description provided for @customerDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات العميل'**
+  String get customerDetails;
+
+  /// No description provided for @name.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم'**
+  String get name;
+
+  /// No description provided for @usedWallet.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحفظة المستخدمة'**
+  String get usedWallet;
+
+  /// No description provided for @walletNotFoundDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن العثور على تفاصيل المحفظة.'**
+  String get walletNotFoundDetails;
+
+  /// No description provided for @walletNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم المحفظة'**
+  String get walletNumber;
+
+  /// No description provided for @timeAndDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوقت والتاريخ'**
+  String get timeAndDate;
+
+  /// No description provided for @date.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get date;
+
+  /// No description provided for @time.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوقت'**
+  String get time;
+
+  /// No description provided for @since.
+  ///
+  /// In ar, this message translates to:
+  /// **'منذ'**
+  String get since;
+
+  /// No description provided for @transactionIsDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه المعاملة دين'**
+  String get transactionIsDebt;
+
+  /// No description provided for @debtWarningMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم دفع المبلغ من قبل العميل وقت إنشاء المعاملة.'**
+  String get debtWarningMessage;
+
+  /// No description provided for @recordedNotes.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملاحظات المسجلة'**
+  String get recordedNotes;
+
+  /// No description provided for @transactionIdLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'معرف المعاملة'**
+  String get transactionIdLabel;
+
+  /// No description provided for @createdBy.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إنشاؤها بواسطة'**
+  String get createdBy;
+
+  /// No description provided for @unknown.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير معروف'**
+  String get unknown;
+
+  /// No description provided for @ownerRoleSuffix.
+  ///
+  /// In ar, this message translates to:
+  /// **' (المالك)'**
+  String get ownerRoleSuffix;
+
+  /// No description provided for @employeeRoleSuffix.
+  ///
+  /// In ar, this message translates to:
+  /// **' (موظف)'**
+  String get employeeRoleSuffix;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت كلمة المرور؟'**
+  String get forgotPassword;
+
+  /// No description provided for @forgotPasswordMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت كلمة المرور؟'**
+  String get forgotPasswordMessage;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'قريباً'**
+  String get comingSoon;
+
+  /// No description provided for @orLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أو'**
+  String get orLabel;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة باستخدام Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @enterStoreEmailMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل البريد الإلكتروني للمتجر لتسجيل الدخول كموظف'**
+  String get enterStoreEmailMessage;
+
+  /// No description provided for @storeEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'بريد المتجر الإلكتروني'**
+  String get storeEmail;
+
+  /// No description provided for @findStore.
+  ///
+  /// In ar, this message translates to:
+  /// **'البحث عن المتجر'**
+  String get findStore;
+
+  /// No description provided for @noAccountYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك حساب؟'**
+  String get noAccountYet;
+
+  /// No description provided for @createStoreNew.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء متجر جديد'**
+  String get createStoreNew;
+
+  /// No description provided for @todayTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاملات اليوم'**
+  String get todayTransactions;
+
+  /// No description provided for @all.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get all;
+
+  /// No description provided for @errorLoadingTransactionsGeneric.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحميل المعاملات.'**
+  String get errorLoadingTransactionsGeneric;
+
+  /// No description provided for @noTransactionsTodayEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد معاملات اليوم'**
+  String get noTransactionsTodayEmpty;
+
+  /// No description provided for @noTransactionsWithFilter.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد معاملات بهذا الفلتر'**
+  String get noTransactionsWithFilter;
+
+  /// No description provided for @startAddingTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ بإضافة معاملة جديدة'**
+  String get startAddingTransaction;
+
+  /// No description provided for @transactionCreatedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إنشاء المعاملة بنجاح'**
+  String get transactionCreatedSuccess;
+
+  /// No description provided for @transactionCreationFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل إنشاء المعاملة'**
+  String get transactionCreationFailed;
+
+  /// No description provided for @ok.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسناً'**
+  String get ok;
+
+  /// No description provided for @noWalletsAvailableAddFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.'**
+  String get noWalletsAvailableAddFirst;
+
+  /// No description provided for @selectWalletForTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر المحفظة لإجراء المعاملة'**
+  String get selectWalletForTransaction;
+
+  /// No description provided for @customerPhone.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم موبايل العميل'**
+  String get customerPhone;
+
+  /// No description provided for @customerNameOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العميل (اختياري)'**
+  String get customerNameOptional;
+
+  /// No description provided for @enterClientName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل اسم العميل'**
+  String get enterClientName;
+
+  /// No description provided for @amountAndCommission.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ والعمولة'**
+  String get amountAndCommission;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ'**
+  String get amountLabel;
+
+  /// No description provided for @commissionLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'العمولة'**
+  String get commissionLabel;
+
+  /// No description provided for @invalidValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيمة غير صالحة'**
+  String get invalidValue;
+
+  /// No description provided for @totalLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإجمالي'**
+  String get totalLabel;
+
+  /// No description provided for @reviewWalletLimits.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة حدود المحفظة'**
+  String get reviewWalletLimits;
+
+  /// No description provided for @dailyLimitAfterTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحد اليومي (بعد المعاملة)'**
+  String get dailyLimitAfterTransaction;
+
+  /// No description provided for @monthlyLimitAfterTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحد الشهري (بعد المعاملة)'**
+  String get monthlyLimitAfterTransaction;
+
+  /// No description provided for @walletLimitWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.'**
+  String get walletLimitWarning;
+
+  /// No description provided for @additionalTransactionDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'أي تفاصيل إضافية عن المعاملة'**
+  String get additionalTransactionDetails;
+
+  /// No description provided for @createTransactionButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء المعاملة'**
+  String get createTransactionButton;
+
+  /// No description provided for @transactionCreateFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل إنشاء المعاملة'**
+  String get transactionCreateFailed;
+
+  /// No description provided for @errorTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ'**
+  String get errorTitle;
+
+  /// No description provided for @okButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسناً'**
+  String get okButton;
+
+  /// No description provided for @debtsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون'**
+  String get debtsTitle;
+
+  /// No description provided for @addDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة دين'**
+  String get addDebt;
+
+  /// No description provided for @settleDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسديد الدين'**
+  String get settleDebt;
+
+  /// No description provided for @settleDebtConfirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد أنك تريد تسجيل هذا الدين كـ \"مسدد\"؟'**
+  String get settleDebtConfirmation;
+
+  /// No description provided for @confirmSettlement.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد التسديد'**
+  String get confirmSettlement;
+
+  /// No description provided for @userNotRegistered.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ: المستخدم غير مسجل'**
+  String get userNotRegistered;
+
+  /// No description provided for @debtSettlementFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسديد الدين'**
+  String get debtSettlementFailed;
+
+  /// No description provided for @debtSettledSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسديد الدين بنجاح'**
+  String get debtSettledSuccess;
+
+  /// No description provided for @errorLoadingDebts.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحميل الديون.'**
+  String get errorLoadingDebts;
+
+  /// No description provided for @noDebtsRecorded.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ديون مسجلة'**
+  String get noDebtsRecorded;
+
+  /// No description provided for @debtsWillAppearHere.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم عرض الديون المفتوحة والمسددة هنا.'**
+  String get debtsWillAppearHere;
+
+  /// No description provided for @addNewDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة دين جديد'**
+  String get addNewDebt;
+
+  /// No description provided for @allWithCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل ({count})'**
+  String allWithCount(int count);
+
+  /// No description provided for @openWithCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفتوح ({count})'**
+  String openWithCount(int count);
+
+  /// No description provided for @paidWithCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسدد ({count})'**
+  String paidWithCount(int count);
+
+  /// No description provided for @financialTransfers.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويلات مالية'**
+  String get financialTransfers;
+
+  /// No description provided for @storeSales.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبيعات محل'**
+  String get storeSales;
+
+  /// No description provided for @addDebtTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة دين جديد'**
+  String get addDebtTitle;
+
+  /// No description provided for @customerName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العميل'**
+  String get customerName;
+
+  /// No description provided for @enterFullCustomerName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل اسم العميل بالكامل'**
+  String get enterFullCustomerName;
+
+  /// No description provided for @debtType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع الدين'**
+  String get debtType;
+
+  /// No description provided for @walletTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاملة محفظة'**
+  String get walletTransaction;
+
+  /// No description provided for @walletTransactionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين ناتج عن معاملة إرسال لم يتم دفعها'**
+  String get walletTransactionSubtitle;
+
+  /// No description provided for @storeSale.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيع من المحل'**
+  String get storeSale;
+
+  /// No description provided for @storeSaleSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين ناتج عن عملية بيع آجلة من المحل'**
+  String get storeSaleSubtitle;
+
+  /// No description provided for @amountDueTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المستحق'**
+  String get amountDueTitle;
+
+  /// No description provided for @debtWillBeAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.'**
+  String get debtWillBeAdded;
+
+  /// No description provided for @additionalDebtDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'أي تفاصيل إضافية عن الدين'**
+  String get additionalDebtDetails;
+
+  /// No description provided for @addDebtAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة الدين'**
+  String get addDebtAction;
+
+  /// No description provided for @debtAddedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إضافة الدين بنجاح'**
+  String get debtAddedSuccess;
+
+  /// No description provided for @employeePermissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'صلاحيات الموظف'**
+  String get employeePermissions;
+
+  /// No description provided for @defineEmployeeActions.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدد ما يمكن للموظف القيام به'**
+  String get defineEmployeeActions;
+
+  /// No description provided for @financialTransactionsSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاملات المالية'**
+  String get financialTransactionsSection;
+
+  /// No description provided for @createNewTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء معاملة جديدة'**
+  String get createNewTransaction;
+
+  /// No description provided for @viewAllTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض جميع المعاملات'**
+  String get viewAllTransactions;
+
+  /// No description provided for @debtsSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون'**
+  String get debtsSection;
+
+  /// No description provided for @viewDebtsList.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض قائمة الديون'**
+  String get viewDebtsList;
+
+  /// No description provided for @addNewDebtPermission.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة دين جديد'**
+  String get addNewDebtPermission;
+
+  /// No description provided for @collectDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحصيل دين (دفع جزئي/كلي)'**
+  String get collectDebt;
+
+  /// No description provided for @deleteDebtPermission.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف دين'**
+  String get deleteDebtPermission;
+
+  /// No description provided for @walletsSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحافظ'**
+  String get walletsSection;
+
+  /// No description provided for @viewWalletsList.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض قائمة المحافظ'**
+  String get viewWalletsList;
+
+  /// No description provided for @addNewWalletPermission.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة محفظة جديدة'**
+  String get addNewWalletPermission;
+
+  /// No description provided for @addBalanceToWalletPermission.
+  ///
+  /// In ar, this message translates to:
+  /// **'شحن رصيد للمحفظة'**
+  String get addBalanceToWalletPermission;
+
+  /// No description provided for @editWalletData.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل بيانات المحفظة'**
+  String get editWalletData;
+
+  /// No description provided for @viewWalletBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض رصيد المحافظ'**
+  String get viewWalletBalance;
+
+  /// No description provided for @dashboardSection.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة التحكم'**
+  String get dashboardSection;
+
+  /// No description provided for @viewStatsCharts.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الإحصائيات (المخططات)'**
+  String get viewStatsCharts;
+
+  /// No description provided for @editDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الدين'**
+  String get editDebt;
+
+  /// No description provided for @paymentMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفعة'**
+  String get paymentMode;
+
+  /// No description provided for @additionMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة'**
+  String get additionMode;
+
+  /// No description provided for @currentAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ الحالي'**
+  String get currentAmount;
+
+  /// No description provided for @pleaseEnterAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إدخل المبلغ'**
+  String get pleaseEnterAmount;
+
+  /// No description provided for @invalidAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ غير صحيح'**
+  String get invalidAmount;
+
+  /// No description provided for @amountMustBePositive.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ يجب أن يكون أكبر من صفر'**
+  String get amountMustBePositive;
+
+  /// No description provided for @paymentExceedsDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المدفوع أكبر من الدين'**
+  String get paymentExceedsDebt;
+
+  /// No description provided for @newAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ الجديد:'**
+  String get newAmount;
+
+  /// No description provided for @saveEdit.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ التعديل'**
+  String get saveEdit;
+
+  /// No description provided for @debtUpdatedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث الدين بنجاح'**
+  String get debtUpdatedSuccess;
+
+  /// No description provided for @debtUpdateFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحديث الدين'**
+  String get debtUpdateFailed;
+
+  /// No description provided for @retryAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get retryAction;
+
+  /// No description provided for @noPermissionWallets.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك صلاحية لعرض المحافظ'**
+  String get noPermissionWallets;
+
+  /// No description provided for @noPermissionTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك صلاحية لعرض المعاملات'**
+  String get noPermissionTransactions;
+
+  /// No description provided for @noPermissionDebts.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك صلاحية لعرض الديون'**
+  String get noPermissionDebts;
+
+  /// No description provided for @noPermissionStats.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس لديك صلاحية لعرض الإحصائيات'**
+  String get noPermissionStats;
+
+  /// No description provided for @deactivateEmployeeAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعطيل حساب الموظف'**
+  String get deactivateEmployeeAccount;
+
+  /// No description provided for @deactivateEmployeeConfirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد أنك تريد تعطيل حساب {name}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.'**
+  String deactivateEmployeeConfirmation(String name);
+
+  /// No description provided for @deactivate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعطيل'**
+  String get deactivate;
+
+  /// No description provided for @employeeDeactivated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تعطيل حساب الموظف'**
+  String get employeeDeactivated;
+
+  /// No description provided for @deactivationFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تعطيل الحساب'**
+  String get deactivationFailed;
+
+  /// No description provided for @loadingEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تحميل الموظفين...'**
+  String get loadingEmployees;
+
+  /// No description provided for @errorLoadingEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحميل الموظفين'**
+  String get errorLoadingEmployees;
+
+  /// No description provided for @noEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد موظفين'**
+  String get noEmployees;
+
+  /// No description provided for @startAddingEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ بإضافة موظف جديد لإدارة صلاحياته.'**
+  String get startAddingEmployees;
+
+  /// No description provided for @addEmployee.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة موظف'**
+  String get addEmployee;
+
+  /// No description provided for @permissionsUpdatedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث الصلاحيات بنجاح'**
+  String get permissionsUpdatedSuccess;
+
+  /// No description provided for @employeeDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الموظف'**
+  String get employeeDetails;
+
+  /// No description provided for @editPermissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الصلاحيات'**
+  String get editPermissions;
+
+  /// No description provided for @inactive.
+  ///
+  /// In ar, this message translates to:
+  /// **'معطل'**
+  String get inactive;
+
+  /// No description provided for @employeeAddedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة الموظف بنجاح'**
+  String get employeeAddedSuccess;
+
+  /// No description provided for @addNewEmployee.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة موظف جديد'**
+  String get addNewEmployee;
+
+  /// No description provided for @currentEmployeesCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموظفين الحاليين: {current} / {max}'**
+  String currentEmployeesCount(int current, int max);
+
+  /// No description provided for @limitReached.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الوصول للحد الأقصى'**
+  String get limitReached;
+
+  /// No description provided for @employeeLoginInfo.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيستخدم الموظف رقم الهاتف والرقم السري لتسجيل الدخول.'**
+  String get employeeLoginInfo;
+
+  /// No description provided for @fullName.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاسم الكامل'**
+  String get fullName;
+
+  /// No description provided for @enterEmployeeName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل اسم الموظف'**
+  String get enterEmployeeName;
+
+  /// No description provided for @employeePinTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقم السري للموظف (PIN)'**
+  String get employeePinTitle;
+
+  /// No description provided for @pin.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقم السري'**
+  String get pin;
+
+  /// No description provided for @fourDigits.
+  ///
+  /// In ar, this message translates to:
+  /// **'4 أرقام'**
+  String get fourDigits;
+
+  /// No description provided for @confirmPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الرقم السري'**
+  String get confirmPin;
+
+  /// No description provided for @reenterPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعد إدخال الرقم السري'**
+  String get reenterPin;
+
+  /// No description provided for @pinsDoNotMatch.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقمان غير متطابقان'**
+  String get pinsDoNotMatch;
+
+  /// No description provided for @subscriptionDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الاشتراك'**
+  String get subscriptionDetails;
+
+  /// No description provided for @currentUsage.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاستهلاك الحالي'**
+  String get currentUsage;
+
+  /// No description provided for @employeeAccounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسابات الموظفين'**
+  String get employeeAccounts;
+
+  /// No description provided for @upgradeSubscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية الاشتراك'**
+  String get upgradeSubscription;
+
+  /// No description provided for @currentPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'الباقة الحالية'**
+  String get currentPlan;
+
+  /// No description provided for @suspended.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلق'**
+  String get suspended;
+
+  /// No description provided for @freePlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجاني'**
+  String get freePlan;
+
+  /// No description provided for @proYearlyPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'برو (سنوي)'**
+  String get proYearlyPlan;
+
+  /// No description provided for @lifetimeVipPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدى الحياة VIP'**
+  String get lifetimeVipPlan;
+
+  /// No description provided for @trialPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجريبي'**
+  String get trialPlan;
+
+  /// No description provided for @upgradeAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية الحساب'**
+  String get upgradeAccount;
+
+  /// No description provided for @unlockStoreCapabilities.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح إمكانيات متجرك'**
+  String get unlockStoreCapabilities;
+
+  /// No description provided for @paywallSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.'**
+  String get paywallSubtitle;
+
+  /// No description provided for @proYearlyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقة برو السنوية'**
+  String get proYearlyTitle;
+
+  /// No description provided for @proYearlyPrice.
+  ///
+  /// In ar, this message translates to:
+  /// **'999 جنيه / سنة'**
+  String get proYearlyPrice;
+
+  /// No description provided for @proFeature1.
+  ///
+  /// In ar, this message translates to:
+  /// **'مزامنة المعاملات تلقائيا'**
+  String get proFeature1;
+
+  /// No description provided for @proFeature2.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة حتى 50 محفظة'**
+  String get proFeature2;
+
+  /// No description provided for @proFeature3.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء حسابات للموظفين'**
+  String get proFeature3;
+
+  /// No description provided for @proFeature4.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعم فني متخصص'**
+  String get proFeature4;
+
+  /// No description provided for @lifetimeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقة مدى الحياة'**
+  String get lifetimeTitle;
+
+  /// No description provided for @lifetimePrice.
+  ///
+  /// In ar, this message translates to:
+  /// **'2999 جنيه فقط مره واحده'**
+  String get lifetimePrice;
+
+  /// No description provided for @lifetimeFeature1.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد لا نهائي من المحافظ'**
+  String get lifetimeFeature1;
+
+  /// No description provided for @lifetimeFeature2.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد لا نهائي من الموظفين'**
+  String get lifetimeFeature2;
+
+  /// No description provided for @lifetimeFeature3.
+  ///
+  /// In ar, this message translates to:
+  /// **'إشعارات SMS للعملاء'**
+  String get lifetimeFeature3;
+
+  /// No description provided for @lifetimeFeature4.
+  ///
+  /// In ar, this message translates to:
+  /// **'أولوية الدعم الفني VIP'**
+  String get lifetimeFeature4;
+
+  /// No description provided for @mostPopular.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأكثر طلباً'**
+  String get mostPopular;
+
+  /// No description provided for @remainingSeats.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي {count} مقاعد فقط!'**
+  String remainingSeats(int count);
+
+  /// No description provided for @soldOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'نفدت الكمية'**
+  String get soldOut;
+
+  /// No description provided for @subscribeNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشترك الآن'**
+  String get subscribeNow;
+
+  /// No description provided for @termsAgreement.
+  ///
+  /// In ar, this message translates to:
+  /// **'بمتابعة العملية أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا.'**
+  String get termsAgreement;
+
+  /// No description provided for @paymentDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل الدفع'**
+  String get paymentDetails;
+
+  /// No description provided for @selectedPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاشتراك المختار: {plan}'**
+  String selectedPlan(String plan);
+
+  /// No description provided for @paymentMethod.
+  ///
+  /// In ar, this message translates to:
+  /// **'طريقة الدفع'**
+  String get paymentMethod;
+
+  /// No description provided for @transferToNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى تحويل المبلغ إلى الرقم: 01000000000'**
+  String get transferToNumber;
+
+  /// No description provided for @transferToAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى تحويل المبلغ إلى الحساب: instapay@bank'**
+  String get transferToAccount;
+
+  /// No description provided for @receiptNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الإيصال / رقم العملية'**
+  String get receiptNumber;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحقل مطلوب'**
+  String get fieldRequired;
+
+  /// No description provided for @subscriptionRequestSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال طلب الاشتراك بنجاح. يرجى الانتظار للمراجعة.'**
+  String get subscriptionRequestSent;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ:'**
+  String get errorOccurred;
+
+  /// No description provided for @lifetimePlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدى الحياة'**
+  String get lifetimePlan;
+
+  /// No description provided for @accountSuspended.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إيقاف حسابك'**
+  String get accountSuspended;
+
+  /// No description provided for @accountSuspendedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد تم تعليق حسابك من قبل الإدارة. يرجى التواصل مع فريق الدعم الفني لحل هذه المشكلة واستعادة وصولك إلى النظام.'**
+  String get accountSuspendedMessage;
+
+  /// No description provided for @contactingSupportTeam.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري الاتصال بالدعم الفني...'**
+  String get contactingSupportTeam;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In ar, this message translates to:
+  /// **'تواصل مع الدعم الفني'**
+  String get contactSupport;
+
+  /// No description provided for @subscriptionActivatedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الاستمتاع بكافة الميزات الاحترافية.'**
+  String get subscriptionActivatedMessage;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get continueButton;
+
+  /// No description provided for @subscriptionUnderReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم الآن مراجعة طلب الاشتراك الخاص بك.'**
+  String get subscriptionUnderReview;
+
+  /// No description provided for @subscriptionRejected.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم.'**
+  String get subscriptionRejected;
+
+  /// No description provided for @subscriptionExpiredMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت صلاحية اشتراكك. قم بالترقية للاستمرار.'**
+  String get subscriptionExpiredMessage;
+
+  /// No description provided for @trialEndingSoon.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقي {daysLeft} يوم على انتهاء الفترة التجريبية. قم بالترقية الآن.'**
+  String trialEndingSoon(int daysLeft);
+
+  /// No description provided for @upgradeToFullVersionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الترقية للنسخة الكاملة'**
+  String get upgradeToFullVersionTitle;
+
+  /// No description provided for @getActivationKey.
+  ///
+  /// In ar, this message translates to:
+  /// **'للحصول على مفتاح التفعيل، يرجى التواصل معنا'**
+  String get getActivationKey;
+
+  /// No description provided for @contactViaWhatsapp.
+  ///
+  /// In ar, this message translates to:
+  /// **'تواصل عبر واتساب'**
+  String get contactViaWhatsapp;
+
+  /// No description provided for @contactViaEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'تواصل عبر البريد الإلكتروني'**
+  String get contactViaEmail;
+
+  /// No description provided for @activateSubscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل الاشتراك'**
+  String get activateSubscription;
+
+  /// No description provided for @activationKey.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفتاح التفعيل'**
+  String get activationKey;
+
+  /// No description provided for @enterActivationKeyHere.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل مفتاح التفعيل هنا'**
+  String get enterActivationKeyHere;
+
+  /// No description provided for @pleaseEnterActivationKey.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرجاء إدخال مفتاح التفعيل'**
+  String get pleaseEnterActivationKey;
+
+  /// No description provided for @activate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل'**
+  String get activate;
+
+  /// No description provided for @subscriptionActivatedSuccessfully.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل الاشتراك بنجاح!'**
+  String get subscriptionActivatedSuccessfully;
+
+  /// No description provided for @fullVersionActivated.
+  ///
+  /// In ar, this message translates to:
+  /// **'النسخة الكاملة مفعلة'**
+  String get fullVersionActivated;
+
+  /// No description provided for @daysRemainingCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} يوم'**
+  String daysRemainingCount(int count);
+
+  /// No description provided for @renewSubscription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجديد الاشتراك'**
+  String get renewSubscription;
+
+  /// No description provided for @renewWhatsappMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحباً، أرغب في تجديد اشتراكي في تطبيق مدير المحفظة.'**
+  String get renewWhatsappMessage;
+
+  /// No description provided for @activationWhatsappMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحباً، أرغب في الحصول على مفتاح تفعيل لتطبيق مدير المحفظة.'**
+  String get activationWhatsappMessage;
+
+  /// No description provided for @failedOpenWhatsApp.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل فتح واتساب'**
+  String get failedOpenWhatsApp;
+
+  /// No description provided for @activationEmailSubject.
+  ///
+  /// In ar, this message translates to:
+  /// **'طلب تفعيل النسخة الكاملة'**
+  String get activationEmailSubject;
+
+  /// No description provided for @activationEmailBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحباً، أود الاستفسار عن كيفية الترقية للنسخة الكاملة.'**
+  String get activationEmailBody;
+
+  /// No description provided for @failedOpenEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل فتح البريد الإلكتروني'**
+  String get failedOpenEmail;
+
+  /// No description provided for @newTransactionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاملة جديدة'**
+  String get newTransactionTitle;
+
+  /// No description provided for @noWalletsAvailableMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.'**
+  String get noWalletsAvailableMessage;
+
+  /// No description provided for @selectWalletHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر المحفظة لإجراء المعاملة'**
+  String get selectWalletHint;
+
+  /// No description provided for @password.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور'**
+  String get password;
+
+  /// No description provided for @smsPermissionRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب صلاحية رسائل SMS'**
+  String get smsPermissionRequired;
+
+  /// No description provided for @automationAndMessages.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأتمتة والرسائل'**
+  String get automationAndMessages;
+
+  /// No description provided for @enableAutoSmsReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل القراءة التلقائية للرسائل'**
+  String get enableAutoSmsReading;
+
+  /// No description provided for @autoDetectTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتشاف المعاملات تلقائياً من الإشعارات'**
+  String get autoDetectTransactions;
+
+  /// No description provided for @linkSimToWallet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط الشريحة بالمحفظة'**
+  String get linkSimToWallet;
+
+  /// No description provided for @sim1Label.
+  ///
+  /// In ar, this message translates to:
+  /// **'شريحة 1'**
+  String get sim1Label;
+
+  /// No description provided for @sim2Label.
+  ///
+  /// In ar, this message translates to:
+  /// **'شريحة 2'**
+  String get sim2Label;
+
+  /// No description provided for @noSavedWallets.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد محافظ محفوظة'**
+  String get noSavedWallets;
+
+  /// No description provided for @trialDaysRemainingLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الفترة التجريبية المتبقية'**
+  String get trialDaysRemainingLabel;
+
+  /// No description provided for @logoutButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الخروج'**
+  String get logoutButton;
+
+  /// No description provided for @instaPay.
+  ///
+  /// In ar, this message translates to:
+  /// **'انستا باي'**
+  String get instaPay;
+
+  /// No description provided for @confirmPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد الدفع'**
+  String get confirmPayment;
+
+  /// No description provided for @paymentConfirmedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تأكيد الدفع بنجاح'**
+  String get paymentConfirmedSuccess;
+
+  /// No description provided for @unavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير متوفر'**
+  String get unavailable;
+
+  /// No description provided for @send.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال'**
+  String get send;
+
+  /// No description provided for @receive.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام'**
+  String get receive;
+
+  /// No description provided for @clientData.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات العميل'**
+  String get clientData;
+
+  /// No description provided for @clientPhoneNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الهاتف'**
+  String get clientPhoneNumber;
+
+  /// No description provided for @clientNameOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم العميل (اختياري)'**
+  String get clientNameOptional;
+
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط مرة أخرى للخروج'**
+  String get pressBackAgainToExit;
+
+  /// No description provided for @ownerOnlyFeature.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الميزة للمالك فقط'**
+  String get ownerOnlyFeature;
+
+  /// No description provided for @expiryDateValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الانتهاء: {date}'**
+  String expiryDateValue(String date);
+
+  /// No description provided for @subscriptionExpiredRenew.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهى اشتراكك. الرجاء التجديد.'**
+  String get subscriptionExpiredRenew;
+
+  /// No description provided for @hide.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء'**
+  String get hide;
+
+  /// No description provided for @addEmployeeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة موظف'**
+  String get addEmployeeAction;
+
+  /// No description provided for @dateAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الإضافة'**
+  String get dateAdded;
+
+  /// No description provided for @manageEmployeesTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدارة الموظفين'**
+  String get manageEmployeesTitle;
+
+  /// No description provided for @activeEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموظفين النشطين'**
+  String get activeEmployees;
+
+  /// No description provided for @inactiveEmployees.
+  ///
+  /// In ar, this message translates to:
+  /// **'الموظفين غير النشطين'**
+  String get inactiveEmployees;
+
+  /// No description provided for @noPermissionCreateTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد صلاحية لإنشاء معاملة'**
+  String get noPermissionCreateTransaction;
+
+  /// No description provided for @noPermissionCreateWallet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد صلاحية لإنشاء محفظة'**
+  String get noPermissionCreateWallet;
+
+  /// No description provided for @noPermissionCreateDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد صلاحية لإنشاء دين'**
+  String get noPermissionCreateDebt;
+
+  /// No description provided for @noPermissionViewStats.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد صلاحية لعرض الإحصائيات'**
+  String get noPermissionViewStats;
+
+  /// No description provided for @noPermissionViewTransactionDetails.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد صلاحية لعرض تفاصيل المعاملة'**
+  String get noPermissionViewTransactionDetails;
+
+  /// No description provided for @trialPeriod.
+  ///
+  /// In ar, this message translates to:
+  /// **'فترة تجريبية'**
+  String get trialPeriod;
+
+  /// No description provided for @trialDaysRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'أيام الفترة التجريبية المتبقية'**
+  String get trialDaysRemaining;
+
+  /// No description provided for @upgradeFullVersion.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترقية للنسخة الكاملة'**
+  String get upgradeFullVersion;
+
+  /// No description provided for @openDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين مفتوح'**
+  String get openDebt;
+
+  /// No description provided for @paidDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'دين مدفوع'**
+  String get paidDebt;
+
+  /// No description provided for @deposit.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيداع'**
+  String get deposit;
+
+  /// No description provided for @paid.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدفوع'**
+  String get paid;
+
+  /// No description provided for @transactionExceedsLimitWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحذير: هذه المعاملة ستتجاوز الحد المسموح به.'**
+  String get transactionExceedsLimitWarning;
+
+  /// No description provided for @googleLoginError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ في تسجيل الدخول بحساب جوجل'**
+  String get googleLoginError;
+
+  /// No description provided for @storeInfo.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلومات المتجر'**
+  String get storeInfo;
+
+  /// No description provided for @pendingSubscriptionReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة الاشتراك قيد الانتظار'**
+  String get pendingSubscriptionReview;
+
+  /// No description provided for @rejectedSubscriptionRequest.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم رفض طلب الاشتراك'**
+  String get rejectedSubscriptionRequest;
 }
 
 class _AppLocalizationsDelegate

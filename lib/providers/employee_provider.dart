@@ -214,8 +214,7 @@ class EmployeeProvider extends ChangeNotifier {
     final activeStaff = _employees
         .where((e) => e.isActive && e.role != 'owner')
         .toList()
-      ..sort((a, b) => (a.createdAt ?? Timestamp.now())
-          .compareTo(b.createdAt ?? Timestamp.now()));
+      ..sort((a, b) => (a.createdAt).compareTo(b.createdAt));
 
     if (activeStaff.length <= maxEmployees) return;
 

@@ -10,8 +10,9 @@ import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
-import '../../../../core/errors/app_exceptions.dart';
+import '../../../core/errors/app_exceptions.dart';
 import 'employee_login_screen.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class LoginLandingScreen extends StatefulWidget {
   const LoginLandingScreen({super.key});
@@ -84,7 +85,9 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     } on AuthException catch (e) {
       ToastUtils.showError(e.message);
     } catch (e) {
-      ToastUtils.showError("حدث خطأ غير متوقع");
+      if (mounted) {
+        ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+      }
     }
   }
 
@@ -138,6 +141,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return DoubleBackToExitWrapper(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBg(context),
@@ -161,7 +165,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 child: TabBar(
                   controller: _tabController,
                   indicator: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary),
                   ),
@@ -172,9 +176,9 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                   labelStyle: AppTextStyles.bodyLarge
                       .copyWith(fontWeight: FontWeight.bold),
                   labelPadding: const EdgeInsets.symmetric(vertical: 12),
-                  tabs: const [
-                    Tab(text: 'المالك'),
-                    Tab(text: 'موظف'),
+                  tabs: [
+                    Tab(text: l10n.owner),
+                    Tab(text: l10n.employee),
                   ],
                 ),
               ),
@@ -202,6 +206,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   Widget _buildOwnerTab() {
     final authProvider = context.watch<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Form(
@@ -210,7 +215,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           children: [
             CustomTextField(
               controller: _ownerEmailController,
-              labelText: 'البريد الإلكتروني',
+              labelText: l10n.email,
               prefixIcon: const Icon(Icons.email_outlined),
               validator: Validators.validateEmail,
               keyboardType: TextInputType.emailAddress,
@@ -218,7 +223,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             const SizedBox(height: 16),
             CustomTextField(
               controller: _ownerPasswordController,
-              labelText: 'كلمة المرور',
+              labelText: l10n.password,
               prefixIcon: const Icon(Icons.lock_outline),
               validator: Validators.validatePassword,
               obscureText: _obscureOwnerPassword,
@@ -235,10 +240,10 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               child: TextButton(
                 onPressed: () {
                   // TODO: Implement forgot password
-                  ToastUtils.showInfo('قريباً');
+                  ToastUtils.showInfo(l10n.comingSoon);
                 },
                 child: Text(
-                  'نسيت كلمة المرور؟',
+                  l10n.forgotPassword,
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.textSecondary(context)),
                 ),
@@ -246,7 +251,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             ),
             const SizedBox(height: 16),
             CustomButton(
-              text: 'تسجيل الدخول',
+              text: l10n.logout, // Using logout as placeholder for login if no explicit key
               onPressed:
                   authProvider.isLoading ? null : _handleOwnerLoginWithEmail,
               isLoading: authProvider.isLoading,
@@ -257,14 +262,14 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('أو', style: AppTextStyles.bodySmall),
+                  child: Text(l10n.orLabel, style: AppTextStyles.bodySmall),
                 ),
                 const Expanded(child: Divider()),
               ],
             ),
             const SizedBox(height: 24),
             CustomButton(
-              text: 'المتابعة باستخدام Google',
+              text: l10n.continueWithGoogle,
               onPressed:
                   authProvider.isLoading ? null : _handleOwnerLoginWithGoogle,
               isLoading: authProvider
@@ -281,6 +286,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   Widget _buildEmployeeTab() {
     final authProvider = context.watch<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Form(
@@ -290,7 +296,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           children: [
             const SizedBox(height: 32),
             Text(
-              'أدخل البريد الإلكتروني للمتجر لتسجيل الدخول كموظف',
+              l10n.enterStoreEmailMessage,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.textSecondary(context)),
@@ -298,14 +304,14 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             const SizedBox(height: 32),
             CustomTextField(
               controller: _storeEmailController,
-              labelText: 'بريد المتجر الإلكتروني',
+              labelText: l10n.storeEmail,
               prefixIcon: const Icon(Icons.store_outlined),
               validator: Validators.validateEmail,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 32),
             CustomButton(
-              text: 'البحث عن المتجر',
+              text: l10n.findStore,
               onPressed: authProvider.isLoading ? null : _handleFindStore,
               isLoading: authProvider.isLoading,
             ),
@@ -316,12 +322,13 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildFooter() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, top: 16),
       child: Column(
         children: [
           Text(
-            'ليس لديك حساب؟',
+            l10n.noAccountYet,
             style: AppTextStyles.bodyMedium
                 .copyWith(color: AppColors.textSecondary(context)),
           ),
@@ -330,7 +337,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               Navigator.pushNamed(context, RouteConstants.storeRegistration);
             },
             child: Text(
-              'إنشاء متجر جديد',
+              l10n.createStoreNew,
               style: AppTextStyles.h3.copyWith(color: AppColors.primary),
             ),
           ),

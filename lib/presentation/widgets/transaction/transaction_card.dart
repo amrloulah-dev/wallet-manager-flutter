@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/presentation/widgets/common/animated_hover_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/transaction_model.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
-class TransactionCard extends StatefulWidget {
+class TransactionCard extends StatelessWidget {
   final TransactionModel transaction;
   final VoidCallback onTap;
   final bool showWalletInfo; // Not used in this implementation as per prompt
@@ -17,52 +19,31 @@ class TransactionCard extends StatefulWidget {
   });
 
   @override
-  State<TransactionCard> createState() => _TransactionCardState();
-}
-
-class _TransactionCardState extends State<TransactionCard> {
-  bool _isHighlighted = false;
-
-  @override
   Widget build(BuildContext context) {
-    final elevation = _isHighlighted ? 4.0 : 1.0;
-    final scale = _isHighlighted ? 0.98 : 1.0;
+    return AnimatedHoverCard(
+      onTap: onTap,
+      initialElevation: 1.0,
+      highlightedElevation: 4.0,
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 1️⃣ Icon Circle (send/receive indicator)
+            _buildTransactionIcon(),
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
-      child: Card(
-        elevation: elevation,
-        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        child: InkWell(
-          onTap: widget.onTap,
-          onHighlightChanged: (isHighlighted) {
-            setState(() {
-              _isHighlighted = isHighlighted;
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 1️⃣ Icon Circle (send/receive indicator)
-                _buildTransactionIcon(),
+            const SizedBox(width: 12),
 
-                const SizedBox(width: 12),
+            // 2️⃣ Transaction Details
+            _buildTransactionDetails(context),
 
-                // 2️⃣ Transaction Details
-                _buildTransactionDetails(context),
+            const SizedBox(width: 8),
 
-                const SizedBox(width: 8),
-
-                // 3️⃣ Amount & Commission (Right-aligned)
-                _buildAmountDetails(),
-              ],
-            ),
-          ),
+            // 3️⃣ Amount & Commission (Right-aligned)
+            _buildAmountDetails(),
+          ],
         ),
       ),
     );
@@ -73,13 +54,13 @@ class _TransactionCardState extends State<TransactionCard> {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: widget.transaction.transactionTypeColor
+        color: transaction.transactionTypeColor
             .withAlpha((0.1 * 255).round()),
         shape: BoxShape.circle,
       ),
       child: Icon(
-        widget.transaction.transactionTypeIcon,
-        color: widget.transaction.transactionTypeColor,
+        transaction.transactionTypeIcon,
+        color: transaction.transactionTypeColor,
         size: 24,
       ),
     );
@@ -99,11 +80,11 @@ class _TransactionCardState extends State<TransactionCard> {
           _buildCustomerInfo(context),
 
           // Customer Name (if exists)
-          if (widget.transaction.customerName != null &&
-              widget.transaction.customerName!.isNotEmpty) ...[
+          if (transaction.customerName != null &&
+              transaction.customerName!.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
-              widget.transaction.customerName!,
+              transaction.customerName!,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary(context),
               ),
@@ -113,9 +94,9 @@ class _TransactionCardState extends State<TransactionCard> {
           ],
 
           // Payment Status Badge (if debt)
-          if (widget.transaction.isDebt) ...[
+          if (transaction.isDebt) ...[
             const SizedBox(height: 4),
-            _buildDebtBadge(),
+            _buildDebtBadge(context),
           ],
         ],
       ),
@@ -123,13 +104,14 @@ class _TransactionCardState extends State<TransactionCard> {
   }
 
   Widget _buildTypeAndTimeRow(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Text(
-          widget.transaction.transactionTypeDisplay,
+          transaction.getTransactionTypeDisplay(l10n),
           style: AppTextStyles.labelMedium.copyWith(
             fontWeight: FontWeight.bold,
-            color: widget.transaction.transactionTypeColor,
+            color: transaction.transactionTypeColor,
           ),
         ),
         Text(
@@ -139,7 +121,7 @@ class _TransactionCardState extends State<TransactionCard> {
           ),
         ),
         Text(
-          widget.transaction.formattedTime, // e.g. '10:30 AM'
+          transaction.formattedTime, // e.g. '10:30 AM'
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary(context),
           ),
@@ -155,14 +137,15 @@ class _TransactionCardState extends State<TransactionCard> {
             size: 14, color: AppColors.textSecondary(context)),
         const SizedBox(width: 4),
         Text(
-          NumberFormatter.formatPhoneNumber(widget.transaction.customerPhone),
+          NumberFormatter.formatPhoneNumber(transaction.customerPhone),
           style: AppTextStyles.bodyMedium,
         ),
       ],
     );
   }
 
-  Widget _buildDebtBadge() {
+  Widget _buildDebtBadge(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -170,7 +153,7 @@ class _TransactionCardState extends State<TransactionCard> {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        'دين',
+        l10n.debt,
         style: AppTextStyles.bodySmall.copyWith(
           fontWeight: FontWeight.bold,
           color: AppColors.warning,
@@ -185,9 +168,9 @@ class _TransactionCardState extends State<TransactionCard> {
       children: [
         // Amount
         Text(
-          NumberFormatter.formatAmount(widget.transaction.amount),
+          NumberFormatter.formatAmount(transaction.amount),
           style: AppTextStyles.h3.copyWith(
-            color: widget.transaction.transactionTypeColor,
+            color: transaction.transactionTypeColor,
           ),
         ),
 
@@ -199,7 +182,7 @@ class _TransactionCardState extends State<TransactionCard> {
           children: [
             const Icon(Icons.attach_money, size: 14, color: AppColors.success),
             Text(
-              NumberFormatter.formatAmount(widget.transaction.commission,
+              NumberFormatter.formatAmount(transaction.commission,
                   showCurrency: false),
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.success,

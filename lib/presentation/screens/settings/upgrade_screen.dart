@@ -9,6 +9,7 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class UpgradeScreen extends StatelessWidget {
   final bool isTrial;
@@ -17,9 +18,10 @@ class UpgradeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTrial ? "الترقية للنسخة الكاملة" : "معلومات الترخيص"),
+        title: Text(isTrial ? l10n.upgradeToFullVersionTitle : l10n.licenseInfo),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -32,6 +34,7 @@ class UpgradeScreen extends StatelessWidget {
   Widget _buildTrialUI(BuildContext context) {
     final TextEditingController keyController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -48,7 +51,7 @@ class UpgradeScreen extends StatelessWidget {
                     size: 48, color: AppColors.primary),
                 const SizedBox(height: 12),
                 Text(
-                  'للحصول على مفتاح التفعيل، يرجى التواصل معنا',
+                  l10n.getActivationKey,
                   style: AppTextStyles.h3,
                   textAlign: TextAlign.center,
                 ),
@@ -56,7 +59,7 @@ class UpgradeScreen extends StatelessWidget {
                 _buildContactButton(
                   context,
                   icon: Icons.phone,
-                  label: 'تواصل عبر واتساب',
+                  label: l10n.contactViaWhatsapp,
                   onTap: () => _launchWhatsApp(context),
                   color: Colors.green,
                 ),
@@ -64,7 +67,7 @@ class UpgradeScreen extends StatelessWidget {
                 _buildContactButton(
                   context,
                   icon: Icons.email,
-                  label: 'تواصل عبر البريد الإلكتروني',
+                  label: l10n.contactViaEmail,
                   onTap: () => _launchEmail(context),
                   color: Colors.blueAccent,
                 ),
@@ -80,16 +83,16 @@ class UpgradeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("تفعيل الاشتراك", style: AppTextStyles.h3),
+              Text(l10n.activateSubscription, style: AppTextStyles.h3),
               const SizedBox(height: 16),
               CustomTextField(
-                labelText: "مفتاح التفعيل",
+                labelText: l10n.activationKey,
                 controller: keyController,
-                hintText: "أدخل مفتاح التفعيل هنا",
+                hintText: l10n.enterActivationKeyHere,
                 prefixIcon: const Icon(Icons.vpn_key_outlined),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'الرجاء إدخال مفتاح التفعيل';
+                    return l10n.pleaseEnterActivationKey;
                   }
                   return null;
                 },
@@ -98,7 +101,7 @@ class UpgradeScreen extends StatelessWidget {
               Consumer<AuthProvider>(
                 builder: (context, auth, _) {
                   return CustomButton(
-                    text: "تفعيل",
+                    text: l10n.activate,
                     isLoading: auth.isLoading,
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
@@ -106,12 +109,12 @@ class UpgradeScreen extends StatelessWidget {
                           await auth
                               .activateNewLicense(keyController.text.trim());
                           if (context.mounted) {
-                            ToastUtils.showSuccess('تم تفعيل الاشتراك بنجاح!');
+                            ToastUtils.showSuccess(l10n.subscriptionActivatedSuccessfully);
                             Navigator.pop(context);
                           }
                         } catch (e) {
                           ToastUtils.showError(
-                              auth.errorMessage ?? 'فشل التفعيل');
+                              auth.errorMessage ?? l10n.activationFailed);
                         }
                       }
                     },
@@ -126,6 +129,7 @@ class UpgradeScreen extends StatelessWidget {
   }
 
   Widget _buildPremiumUI(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Consumer2<AuthProvider, SubscriptionProvider>(
       builder: (context, authProvider, subProvider, _) {
         final licenseKey = authProvider.licenseKey;
@@ -147,25 +151,25 @@ class UpgradeScreen extends StatelessWidget {
                         size: 64, color: AppColors.success),
                     const SizedBox(height: 16),
                     Text(
-                      'النسخة الكاملة مفعلة',
+                      l10n.fullVersionActivated,
                       style:
                           AppTextStyles.h2.copyWith(color: AppColors.success),
                     ),
                     const Divider(height: 32),
-                    _buildInfoRow(context, "مفتاح الترخيص", licenseKey),
+                    _buildInfoRow(context, l10n.licenseKey, licenseKey),
                     const SizedBox(height: 16),
-                    _buildInfoRow(context, "تاريخ الانتهاء",
+                    _buildInfoRow(context, l10n.expiryDate,
                         DateHelper.formatDateTime(expiryDate)),
                     const SizedBox(height: 16),
                     _buildInfoRow(
-                        context, "الأيام المتبقية", "$daysRemaining يوم"),
+                        context, l10n.trialDaysRemainingLabel, l10n.daysRemainingCount(daysRemaining)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 32),
             CustomButton(
-              text: "تجديد الاشتراك",
+              text: l10n.renewSubscription,
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: () => _launchWhatsApp(context, isRenew: true),
@@ -210,9 +214,9 @@ class UpgradeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withAlpha((0.5 * 255).round())),
           borderRadius: BorderRadius.circular(8),
-          color: color.withOpacity(0.1),
+          color: color.withAlpha((0.1 * 255).round()),
         ),
         child: Row(
           children: [
@@ -233,10 +237,11 @@ class UpgradeScreen extends StatelessWidget {
 
   Future<void> _launchWhatsApp(BuildContext context,
       {bool isRenew = false}) async {
+    final l10n = AppLocalizations.of(context)!;
     const phone = '201091264053';
     final message = isRenew
-        ? "مرحباً، أرغب في تجديد اشتراكي في تطبيق مدير المحفظة."
-        : "مرحباً، أرغب في الحصول على مفتاح تفعيل لتطبيق مدير المحفظة.";
+        ? l10n.renewWhatsappMessage
+        : l10n.activationWhatsappMessage;
     final encodedMessage = Uri.encodeComponent(message);
     final url = 'https://wa.me/$phone?text=$encodedMessage';
     final uri = Uri.parse(url);
@@ -244,15 +249,16 @@ class UpgradeScreen extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showError("فشل فتح واتساب");
+        ToastUtils.showError(l10n.failedOpenWhatsApp);
       }
     }
   }
 
   Future<void> _launchEmail(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     const email = 'amrloulah2021@gmail.com';
-    const subject = "طلب تفعيل النسخة الكاملة";
-    const body = "مرحباً، أود الاستفسار عن كيفية الترقية للنسخة الكاملة.";
+    final subject = l10n.activationEmailSubject;
+    final body = l10n.activationEmailBody;
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: email,
@@ -263,7 +269,7 @@ class UpgradeScreen extends StatelessWidget {
       await launchUrl(emailLaunchUri);
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showError("فشل فتح البريد الإلكتروني");
+        ToastUtils.showError(l10n.failedOpenEmail);
       }
     }
   }

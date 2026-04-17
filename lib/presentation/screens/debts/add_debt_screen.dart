@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -54,7 +55,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
 
     final currentUserId = authProvider.currentUserId;
     if (currentUserId == null) {
-      ToastUtils.showError('خطأ في المصادقة، يرجى تسجيل الدخول مرة أخرى');
+      ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
       return;
     }
 
@@ -68,7 +69,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     );
 
     if (success && mounted) {
-      ToastUtils.showSuccess('تم إضافة الدين بنجاح');
+      ToastUtils.showSuccess(AppLocalizations.of(context)!.debtAddedSuccess);
       Navigator.pop(context, true);
     }
   }
@@ -76,7 +77,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('إضافة دين جديد')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.addDebtTitle)),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -106,19 +107,19 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('بيانات العميل', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.customerDetails, style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _customerNameController,
-          labelText: 'اسم العميل',
-          hintText: 'أدخل اسم العميل بالكامل',
-          validator: (val) => Validators.validateRequired(val, 'اسم العميل'),
+          labelText: AppLocalizations.of(context)!.customerName,
+          hintText: AppLocalizations.of(context)!.enterFullCustomerName,
+          validator: (val) => Validators.validateRequired(val, AppLocalizations.of(context)!.customerName),
           prefixIcon: const Icon(Icons.person_outline),
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: _customerPhoneController,
-          labelText: 'رقم موبايل العميل',
+          labelText: AppLocalizations.of(context)!.customerPhone,
           hintText: '01xxxxxxxxx',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -134,18 +135,18 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('نوع الدين', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.debtType, style: AppTextStyles.h3),
         const SizedBox(height: 12),
         _buildDebtTypeTile(
-          title: 'معاملة محفظة',
-          subtitle: 'دين ناتج عن معاملة إرسال لم يتم دفعها',
+          title: AppLocalizations.of(context)!.walletTransaction,
+          subtitle: AppLocalizations.of(context)!.walletTransactionSubtitle,
           value: 'transaction',
           icon: Icons.swap_horiz,
         ),
         const SizedBox(height: 8),
         _buildDebtTypeTile(
-          title: 'بيع من المحل',
-          subtitle: 'دين ناتج عن عملية بيع آجلة من المحل',
+          title: AppLocalizations.of(context)!.storeSale,
+          subtitle: AppLocalizations.of(context)!.storeSaleSubtitle,
           value: 'store_sale',
           icon: Icons.storefront_outlined,
         ),
@@ -188,11 +189,11 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المبلغ المستحق', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.amountDueTitle, style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _amountController,
-          labelText: 'المبلغ',
+          labelText: AppLocalizations.of(context)!.amount,
           hintText: '0.00',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -212,7 +213,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.',
+                  AppLocalizations.of(context)!.debtWillBeAdded,
                   style:
                       AppTextStyles.bodySmall.copyWith(color: AppColors.info),
                 ),
@@ -227,8 +228,8 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   Widget _buildNotesSection() {
     return CustomTextField(
       controller: _notesController,
-      labelText: 'ملاحظات (اختياري)',
-      hintText: 'أي تفاصيل إضافية عن الدين',
+      labelText: AppLocalizations.of(context)!.notesOptional,
+      hintText: AppLocalizations.of(context)!.additionalDebtDetails,
       maxLines: 3,
       maxLength: 200,
       validator: (value) => Validators.validateNotes(value, maxLength: 200),
@@ -265,7 +266,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 ),
               ),
             CustomButton(
-              text: 'إضافة الدين',
+              text: AppLocalizations.of(context)!.addDebtAction,
               onPressed: _handleCreate,
               isLoading: provider.isCreating,
               size: ButtonSize.large,

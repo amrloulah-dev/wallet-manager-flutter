@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,8 @@ class AdminBlockScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -24,7 +27,7 @@ class AdminBlockScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'تم إيقاف حسابك',
+                  loc.accountSuspended,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.redAccent,
@@ -33,7 +36,7 @@ class AdminBlockScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'لقد تم تعليق حسابك من قبل الإدارة. يرجى التواصل مع فريق الدعم الفني لحل هذه المشكلة واستعادة وصولك إلى النظام.',
+                  loc.accountSuspendedMessage,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.grey[700],
                         height: 1.5,
@@ -45,11 +48,11 @@ class AdminBlockScreen extends StatelessWidget {
                   onPressed: () {
                     // Could launch whatsapp or call
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('جاري الاتصال بالدعم الفني...')),
+                      SnackBar(content: Text(loc.contactingSupportTeam)),
                     );
                   },
                   icon: const Icon(Icons.support_agent),
-                  label: const Text('تواصل مع الدعم الفني'),
+                  label: Text(loc.contactSupport),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -63,7 +66,7 @@ class AdminBlockScreen extends StatelessWidget {
                     Provider.of<AuthProvider>(context, listen: false).logout();
                   },
                   icon: const Icon(Icons.logout),
-                  label: const Text('تسجيل الخروج'),
+                  label: Text(loc.logoutButton),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.grey[600],
                   ),

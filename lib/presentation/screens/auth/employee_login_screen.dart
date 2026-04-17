@@ -65,8 +65,10 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
   Future<void> _handleLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_selectedEmployee == null) {
-      ToastUtils.showError('برجاء اختيار الموظف');
+      ToastUtils.showError(l10n.pleaseSelectEmployee);
       return;
     }
 
@@ -78,34 +80,16 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       final enteredStorePassHash =
           PasswordHasher.hashPassword(_storePasswordController.text);
       if (enteredStorePassHash != widget.store.storePassword) {
-        throw AuthException(AppLocalizations.of(context)!.storePasswordInvalid);
+        throw AuthException(l10n.storePasswordInvalid);
       }
 
       // 2. Verify Employee PIN
-      // Note: Employee Model should have 'pin' field comparable.
-      // Assuming pin is stored either plainly or hashed. The previous code didn't use PasswordHasher for PIN explicitly in comparisons before,
-      // but the requirement says "Hash the entered PIN and compare".
-      // Let's assume the stored PIN in UserModel is hashed.
-      // If the stored PIN is just plain text (from previous context it seemed plain "1234"), we might need to check how it's stored.
-      // Checking previous context: `addEmployee` in provider calls `_employeeRepository.addEmployee`.
-      // The task Requirements said: "Step 2 (Verify PIN): Hash the entered PIN and compare it with the selected employee's PIN".
-      // I will follow this instruction assuming the backend stores hash.
-      // However, if the existing data has plain PINs, this might break.
-      // Given this is a refactor, I will assume consistent hashing is desired.
-      // BUT for safety, if the stored PIN length is 4 (typical plain), I might compare directly, OR hash.
-      // Let's stick to the prompt: "Hash the entered PIN".
-
       final enteredPinHash = PasswordHasher.hashPassword(_pinController.text);
-
-      // Fallback check: if stored PIN is length 4 (likely plain legacy), compare directly?
-      // Or just strictly follow "Hash and compare".
-      // I'll stick to strict hash comparison as per "Senior Flutter Developer" instructions.
-      // If `_selectedEmployee!.pin` is the hash.
 
       if (enteredPinHash != _selectedEmployee!.pin) {
         // Double check if legacy plain text match works (optional safety)
         if (_selectedEmployee!.pin != _pinController.text) {
-          throw AuthException(AppLocalizations.of(context)!.pinInvalid);
+          throw AuthException(l10n.pinInvalid);
         }
       }
 
@@ -127,7 +111,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
         Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
         ToastUtils.showSuccess(
-            '${AppLocalizations.of(context)!.welcome} ${_selectedEmployee!.fullName}');
+            '${l10n.welcome} ${_selectedEmployee!.fullName}');
       } else {
         if (mounted && authProvider.errorMessage != null) {
           ToastUtils.showError(authProvider.errorMessage!);
@@ -151,18 +135,19 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   Widget build(BuildContext context) {
     final employeeProvider = context.watch<EmployeeProvider>();
     final employees = employeeProvider.activeEmployees; // Only active users
+    final l10n = AppLocalizations.of(context)!;
 
     return DoubleBackToExitWrapper(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBg(context),
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.employeeLogin),
+          title: Text(l10n.employeeLogin),
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
         ),
         body: _isLoading
-            ? const LoadingIndicator(message: 'جاري تسجيل الدخول...')
+            ? LoadingIndicator(message: l10n.loggingIn)
             : SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
@@ -176,10 +161,10 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withAlpha((0.1 * 255).round()),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3)),
+                                  color: AppColors.primary.withAlpha((0.3 * 255).round())),
                             ),
                             child: Column(
                               children: [
@@ -194,7 +179,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'تسجيل دخول الموظفين',
+                                  l10n.employeeLoginSubtitle,
                                   style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.textSecondary(context)),
                                 ),
@@ -207,8 +192,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           CustomTextField(
                             controller: _storePasswordController,
                             labelText:
-                                AppLocalizations.of(context)!.storePassword,
-                            hintText: 'أدخل كلمة مرور المتجر',
+                                l10n.storePassword,
+                            hintText: l10n.enterStorePassword,
                             prefixIcon: const Icon(Icons.vpn_key_outlined),
                             suffixIcon: IconButton(
                               icon: Icon(_obscureStorePassword
@@ -222,7 +207,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                             keyboardType: TextInputType.text,
                             // No strict validation on length here to allow flexibility, just not empty
                             validator: (val) =>
-                                val == null || val.isEmpty ? 'مطلوب' : null,
+                                val == null || val.isEmpty ? l10n.requiredField : null,
                           ),
                           const SizedBox(height: 20),
 
@@ -232,12 +217,12 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           else if (employeeProvider.hasError)
                             Center(
                                 child: Text(
-                                    employeeProvider.errorMessage ?? 'Error',
+                                    employeeProvider.errorMessage ?? l10n.error,
                                     style: const TextStyle(color: Colors.red)))
                           else
                             CustomDropdown<UserModel>(
-                              labelText: 'اختر الموظف',
-                              hint: 'اضغط للاختيار',
+                              labelText: l10n.selectEmployee,
+                              hint: l10n.selectEmployeeHint,
                               value: _selectedEmployee,
                               prefixIcon: const Icon(Icons.person_outline),
                               fillColor: AppColors.primary
@@ -256,14 +241,14 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                                 setState(() => _selectedEmployee = val);
                               },
                               validator: (val) =>
-                                  val == null ? 'يرجى اختيار الموظف' : null,
+                                  val == null ? l10n.pleaseSelectEmployee : null,
                             ),
                           const SizedBox(height: 20),
 
                           // 3. Employee PIN
                           CustomTextField(
                             controller: _pinController,
-                            labelText: 'رقم التعريف الشخصي (PIN)',
+                            labelText: l10n.pinLabel,
                             hintText: '****',
                             prefixIcon: const Icon(Icons.pin_outlined),
                             suffixIcon: IconButton(
@@ -280,8 +265,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'مطلوب';
-                              if (val.length != 4) return 'يجب أن يكون 4 أرقام';
+                              if (val == null || val.isEmpty) return l10n.requiredField;
+                              if (val.length != 4) return l10n.pinMustBe4Digits;
                               return null;
                             },
                           ),
@@ -289,7 +274,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           const SizedBox(height: 32),
 
                           CustomButton(
-                            text: 'تسجيل الدخول',
+                            text: l10n.loginAction,
                             onPressed: _handleLogin,
                             icon: const Icon(Icons.login),
                           ),

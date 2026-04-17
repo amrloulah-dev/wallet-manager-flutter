@@ -9,6 +9,7 @@ import '../../../providers/statistics_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class GeneralStatisticsScreen extends StatefulWidget {
   const GeneralStatisticsScreen({super.key});
@@ -49,6 +50,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   void _applyFilter() {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.read<StatisticsProvider>();
     final localStartDate = _startDate;
 
@@ -57,8 +59,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
       if (localEndDate.isBefore(localStartDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية')),
+          SnackBar(content: Text(l10n.filterDateError)),
         );
         return;
       }
@@ -82,9 +83,10 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإحصائيات العامة'),
+        title: Text(l10n.generalStats),
         centerTitle: true,
       ),
       body: Column(
@@ -100,11 +102,12 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     return Selector<StatisticsProvider, bool>(
       selector: (context, provider) => provider.isLoading,
       builder: (context, isLoading, child) {
         if (isLoading) {
-          return const LoadingIndicator(message: 'جاري تحميل الإحصائيات...');
+          return LoadingIndicator(message: l10n.loadingWalletData);
         }
         
         return Selector<StatisticsProvider, String?>(
@@ -151,6 +154,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildDateFilter() {
+    final l10n = AppLocalizations.of(context)!;
     return Selector<StatisticsProvider, StatsMode>(
       selector: (context, provider) => provider.mode,
       builder: (context, mode, child) {
@@ -164,7 +168,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(_startDate == null
-                      ? 'تاريخ البداية'
+                      ? l10n.startDate
                       : DateHelper.formatDateTime(_startDate!)),
                   onPressed: () => _selectDate(context, true),
                 ),
@@ -174,7 +178,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(_endDate == null
-                      ? 'تاريخ النهاية'
+                      ? l10n.endDate
                       : DateHelper.formatDateTime(_endDate!)),
                   onPressed: () => _selectDate(context, false),
                 ),
@@ -186,7 +190,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
             children: [
               Expanded(
                 child: CustomButton(
-                  text: 'تطبيق الفلتر',
+                  text: l10n.applyFilter,
                   onPressed: _startDate == null ? null : _applyFilter,
                   size: ButtonSize.small,
                 ),
@@ -195,7 +199,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: CustomButton(
-                    text: 'مسح الفلتر',
+                    text: l10n.clearFilter,
                     onPressed: _clearFilter,
                     type: ButtonType.outlined,
                     size: ButtonSize.small,
@@ -212,6 +216,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildEmptyState({bool isCustom = false}) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -220,8 +225,8 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
               size: 80, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
           Text(isCustom
-              ? 'لا توجد بيانات في هذا النطاق الزمني.'
-              : 'لا توجد إحصائيات لعرضها.'),
+              ? l10n.noDataInRange
+              : l10n.noStatsToShow),
         ],
       ),
     );
@@ -248,17 +253,18 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildBalanceSection(BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     final totalBalance = stats.totalBalance;
 
     return _buildStatCard(
       context: context,
       icon: Icons.account_balance_wallet_outlined,
-      title: 'الرصيد',
+      title: l10n.balance,
       color: Colors.teal,
       children: [
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'إجمالي الرصيد في المحافظ',
+          label: l10n.totalWalletBalance,
           value: NumberFormatter.formatAmount(totalBalance),
         ),
       ],
@@ -267,26 +273,27 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
   Widget _buildTransactionsSection(
       BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.swap_horiz,
-      title: 'المعاملات',
+      title: l10n.transactions,
       color: Colors.blueGrey,
       children: [
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'إجمالي المعاملات',
+          label: l10n.totalTransactions,
           value: NumberFormatter.formatNumber(stats.totalTransactions),
         ),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'معاملات الإرسال',
+          label: l10n.sendTransactions,
           value: NumberFormatter.formatNumber(stats.sendCount),
           valueColor: AppColors.send,
         ),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'معاملات الاستقبال',
+          label: l10n.receiveTransactions,
           value: NumberFormatter.formatNumber(stats.receiveCount),
           valueColor: AppColors.receive,
         ),
@@ -295,28 +302,29 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildAmountsSection(BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.monetization_on_outlined,
-      title: 'المبالغ',
+      title: l10n.amounts,
       color: Colors.purple,
       children: [
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'إجمالي مبلغ الإرسال',
+          label: l10n.sendAmount,
           value: NumberFormatter.formatAmount(stats.totalSentAmount),
           valueColor: AppColors.send,
         ),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'إجمالي مبلغ الاستقبال',
+          label: l10n.receiveAmount,
           value: NumberFormatter.formatAmount(stats.totalReceivedAmount),
           valueColor: AppColors.receive,
         ),
         const Divider(height: 10),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'المبلغ الإجمالي',
+          label: l10n.totalAmountCombined,
           value: NumberFormatter.formatAmount(
               stats.totalSentAmount + stats.totalReceivedAmount),
         ),
@@ -326,6 +334,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
   Widget _buildCommissionSection(
       BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     final totalCommission = stats.totalCommission;
     final totalTransactions = stats.totalTransactions;
     final averageCommission =
@@ -333,17 +342,17 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     return _buildStatCard(
       context: context,
       icon: Icons.attach_money,
-      title: 'العمولات',
+      title: l10n.commission,
       color: AppColors.success,
       children: [
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'إجمالي العمولات',
+          label: l10n.totalCommissionLabel,
           value: NumberFormatter.formatAmount(totalCommission),
         ),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'متوسط العمولة للمعاملة',
+          label: l10n.averageCommission,
           value: NumberFormatter.formatAmount(averageCommission),
         ),
       ],
@@ -351,21 +360,22 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildDebtsSection(BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.credit_card_off_outlined,
-      title: 'الديون',
+      title: l10n.debts,
       color: AppColors.error,
       children: [
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'الديون المفتوحة',
+          label: l10n.openDebtsLabel,
           value: NumberFormatter.formatNumber(stats.openDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalOpenAmount),
         ),
-        _StatItem(
+        _StatItemWidget(
           context: context,
-          label: 'الديون المسددة',
+          label: l10n.paidDebtsLabel,
           value: NumberFormatter.formatNumber(stats.paidDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalPaidAmount),
           valueColor: AppColors.success,
@@ -404,7 +414,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     );
   }
 
-  Widget _StatItem({
+  Widget _StatItemWidget({
     required BuildContext context,
     required String label,
     required String value,

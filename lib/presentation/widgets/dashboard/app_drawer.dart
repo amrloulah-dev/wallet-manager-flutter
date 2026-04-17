@@ -114,7 +114,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(
                             context, RouteConstants.walletsList);
                       } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض المحافظ');
+                        ToastUtils.showError(AppLocalizations.of(context)!.noPermissionWallets);
                       }
                     },
                   ),
@@ -129,7 +129,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(
                             context, RouteConstants.todayTransactions);
                       } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض المعاملات');
+                        ToastUtils.showError(AppLocalizations.of(context)!.noPermissionTransactions);
                       }
                     },
                   ),
@@ -143,7 +143,7 @@ class AppDrawer extends StatelessWidget {
                           user.hasPermission((p) => p.viewDebts)) {
                         Navigator.pushNamed(context, RouteConstants.debtsList);
                       } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض الديون');
+                        ToastUtils.showError(AppLocalizations.of(context)!.noPermissionDebts);
                       }
                     },
                   ),
@@ -158,7 +158,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(
                             context, RouteConstants.generalStatistics);
                       } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
+                        ToastUtils.showError(AppLocalizations.of(context)!.noPermissionStats);
                       }
                     },
                   ),
@@ -171,7 +171,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(
                             context, RouteConstants.manageEmployees);
                       } else {
-                        ToastUtils.showError('هذه الخاصية للمالك فقط');
+                        ToastUtils.showError(AppLocalizations.of(context)!.ownerOnlyFeature);
                       }
                     },
                   ),
@@ -184,7 +184,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.pushNamed(
                             context, RouteConstants.subscriptionDetails);
                       } else {
-                        ToastUtils.showError('هذه الخاصية للمالك فقط');
+                        ToastUtils.showError(AppLocalizations.of(context)!.ownerOnlyFeature);
                       }
                     },
                   ),
