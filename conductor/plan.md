@@ -1,18 +1,18 @@
 # Implementation Plan: Firestore Cost Optimization & Architecture Refactor
 
 ## Phase 1: Eradicate Client-Side Aggregation
-- [ ] Task: Write Failing Tests
-    - [ ] Create/Update tests for `TransactionRepository` to expect the absence of `getTransactionAggregates`.
-    - [ ] Create/Update tests for `StatsRepository` to expect the absence of `reconcileStatsFromWallets` and `reconcileStatsFromDebts`.
-    - [ ] Create/Update tests for `DebtRepository` to expect the absence of `getDebtAggregates`.
-- [ ] Task: Implement to Pass Tests (Delete Aggregations)
-    - [ ] Delete `getTransactionAggregates` from `lib/data/repositories/transaction_repository.dart`.
-    - [ ] Delete `reconcileStatsFromWallets` from `lib/data/repositories/stats_repository.dart`.
-    - [ ] Delete `reconcileStatsFromDebts` from `lib/data/repositories/stats_repository.dart`.
-    - [ ] Delete `getDebtAggregates` from `lib/data/repositories/debt_repository.dart`.
-    - [ ] Refactor Providers/Controllers calling these methods.
-- [ ] Task: Refactor (Optional)
-    - [ ] Ensure clean code structure after deletions.
+- [x] Task: Write Failing Tests
+    - [x] Create/Update tests for `TransactionRepository` to expect the absence of `getTransactionAggregates`.
+    - [x] Create/Update tests for `StatsRepository` to expect the absence of `reconcileStatsFromWallets` and `reconcileStatsFromDebts`.
+    - [x] Create/Update tests for `DebtRepository` to expect the absence of `getDebtAggregates`.
+- [x] Task: Implement to Pass Tests (Delete Aggregations) [1c561f4]
+    - [x] Delete `getTransactionAggregates` from `lib/data/repositories/transaction_repository.dart`.
+    - [x] Delete `reconcileStatsFromWallets` from `lib/data/repositories/stats_repository.dart`.
+    - [x] Delete `reconcileStatsFromDebts` from `lib/data/repositories/stats_repository.dart`.
+    - [x] Delete `getDebtAggregates` from `lib/data/repositories/debt_repository.dart`.
+    - [x] Refactor Providers/Controllers calling these methods.
+- [x] Task: Refactor (Optional)
+    - [x] Ensure clean code structure after deletions.
 - [ ] Task: Conductor - User Manual Verification 'Eradicate Client-Side Aggregation' (Protocol in workflow.md)
 
 ## Phase 2: Implement Cursor-Based Pagination
