@@ -22,13 +22,13 @@
     - [x] Global search for `as int` and `as num` to ensure 0 occurrences in these files. [ed23e1a]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Refactor Data Models and Repositories' (Protocol in workflow.md) [777a1e6]
 
-## Phase 3: Refactor Providers (Optimistic Updates)
-- [ ] Task: Refactor Providers to use NumberParser
-    - [ ] Update `lib/providers/wallet_provider.dart`
-    - [ ] Update `lib/providers/statistics_provider.dart`
-    - [ ] Update `lib/presentation/overlays/overlay_provider.dart`
-    - [ ] Update `lib/core/widgets/global_overlay_listener.dart`
-- [ ] Task: Final Verification
-    - [ ] Global search for `.toDouble()` directly on dynamic maps to ensure 0 occurrences.
-    - [ ] Run `flutter analyze` to ensure 0 issues.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Refactor Providers (Optimistic Updates)' (Protocol in workflow.md)
+## Phase 3: Refactor Providers (Optimistic Updates) [checkpoint: 7ec8d89]
+- [x] Task: Refactor Providers to use NumberParser
+    - [x] Update `lib/providers/wallet_provider.dart`
+    - [x] Update `lib/providers/statistics_provider.dart`
+    - [x] Update `lib/presentation/overlays/overlay_provider.dart`
+    - [x] Update `lib/core/widgets/global_overlay_listener.dart` [8e6fc44]
+- [x] Task: Final Verification
+    - [x] Global search for `.toDouble()` directly on dynamic maps to ensure 0 occurrences.
+    - [x] Run `flutter analyze` to ensure 0 issues. [8e6fc44]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Refactor Providers (Optimistic Updates)' (Protocol in workflow.md) [7ec8d89]
