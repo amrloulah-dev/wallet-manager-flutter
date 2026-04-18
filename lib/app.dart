@@ -102,9 +102,8 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: GlobalOverlayListener(
-        child: Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>(
-          builder: (context, authProvider, themeProvider, localizationProvider,
-              child) {
+        child: Consumer2<ThemeProvider, LocalizationProvider>(
+          builder: (context, themeProvider, localizationProvider, child) {
             return MaterialApp(
               navigatorKey:
                   NavigationService.navigatorKey, // Set the navigatorKey
