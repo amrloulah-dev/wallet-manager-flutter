@@ -11,14 +11,14 @@
     - [x] Run and pass tests.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Patch Device Data Leak (Security)' (Protocol in workflow.md)
 
-## Phase 2: Eliminate Expensive Builds (Performance)
+## Phase 2: Eliminate Expensive Builds (Performance) [checkpoint: d356824]
 - [x] Task: Refactor MaterialApp State Management [4f98efb]
-    - [ ] Write/update failing test for `MaterialApp` and `AuthCheckWrapper` initialization/rebuild behavior if applicable.
-    - [ ] Remove the global `Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>` wrapping the `MaterialApp` in `lib/app.dart`.
-    - [ ] Wrap `MaterialApp` with a `Selector` or a targeted `Consumer2` specifically for `ThemeProvider` and `LocalizationProvider`.
-    - [ ] Update `AuthCheckWrapper` to correctly consume `AuthProvider` internally for routing.
-    - [ ] Run and pass tests.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Eliminate Expensive Builds (Performance)' (Protocol in workflow.md)
+    - [x] Write/update failing test for `MaterialApp` and `AuthCheckWrapper` initialization/rebuild behavior if applicable.
+    - [x] Remove the global `Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>` wrapping the `MaterialApp` in `lib/app.dart`.
+    - [x] Wrap `MaterialApp` with a `Selector` or a targeted `Consumer2` specifically for `ThemeProvider` and `LocalizationProvider`.
+    - [x] Update `AuthCheckWrapper` to correctly consume `AuthProvider` internally for routing.
+    - [x] Run and pass tests.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Eliminate Expensive Builds (Performance)' (Protocol in workflow.md)
 
 ## Phase 3: Unblock Main Thread (Performance)
 - [ ] Task: Optimize Main Initialization
