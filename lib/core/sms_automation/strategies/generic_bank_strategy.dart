@@ -1,3 +1,4 @@
+import '../../errors/app_error_handler.dart';
 import '../models/parsed_sms_dto.dart';
 import '../utils/bank_constants.dart';
 import 'sms_parser_strategy.dart';
@@ -40,16 +41,18 @@ class GenericBankStrategy extends SmsParserStrategy {
     }
 
     // Receive (Deposit)
-    // Pattern: transfer received.*?amount of egp\s*(?<amount>[\d\.]+)
+    // Pattern: transfer received.*?amount of egp\s*(?<amount>[\d\.,]+)
     if (normalizedBody.contains('received')) {
       final receiveRegex =
-          RegExp(r'transfer received.*?amount of egp\s*(?<amount>[\d\.]+)');
+          RegExp(r'transfer received.*?amount of egp\s*(?<amount>[\d\.,]+)');
       final match = receiveRegex.firstMatch(normalizedBody);
       if (match != null) {
-        final amountStr = match.namedGroup('amount');
-        if (amountStr != null) {
-          try {
-            final amount = double.parse(amountStr);
+        final rawAmount = match.namedGroup('amount');
+        if (rawAmount != null) {
+          final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+          final amount = double.tryParse(sanitizedAmountStr);
+
+          if (amount != null) {
             return ParsedSmsDto(
               amount: amount,
               type: TransactionType.credit,
@@ -58,22 +61,29 @@ class GenericBankStrategy extends SmsParserStrategy {
               serviceProvider: 'IPN/Bank',
               originalBody: normalizedBody,
             );
-          } catch (_) {}
+          } else {
+            AppErrorHandler.logSilentError(
+              'Failed to parse bank credit amount: $rawAmount',
+              'GenericBankStrategy_Receive',
+            );
+          }
         }
       }
     }
 
     // Send (Transfer)
-    // Pattern: transfer sent.*?amount of egp\s*(?<amount>[\d\.]+)
+    // Pattern: transfer sent.*?amount of egp\s*(?<amount>[\d\.,]+)
     if (normalizedBody.contains('sent')) {
       final sendRegex =
-          RegExp(r'transfer sent.*?amount of egp\s*(?<amount>[\d\.]+)');
+          RegExp(r'transfer sent.*?amount of egp\s*(?<amount>[\d\.,]+)');
       final match = sendRegex.firstMatch(normalizedBody);
       if (match != null) {
-        final amountStr = match.namedGroup('amount');
-        if (amountStr != null) {
-          try {
-            final amount = double.parse(amountStr);
+        final rawAmount = match.namedGroup('amount');
+        if (rawAmount != null) {
+          final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+          final amount = double.tryParse(sanitizedAmountStr);
+
+          if (amount != null) {
             return ParsedSmsDto(
               amount: amount,
               type: TransactionType.debit,
@@ -81,7 +91,12 @@ class GenericBankStrategy extends SmsParserStrategy {
               serviceProvider: 'IPN/Bank',
               originalBody: normalizedBody,
             );
-          } catch (_) {}
+          } else {
+            AppErrorHandler.logSilentError(
+              'Failed to parse bank debit amount: $rawAmount',
+              'GenericBankStrategy_Send',
+            );
+          }
         }
       }
     }
