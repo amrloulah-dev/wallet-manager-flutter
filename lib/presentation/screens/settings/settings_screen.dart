@@ -597,16 +597,9 @@ class _SmsAutomationSectionState extends State<_SmsAutomationSection> {
 
     // Load current mappings
     final mappings = _storage.getSimMappings();
-    SimWalletConfig? sim1;
-    SimWalletConfig? sim2;
-
-    try {
-      sim1 = mappings.firstWhere((m) => m.simSlotIndex == 0);
-    } catch (_) {}
-
-    try {
-      sim2 = mappings.firstWhere((m) => m.simSlotIndex == 1);
-    } catch (_) {}
+    
+    final sim1 = mappings.where((m) => m.simSlotIndex == 0).firstOrNull;
+    final sim2 = mappings.where((m) => m.simSlotIndex == 1).firstOrNull;
 
     if (mounted) {
       setState(() {
