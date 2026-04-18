@@ -42,15 +42,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   /// Shows the PaymentSuccessModal and marks it as seen so it won't fire again.
   void _checkPaymentSuccessModal() {
     if (!mounted) return;
-    try {
-      final subProvider = context.read<SubscriptionProvider>();
-      // Initial check
-      _maybeShowSuccessModal(subProvider);
-      // Ongoing listener for real-time transitions
-      subProvider.addListener(() => _maybeShowSuccessModal(subProvider));
-    } catch (_) {
-      // SubscriptionProvider not available — skip
-    }
+    final subProvider = context.read<SubscriptionProvider>();
+    // Initial check
+    _maybeShowSuccessModal(subProvider);
+    // Ongoing listener for real-time transitions
+    subProvider.addListener(() => _maybeShowSuccessModal(subProvider));
   }
 
   void _maybeShowSuccessModal(SubscriptionProvider subProvider) {
