@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 import 'user_permissions.dart';
 
@@ -198,9 +199,9 @@ class UserStats {
 
   factory UserStats.fromMap(Map<String, dynamic> map) {
     return UserStats(
-      totalTransactions: map['totalTransactions'] ?? 0,
-      totalCommission: (map['totalCommission'] ?? 0.0).toDouble(),
-      totalDebtsCreated: map['totalDebtsCreated'] ?? 0,
+      totalTransactions: NumberParser.toInt(map['totalTransactions']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalDebtsCreated: NumberParser.toInt(map['totalDebtsCreated']),
       lastTransactionDate: map['lastTransactionDate'],
     );
   }

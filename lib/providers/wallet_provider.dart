@@ -16,6 +16,7 @@ import 'subscription_provider.dart'; // Added import
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
+import '../core/utils/number_parser.dart';
 
 enum WalletStatusState {
   idle,
@@ -100,7 +101,7 @@ class WalletProvider extends ChangeNotifier {
           // ── Zero-cost local state mutation ──
           // The overlay already wrote to Firestore; we just need to update RAM.
           final walletId = event['walletId']?.toString();
-          final deduction = (event['amount'] as num?)?.toDouble() ?? 0.0;
+          final deduction = NumberParser.toDouble(event['amount']);
           final isSend = event['isSend'] == true;
 
           if (walletId == null) return;
@@ -541,7 +542,7 @@ class WalletProvider extends ChangeNotifier {
     }
 
     final walletId = data['walletId'] as String;
-    final amount = (data['amount'] as num).toDouble();
+    final amount = NumberParser.toDouble(data['amount']);
     final type = data['type']
         as String; // SMS type: 'credit' (Receive) or 'debit' (Send)
 

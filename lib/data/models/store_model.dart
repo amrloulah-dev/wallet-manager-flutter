@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 // ===========================
 // Main Store Model
@@ -226,8 +227,8 @@ class StoreSubscription {
           ? (map['endDate'] as Timestamp).toDate() 
           : null,
       trialConsumed: map['trialConsumed'] ?? false,
-      maxWallets: map['maxWallets'] ?? 3,
-      maxEmployees: map['maxEmployees'] ?? 1,
+      maxWallets: NumberParser.toInt(map['maxWallets'], 3),
+      maxEmployees: NumberParser.toInt(map['maxEmployees'], 1),
       smsEnabled: map['smsEnabled'] ?? false,
       pendingRequestDate: map['pendingRequestDate'] != null 
           ? (map['pendingRequestDate'] as Timestamp).toDate() 
@@ -327,10 +328,10 @@ class StoreStats {
 
   factory StoreStats.fromMap(Map<String, dynamic> map) {
     return StoreStats(
-      totalWallets: map['totalWallets'] ?? 0,
-      activeWallets: map['activeWallets'] ?? 0,
-      totalTransactionsToday: map['totalTransactionsToday'] ?? 0,
-      totalCommissionToday: (map['totalCommissionToday'] ?? 0.0).toDouble(),
+      totalWallets: NumberParser.toInt(map['totalWallets']),
+      activeWallets: NumberParser.toInt(map['activeWallets']),
+      totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
+      totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
       lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
     );
   }

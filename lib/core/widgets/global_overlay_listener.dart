@@ -9,6 +9,7 @@ import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/utils/number_parser.dart';
 
 class GlobalOverlayListener extends StatefulWidget {
   final Widget child;
@@ -68,8 +69,8 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
           transactionType: data['type'] == 'debit' ? 'send' : 'receive',
           customerPhone: data['sender']?.toString(),
           customerName: data['customerName']?.toString(),
-          amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-          commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
+          amount: NumberParser.toDouble(data['amount']),
+          commission: NumberParser.toDouble(data['commission']),
           serviceFee: 0.0, 
           paymentStatus: data['paymentStatus']?.toString() ?? 'paid',
           transactionDate: Timestamp.fromDate(DateTime.parse(nowStr)),
@@ -84,7 +85,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         // NEVER call refresh() / fetchInitialWallets() here:
         // Firestore cache lag would overwrite our correct optimistic balance.
         final walletId = data['walletId']?.toString();
-        final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+        final amount = NumberParser.toDouble(data['amount']);
         final type = data['type']?.toString(); // 'debit' = send, 'credit' = receive
         if (walletId != null && amount > 0 && type != null) {
           final isSend = type == 'debit';

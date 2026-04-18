@@ -9,6 +9,7 @@ import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
+import '../core/utils/number_parser.dart';
 
 enum StatsMode { dashboard, filtered }
 
@@ -206,8 +207,8 @@ class StatisticsProvider extends ChangeNotifier {
   void addTransactionOptimistically(Map<String, dynamic> txData) {
     if (_dashboardSummary == null || _todayStats == null) return;
 
-    final double amount = ((txData['amount'] ?? 0.0) as num).toDouble();
-    final double commission = ((txData['commission'] ?? 0.0) as num).toDouble();
+    final double amount = NumberParser.toDouble(txData['amount']);
+    final double commission = NumberParser.toDouble(txData['commission']);
     final String? type = txData['type'] as String?;
 
     // 1. Update Dashboard Summary

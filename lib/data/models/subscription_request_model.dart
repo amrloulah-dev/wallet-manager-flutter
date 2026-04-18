@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 class SubscriptionRequestModel {
   final String id;
@@ -34,7 +35,7 @@ class SubscriptionRequestModel {
       id: doc.id,
       storeId: data['storeId'] ?? '',
       planId: data['planId'] ?? '',
-      amount: (data['amount'] ?? 0.0).toDouble(),
+      amount: NumberParser.toDouble(data['amount']),
       paymentMethod: data['paymentMethod'] ?? '',
       receiptNumber: data['receiptNumber'] ?? '',
       status: data['status'] ?? 'pending',

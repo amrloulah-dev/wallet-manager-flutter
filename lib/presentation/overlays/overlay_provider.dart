@@ -11,6 +11,7 @@ import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/core/utils/number_parser.dart';
 // BotToast is NOT initialized in the overlay isolate — do not use here.
 
 class OverlayProvider with ChangeNotifier {
@@ -88,7 +89,7 @@ class OverlayProvider with ChangeNotifier {
     reset();
 
     // --- Parse incoming SMS data ---
-    _amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+    _amount = NumberParser.toDouble(data['amount']);
     _sender = data['sender']?.toString() ?? 'Unknown';
     _type   = data['type']?.toString()   ?? 'credit';
 
