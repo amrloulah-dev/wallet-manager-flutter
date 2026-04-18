@@ -321,14 +321,18 @@ class WalletProvider extends ChangeNotifier {
         throw ValidationException('Store ID not found.');
       }
 
-      if (_subscriptionProvider != null) {
-        final currentCount =
-            await _walletRepository.getWalletsCount(_currentStoreId!);
-        if (!_subscriptionProvider!.canAddWallet(currentCount)) {
-          _setError(
-              'تم الوصول للحد الأقصى للمحافظ (${_subscriptionProvider!.maxWallets})');
-          return false;
-        }
+      // Bug B-002: Fail-closed if subscription provider is missing
+      if (_subscriptionProvider == null) {
+        _setError('تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.');
+        return false;
+      }
+
+      final currentCount =
+          await _walletRepository.getWalletsCount(_currentStoreId!);
+      if (!_subscriptionProvider!.canAddWallet(currentCount)) {
+        _setError(
+            'تم الوصول للحد الأقصى للمحافظ (${_subscriptionProvider!.maxWallets})');
+        return false;
       }
 
       final newWallet = WalletModel.fromWalletStatus(
