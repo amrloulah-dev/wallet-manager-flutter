@@ -41,7 +41,7 @@
 - [x] Task: Conductor - User Manual Verification 'Dashboard Dependency Injection Validation' (Protocol in workflow.md)
 
 ## Phase 5: Global Remediation & Final Audit
-- [ ] Task: Remediate remaining global anti-patterns
+- [~] Task: Remediate remaining global anti-patterns
     - [ ] Review remaining instances of `catch (_)` or `catch (e) {}` and apply safe alternatives.
     - [ ] Write/update tests as necessary.
     - [ ] Ensure tests pass.
