@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     as fln show NotificationVisibility;
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/sms_automation/models/parsed_sms_dto.dart';
 import 'package:walletmanager/core/sms_automation/sms_parser_engine.dart';
 import 'package:flutter/foundation.dart';
