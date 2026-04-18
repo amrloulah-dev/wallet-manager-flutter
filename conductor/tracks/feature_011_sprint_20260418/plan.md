@@ -1,7 +1,7 @@
 # Implementation Plan: Security & Performance Optimization (Feature 011)
 
 ## Phase 1: Patch Device Data Leak (Security)
-- [ ] Task: Update Firestore Rules
+- [x] Task: Update Firestore Rules [68889b5]
     - [ ] Update `firestore.rules` to enforce document ownership for `/device_registrations/{deviceId}`.
     - [ ] Set `allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;`.
     - [ ] Ensure existing legacy documents lacking `ownerUid` are strictly blocked.
