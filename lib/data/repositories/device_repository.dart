@@ -2,17 +2,21 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/utils/number_parser.dart';
 
 class DeviceRepository {
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
   final DeviceInfoPlugin _deviceInfoPlugin;
 
   DeviceRepository({
     FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
     DeviceInfoPlugin? deviceInfoPlugin,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance,
         _deviceInfoPlugin = deviceInfoPlugin ?? DeviceInfoPlugin();
 
   /// Retrieves a unique device identifier.
@@ -46,7 +50,7 @@ class DeviceRepository {
   Future<bool> checkDeviceEligibility(String deviceId) async {
     try {
       final docSnapshot = await _firestore
-          .collection('device_registry')
+          .collection('device_registrations')
           .doc(deviceId)
           .get();
 
@@ -72,13 +76,14 @@ class DeviceRepository {
   ///
   /// Increments `trialCount` and adds `newStoreId` to `associatedStoreIds`.
   Future<void> registerDeviceUsage(String deviceId, String newStoreId) async {
-    final docRef = _firestore.collection('device_registry').doc(deviceId);
+    final docRef = _firestore.collection('device_registrations').doc(deviceId);
 
     try {
       await docRef.set({
         'trialCount': FieldValue.increment(1),
         'associatedStoreIds': FieldValue.arrayUnion([newStoreId]),
         'lastTrialDate': FieldValue.serverTimestamp(),
+        'ownerUid': _auth.currentUser?.uid,
       }, SetOptions(merge: true));
     } catch (e) {
       rethrow;

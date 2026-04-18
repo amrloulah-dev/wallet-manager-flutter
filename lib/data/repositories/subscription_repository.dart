@@ -1,11 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/device_registry_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/device_registration_model.dart';
 import '../models/subscription_request_model.dart';
 import '../../services/device_tracking_service.dart';
 import '../../core/utils/number_parser.dart';
 
 class SubscriptionRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
+  SubscriptionRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   Future<void> verifyDevice(String storeId) async {
     final deviceId = await DeviceTrackingService.getDeviceId();
@@ -15,27 +23,29 @@ class SubscriptionRepository {
     final docRef = _firestore
         .collection('stores')
         .doc(storeId)
-        .collection('device_registry')
+        .collection('device_registrations')
         .doc(deviceId);
     
-    // T047: Explicitly perform client-side Firestore query against device_registry
+    // T047: Explicitly perform client-side Firestore query against device_registrations
     // For this MVP phase, we use direct client-side reads rather than server-side Cloud Functions.
     final doc = await docRef.get();
     
     if (doc.exists) {
       await docRef.update({
         'lastSeenAt': FieldValue.serverTimestamp(),
+        'ownerUid': _auth.currentUser?.uid,
       });
     } else {
-      final registryModel = DeviceRegistryModel(
+      final registrationModel = DeviceRegistrationModel(
         deviceId: deviceId,
         deviceModel: deviceModel,
         osVersion: osVersion,
         firstSeenAt: Timestamp.now(),
         lastSeenAt: Timestamp.now(),
+        ownerUid: _auth.currentUser?.uid,
       );
       
-      await docRef.set(registryModel.toFirestore());
+      await docRef.set(registrationModel.toFirestore());
     }
   }
 
@@ -92,15 +102,15 @@ class SubscriptionRepository {
     await batch.commit();
   }
   /// Anti-Fraud: Read-before-Write guard.
-  /// Checks the hardware device_registry subcollection across ALL stores
+  /// Checks the hardware device_registrations subcollection across ALL stores
   /// to determine if this physical device has already consumed a trial.
   /// Returns true if the device has been previously registered (trial consumed).
   Future<bool> hasDeviceConsumedTrial() async {
     final deviceId = await DeviceTrackingService.getDeviceId();
     
-    // Query the root-level device_registry for this hardware device
+    // Query the root-level device_registrations for this hardware device
     final docSnapshot = await _firestore
-        .collection('device_registry')
+        .collection('device_registrations')
         .doc(deviceId)
         .get();
     
