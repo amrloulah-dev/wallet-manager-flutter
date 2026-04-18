@@ -5,7 +5,7 @@
     - [ ] Update `firestore.rules` to enforce document ownership for `/device_registrations/{deviceId}`.
     - [ ] Set `allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;`.
     - [ ] Ensure existing legacy documents lacking `ownerUid` are strictly blocked.
-- [ ] Task: Update Device Registration Logic
+- [x] Task: Update Device Registration Logic [18f2c3f]
     - [ ] Write/update failing test for the device registration flow to assert `ownerUid` inclusion.
     - [ ] Update device registration Dart repository/service to include `'ownerUid': FirebaseAuth.instance.currentUser?.uid` in the payload.
     - [ ] Run and pass tests.
