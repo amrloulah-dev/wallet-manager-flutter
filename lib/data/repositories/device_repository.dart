@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/utils/number_parser.dart';
 
 class DeviceRepository {
   final FirebaseFirestore _firestore;
@@ -56,7 +57,7 @@ class DeviceRepository {
       final data = docSnapshot.data();
       if (data == null) return true;
 
-      final trialCount = data['trialCount'] as int? ?? 0;
+      final trialCount = NumberParser.toInt(data['trialCount']);
       return trialCount < 2;
     } catch (e) {
       // Fail safe: return true or false based on policy.

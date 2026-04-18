@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 class StatsSummaryModel {
   // Wallets
@@ -50,22 +51,22 @@ class StatsSummaryModel {
 
   factory StatsSummaryModel.fromMap(Map<String, dynamic> map) {
     return StatsSummaryModel(
-      totalWallets: map['totalWallets'] ?? 0,
-      activeWallets: map['activeWallets'] ?? 0,
-      totalBalance: (map['totalBalance'] ?? 0.0).toDouble(),
-      totalEmployees: map['totalEmployees'] ?? 0,
-      totalTransactions: map['totalTransactions'] ?? 0,
-      totalTransactionsToday: map['totalTransactionsToday'] ?? 0,
-      sendCount: map['sendCount'] ?? 0,
-      receiveCount: map['receiveCount'] ?? 0,
-      totalSentAmount: (map['totalSentAmount'] ?? 0.0).toDouble(),
-      totalReceivedAmount: (map['totalReceivedAmount'] ?? 0.0).toDouble(),
-      totalCommission: (map['totalCommission'] ?? 0.0).toDouble(),
-      totalCommissionToday: (map['totalCommissionToday'] ?? 0.0).toDouble(),
-      openDebtsCount: map['openDebtsCount'] ?? 0,
-      paidDebtsCount: map['paidDebtsCount'] ?? 0,
-      totalOpenAmount: (map['totalOpenAmount'] ?? 0.0).toDouble(),
-      totalPaidAmount: (map['totalPaidAmount'] ?? 0.0).toDouble(),
+      totalWallets: NumberParser.toInt(map['totalWallets']),
+      activeWallets: NumberParser.toInt(map['activeWallets']),
+      totalBalance: NumberParser.toDouble(map['totalBalance']),
+      totalEmployees: NumberParser.toInt(map['totalEmployees']),
+      totalTransactions: NumberParser.toInt(map['totalTransactions']),
+      totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
+      sendCount: NumberParser.toInt(map['sendCount']),
+      receiveCount: NumberParser.toInt(map['receiveCount']),
+      totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
+      totalReceivedAmount: NumberParser.toDouble(map['totalReceivedAmount']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
+      openDebtsCount: NumberParser.toInt(map['openDebtsCount']),
+      paidDebtsCount: NumberParser.toInt(map['paidDebtsCount']),
+      totalOpenAmount: NumberParser.toDouble(map['totalOpenAmount']),
+      totalPaidAmount: NumberParser.toDouble(map['totalPaidAmount']),
       lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
     );
   }

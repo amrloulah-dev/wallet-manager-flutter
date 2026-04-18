@@ -4,6 +4,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_helper.dart';
+import '../../core/utils/number_parser.dart';
 
 class TransactionModel {
   final String transactionId;
@@ -65,14 +66,14 @@ class TransactionModel {
       transactionType: data['transactionType'] ?? 'send',
       customerPhone: data['customerPhone'],
       customerName: data['customerName'],
-      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-      commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
-      serviceFee: (data['serviceFee'] as num?)?.toDouble() ?? 0.0,
+      amount: NumberParser.toDouble(data['amount']),
+      commission: NumberParser.toDouble(data['commission']),
+      serviceFee: NumberParser.toDouble(data['serviceFee']),
       paymentStatus: data['paymentStatus'] ?? 'paid',
       debtId: data['debtId'],
       notes: data[FirebaseConstants.notes],
       transactionDate: data['transactionDate'] ?? Timestamp.now(),
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
+      createdAt: data['createdAt'] ?? Timestamp.now(),
       createdBy: data[FirebaseConstants.createdBy] ?? '',
       createdById: data['createdById'],
       createdByName: data['createdByName'],

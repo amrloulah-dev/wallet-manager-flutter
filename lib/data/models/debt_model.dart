@@ -4,6 +4,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/date_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/number_parser.dart';
 
 class DebtModel {
   // Identity
@@ -62,10 +63,10 @@ class DebtModel {
     final data = doc.data() as Map<String, dynamic>;
 
     final status = data['debtStatus'] ?? 'open';
-    final amountDue = (data['amountDue'] as num?)?.toDouble() ?? 0.0;
+    final amountDue = NumberParser.toDouble(data['amountDue']);
 
     // Fallback for old data where totalAmount didn't exist
-    double totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+    double totalAmount = NumberParser.toDouble(data['totalAmount']);
     if (totalAmount == 0.0 && status == 'open') {
       // If it's open, the total is at least the current due amount
       totalAmount = amountDue;

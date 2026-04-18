@@ -1,3 +1,5 @@
+import '../../core/utils/number_parser.dart';
+
 class DailyStatsModel {
   final String date;
   final int transactionCount;
@@ -23,9 +25,9 @@ class DailyStatsModel {
   factory DailyStatsModel.fromMap(Map<String, dynamic> map, String docId) {
     return DailyStatsModel(
       date: docId,
-      transactionCount: (map['transactionCount'] ?? 0) as int,
-      totalCommission: (map['totalCommission'] ?? 0.0).toDouble(),
-      totalAmount: (map['totalAmount'] ?? 0.0).toDouble(),
+      transactionCount: NumberParser.toInt(map['transactionCount']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalAmount: NumberParser.toDouble(map['totalAmount']),
     );
   }
 

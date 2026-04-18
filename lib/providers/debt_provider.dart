@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/utils/number_parser.dart';
 import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -201,7 +202,7 @@ class DebtProvider extends ChangeNotifier {
         'openDebtsCount': stats['openCount'],
         'paidDebtsCount': stats['paidCount'],
         'totalDebtsCount':
-            (stats['openCount'] as int) + (stats['paidCount'] as int),
+            NumberParser.toInt(stats['openCount']) + NumberParser.toInt(stats['paidCount']),
         'totalOpenAmount': stats['openTotal'],
         'totalPaidAmount': stats['paidTotal'],
       };

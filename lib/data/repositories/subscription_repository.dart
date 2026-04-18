@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/device_registry_model.dart';
 import '../models/subscription_request_model.dart';
 import '../../services/device_tracking_service.dart';
+import '../../core/utils/number_parser.dart';
 
 class SubscriptionRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -109,7 +110,7 @@ class SubscriptionRepository {
     if (data == null) return false;
     
     // If trialCount >= 1, this device has already consumed a trial
-    final trialCount = data['trialCount'] as int? ?? 0;
+    final trialCount = NumberParser.toInt(data['trialCount']);
     return trialCount >= 1;
   }
 }

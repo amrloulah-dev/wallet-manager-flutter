@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/utils/number_parser.dart';
 
 class WalletLimits {
   final double dailyLimit;
@@ -19,10 +20,10 @@ class WalletLimits {
 
   factory WalletLimits.fromMap(Map<String, dynamic> map) {
     return WalletLimits(
-      dailyLimit: (map['dailyLimit'] as num?)?.toDouble() ?? 0.0,
-      dailyUsed: (map['dailyUsed'] as num?)?.toDouble() ?? 0.0,
-      monthlyLimit: (map['monthlyLimit'] as num?)?.toDouble() ?? 0.0,
-      monthlyUsed: (map['monthlyUsed'] as num?)?.toDouble() ?? 0.0,
+      dailyLimit: NumberParser.toDouble(map['dailyLimit']),
+      dailyUsed: NumberParser.toDouble(map['dailyUsed']),
+      monthlyLimit: NumberParser.toDouble(map['monthlyLimit']),
+      monthlyUsed: NumberParser.toDouble(map['monthlyUsed']),
     );
   }
 
@@ -76,11 +77,10 @@ class WalletStats {
 
   factory WalletStats.fromMap(Map<String, dynamic> map) {
     return WalletStats(
-      totalTransactions: (map['totalTransactions'] as num?)?.toInt() ?? 0,
-      totalSentAmount: (map['totalSentAmount'] as num?)?.toDouble() ?? 0.0,
-      totalReceivedAmount:
-          (map['totalReceivedAmount'] as num?)?.toDouble() ?? 0.0,
-      totalCommission: (map['totalCommission'] as num?)?.toDouble() ?? 0.0,
+      totalTransactions: NumberParser.toInt(map['totalTransactions']),
+      totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
+      totalReceivedAmount: NumberParser.toDouble(map['totalReceivedAmount']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
       lastTransactionDate: map['lastTransactionDate'] as Timestamp?,
     );
   }
@@ -159,7 +159,7 @@ class WalletModel {
       phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
       walletType: data[FirebaseConstants.walletType] ?? '',
       walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
-      balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
+      balance: NumberParser.toDouble(data['balance']),
       notes: data[FirebaseConstants.notes],
       isActive: data[FirebaseConstants.isActive] ?? true,
       createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
@@ -183,7 +183,7 @@ class WalletModel {
       phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
       walletType: data[FirebaseConstants.walletType] ?? '',
       walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
-      balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
+      balance: NumberParser.toDouble(data['balance']),
       notes: data[FirebaseConstants.notes],
       isActive: data[FirebaseConstants.isActive] ?? true,
       createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),

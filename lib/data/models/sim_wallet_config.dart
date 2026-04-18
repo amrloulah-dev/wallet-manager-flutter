@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../core/utils/number_parser.dart';
 
 class SimWalletConfig {
   final int simSlotIndex; // 0 for SIM1, 1 for SIM2
@@ -46,7 +47,7 @@ class SimWalletConfig {
   /// Creates a [SimWalletConfig] instance from a JSON map.
   factory SimWalletConfig.fromMap(Map<String, dynamic> map) {
     return SimWalletConfig(
-      simSlotIndex: map['simSlotIndex'] as int,
+      simSlotIndex: NumberParser.toInt(map['simSlotIndex']),
       subscriptionId: map['subscriptionId'] as String?,
       walletId: map['walletId'] as String,
       walletName: map['walletName'] as String,
