@@ -137,7 +137,14 @@ Future<void> handleIncomingSms(
         String? slotStr;
         try {
           slotStr = (message as dynamic).slot?.toString();
-        } catch (_) {}
+        } catch (e, stack) {
+          // Log failure to AppErrorHandler instead of silent swallowing
+          AppErrorHandler.logSilentError(
+            'Failed dynamic slot access: $e',
+            'SmsProcessingPipeline_SlotAccess',
+            stackTrace: stack,
+          );
+        }
 
         if (matchedWalletId == null &&
             slotStr != null &&
