@@ -1,12 +1,12 @@
 # Implementation Plan: Error Handling Remediation
 
-## Phase 1: AppErrorHandler Foundation
-- [ ] Task: Implement AppErrorHandler class
-    - [ ] Write failing test for `AppErrorHandler.logSilentError` behavior (debug vs release mode).
-    - [ ] Implement `AppErrorHandler.logSilentError` in a new or existing utility file.
-    - [ ] Integrate `developer.log` for debug mode and `FirebaseCrashlytics.instance.recordError` for release mode.
-    - [ ] Ensure tests pass.
-- [ ] Task: Conductor - User Manual Verification 'AppErrorHandler Foundation' (Protocol in workflow.md)
+## Phase 1: AppErrorHandler Foundation [checkpoint: e6ba319]
+- [x] Task: Implement AppErrorHandler class [40e115e]
+    - [x] Write failing test for `AppErrorHandler.logSilentError` behavior (debug vs release mode).
+    - [x] Implement `AppErrorHandler.logSilentError` in a new or existing utility file.
+    - [x] Integrate `developer.log` for debug mode and `FirebaseCrashlytics.instance.recordError` for release mode.
+    - [x] Ensure tests pass.
+- [x] Task: Conductor - User Manual Verification 'AppErrorHandler Foundation' (Protocol in workflow.md)
 
 ## Phase 2: SMS Parser Resilience
 - [ ] Task: Update VodafoneCashStrategy parser
