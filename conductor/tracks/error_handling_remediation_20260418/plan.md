@@ -21,17 +21,17 @@
     - [x] Ensure tests pass.
 - [x] Task: Conductor - User Manual Verification 'SMS Parser Resilience' (Protocol in workflow.md)
 
-## Phase 3: SIM Configuration Safe Access
-- [ ] Task: Update _loadState in SettingsScreen
-    - [ ] Write failing test for `SettingsScreen` or related SIM configuration logic to handle missing slots gracefully.
-    - [ ] Replace `mappings.firstWhere(...)` wrapped in `catch(_)` with `mappings.where((m) => m.simSlotIndex == X).firstOrNull`.
-    - [ ] Add conditional UI rendering for null states (e.g., "No saved wallets").
-    - [ ] Ensure tests pass.
-- [ ] Task: Update sms_processing_pipeline.dart
-    - [ ] Write failing test for `SmsProcessingPipeline` slot parsing logic.
-    - [ ] Replace empty `try-catch` block around `slotStr` assignment.
-    - [ ] Ensure tests pass.
-- [ ] Task: Conductor - User Manual Verification 'SIM Configuration Safe Access' (Protocol in workflow.md)
+## Phase 3: SIM Configuration Safe Access [checkpoint: aefc5f0]
+- [x] Task: Update _loadState in SettingsScreen [fec5796]
+    - [x] Write failing test for `SettingsScreen` or related SIM configuration logic to handle missing slots gracefully.
+    - [x] Replace `mappings.firstWhere(...)` wrapped in `catch(_)` with `mappings.where((m) => m.simSlotIndex == X).firstOrNull`.
+    - [x] Add conditional UI rendering for null states (e.g., "No saved wallets").
+    - [x] Ensure tests pass.
+- [x] Task: Update sms_processing_pipeline.dart [258ca80]
+    - [x] Write failing test for `SmsProcessingPipeline` slot parsing logic.
+    - [x] Replace empty `try-catch` block around `slotStr` assignment.
+    - [x] Ensure tests pass.
+- [x] Task: Conductor - User Manual Verification 'SIM Configuration Safe Access' (Protocol in workflow.md)
 
 ## Phase 4: Dashboard Dependency Injection Validation
 - [ ] Task: Remove empty catch in MainDashboardScreen
