@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.dart';
@@ -26,14 +27,13 @@ void main() async {
 
     // Step 3: Check and initialize SMS automation if enabled
     if (sl<LocalStorageService>().isSmsAutomationEnabled) {
-      await SmsService().init(); // Permissions only
+      // T051: Unblock main thread - initialize SMS service asynchronously
+      unawaited(SmsService().init());
     }
 
     // Step 4: Configure the Guardian Isolate (background service).
-    // This registers the onStart handler. The service auto-starts
-    // based on the `autoStart: true` configuration and persists
-    // across app kills.
-    await initializeBackgroundService();
+    // T051: Unblock main thread - initialize background service asynchronously
+    unawaited(initializeBackgroundService());
 
     // Step 5: Run the application.
     runApp(const MyApp());
