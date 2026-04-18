@@ -12,7 +12,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Patch Device Data Leak (Security)' (Protocol in workflow.md)
 
 ## Phase 2: Eliminate Expensive Builds (Performance)
-- [ ] Task: Refactor MaterialApp State Management
+- [x] Task: Refactor MaterialApp State Management [4f98efb]
     - [ ] Write/update failing test for `MaterialApp` and `AuthCheckWrapper` initialization/rebuild behavior if applicable.
     - [ ] Remove the global `Consumer3<AuthProvider, ThemeProvider, LocalizationProvider>` wrapping the `MaterialApp` in `lib/app.dart`.
     - [ ] Wrap `MaterialApp` with a `Selector` or a targeted `Consumer2` specifically for `ThemeProvider` and `LocalizationProvider`.
