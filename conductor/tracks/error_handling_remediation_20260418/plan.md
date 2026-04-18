@@ -8,18 +8,18 @@
     - [x] Ensure tests pass.
 - [x] Task: Conductor - User Manual Verification 'AppErrorHandler Foundation' (Protocol in workflow.md)
 
-## Phase 2: SMS Parser Resilience
-- [ ] Task: Update VodafoneCashStrategy parser
-    - [ ] Write failing test for `VodafoneCashStrategy` parse logic with edge-case amounts (e.g., with commas).
-    - [ ] Replace `try-catch` blocks with `double.tryParse` and string sanitization (`replaceAll(',', '').replaceAll(' ', '')`).
-    - [ ] Call `AppErrorHandler.logSilentError` if `double.tryParse` returns null.
-    - [ ] Ensure tests pass.
-- [ ] Task: Update GenericBankStrategy parser
-    - [ ] Write failing test for `GenericBankStrategy` parse logic with edge-case amounts.
-    - [ ] Replace `try-catch` blocks with `double.tryParse` and string sanitization.
-    - [ ] Call `AppErrorHandler.logSilentError` if `double.tryParse` returns null.
-    - [ ] Ensure tests pass.
-- [ ] Task: Conductor - User Manual Verification 'SMS Parser Resilience' (Protocol in workflow.md)
+## Phase 2: SMS Parser Resilience [checkpoint: d3245b3]
+- [x] Task: Update VodafoneCashStrategy parser [6552a05]
+    - [x] Write failing test for `VodafoneCashStrategy` parse logic with edge-case amounts (e.g., with commas).
+    - [x] Replace `try-catch` blocks with `double.tryParse` and string sanitization (`replaceAll(',', '').replaceAll(' ', '')`).
+    - [x] Call `AppErrorHandler.logSilentError` if `double.tryParse` returns null.
+    - [x] Ensure tests pass.
+- [x] Task: Update GenericBankStrategy parser [27caba9]
+    - [x] Write failing test for `GenericBankStrategy` parse logic with edge-case amounts.
+    - [x] Replace `try-catch` blocks with `double.tryParse` and string sanitization.
+    - [x] Call `AppErrorHandler.logSilentError` if `double.tryParse` returns null.
+    - [x] Ensure tests pass.
+- [x] Task: Conductor - User Manual Verification 'SMS Parser Resilience' (Protocol in workflow.md)
 
 ## Phase 3: SIM Configuration Safe Access
 - [ ] Task: Update _loadState in SettingsScreen
