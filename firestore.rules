@@ -35,9 +35,12 @@ service cloud.firestore {
 
     // --- سجل الأجهزة (مكافحة الاحتيال) ---
     match /device_registrations/{deviceId} {
-      // ممنوع قراءة كل الأجهزة (list: false). مسموح فقط قراءة أو إنشاء جهاز محدد إذا كنت مسجل دخول
-      allow get: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['deviceId']);
+      // مسموح فقط قراءة جهاز محدد إذا كنت صاحب الجهاز (ownerUid)
+      allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+      // السماح بالإنشاء مع ضرورة إرفاق الـ ownerUid الخاص بالمستخدم الحالي
+      allow create: if isAuthenticated() && 
+                       request.resource.data.keys().hasAll(['deviceId', 'ownerUid']) && 
+                       request.resource.data.ownerUid == request.auth.uid;
       allow update, delete, list: if false; // سجل ثابت لا يمكن التلاعب فيه
     }
 
