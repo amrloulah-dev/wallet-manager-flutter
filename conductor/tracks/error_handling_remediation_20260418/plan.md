@@ -33,12 +33,12 @@
     - [x] Ensure tests pass.
 - [x] Task: Conductor - User Manual Verification 'SIM Configuration Safe Access' (Protocol in workflow.md)
 
-## Phase 4: Dashboard Dependency Injection Validation
-- [ ] Task: Remove empty catch in MainDashboardScreen
-    - [ ] Write failing test to ensure `MainDashboardScreen` requires `SubscriptionProvider`.
-    - [ ] Remove `try-catch` wrapping `context.read<SubscriptionProvider>()` in `_checkPaymentSuccessModal`.
-    - [ ] Ensure tests pass.
-- [ ] Task: Conductor - User Manual Verification 'Dashboard Dependency Injection Validation' (Protocol in workflow.md)
+## Phase 4: Dashboard Dependency Injection Validation [checkpoint: e166eb8]
+- [x] Task: Remove empty catch in MainDashboardScreen [c302d77]
+    - [x] Write failing test to ensure `MainDashboardScreen` requires `SubscriptionProvider`.
+    - [x] Remove `try-catch` wrapping `context.read<SubscriptionProvider>()` in `_checkPaymentSuccessModal`.
+    - [x] Ensure tests pass.
+- [x] Task: Conductor - User Manual Verification 'Dashboard Dependency Injection Validation' (Protocol in workflow.md)
 
 ## Phase 5: Global Remediation & Final Audit
 - [ ] Task: Remediate remaining global anti-patterns
