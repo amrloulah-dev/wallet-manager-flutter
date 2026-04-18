@@ -20,14 +20,14 @@
     - [x] Run and pass tests.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Eliminate Expensive Builds (Performance)' (Protocol in workflow.md)
 
-## Phase 3: Unblock Main Thread (Performance)
+## Phase 3: Unblock Main Thread (Performance) [checkpoint: 609b56d]
 - [x] Task: Optimize Main Initialization [141a1f8]
-    - [ ] Write/update failing test verifying `runApp()` timing or mock background service initialization.
-    - [ ] In `lib/main.dart`, locate heavy initializations like `initializeBackgroundService()` and `SmsService().init()`.
-    - [ ] Remove the `await` keyword for these services.
-    - [ ] Wrap them in an asynchronous non-blocking call (e.g., `unawaited()`). Ensure standard Crashlytics logging is preserved.
-    - [ ] Verify `runApp(const MyApp());` is executed immediately after Firebase and Dependency Injection setup.
-    - [ ] Run and pass tests.
+    - [x] Write/update failing test verifying `runApp()` timing or mock background service initialization.
+    - [x] In `lib/main.dart`, locate heavy initializations like `initializeBackgroundService()` and `SmsService().init()`.
+    - [x] Remove the `await` keyword for these services.
+    - [x] Wrap them in an asynchronous non-blocking call (e.g., `unawaited()`). Ensure standard Crashlytics logging is preserved.
+    - [x] Verify `runApp(const MyApp());` is executed immediately after Firebase and Dependency Injection setup.
+    - [x] Run and pass tests.
 - [x] Task: Verify Code Quality [90ee901]
-    - [ ] Run `flutter analyze` and resolve any issues. Output must be `0 issues found`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Unblock Main Thread (Performance)' (Protocol in workflow.md)
+    - [x] Run `flutter analyze` and resolve any issues. Output must be `0 issues found`.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Unblock Main Thread (Performance)' (Protocol in workflow.md)
