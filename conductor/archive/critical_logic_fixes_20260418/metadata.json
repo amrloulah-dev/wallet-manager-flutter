@@ -1,0 +1,8 @@
+{
+  "track_id": "critical_logic_fixes_20260418",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-04-18T12:00:00Z",
+  "updated_at": "2026-04-18T12:00:00Z",
+  "description": "Fix two major business logic flaws related to transaction validation (B-004) and subscription enforcement (B-002)"
+}
