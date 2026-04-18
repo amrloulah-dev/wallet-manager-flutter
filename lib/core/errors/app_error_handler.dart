@@ -1,5 +1,7 @@
-import 'dart:ui';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:bot_toast/bot_toast.dart';
 import '../../routes/navigation_service.dart';
 import '../services/analytics_service.dart';
@@ -29,6 +31,31 @@ class AppErrorHandler {
       );
       return true;
     };
+  }
+
+  /// Logs a non-fatal error silently without interrupting the user.
+  /// In debug mode, logs to console. In release mode, reports to Crashlytics.
+  static void logSilentError(String error, String reason, {StackTrace? stackTrace}) {
+    if (isTestMode || kDebugMode) {
+      debugPrint(
+        '🤫 [SILENT ERROR] [$reason] $error\n'
+        '  Stack: ${stackTrace ?? StackTrace.current}',
+      );
+      developer.log(
+        error,
+        name: 'SILENT_ERROR',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } else {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: reason,
+        printDetails: false,
+        fatal: false,
+      );
+    }
   }
 
   static void handle(

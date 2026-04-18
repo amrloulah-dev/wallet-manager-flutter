@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/errors/error_severity.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+class MockFirebaseCrashlytics extends Mock implements FirebaseCrashlytics {}
 
 void main() {
   late List<String> printLogs;
@@ -19,6 +23,17 @@ void main() {
 
   tearDown(() {
     debugPrint = originalDebugPrint; // restore default
+  });
+
+  test('AppErrorHandler.logSilentError triggers debugPrint/log in debug mode', () {
+    // This should fail to compile or throw if logSilentError is not implemented
+    AppErrorHandler.logSilentError('test error', 'test reason');
+    
+    // In test environment, kDebugMode is usually true
+    // We expect some diagnostic output
+    expect(printLogs.any((log) => log.contains('SILENT ERROR')), isTrue);
+    expect(printLogs.any((log) => log.contains('test error')), isTrue);
+    expect(printLogs.any((log) => log.contains('test reason')), isTrue);
   });
 
   test('AppErrorHandler low severity triggers debugPrint', () async {
