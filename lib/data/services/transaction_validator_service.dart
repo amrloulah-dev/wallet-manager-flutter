@@ -7,7 +7,10 @@ import '../models/transaction_model.dart';
 import '../models/wallet_model.dart';
 
 class TransactionValidatorService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  TransactionValidatorService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   Future<void> validateAndSave(TransactionModel transaction) async {
     debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
@@ -33,6 +36,13 @@ class TransactionValidatorService {
       final walletSnap = await tx.get(walletRef);
       if (!walletSnap.exists) throw NotFoundException('المحفظة غير موجودة.');
 
+      var wallet = WalletModel.fromFirestore(walletSnap);
+
+      // Bug B-004: Prevent transactions on logically deleted/inactive wallets
+      if (!wallet.isActive) {
+        throw ValidationException('لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها');
+      }
+
       // Handle simple deposit immediately
       if (transaction.isDeposit) {
         tx.update(
@@ -40,7 +50,6 @@ class TransactionValidatorService {
         return;
       }
 
-      var wallet = WalletModel.fromFirestore(walletSnap);
       final now = Timestamp.now();
 
       debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
