@@ -28,6 +28,6 @@
     - [ ] Wrap them in an asynchronous non-blocking call (e.g., `unawaited()`). Ensure standard Crashlytics logging is preserved.
     - [ ] Verify `runApp(const MyApp());` is executed immediately after Firebase and Dependency Injection setup.
     - [ ] Run and pass tests.
-- [ ] Task: Verify Code Quality
+- [x] Task: Verify Code Quality [90ee901]
     - [ ] Run `flutter analyze` and resolve any issues. Output must be `0 issues found`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Unblock Main Thread (Performance)' (Protocol in workflow.md)
