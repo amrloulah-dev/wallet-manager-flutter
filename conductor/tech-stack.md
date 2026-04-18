@@ -18,3 +18,4 @@
 ## Tools & Utilities
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
 - **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers.
+- **Data Integrity:** Centralized `NumberParser` utility for safe numeric parsing and null-safety from dynamic sources.
