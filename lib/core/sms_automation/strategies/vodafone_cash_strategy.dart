@@ -1,3 +1,4 @@
+import '../../errors/app_error_handler.dart';
 import '../models/parsed_sms_dto.dart';
 import 'sms_parser_strategy.dart';
 
@@ -29,12 +30,14 @@ class VodafoneCashStrategy extends SmsParserStrategy {
         englishReceiveRegex.firstMatch(normalizedBody);
 
     if (receiveMatch != null) {
-      // Replace any internal commas with dots for valid double parsing
-      final amountStr = receiveMatch.namedGroup('amount')?.replaceAll(',', '.');
+      // Replace any internal commas with empty for valid double parsing (e.g. 1,000 -> 1000)
+      final rawAmount = receiveMatch.namedGroup('amount');
       final number = receiveMatch.namedGroup('number');
-      if (amountStr != null) {
-        try {
-          final amount = double.parse(amountStr);
+      if (rawAmount != null) {
+        final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+        final amount = double.tryParse(sanitizedAmountStr);
+        
+        if (amount != null) {
           return ParsedSmsDto(
             amount: amount,
             type: TransactionType.credit,
@@ -42,7 +45,12 @@ class VodafoneCashStrategy extends SmsParserStrategy {
             serviceProvider: 'Vodafone Cash',
             originalBody: normalizedBody,
           );
-        } catch (_) {}
+        } else {
+          AppErrorHandler.logSilentError(
+            'Failed to parse amount: $rawAmount from SMS',
+            'VodafoneCashStrategy_Receive',
+          );
+        }
       }
     }
 
@@ -56,11 +64,13 @@ class VodafoneCashStrategy extends SmsParserStrategy {
         englishSendRegex.firstMatch(normalizedBody);
 
     if (sendMatch != null) {
-      final amountStr = sendMatch.namedGroup('amount')?.replaceAll(',', '.');
+      final rawAmount = sendMatch.namedGroup('amount');
       final number = sendMatch.namedGroup('number');
-      if (amountStr != null) {
-        try {
-          final amount = double.parse(amountStr);
+      if (rawAmount != null) {
+        final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+        final amount = double.tryParse(sanitizedAmountStr);
+
+        if (amount != null) {
           return ParsedSmsDto(
             amount: amount,
             type: TransactionType.debit,
@@ -68,7 +78,12 @@ class VodafoneCashStrategy extends SmsParserStrategy {
             serviceProvider: 'Vodafone Cash',
             originalBody: normalizedBody,
           );
-        } catch (_) {}
+        } else {
+          AppErrorHandler.logSilentError(
+            'Failed to parse amount: $rawAmount from SMS',
+            'VodafoneCashStrategy_Send',
+          );
+        }
       }
     }
 
