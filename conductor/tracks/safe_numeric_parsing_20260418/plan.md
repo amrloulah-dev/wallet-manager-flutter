@@ -1,13 +1,13 @@
 # Implementation Plan: Safe Numeric Parsing
 
-## Phase 1: Create the Centralized NumberParser Utility
-- [ ] Task: Setup Test Environment for NumberParser
-    - [ ] Create `test/core/utils/number_parser_test.dart`
-    - [ ] Write failing unit tests for `NumberParser.toDouble` and `NumberParser.toInt` covering various inputs (null, int, double, String with commas, invalid strings).
-- [ ] Task: Implement NumberParser Utility
-    - [ ] Create `lib/core/utils/number_parser.dart`
-    - [ ] Implement `NumberParser` class to make the tests pass.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Create the Centralized NumberParser Utility' (Protocol in workflow.md)
+## Phase 1: Create the Centralized NumberParser Utility [checkpoint: 62ee01d]
+- [x] Task: Setup Test Environment for NumberParser
+    - [x] Create `test/core/utils/number_parser_test.dart`
+    - [x] Write failing unit tests for `NumberParser.toDouble` and `NumberParser.toInt` covering various inputs (null, int, double, String with commas, invalid strings). [062e061]
+- [x] Task: Implement NumberParser Utility
+    - [x] Create `lib/core/utils/number_parser.dart`
+    - [x] Implement `NumberParser` class to make the tests pass. [7d87f43]
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Create the Centralized NumberParser Utility' (Protocol in workflow.md) [62ee01d]
 
 ## Phase 2: Refactor Data Models and Repositories
 - [ ] Task: Refactor Models & Repositories to use NumberParser
