@@ -21,7 +21,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Eliminate Expensive Builds (Performance)' (Protocol in workflow.md)
 
 ## Phase 3: Unblock Main Thread (Performance)
-- [ ] Task: Optimize Main Initialization
+- [x] Task: Optimize Main Initialization [141a1f8]
     - [ ] Write/update failing test verifying `runApp()` timing or mock background service initialization.
     - [ ] In `lib/main.dart`, locate heavy initializations like `initializeBackgroundService()` and `SmsService().init()`.
     - [ ] Remove the `await` keyword for these services.
