@@ -53,17 +53,17 @@
     - [x] Execute regex search `[\u0600-\u06FF]` in `lib/providers/` to ensure 0 results.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Decoupling Providers from Hardcoded Strings' (Protocol in workflow.md)
 
-## Phase 4: Localization Enforcement (UI & Routers)
-- [ ] Task: TDD - Localization Utilities and Router
-    - [ ] Create test file: `test/core/utils/error_mapper_test.dart`
-    - [ ] Write failing tests for `ErrorMapper.getLocalizedString` to map specific error codes to expected strings.
-    - [ ] Update router tests to expect localized text instead of hardcoded strings.
-    - [ ] Run tests to ensure they fail (Red phase).
-- [ ] Task: Implement Localization Enforcement
-    - [ ] Create `ErrorMapper` utility class in `lib/core/utils/error_mapper.dart`.
-    - [ ] Navigate to `lib/routes/app_router.dart` and replace hardcoded text with `AppLocalizations.of(context)` calls.
-    - [ ] Update `AppLocalizations` `.arb` files to include new keys for error codes and UI elements.
-- [ ] Task: Refactor and Verify
-    - [ ] Run tests to ensure they pass (Green phase).
-    - [ ] Run `flutter analyze` to ensure 0 issues.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Localization Enforcement (UI & Routers)' (Protocol in workflow.md)
+## Phase 4: Localization Enforcement (UI & Routers) [checkpoint: 93b1484]
+- [x] Task: TDD - Localization Utilities and Router
+    - [x] Create test file: `test/core/utils/error_mapper_test.dart`
+    - [x] Write failing tests for `ErrorMapper.getLocalizedString` to map specific error codes to expected strings.
+    - [x] Update router tests to expect localized text instead of hardcoded strings.
+    - [x] Run tests to ensure they fail (Red phase).
+- [x] Task: Implement Localization Enforcement
+    - [x] Create `ErrorMapper` utility class in `lib/core/utils/error_mapper.dart`.
+    - [x] Navigate to `lib/routes/app_router.dart` and replace hardcoded text with `AppLocalizations.of(context)` calls.
+    - [x] Update `AppLocalizations` `.arb` files to include new keys for error codes and UI elements.
+- [x] Task: Refactor and Verify
+    - [x] Run tests to ensure they pass (Green phase).
+    - [x] Run `flutter analyze` to ensure 0 issues.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Localization Enforcement (UI & Routers)' (Protocol in workflow.md)
