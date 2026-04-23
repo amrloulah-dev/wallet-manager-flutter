@@ -1671,4 +1671,93 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rejectedSubscriptionRequest => 'تم رفض طلب الاشتراك';
+
+  @override
+  String get auth_error_account_not_found =>
+      'لا يوجد حساب مرتبط بهذا البريد الإلكتروني.';
+
+  @override
+  String get auth_error_invalid_email => 'البريد الإلكتروني غير صحيح.';
+
+  @override
+  String get auth_error_too_many_requests =>
+      'محاولات كثيرة جداً. يرجى المحاولة لاحقاً.';
+
+  @override
+  String get auth_error_invalid_credentials =>
+      'كلمة المرور أو رقم الجوال غير صحيح.';
+
+  @override
+  String get auth_error_session_expired =>
+      'فشلت عملية المصادقة، يرجى تسجيل الدخول مجدداً.';
+
+  @override
+  String get auth_error_store_not_found => 'المتجر غير موجود.';
+
+  @override
+  String get auth_error_user_not_found => 'المستخدم غير موجود أو ليس مالكاً.';
+
+  @override
+  String get auth_error_login_failed => 'فشل تسجيل الدخول.';
+
+  @override
+  String get auth_error_employee_login_failed => 'فشل تسجيل دخول الموظف.';
+
+  @override
+  String get auth_error_store_lookup_failed => 'حدث خطأ أثناء البحث عن المتجر.';
+
+  @override
+  String get auth_error_reset_failed =>
+      'حدث خطأ أثناء إرسال البريد الإلكتروني.';
+
+  @override
+  String get auth_error_unexpected => 'حدث خطأ غير متوقع.';
+
+  @override
+  String get auth_operation_failed => 'فشلت العملية.';
+
+  @override
+  String get wallet_error_fetch_failed => 'حدث خطأ في جلب المحافظ.';
+
+  @override
+  String get wallet_error_fetch_more_failed =>
+      'حدث خطأ في جلب المزيد من المحافظ.';
+
+  @override
+  String get wallet_error_create_failed => 'فشل في إنشاء المحفظة.';
+
+  @override
+  String get wallet_error_update_failed => 'فشل في تحديث المحفظة.';
+
+  @override
+  String get wallet_error_delete_failed => 'فشل في حذف المحفظة.';
+
+  @override
+  String get wallet_error_balance_update_failed => 'فشل في تحديث الرصيد.';
+
+  @override
+  String get wallet_error_limit_reached => 'تم الوصول للحد الأقصى للمحافظ.';
+
+  @override
+  String get wallet_error_frozen =>
+      'هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية.';
+
+  @override
+  String get wallet_error_subscription_unresolved =>
+      'تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.';
+
+  @override
+  String get overlay_error_amount_limit_instapay =>
+      'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)';
+
+  @override
+  String get overlay_error_amount_limit_telecom =>
+      'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)';
+
+  @override
+  String get sendLink => 'إرسال الرابط';
+
+  @override
+  String get passwordResetEmailSent =>
+      'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.';
 }

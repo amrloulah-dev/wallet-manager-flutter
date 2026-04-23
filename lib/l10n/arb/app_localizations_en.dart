@@ -1679,4 +1679,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rejectedSubscriptionRequest => 'Subscription request rejected';
+
+  @override
+  String get auth_error_account_not_found =>
+      'No account associated with this email.';
+
+  @override
+  String get auth_error_invalid_email => 'Invalid email address.';
+
+  @override
+  String get auth_error_too_many_requests =>
+      'Too many attempts. Please try again later.';
+
+  @override
+  String get auth_error_invalid_credentials =>
+      'Invalid password or phone number.';
+
+  @override
+  String get auth_error_session_expired =>
+      'Authentication failed, please login again.';
+
+  @override
+  String get auth_error_store_not_found => 'Store not found.';
+
+  @override
+  String get auth_error_user_not_found => 'User not found or not an owner.';
+
+  @override
+  String get auth_error_login_failed => 'Login failed.';
+
+  @override
+  String get auth_error_employee_login_failed => 'Employee login failed.';
+
+  @override
+  String get auth_error_store_lookup_failed =>
+      'Error occurred during store lookup.';
+
+  @override
+  String get auth_error_reset_failed =>
+      'Error occurred while sending reset email.';
+
+  @override
+  String get auth_error_unexpected => 'An unexpected error occurred.';
+
+  @override
+  String get auth_operation_failed => 'Operation failed.';
+
+  @override
+  String get wallet_error_fetch_failed => 'Error fetching wallets.';
+
+  @override
+  String get wallet_error_fetch_more_failed => 'Error fetching more wallets.';
+
+  @override
+  String get wallet_error_create_failed => 'Failed to create wallet.';
+
+  @override
+  String get wallet_error_update_failed => 'Failed to update wallet.';
+
+  @override
+  String get wallet_error_delete_failed => 'Failed to delete wallet.';
+
+  @override
+  String get wallet_error_balance_update_failed => 'Failed to update balance.';
+
+  @override
+  String get wallet_error_limit_reached => 'Wallet limit reached.';
+
+  @override
+  String get wallet_error_frozen =>
+      'This wallet is frozen due to exceeding your current plan limit.';
+
+  @override
+  String get wallet_error_subscription_unresolved =>
+      'Could not verify subscription status. Please try again later.';
+
+  @override
+  String get overlay_error_amount_limit_instapay =>
+      'Amount exceeds the maximum limit for a single transaction (70,000)';
+
+  @override
+  String get overlay_error_amount_limit_telecom =>
+      'Amount exceeds the maximum limit for a single transaction (60,000)';
+
+  @override
+  String get sendLink => 'Send Link';
+
+  @override
+  String get passwordResetEmailSent =>
+      'Reset link has been sent to your email.';
 }

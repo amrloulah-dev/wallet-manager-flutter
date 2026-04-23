@@ -3295,6 +3295,162 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم رفض طلب الاشتراك'**
   String get rejectedSubscriptionRequest;
+
+  /// No description provided for @auth_error_account_not_found.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد حساب مرتبط بهذا البريد الإلكتروني.'**
+  String get auth_error_account_not_found;
+
+  /// No description provided for @auth_error_invalid_email.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني غير صحيح.'**
+  String get auth_error_invalid_email;
+
+  /// No description provided for @auth_error_too_many_requests.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات كثيرة جداً. يرجى المحاولة لاحقاً.'**
+  String get auth_error_too_many_requests;
+
+  /// No description provided for @auth_error_invalid_credentials.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور أو رقم الجوال غير صحيح.'**
+  String get auth_error_invalid_credentials;
+
+  /// No description provided for @auth_error_session_expired.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشلت عملية المصادقة، يرجى تسجيل الدخول مجدداً.'**
+  String get auth_error_session_expired;
+
+  /// No description provided for @auth_error_store_not_found.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتجر غير موجود.'**
+  String get auth_error_store_not_found;
+
+  /// No description provided for @auth_error_user_not_found.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستخدم غير موجود أو ليس مالكاً.'**
+  String get auth_error_user_not_found;
+
+  /// No description provided for @auth_error_login_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسجيل الدخول.'**
+  String get auth_error_login_failed;
+
+  /// No description provided for @auth_error_employee_login_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسجيل دخول الموظف.'**
+  String get auth_error_employee_login_failed;
+
+  /// No description provided for @auth_error_store_lookup_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء البحث عن المتجر.'**
+  String get auth_error_store_lookup_failed;
+
+  /// No description provided for @auth_error_reset_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء إرسال البريد الإلكتروني.'**
+  String get auth_error_reset_failed;
+
+  /// No description provided for @auth_error_unexpected.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع.'**
+  String get auth_error_unexpected;
+
+  /// No description provided for @auth_operation_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشلت العملية.'**
+  String get auth_operation_failed;
+
+  /// No description provided for @wallet_error_fetch_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ في جلب المحافظ.'**
+  String get wallet_error_fetch_failed;
+
+  /// No description provided for @wallet_error_fetch_more_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ في جلب المزيد من المحافظ.'**
+  String get wallet_error_fetch_more_failed;
+
+  /// No description provided for @wallet_error_create_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في إنشاء المحفظة.'**
+  String get wallet_error_create_failed;
+
+  /// No description provided for @wallet_error_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في تحديث المحفظة.'**
+  String get wallet_error_update_failed;
+
+  /// No description provided for @wallet_error_delete_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في حذف المحفظة.'**
+  String get wallet_error_delete_failed;
+
+  /// No description provided for @wallet_error_balance_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في تحديث الرصيد.'**
+  String get wallet_error_balance_update_failed;
+
+  /// No description provided for @wallet_error_limit_reached.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الوصول للحد الأقصى للمحافظ.'**
+  String get wallet_error_limit_reached;
+
+  /// No description provided for @wallet_error_frozen.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية.'**
+  String get wallet_error_frozen;
+
+  /// No description provided for @wallet_error_subscription_unresolved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.'**
+  String get wallet_error_subscription_unresolved;
+
+  /// No description provided for @overlay_error_amount_limit_instapay.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)'**
+  String get overlay_error_amount_limit_instapay;
+
+  /// No description provided for @overlay_error_amount_limit_telecom.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)'**
+  String get overlay_error_amount_limit_telecom;
+
+  /// No description provided for @sendLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرسال الرابط'**
+  String get sendLink;
+
+  /// No description provided for @passwordResetEmailSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.'**
+  String get passwordResetEmailSent;
 }
 
 class _AppLocalizationsDelegate

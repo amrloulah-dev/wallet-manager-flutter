@@ -30,6 +30,10 @@ class ErrorMapper {
         return l10n.auth_error_employee_login_failed;
       case 'auth_error_store_lookup_failed':
         return l10n.auth_error_store_lookup_failed;
+      case 'auth_error_reset_failed':
+        return l10n.auth_error_reset_failed;
+      case 'auth_error_unexpected':
+        return l10n.auth_error_unexpected;
       case 'auth_operation_failed':
         return l10n.auth_operation_failed;
 

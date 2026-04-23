@@ -66,12 +66,12 @@ class AuthRepository {
         case 'user-not-found':
           throw UserNotFoundException();
         case 'invalid-email':
-          throw AuthException('البريد الإلكتروني غير صحيح.');
+          throw AuthException('auth_error_invalid_email');
         default:
-          throw AuthException('حدث خطأ أثناء إرسال البريد الإلكتروني: ${e.message}');
+          throw AuthException('auth_error_reset_failed');
       }
     } catch (e) {
-      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
+      throw AuthException('auth_error_unexpected');
     }
   }
 
