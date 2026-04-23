@@ -67,3 +67,6 @@
     - [x] Run tests to ensure they pass (Green phase).
     - [x] Run `flutter analyze` to ensure 0 issues.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Localization Enforcement (UI & Routers)' (Protocol in workflow.md)
+
+## Phase: Review Fixes [checkpoint: 1765e49]
+- [x] Task: Apply review suggestions
