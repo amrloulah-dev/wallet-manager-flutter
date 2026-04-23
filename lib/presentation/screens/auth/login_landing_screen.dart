@@ -238,10 +238,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                  ToastUtils.showInfo(l10n.comingSoon);
-                },
+                onPressed: () => _showForgotPasswordBottomSheet(context),
                 child: Text(
                   l10n.forgotPassword,
                   style: AppTextStyles.bodySmall
@@ -344,5 +341,86 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
         ],
       ),
     );
+  }
+
+  void _showForgotPasswordBottomSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final emailController = TextEditingController(text: _ownerEmailController.text);
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final authProvider = context.watch<AuthProvider>();
+          
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              left: 24,
+              right: 24,
+              top: 24,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(l10n.forgotPassword, style: AppTextStyles.h2),
+                  const SizedBox(height: 8),
+                  Text(
+                    'أدخل بريدك الإلكتروني لاستلام رابط إعادة تعيين كلمة المرور.',
+                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
+                  ),
+                  const SizedBox(height: 24),
+                  CustomTextField(
+                    controller: emailController,
+                    labelText: l10n.email,
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    validator: Validators.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    text: 'إرسال الرابط',
+                    onPressed: authProvider.isLoading ? null : () async {
+                      if (formKey.currentState!.validate()) {
+                        await _handleForgotPassword(context, emailController.text.trim());
+                      }
+                    },
+                    isLoading: authProvider.isLoading,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleForgotPassword(BuildContext context, String email) async {
+    final authProvider = context.read<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
+
+    await authProvider.sendPasswordReset(email);
+
+    if (authProvider.errorMessage != null) {
+      // In Phase 4 we will use ErrorMapper, for now we show raw or mapped keys
+      ToastUtils.showError(authProvider.errorMessage!);
+    } else {
+      if (mounted) {
+        Navigator.pop(context);
+        ToastUtils.showSuccess('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.');
+      }
+    }
   }
 }
