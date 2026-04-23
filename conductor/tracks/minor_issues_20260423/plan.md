@@ -39,19 +39,19 @@
     - [x] Refactor UI code for clarity.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Password Recovery (UI Logic)' (Protocol in workflow.md)
 
-## Phase 3: Decoupling Providers from Hardcoded Strings
-- [ ] Task: TDD - Decouple Providers
-    - [ ] Update test files for `WalletProvider`, `AuthProvider`, and `OverlayProvider`.
-    - [ ] Write/Update failing tests to expect semantic String Constants instead of hardcoded Arabic strings on errors.
-    - [ ] Run tests to ensure they fail (Red phase).
-- [ ] Task: Refactor Providers
-    - [ ] Navigate to `lib/providers/wallet_provider.dart` and replace hardcoded Arabic strings with constants like `wallet_limit_reached`.
-    - [ ] Navigate to `lib/providers/auth_provider.dart` and replace hardcoded Arabic strings with constants like `auth_invalid_credentials`.
-    - [ ] Navigate to `lib/presentation/overlays/overlay_provider.dart` and replace the hardcoded string with `transaction_limit_exceeded`.
-- [ ] Task: Refactor and Verify
-    - [ ] Run tests to ensure they pass (Green phase).
-    - [ ] Execute regex search `[\u0600-\u06FF]` in `lib/providers/` to ensure 0 results.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Decoupling Providers from Hardcoded Strings' (Protocol in workflow.md)
+## Phase 3: Decoupling Providers from Hardcoded Strings [checkpoint: 622f3dd]
+- [x] Task: TDD - Decouple Providers
+    - [x] Update test files for `WalletProvider`, `AuthProvider`, and `OverlayProvider`.
+    - [x] Write/Update failing tests to expect semantic String Constants instead of hardcoded Arabic strings on errors.
+    - [x] Run tests to ensure they fail (Red phase).
+- [x] Task: Refactor Providers
+    - [x] Navigate to `lib/providers/wallet_provider.dart` and replace hardcoded Arabic strings with constants like `wallet_limit_reached`.
+    - [x] Navigate to `lib/providers/auth_provider.dart` and replace hardcoded Arabic strings with constants like `auth_invalid_credentials`.
+    - [x] Navigate to `lib/presentation/overlays/overlay_provider.dart` and replace the hardcoded string with `transaction_limit_exceeded`.
+- [x] Task: Refactor and Verify
+    - [x] Run tests to ensure they pass (Green phase).
+    - [x] Execute regex search `[\u0600-\u06FF]` in `lib/providers/` to ensure 0 results.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Decoupling Providers from Hardcoded Strings' (Protocol in workflow.md)
 
 ## Phase 4: Localization Enforcement (UI & Routers)
 - [ ] Task: TDD - Localization Utilities and Router
