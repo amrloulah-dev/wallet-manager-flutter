@@ -20,24 +20,24 @@
     - [x] Refactor code for clarity if necessary.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Password Recovery (Auth Logic)' (Protocol in workflow.md)
 
-## Phase 2: Password Recovery (UI Logic)
-- [ ] Task: TDD - Forgot Password UI
-    - [ ] Create/Update test file: `test/presentation/screens/auth/login_landing_screen_test.dart`
-    - [ ] Write failing widget test for presence of Forgot Password `TextButton`.
-    - [ ] Write failing widget test ensuring tapping the button opens a `BottomSheet`.
-    - [ ] Write failing widget test for email input and "Send" button within the `BottomSheet`.
-    - [ ] Run tests to ensure they fail (Red phase).
-- [ ] Task: Implement Forgot Password UI
-    - [ ] Navigate to `lib/presentation/screens/auth/login_landing_screen.dart`.
-    - [ ] Replace `// TODO: Implement forgot password` with a `TextButton`.
-    - [ ] Create `_showForgotPasswordDialog(context)` utilizing a `BottomSheet`.
-    - [ ] Implement `StatefulBuilder` for local loading state to prevent spam clicks.
-    - [ ] Wire "Send" button to `context.read<AuthProvider>().sendPasswordReset(email)`.
-    - [ ] Add `SnackBar` feedback for success/error.
-- [ ] Task: Refactor and Verify
-    - [ ] Run tests to ensure they pass (Green phase).
-    - [ ] Refactor UI code for clarity.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Password Recovery (UI Logic)' (Protocol in workflow.md)
+## Phase 2: Password Recovery (UI Logic) [checkpoint: d11dd16]
+- [x] Task: TDD - Forgot Password UI
+    - [x] Create/Update test file: `test/presentation/screens/auth/login_landing_screen_test.dart`
+    - [x] Write failing widget test for presence of Forgot Password `TextButton`.
+    - [x] Write failing widget test ensuring tapping the button opens a `BottomSheet`.
+    - [x] Write failing widget test for email input and "Send" button within the `BottomSheet`.
+    - [x] Run tests to ensure they fail (Red phase).
+- [x] Task: Implement Forgot Password UI
+    - [x] Navigate to `lib/presentation/screens/auth/login_landing_screen.dart`.
+    - [x] Replace `// TODO: Implement forgot password` with a `TextButton`.
+    - [x] Create `_showForgotPasswordDialog(context)` utilizing a `BottomSheet`.
+    - [x] Implement `StatefulBuilder` for local loading state to prevent spam clicks.
+    - [x] Wire "Send" button to `context.read<AuthProvider>().sendPasswordReset(email)`.
+    - [x] Add `SnackBar` feedback for success/error.
+- [x] Task: Refactor and Verify
+    - [x] Run tests to ensure they pass (Green phase).
+    - [x] Refactor UI code for clarity.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Password Recovery (UI Logic)' (Protocol in workflow.md)
 
 ## Phase 3: Decoupling Providers from Hardcoded Strings
 - [ ] Task: TDD - Decouple Providers
