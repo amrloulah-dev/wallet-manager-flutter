@@ -1,24 +1,24 @@
 # Implementation Plan: Minor Issues - Feature Completion & Localization Enforcement
 
-## Phase 1: Password Recovery (Auth Logic)
-- [ ] Task: TDD - `AuthProvider.sendPasswordReset`
-    - [ ] Create/Update test file: `test/providers/auth_provider_test.dart`
-    - [ ] Write failing tests for email validation (Regex).
-    - [ ] Write failing tests for successful password reset via `_authRepository.sendPasswordResetEmail`.
-    - [ ] Write failing tests for error mapping: `user-not-found` -> `auth_error_account_not_found`.
-    - [ ] Write failing tests for error mapping: `invalid-email` -> `auth_error_invalid_email`.
-    - [ ] Write failing tests for error mapping: `too-many-requests` -> `auth_error_too_many_requests`.
-    - [ ] Run tests to ensure they fail (Red phase).
-- [ ] Task: Implement `AuthProvider.sendPasswordReset`
-    - [ ] Navigate to `lib/providers/auth_provider.dart`.
-    - [ ] Create method `Future<void> sendPasswordReset(String email)`.
-    - [ ] Add pre-flight regex validation.
-    - [ ] Wrap Firebase call in try-catch and map exceptions to semantic snake_case String Constants.
-    - [ ] Ensure proper handling of employee edge case (`user-not-found`).
-- [ ] Task: Refactor and Verify
-    - [ ] Run tests to ensure they pass (Green phase).
-    - [ ] Refactor code for clarity if necessary.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Password Recovery (Auth Logic)' (Protocol in workflow.md)
+## Phase 1: Password Recovery (Auth Logic) [checkpoint: 7fc07a3]
+- [x] Task: TDD - `AuthProvider.sendPasswordReset`
+    - [x] Create/Update test file: `test/providers/auth_provider_test.dart`
+    - [x] Write failing tests for email validation (Regex).
+    - [x] Write failing tests for successful password reset via `_authRepository.sendPasswordResetEmail`.
+    - [x] Write failing tests for error mapping: `user-not-found` -> `auth_error_account_not_found`.
+    - [x] Write failing tests for error mapping: `invalid-email` -> `auth_error_invalid_email`.
+    - [x] Write failing tests for error mapping: `too-many-requests` -> `auth_error_too_many_requests`.
+    - [x] Run tests to ensure they fail (Red phase).
+- [x] Task: Implement `AuthProvider.sendPasswordReset`
+    - [x] Navigate to `lib/providers/auth_provider.dart`.
+    - [x] Create method `Future<void> sendPasswordReset(String email)`.
+    - [x] Add pre-flight regex validation.
+    - [x] Wrap Firebase call in try-catch and map exceptions to semantic snake_case String Constants.
+    - [x] Ensure proper handling of employee edge case (`user-not-found`).
+- [x] Task: Refactor and Verify
+    - [x] Run tests to ensure they pass (Green phase).
+    - [x] Refactor code for clarity if necessary.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Password Recovery (Auth Logic)' (Protocol in workflow.md)
 
 ## Phase 2: Password Recovery (UI Logic)
 - [ ] Task: TDD - Forgot Password UI
