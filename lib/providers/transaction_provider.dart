@@ -137,10 +137,14 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void _setError(String message, [dynamic e, StackTrace? stack]) {
+    debugPrint('💥 [TX ERROR] $message | Error: $e');
+    if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (_isDisposed) return;
     _errorMessage = message;
     _status = TransactionStatus.error;
@@ -154,19 +158,28 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
-    if (_currentStoreId == null) return;
-    if (!forceRefresh && _fetchShieldActive) return;
+    debugPrint('🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
+    if (_currentStoreId == null) {
+      debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
+      return;
+    }
+    if (!forceRefresh && _fetchShieldActive) {
+      debugPrint('🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
+      return;
+    }
 
     _updateStatus(TransactionStatus.loading);
     _errorMessage = null;
     _safeNotify();
 
     try {
+      debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
       final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
       );
+      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
 
       _transactions = result.items;
       _lastDocument = result.lastDocument;
@@ -177,6 +190,8 @@ class TransactionProvider extends ChangeNotifier {
       _calculateSummary();
       _updateStatus(TransactionStatus.loaded);
     } catch (e, stack) {
+      debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
+      debugPrint('🔍 [STACK TRACE]: $stack');
       _setError('فشل في جلب المعاملات.', e, stack);
     } finally {
       _safeNotify();

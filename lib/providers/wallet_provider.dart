@@ -229,17 +229,26 @@ class WalletProvider extends ChangeNotifier {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    if (_currentStoreId == null) return;
-    if (!forceRefresh && _fetchShieldActive) return;
+    debugPrint('🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
+    if (_currentStoreId == null) {
+      debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
+      return;
+    }
+    if (!forceRefresh && _fetchShieldActive) {
+      debugPrint('🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
+      return;
+    }
 
     _updateStatus(WalletStatusState.loading);
     _errorMessage = null;
     _safeNotify();
 
     try {
+      debugPrint('⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
       final result = await _walletRepository.getAllWallets(
         _currentStoreId!,
       );
+      debugPrint('✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
 
       _wallets = result.items;
       _lastDocument = result.lastDocument;
@@ -251,6 +260,7 @@ class WalletProvider extends ChangeNotifier {
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
+        debugPrint('🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
         // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
@@ -262,12 +272,15 @@ class WalletProvider extends ChangeNotifier {
       try {
         await LocalStorageService.instance.cacheWalletLiteList(_wallets);
       } catch (e, stack) {
+        debugPrint('⚠️ [INIT ERROR] WalletProvider: Cache write failed: $e');
         AppErrorHandler.handle(e,
             severity: ErrorSeverity.low,
             operation: 'wallet_cache_write',
             stackTrace: stack);
       }
     } catch (e, stack) {
+      debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
+      debugPrint('🔍 [STACK TRACE]: $stack');
       _setError('حدث خطأ في جلب المحافظ.', e, stack);
     } finally {
       _safeNotify();
@@ -527,7 +540,9 @@ class WalletProvider extends ChangeNotifier {
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void clearError() {

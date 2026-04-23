@@ -9,7 +9,13 @@ class ThemeProvider extends ChangeNotifier {
 
   ThemeProvider({LocalStorageService? localStorage})
       : _localStorage = localStorage ?? LocalStorageService() {
-    _loadThemeMode();
+    Future.microtask(() => _loadThemeMode());
+  }
+
+  void _safeNotify() {
+    if (hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -55,20 +61,21 @@ class ThemeProvider extends ChangeNotifier {
           _themeMode = ThemeMode.system;
           break;
       }
-      notifyListeners();
+      _safeNotify();
     } catch (e, stack) {
       _themeMode = ThemeMode.system;
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.low,
           operation: 'load_theme_mode',
           stackTrace: stack);
+      _safeNotify();
     }
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
     _themeMode = mode;
-    notifyListeners();
+    _safeNotify();
     await _localStorage.saveThemeMode(themeModeString);
   }
 

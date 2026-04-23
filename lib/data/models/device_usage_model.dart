@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 class DeviceUsageModel {
   final String deviceId;
@@ -22,7 +23,7 @@ class DeviceUsageModel {
 
     return DeviceUsageModel(
       deviceId: doc.id,
-      trialCount: data['trialCount'] ?? 0,
+      trialCount: NumberParser.toInt(data['trialCount']),
       lastTrialDate: data['lastTrialDate'] ?? Timestamp.now(),
       associatedStoreIds: List<String>.from(data['associatedStoreIds'] ?? []),
     );

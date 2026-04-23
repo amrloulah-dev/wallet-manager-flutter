@@ -32,6 +32,7 @@ import 'providers/system_config_provider.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/subscription/paywall_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
+import 'presentation/screens/home/main_dashboard_screen.dart';
 
 import 'l10n/arb/app_localizations.dart';
 import 'routes/navigation_service.dart';
@@ -134,7 +135,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 class AuthCheckWrapper extends StatefulWidget {
   const AuthCheckWrapper({super.key});
 
@@ -143,10 +143,11 @@ class AuthCheckWrapper extends StatefulWidget {
 }
 
 class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
+  bool _isNavigating = false; // 🔴 هذا هو مفتاح الحل
+
   @override
   void initState() {
     super.initState();
-    // Check auth state immediately if not already doing so
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (auth.status == AuthStatus.idle) {
@@ -159,16 +160,8 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, child) {
-        if (auth.status == AuthStatus.loading ||
-            auth.status == AuthStatus.idle) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        // 1. Guard against Admin Block (H004: use subscription.status, not deprecated root-level isSuspended)
+        
+        // 1. Guard against Admin Block
         if (auth.currentStore?.subscription.status == SubscriptionStatus.suspended) {
           return const AdminBlockScreen();
         }
@@ -178,27 +171,30 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           return const PaywallScreen();
         }
 
-        // 3. Check Authentication
-        if (auth.isAuthenticated) {
+        // 3. Check Authentication & Navigate Mapped
+        if (auth.isAuthenticated && !_isNavigating) {
+          _isNavigating = true; // نمنع أي محاولة انتقال أخرى
+          
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
-            if (role == 'owner') {
-              Navigator.of(context)
-                  .pushReplacementNamed(RouteConstants.ownerDashboard);
-            } else if (role == 'employee') {
-              Navigator.of(context)
-                  .pushReplacementNamed(RouteConstants.ownerDashboard);
+            if (role == 'owner' || role == 'employee') {
+               // استخدمنا pushReplacementNamed كما كانت في كودك الأصلي
+               Navigator.of(context).pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {
-              auth.logout();
+               auth.logout();
             }
           });
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          
+          // نرجع شاشة فاضية أو تحميل أثناء الانتقال
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
+        // 4. Loading State
+        if (auth.status == AuthStatus.loading || auth.status == AuthStatus.idle) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
+        // 5. Default Fallback (Not Authenticated)
         return const LoginLandingScreen();
       },
     );

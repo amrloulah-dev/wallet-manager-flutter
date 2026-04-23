@@ -12,14 +12,20 @@ class SystemConfigProvider extends ChangeNotifier {
 
   SystemConfigProvider({required SystemConfigRepository repository}) 
       : _repository = repository {
-    _init();
+    Future.microtask(() => _init());
   }
 
   void _init() {
     _subscription = _repository.watchConfigs().listen((newConfigs) {
       _configs = newConfigs;
-      notifyListeners();
+      _safeNotify();
     });
+  }
+
+  void _safeNotify() {
+    if (hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   @override

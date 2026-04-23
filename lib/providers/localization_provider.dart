@@ -8,7 +8,13 @@ class LocalizationProvider extends ChangeNotifier {
   Locale get locale => _locale;
 
   LocalizationProvider() {
-    _loadLocale();
+    Future.microtask(() => _loadLocale());
+  }
+
+  void _safeNotify() {
+    Future.microtask(() {
+      if (hasListeners) notifyListeners();
+    });
   }
 
   Future<void> _loadLocale() async {
@@ -16,7 +22,7 @@ class LocalizationProvider extends ChangeNotifier {
     final savedLocale = prefs.getString(_localeKey);
     if (savedLocale != null) {
       _locale = Locale(savedLocale);
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -25,7 +31,7 @@ class LocalizationProvider extends ChangeNotifier {
     _locale = locale;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale.languageCode);
-    notifyListeners();
+    _safeNotify();
   }
 
   bool get isArabic => _locale.languageCode == 'ar';

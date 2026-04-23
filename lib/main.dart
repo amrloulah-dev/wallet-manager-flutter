@@ -14,30 +14,38 @@ import 'core/errors/error_severity.dart';
 void main() async {
   // Ensure all bindings are initialized before async operations.
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
 
   // Initialize Error Handler early
   AppErrorHandler.init();
 
   try {
     // Step 1: Initialize Firebase.
+    debugPrint('⏳ [INIT DATA] Initializing Firebase...');
     await FirebaseService().initialize();
+    debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
 
     // Step 2: Setup Dependency Injection.
+    debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
     await setupServiceLocator();
+    debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
 
     // Step 3: Check and initialize SMS automation if enabled
     if (sl<LocalStorageService>().isSmsAutomationEnabled) {
-      // T051: Unblock main thread - initialize SMS service asynchronously
+      debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
       unawaited(SmsService().init());
     }
 
     // Step 4: Configure the Guardian Isolate (background service).
-    // T051: Unblock main thread - initialize background service asynchronously
+    debugPrint('⏳ [INIT DATA] Initializing Background Service...');
     unawaited(initializeBackgroundService());
 
     // Step 5: Run the application.
+    debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
     runApp(const MyApp());
   } catch (e, stackTrace) {
+    debugPrint('❌ [INIT FATAL] App initialization failed: $e');
+    debugPrint('🔍 [STACK TRACE]: $stackTrace');
     AppErrorHandler.handle(e,
         severity: ErrorSeverity.critical,
         operation: 'app_initialization',

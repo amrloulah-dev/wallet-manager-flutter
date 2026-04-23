@@ -74,7 +74,9 @@ class StatisticsProvider extends ChangeNotifier {
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed && hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void setStoreId(String? storeId) {
@@ -95,9 +97,14 @@ class StatisticsProvider extends ChangeNotifier {
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
-    if (_storeId == null) return;
+    debugPrint('🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
+    if (_storeId == null) {
+      debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
+      return;
+    }
 
     if (!forceRefresh && _fetchShieldActive) {
+      debugPrint('🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
       return; // Abort the fetch
     }
 
@@ -107,6 +114,7 @@ class StatisticsProvider extends ChangeNotifier {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
+        debugPrint('✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
         _dashboardSummary = _cachedSummary;
         _safeNotify();
       }
@@ -122,16 +130,19 @@ class StatisticsProvider extends ChangeNotifier {
 
     _activateFetchShield();
 
+    debugPrint('⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
     // 1. Establish Summary Stream
     _summarySubscription = _statsRepository
         .watchStatsSummary(_storeId!)
         .listen((summary) {
+      debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
       _dashboardSummary = summary;
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
       _isLoading = false;
       _safeNotify();
     }, onError: (e, stack) {
+      debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
       _setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
     });
 
@@ -139,10 +150,12 @@ class StatisticsProvider extends ChangeNotifier {
     _todayStatsSubscription = _statsRepository
         .watchTodayStats(_storeId!)
         .listen((today) {
+      debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
       _todayStats = today;
       _isLoading = false;
       _safeNotify();
     }, onError: (e, stack) {
+      debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
       _setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
     });
   }
@@ -248,6 +261,8 @@ class StatisticsProvider extends ChangeNotifier {
   }
 
   void _setError(String message, [dynamic e, StackTrace? stack]) {
+    debugPrint('💥 [STATS ERROR] $message | Error: $e');
+    if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     _errorMessage = message;
     _isLoading = false;
     if (e != null) {

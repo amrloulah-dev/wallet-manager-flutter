@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 class LicenseKeyModel {
   final String keyId;
@@ -28,7 +29,7 @@ class LicenseKeyModel {
       usedBy: data['usedBy'],
       usedAt: data['usedAt'],
       createdAt: data['createdAt'] ?? Timestamp.now(),
-      expiryMonths: data['expiryMonths'] ?? 12,
+      expiryMonths: NumberParser.toInt(data['expiryMonths'], 12),
     );
   }
 

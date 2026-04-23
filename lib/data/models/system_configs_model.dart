@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
 
 class SystemConfigsModel {
   final int trialDays; // Default 14
@@ -21,12 +22,12 @@ class SystemConfigsModel {
     if (!doc.exists) return SystemConfigsModel();
     final data = doc.data() as Map<String, dynamic>;
     return SystemConfigsModel(
-      trialDays: data['trialDays'] ?? 14,
-      gracePeriodHours: data['gracePeriodHours'] ?? 48,
+      trialDays: NumberParser.toInt(data['trialDays'], 14),
+      gracePeriodHours: NumberParser.toInt(data['gracePeriodHours'], 48),
       vfCashNumber: data['vfCashNumber'] ?? '',
       instaPayHandle: data['instaPayHandle'] ?? '',
       lifetimePlanEnabled: data['lifetimePlanEnabled'] ?? true,
-      remainingLifetimeSeats: data['remainingLifetimeSeats'] ?? 100,
+      remainingLifetimeSeats: NumberParser.toInt(data['remainingLifetimeSeats'], 100),
     );
   }
 }

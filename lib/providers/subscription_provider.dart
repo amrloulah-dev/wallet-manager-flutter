@@ -24,12 +24,16 @@ class SubscriptionProvider extends ChangeNotifier {
         _repository = repository ?? sl<SubscriptionRepository>() {
     _previousSubscription = _authProvider.currentStore?.subscription;
     _authProvider.addListener(_onAuthChanged);
-    _syncToStorage();
-    _fetchLatestRequest();
+    Future.microtask(() {
+      _syncToStorage();
+      _fetchLatestRequest();
+    });
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed && hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void updateAuthProvider(AuthProvider newAuth) {

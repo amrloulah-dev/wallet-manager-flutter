@@ -69,7 +69,9 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed && hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void setStoreId(String? storeId) {

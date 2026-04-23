@@ -86,7 +86,9 @@ class DebtProvider extends ChangeNotifier {
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed && hasListeners) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   void _setError(String message, [dynamic e, StackTrace? stack]) {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../core/utils/password_hasher.dart';
 import '../data/repositories/auth_repository.dart';
@@ -63,7 +64,7 @@ class AuthProvider extends ChangeNotifier {
         _licenseKeyRepository =
             licenseKeyRepository ?? sl<LicenseKeyRepository>(),
         _localStorage = localStorage ?? sl<LocalStorageService>() {
-    tryAutoLogin();
+    Future.microtask(() => tryAutoLogin());
   }
 
   // Getters
@@ -83,22 +84,41 @@ class AuthProvider extends ChangeNotifier {
   /// If in memory -> returns it.
   /// If missing but Auth exists -> Fetches from Firestore with Retry.
   Future<UserModel?> ensureUserLoaded() async {
+    debugPrint('🚀 [AUTH START] ensureUserLoaded() initiated');
     // 1. Memory Check (Zero Cost)
-    if (_currentUser != null) return _currentUser;
+    if (_currentUser != null) {
+      debugPrint('✅ [AUTH SUCCESS] ensureUserLoaded: User already in memory.');
+      return _currentUser;
+    }
 
     // 2. Auth Session Check (Firebase - Owner)
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
+      debugPrint('⏳ [AUTH DATA] ensureUserLoaded: Firebase user found, fetching from repository...');
       _firebaseUser = firebaseUser;
-      return await _fetchWithRetry(firebaseUser.uid);
+      final user = await _fetchWithRetry(firebaseUser.uid);
+      if (user != null) {
+        debugPrint('✅ [AUTH SUCCESS] ensureUserLoaded: Fetched owner profile.');
+      } else {
+        debugPrint('⚠️ [AUTH ERROR] ensureUserLoaded: Failed to fetch owner profile.');
+      }
+      return user;
     }
 
     // 3. LocalStorage Check (Employee - Virtual)
     final savedUserId = _localStorage.userId;
     if (savedUserId != null) {
-      return await _fetchWithRetry(savedUserId);
+      debugPrint('⏳ [AUTH DATA] ensureUserLoaded: LocalStorage userId found, fetching from repository...');
+      final user = await _fetchWithRetry(savedUserId);
+      if (user != null) {
+        debugPrint('✅ [AUTH SUCCESS] ensureUserLoaded: Fetched employee profile.');
+      } else {
+        debugPrint('⚠️ [AUTH ERROR] ensureUserLoaded: Failed to fetch employee profile.');
+      }
+      return user;
     }
 
+    debugPrint('⚠️ [AUTH ABORT] ensureUserLoaded: No session found.');
     return null;
   }
 
@@ -184,6 +204,7 @@ class AuthProvider extends ChangeNotifier {
 
   /// Validate saved session on app startup
   Future<void> tryAutoLogin() async {
+    debugPrint('🚀 [AUTH START] tryAutoLogin() initiated');
     _setStatus(AuthStatus.loading);
     AnalyticsService.logAppOpen();
     try {
@@ -196,6 +217,7 @@ class AuthProvider extends ChangeNotifier {
       if (savedUserId != null &&
           savedStoreId != null &&
           savedUserRole != null) {
+        debugPrint('⏳ [AUTH DATA] tryAutoLogin: Found saved session ($savedUserRole)');
         // --- Owner Flow ---
         if (savedUserRole == 'owner') {
           final firebaseUser = _authRepository.getCurrentUser();
@@ -203,7 +225,11 @@ class AuthProvider extends ChangeNotifier {
             _firebaseUser = firebaseUser;
             // Reload owner data from Firestore
             final success = await _finalizeOwnerLogin(firebaseUser.uid);
-            if (success) return;
+            if (success) {
+              debugPrint('✅ [AUTH SUCCESS] tryAutoLogin: Owner session restored.');
+              _setStatus(AuthStatus.authenticated);
+              return;
+            }
           }
         }
         // --- Employee Flow ---
@@ -214,11 +240,13 @@ class AuthProvider extends ChangeNotifier {
           final store = await _storeRepository.getStoreById(savedStoreId);
 
           if (user != null && store != null) {
+            debugPrint('✅ [AUTH SUCCESS] tryAutoLogin: Employee session restored.');
             // Basic Validation
             _currentUser = user;
             _currentStore = store;
 
             if (store.subscription.isExpiredAt(TimeService.now())) {
+              debugPrint('⚠️ [AUTH EXPIRED] tryAutoLogin: Subscription expired.');
               _setStatus(AuthStatus.expired);
               return;
             }
@@ -243,15 +271,23 @@ class AuthProvider extends ChangeNotifier {
       // 3. Fallback: Firebase User exists but no local session (Owner Recovery)
       final firebaseUser = _authRepository.getCurrentUser();
       if (firebaseUser != null) {
+        debugPrint('⏳ [AUTH DATA] tryAutoLogin: Firebase user found, attempting owner recovery...');
         _firebaseUser = firebaseUser;
         // Try to recover owner session
         final recovered = await _finalizeOwnerLogin(firebaseUser.uid);
-        if (recovered) return;
+        if (recovered) {
+          debugPrint('✅ [AUTH SUCCESS] tryAutoLogin: Owner recovered via Firebase.');
+          _setStatus(AuthStatus.authenticated);
+          return;
+        }
       }
 
+      debugPrint('⚠️ [AUTH ABORT] tryAutoLogin: No valid session found.');
       // If all attempts fail
       _setStatus(AuthStatus.unauthenticated);
     } catch (e, stack) {
+      debugPrint('❌ [AUTH FATAL] tryAutoLogin Error: $e');
+      debugPrint('🔍 [STACK TRACE]: $stack');
       AppErrorHandler.handle(e, severity: ErrorSeverity.medium, operation: 'check_auth_status', stackTrace: stack);
       await logout();
       _setStatus(AuthStatus.unauthenticated);
@@ -928,12 +964,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _setStatus(AuthStatus status) {
-    _status = status;
-    if (status != AuthStatus.error) {
-      _errorMessage = null;
-    }
-    // notifyListeners() removed for batching
-  }
+  if (_status == status) return; // منع التحديثات المتكررة لنفس الحالة
+  _status = status;
+  
+  // 🔴 الإجبار على التحديث 🔴
+  // ده بيخلي فلاتر يحط تحديث الشاشة في الـ Event Loop القادم غصب عنه
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+     notifyListeners();
+  });
+}
 
   void _setLoading(bool loading) {
     _status = loading ? AuthStatus.loading : AuthStatus.idle;
@@ -941,14 +980,18 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _setError(String message, [Object? error, StackTrace? stack]) {
+    debugPrint('💥 [AUTH ERROR] $message | Error: $error');
+    if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     _errorMessage = message;
     _status = AuthStatus.error;
     AppErrorHandler.handle(error ?? message, severity: ErrorSeverity.medium, operation: 'auth_operation', stackTrace: stack);
-    // notifyListeners() removed for batching
+    _safeNotify();
   }
 
   void _safeNotify() {
-    if (!_isDisposed) notifyListeners();
+    if (!_isDisposed) {
+      Future.microtask(() => notifyListeners());
+    }
   }
 
   @override
