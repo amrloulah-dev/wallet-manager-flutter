@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
+import 'package:walletmanager/core/utils/error_mapper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
@@ -376,7 +377,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                   Text(l10n.forgotPassword, style: AppTextStyles.h2),
                   const SizedBox(height: 8),
                   Text(
-                    'أدخل بريدك الإلكتروني لاستلام رابط إعادة تعيين كلمة المرور.',
+                    l10n.forgotPasswordMessage,
                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
                   ),
                   const SizedBox(height: 24),
@@ -390,7 +391,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                   ),
                   const SizedBox(height: 24),
                   CustomButton(
-                    text: 'إرسال الرابط',
+                    text: l10n.sendLink,
                     onPressed: authProvider.isLoading ? null : () async {
                       if (formKey.currentState!.validate()) {
                         await _handleForgotPassword(context, emailController.text.trim());
@@ -414,12 +415,11 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     await authProvider.sendPasswordReset(email);
 
     if (authProvider.errorMessage != null) {
-      // In Phase 4 we will use ErrorMapper, for now we show raw or mapped keys
-      ToastUtils.showError(authProvider.errorMessage!);
+      ToastUtils.showError(ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
     } else {
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccess('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.');
+        ToastUtils.showSuccess(l10n.passwordResetEmailSent);
       }
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:walletmanager/data/models/store_model.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../core/constants/route_constants.dart';
 import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
@@ -73,33 +74,36 @@ class AppRouter {
 
       default:
         return MaterialPageRoute(
-          builder: (ctx) => Scaffold(
-            appBar: AppBar(
-              title: const Text('خطأ'),
-              centerTitle: true,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'الصفحة المطلوبة غير موجودة.',
-                    style: TextStyle(fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('الرجوع'),
-                  ),
-                ],
+          builder: (ctx) {
+            final l10n = AppLocalizations.of(ctx)!;
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(l10n.error),
+                centerTitle: true,
               ),
-            ),
-          ),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.pageNotFound,
+                      style: const TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(l10n.back),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
     }
   }
