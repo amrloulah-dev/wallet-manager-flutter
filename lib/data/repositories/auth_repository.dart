@@ -57,6 +57,24 @@ class AuthRepository {
     }
   }
 
+  /// Sends a password reset email.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          throw UserNotFoundException();
+        case 'invalid-email':
+          throw AuthException('البريد الإلكتروني غير صحيح.');
+        default:
+          throw AuthException('حدث خطأ أثناء إرسال البريد الإلكتروني: ${e.message}');
+      }
+    } catch (e) {
+      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
+    }
+  }
+
   /// Signs out the current user from both Google and Firebase.
   Future<void> signOut() async {
     try {

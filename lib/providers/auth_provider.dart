@@ -202,6 +202,34 @@ class AuthProvider extends ChangeNotifier {
 
   // ===== Methods =====
 
+  /// Sends a password reset email.
+  Future<void> sendPasswordReset(String email) async {
+    if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _setError('auth_error_invalid_email');
+      return;
+    }
+
+    _setStatus(AuthStatus.loading);
+    try {
+      await _authRepository.sendPasswordResetEmail(email);
+      _setStatus(AuthStatus.idle);
+      _errorMessage = null; // Clear any previous error
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          _setError('auth_error_account_not_found', e);
+        case 'invalid-email':
+          _setError('auth_error_invalid_email', e);
+        case 'too-many-requests':
+          _setError('auth_error_too_many_requests', e);
+        default:
+          _setError(e.message ?? 'auth_operation_failed', e);
+      }
+    } catch (e, stack) {
+      _setError('auth_operation_failed', e, stack);
+    }
+  }
+
   /// Validate saved session on app startup
   Future<void> tryAutoLogin() async {
     debugPrint('🚀 [AUTH START] tryAutoLogin() initiated');
