@@ -36,13 +36,22 @@ void main() async {
       unawaited(SmsService().init());
     }
 
-    // Step 4: Configure the Guardian Isolate (background service).
-    debugPrint('⏳ [INIT DATA] Initializing Background Service...');
-    unawaited(initializeBackgroundService());
-
-    // Step 5: Run the application.
+    // Step 4: Run the application IMMEDIATELY (Do not wait for heavy background services)
     debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
     runApp(const MyApp());
+
+    // Step 5: Configure the Guardian Isolate (background service).
+    // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
+    Future.delayed(const Duration(seconds: 3), () async {
+      try {
+        debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+        await initializeBackgroundService();
+        debugPrint('✅ [BACKGROUND] Service is now active and monitoring SMS.');
+      } catch (e) {
+        debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+      }
+    });
+
   } catch (e, stackTrace) {
     debugPrint('❌ [INIT FATAL] App initialization failed: $e');
     debugPrint('🔍 [STACK TRACE]: $stackTrace');
