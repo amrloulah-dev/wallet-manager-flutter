@@ -28,6 +28,7 @@ class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
 class MockUser extends Mock implements User {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late MockUserRepository mockUserRepo;
   late MockStoreRepository mockStoreRepo;
   late MockLocalStorageService mockStorage;
@@ -183,7 +184,7 @@ void main() {
       final success = await authProvider.loginAsEmployee(mockEmployee, mockStore);
 
       expect(success, isFalse);
-      expect(authProvider.errorMessage, isNotNull);
+      expect(authProvider.errorMessage, equals('auth_error_invalid_credentials'));
       // Since AppErrorHandler sets things up globally, the error routing is tested mostly via mocked dependencies internally
       // Ensure local state represents an error
     });

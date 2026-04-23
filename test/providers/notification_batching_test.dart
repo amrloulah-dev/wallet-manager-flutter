@@ -20,6 +20,7 @@ class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final sl = GetIt.instance;
 
   setUpAll(() {

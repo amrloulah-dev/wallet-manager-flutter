@@ -576,7 +576,7 @@ class AuthProvider extends ChangeNotifier {
       }
       throw AuthException('فشل تسجيل الدخول: ${e.message}');
     } catch (e, stack) {
-      _setError(e is AppException ? e.message : 'فشل تسجيل الدخول.');
+      _setError('auth_error_login_failed');
       AppErrorHandler.handle(e, severity: ErrorSeverity.critical, operation: 'owner_login', stackTrace: stack);
       await _authRepository.signOut();
       rethrow;
@@ -586,12 +586,12 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> _finalizeOwnerLogin(String uid) async {
     final userModel = await _userRepository.getUserByFirebaseUid(uid);
     if (userModel == null || !userModel.isOwner) {
-      throw AuthException('المستخدم غير موجود أو ليس مالكًا.');
+      throw AuthException('auth_error_user_not_found');
     }
 
     final store = await _storeRepository.getStoreById(userModel.storeId);
     if (store == null) {
-      throw AuthException('المتجر غير موجود.');
+      throw AuthException('auth_error_store_not_found');
     }
 
     if (!store.isActive) throw StoreInactiveException();
@@ -638,11 +638,11 @@ class AuthProvider extends ChangeNotifier {
           identityAuthSuccess = true;
         } else {
           AppErrorHandler.handle(
-            Exception('فشل مصادقة الموظف في خدمة الهوية'),
+            Exception('Employee authentication failed in identity service'),
             severity: ErrorSeverity.critical,
             operation: 'AuthProvider.loginAsEmployee',
           );
-          _setError('كلمة المرور أو رقم الجوال غير صحيح.');
+          _setError('auth_error_invalid_credentials');
           return false;
         }
       }
@@ -687,7 +687,7 @@ class AuthProvider extends ChangeNotifier {
       _setStatus(AuthStatus.authenticated);
       return true;
     } catch (e, stack) {
-      final msg = e is AppException ? e.message : 'فشل تسجيل دخول الموظف.';
+      final msg = e is AppException ? e.message : 'auth_error_employee_login_failed';
       AppErrorHandler.handle(
         e,
         stackTrace: stack,
@@ -711,13 +711,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       final store = await _storeRepository.getStoreByEmail(email);
       if (store == null) {
-        throw AuthException('لم يتم العثور على متجر بهذا البريد الإلكتروني.');
+        throw AuthException('auth_error_store_not_found');
       }
       _setStatus(AuthStatus.idle); // Not authenticated yet, just found store
       return store;
     } catch (e) {
       _setError(
-          e is AppException ? e.message : 'حدث خطأ أثناء البحث عن المتجر.');
+          e is AppException ? e.message : 'auth_error_store_lookup_failed');
       return null;
     }
   }

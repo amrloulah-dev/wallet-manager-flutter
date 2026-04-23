@@ -60,6 +60,6 @@ void main() {
     // DESIRED BEHAVIOR (Fixed): It should return false and set an error message
     
     expect(result, isFalse, reason: 'Wallet creation should fail if subscription state is unresolved');
-    expect(walletProvider.errorMessage, contains('تعذر التحقق من حالة الاشتراك'));
+    expect(walletProvider.errorMessage, equals('wallet_error_subscription_unresolved'));
   });
 }

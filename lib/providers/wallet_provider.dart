@@ -201,7 +201,7 @@ class WalletProvider extends ChangeNotifier {
     // 2. Verify User
     if (user == null) {
       throw AuthException(
-          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
+          'auth_error_session_expired');
     }
 
     // 3. Permission Guard
@@ -281,7 +281,7 @@ class WalletProvider extends ChangeNotifier {
     } catch (e, stack) {
       debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
       debugPrint('🔍 [STACK TRACE]: $stack');
-      _setError('حدث خطأ في جلب المحافظ.', e, stack);
+      _setError('wallet_error_fetch_failed', e, stack);
     } finally {
       _safeNotify();
     }
@@ -312,7 +312,7 @@ class WalletProvider extends ChangeNotifier {
       _rebuildWalletMap();
       _updateStatus(WalletStatusState.loaded);
     } catch (e, stack) {
-      _setError('حدث خطأ في جلب المزيد من المحافظ.', e, stack);
+      _setError('wallet_error_fetch_more_failed', e, stack);
     } finally {
       _safeNotify();
     }
@@ -336,15 +336,14 @@ class WalletProvider extends ChangeNotifier {
 
       // Bug B-002: Fail-closed if subscription provider is missing
       if (_subscriptionProvider == null) {
-        _setError('تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.');
+        _setError('wallet_error_subscription_unresolved');
         return false;
       }
 
       final currentCount =
           await _walletRepository.getWalletsCount(_currentStoreId!);
       if (!_subscriptionProvider!.canAddWallet(currentCount)) {
-        _setError(
-            'تم الوصول للحد الأقصى للمحافظ (${_subscriptionProvider!.maxWallets})');
+        _setError('wallet_error_limit_reached');
         return false;
       }
 
@@ -376,7 +375,7 @@ class WalletProvider extends ChangeNotifier {
       _setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في إنشاء المحفظة.', e, stack);
+      _setError('wallet_error_create_failed', e, stack);
       return false;
     } finally {
       if (_status == WalletStatusState.creating) {
@@ -395,7 +394,7 @@ class WalletProvider extends ChangeNotifier {
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
-        _setError('هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية');
+        _setError('wallet_error_frozen');
         return false;
       }
 
@@ -410,7 +409,7 @@ class WalletProvider extends ChangeNotifier {
       _setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في تحديث المحفظة.', e, stack);
+      _setError('wallet_error_update_failed', e, stack);
       return false;
     } finally {
       if (_status == WalletStatusState.updating) {
@@ -433,8 +432,7 @@ class WalletProvider extends ChangeNotifier {
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
-        throw ValidationException(
-            'هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية');
+        throw ValidationException('wallet_error_frozen');
       }
 
       final newTransaction = TransactionModel(
@@ -459,7 +457,7 @@ class WalletProvider extends ChangeNotifier {
       _setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في تحديث الرصيد.', e, stack);
+      _setError('wallet_error_balance_update_failed', e, stack);
       return false;
     } finally {
       if (_status == WalletStatusState.updating) {
@@ -486,10 +484,10 @@ class WalletProvider extends ChangeNotifier {
         rethrow;
       }
     } on FirebaseException catch (e) {
-      _setError(e.message ?? 'فشل في حذف المحفظة.', e);
+      _setError(e.message ?? 'wallet_error_delete_failed', e);
       return false;
     } catch (e, stack) {
-      _setError('فشل في حذف المحفظة.', e, stack);
+      _setError('wallet_error_delete_failed', e, stack);
       return false;
     } finally {
       if (_status == WalletStatusState.deleting) {

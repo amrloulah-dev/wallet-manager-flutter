@@ -146,9 +146,9 @@ class OverlayProvider with ChangeNotifier {
         final isTelecom = ['vodafone_cash', 'orange_cash', 'etisalat_cash', 'we_pay'].contains(walletType);
         
         if (isInstaPay && _amount > 70000) {
-          _errorMessage = "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة";
+          _errorMessage = "overlay_error_amount_limit_instapay";
         } else if (isTelecom && _amount > 60000) {
-          _errorMessage = "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة";
+          _errorMessage = "overlay_error_amount_limit_telecom";
         }
       } else {
         _selectedWalletId = null; // Prevent Dropdown assertion crashes
