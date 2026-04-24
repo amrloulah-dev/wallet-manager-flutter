@@ -8,7 +8,7 @@
     - [x] Create `lib/providers/base_provider.dart`.
     - [x] Implement `_isDisposed`, `dispose()`, `safeNotify()`, and `setError()`.
 - [x] Task: Refactor `BaseProvider` code if needed (No refactoring needed)
-- [ ] Task: Conductor - User Manual Verification 'Setup & BaseProvider Creation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Setup & BaseProvider Creation' (Protocol in workflow.md)
 
 ## Phase 2: Firebase DI Registration
 - [ ] Task: Write Failing Tests for Firebase DI Registration (Red Phase)
