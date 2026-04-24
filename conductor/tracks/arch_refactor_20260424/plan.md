@@ -4,10 +4,10 @@
 - [x] Task: Write Failing Tests for `BaseProvider` (Red Phase)
     - [x] Create `test/providers/base_provider_test.dart`.
     - [x] Write tests for `safeNotify()` and `setError()`.
-- [ ] Task: Implement `BaseProvider` to Pass Tests (Green Phase)
-    - [ ] Create `lib/providers/base_provider.dart`.
-    - [ ] Implement `_isDisposed`, `dispose()`, `safeNotify()`, and `setError()`.
-- [ ] Task: Refactor `BaseProvider` code if needed
+- [x] Task: Implement `BaseProvider` to Pass Tests (Green Phase)
+    - [x] Create `lib/providers/base_provider.dart`.
+    - [x] Implement `_isDisposed`, `dispose()`, `safeNotify()`, and `setError()`.
+- [x] Task: Refactor `BaseProvider` code if needed (No refactoring needed)
 - [ ] Task: Conductor - User Manual Verification 'Setup & BaseProvider Creation' (Protocol in workflow.md)
 
 ## Phase 2: Firebase DI Registration
