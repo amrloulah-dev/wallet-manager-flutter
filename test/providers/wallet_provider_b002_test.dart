@@ -8,14 +8,21 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 
+import 'package:walletmanager/data/services/wallet_cache_manager.dart';
+import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
+
 class MockAuthProvider extends Mock implements AuthProvider {}
 class MockWalletRepository extends Mock implements WalletRepository {}
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+class MockWalletCacheManager extends Mock implements WalletCacheManager {}
+class MockWalletUseCase extends Mock implements WalletUseCase {}
 
 void main() {
   late MockAuthProvider mockAuth;
   late MockWalletRepository mockWalletRepo;
   late MockTransactionRepository mockTransactionRepo;
+  late MockWalletCacheManager mockCacheManager;
+  late MockWalletUseCase mockUseCase;
   late WalletProvider walletProvider;
 
   setUp(() {
@@ -23,11 +30,30 @@ void main() {
     mockAuth = MockAuthProvider();
     mockWalletRepo = MockWalletRepository();
     mockTransactionRepo = MockTransactionRepository();
+    mockCacheManager = MockWalletCacheManager();
+    mockUseCase = MockWalletUseCase();
+
+    // Stub cache manager
+    when(() => mockCacheManager.cacheWallets(any())).thenAnswer((_) async {});
+    
+    // Stub UseCase
+    final mockUser = UserModel(
+      userId: 'user1',
+      storeId: 'test_store',
+      role: 'owner',
+      fullName: 'Test Owner',
+      createdAt: Timestamp.now(),
+      lastLogin: Timestamp.now(),
+    );
+    when(() => mockUseCase.validatePermission(any()))
+        .thenAnswer((_) async => mockUser);
 
     walletProvider = WalletProvider(
       authProvider: mockAuth,
       walletRepository: mockWalletRepo,
       transactionRepository: mockTransactionRepo,
+      cacheManager: mockCacheManager,
+      walletUseCase: mockUseCase,
       storeId: 'test_store',
     );
   });

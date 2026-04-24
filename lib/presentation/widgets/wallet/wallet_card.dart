@@ -7,6 +7,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../l10n/arb/app_localizations.dart';
 

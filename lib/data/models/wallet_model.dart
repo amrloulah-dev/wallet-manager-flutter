@@ -327,41 +327,6 @@ class WalletModel {
     return now.month != lastReset.month || now.year != lastReset.year;
   }
 
-  String get walletTypeDisplayName {
-    switch (walletType) {
-      case 'vodafone_cash':
-        return 'فودافون كاش';
-      case 'instapay':
-        return 'إنستاباي';
-      default:
-        return walletType;
-    }
-  }
-
-  String get walletStatusDisplayName {
-    switch (walletStatus) {
-      case 'new':
-        return 'جديدة';
-      case 'old':
-        return 'قديمة';
-      case 'registered_store':
-        return 'محل مسجل';
-      default:
-        return walletStatus;
-    }
-  }
-
-  IconData get walletTypeIcon {
-    switch (walletType) {
-      case 'vodafone_cash':
-        return FontAwesomeIcons.mobileScreenButton;
-      case 'instapay':
-        return FontAwesomeIcons.buildingColumns;
-      default:
-        return FontAwesomeIcons.wallet;
-    }
-  }
-
   bool canSendAmount(double amount) {
     // New Logic: Check Transaction Cap and Monthly Cap.
     // Daily Limit in the model now represents Transaction Limit.

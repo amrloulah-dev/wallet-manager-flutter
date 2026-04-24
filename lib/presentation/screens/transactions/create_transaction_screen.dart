@@ -12,6 +12,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../../domain/usecases/transaction_fee_calculator.dart';
 import '../../../core/di/service_locator.dart';
 import '../../widgets/common/custom_text_field.dart';

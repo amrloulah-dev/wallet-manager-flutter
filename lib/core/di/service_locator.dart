@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/debt_repository.dart';
@@ -16,8 +16,22 @@ import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/wallet_repository.dart';
 import '../../data/repositories/overlay_repository.dart';
 import '../../data/services/local_storage_service.dart';
+import '../../data/services/wallet_cache_manager.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/subscription_provider.dart';
+import '../../providers/wallet_provider.dart';
+import '../../providers/transaction_provider.dart';
+import '../../providers/employee_provider.dart';
+import '../../providers/statistics_provider.dart';
+import '../../providers/debt_provider.dart';
+import '../../providers/app_events.dart';
+import '../../providers/system_config_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/base_provider.dart';
 import '../../domain/usecases/overlay_usecase.dart';
 import '../../domain/usecases/transaction_fee_calculator.dart';
+import '../../domain/usecases/wallet_usecase.dart';
 import '../../core/services/database_sync_service.dart';
 
 final GetIt sl = GetIt.instance;
@@ -33,6 +47,7 @@ Future<void> setupServiceLocator() async {
   final localStorage = LocalStorageService();
   await localStorage.initialize();
   sl.registerSingleton<LocalStorageService>(localStorage);
+  sl.registerLazySingleton<WalletCacheManager>(() => WalletCacheManager(storage: localStorage));
 
   sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
     authRepository: sl<AuthRepository>(),
@@ -44,6 +59,10 @@ Future<void> setupServiceLocator() async {
 
   // UseCases
   sl.registerLazySingleton<TransactionFeeCalculator>(() => TransactionFeeCalculator());
+  sl.registerLazySingleton<WalletUseCase>(() => WalletUseCase(
+    walletRepository: sl<WalletRepository>(),
+    authProvider: sl<AuthProvider>(),
+  ));
 
 
   // Repositories — Lazy Singletons

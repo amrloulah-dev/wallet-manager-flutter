@@ -16,6 +16,8 @@ import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/data/services/wallet_cache_manager.dart';
+import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 
 void main() {
   group('Service Locator Tests', () {
@@ -43,6 +45,14 @@ void main() {
 
     test('should verify LocalStorageService is registered', () {
       expect(sl.isRegistered<LocalStorageService>(), isTrue);
+    });
+
+    test('should verify WalletCacheManager is registered', () {
+      expect(sl.isRegistered<WalletCacheManager>(), isTrue);
+    });
+
+    test('should verify WalletUseCase is registered', () {
+      expect(sl.isRegistered<WalletUseCase>(), isTrue);
     });
 
     test('should verify Firebase services are registered', () {

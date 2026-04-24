@@ -9,6 +9,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';

@@ -15,6 +15,8 @@ import 'auth_provider.dart';
 import 'base_provider.dart';
 import 'subscription_provider.dart'; // Added import
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/data/services/wallet_cache_manager.dart';
+import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
@@ -33,6 +35,8 @@ enum WalletStatusState {
 class WalletProvider extends BaseProvider {
   final WalletRepository _walletRepository;
   final TransactionRepository _transactionRepository;
+  final WalletCacheManager _cacheManager;
+  final WalletUseCase _walletUseCase;
 
   // State
   String? _currentStoreId;
@@ -74,12 +78,16 @@ class WalletProvider extends BaseProvider {
     SubscriptionProvider? subscriptionProvider,
     WalletRepository? walletRepository,
     TransactionRepository? transactionRepository,
+    WalletCacheManager? cacheManager,
+    WalletUseCase? walletUseCase,
     String? storeId,
   })  : _authProvider = authProvider,
         _subscriptionProvider = subscriptionProvider,
         _walletRepository = walletRepository ?? sl<WalletRepository>(),
         _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
+        _cacheManager = cacheManager ?? sl<WalletCacheManager>(),
+        _walletUseCase = walletUseCase ?? sl<WalletUseCase>(),
         _currentStoreId = storeId {
     // ── Streams-Driven Sync (Phase 1) ──
     // Manual AppEvents listener removed. Data sync is now handled by _walletsSubscription
@@ -194,23 +202,7 @@ class WalletProvider extends BaseProvider {
   /// Robust permission check that ensures user is loaded
   Future<UserModel> _validateUserAndPermission(
       bool Function(UserPermissions) selector) async {
-    // 1. Attempt to load user with retry
-    final user = await _authProvider.ensureUserLoaded();
-
-    // 2. Verify User
-    if (user == null) {
-      throw AuthException(
-          'auth_error_session_expired');
-    }
-
-    // 3. Permission Guard
-    if (user.isOwner) return user;
-
-    if (!user.hasPermission(selector)) {
-      throw PermissionException();
-    }
-
-    return user;
+    return _walletUseCase.validatePermission(selector);
   }
 
   // Helper Check - Deprecated in favor of _validateUserAndPermission but kept for non-async if needed
@@ -268,15 +260,7 @@ class WalletProvider extends BaseProvider {
       _updateStatus(WalletStatusState.loaded);
 
       // Cache the wallets locally for SMS Automation
-      try {
-        await LocalStorageService.instance.cacheWalletLiteList(_wallets);
-      } catch (e, stack) {
-        debugPrint('⚠️ [INIT ERROR] WalletProvider: Cache write failed: $e');
-        AppErrorHandler.handle(e,
-            severity: ErrorSeverity.low,
-            operation: 'wallet_cache_write',
-            stackTrace: stack);
-      }
+      _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
       debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
       debugPrint('🔍 [STACK TRACE]: $stack');
@@ -584,15 +568,12 @@ class WalletProvider extends BaseProvider {
 
   void _recalculateFrozenWallets() {
     _frozenWalletIds.clear();
-    if (_subscriptionProvider == null || _currentStoreId == null) return;
-    final maxWallets = _subscriptionProvider!.maxWallets;
-    if (_wallets.length <= maxWallets) return;
-
-    final sortedWallets = List<WalletModel>.from(_wallets);
-    sortedWallets.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    for (int i = maxWallets; i < sortedWallets.length; i++) {
-      _frozenWalletIds.add(sortedWallets[i].walletId);
-    }
+    final frozen = _walletUseCase.calculateFrozenWallets(
+      wallets: _wallets,
+      subscriptionProvider: _subscriptionProvider,
+      storeId: _currentStoreId,
+    );
+    _frozenWalletIds.addAll(frozen);
   }
 
   Future<bool> _isWalletFrozen(String walletId) async {

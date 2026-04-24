@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'currency_formatter.dart';
 
 class NumberFormatter {
   // ===========================
@@ -22,8 +23,8 @@ class NumberFormatter {
   /// Defaults to 'ج' for the currency symbol.
   static String formatAmount(num? amount,
       {bool showCurrency = true, String currencySymbol = 'ج'}) {
-    final formatted = formatNumber(amount ?? 0);
-    return formatted; // Temporarily remove currency symbol
+    return CurrencyFormatter.formatAmount(amount,
+        showCurrency: showCurrency, currencySymbol: currencySymbol);
   }
 
   // ===========================
@@ -46,12 +47,7 @@ class NumberFormatter {
   /// It removes common currency symbols, commas, and whitespace.
   /// Returns 0.0 if the input is null, empty, or invalid.
   static double parseAmount(String? text) {
-    if (text == null || text.trim().isEmpty) {
-      return 0.0;
-    }
-    // Remove currency symbols (ج, EGP), commas, and whitespace.
-    final cleanedText = text.replaceAll(RegExp(r'[ج,EGP\s]'), '');
-    return double.tryParse(cleanedText) ?? 0.0;
+    return CurrencyFormatter.parseAmount(text);
   }
 
   // ===========================

@@ -9,6 +9,7 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/wallet_stats_card.dart';
 import '../../widgets/common/error_widget.dart';
