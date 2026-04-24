@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -71,10 +70,9 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     try {
       if (_registrationMethod == 1) {
         // --- Google Registration ---
-        await authProvider.loginWithGoogleOrNull();
-        final currentUser = FirebaseAuth.instance.currentUser;
+        final success = await authProvider.loginWithGoogleOrNull();
 
-        if (currentUser == null) {
+        if (!success) {
           ToastUtils.showError(l10n.googleLoginError);
           return;
         }
