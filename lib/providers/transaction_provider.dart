@@ -135,14 +135,14 @@ class TransactionProvider extends BaseProvider {
   }
 
   @override
-  void setError(String message, [dynamic e, StackTrace? stack]) {
-    debugPrint('💥 [TX ERROR] $message | Error: $e');
+  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
+    debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (isDisposed) return;
-    _errorMessage = message;
+    _errorMessage = errorCode;
     _status = TransactionStatus.error;
-    if (e != null) {
-      AppErrorHandler.handle(e,
+    if (error != null) {
+      AppErrorHandler.handle(error,
           severity: ErrorSeverity.medium,
           operation: 'transaction_operation',
           stackTrace: stack);

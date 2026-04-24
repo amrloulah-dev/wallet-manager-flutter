@@ -526,11 +526,11 @@ class WalletProvider extends BaseProvider {
   }
 
   @override
-  void setError(String message, [Object? error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack]) {
     if (isDisposed) return;
-    _errorMessage = message;
+    _errorMessage = errorCode;
     _status = WalletStatusState.error;
-    super.setError(message, error, stack);
+    super.setError(errorCode, error, stack);
   }
 
   void clearError() {

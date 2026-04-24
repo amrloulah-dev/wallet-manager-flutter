@@ -55,11 +55,6 @@ class DebtProvider extends BaseProvider {
         _debtRepository = debtRepository ?? sl<DebtRepository>(),
         _currentStoreId = storeId;
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   // Getters
   List<DebtModel> get debts => _debts;
   Map<String, DebtModel> get debtMap => _debtMap;
@@ -84,17 +79,17 @@ class DebtProvider extends BaseProvider {
   }
 
   @override
-  void setError(String message, [dynamic e, StackTrace? stack]) {
+  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
     if (isDisposed) return;
-    _errorMessage = message;
+    _errorMessage = errorCode;
     _status = DebtStatus.error;
-    if (e != null) {
-      AppErrorHandler.handle(e,
+    if (error != null) {
+      AppErrorHandler.handle(error,
           severity: ErrorSeverity.medium,
           operation: 'debt_operation',
           stackTrace: stack);
     }
-    super.setError(message, e, stack);
+    super.setError(errorCode, error, stack);
     safeNotify();
   }
 

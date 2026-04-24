@@ -254,19 +254,19 @@ class StatisticsProvider extends BaseProvider {
   }
 
   @override
-  void setError(String message, [dynamic e, StackTrace? stack]) {
-    debugPrint('💥 [STATS ERROR] $message | Error: $e');
+  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
+    debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (isDisposed) return;
-    _errorMessage = message;
+    _errorMessage = errorCode;
     _isLoading = false;
-    if (e != null) {
-      AppErrorHandler.handle(e,
+    if (error != null) {
+      AppErrorHandler.handle(error,
           severity: ErrorSeverity.medium,
           operation: 'stats_operation',
           stackTrace: stack);
     }
-    super.setError(message, e, stack);
+    super.setError(errorCode, error, stack);
     safeNotify();
   }
 }

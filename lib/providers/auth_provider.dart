@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
@@ -1008,12 +1007,12 @@ class AuthProvider extends BaseProvider {
   }
 
   @override
-  void setError(String message, [Object? error, StackTrace? stack]) {
-    debugPrint('💥 [AUTH ERROR] $message | Error: $error');
+  void setError(String errorCode, [Object? error, StackTrace? stack]) {
+    debugPrint('💥 [AUTH ERROR] $errorCode | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
-    _errorMessage = message;
+    _errorMessage = errorCode;
     _status = AuthStatus.error;
-    super.setError(message, error, stack);
+    super.setError(errorCode, error, stack);
     safeNotify();
   }
 
