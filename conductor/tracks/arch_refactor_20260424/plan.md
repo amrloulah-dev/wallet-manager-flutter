@@ -13,9 +13,9 @@
 ## Phase 2: Firebase DI Registration
 - [x] Task: Write Failing Tests for Firebase DI Registration (Red Phase)
     - [x] Update tests for `service_locator.dart` to verify `FirebaseFirestore.instance` and `FirebaseAuth.instance` are registered.
-- [ ] Task: Implement Firebase DI Registration to Pass Tests (Green Phase)
-    - [ ] Update `lib/core/di/service_locator.dart` to register Firebase singletons.
-- [ ] Task: Refactor DI code if needed
+- [x] Task: Implement Firebase DI Registration to Pass Tests (Green Phase)
+    - [x] Update `lib/core/di/service_locator.dart` to register Firebase singletons.
+- [x] Task: Refactor DI code if needed (No refactoring needed)
 - [ ] Task: Conductor - User Manual Verification 'Firebase DI Registration' (Protocol in workflow.md)
 
 ## Phase 3: Global Provider Cleanup

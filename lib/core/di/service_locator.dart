@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/debt_repository.dart';
 import '../../data/repositories/device_repository.dart';
@@ -16,6 +18,10 @@ import '../../data/services/local_storage_service.dart';
 final GetIt sl = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
+  // External Services
+  sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+
   // Services
   final localStorage = LocalStorageService();
   await localStorage.initialize();
