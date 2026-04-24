@@ -26,11 +26,11 @@
 - [x] Task: Conductor - User Manual Verification 'UI Logic Extraction' (Protocol in workflow.md)
 
 ## Phase 3: Widget Decomposition
-- [ ] Task: Decompose Settings Screen
-    - [ ] Create directory `lib/presentation/screens/settings/widgets/`.
-    - [ ] Extract logical sections from `lib/presentation/screens/settings/settings_screen.dart` into separate files in `widgets/` (using StatefulWidget for local state).
-    - [ ] Replace extracted code in `settings_screen.dart` with widget references.
-    - [ ] Verify `settings_screen.dart` is under 200 lines.
+- [x] Task: Decompose Settings Screen [d9f7767]
+    - [x] Create directory `lib/presentation/screens/settings/widgets/`.
+    - [x] Extract logical sections from `lib/presentation/screens/settings/settings_screen.dart` into separate files in `widgets/` (using StatefulWidget for local state).
+    - [x] Replace extracted code in `settings_screen.dart` with widget references.
+    - [x] Verify `settings_screen.dart` is under 200 lines.
 - [ ] Task: Conductor - User Manual Verification 'Widget Decomposition' (Protocol in workflow.md)
 
 ## Phase 4: Taming the Final God Class
