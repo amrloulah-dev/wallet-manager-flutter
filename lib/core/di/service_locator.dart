@@ -15,9 +15,10 @@ import '../../data/repositories/transaction_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/wallet_repository.dart';
 import '../../data/repositories/overlay_repository.dart';
-import '../../domain/usecases/overlay_usecase.dart';
-import '../../core/services/database_sync_service.dart';
 import '../../data/services/local_storage_service.dart';
+import '../../domain/usecases/overlay_usecase.dart';
+import '../../domain/usecases/transaction_fee_calculator.dart';
+import '../../core/services/database_sync_service.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -32,7 +33,7 @@ Future<void> setupServiceLocator() async {
   final localStorage = LocalStorageService();
   await localStorage.initialize();
   sl.registerSingleton<LocalStorageService>(localStorage);
-  
+
   sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
     authRepository: sl<AuthRepository>(),
     storeRepository: sl<StoreRepository>(),
@@ -40,6 +41,9 @@ Future<void> setupServiceLocator() async {
     deviceRepository: sl<DeviceRepository>(),
     localStorage: sl<LocalStorageService>(),
   ));
+
+  // UseCases
+  sl.registerLazySingleton<TransactionFeeCalculator>(() => TransactionFeeCalculator());
 
 
   // Repositories — Lazy Singletons

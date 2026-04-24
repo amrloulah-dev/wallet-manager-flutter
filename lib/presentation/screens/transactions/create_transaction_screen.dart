@@ -12,11 +12,12 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../../domain/usecases/transaction_fee_calculator.dart';
+import '../../../core/di/service_locator.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
-import '../../../core/utils/fee_calculator.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
@@ -83,18 +84,17 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ? context.read<WalletProvider>().walletMap[_selectedWalletId!] 
         : null;
 
-    double fee = 0.0;
-    if (wallet != null && _transactionType == 'send') {
-      fee = FeeCalculator.calculateTransactionFee(
-        amount: amount,
-        sourceWalletType: wallet.walletType,
-        receiverPhone: _customerPhoneController.text,
-      );
-    }
+    final result = sl<TransactionFeeCalculator>().calculate(
+      wallet: wallet,
+      transactionType: _transactionType,
+      amount: amount,
+      commission: commission,
+      receiverPhone: _customerPhoneController.text,
+    );
 
     setState(() {
-      _serviceFee = fee;
-      _totalAmount = amount + commission;
+      _serviceFee = result.serviceFee;
+      _totalAmount = result.totalAmount;
     });
   }
 
