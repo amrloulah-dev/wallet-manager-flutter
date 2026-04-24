@@ -16,7 +16,7 @@
 - [x] Task: Implement Firebase DI Registration to Pass Tests (Green Phase)
     - [x] Update `lib/core/di/service_locator.dart` to register Firebase singletons.
 - [x] Task: Refactor DI code if needed (No refactoring needed)
-- [ ] Task: Conductor - User Manual Verification 'Firebase DI Registration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Firebase DI Registration' (Protocol in workflow.md)
 
 ## Phase 3: Global Provider Cleanup
 - [ ] Task: Write Failing Tests for Provider Cleanup (Red Phase)
