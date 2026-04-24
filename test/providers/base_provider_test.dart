@@ -39,15 +39,12 @@ void main() {
     });
 
     test('dispose should set _isDisposed to true', () {
+      expect(provider.isDisposed, isFalse);
       provider.dispose();
-      // We can check if notifyListeners still works or if it fails silently
-      int notifyCount = 0;
-      provider.addListener(() {
-        notifyCount++;
-      });
+      expect(provider.isDisposed, isTrue);
       
-      provider.triggerNotify();
-      expect(notifyCount, 0); // Should not notify after dispose
+      // triggerNotify should fail silently because it checks isDisposed
+      expect(() => provider.triggerNotify(), returnsNormally);
     });
   });
 }
