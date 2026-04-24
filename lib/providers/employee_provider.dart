@@ -8,10 +8,11 @@ import '../core/errors/error_severity.dart';
 import '../data/models/user_permissions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subscription_provider.dart';
+import 'base_provider.dart';
 
 enum EmployeeStatus { initial, loading, loaded, error }
 
-class EmployeeProvider extends ChangeNotifier {
+class EmployeeProvider extends BaseProvider {
   final EmployeeRepository _employeeRepository;
   SubscriptionProvider? _subscriptionProvider;
 
@@ -59,19 +60,10 @@ class EmployeeProvider extends ChangeNotifier {
     _subscriptionProvider = subscriptionProvider;
   }
 
-  bool _isDisposed = false;
-
   @override
   void dispose() {
-    _isDisposed = true;
     _employeeStreamSubscription?.cancel();
     super.dispose();
-  }
-
-  void _safeNotify() {
-    if (!_isDisposed && hasListeners) {
-      Future.microtask(() => notifyListeners());
-    }
   }
 
   void setStoreId(String? storeId) {
@@ -86,7 +78,7 @@ class EmployeeProvider extends ChangeNotifier {
       if (storeId != null) {
         _listenToEmployees(storeId);
       } else {
-        _safeNotify();
+        safeNotify();
       }
     }
   }
@@ -99,18 +91,18 @@ class EmployeeProvider extends ChangeNotifier {
 
   void _listenToEmployees(String storeId) {
     _updateStatus(EmployeeStatus.loading);
-    _safeNotify();
+    safeNotify();
     _employeeStreamSubscription =
         _employeeRepository.watchEmployees(storeId).listen(
       (employees) {
         _employees = employees;
         _recalculateSuspendedEmployees();
         _updateStatus(EmployeeStatus.loaded);
-        _safeNotify();
+        safeNotify();
       },
       onError: (error) {
-        _setError('فشل جلب الموظفين.', error);
-        _safeNotify();
+        setError('فشل جلب الموظفين.', error);
+        safeNotify();
       },
     );
   }
@@ -122,21 +114,21 @@ class EmployeeProvider extends ChangeNotifier {
     required UserPermissions permissions,
   }) async {
     if (_currentStoreId == null) {
-      _setError('لم يتم تعيين المتجر');
-      _safeNotify();
+      setError('لم يتم تعيين المتجر');
+      safeNotify();
       return false;
     }
 
     if (_subscriptionProvider != null &&
         !_subscriptionProvider!.canAddEmployee(employeesCount)) {
-      _setError(
+      setError(
           'تم الوصول للحد الأقصى للموظفين (${_subscriptionProvider!.maxEmployees})');
-      _safeNotify();
+      safeNotify();
       return false;
     }
 
     _updateStatus(EmployeeStatus.loading);
-    _safeNotify();
+    safeNotify();
     try {
       final newEmployee = await _employeeRepository.addEmployee(
         storeId: _currentStoreId!,
@@ -152,19 +144,19 @@ class EmployeeProvider extends ChangeNotifier {
       _updateStatus(EmployeeStatus.loaded);
       return true;
     } on ValidationException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } on ServerException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('حدث خطأ أثناء إضافة الموظف', e, stack);
+      setError('حدث خطأ أثناء إضافة الموظف', e, stack);
       return false;
     } finally {
       if (_status == EmployeeStatus.loading) {
         _updateStatus(EmployeeStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -173,8 +165,8 @@ class EmployeeProvider extends ChangeNotifier {
     required String pin,
   }) async {
     if (pin.length != 4 || !_isNumeric(pin)) {
-      _setError('الرقم السري يجب أن يكون 4 أرقام');
-      _safeNotify();
+      setError('الرقم السري يجب أن يكون 4 أرقام');
+      safeNotify();
       return null;
     }
 
@@ -185,25 +177,25 @@ class EmployeeProvider extends ChangeNotifier {
       );
 
       if (employee == null) {
-        _setError('الرقم السري غير صحيح');
-        _safeNotify();
+        setError('الرقم السري غير صحيح');
+        safeNotify();
         return null;
       }
 
       if (isEmployeeFrozen(employee)) {
-        _setError('هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك');
-        _safeNotify();
+        setError('هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك');
+        safeNotify();
         return null;
       }
 
       return employee;
     } catch (e, stack) {
       if (e is ServerException) {
-        _setError(e.message);
+        setError(e.message);
       } else {
-        _setError('حدث خطأ أثناء التحقق من الرقم السري', e, stack);
+        setError('حدث خطأ أثناء التحقق من الرقم السري', e, stack);
       }
-      _safeNotify();
+      safeNotify();
       return null;
     }
   }
@@ -233,7 +225,7 @@ class EmployeeProvider extends ChangeNotifier {
 
   Future<bool> deactivateEmployee(String userId) async {
     _updateStatus(EmployeeStatus.loading);
-    _safeNotify();
+    safeNotify();
     try {
       final employee = getEmployeeById(userId);
       await _employeeRepository.deactivateEmployee(userId);
@@ -246,13 +238,13 @@ class EmployeeProvider extends ChangeNotifier {
       _updateStatus(EmployeeStatus.loaded);
       return true;
     } on ServerException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } finally {
       if (_status == EmployeeStatus.loading) {
         _updateStatus(EmployeeStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -261,12 +253,12 @@ class EmployeeProvider extends ChangeNotifier {
     required String newPin,
   }) async {
     if (newPin.length != 4 || !_isNumeric(newPin)) {
-      _setError('الرقم السري يجب أن يكون 4 أرقام');
-      _safeNotify();
+      setError('الرقم السري يجب أن يكون 4 أرقام');
+      safeNotify();
       return false;
     }
     _updateStatus(EmployeeStatus.loading);
-    _safeNotify();
+    safeNotify();
     try {
       final employee = getEmployeeById(userId);
       final success = await _employeeRepository.resetEmployeePIN(
@@ -277,23 +269,23 @@ class EmployeeProvider extends ChangeNotifier {
       }
       return success;
     } on ValidationException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } on ServerException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } finally {
       if (_status == EmployeeStatus.loading) {
         _updateStatus(EmployeeStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<bool> updateEmployeePermissions(
       String userId, UserPermissions permissions) async {
     _updateStatus(EmployeeStatus.loading);
-    _safeNotify();
+    safeNotify();
     try {
       await _employeeRepository.updateEmployeePermissions(
         userId: userId,
@@ -303,29 +295,29 @@ class EmployeeProvider extends ChangeNotifier {
       _updateStatus(EmployeeStatus.loaded);
       return true;
     } catch (e, stack) {
-      _setError('فشل تحديث الصلاحيات.', e, stack);
+      setError('فشل تحديث الصلاحيات.', e, stack);
       return false;
     } finally {
       if (_status == EmployeeStatus.loading) {
         _updateStatus(EmployeeStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    _safeNotify();
+    safeNotify();
   }
 
   void toggleActiveFilter() {
     _showActiveOnly = !_showActiveOnly;
-    _safeNotify();
+    safeNotify();
   }
 
   void clearSearch() {
     _searchQuery = '';
-    _safeNotify();
+    safeNotify();
   }
 
   UserModel? getEmployeeById(String userId) {
@@ -342,19 +334,16 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   void _updateStatus(EmployeeStatus status) {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _status = status;
   }
 
-  void _setError(String message, [Object? error, StackTrace? stack]) {
-    if (_isDisposed) return;
+  @override
+  void setError(String message, [Object? error, StackTrace? stack]) {
+    if (isDisposed) return;
     _errorMessage = message;
     _status = EmployeeStatus.error;
-    AppErrorHandler.handle(error ?? message,
-        severity: ErrorSeverity.medium,
-        operation: 'employee_operation',
-        stackTrace: stack);
-    // Note: notifyListeners() is now handled by the calling method's finally block
+    super.setError(message, error, stack);
   }
 
   bool _isNumeric(String str) {
@@ -362,9 +351,9 @@ class EmployeeProvider extends ChangeNotifier {
   }
 
   void clearError() {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _errorMessage = null;
     _status = EmployeeStatus.loaded;
-    _safeNotify();
+    safeNotify();
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'base_provider.dart';
 
-class LocalizationProvider extends ChangeNotifier {
+class LocalizationProvider extends BaseProvider {
   Locale _locale = const Locale('ar');
   static const String _localeKey = 'app_locale';
 
@@ -11,18 +12,12 @@ class LocalizationProvider extends ChangeNotifier {
     Future.microtask(() => _loadLocale());
   }
 
-  void _safeNotify() {
-    Future.microtask(() {
-      if (hasListeners) notifyListeners();
-    });
-  }
-
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final savedLocale = prefs.getString(_localeKey);
     if (savedLocale != null) {
       _locale = Locale(savedLocale);
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -31,7 +26,7 @@ class LocalizationProvider extends ChangeNotifier {
     _locale = locale;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale.languageCode);
-    _safeNotify();
+    safeNotify();
   }
 
   bool get isArabic => _locale.languageCode == 'ar';

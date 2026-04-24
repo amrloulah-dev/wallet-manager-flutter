@@ -8,13 +8,14 @@ import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
+import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 
 enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
 
-class TransactionProvider extends ChangeNotifier {
+class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
 
   // State
@@ -40,8 +41,6 @@ class TransactionProvider extends ChangeNotifier {
   // Filter
   String? _filterType;
 
-  bool _isDisposed = false;
-
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
 
@@ -55,7 +54,6 @@ class TransactionProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _isDisposed = true;
     _fetchShieldTimer?.cancel();
     super.dispose();
   }
@@ -132,20 +130,15 @@ class TransactionProvider extends ChangeNotifier {
   void setFilter(String? type) => setFilterType(type);
 
   void _updateStatus(TransactionStatus status) {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _status = status;
   }
 
-  void _safeNotify() {
-    if (!_isDisposed) {
-      Future.microtask(() => notifyListeners());
-    }
-  }
-
-  void _setError(String message, [dynamic e, StackTrace? stack]) {
+  @override
+  void setError(String message, [dynamic e, StackTrace? stack]) {
     debugPrint('💥 [TX ERROR] $message | Error: $e');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _errorMessage = message;
     _status = TransactionStatus.error;
     if (e != null) {
@@ -154,7 +147,7 @@ class TransactionProvider extends ChangeNotifier {
           operation: 'transaction_operation',
           stackTrace: stack);
     }
-    _safeNotify();
+    safeNotify();
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
@@ -170,7 +163,7 @@ class TransactionProvider extends ChangeNotifier {
 
     _updateStatus(TransactionStatus.loading);
     _errorMessage = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
@@ -192,9 +185,9 @@ class TransactionProvider extends ChangeNotifier {
     } catch (e, stack) {
       debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       debugPrint('🔍 [STACK TRACE]: $stack');
-      _setError('فشل في جلب المعاملات.', e, stack);
+      setError('فشل في جلب المعاملات.', e, stack);
     } finally {
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -204,7 +197,7 @@ class TransactionProvider extends ChangeNotifier {
     }
 
     _updateStatus(TransactionStatus.loadingMore);
-    _safeNotify();
+    safeNotify();
 
     try {
       final result = await _transactionRepository.getTransactionsByDateRange(
@@ -227,9 +220,9 @@ class TransactionProvider extends ChangeNotifier {
       _calculateSummary();
       _updateStatus(TransactionStatus.loaded);
     } catch (e, stack) {
-      _setError('فشل في جلب المزيد من المعاملات.', e, stack);
+      setError('فشل في جلب المزيد من المعاملات.', e, stack);
     } finally {
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -269,7 +262,7 @@ class TransactionProvider extends ChangeNotifier {
     if (_currentStoreId == null) return false;
 
     _updateStatus(TransactionStatus.creating);
-    _safeNotify();
+    safeNotify();
 
     try {
       final newTransaction = TransactionModel(
@@ -296,21 +289,21 @@ class TransactionProvider extends ChangeNotifier {
       _updateStatus(TransactionStatus.loaded);
       return true;
     } on AppException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في إنشاء المعاملة.', e, stack);
+      setError('فشل في إنشاء المعاملة.', e, stack);
       return false;
     } finally {
       if (_status == TransactionStatus.creating) {
         _updateStatus(TransactionStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   void insertTransactionLocally(TransactionModel transaction) {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     
     // Check if it already exists
     if (_transactionMap.containsKey(transaction.transactionId)) return;
@@ -323,16 +316,16 @@ class TransactionProvider extends ChangeNotifier {
     _recomputeTodayTransactions();
     _calculateSummary();
     _activateFetchShield();
-    _safeNotify();
+    safeNotify();
   }
 
   Future<void> selectTransaction(String transactionId) async {
     try {
       final tx = await _transactionRepository.getTransactionById(transactionId);
       _selectedTransaction = tx;
-      _safeNotify();
+      safeNotify();
     } catch (e, stack) {
-      _setError('فشل في جلب تفاصيل المعاملة.', e, stack);
+      setError('فشل في جلب تفاصيل المعاملة.', e, stack);
     }
   }
 }

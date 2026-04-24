@@ -20,6 +20,7 @@ import '../core/services/identity_service.dart';
 import '../core/errors/app_exceptions.dart';
 import '../core/services/analytics_service.dart';
 import '../services/time_service.dart';
+import 'base_provider.dart';
 
 enum AuthStatus {
   idle,
@@ -30,7 +31,7 @@ enum AuthStatus {
   expired
 }
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends BaseProvider {
   // Repositories
   final AuthRepository _authRepository;
   final StoreRepository _storeRepository;
@@ -43,7 +44,6 @@ class AuthProvider extends ChangeNotifier {
   User? _firebaseUser;
   UserModel? _currentUser;
   StoreModel? _currentStore;
-  bool _isDisposed = false;
 
   // Status
   AuthStatus _status = AuthStatus.idle;
@@ -147,7 +147,7 @@ class AuthProvider extends ChangeNotifier {
       if (_status == AuthStatus.loading) {
         _setStatus(AuthStatus.idle); // Without overriding actual loaded state if we use idle
       }
-      _safeNotify();
+      safeNotify();
     }
     return null;
   }
@@ -161,10 +161,10 @@ class AuthProvider extends ChangeNotifier {
     if (_currentStore == null) {
       _storeRepository.getStoreById(user.storeId).then((store) {
         _currentStore = store;
-        _safeNotify();
+        safeNotify();
       });
     }
-    // Note: notifyListeners() batching assumes _safeNotify() will be called at the end of the public method
+    // Note: notifyListeners() batching assumes safeNotify() will be called at the end of the public method
   }
 
   // License Getters
@@ -205,7 +205,7 @@ class AuthProvider extends ChangeNotifier {
   /// Sends a password reset email.
   Future<void> sendPasswordReset(String email) async {
     if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      _setError('auth_error_invalid_email');
+      setError('auth_error_invalid_email');
       return;
     }
 
@@ -217,16 +217,16 @@ class AuthProvider extends ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'user-not-found':
-          _setError('auth_error_account_not_found', e);
+          setError('auth_error_account_not_found', e);
         case 'invalid-email':
-          _setError('auth_error_invalid_email', e);
+          setError('auth_error_invalid_email', e);
         case 'too-many-requests':
-          _setError('auth_error_too_many_requests', e);
+          setError('auth_error_too_many_requests', e);
         default:
-          _setError(e.message ?? 'auth_operation_failed', e);
+          setError(e.message ?? 'auth_operation_failed', e);
       }
     } catch (e, stack) {
-      _setError('auth_operation_failed', e, stack);
+      setError('auth_operation_failed', e, stack);
     }
   }
 
@@ -576,7 +576,7 @@ class AuthProvider extends ChangeNotifier {
       }
       throw AuthException('فشل تسجيل الدخول: ${e.message}');
     } catch (e, stack) {
-      _setError('auth_error_login_failed');
+      setError('auth_error_login_failed');
       AppErrorHandler.handle(e, severity: ErrorSeverity.critical, operation: 'owner_login', stackTrace: stack);
       await _authRepository.signOut();
       rethrow;
@@ -642,7 +642,7 @@ class AuthProvider extends ChangeNotifier {
             severity: ErrorSeverity.critical,
             operation: 'AuthProvider.loginAsEmployee',
           );
-          _setError('auth_error_invalid_credentials');
+          setError('auth_error_invalid_credentials');
           return false;
         }
       }
@@ -694,7 +694,7 @@ class AuthProvider extends ChangeNotifier {
         severity: ErrorSeverity.critical,
         operation: 'AuthProvider.loginAsEmployee',
       );
-      _setError(msg);
+      setError(msg);
       await logout();
       return false;
     } finally {
@@ -702,7 +702,7 @@ class AuthProvider extends ChangeNotifier {
       if (_status == AuthStatus.loading) {
         _setStatus(AuthStatus.idle);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -716,7 +716,7 @@ class AuthProvider extends ChangeNotifier {
       _setStatus(AuthStatus.idle); // Not authenticated yet, just found store
       return store;
     } catch (e) {
-      _setError(
+      setError(
           e is AppException ? e.message : 'auth_error_store_lookup_failed');
       return null;
     }
@@ -791,7 +791,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loginWithGoogle() async {
     final success = await loginWithGoogleOrNull();
     if (!success) {
-      _setError('لا يوجد حساب مرتبط بهذا البريد الإلكتروني.');
+      setError('لا يوجد حساب مرتبط بهذا البريد الإلكتروني.');
     }
   }
 
@@ -807,7 +807,7 @@ class AuthProvider extends ChangeNotifier {
         throw InvalidCredentialsException();
       }
     } catch (e) {
-      _setError(e is AppException ? e.message : 'كلمة سر المتجر غير صحيحة.');
+      setError(e is AppException ? e.message : 'كلمة سر المتجر غير صحيحة.');
       return null;
     }
   }
@@ -864,7 +864,7 @@ class AuthProvider extends ChangeNotifier {
 
       _setStatus(AuthStatus.authenticated);
     } catch (e) {
-      _setError(e is AppException
+      setError(e is AppException
           ? e.message
           : 'Failed to finalize employee session.');
     } finally {
@@ -903,7 +903,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
     } catch (e) {
       _setLoading(false); // Ensure loading is cleared on error
-      _setError(e is AppException ? e.message : 'فشل تفعيل المفتاح: $e');
+      setError(e is AppException ? e.message : 'فشل تفعيل المفتاح: $e');
       rethrow;
     }
   }
@@ -915,14 +915,14 @@ class AuthProvider extends ChangeNotifier {
       _clearState();
       _setStatus(AuthStatus.unauthenticated);
     } catch (e) {
-      _setError('حدث خطأ أثناء تسجيل الخروج');
+      setError('حدث خطأ أثناء تسجيل الخروج');
     }
   }
 
   void clearError() {
     if (_errorMessage != null) {
       _errorMessage = null;
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -933,9 +933,9 @@ class AuthProvider extends ChangeNotifier {
         _currentStore =
             await _storeRepository.getStoreById(_currentStore!.storeId);
       } catch (e) {
-        _setError('فشل تحديث البيانات.');
+        setError('فشل تحديث البيانات.');
       } finally {
-        _safeNotify();
+        safeNotify();
       }
     }
   }
@@ -998,34 +998,23 @@ class AuthProvider extends ChangeNotifier {
   // 🔴 الإجبار على التحديث 🔴
   // ده بيخلي فلاتر يحط تحديث الشاشة في الـ Event Loop القادم غصب عنه
   WidgetsBinding.instance.addPostFrameCallback((_) {
-     notifyListeners();
+     safeNotify();
   });
 }
 
   void _setLoading(bool loading) {
     _status = loading ? AuthStatus.loading : AuthStatus.idle;
-    // notifyListeners() removed for batching
+    // safeNotify() removed for batching
   }
 
-  void _setError(String message, [Object? error, StackTrace? stack]) {
+  @override
+  void setError(String message, [Object? error, StackTrace? stack]) {
     debugPrint('💥 [AUTH ERROR] $message | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     _errorMessage = message;
     _status = AuthStatus.error;
-    AppErrorHandler.handle(error ?? message, severity: ErrorSeverity.medium, operation: 'auth_operation', stackTrace: stack);
-    _safeNotify();
-  }
-
-  void _safeNotify() {
-    if (!_isDisposed) {
-      Future.microtask(() => notifyListeners());
-    }
-  }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    super.dispose();
+    super.setError(message, error, stack);
+    safeNotify();
   }
 
   void _clearState() {

@@ -19,13 +19,13 @@
 - [x] Task: Conductor - User Manual Verification 'Firebase DI Registration' (Protocol in workflow.md)
 
 ## Phase 3: Global Provider Cleanup
-- [ ] Task: Write Failing Tests for Provider Cleanup (Red Phase)
-    - [ ] Ensure existing tests for all providers (`auth_provider.dart`, `wallet_provider.dart`, etc.) fail or need updating for the new base class structure.
-- [ ] Task: Implement Provider Cleanup to Pass Tests (Green Phase)
-    - [ ] Refactor all providers in `lib/providers/` to extend `BaseProvider`.
-    - [ ] Remove all localized `_safeNotify` and `_setError` methods.
-    - [ ] Replace calls to localized methods with calls to the `BaseProvider` methods.
-- [ ] Task: Refactor and clean up imports
+- [x] Task: Write Failing Tests for Provider Cleanup (Red Phase)
+    - [x] Ensure existing tests for all providers (`auth_provider.dart`, `wallet_provider.dart`, etc.) fail or need updating for the new base class structure.
+- [x] Task: Implement Provider Cleanup to Pass Tests (Green Phase)
+    - [x] Refactor all providers in `lib/providers/` to extend `BaseProvider`.
+    - [x] Remove all localized `_safeNotify` and `_setError` methods.
+    - [x] Replace calls to localized methods with calls to the `BaseProvider` methods.
+- [x] Task: Refactor and clean up imports
 - [ ] Task: Conductor - User Manual Verification 'Global Provider Cleanup' (Protocol in workflow.md)
 
 ## Phase 4: Final Verification

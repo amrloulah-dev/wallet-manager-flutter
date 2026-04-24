@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import '../data/services/local_storage_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
+import 'base_provider.dart';
 
-class ThemeProvider extends ChangeNotifier {
+class ThemeProvider extends BaseProvider {
   final LocalStorageService _localStorage;
   ThemeMode _themeMode = ThemeMode.system;
 
   ThemeProvider({LocalStorageService? localStorage})
       : _localStorage = localStorage ?? LocalStorageService() {
     Future.microtask(() => _loadThemeMode());
-  }
-
-  void _safeNotify() {
-    if (hasListeners) {
-      Future.microtask(() => notifyListeners());
-    }
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -61,21 +56,21 @@ class ThemeProvider extends ChangeNotifier {
           _themeMode = ThemeMode.system;
           break;
       }
-      _safeNotify();
+      safeNotify();
     } catch (e, stack) {
       _themeMode = ThemeMode.system;
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.low,
           operation: 'load_theme_mode',
           stackTrace: stack);
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
     _themeMode = mode;
-    _safeNotify();
+    safeNotify();
     await _localStorage.saveThemeMode(themeModeString);
   }
 

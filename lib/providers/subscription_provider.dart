@@ -9,8 +9,9 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import '../data/repositories/subscription_repository.dart';
 import '../data/models/subscription_request_model.dart';
+import 'base_provider.dart';
 
-class SubscriptionProvider extends ChangeNotifier {
+class SubscriptionProvider extends BaseProvider {
   AuthProvider _authProvider;
   final SubscriptionRepository _repository;
   SubscriptionRequestModel? _latestRequest;
@@ -30,12 +31,6 @@ class SubscriptionProvider extends ChangeNotifier {
     });
   }
 
-  void _safeNotify() {
-    if (!_isDisposed && hasListeners) {
-      Future.microtask(() => notifyListeners());
-    }
-  }
-
   void updateAuthProvider(AuthProvider newAuth) {
     _authProvider.removeListener(_onAuthChanged);
     _authProvider = newAuth;
@@ -43,7 +38,7 @@ class SubscriptionProvider extends ChangeNotifier {
     _authProvider.addListener(_onAuthChanged);
     _syncToStorage();
     _fetchLatestRequest();
-    _safeNotify();
+    safeNotify();
   }
 
   StoreSubscription? get _subscription =>
@@ -71,7 +66,7 @@ class SubscriptionProvider extends ChangeNotifier {
 
     _syncToStorage();
     _fetchLatestRequest();
-    _safeNotify();
+    safeNotify();
   }
 
   bool get hasSeenSuccessModal =>
@@ -81,12 +76,12 @@ class SubscriptionProvider extends ChangeNotifier {
 
   void markSuccessModalSeen() {
     LocalStorageService.instance.setHasSeenSuccessModal(true);
-    _safeNotify();
+    safeNotify();
   }
 
   void dismissRejectionBanner() {
     LocalStorageService.instance.setHasDismissedRejection(true);
-    _safeNotify();
+    safeNotify();
   }
 
   Future<void> _fetchLatestRequest() async {
@@ -104,11 +99,11 @@ class SubscriptionProvider extends ChangeNotifier {
           }
 
           _latestRequest = request;
-          _safeNotify();
+          safeNotify();
         }
       } else {
         _latestRequest = null;
-        _safeNotify();
+        safeNotify();
       }
     } catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -149,7 +144,7 @@ class SubscriptionProvider extends ChangeNotifier {
       status: 'pending',
       createdAt: Timestamp.now(),
     );
-    _safeNotify();
+    safeNotify();
 
     try {
       await _repository.submitSubscriptionRequest(
@@ -161,14 +156,11 @@ class SubscriptionProvider extends ChangeNotifier {
       // Data will refresh on next _fetchLatestRequest or auth sync
     } catch (e, stack) {
       _latestRequest = previousRequest;
-      AppErrorHandler.handle(e,
-          severity: ErrorSeverity.medium,
-          operation: 'subscription_submit',
-          stackTrace: stack);
+      setError('subscription_submit_failed', e, stack);
       rethrow;
     } finally {
       // No specific boolean loading flag here, but we should notify just in case
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -220,11 +212,8 @@ class SubscriptionProvider extends ChangeNotifier {
     return currentEmployeeCount < maxEmployees;
   }
 
-  bool _isDisposed = false;
-
   @override
   void dispose() {
-    _isDisposed = true;
     _authProvider.removeListener(_onAuthChanged);
     super.dispose();
   }

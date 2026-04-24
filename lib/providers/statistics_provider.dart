@@ -10,10 +10,11 @@ import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
+import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
 
-class StatisticsProvider extends ChangeNotifier {
+class StatisticsProvider extends BaseProvider {
   final StatsRepository _statsRepository;
 
   String? _storeId;
@@ -34,7 +35,6 @@ class StatisticsProvider extends ChangeNotifier {
 
   StreamSubscription? _summarySubscription;
   StreamSubscription? _todayStatsSubscription;
-  bool _isDisposed = false;
 
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
@@ -66,17 +66,10 @@ class StatisticsProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _isDisposed = true;
     _summarySubscription?.cancel();
     _todayStatsSubscription?.cancel();
     _fetchShieldTimer?.cancel();
     super.dispose();
-  }
-
-  void _safeNotify() {
-    if (!_isDisposed && hasListeners) {
-      Future.microtask(() => notifyListeners());
-    }
   }
 
   void setStoreId(String? storeId) {
@@ -91,7 +84,7 @@ class StatisticsProvider extends ChangeNotifier {
         _todayStats = null;
         _cachedSummary = null;
         _cacheTimestamp = null;
-        _safeNotify();
+        safeNotify();
       }
     }
   }
@@ -116,7 +109,7 @@ class StatisticsProvider extends ChangeNotifier {
       if (_dashboardSummary == null) {
         debugPrint('✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
         _dashboardSummary = _cachedSummary;
-        _safeNotify();
+        safeNotify();
       }
       return;
     }
@@ -126,7 +119,7 @@ class StatisticsProvider extends ChangeNotifier {
     _todayStatsSubscription?.cancel();
 
     _isLoading = true;
-    _safeNotify();
+    safeNotify();
 
     _activateFetchShield();
 
@@ -140,10 +133,10 @@ class StatisticsProvider extends ChangeNotifier {
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
       _isLoading = false;
-      _safeNotify();
+      safeNotify();
     }, onError: (e, stack) {
       debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
-      _setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
+      setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
     });
 
     // 2. Establish Today Stats Stream
@@ -153,10 +146,10 @@ class StatisticsProvider extends ChangeNotifier {
       debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
       _todayStats = today;
       _isLoading = false;
-      _safeNotify();
+      safeNotify();
     }, onError: (e, stack) {
       debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
-      _setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
+      setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
     });
   }
 
@@ -166,7 +159,7 @@ class StatisticsProvider extends ChangeNotifier {
     _mode = StatsMode.filtered;
     _errorMessage = null;
     _filteredStats = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       if (_storeId == null) throw Exception("Store ID not found");
@@ -195,11 +188,11 @@ class StatisticsProvider extends ChangeNotifier {
         _filteredStats = _dashboardSummary!.toMap();
       }
     } catch (e, stack) {
-      _setError("فشل جلب الإحصائيات المفلترة.", e, stack);
+      setError("فشل جلب الإحصائيات المفلترة.", e, stack);
       _filteredStats = null;
     } finally {
       _isLoading = false;
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -208,7 +201,7 @@ class StatisticsProvider extends ChangeNotifier {
     _filteredStats = null;
     _filteredDateRange = null;
     _errorMessage = null;
-    _safeNotify();
+    safeNotify();
   }
 
   Future<void> refreshDashboardStats() async {
@@ -257,12 +250,14 @@ class StatisticsProvider extends ChangeNotifier {
       totalAmount: _todayStats!.totalAmount + amount,
     );
 
-    _safeNotify();
+    safeNotify();
   }
 
-  void _setError(String message, [dynamic e, StackTrace? stack]) {
+  @override
+  void setError(String message, [dynamic e, StackTrace? stack]) {
     debugPrint('💥 [STATS ERROR] $message | Error: $e');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
+    if (isDisposed) return;
     _errorMessage = message;
     _isLoading = false;
     if (e != null) {
@@ -271,6 +266,7 @@ class StatisticsProvider extends ChangeNotifier {
           operation: 'stats_operation',
           stackTrace: stack);
     }
-    _safeNotify();
+    super.setError(message, e, stack);
+    safeNotify();
   }
 }

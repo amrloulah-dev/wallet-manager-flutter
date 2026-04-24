@@ -13,6 +13,7 @@ import '../data/models/user_permissions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../providers/auth_provider.dart';
 import '../core/services/analytics_service.dart';
+import 'base_provider.dart';
 
 enum DebtStatus {
   idle,
@@ -24,7 +25,7 @@ enum DebtStatus {
   error
 }
 
-class DebtProvider extends ChangeNotifier {
+class DebtProvider extends BaseProvider {
   final DebtRepository _debtRepository;
   AuthProvider _authProvider;
 
@@ -45,8 +46,6 @@ class DebtProvider extends ChangeNotifier {
   String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
   String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
 
-  bool _isDisposed = false;
-
   // Constructor
   DebtProvider({
     required AuthProvider authProvider,
@@ -58,7 +57,6 @@ class DebtProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _isDisposed = true;
     super.dispose();
   }
 
@@ -81,18 +79,13 @@ class DebtProvider extends ChangeNotifier {
   }
 
   void _updateStatus(DebtStatus status) {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _status = status;
   }
 
-  void _safeNotify() {
-    if (!_isDisposed && hasListeners) {
-      Future.microtask(() => notifyListeners());
-    }
-  }
-
-  void _setError(String message, [dynamic e, StackTrace? stack]) {
-    if (_isDisposed) return;
+  @override
+  void setError(String message, [dynamic e, StackTrace? stack]) {
+    if (isDisposed) return;
     _errorMessage = message;
     _status = DebtStatus.error;
     if (e != null) {
@@ -101,7 +94,8 @@ class DebtProvider extends ChangeNotifier {
           operation: 'debt_operation',
           stackTrace: stack);
     }
-    _safeNotify();
+    super.setError(message, e, stack);
+    safeNotify();
   }
 
   void setStoreId(String? storeId) {
@@ -135,7 +129,7 @@ class DebtProvider extends ChangeNotifier {
 
     _updateStatus(DebtStatus.loading);
     _errorMessage = null;
-    _safeNotify();
+    safeNotify();
 
     try {
       // Use getDebtsByDateRange for pagination, passing far-past/future dates for "all"
@@ -153,9 +147,9 @@ class DebtProvider extends ChangeNotifier {
       await _fetchSummary();
       _updateStatus(DebtStatus.loaded);
     } catch (e, stack) {
-      _setError('فشل في جلب الديون.', e, stack);
+      setError('فشل في جلب الديون.', e, stack);
     } finally {
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -165,7 +159,7 @@ class DebtProvider extends ChangeNotifier {
     }
 
     _updateStatus(DebtStatus.loadingMore);
-    _safeNotify();
+    safeNotify();
 
     try {
       final result = await _debtRepository.getDebtsByDateRange(
@@ -186,9 +180,9 @@ class DebtProvider extends ChangeNotifier {
       _rebuildDebtMap();
       _updateStatus(DebtStatus.loaded);
     } catch (e, stack) {
-      _setError('فشل في جلب المزيد من الديون.', e, stack);
+      setError('فشل في جلب المزيد من الديون.', e, stack);
     } finally {
-      _safeNotify();
+      safeNotify();
     }
   }
 
@@ -208,7 +202,7 @@ class DebtProvider extends ChangeNotifier {
         'totalOpenAmount': stats['openTotal'],
         'totalPaidAmount': stats['paidTotal'],
       };
-      _safeNotify();
+      safeNotify();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.low,
@@ -226,7 +220,7 @@ class DebtProvider extends ChangeNotifier {
     required String createdBy,
   }) async {
     _updateStatus(DebtStatus.creating);
-    _safeNotify();
+    safeNotify();
     try {
       final user = await _validateUserAndPermission((p) => p.createDebt);
 
@@ -278,23 +272,23 @@ class DebtProvider extends ChangeNotifier {
       _updateStatus(DebtStatus.loaded); // Reset status
       return true;
     } on AppException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في إنشاء الدين.', e, stack);
+      setError('فشل في إنشاء الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.creating) {
         _updateStatus(DebtStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<bool> addPartialDebt(
       String debtId, double amountToAdd, String userId) async {
     _updateStatus(DebtStatus.updating);
-    _safeNotify();
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
@@ -306,22 +300,22 @@ class DebtProvider extends ChangeNotifier {
 
       return true;
     } on AppException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في إضافة المبلغ إلى الدين.', e, stack);
+      setError('فشل في إضافة المبلغ إلى الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.updating) {
         _updateStatus(DebtStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<bool> updateDebt(String debtId, Map<String, dynamic> data) async {
     _updateStatus(DebtStatus.updating);
-    _safeNotify();
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
@@ -333,23 +327,23 @@ class DebtProvider extends ChangeNotifier {
 
       return true;
     } on ServerException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في تحديث الدين.', e, stack);
+      setError('فشل في تحديث الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.updating) {
         _updateStatus(DebtStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<bool> payPartialDebt(
       String debtId, double amountToPay, String userId) async {
     _updateStatus(DebtStatus.updating);
-    _safeNotify();
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
@@ -361,22 +355,22 @@ class DebtProvider extends ChangeNotifier {
 
       return true;
     } on AppException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في تسديد الدين.', e, stack);
+      setError('فشل في تسديد الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.updating) {
         _updateStatus(DebtStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
   Future<bool> deleteDebt(String debtId) async {
     _updateStatus(DebtStatus.updating);
-    _safeNotify();
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.deleteDebt);
 
@@ -388,16 +382,16 @@ class DebtProvider extends ChangeNotifier {
 
       return true;
     } on ServerException catch (e) {
-      _setError(e.message);
+      setError(e.message);
       return false;
     } catch (e, stack) {
-      _setError('فشل في حذف الدين.', e, stack);
+      setError('فشل في حذف الدين.', e, stack);
       return false;
     } finally {
       if (_status == DebtStatus.updating) {
         _updateStatus(DebtStatus.loaded);
       }
-      _safeNotify();
+      safeNotify();
     }
   }
 
