@@ -1,9 +1,9 @@
 # Implementation Plan: Architectural Refactoring & Domain-Driven Design (Phase 1)
 
 ## Phase 1: Setup & BaseProvider Creation
-- [ ] Task: Write Failing Tests for `BaseProvider` (Red Phase)
-    - [ ] Create `test/providers/base_provider_test.dart`.
-    - [ ] Write tests for `safeNotify()` and `setError()`.
+- [x] Task: Write Failing Tests for `BaseProvider` (Red Phase)
+    - [x] Create `test/providers/base_provider_test.dart`.
+    - [x] Write tests for `safeNotify()` and `setError()`.
 - [ ] Task: Implement `BaseProvider` to Pass Tests (Green Phase)
     - [ ] Create `lib/providers/base_provider.dart`.
     - [ ] Implement `_isDisposed`, `dispose()`, `safeNotify()`, and `setError()`.
