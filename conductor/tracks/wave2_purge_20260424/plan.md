@@ -8,12 +8,12 @@
 - **LOCAL STATE OVER GLOBAL BLOAT:** Use `StatefulWidget` for minor ephemeral UI state.
 - **DO NOT TOUCH UNRELATED FILES:** Execute surgically.
 
-## Phase 1: Purging UI Firebase Leaks
-- [ ] Task: Refactor `lib/presentation/screens/auth/store_registration_screen.dart`
-    - [ ] Delete direct `FirebaseAuth.instance.currentUser` calls.
-    - [ ] Replace with `context.read<AuthProvider>().currentUser`.
-    - [ ] Remove `package:firebase_auth/firebase_auth.dart` imports.
-- [ ] Task: Conductor - User Manual Verification 'Purging UI Firebase Leaks' (Protocol in workflow.md)
+## Phase 1: Purging UI Firebase Leaks [checkpoint: 928e809]
+- [x] Task: Refactor `lib/presentation/screens/auth/store_registration_screen.dart`
+    - [x] Delete direct `FirebaseAuth.instance.currentUser` calls.
+    - [x] Replace with `context.read<AuthProvider>().currentUser`.
+    - [x] Remove `package:firebase_auth/firebase_auth.dart` imports.
+- [x] Task: Conductor - User Manual Verification 'Purging UI Firebase Leaks' (Protocol in workflow.md)
 
 ## Phase 2: UI Logic Extraction
 - [ ] Task: Extract Logic to Domain
