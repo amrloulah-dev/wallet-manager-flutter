@@ -18,7 +18,7 @@
 - [x] Task: Refactor DI code if needed (No refactoring needed)
 - [x] Task: Conductor - User Manual Verification 'Firebase DI Registration' (Protocol in workflow.md)
 
-## Phase 3: Global Provider Cleanup
+## Phase 3: Global Provider Cleanup [checkpoint: 33607fa]
 - [x] Task: Write Failing Tests for Provider Cleanup (Red Phase)
     - [x] Ensure existing tests for all providers (`auth_provider.dart`, `wallet_provider.dart`, etc.) fail or need updating for the new base class structure.
 - [x] Task: Implement Provider Cleanup to Pass Tests (Green Phase)
