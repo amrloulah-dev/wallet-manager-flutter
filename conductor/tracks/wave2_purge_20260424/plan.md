@@ -25,13 +25,13 @@
     - [x] Ensure no raw math/fee logic remains in `onPressed` handlers or `build` methods.
 - [x] Task: Conductor - User Manual Verification 'UI Logic Extraction' (Protocol in workflow.md)
 
-## Phase 3: Widget Decomposition
+## Phase 3: Widget Decomposition [checkpoint: bc3a236]
 - [x] Task: Decompose Settings Screen [d9f7767]
     - [x] Create directory `lib/presentation/screens/settings/widgets/`.
     - [x] Extract logical sections from `lib/presentation/screens/settings/settings_screen.dart` into separate files in `widgets/` (using StatefulWidget for local state).
     - [x] Replace extracted code in `settings_screen.dart` with widget references.
     - [x] Verify `settings_screen.dart` is under 200 lines.
-- [ ] Task: Conductor - User Manual Verification 'Widget Decomposition' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Widget Decomposition' (Protocol in workflow.md) [bc3a236]
 
 ## Phase 4: Taming the Final God Class
 - [ ] Task: Extract Logic from WalletProvider
