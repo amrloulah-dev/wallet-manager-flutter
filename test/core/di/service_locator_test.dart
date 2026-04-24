@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
@@ -41,6 +43,11 @@ void main() {
 
     test('should verify LocalStorageService is registered', () {
       expect(sl.isRegistered<LocalStorageService>(), isTrue);
+    });
+
+    test('should verify Firebase services are registered', () {
+      expect(sl.isRegistered<FirebaseFirestore>(), isTrue);
+      expect(sl.isRegistered<FirebaseAuth>(), isTrue);
     });
   });
 }
