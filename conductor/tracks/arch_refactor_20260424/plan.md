@@ -10,7 +10,7 @@
 - [x] Task: Refactor `BaseProvider` code if needed (No refactoring needed)
 - [x] Task: Conductor - User Manual Verification 'Setup & BaseProvider Creation' (Protocol in workflow.md)
 
-## Phase 2: Firebase DI Registration
+## Phase 2: Firebase DI Registration [checkpoint: 8da723c]
 - [x] Task: Write Failing Tests for Firebase DI Registration (Red Phase)
     - [x] Update tests for `service_locator.dart` to verify `FirebaseFirestore.instance` and `FirebaseAuth.instance` are registered.
 - [x] Task: Implement Firebase DI Registration to Pass Tests (Green Phase)
