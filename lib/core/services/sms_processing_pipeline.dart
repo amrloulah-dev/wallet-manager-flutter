@@ -180,7 +180,11 @@ Future<void> handleIncomingSms(
           }
         }
       } catch (e, stack) {
-        debugPrint('[ERROR] [low] [sms_pipeline_matching] $e\nStack: $stack');
+        AppErrorHandler.logSilentError(
+          e.toString(),
+          'SmsProcessingPipeline_Matching',
+          stackTrace: stack,
+        );
       }
     }
 
@@ -228,7 +232,11 @@ Future<void> handleIncomingSms(
     // ── Share data with the overlay UI ──────────────────────
     await FlutterOverlayWindow.shareData(overlayArgs);
   } catch (e, stack) {
-    debugPrint('[ERROR] [low] [sms_pipeline] $e\nStack: $stack');
+    AppErrorHandler.logSilentError(
+      e.toString(),
+      'SmsProcessingPipeline_handleIncomingSms',
+      stackTrace: stack,
+    );
     // Swallow — must never crash any isolate
   }
 }
