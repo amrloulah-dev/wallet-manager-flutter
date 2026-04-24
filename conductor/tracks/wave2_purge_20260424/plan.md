@@ -33,9 +33,9 @@
     - [x] Verify `settings_screen.dart` is under 200 lines.
 - [x] Task: Conductor - User Manual Verification 'Widget Decomposition' (Protocol in workflow.md) [bc3a236]
 
-## Phase 4: Taming the Final God Class
+## Phase 4: Taming the Final God Class [checkpoint: 41d391c]
 - [x] Task: Extract Logic from WalletProvider [08a5ee0]
     - [x] Extract caching logic from `lib/providers/wallet_provider.dart` into `WalletCacheManager`.
     - [x] Extract formatting logic into `lib/core/utils/currency_formatter.dart` or `WalletModel` extension.
     - [x] Refactor `wallet_provider.dart` to only manage state and call repositories/usecases.
-- [ ] Task: Conductor - User Manual Verification 'Taming the Final God Class' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Taming the Final God Class' (Protocol in workflow.md) [41d391c]
