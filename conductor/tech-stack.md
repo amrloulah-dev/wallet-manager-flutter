@@ -10,7 +10,10 @@
     - **Analytics & Performance:** Monitoring user behavior and app health.
 
 ## State Management
-- **Provider:** Simple and scalable state management for app-wide and local states.
+- **Provider:** Simple and scalable state management for app-wide and local states, using a centralized `BaseProvider` for common functionality.
+
+## Dependency Injection
+- **GetIt:** For centralized service and repository registration and decoupled access.
 
 ## Local Storage
 - **Shared Preferences:** Storing local settings and non-sensitive metadata.
