@@ -15,15 +15,15 @@
     - [x] Remove `package:firebase_auth/firebase_auth.dart` imports.
 - [x] Task: Conductor - User Manual Verification 'Purging UI Firebase Leaks' (Protocol in workflow.md)
 
-## Phase 2: UI Logic Extraction
-- [ ] Task: Extract Logic to Domain
-    - [ ] Create `lib/domain/usecases/transaction_fee_calculator.dart`.
-    - [ ] Move fee calculation and validations to `TransactionFeeCalculator`.
-    - [ ] Register `TransactionFeeCalculator` in `lib/core/di/service_locator.dart`.
-- [ ] Task: Refactor UI
-    - [ ] Refactor `lib/presentation/screens/transactions/create_transaction_screen.dart` to inject and use `TransactionFeeCalculator`.
-    - [ ] Ensure no raw math/fee logic remains in `onPressed` handlers or `build` methods.
-- [ ] Task: Conductor - User Manual Verification 'UI Logic Extraction' (Protocol in workflow.md)
+## Phase 2: UI Logic Extraction [checkpoint: 3fb96b0]
+- [x] Task: Extract Logic to Domain
+    - [x] Create `lib/domain/usecases/transaction_fee_calculator.dart`.
+    - [x] Move fee calculation and validations to `TransactionFeeCalculator`.
+    - [x] Register `TransactionFeeCalculator` in `lib/core/di/service_locator.dart`.
+- [x] Task: Refactor UI
+    - [x] Refactor `lib/presentation/screens/transactions/create_transaction_screen.dart` to inject and use `TransactionFeeCalculator`.
+    - [x] Ensure no raw math/fee logic remains in `onPressed` handlers or `build` methods.
+- [x] Task: Conductor - User Manual Verification 'UI Logic Extraction' (Protocol in workflow.md)
 
 ## Phase 3: Widget Decomposition
 - [ ] Task: Decompose Settings Screen
