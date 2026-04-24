@@ -5,6 +5,8 @@ import '../models/subscription_request_model.dart';
 import '../../services/device_tracking_service.dart';
 import '../../core/utils/number_parser.dart';
 
+import 'package:walletmanager/core/di/service_locator.dart';
+
 class SubscriptionRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -12,8 +14,8 @@ class SubscriptionRepository {
   SubscriptionRepository({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  })  : _firestore = firestore ?? sl<FirebaseFirestore>(),
+        _auth = auth ?? sl<FirebaseAuth>();
 
   Future<void> verifyDevice(String storeId) async {
     final deviceId = await DeviceTrackingService.getDeviceId();

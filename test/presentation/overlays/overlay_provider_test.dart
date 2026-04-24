@@ -1,21 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
-import 'package:walletmanager/data/repositories/transaction_repository.dart';
+import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MockTransactionRepository extends Mock implements TransactionRepository {}
+class MockOverlayUseCase extends Mock implements OverlayUseCase {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
-  late MockTransactionRepository mockTxRepo;
+  late MockOverlayUseCase mockOverlayUseCase;
   late OverlayProvider overlayProvider;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    mockTxRepo = MockTransactionRepository();
-    overlayProvider = OverlayProvider(transactionRepository: mockTxRepo);
+    mockOverlayUseCase = MockOverlayUseCase();
+    overlayProvider = OverlayProvider(overlayUseCase: mockOverlayUseCase);
   });
 
   group('OverlayProvider semantic errors', () {

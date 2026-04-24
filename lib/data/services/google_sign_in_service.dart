@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 
 /// A singleton service to handle Google Sign-In and Firebase authentication.
 class GoogleSignInService {
@@ -17,7 +19,7 @@ class GoogleSignInService {
     scopes: ['email'],
   );
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = sl<FirebaseAuth>();
 
   // ===========================
   // Sign In with Google

@@ -41,18 +41,17 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             _employee.userId,
             newPermissions,
           );
+          
+          if (!context.mounted) return;
+          
           if (success) {
             setState(() {
               _employee = _employee.copyWith(permissions: newPermissions);
             });
-            if (mounted) {
-              ToastUtils.showSuccess(AppLocalizations.of(context)!.permissionsUpdatedSuccess);
-              Navigator.pop(context);
-            }
+            ToastUtils.showSuccess(AppLocalizations.of(context)!.permissionsUpdatedSuccess);
+            Navigator.pop(context);
           } else {
-            if (mounted) {
-              ToastUtils.showError(provider.errorMessage ?? AppLocalizations.of(context)!.unexpectedError);
-            }
+            ToastUtils.showError(provider.errorMessage ?? AppLocalizations.of(context)!.unexpectedError);
           }
         },
       ),

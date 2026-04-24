@@ -42,16 +42,18 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
         receiptNumber: _receiptController.text.trim(),
       );
       
+      if (!mounted) return;
+
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.tryAutoLogin(); 
       
-      if (mounted) {
-        final loc = AppLocalizations.of(context)!;
-        Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.subscriptionRequestSent)),
-        );
-      }
+      if (!mounted) return;
+
+      final loc = AppLocalizations.of(context)!;
+      Navigator.of(context).pop(true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.subscriptionRequestSent)),
+      );
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context)!;

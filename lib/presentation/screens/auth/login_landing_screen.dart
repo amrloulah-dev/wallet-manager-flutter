@@ -414,13 +414,13 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
     await authProvider.sendPasswordReset(email);
 
+    if (!context.mounted) return;
+
     if (authProvider.errorMessage != null) {
       ToastUtils.showError(ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
     } else {
-      if (mounted) {
-        Navigator.pop(context);
-        ToastUtils.showSuccess(l10n.passwordResetEmailSent);
-      }
+      Navigator.pop(context);
+      ToastUtils.showSuccess(l10n.passwordResetEmailSent);
     }
   }
 }

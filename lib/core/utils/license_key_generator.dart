@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:walletmanager/core/di/service_locator.dart';
+
 class LicenseKeyGenerator {
   // Prevent instantiation
   LicenseKeyGenerator._();
@@ -23,7 +25,7 @@ class LicenseKeyGenerator {
 
   /// Generate and save a batch of license keys to Firestore
   static Future<void> generateAndSaveBatch({int count = 50}) async {
-    final firestore = FirebaseFirestore.instance;
+    final firestore = sl<FirebaseFirestore>();
     final collection = firestore.collection('license_keys');
 
     try {

@@ -1,29 +1,22 @@
-import 'dart:convert';
-import 'dart:ui';
 import 'dart:isolate';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
-import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
-// BotToast is NOT initialized in the overlay isolate — do not use here.
+import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 
 class OverlayProvider with ChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
-  final TransactionRepository _transactionRepository;
+  final OverlayUseCase _overlayUseCase;
 
-  OverlayProvider({TransactionRepository? transactionRepository})
-      : _transactionRepository =
-            transactionRepository ?? sl<TransactionRepository>();
+  OverlayProvider({OverlayUseCase? overlayUseCase})
+      : _overlayUseCase = overlayUseCase ?? sl<OverlayUseCase>();
 
   bool _isLoading = false;
-  bool _isStorageInitialized = false; // Only guards one-time storage init
+  bool _isStorageInitialized = false;
   String? _errorMessage;
   String? _successMessage;
 
@@ -35,7 +28,6 @@ class OverlayProvider with ChangeNotifier {
   double _commission = 0.0;
   List<Map<String, dynamic>> _availableWallets = [];
 
-  // Constitution Principle 6: Fetch Shield to prevent janky UI rebuilds
   bool _blockAutoFetch = false;
 
   // Getters
@@ -59,10 +51,6 @@ class OverlayProvider with ChangeNotifier {
     super.notifyListeners();
   }
 
-  // ---------------------------------------------------------------------------
-  // RESET — Wipes all transaction-specific fields to prevent stale state.
-  // Called at the start of every new overlay event.
-  // ---------------------------------------------------------------------------
   void reset() {
     _amount = 0.0;
     _sender = '';
@@ -72,23 +60,12 @@ class OverlayProvider with ChangeNotifier {
     _errorMessage = null;
     _successMessage = null;
     _isLoading = false;
-    // NOTE: _availableWallets and _isStorageInitialized are NOT reset.
-    // The wallet list is session-level cache and does not change per-SMS.
   }
 
-  // ---------------------------------------------------------------------------
-  // INGEST NEW EVENT — The single entry-point for every overlay activation.
-  //   1. reset()  → guarantees no stale data
-  //   2. parse    → reads new SMS fields
-  //   3. init     → loads wallets (only once per engine lifetime)
-  //   4. select   → picks the correct wallet
-  //   5. notify   → rebuilds UI
-  // ---------------------------------------------------------------------------
   Future<void> ingestNewEvent(Map<dynamic, dynamic> data) async {
     _blockAutoFetch = true;
     reset();
 
-    // --- Parse incoming SMS data ---
     _amount = NumberParser.toDouble(data['amount']);
     _sender = data['sender']?.toString() ?? 'Unknown';
     _type   = data['type']?.toString()   ?? 'credit';
@@ -98,20 +75,16 @@ class OverlayProvider with ChangeNotifier {
 
     _isLoading = true;
     
-    // We explicitly unblock here for the first loader state if needed, but 
-    // we want to block during limit mutations.
     _blockAutoFetch = false;
-    notifyListeners(); // Show loading UI immediately with new amount/sender
+    notifyListeners();
     _blockAutoFetch = true;
 
     try {
-      // One-time storage + wallet cache init
       if (!_isStorageInitialized) {
         await _localStorageService.initialize();
         _isStorageInitialized = true;
       }
 
-      // Force the Isolate to flush its RAM and read the latest disk state from the Main App
       await LocalStorageService.instance.reloadDisk();
 
       if (_localStorageService.subIsSuspended || !_localStorageService.subSmsEnabled) {
@@ -120,10 +93,8 @@ class OverlayProvider with ChangeNotifier {
         return;
       }
 
-      // Refresh wallet list on every event (cheap local read)
       _availableWallets = LocalStorageService.instance.getCachedWalletLiteList();
 
-      // Smart wallet selection
       String? passedId = data['walletId']?.toString();
       if (passedId != null && passedId.trim().isEmpty) passedId = null;
 
@@ -151,19 +122,18 @@ class OverlayProvider with ChangeNotifier {
           _errorMessage = "overlay_error_amount_limit_telecom";
         }
       } else {
-        _selectedWalletId = null; // Prevent Dropdown assertion crashes
+        _selectedWalletId = null;
       }
     } catch (e) {
       _errorMessage = 'Failed to load data: $e';
 
     } finally {
       _isLoading = false;
-      _blockAutoFetch = false; // Unblock to allow final render
+      _blockAutoFetch = false;
       notifyListeners();
     }
   }
 
-  /// @deprecated — Use [ingestNewEvent] instead. Kept for backward compat.
   @Deprecated('Use ingestNewEvent() which properly resets stale state.')
   Future<void> loadData(dynamic arguments) async {
     if (arguments == null) return;
@@ -182,7 +152,6 @@ class OverlayProvider with ChangeNotifier {
     debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
         'new walletId=$walletId, current amount=$_amount');
 
-    // Recalculate commission for the newly selected wallet
     if (walletId != null && _amount > 0) {
       final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
             (w) => w?['id'] == walletId,
@@ -230,80 +199,19 @@ class OverlayProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Initialize Firebase Service (which inits Firebase App and instances)
-      // This is crucial because we are in a separate isolate.
-      if (!FirebaseService().isInitialized) {
-        await FirebaseService().initialize();
-      }
-
-      String transactionType = _type == 'debit' ? 'send' : 'receive';
-      final now = Timestamp.now();
-      final txId = _transactionRepository.generateId();
-
-      final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
-            (w) => w?['id'] == _selectedWalletId,
-            orElse: () => null,
-          );
-      final walletType = match?['walletType']?.toString() ?? 'vodafone_cash';
-      
-      final calculatedServiceFee = FeeCalculator.calculateTransactionFee(
-        amount: _amount,
-        sourceWalletType: walletType,
-        receiverPhone: _sender,
-      );
-
-      final newTransaction = TransactionModel(
-        transactionId: txId,
+      final result = await _overlayUseCase.execute(
         storeId: storeId,
-        walletId: _selectedWalletId!,
-        transactionType: transactionType,
-        customerPhone: _sender,
+        userId: userId,
+        userName: userName,
+        userRole: userRole,
+        selectedWalletId: _selectedWalletId!,
+        type: _type,
         amount: _amount,
         commission: _commission,
-        serviceFee: calculatedServiceFee,
-        paymentStatus: 'paid',
-        transactionDate: now,
-        createdAt: now,
-        createdBy: userName ?? 'SMS Auto',
-        createdById: userId,
-        createdByName: userName,
-        creatorRole: userRole,
-        isDeleted: false,
-        notes: 'Automated via SMS',
+        sender: _sender,
+        availableWallets: _availableWallets,
       );
 
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'FINAL PAYLOAD | txId=$txId, walletId=$_selectedWalletId, '
-          'type=$transactionType, amount=$_amount, commission=$_commission, '
-          'sender=$_sender, storeId=$storeId');
-
-      await _transactionRepository.createTransaction(newTransaction);
-
-      // 6. Save to Vault
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Compute total deduction BEFORE building vault payload.
-      // This must match the shareData payload math below.
-      final totalDeductionForVault = newTransaction.amount + newTransaction.serviceFee;
-      
-      // CAUTION: Ensure variables like txId and storeId are actually defined in this scope!
-      final txData = jsonEncode({
-        'transactionId': txId, // Check if this exists
-        'amount': totalDeductionForVault, // MUST include service fee for correct local mutation
-        'commission': _commission,
-        'type': _type, // 'debit' = send, 'credit' = receive
-        'walletId': _selectedWalletId,
-        'sender': _sender,
-        'transactionDate': now.toDate().toIso8601String(),
-        'storeId': storeId, // Prevent null crash
-        'paymentStatus': 'paid',
-        'customerName': '',
-        'blockAutoFetch': true, // Principle 6: Fetch Shield
-      });
-
-      await prefs.setString('pending_overlay_tx', txData);
-
-      // 7. Send Ping
       final SendPort? sendPort = IsolateNameServer.lookupPortByName('main_app_port');
       if (sendPort != null) {
         sendPort.send('update_ui');
@@ -314,29 +222,21 @@ class OverlayProvider with ChangeNotifier {
             'WARNING — main_app_port SendPort is null, ping NOT sent');
       }
 
-      // 8. Send exact deduction to main app for zero-cost local state mutation.
-      //    No Firestore read needed — the overlay already knows the exact amounts.
-      final totalDeduction = newTransaction.amount + newTransaction.serviceFee;
-      final isSend = newTransaction.isSend;
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'shareData(local_deduct) → walletId=${newTransaction.walletId}, '
-          'deduction=$totalDeduction, isSend=$isSend');
+          'shareData(local_deduct) → walletId=$_selectedWalletId, '
+          'deduction=${result.totalDeduction}, isSend=${result.isSend}');
       
-      // Force Immediate UI State Change in Overlay
       _isLoading = false;
       notifyListeners();
       
-      // Fire-and-forget: do NOT await shareData — it creates a cross-isolate
-      // deadlock that prevents closeOverlay() from ever being reached.
       FlutterOverlayWindow.shareData({
         "action": "local_deduct",
-        "walletId": newTransaction.walletId,
-        "amount": totalDeduction,
-        "isSend": isSend,
-        "blockAutoFetch": true, // Principle 6: Fetch Shield
+        "walletId": _selectedWalletId,
+        "amount": result.totalDeduction,
+        "isSend": result.isSend,
+        "blockAutoFetch": true,
       });
 
-      // 9. Close Overlay — MUST be the very last await in the try block
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
           'closing overlay window ...');
       await FlutterOverlayWindow.closeOverlay();

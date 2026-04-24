@@ -65,12 +65,14 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   Future<void> _showMarkPaidDialog(DebtModel debt) async {
-    final bool? confirmed = await DialogUtils.showConfirmDialog(
+    final confirmed = await DialogUtils.showConfirmDialog(
       context,
       title: AppLocalizations.of(context)!.settleDebt,
       message: AppLocalizations.of(context)!.settleDebtConfirmation,
       confirmText: AppLocalizations.of(context)!.confirmSettlement,
     );
+
+    if (!mounted) return;
 
     if (confirmed == true) {
       final debtProvider = context.read<DebtProvider>();
@@ -85,7 +87,9 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       final success = await debtProvider.payPartialDebt(
           debt.debtId, debt.amountDue, currentUserId);
 
-      if (mounted && !success) {
+      if (!mounted) return;
+
+      if (!success) {
         ToastUtils.showError(debtProvider.errorMessage ?? AppLocalizations.of(context)!.debtSettlementFailed);
       } else {
         ToastUtils.showSuccess(AppLocalizations.of(context)!.debtSettledSuccess);

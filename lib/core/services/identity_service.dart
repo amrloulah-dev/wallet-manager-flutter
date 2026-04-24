@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import '../errors/app_error_handler.dart';
 import '../errors/error_severity.dart';
 
@@ -45,7 +46,7 @@ class IdentityService {
       if (_secondaryApp == null && authOverride == null) return null;
 
       final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
+      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
 
       try {
         final credential = await auth.createUserWithEmailAndPassword(
@@ -85,7 +86,7 @@ class IdentityService {
       if (_secondaryApp == null && authOverride == null) return false;
 
       final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
+      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
 
       // Unfortunately, Firebase Auth requires the user to be signed in to update password.
       // But updating from admin SDK is usually how this is done easily securely.
@@ -131,7 +132,7 @@ class IdentityService {
       if (_secondaryApp == null && authOverride == null) return false;
 
       final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
+      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
 
       if (auth.currentUser != null && auth.currentUser?.email == email) {
         await auth.currentUser?.delete();
@@ -160,7 +161,7 @@ class IdentityService {
       if (_secondaryApp == null && authOverride == null) return null;
 
       final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? FirebaseAuth.instanceFor(app: _secondaryApp!);
+      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
 
       final credential = await auth.signInWithEmailAndPassword(
         email: email,

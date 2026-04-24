@@ -361,6 +361,8 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       type: DialogType.danger,
     );
 
+    if (!mounted) return;
+
     if (confirmed == true) {
       final walletProvider = context.read<WalletProvider>();
       final localizations = AppLocalizations.of(context)!;

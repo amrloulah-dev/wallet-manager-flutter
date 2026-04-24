@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import '../models/system_configs_model.dart';
 
 class SystemConfigRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = sl<FirebaseFirestore>();
 
   Future<SystemConfigsModel> getConfigs() async {
     final doc = await _firestore.collection('system_configs').doc('default').get();

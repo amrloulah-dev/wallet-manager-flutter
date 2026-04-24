@@ -12,14 +12,10 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   errors:
     dead_null_aware_expression: ignore
-    use_build_context_synchronously: ignore
-    library_private_types_in_public_api: ignore
-    unused_element: ignore
     non_constant_identifier_names: ignore
     deprecated_member_use: ignore
     subtype_of_sealed_class: ignore
     no_wildcard_variable_uses: ignore
-    unused_import: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the

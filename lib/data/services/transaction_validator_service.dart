@@ -6,11 +6,13 @@ import '../../core/utils/date_helper.dart';
 import '../models/transaction_model.dart';
 import '../models/wallet_model.dart';
 
+import 'package:walletmanager/core/di/service_locator.dart';
+
 class TransactionValidatorService {
   final FirebaseFirestore _firestore;
 
   TransactionValidatorService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? sl<FirebaseFirestore>();
 
   Future<void> validateAndSave(TransactionModel transaction) async {
     debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
