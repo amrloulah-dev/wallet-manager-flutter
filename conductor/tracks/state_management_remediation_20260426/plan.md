@@ -8,20 +8,20 @@
     - [x] Override `dispose()` setting `_isDisposed = true` before `super.dispose()`
     - [x] Implement `protected` method `safeNotify()` using `Future.microtask()` checking `!_isDisposed && hasListeners`
     - [x] Write unit tests for `SafeChangeNotifier`
-- [ ] Task: Refactor Providers to extend `SafeChangeNotifier`
-    - [ ] Update `AuthProvider`
-    - [ ] Update `WalletProvider`
-    - [ ] Update `ThemeProvider`
-    - [ ] Update `LocalizationProvider`
-    - [ ] Update `TransactionProvider`
-    - [ ] Update `DebtProvider`
-    - [ ] Update `EmployeeProvider`
-    - [ ] Update `StatisticsProvider`
-    - [ ] Update `SubscriptionProvider`
-    - [ ] Update `SystemConfigProvider`
-    - [ ] Purge manual `_isDisposed` fields from all providers
-    - [ ] Replace `notifyListeners()` with `safeNotify()` in all providers
-    - [ ] Run tests for all modified providers
+- [x] Task: Refactor Providers to extend `SafeChangeNotifier` (829ee69)
+    - [x] Update `AuthProvider`
+    - [x] Update `WalletProvider`
+    - [x] Update `ThemeProvider`
+    - [x] Update `LocalizationProvider`
+    - [x] Update `TransactionProvider`
+    - [x] Update `DebtProvider`
+    - [x] Update `EmployeeProvider`
+    - [x] Update `StatisticsProvider`
+    - [x] Update `SubscriptionProvider`
+    - [x] Update `SystemConfigProvider`
+    - [x] Purge manual `_isDisposed` fields from all providers
+    - [x] Replace `notifyListeners()` with `safeNotify()` in all providers
+    - [x] Run tests for all modified providers
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Architectural Foundation (Safe Lifecycle)' (Protocol in workflow.md)
 
 ## Phase 2: Critical Stability & Resource Cleanup
