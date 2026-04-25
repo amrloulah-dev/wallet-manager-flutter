@@ -59,10 +59,10 @@
     - [x] Add unit tests verifying error reset logic
 - [x] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & State Purity' (Protocol in workflow.md) (3c02624)
 
-## Phase 5: Dependency Injection & Event Bus
+## Phase 5: Dependency Injection & Event Bus [checkpoint: e71d920]
 - [x] Task: Migrate `AppEvents` to Dependency Injection (01844cb)
     - [x] Delete global `appEvents` instance in `lib/providers/app_events.dart`
     - [x] Register `AppEvents` as `LazySingleton` in `lib/core/di/service_locator.dart`
     - [x] Refactor all files referencing `appEvents` to use `sl<AppEvents>()`
     - [x] Run app-wide tests to verify event bus communication
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Dependency Injection & Event Bus' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Dependency Injection & Event Bus' (Protocol in workflow.md) (e71d920)
