@@ -47,7 +47,7 @@
     - [x] Verify UI tests or widget tests still pass
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Selective Rebuild Strategy (Performance)' (Protocol in workflow.md) (9cd87cb)
 
-## Phase 4: UX Responsiveness & State Purity
+## Phase 4: UX Responsiveness & State Purity [checkpoint: 3c02624]
 - [x] Task: Immediate loading feedback in `AuthProvider` (733677a)
     - [x] Update `_setLoading()` to call `safeNotify()` immediately
     - [x] Verify loading state updates instantly in tests
@@ -57,7 +57,7 @@
     - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `DebtProvider`
     - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `AuthProvider`
     - [x] Add unit tests verifying error reset logic
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & State Purity' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & State Purity' (Protocol in workflow.md) (3c02624)
 
 ## Phase 5: Dependency Injection & Event Bus
 - [ ] Task: Migrate `AppEvents` to Dependency Injection
