@@ -4,7 +4,7 @@ import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 
@@ -35,8 +35,8 @@ void main() {
       phone: '123456789',
       pin: 'hashed_pin',
       isActive: true,
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
       permissions: UserPermissions(
         createTransaction: true,
         viewAllTransactions: true,

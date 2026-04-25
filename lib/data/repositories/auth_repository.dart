@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../services/firebase_service.dart';
 import '../services/google_sign_in_service.dart';
+import '../../domain/entities/auth_user.dart';
 
 /// A repository to handle all authentication-related operations.
 class AuthRepository {
@@ -157,14 +158,25 @@ class AuthRepository {
   // User State Methods
   // ===========================
 
-  /// Returns the current Firebase [User] object, or null if not signed in.
-  User? getCurrentUser() {
-    return _auth.currentUser;
+  /// Maps a Firebase User to our domain AuthUser
+  AuthUser? _mapUser(User? user) {
+    if (user == null) return null;
+    return AuthUser(
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+    );
+  }
+
+  /// Returns the current Firebase [User] object, mapped to [AuthUser], or null if not signed in.
+  AuthUser? getCurrentUser() {
+    return _mapUser(_auth.currentUser);
   }
 
   /// A stream that notifies about changes to the user's sign-in state.
-  Stream<User?> authStateChanges() {
-    return _auth.authStateChanges();
+  Stream<AuthUser?> authStateChanges() {
+    return _auth.authStateChanges().map(_mapUser);
   }
 
   /// Returns true if a user is currently signed in.

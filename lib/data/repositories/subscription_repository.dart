@@ -42,8 +42,8 @@ class SubscriptionRepository {
         deviceId: deviceId,
         deviceModel: deviceModel,
         osVersion: osVersion,
-        firstSeenAt: Timestamp.now(),
-        lastSeenAt: Timestamp.now(),
+        firstSeenAt: DateTime.now(),
+        lastSeenAt: DateTime.now(),
         ownerUid: _auth.currentUser?.uid,
       );
       
@@ -78,7 +78,7 @@ class SubscriptionRepository {
     required String receiptNumber,
   }) async {
     final rootRef = _firestore.collection('subscription_requests').doc();
-    final now = Timestamp.now();
+    final now = DateTime.now();
     // T045: Implicitly deduce amount using tierName locally
     final double deducedAmount = _deduceAmount(planId);
     
@@ -99,7 +99,7 @@ class SubscriptionRepository {
     final batch = _firestore.batch();
     batch.set(rootRef, request.toFirestore());
     batch.update(storeRef, {
-      'subscription.pendingRequestDate': now,
+      'subscription.pendingRequestDate': Timestamp.fromDate(now),
     });
     await batch.commit();
   }

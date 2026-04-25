@@ -27,11 +27,11 @@ class UserModel {
   final bool isActive;
 
   // Timestamps
-  final Timestamp createdAt;
+  final DateTime createdAt;
   final String?
       createdBy; // ID of the user who created this user (e.g., owner ID)
-  final Timestamp? updatedAt;
-  final Timestamp lastLogin;
+  final DateTime? updatedAt;
+  final DateTime lastLogin;
 
   // Nested objects (for employees)
   final UserPermissions? permissions;
@@ -87,10 +87,10 @@ class UserModel {
       firebaseUid: data['firebaseUid'], // Default to null for backward compat
       pin: data['pin'],
       isActive: data['isActive'] ?? true,
-      createdAt: data['createdAt'] ?? Timestamp.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       createdBy: data['createdBy'],
-      updatedAt: data['updatedAt'],
-      lastLogin: data['lastLogin'] ?? Timestamp.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
       permissions: role == 'employee'
           ? UserPermissions.fromMap(data['permissions'] ?? {})
           : null,
@@ -110,10 +110,10 @@ class UserModel {
       'firebaseUid': firebaseUid,
       'pin': pin,
       'isActive': isActive,
-      'createdAt': createdAt,
+      'createdAt': Timestamp.fromDate(createdAt),
       'createdBy': createdBy,
-      'updatedAt': updatedAt ?? FieldValue.serverTimestamp(),
-      'lastLogin': lastLogin,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
+      'lastLogin': Timestamp.fromDate(lastLogin),
     };
 
     if (isEmployee) {
@@ -135,10 +135,10 @@ class UserModel {
     String? firebaseUid,
     String? pin,
     bool? isActive,
-    Timestamp? createdAt,
+    DateTime? createdAt,
     String? createdBy,
-    Timestamp? updatedAt,
-    Timestamp? lastLogin,
+    DateTime? updatedAt,
+    DateTime? lastLogin,
     UserPermissions? permissions,
     UserStats? stats,
   }) {
@@ -188,7 +188,7 @@ class UserStats {
   final int totalTransactions;
   final double totalCommission;
   final int totalDebtsCreated;
-  final Timestamp? lastTransactionDate;
+  final DateTime? lastTransactionDate;
 
   UserStats({
     this.totalTransactions = 0,
@@ -202,7 +202,7 @@ class UserStats {
       totalTransactions: NumberParser.toInt(map['totalTransactions']),
       totalCommission: NumberParser.toDouble(map['totalCommission']),
       totalDebtsCreated: NumberParser.toInt(map['totalDebtsCreated']),
-      lastTransactionDate: map['lastTransactionDate'],
+      lastTransactionDate: (map['lastTransactionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -211,7 +211,7 @@ class UserStats {
       'totalTransactions': totalTransactions,
       'totalCommission': totalCommission,
       'totalDebtsCreated': totalDebtsCreated,
-      'lastTransactionDate': lastTransactionDate,
+      'lastTransactionDate': lastTransactionDate != null ? Timestamp.fromDate(lastTransactionDate!) : null,
     };
   }
 
@@ -219,7 +219,7 @@ class UserStats {
     int? totalTransactions,
     double? totalCommission,
     int? totalDebtsCreated,
-    Timestamp? lastTransactionDate,
+    DateTime? lastTransactionDate,
   }) {
     return UserStats(
       totalTransactions: totalTransactions ?? this.totalTransactions,

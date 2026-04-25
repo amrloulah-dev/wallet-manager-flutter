@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
@@ -42,8 +42,8 @@ void main() {
       storeId: 'test_store',
       role: 'owner',
       fullName: 'Test Owner',
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
     );
     when(() => mockUseCase.validatePermission(any()))
         .thenAnswer((_) async => mockUser);
@@ -65,8 +65,8 @@ void main() {
       storeId: 'test_store',
       role: 'owner',
       fullName: 'Test Owner',
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
     );
     when(() => mockAuth.ensureUserLoaded()).thenAnswer((_) async => mockUser);
     when(() => mockAuth.currentUserId).thenReturn('user1');

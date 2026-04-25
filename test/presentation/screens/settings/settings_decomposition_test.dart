@@ -10,7 +10,7 @@ import 'package:walletmanager/providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/store_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class MockAuthProvider extends Mock implements AuthProvider {}
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
@@ -30,7 +30,7 @@ void main() {
     mockLocProvider = MockLocalizationProvider();
 
     // Default stubs
-    final now = Timestamp.now();
+    final now = DateTime.now();
     when(() => mockAuthProvider.currentUser).thenReturn(
       UserModel(
         userId: 'test_user',

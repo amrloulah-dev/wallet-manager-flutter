@@ -26,8 +26,7 @@ class StatsSummaryModel {
   final double totalOpenAmount;
   final double totalPaidAmount;
 
-  // Timestamp
-  final Timestamp lastUpdated;
+  final DateTime lastUpdated;
 
   StatsSummaryModel({
     required this.totalWallets,
@@ -67,7 +66,7 @@ class StatsSummaryModel {
       paidDebtsCount: NumberParser.toInt(map['paidDebtsCount']),
       totalOpenAmount: NumberParser.toDouble(map['totalOpenAmount']),
       totalPaidAmount: NumberParser.toDouble(map['totalPaidAmount']),
-      lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
+      lastUpdated: (map['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -89,7 +88,7 @@ class StatsSummaryModel {
       'paidDebtsCount': paidDebtsCount,
       'totalOpenAmount': totalOpenAmount,
       'totalPaidAmount': totalPaidAmount,
-      'lastUpdated': lastUpdated,
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
 
@@ -110,7 +109,7 @@ class StatsSummaryModel {
     int? paidDebtsCount,
     double? totalOpenAmount,
     double? totalPaidAmount,
-    Timestamp? lastUpdated,
+    DateTime? lastUpdated,
   }) {
     return StatsSummaryModel(
       totalWallets: totalWallets ?? this.totalWallets,
@@ -153,7 +152,7 @@ class StatsSummaryModel {
       paidDebtsCount: 0,
       totalOpenAmount: 0.0,
       totalPaidAmount: 0.0,
-      lastUpdated: Timestamp.now(), // استخدام الوقت الحالي أفضل
+      lastUpdated: DateTime.now(), // استخدام الوقت الحالي أفضل
     );
   }
 }

@@ -14,7 +14,7 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
 
@@ -92,7 +92,7 @@ void main() {
       ownerId: 'owner-123',
       ownerName: 'Owner',
       ownerEmail: 'owner@store.com',
-      createdAt: Timestamp.now(),
+      createdAt: DateTime.now(),
       subscription: StoreSubscription(
         planId: 'basic',
         status: SubscriptionStatus.active,
@@ -102,7 +102,7 @@ void main() {
         smsEnabled: false,
       ),
       settings: StoreSettings(currency: 'SAR', timezone: 'Asia/Riyadh'),
-      stats: StoreStats(lastUpdated: Timestamp.now()),
+      stats: StoreStats(lastUpdated: DateTime.now()),
     );
 
     mockEmployee = UserModel(
@@ -114,8 +114,8 @@ void main() {
       pin: 'hashed_pin',
       firebaseUid: 'test-uid', // initially setup with uid
       isActive: true,
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
       permissions: UserPermissions(
         createTransaction: true,
         viewAllTransactions: true,

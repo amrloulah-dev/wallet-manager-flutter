@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
@@ -44,7 +44,7 @@ class OverlayUseCase {
     }
 
     String transactionType = type == 'debit' ? 'send' : 'receive';
-    final now = Timestamp.now();
+    final now = DateTime.now();
     final txId = _transactionRepository.generateId();
 
     final match = availableWallets.cast<Map<String, dynamic>?>().firstWhere(
@@ -90,7 +90,7 @@ class OverlayUseCase {
       'type': type,
       'walletId': selectedWalletId,
       'sender': sender,
-      'transactionDate': now.toDate().toIso8601String(),
+      'transactionDate': now.toIso8601String(),
       'storeId': storeId,
       'paymentStatus': 'paid',
       'customerName': '',

@@ -25,14 +25,14 @@ class DebtModel {
   final String debtStatus; // 'open' | 'paid'
 
   // Dates
-  final Timestamp debtDate; // تاريخ إنشاء الدين
-  final Timestamp? paidDate; // تاريخ التسديد (null if open)
+  final DateTime debtDate; // تاريخ إنشاء الدين
+  final DateTime? paidDate; // تاريخ التسديد (null if open)
 
   // Tracking
   final String createdBy; // userId who created
-  final Timestamp createdAt;
+  final DateTime createdAt;
   final String? markedPaidBy; // userId who marked as paid
-  final Timestamp? updatedAt;
+  final DateTime? updatedAt;
   final String? lastUpdatedBy;
 
   final String customerNameNormalized;
@@ -82,12 +82,12 @@ class DebtModel {
       totalAmount: totalAmount,
       notes: data[FirebaseConstants.notes],
       debtStatus: status,
-      debtDate: data['debtDate'] ?? Timestamp.now(),
-      paidDate: data['paidDate'],
+      debtDate: (data['debtDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      paidDate: (data['paidDate'] as Timestamp?)?.toDate(),
       createdBy: data[FirebaseConstants.createdBy] ?? '',
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
+      createdAt: (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate() ?? DateTime.now(),
       markedPaidBy: data['markedPaidBy'],
-      updatedAt: data['updatedAt'],
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       lastUpdatedBy: data['lastUpdatedBy'],
     );
   }
@@ -103,12 +103,12 @@ class DebtModel {
       'totalAmount': totalAmount,
       FirebaseConstants.notes: notes,
       'debtStatus': debtStatus,
-      'debtDate': debtDate,
-      'paidDate': paidDate,
+      'debtDate': Timestamp.fromDate(debtDate),
+      'paidDate': paidDate != null ? Timestamp.fromDate(paidDate!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.createdAt: createdAt,
+      FirebaseConstants.createdAt: Timestamp.fromDate(createdAt),
       'markedPaidBy': markedPaidBy,
-      'updatedAt': updatedAt,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'lastUpdatedBy': lastUpdatedBy,
     };
   }
@@ -123,12 +123,12 @@ class DebtModel {
     double? totalAmount,
     String? notes,
     String? debtStatus,
-    Timestamp? debtDate,
-    Timestamp? paidDate,
+    DateTime? debtDate,
+    DateTime? paidDate,
     String? createdBy,
-    Timestamp? createdAt,
+    DateTime? createdAt,
     String? markedPaidBy,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     String? lastUpdatedBy,
   }) {
     return DebtModel(
@@ -170,13 +170,13 @@ class DebtModel {
   Color get statusColor => isOpen ? AppColors.error : AppColors.success;
 
   int get daysSinceCreated =>
-      DateTime.now().difference(debtDate.toDate()).inDays;
-  String get formattedDebtDate => DateHelper.formatTimestamp(debtDate);
+      DateTime.now().difference(debtDate).inDays;
+  String get formattedDebtDate => DateHelper.formatDateTime(debtDate);
   String get formattedPaidDate =>
-      paidDate != null ? DateHelper.formatTimestamp(paidDate!) : '';
+      paidDate != null ? DateHelper.formatDateTime(paidDate!) : '';
   
   String getRelativeDebtDate(AppLocalizations l10n) => 
-      DateHelper.getRelativeTime(debtDate.toDate(), l10n: l10n);
+      DateHelper.getRelativeTime(debtDate, l10n: l10n);
 
   @override
   String toString() =>

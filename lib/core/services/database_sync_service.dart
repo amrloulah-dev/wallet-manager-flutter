@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
@@ -364,7 +364,7 @@ class DatabaseSyncService {
       ownerName: name,
       ownerEmail: email,
       ownerPhoto: photoUrl,
-      createdAt: Timestamp.now(),
+      createdAt: DateTime.now(),
       subscription: placeholderSubscription,
       settings: StoreSettings(),
       stats: StoreStats(
@@ -372,7 +372,7 @@ class DatabaseSyncService {
         activeWallets: 0,
         totalTransactionsToday: 0,
         totalCommissionToday: 0.0,
-        lastUpdated: Timestamp.now(),
+        lastUpdated: DateTime.now(),
       ),
     );
 
@@ -383,8 +383,8 @@ class DatabaseSyncService {
       fullName: name,
       email: email,
       firebaseUid: uid,
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
     );
 
     await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial);

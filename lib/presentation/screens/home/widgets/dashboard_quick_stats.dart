@@ -50,7 +50,7 @@ class DashboardQuickStats extends StatelessWidget {
                 child: Text(AppLocalizations.of(context)!.errorLoadingStats));
           }
 
-          final lastUpdated = stats.lastUpdated.toDate();
+          final lastUpdated = stats.lastUpdated;
           final formattedTime = DateFormat.yMMMd().add_jm().format(lastUpdated);
 
           return Column(

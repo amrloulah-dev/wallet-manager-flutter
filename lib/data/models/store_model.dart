@@ -18,8 +18,8 @@ class StoreModel {
   final bool isActive;
   final bool isSuspended;
 
-  final Timestamp createdAt;
-  final Timestamp? updatedAt;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
 
   final StoreSubscription subscription;
   final StoreSettings settings;
@@ -61,8 +61,8 @@ class StoreModel {
       ownerPhoto: data['ownerPhoto'],
       isActive: data['isActive'] ?? true,
       isSuspended: data['isSuspended'] ?? false,
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      updatedAt: data['updatedAt'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       subscription: data['subscription'] != null 
           ? StoreSubscription.fromMap(data['subscription'])
           : StoreSubscription.migratedLifetime(), // FR-17 legacy migration
@@ -87,8 +87,8 @@ class StoreModel {
       'ownerPhoto': ownerPhoto,
       'isActive': isActive,
       'isSuspended': isSuspended,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt ?? FieldValue.serverTimestamp(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
       'subscription': subscription.toMap(),
       'settings': settings.toMap(),
       'stats': stats.toMap(),
@@ -122,8 +122,8 @@ class StoreModel {
     String? ownerPhoto,
     bool? isActive,
     bool? isSuspended,
-    Timestamp? createdAt,
-    Timestamp? updatedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
     StoreSubscription? subscription,
     StoreSettings? settings,
     StoreStats? stats,
@@ -316,7 +316,7 @@ class StoreStats {
   final int activeWallets;
   final int totalTransactionsToday;
   final double totalCommissionToday;
-  final Timestamp lastUpdated;
+  final DateTime lastUpdated;
 
   StoreStats({
     this.totalWallets = 0,
@@ -332,7 +332,7 @@ class StoreStats {
       activeWallets: NumberParser.toInt(map['activeWallets']),
       totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
       totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
-      lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
+      lastUpdated: (map['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -342,7 +342,7 @@ class StoreStats {
       'activeWallets': activeWallets,
       'totalTransactionsToday': totalTransactionsToday,
       'totalCommissionToday': totalCommissionToday,
-      'lastUpdated': lastUpdated,
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
 
@@ -351,7 +351,7 @@ class StoreStats {
     int? activeWallets,
     int? totalTransactionsToday,
     double? totalCommissionToday,
-    Timestamp? lastUpdated,
+    DateTime? lastUpdated,
   }) {
     return StoreStats(
       totalWallets: totalWallets ?? this.totalWallets,

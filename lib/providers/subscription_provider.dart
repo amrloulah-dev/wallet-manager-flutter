@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../data/models/store_model.dart';
 import '../data/services/local_storage_service.dart';
 import 'package:walletmanager/services/time_service.dart';
@@ -141,7 +141,7 @@ class SubscriptionProvider extends BaseProvider {
       paymentMethod: paymentMethod,
       receiptNumber: receiptNumber,
       status: 'pending',
-      createdAt: Timestamp.now(),
+      createdAt: DateTime.now(),
     );
     safeNotify();
 

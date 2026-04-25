@@ -67,7 +67,7 @@ class TransactionProvider extends BaseProvider {
   void _recomputeTodayTransactions() {
     final now = DateTime.now();
     _todayTransactions = _transactions.where((tx) {
-      return DateHelper.isSameDay(tx.transactionDate.toDate(), now);
+      return DateHelper.isSameDay(tx.transactionDate, now);
     }).toList();
   }
 
@@ -277,8 +277,8 @@ class TransactionProvider extends BaseProvider {
         serviceFee: serviceFee,
         paymentStatus: paymentStatus,
         notes: notes,
-        transactionDate: Timestamp.now(),
-        createdAt: Timestamp.now(),
+        transactionDate: DateTime.now(),
+        createdAt: DateTime.now(),
         createdBy: _currentUser?.userId ?? 'unknown',
       );
 

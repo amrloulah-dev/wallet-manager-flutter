@@ -182,7 +182,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               context: context,
               icon: Icons.calendar_today_outlined,
               label: AppLocalizations.of(context)!.addedDate,
-              value: DateHelper.formatTimestamp(wallet.createdAt),
+              value: DateHelper.formatDateTime(wallet.createdAt),
             ),
             if (wallet.notes != null && wallet.notes!.isNotEmpty) ...[
               const Divider(height: 24),

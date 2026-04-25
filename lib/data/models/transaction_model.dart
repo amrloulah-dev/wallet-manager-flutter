@@ -19,16 +19,16 @@ class TransactionModel {
   final String paymentStatus; // 'paid' | 'debt'
   final String? debtId;
   final String? notes;
-  final Timestamp transactionDate;
-  final Timestamp createdAt;
+  final DateTime transactionDate;
+  final DateTime createdAt;
   final String createdBy;
   final String? createdById;
   final String? createdByName;
   final String? creatorRole;
-  final Timestamp? updatedAt;
+  final DateTime? updatedAt;
   final String? updatedBy;
   final bool isDeleted;
-  final Timestamp? deletedAt;
+  final DateTime? deletedAt;
   final String? deletedBy;
 
   TransactionModel({
@@ -59,6 +59,16 @@ class TransactionModel {
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
+    final transactionDate = (data['transactionDate'] as Timestamp?)?.toDate();
+    if (transactionDate == null) {
+      throw const FormatException('Missing or invalid transactionDate in TransactionModel');
+    }
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    if (createdAt == null) {
+      throw const FormatException('Missing or invalid createdAt in TransactionModel');
+    }
+
     return TransactionModel(
       transactionId: doc.id,
       storeId: data[FirebaseConstants.storeId] ?? '',
@@ -72,16 +82,16 @@ class TransactionModel {
       paymentStatus: data['paymentStatus'] ?? 'paid',
       debtId: data['debtId'],
       notes: data[FirebaseConstants.notes],
-      transactionDate: data['transactionDate'] ?? Timestamp.now(),
-      createdAt: data['createdAt'] ?? Timestamp.now(),
+      transactionDate: transactionDate,
+      createdAt: createdAt,
       createdBy: data[FirebaseConstants.createdBy] ?? '',
       createdById: data['createdById'],
       createdByName: data['createdByName'],
       creatorRole: data['creatorRole'],
-      updatedAt: data[FirebaseConstants.updatedAt],
+      updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
       updatedBy: data['updatedBy'],
       isDeleted: data['isDeleted'] ?? false,
-      deletedAt: data['deletedAt'],
+      deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
       deletedBy: data['deletedBy'],
     );
   }
@@ -99,16 +109,16 @@ class TransactionModel {
       'paymentStatus': paymentStatus,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
-      'transactionDate': transactionDate,
-      FirebaseConstants.createdAt: createdAt,
+      'transactionDate': Timestamp.fromDate(transactionDate),
+      FirebaseConstants.createdAt: Timestamp.fromDate(createdAt),
       FirebaseConstants.createdBy: createdBy,
       'createdById': createdById,
       'createdByName': createdByName,
       'creatorRole': creatorRole,
-      FirebaseConstants.updatedAt: updatedAt,
+      FirebaseConstants.updatedAt: updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'updatedBy': updatedBy,
       'isDeleted': isDeleted,
-      'deletedAt': deletedAt,
+      'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
       'deletedBy': deletedBy,
     };
   }
@@ -126,16 +136,16 @@ class TransactionModel {
     String? paymentStatus,
     String? debtId,
     String? notes,
-    Timestamp? transactionDate,
-    Timestamp? createdAt,
+    DateTime? transactionDate,
+    DateTime? createdAt,
     String? createdBy,
     String? createdById,
     String? createdByName,
     String? creatorRole,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     String? updatedBy,
     bool? isDeleted,
-    Timestamp? deletedAt,
+    DateTime? deletedAt,
     String? deletedBy,
   }) {
     return TransactionModel(
@@ -194,16 +204,16 @@ class TransactionModel {
 
   bool get canBeModified {
     // Can be modified within 5 minutes of creation
-    return DateTime.now().difference(createdAt.toDate()).inMinutes < 5;
+    return DateTime.now().difference(createdAt).inMinutes < 5;
   }
 
   String get formattedDate =>
-      DateHelper.formatTimestamp(transactionDate, format: 'dd/MM/yyyy');
+      DateHelper.formatDateTime(transactionDate, format: 'dd/MM/yyyy');
   String get formattedTime =>
-      DateHelper.formatTimestamp(transactionDate, format: 'hh:mm a');
+      DateHelper.formatDateTime(transactionDate, format: 'hh:mm a');
 
   String getRelativeTime(AppLocalizations l10n) =>
-      DateHelper.getRelativeTime(transactionDate.toDate(), l10n: l10n);
+      DateHelper.getRelativeTime(transactionDate, l10n: l10n);
 
   @override
   String toString() {

@@ -54,7 +54,7 @@ void main() {
 
   group('updateStatsOnDebtUpdate', () {
     final debtId = 'debt1';
-    final now = Timestamp.now();
+    final now = DateTime.now();
 
     DebtModel createTestDebt({
       required String id,

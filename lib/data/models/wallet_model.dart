@@ -63,7 +63,7 @@ class WalletStats {
   final double totalSentAmount;
   final double totalReceivedAmount;
   final double totalCommission;
-  final Timestamp? lastTransactionDate;
+  final DateTime? lastTransactionDate;
 
   WalletStats({
     this.totalTransactions = 0,
@@ -79,7 +79,7 @@ class WalletStats {
       totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
       totalReceivedAmount: NumberParser.toDouble(map['totalReceivedAmount']),
       totalCommission: NumberParser.toDouble(map['totalCommission']),
-      lastTransactionDate: map['lastTransactionDate'] as Timestamp?,
+      lastTransactionDate: (map['lastTransactionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -89,7 +89,7 @@ class WalletStats {
       'totalSentAmount': totalSentAmount,
       'totalReceivedAmount': totalReceivedAmount,
       'totalCommission': totalCommission,
-      'lastTransactionDate': lastTransactionDate,
+      'lastTransactionDate': lastTransactionDate != null ? Timestamp.fromDate(lastTransactionDate!) : null,
     };
   }
 
@@ -98,7 +98,7 @@ class WalletStats {
     double? totalSentAmount,
     double? totalReceivedAmount,
     double? totalCommission,
-    Timestamp? lastTransactionDate,
+    DateTime? lastTransactionDate,
   }) {
     return WalletStats(
       totalTransactions: totalTransactions ?? this.totalTransactions,
@@ -121,13 +121,13 @@ class WalletModel {
   final double balance;
   final String? notes;
   final bool isActive;
-  final Timestamp createdAt;
+  final DateTime createdAt;
   final String createdBy;
-  final Timestamp? updatedAt;
+  final DateTime? updatedAt;
   final WalletLimits sendLimits;
   final WalletLimits receiveLimits;
-  final Timestamp lastDailyReset;
-  final Timestamp lastMonthlyReset;
+  final DateTime lastDailyReset;
+  final DateTime lastMonthlyReset;
   final WalletStats stats;
 
   WalletModel({
@@ -151,30 +151,25 @@ class WalletModel {
 
   factory WalletModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return WalletModel(
-      walletId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
-      walletType: data[FirebaseConstants.walletType] ?? '',
-      walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
-      balance: NumberParser.toDouble(data['balance']),
-      notes: data[FirebaseConstants.notes],
-      isActive: data[FirebaseConstants.isActive] ?? true,
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      updatedAt: data[FirebaseConstants.updatedAt],
-      sendLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
-      receiveLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
-      lastDailyReset: data[FirebaseConstants.lastDailyReset] ?? Timestamp.now(),
-      lastMonthlyReset:
-          data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
-      stats: WalletStats.fromMap(data[FirebaseConstants.stats] ?? {}),
-    );
+    return WalletModel.fromMap(data, doc.id);
   }
 
   factory WalletModel.fromMap(Map<String, dynamic> data, String docId) {
+    final createdAt = (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate();
+    if (createdAt == null) {
+      throw const FormatException('Missing or invalid createdAt in WalletModel');
+    }
+
+    final lastDailyReset = (data[FirebaseConstants.lastDailyReset] as Timestamp?)?.toDate();
+    if (lastDailyReset == null) {
+      throw const FormatException('Missing or invalid lastDailyReset in WalletModel');
+    }
+
+    final lastMonthlyReset = (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
+    if (lastMonthlyReset == null) {
+      throw const FormatException('Missing or invalid lastMonthlyReset in WalletModel');
+    }
+
     return WalletModel(
       walletId: docId,
       storeId: data[FirebaseConstants.storeId] ?? '',
@@ -184,16 +179,15 @@ class WalletModel {
       balance: NumberParser.toDouble(data['balance']),
       notes: data[FirebaseConstants.notes],
       isActive: data[FirebaseConstants.isActive] ?? true,
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
+      createdAt: createdAt,
       createdBy: data[FirebaseConstants.createdBy] ?? '',
-      updatedAt: data[FirebaseConstants.updatedAt],
+      updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
       sendLimits:
           WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
       receiveLimits:
           WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
-      lastDailyReset: data[FirebaseConstants.lastDailyReset] ?? Timestamp.now(),
-      lastMonthlyReset:
-          data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
+      lastDailyReset: lastDailyReset,
+      lastMonthlyReset: lastMonthlyReset,
       stats: WalletStats.fromMap(data[FirebaseConstants.stats] ?? {}),
     );
   }
@@ -207,13 +201,13 @@ class WalletModel {
       'balance': balance,
       FirebaseConstants.notes: notes,
       FirebaseConstants.isActive: isActive,
-      FirebaseConstants.createdAt: createdAt,
+      FirebaseConstants.createdAt: Timestamp.fromDate(createdAt),
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.updatedAt: updatedAt,
+      FirebaseConstants.updatedAt: updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       FirebaseConstants.sendLimits: sendLimits.toMap(),
       FirebaseConstants.receiveLimits: receiveLimits.toMap(),
-      FirebaseConstants.lastDailyReset: lastDailyReset,
-      FirebaseConstants.lastMonthlyReset: lastMonthlyReset,
+      FirebaseConstants.lastDailyReset: Timestamp.fromDate(lastDailyReset),
+      FirebaseConstants.lastMonthlyReset: Timestamp.fromDate(lastMonthlyReset),
       FirebaseConstants.stats: stats.toMap(),
     };
   }
@@ -227,13 +221,13 @@ class WalletModel {
     double? balance,
     String? notes,
     bool? isActive,
-    Timestamp? createdAt,
+    DateTime? createdAt,
     String? createdBy,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     WalletLimits? sendLimits,
     WalletLimits? receiveLimits,
-    Timestamp? lastDailyReset,
-    Timestamp? lastMonthlyReset,
+    DateTime? lastDailyReset,
+    DateTime? lastMonthlyReset,
     WalletStats? stats,
   }) {
     return WalletModel(
@@ -266,7 +260,7 @@ class WalletModel {
     required String createdBy,
     String? notes,
   }) {
-    final now = Timestamp.now();
+    final now = DateTime.now();
     final isNew = walletStatus == 'new';
     final isInstapay = walletType == 'instapay';
 
@@ -313,7 +307,7 @@ class WalletModel {
 
   bool get needsDailyReset {
     final now = DateTime.now();
-    final lastReset = lastDailyReset.toDate();
+    final lastReset = lastDailyReset;
     return now.day != lastReset.day ||
         now.month != lastReset.month ||
         now.year != lastReset.year;
@@ -321,7 +315,7 @@ class WalletModel {
 
   bool get needsMonthlyReset {
     final now = DateTime.now();
-    final lastReset = lastMonthlyReset.toDate();
+    final lastReset = lastMonthlyReset;
     return now.month != lastReset.month || now.year != lastReset.year;
   }
 

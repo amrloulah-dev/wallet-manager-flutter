@@ -222,17 +222,17 @@ class WalletRepository {
 
     for (final wallet in wallets) {
       final updates = <String, dynamic>{};
-      final now = Timestamp.now();
+      final serverTs = FieldValue.serverTimestamp();
 
       if (wallet.needsDailyReset) {
         updates['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
         updates['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
-        updates[FirebaseConstants.lastDailyReset] = now;
+        updates[FirebaseConstants.lastDailyReset] = serverTs;
       }
       if (wallet.needsMonthlyReset) {
         updates['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
         updates['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
-        updates[FirebaseConstants.lastMonthlyReset] = now;
+        updates[FirebaseConstants.lastMonthlyReset] = serverTs;
       }
 
       if (updates.isNotEmpty) {

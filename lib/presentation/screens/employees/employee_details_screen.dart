@@ -143,7 +143,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
           _buildInfoRow(
             Icons.calendar_today,
             AppLocalizations.of(context)!.dateAdded,
-            _employee.createdAt.toDate().toString().split(' ')[0],
+            _employee.createdAt.toString().split(' ')[0],
           ),
         ],
       ),

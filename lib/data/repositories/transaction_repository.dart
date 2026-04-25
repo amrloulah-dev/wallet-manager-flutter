@@ -42,7 +42,7 @@ class TransactionRepository {
     required double amount,
     required String createdBy,
   }) async {
-    final now = Timestamp.now();
+    final now = DateTime.now();
     final transaction = TransactionModel(
       transactionId: transactionId,
       storeId: storeId,
@@ -101,9 +101,9 @@ class TransactionRepository {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('transactionDate',
-              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
+              isGreaterThanOrEqualTo: Timestamp.fromDate(DateHelper.getStartOfDay(startDate)))
           .where('transactionDate',
-              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
+              isLessThanOrEqualTo: Timestamp.fromDate(DateHelper.getEndOfDay(endDate)))
           .where('isDeleted', isEqualTo: false)
           .orderBy('transactionDate', descending: true);
 
@@ -146,9 +146,9 @@ class TransactionRepository {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('transactionDate',
-              isGreaterThanOrEqualTo: DateHelper.getStartOfDay(startDate))
+              isGreaterThanOrEqualTo: Timestamp.fromDate(DateHelper.getStartOfDay(startDate)))
           .where('transactionDate',
-              isLessThanOrEqualTo: DateHelper.getEndOfDay(endDate))
+              isLessThanOrEqualTo: Timestamp.fromDate(DateHelper.getEndOfDay(endDate)))
           .where('isDeleted', isEqualTo: false)
           .orderBy('transactionDate', descending: true);
 
@@ -179,7 +179,7 @@ class TransactionRepository {
     try {
       final updateData = {
         ...data,
-        FirebaseConstants.updatedAt: Timestamp.now()
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _transactionsCollection.doc(transactionId).update(updateData);
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
@@ -198,7 +198,7 @@ class TransactionRepository {
     try {
       await _transactionsCollection.doc(transactionId).update({
         'isDeleted': true,
-        'deletedAt': Timestamp.now(),
+        'deletedAt': FieldValue.serverTimestamp(),
         'deletedBy': deletedBy,
       });
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));

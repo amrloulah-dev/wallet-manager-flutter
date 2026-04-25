@@ -6,8 +6,8 @@ class LicenseKeyModel {
   final String licenseKey;
   final bool isUsed;
   final String? usedBy;
-  final Timestamp? usedAt;
-  final Timestamp createdAt;
+  final DateTime? usedAt;
+  final DateTime createdAt;
   final int expiryMonths;
 
   LicenseKeyModel({
@@ -27,8 +27,8 @@ class LicenseKeyModel {
       licenseKey: data['licenseKey'] ?? '',
       isUsed: data['isUsed'] ?? false,
       usedBy: data['usedBy'],
-      usedAt: data['usedAt'],
-      createdAt: data['createdAt'] ?? Timestamp.now(),
+      usedAt: (data['usedAt'] as Timestamp?)?.toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       expiryMonths: NumberParser.toInt(data['expiryMonths'], 12),
     );
   }
@@ -39,8 +39,8 @@ class LicenseKeyModel {
       'licenseKey': licenseKey,
       'isUsed': isUsed,
       'usedBy': usedBy,
-      'usedAt': usedAt,
-      'createdAt': createdAt,
+      'usedAt': usedAt != null ? Timestamp.fromDate(usedAt!) : null,
+      'createdAt': Timestamp.fromDate(createdAt),
       'expiryMonths': expiryMonths,
     };
   }

@@ -4,8 +4,8 @@ class DeviceRegistrationModel {
   final String deviceId; // Local generated UUID
   final String deviceModel;
   final String osVersion;
-  final Timestamp firstSeenAt;
-  final Timestamp lastSeenAt;
+  final DateTime firstSeenAt;
+  final DateTime lastSeenAt;
   final String? ownerUid;
 
   DeviceRegistrationModel({
@@ -26,8 +26,8 @@ class DeviceRegistrationModel {
       deviceId: doc.id,
       deviceModel: data['deviceModel'] ?? '',
       osVersion: data['osVersion'] ?? '',
-      firstSeenAt: data['firstSeenAt'] ?? Timestamp.now(),
-      lastSeenAt: data['lastSeenAt'] ?? Timestamp.now(),
+      firstSeenAt: (data['firstSeenAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastSeenAt: (data['lastSeenAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       ownerUid: data['ownerUid'],
     );
   }
@@ -36,8 +36,8 @@ class DeviceRegistrationModel {
     return {
       'deviceModel': deviceModel,
       'osVersion': osVersion,
-      'firstSeenAt': firstSeenAt,
-      'lastSeenAt': lastSeenAt,
+      'firstSeenAt': Timestamp.fromDate(firstSeenAt),
+      'lastSeenAt': Timestamp.fromDate(lastSeenAt),
       'ownerUid': ownerUid,
     };
   }
@@ -46,8 +46,8 @@ class DeviceRegistrationModel {
     String? deviceId,
     String? deviceModel,
     String? osVersion,
-    Timestamp? firstSeenAt,
-    Timestamp? lastSeenAt,
+    DateTime? firstSeenAt,
+    DateTime? lastSeenAt,
     String? ownerUid,
   }) {
     return DeviceRegistrationModel(

@@ -186,7 +186,7 @@ class UserRepository {
     try {
       final updateData = {
         ...data,
-        FirebaseConstants.updatedAt: Timestamp.now()
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _usersCollection.doc(userId).update(updateData);
     } on FirebaseException catch (e) {
@@ -202,7 +202,7 @@ class UserRepository {
     try {
       await _usersCollection
           .doc(userId)
-          .update({FirebaseConstants.lastLogin: Timestamp.now()});
+          .update({FirebaseConstants.lastLogin: FieldValue.serverTimestamp()});
     } on FirebaseException catch (e) {
       throw ServerException('فشل تحديث وقت تسجيل الدخول: ${e.message}',
           code: e.code);
@@ -311,7 +311,7 @@ class UserRepository {
 
       final statsData = <String, dynamic>{
         '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}':
-            Timestamp.now(),
+            FieldValue.serverTimestamp(),
       };
       if (incrementTransactions != null) {
         statsData[

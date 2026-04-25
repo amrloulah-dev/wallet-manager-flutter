@@ -4,7 +4,7 @@ import '../../core/utils/number_parser.dart';
 class DeviceUsageModel {
   final String deviceId;
   final int trialCount;
-  final Timestamp lastTrialDate;
+  final DateTime lastTrialDate;
   final List<String> associatedStoreIds;
 
   DeviceUsageModel({
@@ -24,7 +24,7 @@ class DeviceUsageModel {
     return DeviceUsageModel(
       deviceId: doc.id,
       trialCount: NumberParser.toInt(data['trialCount']),
-      lastTrialDate: data['lastTrialDate'] ?? Timestamp.now(),
+      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       associatedStoreIds: List<String>.from(data['associatedStoreIds'] ?? []),
     );
   }
@@ -33,7 +33,7 @@ class DeviceUsageModel {
   Map<String, dynamic> toFirestore() {
     return {
       'trialCount': trialCount,
-      'lastTrialDate': lastTrialDate,
+      'lastTrialDate': Timestamp.fromDate(lastTrialDate),
       'associatedStoreIds': associatedStoreIds,
     };
   }
@@ -41,7 +41,7 @@ class DeviceUsageModel {
   DeviceUsageModel copyWith({
     String? deviceId,
     int? trialCount,
-    Timestamp? lastTrialDate,
+    DateTime? lastTrialDate,
     List<String>? associatedStoreIds,
   }) {
     return DeviceUsageModel(

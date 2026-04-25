@@ -10,8 +10,8 @@ class SubscriptionRequestModel {
   final String receiptNumber; // Transaction ID
   final String status; // 'pending', 'approved', 'rejected'
   final String? rejectionReason;
-  final Timestamp createdAt;
-  final Timestamp? processedAt;
+  final DateTime createdAt;
+  final DateTime? processedAt;
 
   SubscriptionRequestModel({
     required this.id,
@@ -40,8 +40,8 @@ class SubscriptionRequestModel {
       receiptNumber: data['receiptNumber'] ?? '',
       status: data['status'] ?? 'pending',
       rejectionReason: data['rejectionReason'],
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      processedAt: data['processedAt'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      processedAt: (data['processedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -54,8 +54,8 @@ class SubscriptionRequestModel {
       'receiptNumber': receiptNumber,
       'status': status,
       'rejectionReason': rejectionReason,
-      'createdAt': createdAt,
-      'processedAt': processedAt,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'processedAt': processedAt != null ? Timestamp.fromDate(processedAt!) : null,
     };
   }
 
@@ -68,8 +68,8 @@ class SubscriptionRequestModel {
     String? receiptNumber,
     String? status,
     String? rejectionReason,
-    Timestamp? createdAt,
-    Timestamp? processedAt,
+    DateTime? createdAt,
+    DateTime? processedAt,
   }) {
     return SubscriptionRequestModel(
       id: id ?? this.id,

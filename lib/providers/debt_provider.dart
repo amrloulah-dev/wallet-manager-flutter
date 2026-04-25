@@ -238,8 +238,8 @@ class DebtProvider extends BaseProvider {
           amountDue: amountDue,
           totalAmount: amountDue,
           notes: notes,
-          debtDate: Timestamp.now(),
-          createdAt: Timestamp.now(),
+          debtDate: DateTime.now(),
+          createdAt: DateTime.now(),
           createdBy: user.userId,
         );
 

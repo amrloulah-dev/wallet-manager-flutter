@@ -1,17 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DateHelper {
-  // ===========================
-  // Format Timestamp to String
-  // ===========================
-  /// Converts a Firestore Timestamp to a formatted string.
-  static String formatTimestamp(Timestamp timestamp,
-      {String format = 'dd/MM/yyyy'}) {
-    final dateTime = timestamp.toDate();
-    return DateFormat(format).format(dateTime);
-  }
 
   // ===========================
   // Format DateTime to String
@@ -94,13 +84,7 @@ class DateHelper {
         date.day == now.day;
   }
 
-  // ===========================
-  // Check if Timestamp is Today
-  // ===========================
-  /// Checks if the given Firestore Timestamp is today.
-  static bool isTimestampToday(Timestamp timestamp) {
-    return isToday(timestamp.toDate());
-  }
+
 
   // ===========================
   // Get Relative Time (Localized)
@@ -193,21 +177,7 @@ class DateHelper {
     return date1.year == date2.year && date1.month == date2.month;
   }
 
-  // ===========================
-  // Convert DateTime to Timestamp
-  // ===========================
-  /// Converts a DateTime object to a Firestore Timestamp.
-  static Timestamp dateTimeToTimestamp(DateTime dateTime) {
-    return Timestamp.fromDate(dateTime);
-  }
 
-  // ===========================
-  // Convert Timestamp to DateTime
-  // ===========================
-  /// Converts a Firestore Timestamp to a DateTime object.
-  static DateTime timestampToDateTime(Timestamp timestamp) {
-    return timestamp.toDate();
-  }
 
   // ===========================
   // Get Current Date String (yyyy-MM-dd)

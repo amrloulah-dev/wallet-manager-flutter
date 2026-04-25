@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
+import '../domain/entities/auth_user.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/store_repository.dart';
 import '../data/repositories/user_repository.dart';
@@ -34,7 +34,7 @@ class AuthProvider extends BaseProvider {
   final LocalStorageService _localStorage;
 
   // State
-  User? _firebaseUser;
+  AuthUser? _firebaseUser;
   UserModel? _currentUser;
   StoreModel? _currentStore;
 
@@ -60,7 +60,7 @@ class AuthProvider extends BaseProvider {
   }
 
   // Getters
-  User? get firebaseUser => _firebaseUser;
+  AuthUser? get firebaseUser => _firebaseUser;
   UserModel? get currentUser => _currentUser;
   StoreModel? get currentStore => _currentStore;
 
@@ -118,17 +118,10 @@ class AuthProvider extends BaseProvider {
       await _authRepository.sendPasswordResetEmail(email);
       _setStatus(AuthStatus.idle);
       _errorMessage = null; 
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case 'user-not-found':
-          setError('auth_error_account_not_found', e);
-        case 'invalid-email':
-          setError('auth_error_invalid_email', e);
-        case 'too-many-requests':
-          setError('auth_error_too_many_requests', e);
-        default:
-          setError(e.message ?? 'auth_operation_failed', e);
-      }
+    } on UserNotFoundException catch (e) {
+      setError('auth_error_account_not_found', e);
+    } on AuthException catch (e) {
+      setError(e.message, e);
     } catch (e, stack) {
       setError(e is AppException ? e.message : 'auth_operation_failed', e, stack);
     }

@@ -84,8 +84,8 @@ class EmployeeRepository {
       firebaseUid: null,
       pin: hashedPin,
       isActive: true,
-      createdAt: Timestamp.now(),
-      lastLogin: Timestamp.now(),
+      createdAt: DateTime.now(),
+      lastLogin: DateTime.now(),
       permissions: permissions,
       stats: UserStats(),
     );
@@ -175,7 +175,7 @@ class EmployeeRepository {
 
       transaction.update(userRef, {
         FirebaseConstants.isActive: false,
-        FirebaseConstants.updatedAt: Timestamp.now(),
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       });
 
       if (wasActive && storeId != null) {

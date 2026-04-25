@@ -77,7 +77,7 @@ class WalletStatsCard extends StatelessWidget {
                     icon: Icons.access_time,
                     label: l10n.lastTransaction,
                     value: DateHelper.getRelativeTime(
-                      stats.lastTransactionDate!.toDate(),
+                      stats.lastTransactionDate!,
                       l10n: l10n,
                     ),
                     color: AppColors.textSecondary(context),

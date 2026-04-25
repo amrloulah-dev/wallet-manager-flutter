@@ -8,7 +8,7 @@ import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:walletmanager/core/utils/number_parser.dart';
 
 class GlobalOverlayListener extends StatefulWidget {
@@ -73,8 +73,8 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
           commission: NumberParser.toDouble(data['commission']),
           serviceFee: 0.0, 
           paymentStatus: data['paymentStatus']?.toString() ?? 'paid',
-          transactionDate: Timestamp.fromDate(DateTime.parse(nowStr)),
-          createdAt: Timestamp.fromDate(DateTime.parse(nowStr)),
+          transactionDate: DateTime.parse(nowStr),
+          createdAt: DateTime.parse(nowStr),
           createdBy: 'SMS Auto',
         );
         

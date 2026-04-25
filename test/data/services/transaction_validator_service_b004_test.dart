@@ -67,8 +67,8 @@ void main() {
       commission: 5.0,
       serviceFee: 1.0,
       paymentStatus: 'paid',
-      transactionDate: Timestamp.now(),
-      createdAt: Timestamp.now(),
+      transactionDate: DateTime.now(),
+      createdAt: DateTime.now(),
       createdBy: 'user1',
     );
 
