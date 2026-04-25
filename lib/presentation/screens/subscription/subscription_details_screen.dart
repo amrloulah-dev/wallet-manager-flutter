@@ -12,9 +12,12 @@ class SubscriptionDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final authProvider = Provider.of<AuthProvider>(context);
-    final subscription = authProvider.currentStore?.subscription;
-    final stats = authProvider.currentStore?.stats;
+    final subscription = context.select<AuthProvider, dynamic>(
+      (p) => p.currentStore?.subscription,
+    );
+    final stats = context.select<AuthProvider, dynamic>(
+      (p) => p.currentStore?.stats,
+    );
     
     if (subscription == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -59,7 +62,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               _buildLimitItem(
                 context,
                 title: loc.employeeAccounts,
-                current: context.watch<EmployeeProvider>().employeesCount, // dynamic employee count
+                current: context.select<EmployeeProvider, int>((p) => p.employeesCount), // dynamic employee count
                 max: subscription.maxEmployees,
                 icon: Icons.people,
               ),

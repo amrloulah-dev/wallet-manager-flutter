@@ -5,7 +5,6 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/debt_model.dart';
 import '../services/firebase_service.dart';
-import '../models/paginated_result.dart';
 
 class DebtRepository {
   final FirebaseService _firebaseService;
@@ -22,6 +21,12 @@ class DebtRepository {
       _firestore.collection(FirebaseConstants.debts);
 
   String generateId() => _debtsCollection.doc().id;
+
+  DocumentSnapshot? _lastDocument;
+
+  void resetPagination() {
+    _lastDocument = null;
+  }
 
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
@@ -299,8 +304,8 @@ class DebtRepository {
     }
   }
 
-  Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
+  Future<List<DebtModel>> getDebtsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate, {bool loadMore = false}) async {
     try {
       Query query = _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -308,15 +313,21 @@ class DebtRepository {
           .where('createdAt', isLessThanOrEqualTo: endDate)
           .orderBy('createdAt', descending: true);
 
-      if (lastDocument != null) {
-        query = query.startAfterDocument(lastDocument);
+      if (!loadMore) {
+        _lastDocument = null;
+      }
+
+      if (_lastDocument != null) {
+        query = query.startAfterDocument(_lastDocument!);
       }
 
       final snapshot = await query.limit(20).get();
       final items = snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
-      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      if (snapshot.docs.isNotEmpty) {
+        _lastDocument = snapshot.docs.last;
+      }
 
-      return PaginatedResult(items: items, lastDocument: lastDoc);
+      return items;
     } on FirebaseException catch (e) {
       throw ServerException('Failed to get debts by date range: ${e.message}',
           code: e.code);

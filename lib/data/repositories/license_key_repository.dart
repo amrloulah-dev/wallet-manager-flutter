@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/license_key_model.dart';
 import '../models/store_model.dart';
 import '../../core/errors/app_exceptions.dart';
+import '../../core/utils/license_key_generator.dart';
 
 class LicenseKeyRepository {
   late final FirebaseFirestore _firestore;
@@ -85,6 +86,37 @@ class LicenseKeyRepository {
     } catch (e) {
       if (e is ServerException) rethrow; // Pass up our custom exceptions
       throw ServerException('فشل في تفعيل الاشتراك: $e');
+    }
+  }
+
+  /// Generate and save a batch of license keys to Firestore
+  Future<void> generateAndSaveBatch({int count = 50}) async {
+    try {
+      int remaining = count;
+      while (remaining > 0) {
+        final batchCount = remaining > 500 ? 500 : remaining;
+        final batch = _firestore.batch();
+
+        for (int i = 0; i < batchCount; i++) {
+          final docRef = _keysCollection.doc();
+          final key = LicenseKeyGenerator.generateKey();
+
+          batch.set(docRef, {
+            'keyId': docRef.id,
+            'licenseKey': key,
+            'isUsed': false,
+            'usedBy': null,
+            'usedAt': null,
+            'createdAt': FieldValue.serverTimestamp(),
+            'expiryMonths': 12,
+          });
+        }
+
+        await batch.commit();
+        remaining -= batchCount;
+      }
+    } catch (e) {
+      throw ServerException('Failed to generate license keys: $e');
     }
   }
 

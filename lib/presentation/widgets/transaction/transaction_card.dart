@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/transaction_model.dart';
+import '../../utils/model_ui_extensions.dart';
 import '../../../l10n/arb/app_localizations.dart';
 
 class TransactionCard extends StatelessWidget {

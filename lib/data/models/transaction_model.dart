@@ -1,9 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../core/constants/firebase_constants.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/date_helper.dart';
 import '../../core/utils/number_parser.dart';
 
 class TransactionModel {
@@ -183,37 +179,6 @@ class TransactionModel {
   bool get isDebt => paymentStatus == 'debt';
   double get totalAmount =>
       amount + commission; // Original total amount (base + comm)
-  
-  String getTransactionTypeDisplay(AppLocalizations l10n) {
-    if (isSend) return l10n.send;
-    if (isReceive) return l10n.receive;
-    if (isDeposit) return l10n.deposit;
-    return transactionType;
-  }
-
-  IconData get transactionTypeIcon => isSend
-      ? Icons.arrow_upward
-      : (isReceive ? Icons.arrow_downward : Icons.add_card_outlined);
-  Color get transactionTypeColor => isSend
-      ? AppColors.send
-      : (isReceive ? AppColors.receive : AppColors.primary);
-
-  String getPaymentStatusDisplay(AppLocalizations l10n) {
-    return isPaid ? l10n.paid : l10n.debt;
-  }
-
-  bool get canBeModified {
-    // Can be modified within 5 minutes of creation
-    return DateTime.now().difference(createdAt).inMinutes < 5;
-  }
-
-  String get formattedDate =>
-      DateHelper.formatDateTime(transactionDate, format: 'dd/MM/yyyy');
-  String get formattedTime =>
-      DateHelper.formatDateTime(transactionDate, format: 'hh:mm a');
-
-  String getRelativeTime(AppLocalizations l10n) =>
-      DateHelper.getRelativeTime(transactionDate, l10n: l10n);
 
   @override
   String toString() {

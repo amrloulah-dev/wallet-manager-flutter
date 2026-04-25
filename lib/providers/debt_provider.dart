@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/utils/number_parser.dart';
 import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
@@ -34,7 +33,6 @@ class DebtProvider extends BaseProvider {
   Map<String, DebtModel> _debtMap = {};
   Map<String, dynamic> _summary = {};
 
-  DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
 
   // Status
@@ -127,15 +125,15 @@ class DebtProvider extends BaseProvider {
 
     try {
       // Use getDebtsByDateRange for pagination, passing far-past/future dates for "all"
-      final result = await _debtRepository.getDebtsByDateRange(
+      final items = await _debtRepository.getDebtsByDateRange(
         _currentStoreId!,
         DateTime(2020),
         DateTime(2100),
+        loadMore: false,
       );
 
-      _debts = result.items;
-      _lastDocument = result.lastDocument;
-      _hasMore = result.items.length >= 20;
+      _debts = items;
+      _hasMore = items.length >= 20;
       
       _rebuildDebtMap();
       await _fetchSummary();
@@ -148,7 +146,7 @@ class DebtProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreDebts() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
     }
 
@@ -156,19 +154,18 @@ class DebtProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final result = await _debtRepository.getDebtsByDateRange(
+      final items = await _debtRepository.getDebtsByDateRange(
         _currentStoreId!,
         DateTime(2020),
         DateTime(2100),
-        lastDocument: _lastDocument,
+        loadMore: true,
       );
 
-      if (result.items.isEmpty) {
+      if (items.isEmpty) {
         _hasMore = false;
       } else {
-        _debts.addAll(result.items);
-        _lastDocument = result.lastDocument;
-        _hasMore = result.items.length >= 20;
+        _debts.addAll(items);
+        _hasMore = items.length >= 20;
       }
 
       _rebuildDebtMap();

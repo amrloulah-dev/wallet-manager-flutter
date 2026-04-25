@@ -6,6 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/dialog_utils.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/debt_model.dart';
+import '../../utils/model_ui_extensions.dart';
 import '../../../providers/debt_provider.dart';
 import '../../../providers/statistics_provider.dart';
 import '../../../l10n/arb/app_localizations.dart';

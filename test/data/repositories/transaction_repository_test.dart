@@ -66,20 +66,33 @@ void main() {
       verify(() => mockQuery.limit(20)).called(1);
     });
 
-    test('getAllTransactions should use startAfterDocument when lastDocument is provided', () async {
-      final mockLastDoc = MockDocumentSnapshot();
+    test('getAllTransactions should fetch next page when loadMore is true', () async {
+      final mockDoc = MockQueryDocumentSnapshot();
+      when(() => mockDoc.id).thenReturn('test_id');
+      when(() => mockDoc.data()).thenReturn({
+        'transactionId': 'test_id',
+        'storeId': 'store_id',
+        'walletId': 'wallet_id',
+        'transactionType': 'deposit',
+        'amount': 100.0,
+        'transactionDate': Timestamp.now(),
+        'createdAt': Timestamp.now(),
+        'createdBy': 'user1',
+        'isDeleted': false,
+      });
       
       when(() => mockCollection.where('storeId', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
       when(() => mockQuery.where('isDeleted', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
       when(() => mockQuery.startAfterDocument(any())).thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-      when(() => mockSnapshot.docs).thenReturn([]);
+      when(() => mockSnapshot.docs).thenReturn([mockDoc]);
 
-      await repository.getAllTransactions(storeId, lastDocument: mockLastDoc);
+      await repository.getAllTransactions(storeId);
+      await repository.getAllTransactions(storeId, loadMore: true);
 
-      verify(() => mockQuery.startAfterDocument(mockLastDoc)).called(1);
-      verify(() => mockQuery.limit(20)).called(1);
+      verify(() => mockQuery.startAfterDocument(mockDoc)).called(1);
+      verify(() => mockQuery.limit(20)).called(2);
     });
   });
 }

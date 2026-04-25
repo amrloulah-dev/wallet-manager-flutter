@@ -6,6 +6,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/transaction_model.dart';
+import '../../utils/model_ui_extensions.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';

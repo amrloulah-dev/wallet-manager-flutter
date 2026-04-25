@@ -1,9 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../core/constants/firebase_constants.dart';
-import '../../core/utils/date_helper.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/utils/number_parser.dart';
 
 class DebtModel {
@@ -157,26 +153,6 @@ class DebtModel {
 
   bool get isTransactionDebt => debtType == 'transaction';
   bool get isStoreSaleDebt => debtType == 'store_sale';
-
-  String getDebtTypeDisplay(AppLocalizations l10n) =>
-      isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
-  
-  String getDebtStatusDisplay(AppLocalizations l10n) => 
-      isOpen ? l10n.openDebt : l10n.paidDebt;
-
-  IconData get debtTypeIcon =>
-      isTransactionDebt ? Icons.swap_horiz : Icons.shopping_cart;
-
-  Color get statusColor => isOpen ? AppColors.error : AppColors.success;
-
-  int get daysSinceCreated =>
-      DateTime.now().difference(debtDate).inDays;
-  String get formattedDebtDate => DateHelper.formatDateTime(debtDate);
-  String get formattedPaidDate =>
-      paidDate != null ? DateHelper.formatDateTime(paidDate!) : '';
-  
-  String getRelativeDebtDate(AppLocalizations l10n) => 
-      DateHelper.getRelativeTime(debtDate, l10n: l10n);
 
   @override
   String toString() =>

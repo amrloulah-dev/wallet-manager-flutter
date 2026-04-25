@@ -9,10 +9,22 @@ class SubscriptionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final subProvider = Provider.of<SubscriptionProvider>(context);
-    final subscription = authProvider.currentStore?.subscription;
-    final latestRequest = subProvider.latestRequest;
+    final subscription = context.select<AuthProvider, dynamic>(
+      (p) => p.currentStore?.subscription,
+    );
+    final isTrial = context.select<AuthProvider, bool>((p) => p.isTrial);
+    final trialDaysRemaining = context.select<AuthProvider, int?>(
+      (p) => p.trialDaysRemaining,
+    );
+    final latestRequest = context.select<SubscriptionProvider, dynamic>(
+      (p) => p.latestRequest,
+    );
+    final isExpired = context.select<SubscriptionProvider, bool>(
+      (p) => p.isExpired,
+    );
+    final hasDismissedRejection = context.select<SubscriptionProvider, bool>(
+      (p) => p.hasDismissedRejection,
+    );
     final l10n = AppLocalizations.of(context)!;
 
     if (subscription == null) return const SizedBox.shrink();
@@ -26,13 +38,13 @@ class SubscriptionBanner extends StatelessWidget {
           color: Colors.orange,
           message: l10n.pendingSubscriptionReview,
         );
-      } else if (latestRequest.status == 'approved' && !subProvider.isExpired) {
+      } else if (latestRequest.status == 'approved' && !isExpired) {
         // Technically if it's approved, the cloud function updates the subscription.
         // But if we want to show a short banner, we can just optionally show it.
         // It mostly matters for rejection.
       } else if (latestRequest.status == 'rejected') {
         // H009: Dismissible rejection banner
-        if (subProvider.hasDismissedRejection) {
+        if (hasDismissedRejection) {
           // User dismissed this rejection banner — don't show it
         } else {
           return _buildBanner(
@@ -40,7 +52,7 @@ class SubscriptionBanner extends StatelessWidget {
             icon: Icons.error,
             color: Colors.red,
             message: l10n.rejectedSubscriptionRequest,
-            onDismiss: () => subProvider.dismissRejectionBanner(),
+            onDismiss: () => context.read<SubscriptionProvider>().dismissRejectionBanner(),
           );
         }
       }
@@ -55,7 +67,7 @@ class SubscriptionBanner extends StatelessWidget {
     }
     
     // Check if expired
-    if (subProvider.isExpired) {
+    if (isExpired) {
        return _buildBanner(
          context, 
          icon: Icons.warning_rounded, 
@@ -65,8 +77,8 @@ class SubscriptionBanner extends StatelessWidget {
     }
     
     // Check if trial with <= 3 days left
-    if (authProvider.isTrial) {
-      final daysLeft = authProvider.trialDaysRemaining ?? 0;
+    if (isTrial) {
+      final daysLeft = trialDaysRemaining ?? 0;
       if (daysLeft <= 3 && daysLeft > 0) {
         return _buildBanner(
          context, 

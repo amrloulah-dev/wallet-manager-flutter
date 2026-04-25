@@ -9,7 +9,6 @@ import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/date_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/firebase_service.dart';
-import '../models/paginated_result.dart';
 
 class TransactionRepository {
   final FirebaseService _firebaseService;
@@ -27,6 +26,9 @@ class TransactionRepository {
   FirebaseFirestore get _firestore => _firebaseService.firestore;
   CollectionReference get _transactionsCollection =>
       _firestore.collection(FirebaseConstants.transactions);
+
+  DocumentSnapshot? _lastDocument;
+  DocumentSnapshot? _lastAllDocument;
 
   String generateId() => _transactionsCollection.doc().id;
 
@@ -140,8 +142,8 @@ class TransactionRepository {
           'An unexpected error occurred while fetching the transaction.');
     }
   }
-  Future<PaginatedResult<TransactionModel>> getTransactionsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
+  Future<List<TransactionModel>> getTransactionsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate, {bool loadMore = false}) async {
     try {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -152,17 +154,23 @@ class TransactionRepository {
           .where('isDeleted', isEqualTo: false)
           .orderBy('transactionDate', descending: true);
 
-      if (lastDocument != null) {
-        query = query.startAfterDocument(lastDocument);
+      if (!loadMore) {
+        _lastDocument = null;
+      }
+
+      if (_lastDocument != null) {
+        query = query.startAfterDocument(_lastDocument!);
       }
 
       final snapshot = await query.limit(20).get();
       final items = snapshot.docs
           .map((doc) => TransactionModel.fromFirestore(doc))
           .toList();
-      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      if (snapshot.docs.isNotEmpty) {
+        _lastDocument = snapshot.docs.last;
+      }
       
-      return PaginatedResult(items: items, lastDocument: lastDoc);
+      return items;
     } on FirebaseException catch (e) {
       throw ServerException(
           'Failed to get transactions by date range: ${e.message}',
@@ -212,23 +220,29 @@ class TransactionRepository {
     }
   }
 
-  Future<PaginatedResult<TransactionModel>> getAllTransactions(String storeId, {DocumentSnapshot? lastDocument}) async {
+  Future<List<TransactionModel>> getAllTransactions(String storeId, {bool loadMore = false}) async {
     try {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where('isDeleted', isEqualTo: false);
 
-      if (lastDocument != null) {
-        query = query.startAfterDocument(lastDocument);
+      if (!loadMore) {
+        _lastAllDocument = null;
+      }
+
+      if (_lastAllDocument != null) {
+        query = query.startAfterDocument(_lastAllDocument!);
       }
 
       final snapshot = await query.limit(20).get();
       final items = snapshot.docs
           .map((doc) => TransactionModel.fromFirestore(doc))
           .toList();
-      final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      if (snapshot.docs.isNotEmpty) {
+        _lastAllDocument = snapshot.docs.last;
+      }
 
-      return PaginatedResult(items: items, lastDocument: lastDoc);
+      return items;
     } on FirebaseException catch (e) {
       throw ServerException('Failed to get all transactions: ${e.message}',
           code: e.code);

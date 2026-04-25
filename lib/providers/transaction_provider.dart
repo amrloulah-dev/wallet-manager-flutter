@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
@@ -26,7 +25,6 @@ class TransactionProvider extends BaseProvider {
   List<TransactionModel> _todayTransactions = [];
   Map<String, dynamic> _summary = {};
 
-  DocumentSnapshot? _lastDocument;
   bool _hasMore = true;
   DateTimeRange _dateRange = DateTimeRange(
       start: DateHelper.getStartOfDay(DateTime.now()),
@@ -167,16 +165,16 @@ class TransactionProvider extends BaseProvider {
 
     try {
       debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
-      final result = await _transactionRepository.getTransactionsByDateRange(
+      final items = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
+        loadMore: false,
       );
-      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
+      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${items.length} transactions.');
 
-      _transactions = result.items;
-      _lastDocument = result.lastDocument;
-      _hasMore = result.items.length >= 20;
+      _transactions = items;
+      _hasMore = items.length >= 20;
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
@@ -192,7 +190,7 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
       return;
     }
 
@@ -200,19 +198,18 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final result = await _transactionRepository.getTransactionsByDateRange(
+      final items = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
-        lastDocument: _lastDocument,
+        loadMore: true,
       );
 
-      if (result.items.isEmpty) {
+      if (items.isEmpty) {
         _hasMore = false;
       } else {
-        _transactions.addAll(result.items);
-        _lastDocument = result.lastDocument;
-        _hasMore = result.items.length >= 20;
+        _transactions.addAll(items);
+        _hasMore = items.length >= 20;
       }
 
       _rebuildTransactionMap();

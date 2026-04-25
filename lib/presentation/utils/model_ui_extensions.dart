@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/date_helper.dart';
+import '../../data/models/transaction_model.dart';
+import '../../data/models/debt_model.dart';
+
+extension TransactionModelUI on TransactionModel {
+  String getTransactionTypeDisplay(AppLocalizations l10n) {
+    if (isSend) return l10n.send;
+    if (isReceive) return l10n.receive;
+    if (isDeposit) return l10n.deposit;
+    return transactionType;
+  }
+
+  IconData get transactionTypeIcon => isSend
+      ? Icons.arrow_upward
+      : (isReceive ? Icons.arrow_downward : Icons.add_card_outlined);
+      
+  Color get transactionTypeColor => isSend
+      ? AppColors.send
+      : (isReceive ? AppColors.receive : AppColors.primary);
+
+  String getPaymentStatusDisplay(AppLocalizations l10n) {
+    return isPaid ? l10n.paid : l10n.debt;
+  }
+
+  String getRelativeTime(AppLocalizations l10n) =>
+      DateHelper.getRelativeTime(transactionDate, l10n: l10n);
+
+  bool get canBeModified {
+    // Can be modified within 5 minutes of creation
+    return DateTime.now().difference(createdAt).inMinutes < 5;
+  }
+
+  String get formattedDate =>
+      DateHelper.formatDateTime(transactionDate, format: 'dd/MM/yyyy');
+  String get formattedTime =>
+      DateHelper.formatDateTime(transactionDate, format: 'hh:mm a');
+}
+
+extension DebtModelUI on DebtModel {
+  String getDebtTypeDisplay(AppLocalizations l10n) =>
+      isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
+  
+  String getDebtStatusDisplay(AppLocalizations l10n) => 
+      isOpen ? l10n.openDebt : l10n.paidDebt;
+
+  IconData get debtTypeIcon =>
+      isTransactionDebt ? Icons.swap_horiz : Icons.shopping_cart;
+
+  Color get statusColor => isOpen ? AppColors.error : AppColors.success;
+
+  String getRelativeDebtDate(AppLocalizations l10n) => 
+      DateHelper.getRelativeTime(debtDate, l10n: l10n);
+
+  int get daysSinceCreated =>
+      DateTime.now().difference(debtDate).inDays;
+  
+  String get formattedDebtDate => DateHelper.formatDateTime(debtDate);
+  
+  String get formattedPaidDate =>
+      paidDate != null ? DateHelper.formatDateTime(paidDate!) : '';
+}
