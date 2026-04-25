@@ -24,7 +24,7 @@
     - [x] Run tests for all modified providers
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Architectural Foundation (Safe Lifecycle)' (Protocol in workflow.md) (e841129)
 
-## Phase 2: Critical Stability & Resource Cleanup
+## Phase 2: Critical Stability & Resource Cleanup [checkpoint: 6034c10]
 - [x] Task: Fix race condition in `AuthProvider` (733677a)
     - [x] Locate `_setStatus()` in `lib/providers/auth_provider.dart`
     - [x] Remove `notifyListeners()` from `addPostFrameCallback`
@@ -34,7 +34,7 @@
     - [x] Locate `dispose()` in `lib/providers/wallet_provider.dart`
     - [x] Add `_fetchShieldTimer?.cancel();` before `super.dispose()`
     - [x] Add unit test verifying `WalletProvider` disposal
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Critical Stability & Resource Cleanup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Critical Stability & Resource Cleanup' (Protocol in workflow.md) (6034c10)
 
 ## Phase 3: Selective Rebuild Strategy (Performance)
 - [ ] Task: Purge `context.watch<T>()` from screens
