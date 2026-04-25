@@ -30,10 +30,10 @@
     - [x] Remove `notifyListeners()` from `addPostFrameCallback`
     - [x] Replace with `safeNotify()` directly
     - [x] Add unit test verifying `_setStatus()`
-- [ ] Task: Fix resource leak in `WalletProvider`
-    - [ ] Locate `dispose()` in `lib/providers/wallet_provider.dart`
-    - [ ] Add `_fetchShieldTimer?.cancel();` before `super.dispose()`
-    - [ ] Add unit test verifying `WalletProvider` disposal
+- [x] Task: Fix resource leak in `WalletProvider` (5ff12e0)
+    - [x] Locate `dispose()` in `lib/providers/wallet_provider.dart`
+    - [x] Add `_fetchShieldTimer?.cancel();` before `super.dispose()`
+    - [x] Add unit test verifying `WalletProvider` disposal
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Critical Stability & Resource Cleanup' (Protocol in workflow.md)
 
 ## Phase 3: Selective Rebuild Strategy (Performance)
