@@ -1,6 +1,6 @@
 # Implementation Plan: State Management Remediation (V2)
 
-## Phase 1: Architectural Foundation (Safe Lifecycle)
+## Phase 1: Architectural Foundation (Safe Lifecycle) [checkpoint: e841129]
 - [x] Task: Create `SafeChangeNotifier` base class (cace69f)
     - [x] Create `lib/core/state/safe_change_notifier.dart`
     - [x] Implement `SafeChangeNotifier` inheriting from `ChangeNotifier`
@@ -22,7 +22,7 @@
     - [x] Purge manual `_isDisposed` fields from all providers
     - [x] Replace `notifyListeners()` with `safeNotify()` in all providers
     - [x] Run tests for all modified providers
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Architectural Foundation (Safe Lifecycle)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Architectural Foundation (Safe Lifecycle)' (Protocol in workflow.md) (e841129)
 
 ## Phase 2: Critical Stability & Resource Cleanup
 - [ ] Task: Fix race condition in `AuthProvider`
