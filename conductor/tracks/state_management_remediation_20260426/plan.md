@@ -25,11 +25,11 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Architectural Foundation (Safe Lifecycle)' (Protocol in workflow.md) (e841129)
 
 ## Phase 2: Critical Stability & Resource Cleanup
-- [ ] Task: Fix race condition in `AuthProvider`
-    - [ ] Locate `_setStatus()` in `lib/providers/auth_provider.dart`
-    - [ ] Remove `notifyListeners()` from `addPostFrameCallback`
-    - [ ] Replace with `safeNotify()` directly
-    - [ ] Add unit test verifying `_setStatus()`
+- [x] Task: Fix race condition in `AuthProvider` (733677a)
+    - [x] Locate `_setStatus()` in `lib/providers/auth_provider.dart`
+    - [x] Remove `notifyListeners()` from `addPostFrameCallback`
+    - [x] Replace with `safeNotify()` directly
+    - [x] Add unit test verifying `_setStatus()`
 - [ ] Task: Fix resource leak in `WalletProvider`
     - [ ] Locate `dispose()` in `lib/providers/wallet_provider.dart`
     - [ ] Add `_fetchShieldTimer?.cancel();` before `super.dispose()`
