@@ -162,6 +162,7 @@ class WalletProvider extends BaseProvider {
   @override
   void dispose() {
     _overlayDataSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
