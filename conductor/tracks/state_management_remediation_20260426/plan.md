@@ -48,15 +48,15 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Selective Rebuild Strategy (Performance)' (Protocol in workflow.md) (9cd87cb)
 
 ## Phase 4: UX Responsiveness & State Purity
-- [ ] Task: Immediate loading feedback in `AuthProvider`
-    - [ ] Update `_setLoading()` to call `safeNotify()` immediately
-    - [ ] Verify loading state updates instantly in tests
-- [ ] Task: State reset in async actions
-    - [ ] Add `_errorMessage = null; safeNotify();` to start of async actions in `WalletProvider`
-    - [ ] Add `_errorMessage = null; safeNotify();` to start of async actions in `TransactionProvider`
-    - [ ] Add `_errorMessage = null; safeNotify();` to start of async actions in `DebtProvider`
-    - [ ] Add `_errorMessage = null; safeNotify();` to start of async actions in `AuthProvider`
-    - [ ] Add unit tests verifying error reset logic
+- [x] Task: Immediate loading feedback in `AuthProvider` (733677a)
+    - [x] Update `_setLoading()` to call `safeNotify()` immediately
+    - [x] Verify loading state updates instantly in tests
+- [x] Task: State reset in async actions (7ccf6cb)
+    - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `WalletProvider`
+    - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `TransactionProvider`
+    - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `DebtProvider`
+    - [x] Add `_errorMessage = null; safeNotify();` to start of async actions in `AuthProvider`
+    - [x] Add unit tests verifying error reset logic
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & State Purity' (Protocol in workflow.md)
 
 ## Phase 5: Dependency Injection & Event Bus
