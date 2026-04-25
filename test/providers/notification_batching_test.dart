@@ -71,6 +71,26 @@ void main() {
         
         expect(callCount, 0, reason: 'Must not emit notification after dispose');
       });
+
+      test('safeNotify (via tryAutoLogin) fires if not disposed', () async {
+        final mockSync = sl<DatabaseSyncService>();
+        when(() => mockSync.tryAutoLogin()).thenAnswer((_) async => null);
+
+        final authProvider = AuthProvider();
+        
+        int callCount = 0;
+        authProvider.addListener(() {
+          callCount++;
+        });
+
+        // tryAutoLogin calls _setStatus(loading) then _setStatus(unauthenticated)
+        await authProvider.tryAutoLogin();
+        
+        // Wait for microtasks
+        await Future.microtask(() {});
+        
+        expect(callCount, greaterThan(0), reason: 'Must emit notification');
+      });
     });
   });
 }

@@ -359,9 +359,7 @@ class AuthProvider extends BaseProvider {
   void _setStatus(AuthStatus status) {
     if (_status == status) return;
     _status = status;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      safeNotify();
-    });
+    safeNotify();
   }
 
   @override
