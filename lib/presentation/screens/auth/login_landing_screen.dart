@@ -206,7 +206,6 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildOwnerTab() {
-    final authProvider = context.watch<AuthProvider>();
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -248,11 +247,15 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               ),
             ),
             const SizedBox(height: 16),
-            CustomButton(
-              text: l10n.logout, // Using logout as placeholder for login if no explicit key
-              onPressed:
-                  authProvider.isLoading ? null : _handleOwnerLoginWithEmail,
-              isLoading: authProvider.isLoading,
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.logout, // Using logout as placeholder for login if no explicit key
+                  onPressed: isLoading ? null : _handleOwnerLoginWithEmail,
+                  isLoading: isLoading,
+                );
+              },
             ),
             const SizedBox(height: 24),
             Row(
@@ -266,15 +269,18 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               ],
             ),
             const SizedBox(height: 24),
-            CustomButton(
-              text: l10n.continueWithGoogle,
-              onPressed:
-                  authProvider.isLoading ? null : _handleOwnerLoginWithGoogle,
-              isLoading: authProvider
-                  .isLoading, // Or use a separate loading state if needed
-              type: ButtonType.outlined,
-              icon: const FaIcon(FontAwesomeIcons.google,
-                  color: AppColors.primary),
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.continueWithGoogle,
+                  onPressed: isLoading ? null : _handleOwnerLoginWithGoogle,
+                  isLoading: isLoading,
+                  type: ButtonType.outlined,
+                  icon: const FaIcon(FontAwesomeIcons.google,
+                      color: AppColors.primary),
+                );
+              },
             ),
           ],
         ),
@@ -283,7 +289,6 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildEmployeeTab() {
-    final authProvider = context.watch<AuthProvider>();
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -308,10 +313,15 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 32),
-            CustomButton(
-              text: l10n.findStore,
-              onPressed: authProvider.isLoading ? null : _handleFindStore,
-              isLoading: authProvider.isLoading,
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.findStore,
+                  onPressed: isLoading ? null : _handleFindStore,
+                  isLoading: isLoading,
+                );
+              },
             ),
           ],
         ),
@@ -353,57 +363,56 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          final authProvider = context.watch<AuthProvider>();
-          
-          return Container(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              left: 24,
-              right: 24,
-              top: 24,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface(context),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(l10n.forgotPassword, style: AppTextStyles.h2),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.forgotPasswordMessage,
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
-                  ),
-                  const SizedBox(height: 24),
-                  CustomTextField(
-                    controller: emailController,
-                    labelText: l10n.email,
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    validator: Validators.validateEmail,
-                    keyboardType: TextInputType.emailAddress,
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 24),
-                  CustomButton(
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          left: 24,
+          right: 24,
+          top: 24,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.forgotPassword, style: AppTextStyles.h2),
+              const SizedBox(height: 8),
+              Text(
+                l10n.forgotPasswordMessage,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
+              ),
+              const SizedBox(height: 24),
+              CustomTextField(
+                controller: emailController,
+                labelText: l10n.email,
+                prefixIcon: const Icon(Icons.email_outlined),
+                validator: Validators.validateEmail,
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+              ),
+              const SizedBox(height: 24),
+              Selector<AuthProvider, bool>(
+                selector: (_, p) => p.isLoading,
+                builder: (context, isLoading, child) {
+                  return CustomButton(
                     text: l10n.sendLink,
-                    onPressed: authProvider.isLoading ? null : () async {
+                    onPressed: isLoading ? null : () async {
                       if (formKey.currentState!.validate()) {
                         await _handleForgotPassword(context, emailController.text.trim());
                       }
                     },
-                    isLoading: authProvider.isLoading,
-                  ),
-                ],
+                    isLoading: isLoading,
+                  );
+                },
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
     );
   }

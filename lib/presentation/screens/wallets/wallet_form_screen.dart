@@ -57,7 +57,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
         _initializeEditMode(wallet);
       }
       // Clear any previous errors when the screen loads
-      Provider.of<WalletProvider>(context, listen: false).clearError();
+      context.read<WalletProvider>().clearError();
     });
   }
 
@@ -81,14 +81,14 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final walletProvider = context.read<WalletProvider>();
+    final authProvider = context.read<AuthProvider>();
 
     walletProvider.clearError();
 
     // H006 (Tightened): Preemptive hard-stop paywall check — BEFORE form validation
     if (!_isEditMode) {
-      final subProvider = Provider.of<SubscriptionProvider>(context, listen: false);
+      final subProvider = context.read<SubscriptionProvider>();
       final currentCount = walletProvider.wallets.length;
       if (!subProvider.canAddWallet(currentCount)) {
         Navigator.pushNamed(context, RouteConstants.upgradeScreen);

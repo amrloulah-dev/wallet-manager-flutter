@@ -10,97 +10,102 @@ class PaywallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final systemConfigs = context.watch<SystemConfigProvider>().configs;
-    
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(loc.upgradeAccount),
-          centerTitle: true,
-          elevation: 0,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.workspace_premium,
-                size: 80,
-                color: Colors.amber,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                loc.unlockStoreCapabilities,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+
+    return Selector<SystemConfigProvider, SystemConfigsModel>(
+      selector: (_, provider) => provider.configs,
+      builder: (context, systemConfigs, child) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(loc.upgradeAccount),
+              centerTitle: true,
+              elevation: 0,
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(
+                    Icons.workspace_premium,
+                    size: 80,
+                    color: Colors.amber,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    loc.unlockStoreCapabilities,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    loc.paywallSubtitle,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Pro Yearly Plan
+                  _buildPlanCard(
+                    context,
+                    loc: loc,
+                    title: loc.proYearlyTitle,
+                    price: loc.proYearlyPrice,
+                    features: [
+                      loc.proFeature1,
+                      loc.proFeature2,
+                      loc.proFeature3,
+                      loc.proFeature4,
+                    ],
+                    isPopular: true,
+                    onTap: () => PaymentModalScreen.show(context, 'pro_yearly'),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Lifetime VIP Plan
+                  if (systemConfigs.lifetimePlanEnabled)
+                    _buildPlanCard(
+                      context,
+                      loc: loc,
+                      title: loc.lifetimeTitle,
+                      price: loc.lifetimePrice,
+                      scarcityText: systemConfigs.remainingLifetimeSeats > 0
+                          ? loc.remainingSeats(
+                              systemConfigs.remainingLifetimeSeats)
+                          : loc.soldOut,
+                      isDisabled: systemConfigs.remainingLifetimeSeats <= 0,
+                      features: [
+                        loc.lifetimeFeature1,
+                        loc.lifetimeFeature2,
+                        loc.lifetimeFeature3,
+                        loc.lifetimeFeature4,
+                      ],
+                      isPopular: false,
+                      color: Colors.purple.shade700,
+                      onTap: systemConfigs.remainingLifetimeSeats > 0
+                          ? () => PaymentModalScreen.show(context, 'lifetime')
+                          : null,
                     ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                loc.paywallSubtitle,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              // Pro Yearly Plan
-              _buildPlanCard(
-                context,
-                loc: loc,
-                title: loc.proYearlyTitle,
-                price: loc.proYearlyPrice,
-                features: [
-                  loc.proFeature1,
-                  loc.proFeature2,
-                  loc.proFeature3,
-                  loc.proFeature4,
+                  if (systemConfigs.lifetimePlanEnabled)
+                    const SizedBox(height: 32),
+
+                  Text(
+                    loc.termsAgreement,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
                 ],
-                isPopular: true,
-                onTap: () => PaymentModalScreen.show(context, 'pro_yearly'),
               ),
-              const SizedBox(height: 24),
-              
-              // Lifetime VIP Plan
-              if (systemConfigs.lifetimePlanEnabled)
-                _buildPlanCard(
-                  context,
-                  loc: loc,
-                  title: loc.lifetimeTitle,
-                  price: loc.lifetimePrice,
-                  scarcityText: systemConfigs.remainingLifetimeSeats > 0
-                      ? loc.remainingSeats(systemConfigs.remainingLifetimeSeats)
-                      : loc.soldOut,
-                  isDisabled: systemConfigs.remainingLifetimeSeats <= 0,
-                  features: [
-                    loc.lifetimeFeature1,
-                    loc.lifetimeFeature2,
-                    loc.lifetimeFeature3,
-                    loc.lifetimeFeature4,
-                  ],
-                  isPopular: false,
-                  color: Colors.purple.shade700,
-                  onTap: systemConfigs.remainingLifetimeSeats > 0 
-                      ? () => PaymentModalScreen.show(context, 'lifetime')
-                      : null,
-                ),
-              if (systemConfigs.lifetimePlanEnabled)
-                const SizedBox(height: 32),
-              
-              Text(
-                loc.termsAgreement,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -36,6 +36,8 @@ void main() {
 
       when(() => mockAuth.currentStoreId).thenReturn('test_store');
       when(() => mockAuth.currentStore).thenReturn(null);
+      when(() => mockAuth.isTrial).thenReturn(false);
+      when(() => mockAuth.trialDaysRemaining).thenReturn(null);
       
       // Stub the fetch calls
       when(() => mockStats.fetchDashboardStats(forceRefresh: any(named: 'forceRefresh'))).thenAnswer((_) async {});
@@ -62,6 +64,9 @@ void main() {
 
       // Subscription stubs
       when(() => mockSub.hasSeenSuccessModal).thenReturn(true);
+      when(() => mockSub.isExpired).thenReturn(false);
+      when(() => mockSub.hasDismissedRejection).thenReturn(false);
+      when(() => mockSub.latestRequest).thenReturn(null);
       when(() => mockSub.addListener(any())).thenReturn(null);
       when(() => mockSub.removeListener(any())).thenReturn(null);
 

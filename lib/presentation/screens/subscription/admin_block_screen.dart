@@ -63,7 +63,7 @@ class AdminBlockScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextButton.icon(
                   onPressed: () {
-                    Provider.of<AuthProvider>(context, listen: false).logout();
+                    context.read<AuthProvider>().logout();
                   },
                   icon: const Icon(Icons.logout),
                   label: Text(loc.logoutButton),

@@ -35,7 +35,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final subProvider = Provider.of<SubscriptionProvider>(context, listen: false);
+      final subProvider = context.read<SubscriptionProvider>();
       await subProvider.submitSubscriptionRequest(
         planId: widget.planId,
         paymentMethod: _selectedMethod,
@@ -44,7 +44,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
       
       if (!mounted) return;
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final authProvider = context.read<AuthProvider>();
       await authProvider.tryAutoLogin(); 
       
       if (!mounted) return;

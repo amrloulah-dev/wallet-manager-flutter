@@ -133,8 +133,6 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final employeeProvider = context.watch<EmployeeProvider>();
-    final employees = employeeProvider.activeEmployees; // Only active users
     final l10n = AppLocalizations.of(context)!;
 
     return DoubleBackToExitWrapper(
@@ -161,10 +159,12 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha((0.1 * 255).round()),
+                              color: AppColors.primary
+                                  .withAlpha((0.1 * 255).round()),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: AppColors.primary.withAlpha((0.3 * 255).round())),
+                                  color: AppColors.primary
+                                      .withAlpha((0.3 * 255).round())),
                             ),
                             child: Column(
                               children: [
@@ -191,8 +191,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           // 1. Store Password
                           CustomTextField(
                             controller: _storePasswordController,
-                            labelText:
-                                l10n.storePassword,
+                            labelText: l10n.storePassword,
                             hintText: l10n.enterStorePassword,
                             prefixIcon: const Icon(Icons.vpn_key_outlined),
                             suffixIcon: IconButton(
@@ -206,43 +205,51 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                             obscureText: _obscureStorePassword,
                             keyboardType: TextInputType.text,
                             // No strict validation on length here to allow flexibility, just not empty
-                            validator: (val) =>
-                                val == null || val.isEmpty ? l10n.requiredField : null,
+                            validator: (val) => val == null || val.isEmpty
+                                ? l10n.requiredField
+                                : null,
                           ),
                           const SizedBox(height: 20),
 
                           // 2. Select Employee
-                          if (employeeProvider.isLoading)
-                            const Center(child: CircularProgressIndicator())
-                          else if (employeeProvider.hasError)
-                            Center(
-                                child: Text(
-                                    employeeProvider.errorMessage ?? l10n.error,
-                                    style: const TextStyle(color: Colors.red)))
-                          else
-                            CustomDropdown<UserModel>(
-                              labelText: l10n.selectEmployee,
-                              hint: l10n.selectEmployeeHint,
-                              value: _selectedEmployee,
-                              prefixIcon: const Icon(Icons.person_outline),
-                              fillColor: AppColors.primary
-                                  .withAlpha((0.05 * 255).round()),
-
-                              // 1. نمرر قائمة الموظفين مباشرة (بدل ويدجت الـ items المعقدة)
-                              itemsList: employees,
-
-                              // 2. نخبر الويدجت كيف تقرأ النص من الموديل (هنا هو fullName)
-                              itemLabelBuilder: (UserModel employee) =>
-                                  employee.fullName,
-
-                              // تم حذف selectedItemBuilder لأن الويدجت الجديدة تتكفل به داخلياً
-
-                              onChanged: (val) {
-                                setState(() => _selectedEmployee = val);
-                              },
-                              validator: (val) =>
-                                  val == null ? l10n.pleaseSelectEmployee : null,
+                          Selector<EmployeeProvider,
+                              ({List<UserModel> employees, bool isLoading, bool hasError, String? errorMessage})>(
+                            selector: (_, p) => (
+                              employees: p.activeEmployees,
+                              isLoading: p.isLoading,
+                              hasError: p.hasError,
+                              errorMessage: p.errorMessage
                             ),
+                            builder: (context, data, child) {
+                              if (data.isLoading) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (data.hasError) {
+                                return Center(
+                                    child: Text(data.errorMessage ?? l10n.error,
+                                        style:
+                                            const TextStyle(color: Colors.red)));
+                              } else {
+                                return CustomDropdown<UserModel>(
+                                  labelText: l10n.selectEmployee,
+                                  hint: l10n.selectEmployeeHint,
+                                  value: _selectedEmployee,
+                                  prefixIcon: const Icon(Icons.person_outline),
+                                  fillColor: AppColors.primary
+                                      .withAlpha((0.05 * 255).round()),
+                                  itemsList: data.employees,
+                                  itemLabelBuilder: (UserModel employee) =>
+                                      employee.fullName,
+                                  onChanged: (val) {
+                                    setState(() => _selectedEmployee = val);
+                                  },
+                                  validator: (val) => val == null
+                                      ? l10n.pleaseSelectEmployee
+                                      : null,
+                                );
+                              }
+                            },
+                          ),
                           const SizedBox(height: 20),
 
                           // 3. Employee PIN
@@ -265,7 +272,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             validator: (val) {
-                              if (val == null || val.isEmpty) return l10n.requiredField;
+                              if (val == null || val.isEmpty)
+                                return l10n.requiredField;
                               if (val.length != 4) return l10n.pinMustBe4Digits;
                               return null;
                             },

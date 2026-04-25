@@ -27,49 +27,56 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<WalletProvider>();
-    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
-    final reactiveWallet = provider.wallets.firstWhere(
-        (w) => w.walletId == wallet.walletId,
-        orElse: () => wallet);
-
-    return AnimatedHoverCard(
-      onTap: isFrozen
-          ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
-          : onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Opacity(
-            opacity: isFrozen ? 0.5 : 1.0,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, reactiveWallet, isFrozen),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  _buildLimits(context, reactiveWallet),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  _buildStats(context, reactiveWallet),
-                  if (onEdit != null || onDelete != null) ...[
-                    const SizedBox(height: 12),
-                    _buildActions(context, isFrozen),
-                  ]
-                ],
-              ),
-            ),
-          ),
-          if (isFrozen)
-            const Positioned(
-              child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
-            ),
-        ],
+    return Selector<WalletProvider, ({WalletModel wallet, bool isFrozen})>(
+      selector: (_, provider) => (
+        wallet: provider.wallets.firstWhere(
+            (w) => w.walletId == wallet.walletId,
+            orElse: () => wallet),
+        isFrozen: provider.isWalletFrozenSync(wallet.walletId)
       ),
+      builder: (context, data, child) {
+        final reactiveWallet = data.wallet;
+        final isFrozen = data.isFrozen;
+
+        return AnimatedHoverCard(
+          onTap: isFrozen
+              ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+              : onTap,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: isFrozen ? 0.5 : 1.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(context, reactiveWallet, isFrozen),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      _buildLimits(context, reactiveWallet),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      _buildStats(context, reactiveWallet),
+                      if (onEdit != null || onDelete != null) ...[
+                        const SizedBox(height: 12),
+                        _buildActions(context, isFrozen),
+                      ]
+                    ],
+                  ),
+                ),
+              ),
+              if (isFrozen)
+                const Positioned(
+                  child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

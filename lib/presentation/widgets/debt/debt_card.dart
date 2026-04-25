@@ -121,7 +121,7 @@ class DebtCard extends StatelessWidget {
                 if (confirm == true) {
                   if (context.mounted) {
                     final success =
-                        await Provider.of<DebtProvider>(context, listen: false)
+                        await context.read<DebtProvider>()
                             .deleteDebt(debt.debtId);
 
                     if (success && context.mounted) {

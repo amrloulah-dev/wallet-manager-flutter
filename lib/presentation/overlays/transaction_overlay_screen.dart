@@ -69,7 +69,7 @@ class _OverlayContentState extends State<_OverlayContent> {
     super.initState();
     _commissionFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _provider = Provider.of<OverlayProvider>(context, listen: false);
+      _provider = context.read<OverlayProvider>();
 
       _overlaySubscription =
           FlutterOverlayWindow.overlayListener.listen((event) {
@@ -95,7 +95,7 @@ class _OverlayContentState extends State<_OverlayContent> {
 
   @override
   Widget build(BuildContext context) {
-    _provider = Provider.of<OverlayProvider>(context);
+    _provider = context.watch<OverlayProvider>();
     final theme = ThemeData.light();
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
