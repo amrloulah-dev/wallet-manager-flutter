@@ -10,10 +10,15 @@
     - **Analytics & Performance:** Monitoring user behavior and app health.
 
 ## State Management
-- **Provider:** Simple and scalable state management for app-wide and local states, using a centralized `BaseProvider` for common functionality.
+- **Provider:** Primary state management solution.
+    - `SafeChangeNotifier` (Custom): Base class with microtask-wrapped `safeNotify()` and disposal guards.
+    - `Selector`: For granular, field-level rebuild optimization.
+    - `ProxyProvider`: For cross-provider dependencies.
+    - `context.read<T>()`: For action-only provider access.
 
 ## Dependency Injection
 - **GetIt:** For centralized service and repository registration and decoupled access.
+    - Includes `AppEvents` bus for decoupled system events.
 
 ## Local Storage
 - **Shared Preferences:** Storing local settings and non-sensitive metadata.
