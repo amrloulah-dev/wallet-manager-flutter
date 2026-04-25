@@ -37,14 +37,14 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Critical Stability & Resource Cleanup' (Protocol in workflow.md) (6034c10)
 
 ## Phase 3: Selective Rebuild Strategy (Performance)
-- [ ] Task: Purge `context.watch<T>()` from screens
-    - [ ] Refactor `lib/presentation/screens/login_landing_screen.dart` to remove high-level `watch`
-    - [ ] Refactor `lib/presentation/widgets/wallet_card.dart` to remove high-level `watch`
-    - [ ] Identify and refactor other high-level `watch` usages in the presentation layer
-- [ ] Task: Integrate `Selector` and `context.read<T>()`
-    - [ ] Replace `watch` with `Selector<Provider, Value>` where targeted rebuilds are needed
-    - [ ] Replace `Provider.of<T>(context)` action calls with `context.read<T>()` or `listen: false`
-    - [ ] Verify UI tests or widget tests still pass
+- [x] Task: Purge `context.watch<T>()` from screens (17dd84a)
+    - [x] Refactor `lib/presentation/screens/login_landing_screen.dart` to remove high-level `watch`
+    - [x] Refactor `lib/presentation/widgets/wallet_card.dart` to remove high-level `watch`
+    - [x] Identify and refactor other high-level `watch` usages in the presentation layer
+- [x] Task: Integrate `Selector` and `context.read<T>()` (17dd84a)
+    - [x] Replace `watch` with `Selector<Provider, Value>` where targeted rebuilds are needed
+    - [x] Replace `Provider.of<T>(context)` action calls with `context.read<T>()` or `listen: false`
+    - [x] Verify UI tests or widget tests still pass
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Selective Rebuild Strategy (Performance)' (Protocol in workflow.md)
 
 ## Phase 4: UX Responsiveness & State Purity
