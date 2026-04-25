@@ -60,9 +60,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & State Purity' (Protocol in workflow.md) (3c02624)
 
 ## Phase 5: Dependency Injection & Event Bus
-- [ ] Task: Migrate `AppEvents` to Dependency Injection
-    - [ ] Delete global `appEvents` instance in `lib/providers/app_events.dart`
-    - [ ] Register `AppEvents` as `LazySingleton` in `lib/core/di/service_locator.dart`
-    - [ ] Refactor all files referencing `appEvents` to use `sl<AppEvents>()`
-    - [ ] Run app-wide tests to verify event bus communication
+- [x] Task: Migrate `AppEvents` to Dependency Injection (01844cb)
+    - [x] Delete global `appEvents` instance in `lib/providers/app_events.dart`
+    - [x] Register `AppEvents` as `LazySingleton` in `lib/core/di/service_locator.dart`
+    - [x] Refactor all files referencing `appEvents` to use `sl<AppEvents>()`
+    - [x] Run app-wide tests to verify event bus communication
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Dependency Injection & Event Bus' (Protocol in workflow.md)
