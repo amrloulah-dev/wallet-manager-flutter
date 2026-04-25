@@ -36,7 +36,7 @@
     - [x] Add unit test verifying `WalletProvider` disposal
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Critical Stability & Resource Cleanup' (Protocol in workflow.md) (6034c10)
 
-## Phase 3: Selective Rebuild Strategy (Performance)
+## Phase 3: Selective Rebuild Strategy (Performance) [checkpoint: 9cd87cb]
 - [x] Task: Purge `context.watch<T>()` from screens (17dd84a)
     - [x] Refactor `lib/presentation/screens/login_landing_screen.dart` to remove high-level `watch`
     - [x] Refactor `lib/presentation/widgets/wallet_card.dart` to remove high-level `watch`
@@ -45,7 +45,7 @@
     - [x] Replace `watch` with `Selector<Provider, Value>` where targeted rebuilds are needed
     - [x] Replace `Provider.of<T>(context)` action calls with `context.read<T>()` or `listen: false`
     - [x] Verify UI tests or widget tests still pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Selective Rebuild Strategy (Performance)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Selective Rebuild Strategy (Performance)' (Protocol in workflow.md) (9cd87cb)
 
 ## Phase 4: UX Responsiveness & State Purity
 - [ ] Task: Immediate loading feedback in `AuthProvider`
