@@ -9,7 +9,6 @@ import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
 import 'package:walletmanager/core/services/identity_service.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
-import 'package:walletmanager/providers/app_events.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
@@ -21,7 +20,6 @@ import 'package:walletmanager/core/services/database_sync_service.dart';
 class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
-class MockAppEvents extends Mock implements AppEvents {}
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockUserCredential extends Mock implements UserCredential {}
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -34,7 +32,6 @@ void main() {
   late MockUserRepository mockUserRepo;
   late MockStoreRepository mockStoreRepo;
   late MockLocalStorageService mockStorage;
-  late MockAppEvents mockEvents;
   late AuthProvider authProvider;
   late MockAuthRepository mockAuthRepo;
   late MockDeviceRepository mockDeviceRepo;
@@ -53,7 +50,6 @@ void main() {
     mockUserRepo = MockUserRepository();
     mockStoreRepo = MockStoreRepository();
     mockStorage = MockLocalStorageService();
-    mockEvents = MockAppEvents();
     mockAuthRepo = MockAuthRepository();
     mockDeviceRepo = MockDeviceRepository();
     mockLicenseRepo = MockLicenseKeyRepository();
@@ -133,9 +129,6 @@ void main() {
        userName: any(named: 'userName'),
        storeName: any(named: 'storeName'),
     )).thenAnswer((_) async {});
-    when(() => mockEvents.fireWalletsChanged()).thenAnswer((_) {});
-    when(() => mockEvents.fireTransactionsChanged()).thenAnswer((_) {});
-    when(() => mockEvents.fireDebtsChanged()).thenAnswer((_) {});
   });
 
   group('AuthProvider Employee Login', () {

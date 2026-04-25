@@ -25,6 +25,3 @@ class AppEvents {
     _statsRefreshController.close();
   }
 }
-
-/// Global instance of the AppEvents bus.
-final appEvents = AppEvents();

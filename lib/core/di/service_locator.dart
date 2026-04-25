@@ -18,6 +18,7 @@ import '../../data/repositories/overlay_repository.dart';
 import '../../data/services/local_storage_service.dart';
 import '../../data/services/wallet_cache_manager.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/app_events.dart';
 import '../../domain/usecases/overlay_usecase.dart';
 import '../../domain/usecases/transaction_fee_calculator.dart';
 import '../../domain/usecases/wallet_usecase.dart';
@@ -37,6 +38,7 @@ Future<void> setupServiceLocator() async {
   await localStorage.initialize();
   sl.registerSingleton<LocalStorageService>(localStorage);
   sl.registerLazySingleton<WalletCacheManager>(() => WalletCacheManager(storage: localStorage));
+  sl.registerLazySingleton<AppEvents>(() => AppEvents());
 
   sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
     authRepository: sl<AuthRepository>(),
