@@ -73,6 +73,13 @@ class DebtProvider extends BaseProvider {
   void _updateStatus(DebtStatus status) {
     if (isDisposed) return;
     _status = status;
+    // Reset error when starting a new operation
+    if (status == DebtStatus.loading ||
+        status == DebtStatus.creating ||
+        status == DebtStatus.updating) {
+      _errorMessage = null;
+    }
+    safeNotify();
   }
 
   @override

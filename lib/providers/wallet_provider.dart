@@ -497,6 +497,14 @@ class WalletProvider extends BaseProvider {
   void _updateStatus(WalletStatusState status) {
     if (isDisposed) return;
     _status = status;
+    // Reset error when starting a new operation
+    if (status == WalletStatusState.loading ||
+        status == WalletStatusState.creating ||
+        status == WalletStatusState.updating ||
+        status == WalletStatusState.deleting) {
+      _errorMessage = null;
+    }
+    safeNotify();
   }
 
   @override

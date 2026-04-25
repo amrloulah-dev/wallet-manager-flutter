@@ -359,6 +359,10 @@ class AuthProvider extends BaseProvider {
   void _setStatus(AuthStatus status) {
     if (_status == status) return;
     _status = status;
+    // Reset error when starting a new operation
+    if (status == AuthStatus.loading) {
+      _errorMessage = null;
+    }
     safeNotify();
   }
 

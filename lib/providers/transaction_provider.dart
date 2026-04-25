@@ -130,6 +130,12 @@ class TransactionProvider extends BaseProvider {
   void _updateStatus(TransactionStatus status) {
     if (isDisposed) return;
     _status = status;
+    // Reset error when starting a new operation
+    if (status == TransactionStatus.loading ||
+        status == TransactionStatus.creating) {
+      _errorMessage = null;
+    }
+    safeNotify();
   }
 
   @override
