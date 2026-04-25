@@ -14,13 +14,14 @@ void main() {
   });
 
   group('BaseProvider Tests', () {
-    test('safeNotify should call notifyListeners when not disposed', () {
+    test('safeNotify should call notifyListeners when not disposed', () async {
       int notifyCount = 0;
       provider.addListener(() {
         notifyCount++;
       });
 
       provider.triggerNotify();
+      await Future.microtask(() {});
       expect(notifyCount, 1);
     });
 
