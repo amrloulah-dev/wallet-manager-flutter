@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/core/sms_automation/strategies/generic_bank_strategy.dart';
-import 'package:walletmanager/core/sms_automation/models/parsed_sms_dto.dart';
 
 void main() {
   late GenericBankStrategy strategy;

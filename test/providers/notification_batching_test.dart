@@ -12,12 +12,15 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
+import 'package:walletmanager/core/services/database_sync_service.dart';
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
 class MockUserRepository extends Mock implements UserRepository {}
 class MockDeviceRepository extends Mock implements DeviceRepository {}
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+class MockDatabaseSyncService extends Mock implements DatabaseSyncService {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +39,7 @@ void main() {
     sl.registerSingleton<DeviceRepository>(MockDeviceRepository());
     sl.registerSingleton<LicenseKeyRepository>(MockLicenseKeyRepository());
     sl.registerSingleton<LocalStorageService>(MockLocalStorageService());
+    sl.registerSingleton<DatabaseSyncService>(MockDatabaseSyncService());
 
     // Setup basic expectations
     final mockStorage = sl<LocalStorageService>();

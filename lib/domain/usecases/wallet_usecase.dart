@@ -8,6 +8,7 @@ import '../../providers/subscription_provider.dart';
 
 /// UseCase for wallet-related business logic.
 class WalletUseCase {
+  // ignore: unused_field
   final WalletRepository _walletRepository;
   final AuthProvider _authProvider;
 

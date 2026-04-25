@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
-import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
 
 // A subclass to allow injecting a fake firestore

@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 import '../data/models/user_permissions.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subscription_provider.dart';
 import 'base_provider.dart';
 

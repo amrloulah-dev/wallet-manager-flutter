@@ -190,6 +190,8 @@ void main() {
             email: 'emp_${mockEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           )).thenThrow(FirebaseAuthException(code: 'wrong-password'));
+      when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
+      when(() => mockStorage.clearSession()).thenAnswer((_) async {});
 
       final success = await authProvider.loginAsEmployee(mockEmployee, mockStore);
 

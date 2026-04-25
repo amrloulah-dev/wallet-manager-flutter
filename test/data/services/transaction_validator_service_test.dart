@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
-import 'package:walletmanager/data/services/transaction_validator_service.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockTransaction extends Mock implements Transaction {}

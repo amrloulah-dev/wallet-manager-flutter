@@ -14,7 +14,6 @@ import 'data/services/transaction_validator_service.dart';
 import 'data/repositories/system_config_repository.dart';
 import 'data/repositories/employee_repository.dart';
 import 'data/repositories/wallet_repository.dart';
-import 'data/repositories/transaction_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/repositories/stats_repository.dart';
 
@@ -32,7 +31,6 @@ import 'providers/system_config_provider.dart';
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/subscription/paywall_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
-import 'presentation/screens/home/main_dashboard_screen.dart';
 
 import 'l10n/arb/app_localizations.dart';
 import 'routes/navigation_service.dart';

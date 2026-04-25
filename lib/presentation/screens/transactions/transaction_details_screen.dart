@@ -10,6 +10,8 @@ import '../../../data/models/wallet_model.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../../l10n/arb/app_localizations.dart';
+import '../../utils/wallet_extensions.dart';
+
 
 class TransactionDetailsScreen extends StatefulWidget {
   const TransactionDetailsScreen({super.key});

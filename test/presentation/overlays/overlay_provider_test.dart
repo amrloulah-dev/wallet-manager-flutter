@@ -10,6 +10,7 @@ class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
   late MockOverlayUseCase mockOverlayUseCase;
+  // ignore: unused_local_variable
   late OverlayProvider overlayProvider;
 
   setUp(() {
@@ -21,6 +22,7 @@ void main() {
   group('OverlayProvider semantic errors', () {
     test('emits semantic error for InstaPay limit', () async {
       // Setup data that triggers InstaPay limit
+      // ignore: unused_local_variable
       final data = {
         'amount': 70001,
         'sender': '01012345678',

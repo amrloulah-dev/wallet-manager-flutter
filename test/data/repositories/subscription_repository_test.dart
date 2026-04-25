@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/repositories/subscription_repository.dart';
-import 'package:walletmanager/data/models/device_registration_model.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}

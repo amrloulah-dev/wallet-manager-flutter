@@ -31,6 +31,30 @@ class TransactionRepository {
   String generateId() => _transactionsCollection.doc().id;
 
   // 1️⃣ CREATE
+
+  /// Creates a deposit transaction from primitive Dart types.
+  /// [Timestamp] stamps are applied here, keeping infrastructure types
+  /// out of the providers layer (STRICT CLEAN ARCHITECTURE).
+  Future<void> createDeposit({
+    required String transactionId,
+    required String storeId,
+    required String walletId,
+    required double amount,
+    required String createdBy,
+  }) async {
+    final now = Timestamp.now();
+    final transaction = TransactionModel(
+      transactionId: transactionId,
+      storeId: storeId,
+      walletId: walletId,
+      transactionType: 'deposit',
+      amount: amount,
+      transactionDate: now,
+      createdAt: now,
+      createdBy: createdBy,
+    );
+    return createTransaction(transaction);
+  }
   Future<void> createTransaction(TransactionModel transaction) async {
     try {
       debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '

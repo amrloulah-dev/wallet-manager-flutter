@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -14,7 +12,6 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
 import 'subscription_provider.dart'; // Added import
-import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
@@ -41,12 +38,13 @@ class WalletProvider extends BaseProvider {
   // State
   String? _currentStoreId;
 
+  // ignore: unused_field
   final AuthProvider _authProvider; // Made final and non-nullable
   SubscriptionProvider? _subscriptionProvider;
   List<WalletModel> _wallets = [];
   Map<String, WalletModel> _walletMap = {};
   final Set<String> _frozenWalletIds = {};
-  DocumentSnapshot? _lastDocument;
+  dynamic _lastDocument; // opaque cursor — typed at the repository boundary
   bool _hasMore = true;
 
   // Status
@@ -418,24 +416,15 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_frozen');
       }
 
-      final newTransaction = TransactionModel(
+      await _transactionRepository.createDeposit(
         transactionId: _transactionRepository.generateId(),
         storeId: _currentStoreId!,
         walletId: walletId,
-        transactionType: 'deposit',
         amount: amount,
-        transactionDate: Timestamp.now(),
-        createdAt: Timestamp.now(),
         createdBy: createdBy,
       );
-
-      try {
-        await _transactionRepository.createTransaction(newTransaction);
-        _updateStatus(WalletStatusState.loaded);
-        return true;
-      } catch (e) {
-        rethrow;
-      }
+      _updateStatus(WalletStatusState.loaded);
+      return true;
     } on AppException catch (e) {
       setError(e.message);
       return false;
@@ -466,8 +455,8 @@ class WalletProvider extends BaseProvider {
             stackTrace: stack);
         rethrow;
       }
-    } on FirebaseException catch (e) {
-      setError(e.message ?? 'wallet_error_delete_failed', e);
+    } on Exception catch (e) {
+      setError(e.toString(), e);
       return false;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);

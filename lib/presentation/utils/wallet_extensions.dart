@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../models/wallet_model.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
 
 /// UI-related extensions for [WalletModel].
 extension WalletUIExtensions on WalletModel {

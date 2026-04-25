@@ -15,7 +15,7 @@ class SkeletonCard extends StatefulWidget {
   });
 
   @override
-  _SkeletonCardState createState() => _SkeletonCardState();
+  State<SkeletonCard> createState() => _SkeletonCardState();
 }
 
 class _SkeletonCardState extends State<SkeletonCard>

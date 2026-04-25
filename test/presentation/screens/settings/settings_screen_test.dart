@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/models/sim_wallet_config.dart';
 import 'package:collection/collection.dart';
 

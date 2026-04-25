@@ -4,7 +4,6 @@ import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockStatsRepository extends Mock implements StatsRepository {}
 

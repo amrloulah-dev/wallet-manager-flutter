@@ -118,6 +118,17 @@ class AuthProvider extends BaseProvider {
       await _authRepository.sendPasswordResetEmail(email);
       _setStatus(AuthStatus.idle);
       _errorMessage = null; 
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          setError('auth_error_account_not_found', e);
+        case 'invalid-email':
+          setError('auth_error_invalid_email', e);
+        case 'too-many-requests':
+          setError('auth_error_too_many_requests', e);
+        default:
+          setError(e.message ?? 'auth_operation_failed', e);
+      }
     } catch (e, stack) {
       setError(e is AppException ? e.message : 'auth_operation_failed', e, stack);
     }
@@ -313,8 +324,8 @@ class AuthProvider extends BaseProvider {
       await _localStorage.clearSession();
       _clearState();
       _setStatus(AuthStatus.unauthenticated);
-    } catch (e) {
-      setError('حدث خطأ أثناء تسجيل الخروج');
+    } catch (e, stack) {
+      setError('حدث خطأ أثناء تسجيل الخروج', e, stack);
     }
   }
 
