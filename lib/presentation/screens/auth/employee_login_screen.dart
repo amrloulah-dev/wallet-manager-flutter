@@ -272,8 +272,9 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             validator: (val) {
-                              if (val == null || val.isEmpty)
+                              if (val == null || val.isEmpty) {
                                 return l10n.requiredField;
+                              }
                               if (val.length != 4) return l10n.pinMustBe4Digits;
                               return null;
                             },

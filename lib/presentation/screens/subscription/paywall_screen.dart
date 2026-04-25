@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/system_config_provider.dart';
+import '../../../data/models/system_configs_model.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
 
