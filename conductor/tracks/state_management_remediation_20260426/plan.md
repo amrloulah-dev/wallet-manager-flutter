@@ -1,13 +1,13 @@
 # Implementation Plan: State Management Remediation (V2)
 
 ## Phase 1: Architectural Foundation (Safe Lifecycle)
-- [ ] Task: Create `SafeChangeNotifier` base class
-    - [ ] Create `lib/core/state/safe_change_notifier.dart`
-    - [ ] Implement `SafeChangeNotifier` inheriting from `ChangeNotifier`
-    - [ ] Encapsulate `bool _isDisposed = false`
-    - [ ] Override `dispose()` setting `_isDisposed = true` before `super.dispose()`
-    - [ ] Implement `protected` method `safeNotify()` using `Future.microtask()` checking `!_isDisposed && hasListeners`
-    - [ ] Write unit tests for `SafeChangeNotifier`
+- [x] Task: Create `SafeChangeNotifier` base class (cace69f)
+    - [x] Create `lib/core/state/safe_change_notifier.dart`
+    - [x] Implement `SafeChangeNotifier` inheriting from `ChangeNotifier`
+    - [x] Encapsulate `bool _isDisposed = false`
+    - [x] Override `dispose()` setting `_isDisposed = true` before `super.dispose()`
+    - [x] Implement `protected` method `safeNotify()` using `Future.microtask()` checking `!_isDisposed && hasListeners`
+    - [x] Write unit tests for `SafeChangeNotifier`
 - [ ] Task: Refactor Providers to extend `SafeChangeNotifier`
     - [ ] Update `AuthProvider`
     - [ ] Update `WalletProvider`
