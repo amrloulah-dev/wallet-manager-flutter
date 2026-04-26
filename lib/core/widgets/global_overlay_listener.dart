@@ -10,6 +10,7 @@ import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 
 import 'package:walletmanager/core/utils/number_parser.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 
 class GlobalOverlayListener extends StatefulWidget {
   final Widget child;
@@ -68,13 +69,13 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
           transactionId: data['transactionId']?.toString() ?? '',
           storeId: data['storeId']?.toString() ?? '',
           walletId: data['walletId']?.toString() ?? '',
-          transactionType: data['type'] == 'debit' ? 'send' : 'receive',
+          transactionType: TransactionType.fromString(data['type']?.toString() ?? 'debit'), // ENUM refactor
           customerPhone: data['sender']?.toString(),
           customerName: data['customerName']?.toString(),
           amount: NumberParser.toDouble(data['amount']),
           commission: NumberParser.toDouble(data['commission']),
           serviceFee: 0.0, 
-          paymentStatus: data['paymentStatus']?.toString() ?? 'paid',
+          paymentStatus: PaymentStatus.fromString(data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
           transactionDate: DateTime.parse(nowStr),
           createdAt: DateTime.parse(nowStr),
           createdBy: 'SMS Auto',

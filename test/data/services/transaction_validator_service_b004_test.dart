@@ -5,6 +5,8 @@ import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 
 // A subclass to allow injecting a fake firestore
 class TestTransactionValidatorService extends TransactionValidatorService {
@@ -30,8 +32,8 @@ void main() {
     await walletRef.set({
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.phoneNumber: '01012345678',
-      FirebaseConstants.walletType: 'vodafone_cash',
-      FirebaseConstants.walletStatus: 'old',
+      FirebaseConstants.walletType: WalletType.vodafoneCash.name, // ENUM refactor
+      FirebaseConstants.walletStatus: WalletStatus.active.name, // ENUM refactor
       'balance': 1000.0,
       FirebaseConstants.isActive: false, // 🚩 Inactive
       FirebaseConstants.createdAt: Timestamp.now(),
@@ -62,11 +64,11 @@ void main() {
       transactionId: 'tx1',
       storeId: storeId,
       walletId: walletId,
-      transactionType: 'send',
+      transactionType: TransactionType.debit, // ENUM refactor
       amount: 100.0,
       commission: 5.0,
       serviceFee: 1.0,
-      paymentStatus: 'paid',
+      paymentStatus: PaymentStatus.paid, // ENUM refactor
       transactionDate: DateTime.now(),
       createdAt: DateTime.now(),
       createdBy: 'user1',

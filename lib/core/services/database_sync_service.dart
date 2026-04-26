@@ -16,6 +16,8 @@ import 'package:walletmanager/core/services/identity_service.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/utils/password_hasher.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
 
 class AuthSessionResult {
   final UserModel user;
@@ -56,12 +58,12 @@ class DatabaseSyncService {
     final savedUserRole = _localStorage.userRole;
 
     if (savedUserId != null && savedStoreId != null && savedUserRole != null) {
-      if (savedUserRole == 'owner') {
+      if (savedUserRole == UserRole.owner.name) { // ENUM refactor
         final firebaseUser = _authRepository.getCurrentUser();
         if (firebaseUser != null) {
           return await _finalizeOwnerLogin(firebaseUser.uid);
         }
-      } else if (savedUserRole == 'employee') {
+      } else if (savedUserRole == UserRole.employee.name) { // ENUM refactor
         final user = await _userRepository.getUserById(savedUserId);
         final store = await _storeRepository.getStoreById(savedStoreId);
 
@@ -101,13 +103,13 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(userModel.userId);
       AnalyticsService.setUserId(userModel.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: userModel.role);
+      AnalyticsService.setUserProperty(name: 'role', value: userModel.role.name); // ENUM refactor
       AnalyticsService.logLogin('email_password');
 
       await _localStorage.saveSession(
         userId: userModel.userId,
         storeId: store.storeId,
-        userRole: userModel.role,
+        userRole: userModel.role.name, // ENUM refactor
         userName: userModel.fullName,
         storeName: store.storeName,
       );
@@ -147,13 +149,13 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(user.userId);
       AnalyticsService.setUserId(user.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: user.role);
+      AnalyticsService.setUserProperty(name: 'role', value: user.role.name); // ENUM refactor
       AnalyticsService.logLogin('google');
 
       await _localStorage.saveSession(
         userId: user.userId,
         storeId: store.storeId,
-        userRole: user.role,
+        userRole: user.role.name, // ENUM refactor
         userName: user.fullName,
         storeName: store.storeName,
       );
@@ -195,13 +197,13 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(employee.userId);
       AnalyticsService.setUserId(employee.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: 'employee');
+      AnalyticsService.setUserProperty(name: 'role', value: UserRole.employee.name); // ENUM refactor
       AnalyticsService.logLogin('pin_code');
 
       await _localStorage.saveSession(
         userId: employee.userId,
         storeId: store.storeId,
-        userRole: 'employee',
+        userRole: UserRole.employee.name, // ENUM refactor
         userName: employee.fullName,
         storeName: store.storeName,
       );
@@ -235,7 +237,7 @@ class DatabaseSyncService {
       await _localStorage.saveSession(
         userId: updatedEmployee.userId,
         storeId: store.storeId,
-        userRole: updatedEmployee.role,
+        userRole: updatedEmployee.role.name, // ENUM refactor
         userName: updatedEmployee.fullName,
         storeName: store.storeName,
       );
@@ -347,7 +349,7 @@ class DatabaseSyncService {
     final userId = uid;
 
     final placeholderSubscription = StoreSubscription(
-      planId: "trial",
+      planId: SubscriptionPlan.trial, // ENUM refactor
       status: SubscriptionStatus.active,
       endDate: DateTime.now().add(const Duration(days: 14)),
       trialConsumed: false,
@@ -379,7 +381,7 @@ class DatabaseSyncService {
     final newOwner = UserModel(
       userId: userId,
       storeId: storeId,
-      role: 'owner',
+      role: UserRole.owner, // ENUM refactor
       fullName: name,
       email: email,
       firebaseUid: uid,
@@ -396,7 +398,7 @@ class DatabaseSyncService {
     await _localStorage.saveSession(
       userId: userId,
       storeId: storeId,
-      userRole: 'owner',
+      userRole: UserRole.owner.name, // ENUM refactor
       userName: newOwner.fullName,
       storeName: resolvedStore.storeName,
     );

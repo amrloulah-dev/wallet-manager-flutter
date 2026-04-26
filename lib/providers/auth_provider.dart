@@ -119,12 +119,16 @@ class AuthProvider extends BaseProvider {
       await _authRepository.sendPasswordResetEmail(email);
       _setStatus(AuthStatus.idle);
       _errorMessage = null; 
-    } on UserNotFoundException catch (e) {
-      setError('auth_error_account_not_found', e);
-    } on AuthException catch (e) {
-      setError(e.message, e);
     } catch (e, stack) {
-      setError(e is AppException ? e.message : 'auth_operation_failed', e, stack);
+      if (e is UserNotFoundException) {
+        setError('auth_error_account_not_found', e, stack);
+      } else if (e is AuthException) {
+        setError(e.message, e, stack);
+      } else if (e is AppException) {
+        setError(e.message, e, stack);
+      } else {
+        setError('auth_operation_failed', e, stack);
+      }
     }
   }
 

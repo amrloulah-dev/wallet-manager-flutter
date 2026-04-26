@@ -1,6 +1,7 @@
 enum TransactionType {
   credit, // Deposit/Receive
   debit, // Transfer/Send
+  deposit, // Balance top-up
   other;
 
   String get nameAr {
@@ -9,6 +10,8 @@ enum TransactionType {
         return 'إيداع / استلام';
       case TransactionType.debit:
         return 'تحويل / إرسال';
+      case TransactionType.deposit:
+        return 'شحن رصيد';
       case TransactionType.other:
         return 'أخرى';
     }
@@ -22,6 +25,8 @@ enum TransactionType {
       case 'debit':
       case 'send':
         return TransactionType.debit;
+      case 'deposit':
+        return TransactionType.deposit;
       default:
         return TransactionType.other;
     }
@@ -34,7 +39,8 @@ enum TransactionType {
 enum PaymentStatus {
   paid,
   pending,
-  failed;
+  failed,
+  debt;
 
   String get nameAr {
     switch (this) {
@@ -44,6 +50,8 @@ enum PaymentStatus {
         return 'قيد الانتظار';
       case PaymentStatus.failed:
         return 'فشل';
+      case PaymentStatus.debt:
+        return 'دين';
     }
   }
 
@@ -55,6 +63,8 @@ enum PaymentStatus {
         return PaymentStatus.pending;
       case 'failed':
         return PaymentStatus.failed;
+      case 'debt':
+        return PaymentStatus.debt;
       default:
         return PaymentStatus.pending;
     }

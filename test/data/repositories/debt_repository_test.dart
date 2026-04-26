@@ -54,11 +54,11 @@ void main() {
       when(() => mockQuery.orderBy('createdAt', descending: any(named: 'descending'))).thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-      when(() => mockSnapshot.docs).thenReturn([]);
+      when(() => mockSnapshot.docs).thenReturn(<QueryDocumentSnapshot<Map<String, dynamic>>>[]);
 
       final result = await repository.getDebtsByDateRange(storeId, DateTime.now(), DateTime.now());
 
-      expect(result, isA<PaginatedResult>());
+      expect(result, isA<List>()); // It returns a List, not a PaginatedResult
       verify(() => mockQuery.limit(20)).called(1);
     });
   });

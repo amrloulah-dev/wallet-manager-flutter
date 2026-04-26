@@ -11,10 +11,17 @@ import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    AppErrorHandler.isTestMode = true;
+  });
+
   group('Model Enum Serialization', () {
     test('DebtModel should serialize/deserialize enums', () {
       final now = DateTime.now();

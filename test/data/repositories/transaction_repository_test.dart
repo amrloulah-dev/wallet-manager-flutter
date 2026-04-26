@@ -58,11 +58,11 @@ void main() {
       when(() => mockQuery.where('isDeleted', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-      when(() => mockSnapshot.docs).thenReturn([]);
+      when(() => mockSnapshot.docs).thenReturn(<QueryDocumentSnapshot<Map<String, dynamic>>>[]);
 
       final result = await repository.getAllTransactions(storeId);
 
-      expect(result, isA<PaginatedResult>());
+      expect(result, isA<List>()); // It returns a List, not a PaginatedResult
       verify(() => mockQuery.limit(20)).called(1);
     });
 
@@ -86,7 +86,7 @@ void main() {
       when(() => mockQuery.startAfterDocument(any())).thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-      when(() => mockSnapshot.docs).thenReturn([mockDoc]);
+      when(() => mockSnapshot.docs).thenReturn(<QueryDocumentSnapshot<Map<String, dynamic>>>[mockDoc]);
 
       await repository.getAllTransactions(storeId);
       await repository.getAllTransactions(storeId, loadMore: true);

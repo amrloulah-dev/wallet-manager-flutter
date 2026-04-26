@@ -8,17 +8,20 @@ import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/enums/debt_enums.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
-class MockCacheManager extends Mock implements CacheManager {}
-class MockStatsRepository extends Mock implements StatsRepository {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late FakeFirebaseFirestore fakeFirestore;
   late MockFirebaseService mockFirebaseService;
   late StatsRepository statsRepository;
 
   setUp(() {
+    AppErrorHandler.isTestMode = true;
     fakeFirestore = FakeFirebaseFirestore();
     mockFirebaseService = MockFirebaseService();
     statsRepository = StatsRepository(firestore: fakeFirestore);
@@ -72,7 +75,13 @@ void main() {
         'storeId': 'store1',
         'amountDue': 100.0,
         'totalAmount': 100.0,
-        'debtStatus': 'open',
+        'debtStatus': DebtStatus.open.name,
+        'debtType': 'store_sale',
+        'customerName': 'Test',
+        'customerPhone': '010',
+        'createdBy': 'user1',
+        'createdAt': Timestamp.now(),
+        'debtDate': Timestamp.now(),
       });
 
       expect(() => repository.processPayment(debtId, 150.0, 'user1'),

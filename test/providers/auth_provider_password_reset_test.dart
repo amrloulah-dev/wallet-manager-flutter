@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
@@ -11,6 +10,7 @@ import 'package:walletmanager/data/repositories/license_key_repository.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
+import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
@@ -80,7 +80,7 @@ void main() {
 
     test('maps user-not-found error code correctly', () async {
       when(() => mockAuthRepo.sendPasswordResetEmail(any()))
-          .thenThrow(FirebaseAuthException(code: 'user-not-found'));
+          .thenThrow(UserNotFoundException());
 
       await authProvider.sendPasswordReset('nonexistent@example.com');
 
@@ -89,7 +89,7 @@ void main() {
 
     test('maps invalid-email error code correctly', () async {
       when(() => mockAuthRepo.sendPasswordResetEmail(any()))
-          .thenThrow(FirebaseAuthException(code: 'invalid-email'));
+          .thenThrow(AuthException('auth_error_invalid_email'));
 
       await authProvider.sendPasswordReset('bad@email.com');
 
@@ -98,7 +98,7 @@ void main() {
 
     test('maps too-many-requests error code correctly', () async {
       when(() => mockAuthRepo.sendPasswordResetEmail(any()))
-          .thenThrow(FirebaseAuthException(code: 'too-many-requests'));
+          .thenThrow(AuthException('auth_error_too_many_requests'));
 
       await authProvider.sendPasswordReset('busy@example.com');
 
