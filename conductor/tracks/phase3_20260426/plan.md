@@ -9,7 +9,7 @@
     - [x] Write failing test for `processPayment` rejecting negative/zero values
     - [x] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`
     - [x] Ensure tests pass
-- [x] Task: Implement atomic ceiling checks for `DebtRepository.processPayment`
+- [x] Task: Implement atomic ceiling checks for `DebtRepository.processPayment` [976af45]
     - [x] Write failing test for overpayment throwing `InvalidAmountException`
     - [x] Refactor `DebtRepository.processPayment` using `runTransaction` to enforce `paymentAmount <= amountDue`
     - [x] Ensure tests pass
