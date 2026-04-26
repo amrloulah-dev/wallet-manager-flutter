@@ -4,7 +4,7 @@
 - [x] Task: Decouple AppErrorHandler from UI components (d5fb222)
     - [ ] Update `lib/core/errors/app_error_handler.dart` to remove `BotToast` and `showDialog` dependencies.
     - [ ] Ensure `AppErrorHandler` only handles logging.
-- [ ] Task: Fix string interpolation bugs in WalletRepository
+- [x] Task: Fix string interpolation bugs in WalletRepository (28f05dd)
     - [ ] Refactor `wallet_repository.dart` replacing `'...: e'` with `'...: $e'`.
 - [ ] Task: Purge unsafe null-bang operators
     - [ ] Update `statistics_provider.dart` to use safe coalescing `??`.
