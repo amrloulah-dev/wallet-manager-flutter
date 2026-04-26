@@ -24,7 +24,7 @@
     - [x] Write failing test for error emission in `UserRepository`, `StoreRepository`, and `EmployeeRepository`
     - [x] Replace empty `.handleError` blocks with `AppErrorHandler.handle(e)` and re-emit via `Stream.error(e)`
     - [x] Ensure tests pass
-- [x] Task: Implement cost capping in snapshots
+- [x] Task: Implement cost capping in snapshots [27313d9]
     - [x] Update employee-related snapshots in `EmployeeRepository` and `UserRepository` with `.limit(100)`
 - [ ] Task: Ensure listener safety across providers
     - [ ] Update `SystemConfigProvider` and other `.listen()` callers to include explicit `onError` handling (surfacing via Toasts/Snackbars)
