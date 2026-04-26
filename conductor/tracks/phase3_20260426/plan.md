@@ -44,7 +44,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Domain Purity & Enum Migration' (Protocol in workflow.md)
 
 ## Phase 4: UX Responsiveness & Precision Handling
-- [x] Task: Ensure immediate feedback in Providers
+- [x] Task: Ensure immediate feedback in Providers [134b4fa]
     - [x] Write failing tests to verify `setLoading(true)` or `safeNotify()` is called immediately and `_errorMessage = null;` is reset before async work
     - [x] Update Provider action methods accordingly
     - [x] Ensure tests pass
