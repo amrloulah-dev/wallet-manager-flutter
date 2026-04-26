@@ -1,12 +1,13 @@
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:bot_toast/bot_toast.dart';
-import '../../routes/navigation_service.dart';
 import '../services/analytics_service.dart';
 import 'error_severity.dart';
 
+/// Centralized error handler responsible for logging and diagnostics.
+/// 
+/// This class is strictly decoupled from UI components (like BotToast or showDialog)
+/// to ensure it can safely run in background isolates or before the UI is mounted.
 class AppErrorHandler {
   static bool isTestMode = false;
   
@@ -58,6 +59,10 @@ class AppErrorHandler {
     }
   }
 
+  /// Handles an error by logging diagnostics and reporting to analytics.
+  /// 
+  /// UI notifications should be handled at the call site or via a dedicated
+  /// UI notification service to maintain core decoupling.
   static void handle(
     Object error, {
     ErrorSeverity severity = ErrorSeverity.medium,
@@ -76,37 +81,14 @@ class AppErrorHandler {
       operation: operation,
     );
 
-    switch (severity) {
-      case ErrorSeverity.low:
-        BotToast.showText(text: message);
-        break;
-      case ErrorSeverity.medium:
-        BotToast.showNotification(
-          title: (_) => const Text('تنبيه'),
-          subtitle: (_) => Text(message),
-        );
-        break;
-      case ErrorSeverity.critical:
-        final context = NavigationService.navigatorKey.currentContext;
-        if (context != null) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('خطأ حرج'),
-              content: Text(message),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('حسناً'),
-                ),
-              ],
-            ),
-          );
-        } else {
-          // Fallback if no context
-          BotToast.showText(text: "خطأ حرج: $message");
-        }
-        break;
+    // Report to Crashlytics for serious errors
+    if (!kDebugMode && (severity == ErrorSeverity.critical || severity == ErrorSeverity.medium)) {
+      FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'Operation: $operation',
+        fatal: severity == ErrorSeverity.critical,
+      );
     }
   }
 
