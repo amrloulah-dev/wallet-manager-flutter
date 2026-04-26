@@ -6,7 +6,7 @@
     - [ ] Ensure `AppErrorHandler` only handles logging.
 - [x] Task: Fix string interpolation bugs in WalletRepository (28f05dd)
     - [ ] Refactor `wallet_repository.dart` replacing `'...: e'` with `'...: $e'`.
-- [ ] Task: Purge unsafe null-bang operators
+- [x] Task: Purge unsafe null-bang operators (9915d8a)
     - [ ] Update `statistics_provider.dart` to use safe coalescing `??`.
     - [ ] Update `wallet_provider.dart` to throw `ValidationException` instead of using `!`.
 - [ ] Task: Stop silent balance falsification
