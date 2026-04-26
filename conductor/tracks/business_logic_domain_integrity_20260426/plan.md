@@ -11,7 +11,7 @@
     - [ ] Update `wallet_provider.dart` to throw `ValidationException` instead of using `!`.
 - [x] Task: Stop silent balance falsification (4c497ef)
     - [ ] Update `wallet_repository.dart` (`getTotalBalance`, `getWalletsCount`) to re-throw exceptions instead of returning `0.0`.
-- [ ] Task: Add null-guards for TransactionFeeCalculator
+- [x] Task: Add null-guards for TransactionFeeCalculator (37a6ed1)
     - [ ] Update `transaction_fee_calculator.dart` to early return if `wallet == null`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Critical Crash Prevention & Error Decoupling' (Protocol in workflow.md)
 
