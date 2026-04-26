@@ -311,7 +311,9 @@ class WalletProvider extends BaseProvider {
     String? notes,
     required String createdBy,
   }) async {
-    _updateStatus(WalletProviderStatus.creating);
+    _status = WalletProviderStatus.creating;
+    _errorMessage = null;
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
@@ -371,7 +373,9 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
-    _updateStatus(WalletProviderStatus.updating);
+    _status = WalletProviderStatus.updating;
+    _errorMessage = null;
+    safeNotify();
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 

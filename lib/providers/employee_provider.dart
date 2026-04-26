@@ -112,6 +112,10 @@ class EmployeeProvider extends BaseProvider {
     required String pin,
     required UserPermissions permissions,
   }) async {
+    _status = EmployeeProviderStatus.loading;
+    _errorMessage = null;
+    safeNotify();
+
     if (_currentStoreId == null) {
       setError('لم يتم تعيين المتجر');
       safeNotify();
@@ -223,7 +227,8 @@ class EmployeeProvider extends BaseProvider {
   }
 
   Future<bool> deactivateEmployee(String userId) async {
-    _updateStatus(EmployeeProviderStatus.loading);
+    _status = EmployeeProviderStatus.loading;
+    _errorMessage = null;
     safeNotify();
     try {
       final employee = getEmployeeById(userId);

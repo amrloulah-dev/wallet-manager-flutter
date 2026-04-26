@@ -218,7 +218,8 @@ class DebtProvider extends BaseProvider {
     String? notes,
     required String createdBy,
   }) async {
-    _updateStatus(DebtProviderStatus.creating);
+    _status = DebtProviderStatus.creating;
+    _errorMessage = null;
     safeNotify();
     try {
       final user = await _validateUserAndPermission((p) => p.createDebt);

@@ -266,7 +266,8 @@ class TransactionProvider extends BaseProvider {
   }) async {
     if (_currentStoreId == null) return false;
 
-    _updateStatus(TransactionProviderStatus.creating);
+    _status = TransactionProviderStatus.creating;
+    _errorMessage = null;
     safeNotify();
 
     try {
