@@ -2,14 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/providers/debt_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
-import 'package:walletmanager/providers/transaction_provider.dart';
-import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
@@ -17,7 +14,6 @@ import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/debt_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
-import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/models/user_model.dart';
@@ -28,7 +24,6 @@ class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
 class MockDebtRepository extends Mock implements DebtRepository {}
 class MockWalletRepository extends Mock implements WalletRepository {}
 class MockTransactionRepository extends Mock implements TransactionRepository {}
-class MockEmployeeRepository extends Mock implements EmployeeRepository {}
 class MockWalletCacheManager extends Mock implements WalletCacheManager {}
 class MockWalletUseCase extends Mock implements WalletUseCase {}
 
@@ -41,7 +36,6 @@ void main() {
   late MockDebtRepository mockDebtRepo;
   late MockWalletRepository mockWalletRepo;
   late MockTransactionRepository mockTransactionRepo;
-  late MockEmployeeRepository mockEmployeeRepo;
   late MockWalletCacheManager mockCacheManager;
   late MockWalletUseCase mockUseCase;
 
@@ -58,7 +52,6 @@ void main() {
     mockDebtRepo = MockDebtRepository();
     mockWalletRepo = MockWalletRepository();
     mockTransactionRepo = MockTransactionRepository();
-    mockEmployeeRepo = MockEmployeeRepository();
     mockCacheManager = MockWalletCacheManager();
     mockUseCase = MockWalletUseCase();
 

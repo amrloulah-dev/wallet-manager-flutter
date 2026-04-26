@@ -9,6 +9,7 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/utils/toast_utils.dart';
 import '../../../../providers/statistics_provider.dart';
 import '../../../../providers/auth_provider.dart';
+import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../widgets/common/skeleton_card.dart';
 import '../../../widgets/dashboard/stats_card.dart';

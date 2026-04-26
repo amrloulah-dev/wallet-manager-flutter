@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
