@@ -166,23 +166,24 @@ class StatisticsProvider extends BaseProvider {
 
       if (isToday && _todayStats != null && _dashboardSummary != null) {
         _filteredStats = {
-          'totalBalance': _dashboardSummary!.totalBalance,
-          'totalWallets': _dashboardSummary!.totalWallets,
-          'totalTransactions': _todayStats!.transactionCount,
-          'totalCommission': _todayStats!.totalCommission,
+          'totalBalance': _dashboardSummary?.totalBalance ?? 0.0,
+          'totalWallets': _dashboardSummary?.totalWallets ?? 0,
+          'totalTransactions': _todayStats?.transactionCount ?? 0,
+          'totalCommission': _todayStats?.totalCommission ?? 0.0,
           'sendCount': 0, // Breakdown not in daily_stats yet
-          'totalSentAmount': _todayStats!.totalAmount, // Assuming total for today
+          'totalSentAmount': _todayStats?.totalAmount ?? 0.0, // Assuming total for today
           'receiveCount': 0,
           'totalReceivedAmount': 0.0,
-          'openDebtsCount': _dashboardSummary!.openDebtsCount,
-          'totalOpenAmount': _dashboardSummary!.totalOpenAmount,
-          'paidDebtsCount': _dashboardSummary!.paidDebtsCount,
-          'totalPaidAmount': _dashboardSummary!.totalPaidAmount,
-          'totalDebtsCount': _dashboardSummary!.openDebtsCount + _dashboardSummary!.paidDebtsCount,
+          'openDebtsCount': _dashboardSummary?.openDebtsCount ?? 0,
+          'totalOpenAmount': _dashboardSummary?.totalOpenAmount ?? 0.0,
+          'paidDebtsCount': _dashboardSummary?.paidDebtsCount ?? 0,
+          'totalPaidAmount': _dashboardSummary?.totalPaidAmount ?? 0.0,
+          'totalDebtsCount': (_dashboardSummary?.openDebtsCount ?? 0) +
+              (_dashboardSummary?.paidDebtsCount ?? 0),
         };
       } else if (_dashboardSummary != null) {
         // Fallback to global summary for other ranges (Phase 3 constraint)
-        _filteredStats = _dashboardSummary!.toMap();
+        _filteredStats = _dashboardSummary?.toMap();
       }
     } catch (e, stack) {
       setError("فشل جلب الإحصائيات المفلترة.", e, stack);
@@ -210,15 +211,18 @@ class StatisticsProvider extends BaseProvider {
   void addTransactionOptimistically(Map<String, dynamic> txData) {
     if (_dashboardSummary == null || _todayStats == null) return;
 
+    final summary = _dashboardSummary!;
+    final today = _todayStats!;
+
     final double amount = NumberParser.toDouble(txData['amount']);
     final double commission = NumberParser.toDouble(txData['commission']);
     final String? type = txData['type'] as String?;
 
     // 1. Update Dashboard Summary
-    double newTotalReceived = _dashboardSummary!.totalReceivedAmount;
-    double newTotalSent = _dashboardSummary!.totalSentAmount;
-    int newReceiveCount = _dashboardSummary!.receiveCount;
-    int newSendCount = _dashboardSummary!.sendCount;
+    double newTotalReceived = summary.totalReceivedAmount;
+    double newTotalSent = summary.totalSentAmount;
+    int newReceiveCount = summary.receiveCount;
+    int newSendCount = summary.sendCount;
 
     if (type == 'credit') {
       newTotalReceived += amount;
@@ -228,12 +232,11 @@ class StatisticsProvider extends BaseProvider {
       newSendCount += 1;
     }
 
-    _dashboardSummary = _dashboardSummary!.copyWith(
-      totalTransactions: _dashboardSummary!.totalTransactions + 1,
-      totalTransactionsToday: _dashboardSummary!.totalTransactionsToday + 1,
-      totalCommission: _dashboardSummary!.totalCommission + commission,
-      totalCommissionToday:
-          _dashboardSummary!.totalCommissionToday + commission,
+    _dashboardSummary = summary.copyWith(
+      totalTransactions: summary.totalTransactions + 1,
+      totalTransactionsToday: summary.totalTransactionsToday + 1,
+      totalCommission: summary.totalCommission + commission,
+      totalCommissionToday: summary.totalCommissionToday + commission,
       totalReceivedAmount: newTotalReceived,
       totalSentAmount: newTotalSent,
       receiveCount: newReceiveCount,
@@ -241,10 +244,10 @@ class StatisticsProvider extends BaseProvider {
     );
 
     // 2. Update Today Stats
-    _todayStats = _todayStats!.copyWith(
-      transactionCount: _todayStats!.transactionCount + 1,
-      totalCommission: _todayStats!.totalCommission + commission,
-      totalAmount: _todayStats!.totalAmount + amount,
+    _todayStats = today.copyWith(
+      transactionCount: today.transactionCount + 1,
+      totalCommission: today.totalCommission + commission,
+      totalAmount: today.totalAmount + amount,
     );
 
     safeNotify();

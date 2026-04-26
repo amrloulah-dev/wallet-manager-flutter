@@ -238,8 +238,11 @@ class WalletProvider extends BaseProvider {
 
     try {
       debugPrint('⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
+      
+      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
+      
       final result = await _walletRepository.getAllWallets(
-        _currentStoreId!,
+        storeId,
       );
       debugPrint('✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
 
@@ -281,8 +284,10 @@ class WalletProvider extends BaseProvider {
     safeNotify();
 
     try {
+      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
+      
       final result = await _walletRepository.getAllWallets(
-        _currentStoreId!,
+        storeId,
         lastDocument: _lastDocument,
       );
 
@@ -317,9 +322,7 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
-      if (_currentStoreId == null) {
-        throw ValidationException('Store ID not found.');
-      }
+      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
       // Bug B-002: Fail-closed if subscription provider is missing
       if (_subscriptionProvider == null) {
@@ -328,7 +331,7 @@ class WalletProvider extends BaseProvider {
       }
 
       final currentCount =
-          await _walletRepository.getWalletsCount(_currentStoreId!);
+          await _walletRepository.getWalletsCount(storeId);
       if (!_subscriptionProvider!.canAddWallet(currentCount)) {
         setError('wallet_error_limit_reached');
         return false;
@@ -336,7 +339,7 @@ class WalletProvider extends BaseProvider {
 
       final newWallet = WalletModel.fromWalletStatus(
         walletId: _walletRepository.generateId(),
-        storeId: _currentStoreId!,
+        storeId: storeId,
         phoneNumber: phoneNumber,
         walletType: walletType.name,
         walletStatus: walletStatus.name,
