@@ -281,6 +281,7 @@ class EmployeeRepository {
         .where(FirebaseConstants.role,
             isEqualTo: FirebaseConstants.employeeRole)
         .orderBy(FirebaseConstants.createdAt, descending: true)
+        .limit(100)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
