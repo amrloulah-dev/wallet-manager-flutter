@@ -65,4 +65,22 @@ void main() {
       verify(() => mockQuery.limit(20)).called(1);
     });
   });
+
+  group('WalletRepository Error Handling (Phase 3)', () {
+    test('getTotalBalance should throw ServerException when Firestore fails', () async {
+      when(() => mockCollection.where('storeId', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.where('isActive', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.get()).thenThrow(FirebaseException(plugin: 'firestore', message: 'test error'));
+
+      expect(() => repository.getTotalBalance(storeId), throwsA(isA<Exception>()));
+    });
+
+    test('getWalletsCount should throw ServerException when Firestore fails', () async {
+      when(() => mockCollection.where('storeId', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.where('isActive', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.get()).thenThrow(FirebaseException(plugin: 'firestore', message: 'test error'));
+
+      expect(() => repository.getWalletsCount(storeId), throwsA(isA<Exception>()));
+    });
+  });
 }

@@ -133,7 +133,7 @@ class WalletRepository {
       }
       return totalBalance;
     } catch (e) {
-      return 0.0;
+      throw ServerException('فشل الحصول على إجمالي الرصيد: $e');
     }
   }
 
@@ -145,7 +145,7 @@ class WalletRepository {
           .get();
       return snapshot.docs.length;
     } catch (e) {
-      return 0;
+      throw ServerException('فشل الحصول على عدد المحافظ: $e');
     }
   }
 
