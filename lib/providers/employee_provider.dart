@@ -207,7 +207,7 @@ class EmployeeProvider extends BaseProvider {
     final activeStaff = _employees
         .where((e) => e.isActive && e.role != UserRole.owner)
         .toList()
-      ..sort((a, b) => (a.createdAt).compareTo(b.createdAt));
+      ..sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
 
     if (activeStaff.length <= maxEmployees) return;
 

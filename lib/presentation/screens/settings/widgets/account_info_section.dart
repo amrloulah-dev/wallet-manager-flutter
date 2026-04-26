@@ -102,7 +102,7 @@ class AccountInfoSection extends StatelessWidget {
                       _buildInfoRow(
                           context: context,
                           label: AppLocalizations.of(context)!.creationDate,
-                          value: DateHelper.formatDateTime(store.createdAt)),
+                          value: DateHelper.formatDateTime(store.createdAt ?? DateTime.now())),
                     ],
                   ),
                 ),

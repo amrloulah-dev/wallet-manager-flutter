@@ -242,10 +242,8 @@ void main() {
       });
 
       final fromFirestore = DebtModel.fromFirestore(mockSnapshot);
-      // We expect it to NOT throw and provide defaults or nulls where applicable
-      // But the current implementation uses ?? DateTime.now() for required fields.
-      // The spec says "return null for missing timestamps (no fabricating Timestamp.now())".
-      // This means we might need to update the model to allow nulls or handle them differently.
+      expect(fromFirestore.debtDate, isNull);
+      expect(fromFirestore.createdAt, isNull);
     });
   });
 }

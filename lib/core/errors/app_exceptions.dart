@@ -139,5 +139,5 @@ class DomainException extends AppException {
 
 /// Thrown when a monetary amount is invalid (e.g., negative or exceeds limit).
 class InvalidAmountException extends DomainException {
-  InvalidAmountException([String message = 'المبلغ غير صالح']) : super(message);
+  InvalidAmountException([super.message = 'المبلغ غير صالح']);
 }

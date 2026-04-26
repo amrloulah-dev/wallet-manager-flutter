@@ -66,7 +66,8 @@ class TransactionProvider extends BaseProvider {
   void _recomputeTodayTransactions() {
     final now = DateTime.now();
     _todayTransactions = _transactions.where((tx) {
-      return DateHelper.isSameDay(tx.transactionDate, now);
+      // Safe access for nullable transactionDate
+      return DateHelper.isSameDay(tx.transactionDate ?? now, now);
     }).toList();
   }
 
@@ -269,6 +270,7 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
+      final now = DateTime.now();
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.generateId(),
         storeId: _currentStoreId!,
@@ -281,8 +283,8 @@ class TransactionProvider extends BaseProvider {
         serviceFee: serviceFee,
         paymentStatus: paymentStatus,
         notes: notes,
-        transactionDate: DateTime.now(),
-        createdAt: DateTime.now(),
+        transactionDate: now,
+        createdAt: now,
         createdBy: _currentUser?.userId ?? 'unknown',
       );
 
@@ -314,7 +316,9 @@ class TransactionProvider extends BaseProvider {
 
     _transactions.add(transaction);
     // Sort by transactionDate descending to maintain consistency with Firestore stream
-    _transactions.sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+    // Safe comparison for nullable transactionDate
+    final now = DateTime.now();
+    _transactions.sort((a, b) => (b.transactionDate ?? now).compareTo(a.transactionDate ?? now));
     
     _rebuildTransactionMap();
     _recomputeTodayTransactions();

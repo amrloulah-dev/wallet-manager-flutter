@@ -26,17 +26,17 @@ extension TransactionModelUI on TransactionModel {
   }
 
   String getRelativeTime(AppLocalizations l10n) =>
-      DateHelper.getRelativeTime(transactionDate, l10n: l10n);
+      DateHelper.getRelativeTime(transactionDate ?? DateTime.now(), l10n: l10n); // Safe access
 
   bool get canBeModified {
     // Can be modified within 5 minutes of creation
-    return DateTime.now().difference(createdAt).inMinutes < 5;
+    return DateTime.now().difference(createdAt ?? DateTime.now()).inMinutes < 5; // Safe access
   }
 
   String get formattedDate =>
-      DateHelper.formatDateTime(transactionDate, format: 'dd/MM/yyyy');
+      DateHelper.formatDateTime(transactionDate ?? DateTime.now(), format: 'dd/MM/yyyy'); // Safe access
   String get formattedTime =>
-      DateHelper.formatDateTime(transactionDate, format: 'hh:mm a');
+      DateHelper.formatDateTime(transactionDate ?? DateTime.now(), format: 'hh:mm a'); // Safe access
 }
 
 extension DebtModelUI on DebtModel {
@@ -52,12 +52,12 @@ extension DebtModelUI on DebtModel {
   Color get statusColor => isOpen ? AppColors.error : AppColors.success;
 
   String getRelativeDebtDate(AppLocalizations l10n) => 
-      DateHelper.getRelativeTime(debtDate, l10n: l10n);
+      DateHelper.getRelativeTime(debtDate ?? DateTime.now(), l10n: l10n); // Safe access
 
   int get daysSinceCreated =>
-      DateTime.now().difference(debtDate).inDays;
+      DateTime.now().difference(debtDate ?? DateTime.now()).inDays; // Safe access
   
-  String get formattedDebtDate => DateHelper.formatDateTime(debtDate);
+  String get formattedDebtDate => DateHelper.formatDateTime(debtDate ?? DateTime.now()); // Safe access
   
   String get formattedPaidDate =>
       paidDate != null ? DateHelper.formatDateTime(paidDate!) : '';
