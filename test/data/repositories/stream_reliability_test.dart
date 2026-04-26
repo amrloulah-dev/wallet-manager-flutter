@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
@@ -23,6 +24,7 @@ void main() {
   late MockQuery mockQuery;
 
   setUp(() {
+    AppErrorHandler.isTestMode = true;
     mockFirebaseService = MockFirebaseService();
     mockFirestore = MockFirebaseFirestore();
     mockCollection = MockCollectionReference();
