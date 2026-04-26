@@ -160,7 +160,7 @@ class WalletRepository {
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
-      throw ServerException('فشل تحديث المحفظة: e');
+      throw ServerException('فشل تحديث المحفظة: $e');
     }
   }
 
@@ -178,7 +178,7 @@ class WalletRepository {
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
-      throw ServerException('فشل تحديث رصيد المحفظة: e');
+      throw ServerException('فشل تحديث رصيد المحفظة: $e');
     }
   }
 
