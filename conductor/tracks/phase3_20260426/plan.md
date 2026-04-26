@@ -1,7 +1,7 @@
 # Implementation Plan: Phase 3 - Business Logic & Domain Integrity
 
 ## Phase 1: Financial Fortification & Guard Implementation
-- [x] Task: Create `AmountValidator` utility
+- [x] Task: Create `AmountValidator` utility [428f24c]
     - [x] Write failing test for `ensurePositive(double value)`
     - [x] Implement `AmountValidator` throwing `DomainException` for values <= 0
     - [x] Ensure tests pass
