@@ -1,10 +1,10 @@
 # Implementation Plan: Phase 3 - Business Logic & Domain Integrity
 
 ## Phase 1: Financial Fortification & Guard Implementation
-- [ ] Task: Create `AmountValidator` utility
-    - [ ] Write failing test for `ensurePositive(double value)`
-    - [ ] Implement `AmountValidator` throwing `DomainException` for values <= 0
-    - [ ] Ensure tests pass
+- [x] Task: Create `AmountValidator` utility
+    - [x] Write failing test for `ensurePositive(double value)`
+    - [x] Implement `AmountValidator` throwing `DomainException` for values <= 0
+    - [x] Ensure tests pass
 - [ ] Task: Apply `AmountValidator` guards in repositories
     - [ ] Write failing test for `processPayment` rejecting negative/zero values
     - [ ] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`

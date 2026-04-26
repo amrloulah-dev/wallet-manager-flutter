@@ -128,3 +128,16 @@ class WeakPasswordException extends AuthException {
 class WrongPasswordException extends AuthException {
   WrongPasswordException() : super('كلمة المرور غير صحيحة');
 }
+
+// ===========================
+// Domain Exceptions
+// ===========================
+/// Base class for domain-related logic errors.
+class DomainException extends AppException {
+  DomainException(super.message);
+}
+
+/// Thrown when a monetary amount is invalid (e.g., negative or exceeds limit).
+class InvalidAmountException extends DomainException {
+  InvalidAmountException([String message = 'المبلغ غير صالح']) : super(message);
+}
