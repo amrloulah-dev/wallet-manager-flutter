@@ -1,0 +1,53 @@
+# Implementation Plan: Phase 3 - Business Logic & Domain Integrity
+
+## Phase 1: Financial Fortification & Guard Implementation
+- [ ] Task: Create `AmountValidator` utility
+    - [ ] Write failing test for `ensurePositive(double value)`
+    - [ ] Implement `AmountValidator` throwing `DomainException` for values <= 0
+    - [ ] Ensure tests pass
+- [ ] Task: Apply `AmountValidator` guards in repositories
+    - [ ] Write failing test for `processPayment` rejecting negative/zero values
+    - [ ] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`
+    - [ ] Ensure tests pass
+- [ ] Task: Implement atomic ceiling checks for `DebtRepository.processPayment`
+    - [ ] Write failing test for overpayment throwing `InvalidAmountException`
+    - [ ] Refactor `DebtRepository.processPayment` using `runTransaction` to enforce `paymentAmount <= amountDue`
+    - [ ] Ensure tests pass
+- [ ] Task: Enforce counter integrity for statistics
+    - [ ] Write failing test to prevent counter from decrementing below zero
+    - [ ] Update counter logic to prevent sub-zero decrements
+    - [ ] Ensure tests pass
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Financial Fortification & Guard Implementation' (Protocol in workflow.md)
+
+## Phase 2: Stream Reliability & Cost Optimization
+- [ ] Task: Propagate errors in Stream repositories
+    - [ ] Write failing test for error emission in `UserRepository`, `StoreRepository`, and `EmployeeRepository`
+    - [ ] Replace empty `.handleError` blocks with `AppErrorHandler.handle(e)` and re-emit via `Stream.error(e)`
+    - [ ] Ensure tests pass
+- [ ] Task: Implement cost capping in snapshots
+    - [ ] Update employee-related snapshots in `EmployeeRepository` and `UserRepository` with `.limit(100)`
+- [ ] Task: Ensure listener safety across providers
+    - [ ] Update `SystemConfigProvider` and other `.listen()` callers to include explicit `onError` handling (surfacing via Toasts/Snackbars)
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Stream Reliability & Cost Optimization' (Protocol in workflow.md)
+
+## Phase 3: Domain Purity & Enum Migration
+- [ ] Task: Create Enhanced Enums
+    - [ ] Create enums: `DebtStatus`, `WalletType`, `SubscriptionStatus`, and Enums for `EmployeeModel` & `StoreModel`
+- [ ] Task: Refactor Domain Models to use Enums
+    - [ ] Write failing tests for model serialization using the new Enums
+    - [ ] Update `WalletModel`, `DebtModel`, `TransactionModel`, `EmployeeModel`, and `StoreModel` to use Enums instead of strings
+    - [ ] Ensure tests pass
+- [ ] Task: Implement safe serialization with logging
+    - [ ] Write failing tests for handling missing timestamps and hard casts
+    - [ ] Refactor `fromFirestore` methods to return null for missing timestamps, log corrupt data occurrences, and use safe fallbacks (`as String? ?? ''`)
+    - [ ] Ensure tests pass
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Domain Purity & Enum Migration' (Protocol in workflow.md)
+
+## Phase 4: UX Responsiveness & Precision Handling
+- [ ] Task: Ensure immediate feedback in Providers
+    - [ ] Write failing tests to verify `setLoading(true)` or `safeNotify()` is called immediately and `_errorMessage = null;` is reset before async work
+    - [ ] Update Provider action methods accordingly
+    - [ ] Ensure tests pass
+- [ ] Task: Format UI for precision
+    - [ ] Update presentation layer to use `.toStringAsFixed(2)` for monetary values to prevent precision drift artifacts
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & Precision Handling' (Protocol in workflow.md)
