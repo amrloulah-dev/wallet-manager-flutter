@@ -34,8 +34,22 @@ class TransactionFeeCalculator {
     required double commission,
     required String receiverPhone,
   }) {
+    if (wallet == null) {
+      return TransactionCalculationResult(
+        serviceFee: 0.0,
+        totalAmount: amount + commission,
+        willExceedLimits: true,
+        newDailyUsed: 0.0,
+        newMonthlyUsed: 0.0,
+        dailyLimit: 0.0,
+        monthlyLimit: 0.0,
+        dailyExceeded: false,
+        monthlyExceeded: false,
+      );
+    }
+
     double fee = 0.0;
-    if (wallet != null && transactionType == TransactionType.debit) {
+    if (transactionType == TransactionType.debit) {
       fee = FeeCalculator.calculateTransactionFee(
         amount: amount,
         sourceWalletType: wallet.walletType.name, // ENUM refactor
