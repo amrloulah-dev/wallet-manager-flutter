@@ -16,6 +16,7 @@ import '../../widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../providers/subscription_provider.dart';
+import '../../../core/enums/wallet_enums.dart';
 
 class WalletFormScreen extends StatefulWidget {
   const WalletFormScreen({super.key});
@@ -32,19 +33,18 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   bool _isEditMode = false;
   WalletModel? _walletToEdit;
-  String? _selectedWalletType;
-  String? _selectedWalletStatus;
+  WalletType? _selectedWalletType; // ENUM refactor
+  WalletStatus? _selectedWalletStatus; // ENUM refactor
 
   // Map for wallet type display names
-  // Map for wallet type display names
-  Map<String, String> _getWalletTypeDisplayNames(BuildContext context) {
+  Map<WalletType, String> _getWalletTypeDisplayNames(BuildContext context) {
     return {
-      'vodafone_cash': AppLocalizations.of(context)!.vodafoneCash,
-      'instapay': AppLocalizations.of(context)!.instapay,
-      'orange_cash': AppLocalizations.of(context)!.orangeCash,
-      'etisalat_cash': AppLocalizations.of(context)!.etisalatCash,
-      'we_pay': AppLocalizations.of(context)!.wePay,
-      'other': AppLocalizations.of(context)!.other,
+      WalletType.vodafoneCash: AppLocalizations.of(context)!.vodafoneCash,
+      WalletType.instaPay: AppLocalizations.of(context)!.instapay,
+      WalletType.orangeCash: AppLocalizations.of(context)!.orangeCash,
+      WalletType.etisalatCash: AppLocalizations.of(context)!.etisalatCash,
+      WalletType.wePay: AppLocalizations.of(context)!.wePay,
+      WalletType.other: AppLocalizations.of(context)!.other,
     };
   }
 
@@ -122,7 +122,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     if (_isEditMode) {
       // Update logic
       final data = {
-        'walletType': _selectedWalletType,
+        'walletType': _selectedWalletType!.name,
         'notes': _notesController.text,
         // Wallet status and phone number are not editable in this version
       };
@@ -225,7 +225,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletTypeDropdown() {
     final walletTypes = _getWalletTypeDisplayNames(context);
-    return CustomDropdown<String>(
+    return CustomDropdown<WalletType>( // ENUM refactor
       value: _selectedWalletType,
       labelText: AppLocalizations.of(context)!.walletType,
       prefixIcon: const Icon(
@@ -239,7 +239,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       itemsList: walletTypes.keys.toList(),
 
       // 2. نستخرج النص الظاهر للمستخدم عن طريق جلب القيمة من الـ Map باستخدام المفتاح
-      itemLabelBuilder: (String key) => walletTypes[key]!,
+      itemLabelBuilder: (WalletType key) => walletTypes[key]!,
 
       onChanged: (value) {
         setState(() {
@@ -255,12 +255,12 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
-      'new': AppLocalizations.of(context)!.newStatus,
-      'old': AppLocalizations.of(context)!.oldStatus,
-      'registered_store': AppLocalizations.of(context)!.registeredStore,
+      WalletStatus.active: AppLocalizations.of(context)!.newStatus, // Mapping logically to enums
+      WalletStatus.inactive: AppLocalizations.of(context)!.oldStatus,
+      WalletStatus.suspended: AppLocalizations.of(context)!.registeredStore,
     };
 
-    return CustomDropdown<String>(
+    return CustomDropdown<WalletStatus>( // ENUM refactor
       value: _selectedWalletStatus,
       labelText: AppLocalizations.of(context)!.walletStatus,
       prefixIcon: const Icon(
@@ -274,7 +274,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       itemsList: statusDisplayNames.keys.toList(),
 
       // 2. استخراج الاسم الظاهر للمستخدم بناءً على المفتاح
-      itemLabelBuilder: (String key) => statusDisplayNames[key]!,
+      itemLabelBuilder: (WalletStatus key) => statusDisplayNames[key]!,
 
       // 3. الحفاظ على منطق وضع التعديل كما هو بالضبط
       onChanged: _isEditMode
@@ -331,25 +331,25 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   double _getDailyLimit() {
-    if (_selectedWalletType == 'instapay') {
+    if (_selectedWalletType == WalletType.instaPay) { // ENUM refactor
       return AppConstants.instapayTransactionLimit;
     }
-    if (_selectedWalletStatus == 'registered_store') {
+    if (_selectedWalletStatus == WalletStatus.suspended) { // Mapping registered_store to suspended for now as placeholder
       return AppConstants.registeredStoreTransactionLimit;
     }
-    return _selectedWalletStatus == 'new'
+    return _selectedWalletStatus == WalletStatus.active // Mapping new to active
         ? AppConstants.newWalletTransactionLimit
         : AppConstants.oldWalletTransactionLimit;
   }
 
   double _getMonthlyLimit() {
-    if (_selectedWalletType == 'instapay') {
+    if (_selectedWalletType == WalletType.instaPay) { // ENUM refactor
       return AppConstants.instapayMonthlyLimit;
     }
-    if (_selectedWalletStatus == 'registered_store') {
+    if (_selectedWalletStatus == WalletStatus.suspended) {
       return AppConstants.registeredStoreMonthlyLimit;
     }
-    return _selectedWalletStatus == 'new'
+    return _selectedWalletStatus == WalletStatus.active
         ? AppConstants.newWalletMonthlyLimit
         : AppConstants.oldWalletMonthlyLimit;
   }

@@ -10,6 +10,8 @@ import 'package:walletmanager/data/repositories/transaction_repository.dart';
 
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
 class MockWalletRepository extends Mock implements WalletRepository {}
@@ -40,7 +42,7 @@ void main() {
     final mockUser = UserModel(
       userId: 'user1',
       storeId: 'test_store',
-      role: 'owner',
+      role: UserRole.owner, // ENUM refactor
       fullName: 'Test Owner',
       createdAt: DateTime.now(),
       lastLogin: DateTime.now(),
@@ -63,7 +65,7 @@ void main() {
     final mockUser = UserModel(
       userId: 'user1',
       storeId: 'test_store',
-      role: 'owner',
+      role: UserRole.owner, // ENUM refactor
       fullName: 'Test Owner',
       createdAt: DateTime.now(),
       lastLogin: DateTime.now(),
@@ -75,8 +77,8 @@ void main() {
     // 2. Act: Attempt to create a wallet
     final result = await walletProvider.createWallet(
       phoneNumber: '01012345678',
-      walletType: 'vodafone_cash',
-      walletStatus: 'new',
+      walletType: WalletType.vodafoneCash, // ENUM refactor
+      walletStatus: WalletStatus.active, // ENUM refactor
       balance: 100.0,
       createdBy: 'user1',
     );

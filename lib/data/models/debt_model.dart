@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/enums/debt_enums.dart';
 
 class DebtModel {
   // Identity
@@ -12,22 +13,22 @@ class DebtModel {
   final String customerPhone;
 
   // Debt Details
-  final String debtType; // 'transaction' | 'store_sale'
-  final double amountDue; // المبلغ المستحق (المتبقي)
-  final double totalAmount; // إجمالي مبلغ الدين الأصلي
+  final DebtType debtType; // ENUM refactor
+  final double amountDue; 
+  final double totalAmount; 
   final String? notes;
 
   // Status
-  final String debtStatus; // 'open' | 'paid'
+  final DebtStatus debtStatus; // ENUM refactor
 
   // Dates
-  final DateTime debtDate; // تاريخ إنشاء الدين
-  final DateTime? paidDate; // تاريخ التسديد (null if open)
+  final DateTime debtDate; 
+  final DateTime? paidDate; 
 
   // Tracking
-  final String createdBy; // userId who created
+  final String createdBy; 
   final DateTime createdAt;
-  final String? markedPaidBy; // userId who marked as paid
+  final String? markedPaidBy; 
   final DateTime? updatedAt;
   final String? lastUpdatedBy;
 
@@ -42,7 +43,7 @@ class DebtModel {
     required this.amountDue,
     required this.totalAmount,
     this.notes,
-    this.debtStatus = 'open',
+    this.debtStatus = DebtStatus.open,
     required this.debtDate,
     this.paidDate,
     required this.createdBy,
@@ -58,13 +59,17 @@ class DebtModel {
     }
     final data = doc.data() as Map<String, dynamic>;
 
-    final status = data['debtStatus'] ?? 'open';
+    final statusStr = data['debtStatus'] as String? ?? 'open';
+    final debtStatus = DebtStatus.fromString(statusStr);
+    
+    final typeStr = data['debtType'] as String? ?? 'store_sale';
+    final debtType = DebtType.fromString(typeStr);
+
     final amountDue = NumberParser.toDouble(data['amountDue']);
 
     // Fallback for old data where totalAmount didn't exist
     double totalAmount = NumberParser.toDouble(data['totalAmount']);
-    if (totalAmount == 0.0 && status == 'open') {
-      // If it's open, the total is at least the current due amount
+    if (totalAmount == 0.0 && debtStatus == DebtStatus.open) {
       totalAmount = amountDue;
     }
 
@@ -73,11 +78,11 @@ class DebtModel {
       storeId: data[FirebaseConstants.storeId] ?? '',
       customerName: data['customerName'] ?? '',
       customerPhone: data['customerPhone'] ?? '',
-      debtType: data['debtType'] ?? 'store_sale',
+      debtType: debtType,
       amountDue: amountDue,
       totalAmount: totalAmount,
       notes: data[FirebaseConstants.notes],
-      debtStatus: status,
+      debtStatus: debtStatus,
       debtDate: (data['debtDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       paidDate: (data['paidDate'] as Timestamp?)?.toDate(),
       createdBy: data[FirebaseConstants.createdBy] ?? '',
@@ -94,11 +99,11 @@ class DebtModel {
       'customerName': customerName,
       'customerNameNormalized': customerNameNormalized,
       'customerPhone': customerPhone,
-      'debtType': debtType,
+      'debtType': debtType.name,
       'amountDue': amountDue,
       'totalAmount': totalAmount,
       FirebaseConstants.notes: notes,
-      'debtStatus': debtStatus,
+      'debtStatus': debtStatus.name,
       'debtDate': Timestamp.fromDate(debtDate),
       'paidDate': paidDate != null ? Timestamp.fromDate(paidDate!) : null,
       FirebaseConstants.createdBy: createdBy,
@@ -114,11 +119,11 @@ class DebtModel {
     String? storeId,
     String? customerName,
     String? customerPhone,
-    String? debtType,
+    DebtType? debtType,
     double? amountDue,
     double? totalAmount,
     String? notes,
-    String? debtStatus,
+    DebtStatus? debtStatus,
     DateTime? debtDate,
     DateTime? paidDate,
     String? createdBy,
@@ -148,11 +153,11 @@ class DebtModel {
   }
 
   // Getters
-  bool get isOpen => debtStatus == 'open';
-  bool get isPaid => debtStatus == 'paid';
+  bool get isOpen => debtStatus == DebtStatus.open;
+  bool get isPaid => debtStatus == DebtStatus.paid;
 
-  bool get isTransactionDebt => debtType == 'transaction';
-  bool get isStoreSaleDebt => debtType == 'store_sale';
+  bool get isTransactionDebt => debtType == DebtType.transaction;
+  bool get isStoreSaleDebt => debtType == DebtType.storeSale;
 
   @override
   String toString() =>

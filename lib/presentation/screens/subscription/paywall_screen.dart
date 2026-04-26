@@ -4,6 +4,7 @@ import '../../../providers/system_config_provider.dart';
 import '../../../data/models/system_configs_model.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
+import '../../../core/enums/subscription_enums.dart';
 
 class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
@@ -64,7 +65,7 @@ class PaywallScreen extends StatelessWidget {
                       loc.proFeature4,
                     ],
                     isPopular: true,
-                    onTap: () => PaymentModalScreen.show(context, 'pro_yearly'),
+                    onTap: () => PaymentModalScreen.show(context, SubscriptionPlan.proYearly), // ENUM refactor
                   ),
                   const SizedBox(height: 24),
 
@@ -89,7 +90,7 @@ class PaywallScreen extends StatelessWidget {
                       isPopular: false,
                       color: Colors.purple.shade700,
                       onTap: systemConfigs.remainingLifetimeSeats > 0
-                          ? () => PaymentModalScreen.show(context, 'lifetime')
+                          ? () => PaymentModalScreen.show(context, SubscriptionPlan.lifetime) // ENUM refactor
                           : null,
                     ),
                   if (systemConfigs.lifetimePlanEnabled)

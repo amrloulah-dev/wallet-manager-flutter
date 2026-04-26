@@ -5,6 +5,7 @@ import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
 import '../../../data/models/store_model.dart';
 import '../../../providers/employee_provider.dart';
+import '../../../core/enums/subscription_enums.dart';
 
 class SubscriptionDetailsScreen extends StatelessWidget {
   const SubscriptionDetailsScreen({super.key});
@@ -12,10 +13,10 @@ class SubscriptionDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final subscription = context.select<AuthProvider, dynamic>(
+    final subscription = context.select<AuthProvider, StoreSubscription?>(
       (p) => p.currentStore?.subscription,
     );
-    final stats = context.select<AuthProvider, dynamic>(
+    final stats = context.select<AuthProvider, StoreStats?>(
       (p) => p.currentStore?.stats,
     );
     
@@ -23,9 +24,9 @@ class SubscriptionDetailsScreen extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final isPro = subscription.planId == 'pro_yearly';
-    final isLifetime = subscription.planId == 'lifetime';
-    final isTrial = subscription.planId == 'trial';
+    final isPro = subscription.planId == SubscriptionPlan.proYearly;
+    final isLifetime = subscription.planId == SubscriptionPlan.lifetime;
+    final isTrial = subscription.planId == SubscriptionPlan.trial;
     
     String planName = loc.freePlan;
     if (isPro) planName = loc.proYearlyPlan;
@@ -54,7 +55,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               _buildLimitItem(
                 context,
                 title: loc.activeWallets,
-                current: stats?.activeWallets ?? 0,
+                current: stats?.totalWallets ?? 0,
                 max: subscription.maxWallets,
                 icon: Icons.account_balance_wallet,
               ),
@@ -97,7 +98,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, AppLocalizations loc, String planName, dynamic subscription, bool isLifetime) {
+  Widget _buildStatusCard(BuildContext context, AppLocalizations loc, String planName, StoreSubscription subscription, bool isLifetime) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(

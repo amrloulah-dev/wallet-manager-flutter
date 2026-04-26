@@ -10,6 +10,7 @@ import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../l10n/arb/app_localizations.dart';
+import '../../../core/enums/wallet_enums.dart';
 
 class WalletCard extends StatelessWidget {
   final WalletModel wallet;
@@ -134,9 +135,9 @@ class WalletCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: (wallet.walletStatus == 'new'
-                      ? AppColors.warning
-                      : AppColors.success)
+              color: (wallet.walletStatus == WalletStatus.suspended // ENUM refactor (placeholder)
+                      ? AppColors.error
+                      : AppColors.primary)
                   .withAlpha((0.15 * 255).round()),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -144,9 +145,9 @@ class WalletCard extends StatelessWidget {
               wallet.walletStatusDisplayName,
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.bold,
-                color: wallet.walletStatus == 'new'
-                    ? AppColors.warning
-                    : AppColors.success,
+                color: wallet.walletStatus == WalletStatus.suspended
+                    ? AppColors.error
+                    : AppColors.primary,
               ),
             ),
           ),

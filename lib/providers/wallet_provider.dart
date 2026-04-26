@@ -11,14 +11,15 @@ import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
-import 'subscription_provider.dart'; // Added import
+import 'subscription_provider.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
+import '../core/enums/wallet_enums.dart';
 
-enum WalletStatusState {
+enum WalletProviderStatus {
   idle,
   loading,
   loadingMore,
@@ -48,13 +49,13 @@ class WalletProvider extends BaseProvider {
   bool _hasMore = true;
 
   // Status
-  WalletStatusState _status = WalletStatusState.idle;
+  WalletProviderStatus _status = WalletProviderStatus.idle;
   String? _errorMessage;
 
   // Filters
   String _searchQuery = '';
-  String? _filterByType;
-  String? _filterByStatus;
+  WalletType? _filterByType; // ENUM refactor
+  WalletStatus? _filterByStatus; // ENUM refactor
 
   StreamSubscription? _overlayDataSubscription;
 
@@ -171,21 +172,21 @@ class WalletProvider extends BaseProvider {
   // Getters
   List<WalletModel> get wallets => _wallets;
   Map<String, WalletModel> get walletMap => _walletMap;
-  WalletStatusState get status => _status;
+  WalletProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   String get searchQuery => _searchQuery;
-  String? get filterByType => _filterByType;
-  String? get filterByStatus => _filterByStatus;
+  WalletType? get filterByType => _filterByType; // ENUM refactor
+  WalletStatus? get filterByStatus => _filterByStatus; // ENUM refactor
   bool get hasMore => _hasMore;
 
   // Helper Getters
-  bool get isLoading => _status == WalletStatusState.loading;
-  bool get isLoadingMore => _status == WalletStatusState.loadingMore;
-  bool get isCreating => _status == WalletStatusState.creating;
-  bool get isUpdating => _status == WalletStatusState.updating;
-  bool get isDeleting => _status == WalletStatusState.deleting;
-  bool get hasError => _status == WalletStatusState.error;
+  bool get isLoading => _status == WalletProviderStatus.loading;
+  bool get isLoadingMore => _status == WalletProviderStatus.loadingMore;
+  bool get isCreating => _status == WalletProviderStatus.creating;
+  bool get isUpdating => _status == WalletProviderStatus.updating;
+  bool get isDeleting => _status == WalletProviderStatus.deleting;
+  bool get hasError => _status == WalletProviderStatus.error;
 
   // Methods
 
@@ -231,7 +232,7 @@ class WalletProvider extends BaseProvider {
       return;
     }
 
-    _updateStatus(WalletStatusState.loading);
+    _updateStatus(WalletProviderStatus.loading);
     _errorMessage = null;
     safeNotify();
 
@@ -258,7 +259,7 @@ class WalletProvider extends BaseProvider {
       }
 
       _rebuildWalletMap();
-      _updateStatus(WalletStatusState.loaded);
+      _updateStatus(WalletProviderStatus.loaded);
 
       // Cache the wallets locally for SMS Automation
       _cacheManager.cacheWallets(_wallets);
@@ -276,7 +277,7 @@ class WalletProvider extends BaseProvider {
       return;
     }
 
-    _updateStatus(WalletStatusState.loadingMore);
+    _updateStatus(WalletProviderStatus.loadingMore);
     safeNotify();
 
     try {
@@ -294,7 +295,7 @@ class WalletProvider extends BaseProvider {
       }
 
       _rebuildWalletMap();
-      _updateStatus(WalletStatusState.loaded);
+      _updateStatus(WalletProviderStatus.loaded);
     } catch (e, stack) {
       setError('wallet_error_fetch_more_failed', e, stack);
     } finally {
@@ -304,13 +305,13 @@ class WalletProvider extends BaseProvider {
 
   Future<bool> createWallet({
     required String phoneNumber,
-    required String walletType,
-    required String walletStatus,
+    required WalletType walletType, // ENUM refactor
+    required WalletStatus walletStatus, // ENUM refactor
     required double balance,
     String? notes,
     required String createdBy,
   }) async {
-    _updateStatus(WalletStatusState.creating);
+    _updateStatus(WalletProviderStatus.creating);
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
@@ -335,8 +336,8 @@ class WalletProvider extends BaseProvider {
         walletId: _walletRepository.generateId(),
         storeId: _currentStoreId!,
         phoneNumber: phoneNumber,
-        walletType: walletType,
-        walletStatus: walletStatus,
+        walletType: walletType.name,
+        walletStatus: walletStatus.name,
         balance: balance,
         notes: notes,
         createdBy: createdBy,
@@ -350,7 +351,7 @@ class WalletProvider extends BaseProvider {
 
       try {
         await _walletRepository.createWallet(newWallet);
-        _updateStatus(WalletStatusState.loaded);
+        _updateStatus(WalletProviderStatus.loaded);
         return true;
       } catch (e) {
         rethrow;
@@ -362,15 +363,15 @@ class WalletProvider extends BaseProvider {
       setError('wallet_error_create_failed', e, stack);
       return false;
     } finally {
-      if (_status == WalletStatusState.creating) {
-        _updateStatus(WalletStatusState.loaded);
+      if (_status == WalletProviderStatus.creating) {
+        _updateStatus(WalletProviderStatus.loaded);
       }
       safeNotify();
     }
   }
 
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
-    _updateStatus(WalletStatusState.updating);
+    _updateStatus(WalletProviderStatus.updating);
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
@@ -384,7 +385,7 @@ class WalletProvider extends BaseProvider {
 
       try {
         await _walletRepository.updateWallet(walletId, data);
-        _updateStatus(WalletStatusState.loaded);
+        _updateStatus(WalletProviderStatus.loaded);
         return true;
       } catch (e) {
         rethrow;
@@ -396,8 +397,8 @@ class WalletProvider extends BaseProvider {
       setError('wallet_error_update_failed', e, stack);
       return false;
     } finally {
-      if (_status == WalletStatusState.updating) {
-        _updateStatus(WalletStatusState.loaded);
+      if (_status == WalletProviderStatus.updating) {
+        _updateStatus(WalletProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -405,7 +406,7 @@ class WalletProvider extends BaseProvider {
 
   Future<bool> addBalanceToWallet(
       String walletId, double amount, String createdBy) async {
-    _updateStatus(WalletStatusState.updating);
+    _updateStatus(WalletProviderStatus.updating);
     try {
       await _validateUserAndPermission((p) => p.addBalance);
 
@@ -426,7 +427,7 @@ class WalletProvider extends BaseProvider {
         amount: amount,
         createdBy: createdBy,
       );
-      _updateStatus(WalletStatusState.loaded);
+      _updateStatus(WalletProviderStatus.loaded);
       return true;
     } on AppException catch (e) {
       setError(e.message);
@@ -435,21 +436,21 @@ class WalletProvider extends BaseProvider {
       setError('wallet_error_balance_update_failed', e, stack);
       return false;
     } finally {
-      if (_status == WalletStatusState.updating) {
-        _updateStatus(WalletStatusState.loaded);
+      if (_status == WalletProviderStatus.updating) {
+        _updateStatus(WalletProviderStatus.loaded);
       }
       safeNotify();
     }
   }
 
   Future<bool> deleteWallet(String walletId) async {
-    _updateStatus(WalletStatusState.deleting);
+    _updateStatus(WalletProviderStatus.deleting);
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
       try {
         await _walletRepository.deleteWallet(walletId);
-        _updateStatus(WalletStatusState.loaded);
+        _updateStatus(WalletProviderStatus.loaded);
         return true;
       } catch (e, stack) {
         AppErrorHandler.handle(e,
@@ -465,8 +466,8 @@ class WalletProvider extends BaseProvider {
       setError('wallet_error_delete_failed', e, stack);
       return false;
     } finally {
-      if (_status == WalletStatusState.deleting) {
-        _updateStatus(WalletStatusState.loaded);
+      if (_status == WalletProviderStatus.deleting) {
+        _updateStatus(WalletProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -478,12 +479,12 @@ class WalletProvider extends BaseProvider {
     fetchInitialWallets();
   }
 
-  void setTypeFilter(String? type) {
+  void setTypeFilter(WalletType? type) { // ENUM refactor
     _filterByType = type;
     fetchInitialWallets();
   }
 
-  void setStatusFilter(String? status) {
+  void setStatusFilter(WalletStatus? status) { // ENUM refactor
     _filterByStatus = status;
     fetchInitialWallets();
   }
@@ -496,14 +497,14 @@ class WalletProvider extends BaseProvider {
   }
 
   // Helper Methods
-  void _updateStatus(WalletStatusState status) {
+  void _updateStatus(WalletProviderStatus status) {
     if (isDisposed) return;
     _status = status;
     // Reset error when starting a new operation
-    if (status == WalletStatusState.loading ||
-        status == WalletStatusState.creating ||
-        status == WalletStatusState.updating ||
-        status == WalletStatusState.deleting) {
+    if (status == WalletProviderStatus.loading ||
+        status == WalletProviderStatus.creating ||
+        status == WalletProviderStatus.updating ||
+        status == WalletProviderStatus.deleting) {
       _errorMessage = null;
     }
     safeNotify();
@@ -513,14 +514,14 @@ class WalletProvider extends BaseProvider {
   void setError(String errorCode, [Object? error, StackTrace? stack]) {
     if (isDisposed) return;
     _errorMessage = errorCode;
-    _status = WalletStatusState.error;
+    _status = WalletProviderStatus.error;
     super.setError(errorCode, error, stack);
   }
 
   void clearError() {
     if (isDisposed) return;
     _errorMessage = null;
-    _status = WalletStatusState.idle;
+    _status = WalletProviderStatus.idle;
     safeNotify();
   }
 

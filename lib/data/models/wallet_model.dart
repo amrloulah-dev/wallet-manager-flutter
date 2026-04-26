@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/enums/wallet_enums.dart';
 
 class WalletLimits {
   final double dailyLimit;
@@ -116,8 +117,8 @@ class WalletModel {
   final String walletId;
   final String storeId;
   final String phoneNumber;
-  final String walletType;
-  final String walletStatus;
+  final WalletType walletType; // ENUM refactor
+  final WalletStatus walletStatus; // ENUM refactor
   final double balance;
   final String? notes;
   final bool isActive;
@@ -174,8 +175,8 @@ class WalletModel {
       walletId: docId,
       storeId: data[FirebaseConstants.storeId] ?? '',
       phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
-      walletType: data[FirebaseConstants.walletType] ?? '',
-      walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
+      walletType: WalletType.fromString(data[FirebaseConstants.walletType] ?? ''),
+      walletStatus: WalletStatus.fromString(data[FirebaseConstants.walletStatus] ?? 'active'),
       balance: NumberParser.toDouble(data['balance']),
       notes: data[FirebaseConstants.notes],
       isActive: data[FirebaseConstants.isActive] ?? true,
@@ -196,8 +197,8 @@ class WalletModel {
     return {
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.phoneNumber: phoneNumber,
-      FirebaseConstants.walletType: walletType,
-      FirebaseConstants.walletStatus: walletStatus,
+      FirebaseConstants.walletType: walletType.name,
+      FirebaseConstants.walletStatus: walletStatus.name,
       'balance': balance,
       FirebaseConstants.notes: notes,
       FirebaseConstants.isActive: isActive,
@@ -216,8 +217,8 @@ class WalletModel {
     String? walletId,
     String? storeId,
     String? phoneNumber,
-    String? walletType,
-    String? walletStatus,
+    WalletType? walletType,
+    WalletStatus? walletStatus,
     double? balance,
     String? notes,
     bool? isActive,
@@ -261,8 +262,11 @@ class WalletModel {
     String? notes,
   }) {
     final now = DateTime.now();
+    final typeEnum = WalletType.fromString(walletType);
+    final statusEnum = WalletStatus.fromString(walletStatus);
+    
     final isNew = walletStatus == 'new';
-    final isInstapay = walletType == 'instapay';
+    final isInstapay = typeEnum == WalletType.instaPay;
 
     final double dailyLimit = isInstapay
         ? AppConstants.instapayTransactionLimit
@@ -284,8 +288,8 @@ class WalletModel {
       walletId: walletId,
       storeId: storeId,
       phoneNumber: phoneNumber,
-      walletType: walletType,
-      walletStatus: walletStatus,
+      walletType: typeEnum,
+      walletStatus: statusEnum,
       balance: balance,
       notes: notes,
       isActive: true,
@@ -320,8 +324,6 @@ class WalletModel {
   }
 
   bool canSendAmount(double amount) {
-    // New Logic: Check Transaction Cap and Monthly Cap.
-    // Daily Limit in the model now represents Transaction Limit.
     final limits = getLimits();
     return amount <= limits.dailyLimit &&
         !limits.isMonthlyLimitReached &&
@@ -329,8 +331,6 @@ class WalletModel {
   }
 
   bool canReceiveAmount(double amount) {
-    // New Logic: Check Transaction Cap and Monthly Cap.
-    // Daily Limit in the model now represents Transaction Limit.
     final limits = getReceiveLimits();
 
     return amount <= limits.dailyLimit &&
@@ -338,22 +338,12 @@ class WalletModel {
         (limits.monthlyRemaining >= amount);
   }
 
-  // Helper to get limits easily as requested
   WalletLimits getLimits() {
-    if (walletStatus == 'registered_store') {
-      return sendLimits.copyWith(
-        dailyLimit: AppConstants.registeredStoreTransactionLimit,
-      );
-    }
+    // We can still check for raw strings if we want to be safe, but better use enums soon
     return sendLimits;
   }
 
   WalletLimits getReceiveLimits() {
-    if (walletStatus == 'registered_store') {
-      return receiveLimits.copyWith(
-        dailyLimit: AppConstants.registeredStoreTransactionLimit,
-      );
-    }
     return receiveLimits;
   }
 

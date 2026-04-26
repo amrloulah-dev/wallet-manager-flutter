@@ -12,6 +12,7 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../utils/wallet_extensions.dart';
+import '../../../core/enums/wallet_enums.dart';
 
 
 class TransactionDetailsScreen extends StatefulWidget {
@@ -300,7 +301,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   context: context,
                   icon: wallet.walletTypeIcon,
                   label: l10n.walletType,
-                  value: wallet.walletType == 'vodafone_cash' ? l10n.vodafoneCash : (wallet.walletType == 'instapay' ? l10n.instapay : wallet.walletType),
+                  value: wallet.walletType == WalletType.vodafoneCash ? l10n.vodafoneCash : (wallet.walletType == WalletType.instaPay ? l10n.instapay : wallet.walletType.name), // ENUM refactor
                 ),
               ]
             ],

@@ -16,6 +16,7 @@ import '../../widgets/debt/debt_summary_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../../core/enums/debt_enums.dart';
 
 class DebtsListScreen extends StatefulWidget {
   const DebtsListScreen({super.key});
@@ -273,7 +274,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   Widget _buildTypeSegmentControl() {
-    return Selector<DebtProvider, String>(
+    return Selector<DebtProvider, DebtType>( // ENUM refactor
       selector: (context, provider) => provider.currentDebtType,
       builder: (context, currentDebtType, child) {
         return Container(
@@ -289,16 +290,16 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
               Expanded(
                 child: _TypeTab(
                   label: AppLocalizations.of(context)!.financialTransfers,
-                  isSelected: currentDebtType == 'transaction',
-                  onTap: () => context.read<DebtProvider>().setDebtType('transaction'),
+                  isSelected: currentDebtType == DebtType.transaction,
+                  onTap: () => context.read<DebtProvider>().setDebtType(DebtType.transaction),
                   icon: Icons.swap_horiz,
                 ),
               ),
               Expanded(
                 child: _TypeTab(
                   label: AppLocalizations.of(context)!.storeSales,
-                  isSelected: currentDebtType == 'store_sale',
-                  onTap: () => context.read<DebtProvider>().setDebtType('store_sale'),
+                  isSelected: currentDebtType == DebtType.storeSale,
+                  onTap: () => context.read<DebtProvider>().setDebtType(DebtType.storeSale),
                   icon: Icons.storefront_outlined,
                 ),
               ),

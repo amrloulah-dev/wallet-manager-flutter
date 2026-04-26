@@ -20,6 +20,7 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../../core/enums/transaction_enums.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
   const CreateTransactionScreen({super.key});
@@ -39,8 +40,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
   String? _selectedWalletId;
 
-  String? _transactionType; // 'send' | 'receive'
-  final String _paymentStatus = 'paid'; // 'paid' | 'debt'
+  TransactionType? _transactionType; // ENUM refactor
+  final PaymentStatus _paymentStatus = PaymentStatus.paid; // ENUM refactor
 
   bool _isTypeValidated = true;
   double _totalAmount = 0.0;
@@ -240,9 +241,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 label: l10n.send,
                 icon: Icons.arrow_upward,
                 color: AppColors.send,
-                isSelected: _transactionType == 'send',
+                isSelected: _transactionType == TransactionType.debit, // ENUM refactor
                 onTap: () {
-                  setState(() => _transactionType = 'send');
+                  setState(() => _transactionType = TransactionType.debit);
                   _updateTotal();
                 },
               ),
@@ -253,9 +254,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 label: l10n.receive,
                 icon: Icons.arrow_downward,
                 color: AppColors.receive,
-                isSelected: _transactionType == 'receive',
+                isSelected: _transactionType == TransactionType.credit, // ENUM refactor
                 onTap: () {
-                  setState(() => _transactionType = 'receive');
+                  setState(() => _transactionType = TransactionType.credit);
                   _updateTotal();
                 },
               ),
@@ -370,7 +371,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildFeeSection() {
-    if (_transactionType != 'send' || _serviceFee <= 0) {
+    if (_transactionType != TransactionType.debit || _serviceFee <= 0) { // ENUM refactor
       return const SizedBox.shrink();
     }
 
@@ -435,7 +436,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         if (wallet == null) return const SizedBox.shrink();
 
         final amount = double.tryParse(_amountController.text) ?? 0.0;
-        final isSend = _transactionType == 'send';
+        final isSend = _transactionType == TransactionType.debit; // ENUM refactor
         final limits = isSend
             ? wallet.getLimits()
             : wallet.getReceiveLimits();

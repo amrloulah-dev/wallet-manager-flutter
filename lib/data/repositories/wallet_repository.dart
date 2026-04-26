@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
@@ -48,8 +49,8 @@ class WalletRepository {
     String storeId, {
     bool activeOnly = true,
     int limit = 20,
-    String? walletType,
-    String? walletStatus,
+    WalletType? walletType,
+    WalletStatus? walletStatus,
   }) {
     try {
       Query query = _walletsCollection.where(FirebaseConstants.storeId,
@@ -60,11 +61,11 @@ class WalletRepository {
       }
       
       if (walletType != null) {
-        query = query.where(FirebaseConstants.walletType, isEqualTo: walletType);
+        query = query.where(FirebaseConstants.walletType, isEqualTo: walletType.name);
       }
       
       if (walletStatus != null) {
-        query = query.where(FirebaseConstants.walletStatus, isEqualTo: walletStatus);
+        query = query.where(FirebaseConstants.walletStatus, isEqualTo: walletStatus.name);
       }
 
       // Always order by createdAt to ensure consistent stream results

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
@@ -12,7 +13,7 @@ import '../core/services/analytics_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 
-enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
+enum TransactionProviderStatus { idle, loading, loadingMore, loaded, creating, error }
 
 class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
@@ -31,13 +32,13 @@ class TransactionProvider extends BaseProvider {
       end: DateHelper.getEndOfDay(DateTime.now()));
 
   // Status
-  TransactionStatus _status = TransactionStatus.idle;
+  TransactionProviderStatus _status = TransactionProviderStatus.idle;
   String? _errorMessage;
 
   TransactionModel? _selectedTransaction;
 
   // Filter
-  String? _filterType;
+  TransactionType? _filterType; // ENUM refactor
 
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
@@ -82,19 +83,19 @@ class TransactionProvider extends BaseProvider {
   Map<String, TransactionModel> get transactionMap => _transactionMap;
   List<TransactionModel> get todayTransactions => _todayTransactions;
   Map<String, dynamic> get summary => _summary;
-  TransactionStatus get status => _status;
+  TransactionProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   bool get hasMore => _hasMore;
-  String? get filterType => _filterType;
+  TransactionType? get filterType => _filterType;
   TransactionModel? get selectedTransaction => _selectedTransaction;
   DateTimeRange get dateRange => _dateRange;
 
   // Helper Getters
-  bool get isLoading => _status == TransactionStatus.loading;
-  bool get isLoadingMore => _status == TransactionStatus.loadingMore;
-  bool get isCreating => _status == TransactionStatus.creating;
-  bool get hasError => _status == TransactionStatus.error;
+  bool get isLoading => _status == TransactionProviderStatus.loading;
+  bool get isLoadingMore => _status == TransactionProviderStatus.loadingMore;
+  bool get isCreating => _status == TransactionProviderStatus.creating;
+  bool get hasError => _status == TransactionProviderStatus.error;
 
   // Methods
 
@@ -119,20 +120,20 @@ class TransactionProvider extends BaseProvider {
     fetchInitialTransactions();
   }
 
-  void setFilterType(String? type) {
+  void setFilterType(TransactionType? type) { // ENUM refactor
     _filterType = type;
     fetchInitialTransactions();
   }
 
   // Alias for setFilterType to fix analyze error
-  void setFilter(String? type) => setFilterType(type);
+  void setFilter(TransactionType? type) => setFilterType(type);
 
-  void _updateStatus(TransactionStatus status) {
+  void _updateStatus(TransactionProviderStatus status) {
     if (isDisposed) return;
     _status = status;
     // Reset error when starting a new operation
-    if (status == TransactionStatus.loading ||
-        status == TransactionStatus.creating) {
+    if (status == TransactionProviderStatus.loading ||
+        status == TransactionProviderStatus.creating) {
       _errorMessage = null;
     }
     safeNotify();
@@ -144,7 +145,7 @@ class TransactionProvider extends BaseProvider {
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (isDisposed) return;
     _errorMessage = errorCode;
-    _status = TransactionStatus.error;
+    _status = TransactionProviderStatus.error;
     if (error != null) {
       AppErrorHandler.handle(error,
           severity: ErrorSeverity.medium,
@@ -165,7 +166,7 @@ class TransactionProvider extends BaseProvider {
       return;
     }
 
-    _updateStatus(TransactionStatus.loading);
+    _updateStatus(TransactionProviderStatus.loading);
     _errorMessage = null;
     safeNotify();
 
@@ -185,7 +186,7 @@ class TransactionProvider extends BaseProvider {
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
       _calculateSummary();
-      _updateStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       debugPrint('🔍 [STACK TRACE]: $stack');
@@ -200,7 +201,7 @@ class TransactionProvider extends BaseProvider {
       return;
     }
 
-    _updateStatus(TransactionStatus.loadingMore);
+    _updateStatus(TransactionProviderStatus.loadingMore);
     safeNotify();
 
     try {
@@ -221,7 +222,7 @@ class TransactionProvider extends BaseProvider {
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
       _calculateSummary();
-      _updateStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       setError('فشل في جلب المزيد من المعاملات.', e, stack);
     } finally {
@@ -253,18 +254,18 @@ class TransactionProvider extends BaseProvider {
 
   Future<bool> createTransaction({
     required String walletId,
-    required String transactionType,
+    required TransactionType transactionType, // ENUM refactor
     required double amount,
     required double commission,
     double serviceFee = 0.0,
-    String paymentStatus = 'paid',
+    PaymentStatus paymentStatus = PaymentStatus.paid, // ENUM refactor
     String? customerPhone,
     String? customerName,
     String? notes,
   }) async {
     if (_currentStoreId == null) return false;
 
-    _updateStatus(TransactionStatus.creating);
+    _updateStatus(TransactionProviderStatus.creating);
     safeNotify();
 
     try {
@@ -286,10 +287,10 @@ class TransactionProvider extends BaseProvider {
       );
 
       await _transactionRepository.createTransaction(newTransaction);
-      AnalyticsService.logTransactionCreated(transactionType);
+      AnalyticsService.logTransactionCreated(transactionType.name);
       
       _activateFetchShield();
-      _updateStatus(TransactionStatus.loaded);
+      _updateStatus(TransactionProviderStatus.loaded);
       return true;
     } on AppException catch (e) {
       setError(e.message);
@@ -298,8 +299,8 @@ class TransactionProvider extends BaseProvider {
       setError('فشل في إنشاء المعاملة.', e, stack);
       return false;
     } finally {
-      if (_status == TransactionStatus.creating) {
-        _updateStatus(TransactionStatus.loaded);
+      if (_status == TransactionProviderStatus.creating) {
+        _updateStatus(TransactionProviderStatus.loaded);
       }
       safeNotify();
     }

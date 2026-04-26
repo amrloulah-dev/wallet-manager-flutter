@@ -10,6 +10,8 @@ import 'package:walletmanager/providers/theme_provider.dart';
 import 'package:walletmanager/providers/localization_provider.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/store_model.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
 
 
 class MockAuthProvider extends Mock implements AuthProvider {}
@@ -35,7 +37,7 @@ void main() {
       UserModel(
         userId: 'test_user',
         storeId: 'test_store',
-        role: 'owner',
+        role: UserRole.owner, // ENUM refactor
         fullName: 'Test User',
         email: 'test@example.com',
         phone: '123456789',
@@ -54,8 +56,8 @@ void main() {
         ownerEmail: 'test@example.com',
         createdAt: now,
         subscription: StoreSubscription(
-          planId: 'trial',
-          status: SubscriptionStatus.active,
+          planId: SubscriptionPlan.trial, // ENUM refactor
+          status: SubscriptionStatus.active, // ENUM refactor
           trialConsumed: false,
           maxWallets: 5,
           maxEmployees: 2,

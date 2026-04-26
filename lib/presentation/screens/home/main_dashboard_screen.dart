@@ -19,6 +19,7 @@ import 'widgets/dashboard_quick_stats.dart';
 import 'widgets/dashboard_quick_actions.dart';
 import 'widgets/dashboard_alerts.dart';
 import 'widgets/dashboard_recent_txns.dart';
+import '../../../../core/enums/subscription_enums.dart';
 
 class MainDashboardScreen extends StatefulWidget {
   const MainDashboardScreen({super.key});
@@ -54,7 +55,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     if (!subProvider.hasSeenSuccessModal) {
       // Verify the user actually upgraded (not just a flag reset)
       final planId = context.read<AuthProvider>().currentStore?.subscription.planId;
-      if (planId == 'pro_yearly' || planId == 'lifetime') {
+      if (planId == SubscriptionPlan.proYearly || planId == SubscriptionPlan.lifetime) { // ENUM refactor
         subProvider.markSuccessModalSeen();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {

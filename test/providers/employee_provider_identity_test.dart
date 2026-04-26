@@ -7,6 +7,7 @@ import 'package:walletmanager/providers/employee_provider.dart';
 
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
 
@@ -30,7 +31,7 @@ void main() {
     mockEmployee = UserModel(
       userId: 'emp-123',
       storeId: 'store-123',
-      role: 'employee',
+      role: UserRole.employee, // ENUM refactor
       fullName: 'Test Employee',
       phone: '123456789',
       pin: 'hashed_pin',

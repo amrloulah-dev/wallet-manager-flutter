@@ -12,6 +12,7 @@ import '../../../../providers/auth_provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../widgets/common/skeleton_card.dart';
 import '../../../widgets/dashboard/stats_card.dart';
+import '../../../../core/enums/user_enums.dart';
 
 class DashboardQuickStats extends StatelessWidget {
   const DashboardQuickStats({super.key});
@@ -91,7 +92,7 @@ class DashboardQuickStats extends StatelessWidget {
                           color: Colors.blue.shade700,
                           onTap: () {
                             final user = context.read<AuthProvider>().currentUser;
-                            final canAccess = user?.role == 'owner' ||
+                            final canAccess = user?.role == UserRole.owner || // ENUM refactor
                                 (user?.permissions?.viewWallets ?? false);
 
                             if (canAccess) {
@@ -112,7 +113,7 @@ class DashboardQuickStats extends StatelessWidget {
                         onTap: () {
                           final user = context.read<AuthProvider>().currentUser;
                           if (user != null &&
-                              (user.role == 'owner' ||
+                              (user.role == UserRole.owner || // ENUM refactor
                                   user.hasPermission(
                                       (p) => p.createTransaction) ||
                                   user.hasPermission(
@@ -136,7 +137,7 @@ class DashboardQuickStats extends StatelessWidget {
                         onTap: () {
                           final user = context.read<AuthProvider>().currentUser;
                           if (user != null &&
-                              (user.role == 'owner' ||
+                              (user.role == UserRole.owner || // ENUM refactor
                                   user.hasPermission(
                                       (p) => p.createTransaction) ||
                                   user.hasPermission(
@@ -156,7 +157,7 @@ class DashboardQuickStats extends StatelessWidget {
                         color: Colors.red.shade700,
                         onTap: () {
                           final user = context.read<AuthProvider>().currentUser;
-                          final canAccess = user?.role == 'owner' ||
+                          final canAccess = user?.role == UserRole.owner || // ENUM refactor
                               (user?.permissions?.viewDebts ?? false);
 
                           if (canAccess) {

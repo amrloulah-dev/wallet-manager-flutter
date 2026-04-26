@@ -4,6 +4,7 @@ import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/repositories/overlay_repository.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 
 class TransactionResult {
   final String txId;
@@ -43,7 +44,7 @@ class OverlayUseCase {
       await FirebaseService().initialize();
     }
 
-    String transactionType = type == 'debit' ? 'send' : 'receive';
+    TransactionType transactionType = type == 'debit' ? TransactionType.debit : TransactionType.credit; // ENUM refactor
     final now = DateTime.now();
     final txId = _transactionRepository.generateId();
 
@@ -68,7 +69,7 @@ class OverlayUseCase {
       amount: amount,
       commission: commission,
       serviceFee: calculatedServiceFee,
-      paymentStatus: 'paid',
+      paymentStatus: PaymentStatus.paid, // ENUM refactor
       transactionDate: now,
       createdAt: now,
       createdBy: userName ?? 'SMS Auto',
@@ -92,7 +93,7 @@ class OverlayUseCase {
       'sender': sender,
       'transactionDate': now.toIso8601String(),
       'storeId': storeId,
-      'paymentStatus': 'paid',
+      'paymentStatus': PaymentStatus.paid.name, // ENUM refactor
       'customerName': '',
       'blockAutoFetch': true,
     };

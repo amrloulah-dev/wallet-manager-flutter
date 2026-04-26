@@ -1,18 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/enums/transaction_enums.dart';
 
 class TransactionModel {
   final String transactionId;
   final String storeId;
   final String walletId;
-  final String transactionType; // 'send' | 'receive' | 'deposit'
+  final TransactionType transactionType; // ENUM refactor
   final String? customerPhone;
   final String? customerName;
   final double amount;
   final double commission;
   final double serviceFee; // Fee charged by the network/service
-  final String paymentStatus; // 'paid' | 'debt'
+  final PaymentStatus paymentStatus; // ENUM refactor
   final String? debtId;
   final String? notes;
   final DateTime transactionDate;
@@ -37,7 +38,7 @@ class TransactionModel {
     required this.amount,
     this.commission = 0.0,
     this.serviceFee = 0.0,
-    this.paymentStatus = 'paid',
+    this.paymentStatus = PaymentStatus.paid,
     this.debtId,
     this.notes,
     required this.transactionDate,
@@ -69,13 +70,13 @@ class TransactionModel {
       transactionId: doc.id,
       storeId: data[FirebaseConstants.storeId] ?? '',
       walletId: data[FirebaseConstants.walletId] ?? '',
-      transactionType: data['transactionType'] ?? 'send',
+      transactionType: TransactionType.fromString(data['transactionType'] ?? 'send'),
       customerPhone: data['customerPhone'],
       customerName: data['customerName'],
       amount: NumberParser.toDouble(data['amount']),
       commission: NumberParser.toDouble(data['commission']),
       serviceFee: NumberParser.toDouble(data['serviceFee']),
-      paymentStatus: data['paymentStatus'] ?? 'paid',
+      paymentStatus: PaymentStatus.fromString(data['paymentStatus'] ?? 'paid'),
       debtId: data['debtId'],
       notes: data[FirebaseConstants.notes],
       transactionDate: transactionDate,
@@ -96,13 +97,13 @@ class TransactionModel {
     return {
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.walletId: walletId,
-      'transactionType': transactionType,
+      'transactionType': transactionType.name,
       'customerPhone': customerPhone,
       'customerName': customerName,
       'amount': amount,
       'commission': commission,
       'serviceFee': serviceFee,
-      'paymentStatus': paymentStatus,
+      'paymentStatus': paymentStatus.name,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
       'transactionDate': Timestamp.fromDate(transactionDate),
@@ -123,13 +124,13 @@ class TransactionModel {
     String? transactionId,
     String? storeId,
     String? walletId,
-    String? transactionType,
+    TransactionType? transactionType,
     String? customerPhone,
     String? customerName,
     double? amount,
     double? commission,
     double? serviceFee,
-    String? paymentStatus,
+    PaymentStatus? paymentStatus,
     String? debtId,
     String? notes,
     DateTime? transactionDate,
@@ -172,11 +173,11 @@ class TransactionModel {
   }
 
   // Getters
-  bool get isSend => transactionType == 'send';
-  bool get isReceive => transactionType == 'receive';
-  bool get isDeposit => transactionType == 'deposit';
-  bool get isPaid => paymentStatus == 'paid';
-  bool get isDebt => paymentStatus == 'debt';
+  bool get isSend => transactionType == TransactionType.debit;
+  bool get isReceive => transactionType == TransactionType.credit;
+  bool get isDeposit => transactionType == TransactionType.deposit;
+  bool get isPaid => paymentStatus == PaymentStatus.paid;
+  bool get isDebt => paymentStatus == PaymentStatus.debt;
   double get totalAmount =>
       amount + commission; // Original total amount (base + comm)
 

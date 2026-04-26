@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 import '../../core/utils/amount_validator.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -77,13 +78,13 @@ class TransactionValidatorService {
       // ------------------------------------------------------------------
       // 2. EXPLICIT NETWORK LIMITS (InstaPay / Telecom) - Single Transaction
       // ------------------------------------------------------------------
-      final isInstaPay = wallet.walletType == 'instapay';
+      final isInstaPay = wallet.walletType == WalletType.instaPay; // ENUM refactor
       final isTelecom = [
-        'vodafone_cash',
-        'orange_cash',
-        'etisalat_cash',
-        'we_pay'
-      ].contains(wallet.walletType);
+        WalletType.vodafoneCash,
+        WalletType.orangeCash,
+        WalletType.etisalatCash,
+        WalletType.wePay
+      ].contains(wallet.walletType); // ENUM refactor
 
       if (isInstaPay && transaction.amount > 70000) {
         throw ValidationException('الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.');

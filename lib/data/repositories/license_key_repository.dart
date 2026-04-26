@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/license_key_model.dart';
-import '../models/store_model.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/license_key_generator.dart';
+import '../../core/enums/subscription_enums.dart';
 
 class LicenseKeyRepository {
   late final FirebaseFirestore _firestore;
@@ -77,8 +77,8 @@ class LicenseKeyRepository {
 
         // 3. Update Store Doc
         transaction.update(storeRef, {
-          'subscription.planId': 'premium',
-          'subscription.status': SubscriptionStatus.active.name,
+          'subscription.planId': SubscriptionPlan.proYearly.name, // ENUM refactor
+          'subscription.status': SubscriptionStatus.active.name, // ENUM refactor
           'subscription.endDate': Timestamp.fromDate(newExpiryDate),
           'updatedAt': FieldValue.serverTimestamp(),
         });

@@ -16,13 +16,11 @@ class MockStatsRepository extends Mock implements StatsRepository {}
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
   late MockFirebaseService mockFirebaseService;
-  late MockCacheManager mockCacheManager;
   late StatsRepository statsRepository;
 
   setUp(() {
     fakeFirestore = FakeFirebaseFirestore();
     mockFirebaseService = MockFirebaseService();
-    mockCacheManager = MockCacheManager();
     statsRepository = StatsRepository(firestore: fakeFirestore);
     
     when(() => mockFirebaseService.firestore).thenReturn(fakeFirestore);

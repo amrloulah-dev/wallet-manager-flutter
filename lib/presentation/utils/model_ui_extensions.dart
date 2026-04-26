@@ -10,7 +10,7 @@ extension TransactionModelUI on TransactionModel {
     if (isSend) return l10n.send;
     if (isReceive) return l10n.receive;
     if (isDeposit) return l10n.deposit;
-    return transactionType;
+    return transactionType.name; // ENUM refactor
   }
 
   IconData get transactionTypeIcon => isSend

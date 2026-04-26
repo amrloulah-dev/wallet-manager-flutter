@@ -16,6 +16,8 @@ import 'package:walletmanager/data/repositories/license_key_repository.dart';
 
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
@@ -90,8 +92,8 @@ void main() {
       ownerEmail: 'owner@store.com',
       createdAt: DateTime.now(),
       subscription: StoreSubscription(
-        planId: 'basic',
-        status: SubscriptionStatus.active,
+        planId: SubscriptionPlan.free, // ENUM refactor
+        status: SubscriptionStatus.active, // ENUM refactor
         trialConsumed: false,
         maxWallets: 3,
         maxEmployees: 1,
@@ -104,7 +106,7 @@ void main() {
     mockEmployee = UserModel(
       userId: 'emp-123',
       storeId: 'store-123',
-      role: 'employee',
+      role: UserRole.employee, // ENUM refactor
       fullName: 'Test Employee',
       phone: '123456789',
       pin: 'hashed_pin',

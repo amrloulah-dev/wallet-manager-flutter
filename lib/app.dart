@@ -9,7 +9,6 @@ import 'core/constants/route_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/widgets/global_overlay_listener.dart';
 
-import 'data/models/store_model.dart';
 import 'data/services/transaction_validator_service.dart';
 import 'data/repositories/system_config_repository.dart';
 import 'data/repositories/employee_repository.dart';
@@ -35,6 +34,9 @@ import 'presentation/screens/subscription/admin_block_screen.dart';
 import 'l10n/arb/app_localizations.dart';
 import 'routes/navigation_service.dart';
 import 'routes/app_router.dart';
+
+import 'core/enums/subscription_enums.dart';
+import 'core/enums/user_enums.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -165,7 +167,7 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
         }
 
         // 2. Guard against Expired License
-        if (auth.isSubscriptionExpired && auth.currentStore?.subscription.planId != 'lifetime') {
+        if (auth.isSubscriptionExpired && auth.currentStore?.subscription.planId != SubscriptionPlan.lifetime) {
           return const PaywallScreen();
         }
 
@@ -175,7 +177,7 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
-            if (role == 'owner' || role == 'employee') {
+            if (role == UserRole.owner || role == UserRole.employee) {
                // استخدمنا pushReplacementNamed كما كانت في كودك الأصلي
                Navigator.of(context).pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {

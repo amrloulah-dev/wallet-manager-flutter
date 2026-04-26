@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/enums/debt_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -193,7 +194,7 @@ class DebtRepository {
 
         if (isFullPayment) {
           updateData['amountDue'] = 0.0;
-          updateData['debtStatus'] = 'paid';
+          updateData['debtStatus'] = DebtStatus.paid.name;
           updateData['paidDate'] = FieldValue.serverTimestamp();
           updateData['markedPaidBy'] = userId;
 
@@ -241,7 +242,7 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        final wasPaid = oldDebt.debtStatus == 'paid';
+        final wasPaid = oldDebt.debtStatus == DebtStatus.paid;
 
         final Map<String, dynamic> updateData = {
           'amountDue': FieldValue.increment(amountToAdd),
@@ -262,7 +263,7 @@ class DebtRepository {
         };
 
         if (wasPaid) {
-          updateData['debtStatus'] = 'open';
+          updateData['debtStatus'] = DebtStatus.open.name;
           statsUpdates['openDebtsCount'] = FieldValue.increment(1);
           statsUpdates['paidDebtsCount'] = FieldValue.increment(-1);
           statsUpdates['totalPaidAmount'] =
@@ -448,14 +449,14 @@ class DebtRepository {
           .where('debtType', isEqualTo: type);
 
       // Open Debts Query
-      final openQuery = baseQuery.where('debtStatus', isEqualTo: 'open');
+      final openQuery = baseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
       final openAggregate = openQuery.aggregate(
         sum('amountDue'),
         count(),
       );
 
       // Paid Debts Query
-      final paidQuery = baseQuery.where('debtStatus', isEqualTo: 'paid');
+      final paidQuery = baseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
 
       // We sum 'totalAmount' (original total)
       final paidAggregate = paidQuery.aggregate(

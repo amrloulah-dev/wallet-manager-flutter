@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
+import 'package:walletmanager/core/enums/debt_enums.dart';
 
 // Mocks
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
@@ -59,14 +60,14 @@ void main() {
     DebtModel createTestDebt({
       required String id,
       required double amount,
-      String status = 'open',
+      DebtStatus status = DebtStatus.open, // ENUM refactor
     }) {
       return DebtModel(
         debtId: id,
         storeId: storeId,
         customerName: 'Customer $id',
         customerPhone: '123456789',
-        debtType: 'lend',
+        debtType: DebtType.storeSale, // ENUM refactor
         amountDue: amount,
         totalAmount: amount,
         debtStatus: status,

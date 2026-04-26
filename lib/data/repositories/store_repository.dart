@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
@@ -43,7 +44,7 @@ class StoreRepository {
       if (isEligibleForTrial) {
         // H001: Trial tier gets generous limits
         subscription = StoreSubscription(
-          planId: 'trial',
+          planId: SubscriptionPlan.trial, // ENUM refactor
           status: SubscriptionStatus.active,
           endDate: DateTime.now().add(const Duration(days: 14)),
           trialConsumed: false,
@@ -54,7 +55,7 @@ class StoreRepository {
       } else {
         // H002: Device-ineligible users land on Free tier directly
         subscription = StoreSubscription(
-          planId: 'free',
+          planId: SubscriptionPlan.free, // ENUM refactor
           status: SubscriptionStatus.active,
           endDate: null,
           trialConsumed: true,

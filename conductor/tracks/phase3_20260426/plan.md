@@ -33,10 +33,10 @@
 ## Phase 3: Domain Purity & Enum Migration
 - [x] Task: Create Enhanced Enums [64fc9df]
     - [x] Create enums: `DebtStatus`, `WalletType`, `SubscriptionStatus`, and Enums for `EmployeeModel` & `StoreModel`
-- [ ] Task: Refactor Domain Models to use Enums
-    - [ ] Write failing tests for model serialization using the new Enums
-    - [ ] Update `WalletModel`, `DebtModel`, `TransactionModel`, `EmployeeModel`, and `StoreModel` to use Enums instead of strings
-    - [ ] Ensure tests pass
+- [x] Task: Refactor Domain Models to use Enums
+    - [x] Write failing tests for model serialization using the new Enums
+    - [x] Update `WalletModel`, `DebtModel`, `TransactionModel`, `EmployeeModel`, and `StoreModel` to use Enums instead of strings
+    - [x] Ensure tests pass
 - [ ] Task: Implement safe serialization with logging
     - [ ] Write failing tests for handling missing timestamps and hard casts
     - [ ] Refactor `fromFirestore` methods to return null for missing timestamps, log corrupt data occurrences, and use safe fallbacks (`as String? ?? ''`)

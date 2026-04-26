@@ -8,6 +8,7 @@ import '../../../../providers/auth_provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../widgets/dashboard/quick_action_card.dart';
 import '../../../widgets/dashboard/section_header.dart';
+import '../../../../core/enums/user_enums.dart';
 
 class DashboardQuickActions extends StatelessWidget {
   const DashboardQuickActions({super.key});
@@ -93,7 +94,7 @@ class DashboardQuickActions extends StatelessWidget {
                 color: Colors.blue.shade700,
                 onTap: () {
                   final user = context.read<AuthProvider>().currentUser;
-                  final canAccess = user?.role == 'owner' ||
+                  final canAccess = user?.role == UserRole.owner || // ENUM refactor
                       (user?.permissions?.viewWallets ?? false);
 
                   if (canAccess) {
@@ -123,7 +124,7 @@ class DashboardQuickActions extends StatelessWidget {
                 color: Colors.red.shade700,
                 onTap: () {
                   final user = context.read<AuthProvider>().currentUser;
-                  final canAccess = user?.role == 'owner' ||
+                  final canAccess = user?.role == UserRole.owner || // ENUM refactor
                       (user?.permissions?.viewDebts ?? false);
 
                   if (canAccess) {
@@ -139,7 +140,7 @@ class DashboardQuickActions extends StatelessWidget {
                 color: Colors.teal.shade700,
                 onTap: () {
                   final user = context.read<AuthProvider>().currentUser;
-                  if (user != null && user.role == 'owner') {
+                  if (user != null && user.role == UserRole.owner) { // ENUM refactor
                     Navigator.pushNamed(context, RouteConstants.manageEmployees);
                   } else {
                     ToastUtils.showError(l10n.ownerOnlyFeature);

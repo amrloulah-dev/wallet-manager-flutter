@@ -9,6 +9,7 @@ import 'auth_provider.dart';
 import '../data/repositories/subscription_repository.dart';
 import '../data/models/subscription_request_model.dart';
 import 'base_provider.dart';
+import '../core/enums/subscription_enums.dart';
 
 class SubscriptionProvider extends BaseProvider {
   AuthProvider _authProvider;
@@ -55,8 +56,8 @@ class SubscriptionProvider extends BaseProvider {
       if (wasPending &&
           !isNowPending &&
           currentSub.status == SubscriptionStatus.active &&
-          (currentSub.planId == 'pro_yearly' ||
-              currentSub.planId == 'lifetime')) {
+          (currentSub.planId == SubscriptionPlan.proYearly ||
+              currentSub.planId == SubscriptionPlan.lifetime)) {
         // Dependably trigger success modal state
         LocalStorageService.instance.setHasSeenSuccessModal(false);
       }
@@ -112,14 +113,14 @@ class SubscriptionProvider extends BaseProvider {
     }
   }
 
-  double _deduceAmount(String planId) {
-    if (planId == 'lifetime') return 2500.0;
-    if (planId == 'pro_yearly') return 1200.0;
+  double _deduceAmount(SubscriptionPlan planId) {
+    if (planId == SubscriptionPlan.lifetime) return 2500.0;
+    if (planId == SubscriptionPlan.proYearly) return 1200.0;
     return 0.0;
   }
 
   Future<void> submitSubscriptionRequest({
-    required String planId,
+    required SubscriptionPlan planId, // ENUM refactor
     required String paymentMethod,
     required String receiptNumber,
   }) async {
@@ -136,7 +137,7 @@ class SubscriptionProvider extends BaseProvider {
     _latestRequest = SubscriptionRequestModel(
       id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
       storeId: storeId,
-      planId: planId,
+      planId: planId.name, // Mapping to string for the model if it still uses string
       amount: _deduceAmount(planId),
       paymentMethod: paymentMethod,
       receiptNumber: receiptNumber,
@@ -148,7 +149,7 @@ class SubscriptionProvider extends BaseProvider {
     try {
       await _repository.submitSubscriptionRequest(
         storeId: storeId,
-        planId: planId,
+        planId: planId.name,
         paymentMethod: paymentMethod,
         receiptNumber: receiptNumber,
       );
@@ -168,7 +169,7 @@ class SubscriptionProvider extends BaseProvider {
     if (sub != null) {
       LocalStorageService.instance.saveSubscriptionLimits(
         endDateMs: sub.endDate?.millisecondsSinceEpoch,
-        isLifetime: sub.planId == 'lifetime',
+        isLifetime: sub.planId == SubscriptionPlan.lifetime,
         smsEnabled: sub.smsEnabled,
         isSuspended: sub.status == SubscriptionStatus.suspended,
       );

@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
-import 'package:walletmanager/core/utils/password_hasher.dart';
-import 'package:walletmanager/data/models/user_permissions.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;

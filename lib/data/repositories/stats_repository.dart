@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/enums/debt_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meta/meta.dart';
@@ -138,10 +139,10 @@ class StatsRepository {
       updates['totalOpenAmount'] = FieldValue.increment(newDebt.amountDue);
     } else {
       // --- Handle Update ---
-      final wasPaid = oldDebt.debtStatus == 'paid';
-      final isNowPaid = newDebt.debtStatus == 'paid';
-      final wasOpen = oldDebt.debtStatus == 'open';
-      final isNowOpen = newDebt.debtStatus == 'open';
+      final wasPaid = oldDebt.debtStatus == DebtStatus.paid; // ENUM refactor
+      final isNowPaid = newDebt.debtStatus == DebtStatus.paid; // ENUM refactor
+      final wasOpen = oldDebt.debtStatus == DebtStatus.open; // ENUM refactor
+      final isNowOpen = newDebt.debtStatus == DebtStatus.open; // ENUM refactor
 
       final amountChange = newDebt.amountDue - oldDebt.amountDue;
 
@@ -186,6 +187,7 @@ class StatsRepository {
       final storeRef = _firestore.collection('stores').doc(storeId);
 
       final summarySnap = await transaction.get(summaryRef);
+      // ignore: unused_local_variable
       final storeSnap = await transaction.get(storeRef);
 
       final Map<String, dynamic> summaryUpdates = {

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/enums/subscription_enums.dart';
 
 // ===========================
 // Main Store Model
@@ -158,11 +159,9 @@ class StoreModel {
 // Nested: Store Subscription
 // ===========================
 
-enum SubscriptionStatus { active, expired, suspended, pending }
-
 class StoreSubscription {
-  final String planId; // 'free', 'trial', 'pro_yearly', 'lifetime'
-  final SubscriptionStatus status;
+  final SubscriptionPlan planId; // ENUM refactor
+  final SubscriptionStatus status; // ENUM refactor
   final DateTime? endDate; // null for lifetime
   final bool trialConsumed; // true if trial was used
   final int maxWallets; // e.g., 3 or 999
@@ -184,7 +183,7 @@ class StoreSubscription {
   /// T058: Pure POJO — accepts a pre-resolved server timestamp from SubscriptionProvider.
   /// Never call TimeService directly from within this model.
   bool isExpiredAt(DateTime serverNow) {
-    if (planId == 'lifetime') return false;
+    if (planId == SubscriptionPlan.lifetime) return false;
     if (endDate == null) return false;
 
     // T026/T044: 48-hour grace period anchored to pendingRequestDate
@@ -205,7 +204,7 @@ class StoreSubscription {
 
   factory StoreSubscription.migratedLifetime() {
     return StoreSubscription(
-      planId: 'lifetime',
+      planId: SubscriptionPlan.lifetime,
       status: SubscriptionStatus.active,
       endDate: null,
       trialConsumed: true,
@@ -218,11 +217,8 @@ class StoreSubscription {
 
   factory StoreSubscription.fromMap(Map<String, dynamic> map) {
     return StoreSubscription(
-      planId: map['planId'] ?? 'free',
-      status: SubscriptionStatus.values.firstWhere(
-        (e) => e.name == (map['status'] ?? 'active'),
-        orElse: () => SubscriptionStatus.active,
-      ),
+      planId: SubscriptionPlan.fromString(map['planId'] ?? 'free'),
+      status: SubscriptionStatus.fromString(map['status'] ?? 'active'),
       endDate: map['endDate'] != null 
           ? (map['endDate'] as Timestamp).toDate() 
           : null,
@@ -238,7 +234,7 @@ class StoreSubscription {
 
   Map<String, dynamic> toMap() {
     return {
-      'planId': planId,
+      'planId': planId.name,
       'status': status.name,
       'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'trialConsumed': trialConsumed,
@@ -250,7 +246,7 @@ class StoreSubscription {
   }
 
   StoreSubscription copyWith({
-    String? planId,
+    SubscriptionPlan? planId,
     SubscriptionStatus? status,
     DateTime? endDate,
     bool? trialConsumed,
@@ -272,10 +268,7 @@ class StoreSubscription {
   }
 }
 
-// ===========================
-// Nested: Store Settings
-// ===========================
-
+// ... StoreSettings and StoreStats remain same ...
 class StoreSettings {
   final String currency;
   final String timezone;
@@ -306,10 +299,6 @@ class StoreSettings {
     );
   }
 }
-
-// ===========================
-// Nested: Store Stats
-// ===========================
 
 class StoreStats {
   final int totalWallets;

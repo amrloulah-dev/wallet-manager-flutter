@@ -11,6 +11,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../widgets/common/skeleton_list.dart';
 import '../../../widgets/transaction/transaction_card.dart';
 import '../../../widgets/dashboard/section_header.dart';
+import '../../../../core/enums/user_enums.dart';
 
 class DashboardRecentTxns extends StatelessWidget {
   const DashboardRecentTxns({super.key});
@@ -44,7 +45,7 @@ class DashboardRecentTxns extends StatelessWidget {
                 onActionTap: () {
                   final user = context.read<AuthProvider>().currentUser;
                   if (user != null &&
-                      (user.role == 'owner' ||
+                      (user.role == UserRole.owner || // ENUM refactor
                           user.hasPermission((p) => p.createTransaction) ||
                           user.hasPermission((p) => p.viewAllTransactions))) {
                     Navigator.pushNamed(

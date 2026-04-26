@@ -7,15 +7,16 @@ import '../core/errors/error_severity.dart';
 import '../data/models/user_permissions.dart';
 import 'subscription_provider.dart';
 import 'base_provider.dart';
+import '../core/enums/user_enums.dart';
 
-enum EmployeeStatus { initial, loading, loaded, error }
+enum EmployeeProviderStatus { initial, loading, loaded, error }
 
 class EmployeeProvider extends BaseProvider {
   final EmployeeRepository _employeeRepository;
   SubscriptionProvider? _subscriptionProvider;
 
   List<UserModel> _employees = [];
-  EmployeeStatus _status = EmployeeStatus.initial;
+  EmployeeProviderStatus _status = EmployeeProviderStatus.initial;
   String? _errorMessage;
   String? _currentStoreId;
   String _searchQuery = '';
@@ -26,11 +27,11 @@ class EmployeeProvider extends BaseProvider {
   StreamSubscription? _employeeStreamSubscription;
 
   List<UserModel> get employees => _employees;
-  EmployeeStatus get status => _status;
+  EmployeeProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
-  bool get isLoading => _status == EmployeeStatus.loading;
-  bool get hasError => _status == EmployeeStatus.error;
+  bool get isLoading => _status == EmployeeProviderStatus.loading;
+  bool get hasError => _status == EmployeeProviderStatus.error;
   String get searchQuery => _searchQuery;
   bool get showActiveOnly => _showActiveOnly;
 
@@ -45,7 +46,7 @@ class EmployeeProvider extends BaseProvider {
   }
 
   int get employeesCount =>
-      _employees.where((e) => e.isActive && e.role != 'owner').length;
+      _employees.where((e) => e.isActive && e.role != UserRole.owner).length;
   List<UserModel> get activeEmployees =>
       _employees.where((e) => e.isActive).toList();
   List<UserModel> get inactiveEmployees =>
@@ -69,7 +70,7 @@ class EmployeeProvider extends BaseProvider {
       _currentStoreId = storeId;
       _employeeStreamSubscription?.cancel();
       _employees = [];
-      _status = EmployeeStatus.initial;
+      _status = EmployeeProviderStatus.initial;
       _errorMessage = null;
       _searchQuery = '';
 
@@ -88,14 +89,14 @@ class EmployeeProvider extends BaseProvider {
   }
 
   void _listenToEmployees(String storeId) {
-    _updateStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     _employeeStreamSubscription =
         _employeeRepository.watchEmployees(storeId).listen(
       (employees) {
         _employees = employees;
         _recalculateSuspendedEmployees();
-        _updateStatus(EmployeeStatus.loaded);
+        _updateStatus(EmployeeProviderStatus.loaded);
         safeNotify();
       },
       onError: (error) {
@@ -125,7 +126,7 @@ class EmployeeProvider extends BaseProvider {
       return false;
     }
 
-    _updateStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     try {
       final newEmployee = await _employeeRepository.addEmployee(
@@ -139,7 +140,7 @@ class EmployeeProvider extends BaseProvider {
       _employeeRepository.provisionIdentity(newEmployee);
 
       _errorMessage = null;
-      _updateStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeProviderStatus.loaded);
       return true;
     } on ValidationException catch (e) {
       setError(e.message);
@@ -151,8 +152,8 @@ class EmployeeProvider extends BaseProvider {
       setError('حدث خطأ أثناء إضافة الموظف', e, stack);
       return false;
     } finally {
-      if (_status == EmployeeStatus.loading) {
-        _updateStatus(EmployeeStatus.loaded);
+      if (_status == EmployeeProviderStatus.loading) {
+        _updateStatus(EmployeeProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -204,7 +205,7 @@ class EmployeeProvider extends BaseProvider {
     final maxEmployees = _subscriptionProvider!.maxEmployees;
 
     final activeStaff = _employees
-        .where((e) => e.isActive && e.role != 'owner')
+        .where((e) => e.isActive && e.role != UserRole.owner)
         .toList()
       ..sort((a, b) => (a.createdAt).compareTo(b.createdAt));
 
@@ -216,13 +217,13 @@ class EmployeeProvider extends BaseProvider {
   }
 
   bool isEmployeeFrozen(UserModel employee) {
-    if (employee.role == 'owner') return false;
+    if (employee.role == UserRole.owner) return false;
     if (!employee.isActive) return false;
     return _suspendedEmployeeIds.contains(employee.userId);
   }
 
   Future<bool> deactivateEmployee(String userId) async {
-    _updateStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     try {
       final employee = getEmployeeById(userId);
@@ -233,14 +234,14 @@ class EmployeeProvider extends BaseProvider {
       }
 
       // No longer need to fire event, stream will update automatically
-      _updateStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeProviderStatus.loaded);
       return true;
     } on ServerException catch (e) {
       setError(e.message);
       return false;
     } finally {
-      if (_status == EmployeeStatus.loading) {
-        _updateStatus(EmployeeStatus.loaded);
+      if (_status == EmployeeProviderStatus.loading) {
+        _updateStatus(EmployeeProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -255,7 +256,7 @@ class EmployeeProvider extends BaseProvider {
       safeNotify();
       return false;
     }
-    _updateStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     try {
       final employee = getEmployeeById(userId);
@@ -273,8 +274,8 @@ class EmployeeProvider extends BaseProvider {
       setError(e.message);
       return false;
     } finally {
-      if (_status == EmployeeStatus.loading) {
-        _updateStatus(EmployeeStatus.loaded);
+      if (_status == EmployeeProviderStatus.loading) {
+        _updateStatus(EmployeeProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -282,7 +283,7 @@ class EmployeeProvider extends BaseProvider {
 
   Future<bool> updateEmployeePermissions(
       String userId, UserPermissions permissions) async {
-    _updateStatus(EmployeeStatus.loading);
+    _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     try {
       await _employeeRepository.updateEmployeePermissions(
@@ -290,14 +291,14 @@ class EmployeeProvider extends BaseProvider {
         permissions: permissions,
       );
       // No need to refresh locally as stream will update
-      _updateStatus(EmployeeStatus.loaded);
+      _updateStatus(EmployeeProviderStatus.loaded);
       return true;
     } catch (e, stack) {
       setError('فشل تحديث الصلاحيات.', e, stack);
       return false;
     } finally {
-      if (_status == EmployeeStatus.loading) {
-        _updateStatus(EmployeeStatus.loaded);
+      if (_status == EmployeeProviderStatus.loading) {
+        _updateStatus(EmployeeProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -331,7 +332,7 @@ class EmployeeProvider extends BaseProvider {
     }
   }
 
-  void _updateStatus(EmployeeStatus status) {
+  void _updateStatus(EmployeeProviderStatus status) {
     if (isDisposed) return;
     _status = status;
   }
@@ -340,7 +341,7 @@ class EmployeeProvider extends BaseProvider {
   void setError(String errorCode, [Object? error, StackTrace? stack]) {
     if (isDisposed) return;
     _errorMessage = errorCode;
-    _status = EmployeeStatus.error;
+    _status = EmployeeProviderStatus.error;
     super.setError(errorCode, error, stack);
   }
 
@@ -351,7 +352,7 @@ class EmployeeProvider extends BaseProvider {
   void clearError() {
     if (isDisposed) return;
     _errorMessage = null;
-    _status = EmployeeStatus.loaded;
+    _status = EmployeeProviderStatus.loaded;
     safeNotify();
   }
 }

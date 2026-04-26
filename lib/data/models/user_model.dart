@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/enums/user_enums.dart';
 
 import 'user_permissions.dart';
 
@@ -11,7 +12,7 @@ class UserModel {
   // Identity
   final String userId;
   final String storeId;
-  final String role; // "owner" | "employee"
+  final UserRole role; // ENUM refactor
 
   // Personal Info
   final String fullName;
@@ -57,8 +58,8 @@ class UserModel {
   });
 
   // Getters
-  bool get isOwner => role == 'owner';
-  bool get isEmployee => role == 'employee';
+  bool get isOwner => role == UserRole.owner;
+  bool get isEmployee => role == UserRole.employee;
 
   /// Helper to check permissions easily.
   /// Example: user.hasPermission((p) => p.createDebt)
@@ -74,7 +75,8 @@ class UserModel {
       throw Exception('User document does not exist!');
     }
     final data = doc.data() as Map<String, dynamic>;
-    final role = data['role'] ?? 'employee';
+    final roleStr = data['role'] as String? ?? 'employee';
+    final role = UserRole.fromString(roleStr);
 
     return UserModel(
       userId: doc.id,
@@ -91,10 +93,10 @@ class UserModel {
       createdBy: data['createdBy'],
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      permissions: role == 'employee'
+      permissions: role == UserRole.employee
           ? UserPermissions.fromMap(data['permissions'] ?? {})
           : null,
-      stats: role == 'employee' ? UserStats.fromMap(data['stats'] ?? {}) : null,
+      stats: role == UserRole.employee ? UserStats.fromMap(data['stats'] ?? {}) : null,
     );
   }
 
@@ -102,7 +104,7 @@ class UserModel {
   Map<String, dynamic> toFirestore() {
     final map = {
       'storeId': storeId,
-      'role': role,
+      'role': role.name,
       'fullName': fullName,
       'email': email,
       'phone': phone,
@@ -127,7 +129,7 @@ class UserModel {
   UserModel copyWith({
     String? userId,
     String? storeId,
-    String? role,
+    UserRole? role,
     String? fullName,
     String? email,
     String? phone,
@@ -180,10 +182,7 @@ class UserModel {
   int get hashCode => userId.hashCode ^ storeId.hashCode;
 }
 
-// ===========================
-// Nested: User Stats
-// ===========================
-
+// ... UserStats remains same ...
 class UserStats {
   final int totalTransactions;
   final double totalCommission;

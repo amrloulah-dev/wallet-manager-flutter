@@ -13,6 +13,7 @@ import '../core/services/database_sync_service.dart';
 import '../core/services/analytics_service.dart';
 import '../services/time_service.dart';
 import 'base_provider.dart';
+import '../core/enums/subscription_enums.dart';
 
 enum AuthStatus {
   idle,
@@ -79,7 +80,7 @@ class AuthProvider extends BaseProvider {
   }
 
   // License Getters
-  String get licenseKey => _currentStore?.subscription.planId ?? 'N/A';
+  String get licenseKey => _currentStore?.subscription.planId.name ?? 'N/A'; // ENUM refactor
   DateTime get licenseExpiryDate =>
       _currentStore?.subscription.endDate ?? DateTime.now();
 
@@ -98,7 +99,7 @@ class AuthProvider extends BaseProvider {
 
   String? get currentStoreId => _currentStore?.storeId;
 
-  bool get isTrial => _currentStore?.subscription.planId == 'trial';
+  bool get isTrial => _currentStore?.subscription.planId == SubscriptionPlan.trial; // ENUM refactor
   int? get trialDaysRemaining {
     if (!isTrial || _currentStore?.subscription.endDate == null) return null;
     final expiry = _currentStore!.subscription.endDate!;
@@ -302,7 +303,7 @@ class AuthProvider extends BaseProvider {
       );
 
       await refreshUserData();
-      AnalyticsService.logLicenseUpgraded(_currentStore?.subscription.planId ?? 'premium');
+      AnalyticsService.logLicenseUpgraded(_currentStore?.subscription.planId.name ?? 'premium');
       _setStatus(AuthStatus.idle);
     } catch (e) {
       _setStatus(AuthStatus.idle);

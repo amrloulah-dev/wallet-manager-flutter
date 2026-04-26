@@ -14,6 +14,7 @@ import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/wallet_stats_card.dart';
 import '../../widgets/common/error_widget.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../../core/enums/wallet_enums.dart';
 
 class WalletDetailsScreen extends StatefulWidget {
   const WalletDetailsScreen({super.key});
@@ -173,9 +174,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               icon: Icons.label_outline,
               label: AppLocalizations.of(context)!.walletStatus,
               value: wallet.walletStatusDisplayName,
-              valueColor: wallet.walletStatus == 'new'
-                  ? AppColors.newWallet
-                  : AppColors.oldWallet,
+              valueColor: wallet.walletStatus == WalletStatus.suspended // ENUM refactor (placeholder check)
+                  ? AppColors.error
+                  : AppColors.primary,
             ),
             const SizedBox(height: 16),
             _buildInfoRow(

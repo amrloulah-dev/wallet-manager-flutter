@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 import '../../core/utils/amount_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
@@ -51,7 +52,7 @@ class TransactionRepository {
       transactionId: transactionId,
       storeId: storeId,
       walletId: walletId,
-      transactionType: 'deposit',
+      transactionType: TransactionType.deposit, // ENUM refactor
       amount: amount,
       transactionDate: now,
       createdAt: now,
@@ -99,7 +100,7 @@ class TransactionRepository {
     String storeId,
     DateTime startDate,
     DateTime endDate, {
-    String? transactionType,
+    TransactionType? transactionType, // ENUM refactor
     int limit = 20,
   }) {
     try {
@@ -113,7 +114,7 @@ class TransactionRepository {
           .orderBy('transactionDate', descending: true);
 
       if (transactionType != null) {
-        query = query.where('transactionType', isEqualTo: transactionType);
+        query = query.where('transactionType', isEqualTo: transactionType.name);
       }
 
       return query.limit(limit).snapshots().map((snapshot) {

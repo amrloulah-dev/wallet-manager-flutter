@@ -10,9 +10,10 @@ import '../../../providers/debt_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../../core/enums/debt_enums.dart';
 
 class AddDebtScreen extends StatefulWidget {
-  final String? initialDebtType;
+  final DebtType? initialDebtType; // ENUM refactor
   const AddDebtScreen({super.key, this.initialDebtType});
 
   @override
@@ -26,14 +27,12 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  String _debtType = 'transaction'; // 'transaction' | 'store_sale'
+  late DebtType _debtType; // ENUM refactor
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialDebtType != null) {
-      _debtType = widget.initialDebtType!;
-    }
+    _debtType = widget.initialDebtType ?? DebtType.transaction;
   }
 
   @override
@@ -140,14 +139,14 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         _buildDebtTypeTile(
           title: AppLocalizations.of(context)!.walletTransaction,
           subtitle: AppLocalizations.of(context)!.walletTransactionSubtitle,
-          value: 'transaction',
+          value: DebtType.transaction,
           icon: Icons.swap_horiz,
         ),
         const SizedBox(height: 8),
         _buildDebtTypeTile(
           title: AppLocalizations.of(context)!.storeSale,
           subtitle: AppLocalizations.of(context)!.storeSaleSubtitle,
-          value: 'store_sale',
+          value: DebtType.storeSale,
           icon: Icons.storefront_outlined,
         ),
       ],
@@ -157,7 +156,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   Widget _buildDebtTypeTile({
     required String title,
     required String subtitle,
-    required String value,
+    required DebtType value,
     required IconData icon,
   }) {
     final isSelected = _debtType == value;
@@ -173,7 +172,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
           width: isSelected ? 1.5 : 1,
         ),
       ),
-      child: RadioListTile<String>(
+      child: RadioListTile<DebtType>(
         value: value,
         groupValue: _debtType,
         onChanged: (val) => setState(() => _debtType = val!),

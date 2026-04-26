@@ -1,5 +1,6 @@
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 
 class TransactionCalculationResult {
   final double serviceFee;
@@ -28,16 +29,16 @@ class TransactionCalculationResult {
 class TransactionFeeCalculator {
   TransactionCalculationResult calculate({
     required WalletModel? wallet,
-    required String? transactionType,
+    required TransactionType? transactionType, // ENUM refactor
     required double amount,
     required double commission,
     required String receiverPhone,
   }) {
     double fee = 0.0;
-    if (wallet != null && transactionType == 'send') {
+    if (wallet != null && transactionType == TransactionType.debit) {
       fee = FeeCalculator.calculateTransactionFee(
         amount: amount,
-        sourceWalletType: wallet.walletType,
+        sourceWalletType: wallet.walletType.name, // ENUM refactor
         receiverPhone: receiverPhone,
       );
     }
@@ -53,7 +54,7 @@ class TransactionFeeCalculator {
     bool monthlyExceeded = false;
 
     if (wallet != null && transactionType != null) {
-      final isSend = transactionType == 'send';
+      final isSend = transactionType == TransactionType.debit;
       final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
       newDailyUsed = limits.dailyUsed + amount;
       newMonthlyUsed = limits.monthlyUsed + amount;

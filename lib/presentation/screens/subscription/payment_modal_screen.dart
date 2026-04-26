@@ -4,13 +4,14 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/enums/subscription_enums.dart';
 
 class PaymentModalScreen extends StatefulWidget {
-  final String planId; // 'pro_yearly' or 'lifetime'
+  final SubscriptionPlan planId; // ENUM refactor
 
   const PaymentModalScreen({super.key, required this.planId});
 
-  static void show(BuildContext context, String planId) {
+  static void show(BuildContext context, SubscriptionPlan planId) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -72,7 +73,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final planName = widget.planId == 'lifetime' ? loc.lifetimePlan : loc.proYearlyTitle;
+    final planName = widget.planId == SubscriptionPlan.lifetime ? loc.lifetimePlan : loc.proYearlyTitle;
     
     return Directionality(
       textDirection: TextDirection.rtl,

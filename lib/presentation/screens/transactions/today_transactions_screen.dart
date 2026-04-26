@@ -10,6 +10,7 @@ import '../../widgets/transaction/transaction_summary_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../../core/enums/transaction_enums.dart';
 
 class TodayTransactionsScreen extends StatefulWidget {
   const TodayTransactionsScreen({super.key});
@@ -69,9 +70,9 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
         actions: [
           Consumer<TransactionProvider>(
             builder: (context, provider, _) {
-              return PopupMenuButton<String?>(
+              return PopupMenuButton<TransactionType?>( // ENUM refactor
                 icon: const Icon(Icons.filter_list),
-                onSelected: (String? value) {
+                onSelected: (TransactionType? value) {
                   provider.setFilter(value);
                 },
                 shape: RoundedRectangleBorder(
@@ -80,14 +81,14 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 color: AppColors.surface(context),
                 elevation: 4,
                 itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<String?>>[
+                    <PopupMenuEntry<TransactionType?>>[
                   _buildFilterMenuItem(null, AppLocalizations.of(context)!.all, provider.filterType,
                       icon: Icons.clear_all),
                   const PopupMenuDivider(),
-                  _buildFilterMenuItem('send', AppLocalizations.of(context)!.send, provider.filterType,
+                  _buildFilterMenuItem(TransactionType.debit, AppLocalizations.of(context)!.send, provider.filterType,
                       icon: Icons.arrow_upward, color: AppColors.send),
                   _buildFilterMenuItem(
-                      'receive', AppLocalizations.of(context)!.receive, provider.filterType,
+                      TransactionType.credit, AppLocalizations.of(context)!.receive, provider.filterType,
                       icon: Icons.arrow_downward, color: AppColors.receive),
                 ],
               );
@@ -127,10 +128,10 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
     );
   }
 
-  PopupMenuItem<String?> _buildFilterMenuItem(
-      String? value, String text, String? groupValue,
+  PopupMenuItem<TransactionType?> _buildFilterMenuItem(
+      TransactionType? value, String text, TransactionType? groupValue,
       {IconData? icon, Color? color}) {
-    return PopupMenuItem<String?>(
+    return PopupMenuItem<TransactionType?>(
       value: value,
       child: Row(
         children: [
@@ -158,7 +159,7 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
   }
 
   Widget _buildContent() {
-    return Selector<TransactionProvider, (TransactionStatus, String?, String?, bool)>(
+    return Selector<TransactionProvider, (TransactionProviderStatus, String?, TransactionType?, bool)>(
       selector: (context, provider) => (
         provider.status,
         provider.errorMessage,
@@ -169,9 +170,9 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
         final status = state.$1;
         final errorMessage = state.$2;
         final filterType = state.$3;
-        final isLoading = status == TransactionStatus.loading;
-        final hasError = status == TransactionStatus.error;
-        final isLoadingMore = status == TransactionStatus.loadingMore;
+        final isLoading = status == TransactionProviderStatus.loading;
+        final hasError = status == TransactionProviderStatus.error;
+        final isLoadingMore = status == TransactionProviderStatus.loadingMore;
 
         if (isLoading) {
           return const SkeletonList(itemCount: 5, itemHeight: 80);

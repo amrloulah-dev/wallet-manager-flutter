@@ -7,6 +7,7 @@ import '../../core/errors/error_severity.dart';
 import '../../core/services/identity_service.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_permissions.dart';
+import '../../core/enums/user_enums.dart';
 
 class EmployeeRepository {
   final FirebaseFirestore _firestore;
@@ -25,7 +26,7 @@ class EmployeeRepository {
       Query query = _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
-              isEqualTo: FirebaseConstants.employeeRole);
+              isEqualTo: UserRole.employee.name); // ENUM refactor
 
       if (activeOnly) {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
@@ -49,7 +50,7 @@ class EmployeeRepository {
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
-              isEqualTo: FirebaseConstants.employeeRole)
+              isEqualTo: UserRole.employee.name) // ENUM refactor
           .where(FirebaseConstants.pin, isEqualTo: hashedPin)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .limit(1)
@@ -77,7 +78,7 @@ class EmployeeRepository {
     final newUser = UserModel(
       userId: newUserId,
       storeId: storeId,
-      role: FirebaseConstants.employeeRole,
+      role: UserRole.employee, // ENUM refactor
       fullName: fullName,
       email: null,
       phone: phone,
@@ -151,7 +152,7 @@ class EmployeeRepository {
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
-              isEqualTo: FirebaseConstants.employeeRole)
+              isEqualTo: UserRole.employee.name) // ENUM refactor
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .get();
       return snapshot.docs.length;
@@ -279,7 +280,7 @@ class EmployeeRepository {
     return _usersCollection
         .where(FirebaseConstants.storeId, isEqualTo: storeId)
         .where(FirebaseConstants.role,
-            isEqualTo: FirebaseConstants.employeeRole)
+            isEqualTo: UserRole.employee.name) // ENUM refactor
         .orderBy(FirebaseConstants.createdAt, descending: true)
         .limit(100)
         .snapshots()
@@ -297,7 +298,8 @@ class EmployeeRepository {
       
       final uid = await IdentityService.provisionIdentity(
         phone: employee.phone!,
-        storeId: employee.storeId,
+        // ignore: unnecessary_cast
+        storeId: employee.storeId as String,
         pin: employee.pin!,
       );
 

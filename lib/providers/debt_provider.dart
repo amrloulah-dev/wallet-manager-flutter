@@ -12,8 +12,9 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import '../providers/auth_provider.dart';
 import '../core/services/analytics_service.dart';
 import 'base_provider.dart';
+import '../core/enums/debt_enums.dart';
 
-enum DebtStatus {
+enum DebtProviderStatus {
   idle,
   loading,
   loadingMore,
@@ -36,12 +37,12 @@ class DebtProvider extends BaseProvider {
   bool _hasMore = true;
 
   // Status
-  DebtStatus _status = DebtStatus.idle;
+  DebtProviderStatus _status = DebtProviderStatus.idle;
   String? _errorMessage;
 
   // Filter
   String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
-  String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
+  DebtType _currentDebtType = DebtType.transaction; // ENUM refactor
 
   // Constructor
   DebtProvider({
@@ -56,27 +57,27 @@ class DebtProvider extends BaseProvider {
   List<DebtModel> get debts => _debts;
   Map<String, DebtModel> get debtMap => _debtMap;
   Map<String, dynamic> get summary => _summary;
-  DebtStatus get status => _status;
+  DebtProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String get currentFilter => _currentFilter;
-  String get currentDebtType => _currentDebtType;
+  DebtType get currentDebtType => _currentDebtType;
   bool get hasMore => _hasMore;
-  bool get isLoading => _status == DebtStatus.loading;
-  bool get isLoadingMore => _status == DebtStatus.loadingMore;
-  bool get isCreating => _status == DebtStatus.creating;
-  bool get isUpdating => _status == DebtStatus.updating;
+  bool get isLoading => _status == DebtProviderStatus.loading;
+  bool get isLoadingMore => _status == DebtProviderStatus.loadingMore;
+  bool get isCreating => _status == DebtProviderStatus.creating;
+  bool get isUpdating => _status == DebtProviderStatus.updating;
 
   void _rebuildDebtMap() {
     _debtMap = {for (var debt in _debts) debt.debtId: debt};
   }
 
-  void _updateStatus(DebtStatus status) {
+  void _updateStatus(DebtProviderStatus status) {
     if (isDisposed) return;
     _status = status;
     // Reset error when starting a new operation
-    if (status == DebtStatus.loading ||
-        status == DebtStatus.creating ||
-        status == DebtStatus.updating) {
+    if (status == DebtProviderStatus.loading ||
+        status == DebtProviderStatus.creating ||
+        status == DebtProviderStatus.updating) {
       _errorMessage = null;
     }
     safeNotify();
@@ -86,7 +87,7 @@ class DebtProvider extends BaseProvider {
   void setError(String errorCode, [dynamic error, StackTrace? stack]) {
     if (isDisposed) return;
     _errorMessage = errorCode;
-    _status = DebtStatus.error;
+    _status = DebtProviderStatus.error;
     if (error != null) {
       AppErrorHandler.handle(error,
           severity: ErrorSeverity.medium,
@@ -109,7 +110,7 @@ class DebtProvider extends BaseProvider {
     setStoreId(auth.currentStoreId);
   }
 
-  void setDebtType(String type) {
+  void setDebtType(DebtType type) {
     if (_currentDebtType != type) {
       _currentDebtType = type;
       fetchInitialDebts();
@@ -126,7 +127,7 @@ class DebtProvider extends BaseProvider {
   Future<void> fetchInitialDebts({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
 
-    _updateStatus(DebtStatus.loading);
+    _updateStatus(DebtProviderStatus.loading);
     _errorMessage = null;
     safeNotify();
 
@@ -144,7 +145,7 @@ class DebtProvider extends BaseProvider {
       
       _rebuildDebtMap();
       await _fetchSummary();
-      _updateStatus(DebtStatus.loaded);
+      _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
       setError('فشل في جلب الديون.', e, stack);
     } finally {
@@ -157,7 +158,7 @@ class DebtProvider extends BaseProvider {
       return;
     }
 
-    _updateStatus(DebtStatus.loadingMore);
+    _updateStatus(DebtProviderStatus.loadingMore);
     safeNotify();
 
     try {
@@ -176,7 +177,7 @@ class DebtProvider extends BaseProvider {
       }
 
       _rebuildDebtMap();
-      _updateStatus(DebtStatus.loaded);
+      _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
       setError('فشل في جلب المزيد من الديون.', e, stack);
     } finally {
@@ -189,7 +190,7 @@ class DebtProvider extends BaseProvider {
     try {
       final stats = await _debtRepository.fetchDebtStatistics(
         storeId: _currentStoreId!,
-        type: _currentDebtType,
+        type: _currentDebtType.name,
       );
 
       _summary = {
@@ -212,12 +213,12 @@ class DebtProvider extends BaseProvider {
   Future<bool> createDebt({
     required String customerName,
     required String customerPhone,
-    required String debtType,
+    required DebtType debtType, // ENUM refactor
     required double amountDue,
     String? notes,
     required String createdBy,
   }) async {
-    _updateStatus(DebtStatus.creating);
+    _updateStatus(DebtProviderStatus.creating);
     safeNotify();
     try {
       final user = await _validateUserAndPermission((p) => p.createDebt);
@@ -267,7 +268,7 @@ class DebtProvider extends BaseProvider {
         );
       }
 
-      _updateStatus(DebtStatus.loaded); // Reset status
+      _updateStatus(DebtProviderStatus.loaded); // Reset status
       return true;
     } on AppException catch (e) {
       setError(e.message);
@@ -276,8 +277,8 @@ class DebtProvider extends BaseProvider {
       setError('فشل في إنشاء الدين.', e, stack);
       return false;
     } finally {
-      if (_status == DebtStatus.creating) {
-        _updateStatus(DebtStatus.loaded);
+      if (_status == DebtProviderStatus.creating) {
+        _updateStatus(DebtProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -285,7 +286,7 @@ class DebtProvider extends BaseProvider {
 
   Future<bool> addPartialDebt(
       String debtId, double amountToAdd, String userId) async {
-    _updateStatus(DebtStatus.updating);
+    _updateStatus(DebtProviderStatus.updating);
     safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
@@ -304,15 +305,15 @@ class DebtProvider extends BaseProvider {
       setError('فشل في إضافة المبلغ إلى الدين.', e, stack);
       return false;
     } finally {
-      if (_status == DebtStatus.updating) {
-        _updateStatus(DebtStatus.loaded);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
       }
       safeNotify();
     }
   }
 
   Future<bool> updateDebt(String debtId, Map<String, dynamic> data) async {
-    _updateStatus(DebtStatus.updating);
+    _updateStatus(DebtProviderStatus.updating);
     safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
@@ -331,8 +332,8 @@ class DebtProvider extends BaseProvider {
       setError('فشل في تحديث الدين.', e, stack);
       return false;
     } finally {
-      if (_status == DebtStatus.updating) {
-        _updateStatus(DebtStatus.loaded);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
       }
       safeNotify();
     }
@@ -340,7 +341,7 @@ class DebtProvider extends BaseProvider {
 
   Future<bool> payPartialDebt(
       String debtId, double amountToPay, String userId) async {
-    _updateStatus(DebtStatus.updating);
+    _updateStatus(DebtProviderStatus.updating);
     safeNotify();
     try {
       await _validateUserAndPermission((p) => p.createDebt);
@@ -359,15 +360,15 @@ class DebtProvider extends BaseProvider {
       setError('فشل في تسديد الدين.', e, stack);
       return false;
     } finally {
-      if (_status == DebtStatus.updating) {
-        _updateStatus(DebtStatus.loaded);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
       }
       safeNotify();
     }
   }
 
   Future<bool> deleteDebt(String debtId) async {
-    _updateStatus(DebtStatus.updating);
+    _updateStatus(DebtProviderStatus.updating);
     safeNotify();
     try {
       await _validateUserAndPermission((p) => p.deleteDebt);
@@ -386,8 +387,8 @@ class DebtProvider extends BaseProvider {
       setError('فشل في حذف الدين.', e, stack);
       return false;
     } finally {
-      if (_status == DebtStatus.updating) {
-        _updateStatus(DebtStatus.loaded);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
       }
       safeNotify();
     }
