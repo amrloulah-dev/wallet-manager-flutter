@@ -188,6 +188,12 @@ class DebtRepository {
             .collection('stats')
             .doc('summary');
 
+        final statsSnap = await transaction.get(statsRef);
+        int currentOpenDebts = 0;
+        if (statsSnap.exists) {
+          currentOpenDebts = (statsSnap.data()?['openDebtsCount'] as int?) ?? 0;
+        }
+
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
         };
@@ -198,7 +204,7 @@ class DebtRepository {
           updateData['paidDate'] = FieldValue.serverTimestamp();
           updateData['markedPaidBy'] = userId;
 
-          statsUpdates['openDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
           statsUpdates['totalOpenAmount'] =
               FieldValue.increment(-oldDebt.amountDue);
           statsUpdates['paidDebtsCount'] = FieldValue.increment(1);
@@ -257,6 +263,13 @@ class DebtRepository {
             .collection('stats')
             .doc('summary');
 
+        final statsSnap = await transaction.get(statsRef);
+        int currentPaidDebts = 0;
+        if (statsSnap.exists) {
+          final data = statsSnap.data() as Map<String, dynamic>;
+          currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
+        }
+
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
           'totalOpenAmount': FieldValue.increment(amountToAdd),
@@ -265,7 +278,7 @@ class DebtRepository {
         if (wasPaid) {
           updateData['debtStatus'] = DebtStatus.open.name;
           statsUpdates['openDebtsCount'] = FieldValue.increment(1);
-          statsUpdates['paidDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
           statsUpdates['totalPaidAmount'] =
               FieldValue.increment(-oldDebt.totalAmount);
         }
@@ -396,24 +409,31 @@ class DebtRepository {
             .collection('stats')
             .doc('summary');
 
+        final statsSnap = await transaction.get(statsRef);
+        int currentOpenDebts = 0;
+        int currentPaidDebts = 0;
+        if (statsSnap.exists) {
+          final data = statsSnap.data() as Map<String, dynamic>;
+          currentOpenDebts = (data['openDebtsCount'] as int?) ?? 0;
+          currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
+        }
+
         // Prepare Stats Updates
         final Map<String, dynamic> updates = {
           'lastUpdated': FieldValue.serverTimestamp(),
         };
 
         if (debt.isOpen) {
-          updates['openDebtsCount'] = FieldValue.increment(-1);
+          updates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
           updates['totalOpenAmount'] = FieldValue.increment(-debt.amountDue);
         } else if (debt.isPaid) {
-          updates['paidDebtsCount'] = FieldValue.increment(-1);
+          updates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
           updates['totalPaidAmount'] = FieldValue.increment(-debt.totalAmount);
         }
 
         // Perform Writes
         transaction.delete(debtDocRef);
-        // Attempt to update stats, assuming the summary document exists.
-        // If it doesn't, this part of the transaction will fail, ensuring consistency.
-        transaction.update(statsRef, updates);
+        transaction.set(statsRef, updates, SetOptions(merge: true));
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));

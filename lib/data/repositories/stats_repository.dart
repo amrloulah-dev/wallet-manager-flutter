@@ -129,7 +129,19 @@ class StatsRepository {
     required DebtModel newDebt,
   }) async {
     final summaryRef = _getSummaryDocRef(storeId);
-    final Map<String, FieldValue> updates = {
+
+    // --- Read operations first ---
+    final summarySnap = await firestoreTransaction.get(summaryRef);
+    int currentOpenDebts = 0;
+    int currentPaidDebts = 0;
+
+    if (summarySnap.exists) {
+      final data = summarySnap.data() as Map<String, dynamic>;
+      currentOpenDebts = (data['openDebtsCount'] as int?) ?? 0;
+      currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
+    }
+
+    final Map<String, dynamic> updates = {
       'lastUpdated': FieldValue.serverTimestamp(),
     };
 
@@ -159,12 +171,12 @@ class StatsRepository {
       // --- Handle Status Changes ---
       if (wasOpen && isNowPaid) {
         // Open -> Paid (Full Payment)
-        updates['openDebtsCount'] = FieldValue.increment(-1);
+        updates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
         updates['paidDebtsCount'] = FieldValue.increment(1);
       } else if (wasPaid && isNowOpen) {
         // Paid -> Open (Re-opening a paid debt)
         updates['openDebtsCount'] = FieldValue.increment(1);
-        updates['paidDebtsCount'] = FieldValue.increment(-1);
+        updates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
       }
     }
 
