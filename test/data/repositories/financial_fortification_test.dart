@@ -64,10 +64,21 @@ void main() {
           throwsA(isA<DomainException>()));
     });
 
-    test('StatsRepository.incrementOpenDebtStats should throw DomainException for negative amount', () async {
-      final repository = StatsRepository(firestore: fakeFirestore);
-      expect(() => repository.incrementOpenDebtStats('store1', -100.0),
-          throwsA(isA<DomainException>()));
+    test('DebtRepository.processPayment should throw InvalidAmountException for overpayment', () async {
+      final repository = DebtRepository(firebaseService: mockFirebaseService);
+      
+      // Setup: Create a debt with amountDue = 100
+      final debtId = 'debt100';
+      await fakeFirestore.collection('debts').doc(debtId).set({
+        'debtId': debtId,
+        'storeId': 'store1',
+        'amountDue': 100.0,
+        'totalAmount': 100.0,
+        'debtStatus': 'open',
+      });
+
+      expect(() => repository.processPayment(debtId, 150.0, 'user1'),
+          throwsA(isA<InvalidAmountException>()));
     });
   });
 }

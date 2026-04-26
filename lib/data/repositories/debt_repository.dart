@@ -171,7 +171,7 @@ class DebtRepository {
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
         if (amountToPay > oldDebt.amountDue) {
-          throw ValidationException('Paid amount exceeds remaining debt.');
+          throw InvalidAmountException('المبلغ المدفوع يتجاوز الدين المتبقي.');
         }
 
         final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
