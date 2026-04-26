@@ -7,9 +7,9 @@ import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
-import 'package:walletmanager/providers/base_provider.dart';
+import 'package:walletmanager/core/state/safe_change_notifier.dart';
 
-class OverlayProvider extends BaseProvider {
+class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService = LocalStorageService();
   final OverlayUseCase _overlayUseCase;
 
@@ -252,6 +252,13 @@ class OverlayProvider extends BaseProvider {
       _isLoading = false;
       _guardedNotify();
     }
+  }
+
+  @override
+  void dispose() {
+    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> dispose(): Cleaning up overlay provider resources.');
+    // Any future StreamSubscriptions or Timers specific to OverlayProvider MUST be cancelled here.
+    super.dispose();
   }
 
   void close() async {
