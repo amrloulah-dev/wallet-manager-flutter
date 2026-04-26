@@ -9,7 +9,7 @@
 - [x] Task: Purge unsafe null-bang operators (9915d8a)
     - [ ] Update `statistics_provider.dart` to use safe coalescing `??`.
     - [ ] Update `wallet_provider.dart` to throw `ValidationException` instead of using `!`.
-- [ ] Task: Stop silent balance falsification
+- [x] Task: Stop silent balance falsification (4c497ef)
     - [ ] Update `wallet_repository.dart` (`getTotalBalance`, `getWalletsCount`) to re-throw exceptions instead of returning `0.0`.
 - [ ] Task: Add null-guards for TransactionFeeCalculator
     - [ ] Update `transaction_fee_calculator.dart` to early return if `wallet == null`.
