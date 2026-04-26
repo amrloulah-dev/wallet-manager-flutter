@@ -173,31 +173,56 @@ class EmployeeRepository {
       final wasActive = userData[FirebaseConstants.isActive] == true;
       final storeId = userData[FirebaseConstants.storeId];
 
-      transaction.update(userRef, {
-        FirebaseConstants.isActive: false,
-        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
-      });
-
       if (wasActive && storeId != null) {
         final storeRef = _firestore
             .collection(FirebaseConstants.storesCollection)
             .doc(storeId);
-        transaction.update(
-            storeRef, {'stats.totalEmployees': FieldValue.increment(-1)});
-
-        // Update Store Stats Summary Document
         final statsSummaryRef = _firestore
             .collection(FirebaseConstants.storesCollection)
             .doc(storeId)
             .collection('stats')
             .doc('summary');
+
+        final storeSnap = await transaction.get(storeRef);
+        final statsSnap = await transaction.get(statsSummaryRef);
+
+        int currentStoreEmployees = 0;
+        if (storeSnap.exists) {
+          currentStoreEmployees = (storeSnap.data()?['stats']
+                  ?['totalEmployees'] as int?) ??
+              0;
+        }
+
+        int currentSummaryEmployees = 0;
+        if (statsSnap.exists) {
+          currentSummaryEmployees = (statsSnap.data()?['totalEmployees'] as int?) ?? 0;
+        }
+
+        transaction.update(userRef, {
+          FirebaseConstants.isActive: false,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        transaction.update(storeRef, {
+          'stats.totalEmployees': currentStoreEmployees > 0
+              ? currentStoreEmployees - 1
+              : 0
+        });
+
         transaction.set(
             statsSummaryRef,
             {
-              'totalEmployees': FieldValue.increment(-1),
+              'totalEmployees': currentSummaryEmployees > 0
+                  ? currentSummaryEmployees - 1
+                  : 0,
               'lastUpdated': FieldValue.serverTimestamp(),
             },
             SetOptions(merge: true));
+      } else {
+        transaction.update(userRef, {
+          FirebaseConstants.isActive: false,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
       }
     });
   }

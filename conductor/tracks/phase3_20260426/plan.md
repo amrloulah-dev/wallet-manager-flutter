@@ -13,10 +13,10 @@
     - [x] Write failing test for overpayment throwing `InvalidAmountException`
     - [x] Refactor `DebtRepository.processPayment` using `runTransaction` to enforce `paymentAmount <= amountDue`
     - [x] Ensure tests pass
-- [ ] Task: Enforce counter integrity for statistics
-    - [ ] Write failing test to prevent counter from decrementing below zero
-    - [ ] Update counter logic to prevent sub-zero decrements
-    - [ ] Ensure tests pass
+- [x] Task: Enforce counter integrity for statistics
+    - [x] Write failing test to prevent counter from decrementing below zero
+    - [x] Update counter logic to prevent sub-zero decrements
+    - [x] Ensure tests pass
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Financial Fortification & Guard Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Stream Reliability & Cost Optimization

@@ -181,33 +181,49 @@ class StatsRepository {
       return;
     }
 
-    final docRef = _getSummaryDocRef(storeId);
-    final Map<String, dynamic> updates = {
-      'lastUpdated': FieldValue.serverTimestamp(),
-    };
-    if (countChange != 0) {
-      updates['totalWallets'] = FieldValue.increment(countChange);
-    }
-    if (activeCountChange != 0) {
-      updates['activeWallets'] = FieldValue.increment(activeCountChange);
-    }
-    if (balanceChange != 0.0) {
-      updates['totalBalance'] = FieldValue.increment(balanceChange);
-    }
-    await docRef.update(updates);
+    await _firestore.runTransaction((transaction) async {
+      final summaryRef = _getSummaryDocRef(storeId);
+      final storeRef = _firestore.collection('stores').doc(storeId);
 
-    // Also update Store Document root stats field (Legacy support)
-    final storeRef = _firestore.collection('stores').doc(storeId);
-    final Map<String, dynamic> storeUpdates = {
-      'stats.lastUpdated': FieldValue.serverTimestamp(),
-    };
-    if (countChange != 0) {
-      storeUpdates['stats.totalWallets'] = FieldValue.increment(countChange);
-    }
-    if (activeCountChange != 0) {
-      storeUpdates['stats.activeWallets'] =
-          FieldValue.increment(activeCountChange);
-    }
-    await storeRef.update(storeUpdates);
+      final summarySnap = await transaction.get(summaryRef);
+      final storeSnap = await transaction.get(storeRef);
+
+      final Map<String, dynamic> summaryUpdates = {
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+      final Map<String, dynamic> storeUpdates = {
+        'stats.lastUpdated': FieldValue.serverTimestamp(),
+      };
+
+      if (countChange != 0) {
+        int currentTotal = 0;
+        if (summarySnap.exists) {
+          final data = summarySnap.data() as Map<String, dynamic>?;
+          currentTotal = (data?['totalWallets'] as int?) ?? 0;
+        }
+        final newTotal = (currentTotal + countChange).clamp(0, 999999).toInt();
+        summaryUpdates['totalWallets'] = newTotal;
+        storeUpdates['stats.totalWallets'] = newTotal;
+      }
+
+      if (activeCountChange != 0) {
+        int currentActive = 0;
+        if (summarySnap.exists) {
+          final data = summarySnap.data() as Map<String, dynamic>?;
+          currentActive = (data?['activeWallets'] as int?) ?? 0;
+        }
+        final newActive =
+            (currentActive + activeCountChange).clamp(0, 999999).toInt();
+        summaryUpdates['activeWallets'] = newActive;
+        storeUpdates['stats.activeWallets'] = newActive;
+      }
+
+      if (balanceChange != 0.0) {
+        summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
+      }
+
+      transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
+      transaction.update(storeRef, storeUpdates);
+    });
   }
 }
