@@ -20,10 +20,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Financial Fortification & Guard Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Stream Reliability & Cost Optimization
-- [ ] Task: Propagate errors in Stream repositories
-    - [ ] Write failing test for error emission in `UserRepository`, `StoreRepository`, and `EmployeeRepository`
-    - [ ] Replace empty `.handleError` blocks with `AppErrorHandler.handle(e)` and re-emit via `Stream.error(e)`
-    - [ ] Ensure tests pass
+- [x] Task: Propagate errors in Stream repositories
+    - [x] Write failing test for error emission in `UserRepository`, `StoreRepository`, and `EmployeeRepository`
+    - [x] Replace empty `.handleError` blocks with `AppErrorHandler.handle(e)` and re-emit via `Stream.error(e)`
+    - [x] Ensure tests pass
 - [ ] Task: Implement cost capping in snapshots
     - [ ] Update employee-related snapshots in `EmployeeRepository` and `UserRepository` with `.limit(100)`
 - [ ] Task: Ensure listener safety across providers

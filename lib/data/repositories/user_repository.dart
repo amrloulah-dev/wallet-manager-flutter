@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_model.dart';
@@ -369,7 +370,10 @@ class UserRepository {
         return UserModel.fromFirestore(snapshot);
       }
       return null;
-    }).handleError((error) {});
+    }).handleError((error) {
+      AppErrorHandler.handle(error, operation: 'UserRepository.watchUser');
+      throw error;
+    });
   }
 
   /// Provides a real-time stream of active employees for a store.
@@ -384,7 +388,8 @@ class UserRepository {
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
         .handleError((error) {
-      return <UserModel>[];
+      AppErrorHandler.handle(error, operation: 'UserRepository.watchEmployees');
+      throw error;
     });
   }
 

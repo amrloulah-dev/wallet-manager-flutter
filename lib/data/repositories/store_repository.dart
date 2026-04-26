@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
@@ -303,7 +304,8 @@ class StoreRepository {
       }
       return null;
     }).handleError((error) {
-      // Optionally, you could yield an error state object here.
+      AppErrorHandler.handle(error, operation: 'StoreRepository.watchStore');
+      throw error;
     });
   }
 

@@ -285,8 +285,8 @@ class EmployeeRepository {
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
         .handleError((error) {
-      // Silently handle stream errors or use a proper logger in a real app
-      return <UserModel>[];
+      AppErrorHandler.handle(error, operation: 'EmployeeRepository.watchEmployees');
+      throw error;
     });
   }
 
