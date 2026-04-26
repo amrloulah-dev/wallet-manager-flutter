@@ -26,8 +26,8 @@
     - [x] Ensure tests pass
 - [x] Task: Implement cost capping in snapshots [27313d9]
     - [x] Update employee-related snapshots in `EmployeeRepository` and `UserRepository` with `.limit(100)`
-- [ ] Task: Ensure listener safety across providers
-    - [ ] Update `SystemConfigProvider` and other `.listen()` callers to include explicit `onError` handling (surfacing via Toasts/Snackbars)
+- [x] Task: Ensure listener safety across providers
+    - [x] Update `SystemConfigProvider` and other `.listen()` callers to include explicit `onError` handling (surfacing via Toasts/Snackbars)
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Stream Reliability & Cost Optimization' (Protocol in workflow.md)
 
 ## Phase 3: Domain Purity & Enum Migration

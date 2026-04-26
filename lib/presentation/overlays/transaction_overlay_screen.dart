@@ -76,6 +76,8 @@ class _OverlayContentState extends State<_OverlayContent> {
         if (event != null && event is Map) {
           _provider.ingestNewEvent(event);
         }
+      }, onError: (error) {
+        debugPrint('❌ [OVERLAY] overlayListener error: $error');
       });
 
       Future.delayed(const Duration(milliseconds: 300), () {

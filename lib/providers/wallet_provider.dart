@@ -129,6 +129,8 @@ class WalletProvider extends BaseProvider {
                 'isSend=$isSend. No Firebase read needed!');
           }
         }
+      }, onError: (error) {
+        AppErrorHandler.handle(error, operation: 'WalletProvider.overlayListener');
       });
     } catch (_) {
     }

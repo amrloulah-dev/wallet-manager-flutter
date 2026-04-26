@@ -35,6 +35,8 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       if (message == 'update_ui') {
         _fetchAndApplyData();
       }
+    }, onError: (error) {
+      debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
     });
   }
 
