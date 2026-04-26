@@ -13,7 +13,7 @@
     - [x] Write failing test for overpayment throwing `InvalidAmountException`
     - [x] Refactor `DebtRepository.processPayment` using `runTransaction` to enforce `paymentAmount <= amountDue`
     - [x] Ensure tests pass
-- [x] Task: Enforce counter integrity for statistics
+- [x] Task: Enforce counter integrity for statistics [8d5ed7e]
     - [x] Write failing test to prevent counter from decrementing below zero
     - [x] Update counter logic to prevent sub-zero decrements
     - [x] Ensure tests pass
