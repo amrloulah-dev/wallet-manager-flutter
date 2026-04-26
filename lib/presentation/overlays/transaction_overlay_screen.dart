@@ -164,7 +164,7 @@ class _OverlayContentState extends State<_OverlayContent> {
                         _provider.availableWallets.isNotEmpty) ...[
                       _HeroAmountWidget(
                         txtAmount: l10n.amount,
-                        amount: _provider.amount.toString(),
+                        amount: NumberFormatter.formatAmount(_provider.amount),
                         type: _provider.type,
                       ),
                       const SizedBox(height: 16),

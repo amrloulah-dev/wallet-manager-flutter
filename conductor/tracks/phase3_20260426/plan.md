@@ -48,6 +48,6 @@
     - [x] Write failing tests to verify `setLoading(true)` or `safeNotify()` is called immediately and `_errorMessage = null;` is reset before async work
     - [x] Update Provider action methods accordingly
     - [x] Ensure tests pass
-- [ ] Task: Format UI for precision
-    - [ ] Update presentation layer to use `.toStringAsFixed(2)` for monetary values to prevent precision drift artifacts
+- [x] Task: Format UI for precision
+    - [x] Update presentation layer to use `.toStringAsFixed(2)` for monetary values to prevent precision drift artifacts
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: UX Responsiveness & Precision Handling' (Protocol in workflow.md)

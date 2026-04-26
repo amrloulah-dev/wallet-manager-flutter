@@ -106,8 +106,7 @@ class DashboardQuickStats extends StatelessWidget {
                       StatsCard(
                         title:
                             '${AppLocalizations.of(context)!.totalTransactions} ',
-                        value: (data.today?.transactionCount ?? 0)
-                            .toString(),
+                        value: (data.today?.transactionCount ?? 0).toString(),
                         icon: Icons.swap_horiz,
                         color: Colors.green.shade700,
                         onTap: () {
@@ -129,9 +128,7 @@ class DashboardQuickStats extends StatelessWidget {
                       StatsCard(
                         title:
                             '${AppLocalizations.of(context)!.totalCommission} ',
-                        value: (data.today?.totalCommission ?? 0)
-                            .toInt()
-                            .toString(),
+                        value: NumberFormatter.formatAmount(data.today?.totalCommission),
                         icon: Icons.attach_money,
                         color: Colors.orange.shade800,
                         onTap: () {

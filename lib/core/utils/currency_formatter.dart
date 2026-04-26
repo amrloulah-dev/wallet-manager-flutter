@@ -6,9 +6,9 @@ class CurrencyFormatter {
   /// Defaults to 'en_US' locale for standard comma separators.
   static String formatAmount(num? amount, {bool showCurrency = false, String currencySymbol = 'ج'}) {
     if (amount == null) {
-      return '0';
+      return '0.00';
     }
-    final formatter = NumberFormat('#,##0.##', 'en_US');
+    final formatter = NumberFormat('#,##0.00', 'en_US');
     final formatted = formatter.format(amount);
     
     if (showCurrency) {
