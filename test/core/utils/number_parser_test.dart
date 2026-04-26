@@ -20,6 +20,12 @@ void main() {
         expect(NumberParser.toDouble('1,000.50'), 1000.50);
       });
 
+      test('should strip non-numeric characters except decimal point', () {
+        expect(NumberParser.toDouble('EGP 123.45'), 123.45);
+        expect(NumberParser.toDouble('100\$'), 100.0);
+        expect(NumberParser.toDouble('Amount: 50.00'), 50.0);
+      });
+
       test('should return default value when value is null', () {
         expect(NumberParser.toDouble(null), 0.0);
         expect(NumberParser.toDouble(null, 1.0), 1.0);
