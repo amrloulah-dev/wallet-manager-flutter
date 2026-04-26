@@ -16,12 +16,12 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Critical Crash Prevention & Error Decoupling' (Protocol in workflow.md) (d8709ac)
 
 ## Phase 2: Financial Logic & Boundary Fortification
-- [ ] Task: Write failing unit tests for AmountValidator and NumberParser
-    - [ ] Create/update tests in `test/core/utils/amount_validator_test.dart` for negative, zero, NaN, and Infinity.
-    - [ ] Create/update tests in `test/core/utils/number_parser_test.dart` for regex logic.
-- [ ] Task: Implement robust AmountValidator and NumberParser
-    - [ ] Update `AmountValidator` (`ensurePositive`, `ensurePositiveOrZero`).
-    - [ ] Update `NumberParser.toDouble()` to strip non-numeric characters using Regex.
+- [x] Task: Write failing unit tests for AmountValidator and NumberParser (cf378b6)
+    - [x] Create/update tests in `test/core/utils/amount_validator_test.dart` for negative, zero, NaN, and Infinity.
+    - [x] Create/update tests in `test/core/utils/number_parser_test.dart` for regex logic.
+- [x] Task: Implement robust AmountValidator and NumberParser (cf378b6)
+    - [x] Update `AmountValidator` (`ensurePositive`, `ensurePositiveOrZero`).
+    - [x] Update `NumberParser.toDouble()` to strip non-numeric characters using Regex.
 - [ ] Task: Write failing unit tests for TransactionValidatorService
     - [ ] Create/update tests in `test/data/services/transaction_validator_service_test.dart` for commission math and floating-point epsilon checks.
 - [ ] Task: Implement TransactionValidatorService financial boundary fixes
