@@ -37,7 +37,7 @@
     - [x] Write failing tests for model serialization using the new Enums
     - [x] Update `WalletModel`, `DebtModel`, `TransactionModel`, `EmployeeModel`, and `StoreModel` to use Enums instead of strings
     - [x] Ensure tests pass
-- [x] Task: Implement safe serialization with logging [d860d9a]
+- [x] Task: Implement safe serialization with logging [cd3feac]
     - [x] Write failing tests for handling missing timestamps and hard casts
     - [x] Refactor `fromFirestore` methods to return null for missing timestamps, log corrupt data occurrences, and use safe fallbacks (`as String? ?? ''`)
     - [x] Ensure tests pass
