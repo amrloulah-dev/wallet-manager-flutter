@@ -5,7 +5,7 @@
     - [x] Write failing test for `ensurePositive(double value)`
     - [x] Implement `AmountValidator` throwing `DomainException` for values <= 0
     - [x] Ensure tests pass
-- [x] Task: Apply `AmountValidator` guards in repositories
+- [x] Task: Apply `AmountValidator` guards in repositories [d262f43]
     - [x] Write failing test for `processPayment` rejecting negative/zero values
     - [x] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`
     - [x] Ensure tests pass
