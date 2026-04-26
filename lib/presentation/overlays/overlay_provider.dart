@@ -7,8 +7,9 @@ import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
+import 'package:walletmanager/providers/base_provider.dart';
 
-class OverlayProvider with ChangeNotifier {
+class OverlayProvider extends BaseProvider {
   final LocalStorageService _localStorageService = LocalStorageService();
   final OverlayUseCase _overlayUseCase;
 
@@ -41,14 +42,16 @@ class OverlayProvider with ChangeNotifier {
   double get commission => _commission;
   List<Map<String, dynamic>> get availableWallets => _availableWallets;
 
-  @override
-  void notifyListeners() {
+  /// Guarded notification that respects the fetch shield.
+  /// When [_blockAutoFetch] is true, notifications are suppressed
+  /// to prevent unnecessary janky UI rebuilds during batch state mutations.
+  void _guardedNotify() {
     if (_blockAutoFetch) {
       debugPrint('🛡️ [Fetch Shield] _blockAutoFetch active — suppressed '
-          'notifyListeners() to prevent unnecessary janky UI rebuilds');
+          'safeNotify() to prevent unnecessary janky UI rebuilds');
       return;
     }
-    super.notifyListeners();
+    safeNotify();
   }
 
   void reset() {
@@ -76,7 +79,7 @@ class OverlayProvider with ChangeNotifier {
     _isLoading = true;
     
     _blockAutoFetch = false;
-    notifyListeners();
+    _guardedNotify();
     _blockAutoFetch = true;
 
     try {
@@ -130,7 +133,7 @@ class OverlayProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       _blockAutoFetch = false;
-      notifyListeners();
+      _guardedNotify();
     }
   }
 
@@ -144,7 +147,7 @@ class OverlayProvider with ChangeNotifier {
 
   void setCommission(String value) {
     _commission = double.tryParse(value) ?? 0.0;
-    notifyListeners();
+    _guardedNotify();
   }
 
   void setSelectedWallet(String? walletId) {
@@ -173,13 +176,13 @@ class OverlayProvider with ChangeNotifier {
           'walletId is null or amount=0, commission reset to 0.0');
     }
 
-    notifyListeners();
+    _guardedNotify();
   }
 
   Future<void> submitTransaction() async {
     if (_selectedWalletId == null) {
       _errorMessage = 'Please select a wallet';
-      notifyListeners();
+      _guardedNotify();
       return;
     }
 
@@ -190,13 +193,13 @@ class OverlayProvider with ChangeNotifier {
 
     if (userId == null || storeId == null) {
       _errorMessage = 'Session invalid. Please login again inside the app.';
-      notifyListeners();
+      _guardedNotify();
       return;
     }
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _guardedNotify();
 
     try {
       final result = await _overlayUseCase.execute(
@@ -227,7 +230,7 @@ class OverlayProvider with ChangeNotifier {
           'deduction=${result.totalDeduction}, isSend=${result.isSend}');
       
       _isLoading = false;
-      notifyListeners();
+      _guardedNotify();
       
       FlutterOverlayWindow.shareData({
         "action": "local_deduct",
@@ -247,7 +250,7 @@ class OverlayProvider with ChangeNotifier {
           'CATCH → $e');
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _guardedNotify();
     }
   }
 

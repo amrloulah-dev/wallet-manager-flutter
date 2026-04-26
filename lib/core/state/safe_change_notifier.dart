@@ -23,7 +23,11 @@ abstract class SafeChangeNotifier extends ChangeNotifier {
   @protected
   void safeNotify() {
     if (!_isDisposed && hasListeners) {
-      Future.microtask(() => notifyListeners());
+      Future.microtask(() {
+        if (!_isDisposed && hasListeners) {
+          notifyListeners();
+        }
+      });
     }
   }
 }
