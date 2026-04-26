@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/utils/amount_validator.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/date_helper.dart';
@@ -22,9 +23,7 @@ class TransactionValidatorService {
         'storeId=${transaction.storeId}');
 
     // 1. Positive Amount Check
-    if (transaction.amount <= 0) {
-      throw ValidationException('المبلغ يجب أن يكون أكبر من الصفر.');
-    }
+    AmountValidator.ensurePositive(transaction.amount);
 
     final balanceChange = transaction.isSend
         ? -(transaction.amount + transaction.serviceFee)

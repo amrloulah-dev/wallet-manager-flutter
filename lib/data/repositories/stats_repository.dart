@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
@@ -110,6 +111,7 @@ class StatsRepository {
   }
 
   Future<void> incrementOpenDebtStats(String storeId, double amount) async {
+    AmountValidator.ensurePositive(amount);
     final docRef = _getSummaryDocRef(storeId);
     await docRef.update({
       'openDebtsCount': FieldValue.increment(1),

@@ -1,3 +1,4 @@
+import '../../core/utils/amount_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
@@ -44,6 +45,7 @@ class TransactionRepository {
     required double amount,
     required String createdBy,
   }) async {
+    AmountValidator.ensurePositive(amount);
     final now = DateTime.now();
     final transaction = TransactionModel(
       transactionId: transactionId,
@@ -58,6 +60,7 @@ class TransactionRepository {
     return createTransaction(transaction);
   }
   Future<void> createTransaction(TransactionModel transaction) async {
+    AmountValidator.ensurePositive(transaction.amount);
     try {
       debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
           'RECEIVED | txId=${transaction.transactionId}, '

@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
@@ -163,6 +164,7 @@ class WalletRepository {
   }
 
   Future<void> updateWalletBalance(String walletId, double amount) async {
+    AmountValidator.ensurePositive(amount);
     try {
       final wallet = await getWalletById(walletId);
       if (wallet == null) throw NotFoundException('Wallet');

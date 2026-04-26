@@ -5,10 +5,10 @@
     - [x] Write failing test for `ensurePositive(double value)`
     - [x] Implement `AmountValidator` throwing `DomainException` for values <= 0
     - [x] Ensure tests pass
-- [ ] Task: Apply `AmountValidator` guards in repositories
-    - [ ] Write failing test for `processPayment` rejecting negative/zero values
-    - [ ] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`
-    - [ ] Ensure tests pass
+- [x] Task: Apply `AmountValidator` guards in repositories
+    - [x] Write failing test for `processPayment` rejecting negative/zero values
+    - [x] Update `processPayment`, `addExpense`, and balance-modifying methods with `ensurePositive`
+    - [x] Ensure tests pass
 - [ ] Task: Implement atomic ceiling checks for `DebtRepository.processPayment`
     - [ ] Write failing test for overpayment throwing `InvalidAmountException`
     - [ ] Refactor `DebtRepository.processPayment` using `runTransaction` to enforce `paymentAmount <= amountDue`

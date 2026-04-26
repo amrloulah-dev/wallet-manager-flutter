@@ -1,3 +1,4 @@
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -156,6 +157,7 @@ class DebtRepository {
   // 3️⃣ UPDATE
   Future<void> processPayment(
       String debtId, double amountToPay, String userId) async {
+    AmountValidator.ensurePositive(amountToPay);
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -168,9 +170,6 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToPay <= 0) {
-          throw ValidationException('Amount must be positive.');
-        }
         if (amountToPay > oldDebt.amountDue) {
           throw ValidationException('Paid amount exceeds remaining debt.');
         }
@@ -229,6 +228,7 @@ class DebtRepository {
 
   Future<void> addPartialDebt(
       String debtId, double amountToAdd, String userId) async {
+    AmountValidator.ensurePositive(amountToAdd);
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -240,10 +240,6 @@ class DebtRepository {
         }
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
-
-        if (amountToAdd <= 0) {
-          throw ValidationException('Amount must be positive.');
-        }
 
         final wasPaid = oldDebt.debtStatus == 'paid';
 
