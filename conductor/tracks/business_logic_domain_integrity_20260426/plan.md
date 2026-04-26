@@ -1,7 +1,7 @@
 # Implementation Plan: Business Logic & Domain Integrity Execution Plan (V2)
 
 ## Phase 1: Critical Crash Prevention & Error Decoupling
-- [ ] Task: Decouple AppErrorHandler from UI components
+- [x] Task: Decouple AppErrorHandler from UI components (d5fb222)
     - [ ] Update `lib/core/errors/app_error_handler.dart` to remove `BotToast` and `showDialog` dependencies.
     - [ ] Ensure `AppErrorHandler` only handles logging.
 - [ ] Task: Fix string interpolation bugs in WalletRepository
