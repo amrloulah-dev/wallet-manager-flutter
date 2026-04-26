@@ -33,7 +33,7 @@
 ## Phase 3: Domain Purity & Enum Migration
 - [x] Task: Create Enhanced Enums [64fc9df]
     - [x] Create enums: `DebtStatus`, `WalletType`, `SubscriptionStatus`, and Enums for `EmployeeModel` & `StoreModel`
-- [x] Task: Refactor Domain Models to use Enums
+- [x] Task: Refactor Domain Models to use Enums [d860d9a]
     - [x] Write failing tests for model serialization using the new Enums
     - [x] Update `WalletModel`, `DebtModel`, `TransactionModel`, `EmployeeModel`, and `StoreModel` to use Enums instead of strings
     - [x] Ensure tests pass
