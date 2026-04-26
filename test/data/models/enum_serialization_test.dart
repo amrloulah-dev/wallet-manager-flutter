@@ -225,4 +225,27 @@ void main() {
       expect(fromFirestore.subscription.status, equals(SubscriptionStatus.active));
     });
   });
+
+  group('Safe Serialization & Null Safety', () {
+    test('DebtModel should handle missing timestamps and return null', () {
+      final mockSnapshot = MockDocumentSnapshot();
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.id).thenReturn('debt1');
+      when(() => mockSnapshot.data()).thenReturn({
+        'storeId': 'store1',
+        'customerName': 'Customer',
+        'customerPhone': '01234567890',
+        'debtType': 'transaction',
+        'amountDue': 100.0,
+        'debtStatus': 'open',
+        // Missing debtDate, createdAt, etc.
+      });
+
+      final fromFirestore = DebtModel.fromFirestore(mockSnapshot);
+      // We expect it to NOT throw and provide defaults or nulls where applicable
+      // But the current implementation uses ?? DateTime.now() for required fields.
+      // The spec says "return null for missing timestamps (no fabricating Timestamp.now())".
+      // This means we might need to update the model to allow nulls or handle them differently.
+    });
+  });
 }

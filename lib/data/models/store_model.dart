@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/subscription_enums.dart';
+import '../../core/errors/app_error_handler.dart';
 
 // ===========================
 // Main Store Model
@@ -19,7 +20,7 @@ class StoreModel {
   final bool isActive;
   final bool isSuspended;
 
-  final DateTime createdAt;
+  final DateTime? createdAt; // Made nullable
   final DateTime? updatedAt;
 
   final StoreSubscription subscription;
@@ -37,7 +38,7 @@ class StoreModel {
     this.ownerPhoto,
     this.isActive = true,
     this.isSuspended = false,
-    required this.createdAt,
+    this.createdAt,
     this.updatedAt,
     required this.subscription,
     required this.settings,
@@ -52,24 +53,32 @@ class StoreModel {
     }
     final data = doc.data() as Map<String, dynamic>;
 
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    if (createdAt == null) {
+      AppErrorHandler.handle(
+        'Missing createdAt in Store document: ${doc.id}',
+        operation: 'StoreModel.fromFirestore',
+      );
+    }
+
     return StoreModel(
       storeId: doc.id,
-      storeName: data['storeName'] ?? '',
-      storePassword: data['storePassword'] ?? '',
-      ownerId: data['ownerId'] ?? '',
-      ownerName: data['ownerName'] ?? '',
-      ownerEmail: data['ownerEmail'] ?? '',
-      ownerPhoto: data['ownerPhoto'],
-      isActive: data['isActive'] ?? true,
-      isSuspended: data['isSuspended'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      storeName: data['storeName'] as String? ?? '',
+      storePassword: data['storePassword'] as String? ?? '',
+      ownerId: data['ownerId'] as String? ?? '',
+      ownerName: data['ownerName'] as String? ?? '',
+      ownerEmail: data['ownerEmail'] as String? ?? '',
+      ownerPhoto: data['ownerPhoto'] as String?,
+      isActive: data['isActive'] as bool? ?? true,
+      isSuspended: data['isSuspended'] as bool? ?? false,
+      createdAt: createdAt,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       subscription: data['subscription'] != null 
-          ? StoreSubscription.fromMap(data['subscription'])
+          ? StoreSubscription.fromMap(data['subscription'] as Map<String, dynamic>)
           : StoreSubscription.migratedLifetime(), // FR-17 legacy migration
-      settings: StoreSettings.fromMap(data['settings'] ?? {}),
-      stats: StoreStats.fromMap(data['stats'] ?? {}),
-      legacyData: data['legacyData'] ?? {
+      settings: StoreSettings.fromMap(data['settings'] as Map<String, dynamic>? ?? {}),
+      stats: StoreStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {}),
+      legacyData: data['legacyData'] as Map<String, dynamic>? ?? {
         if (data.containsKey('licenseKey')) 'licenseKey': data['licenseKey'],
         if (data.containsKey('licenseKeyId')) 'licenseKeyId': data['licenseKeyId'],
         if (data.containsKey('activeLicenseKey')) 'activeLicenseKey': data['activeLicenseKey'],
@@ -88,7 +97,7 @@ class StoreModel {
       'ownerPhoto': ownerPhoto,
       'isActive': isActive,
       'isSuspended': isSuspended,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
       'subscription': subscription.toMap(),
       'settings': settings.toMap(),
@@ -217,15 +226,15 @@ class StoreSubscription {
 
   factory StoreSubscription.fromMap(Map<String, dynamic> map) {
     return StoreSubscription(
-      planId: SubscriptionPlan.fromString(map['planId'] ?? 'free'),
-      status: SubscriptionStatus.fromString(map['status'] ?? 'active'),
+      planId: SubscriptionPlan.fromString(map['planId'] as String? ?? 'free'),
+      status: SubscriptionStatus.fromString(map['status'] as String? ?? 'active'),
       endDate: map['endDate'] != null 
           ? (map['endDate'] as Timestamp).toDate() 
           : null,
-      trialConsumed: map['trialConsumed'] ?? false,
+      trialConsumed: map['trialConsumed'] as bool? ?? false,
       maxWallets: NumberParser.toInt(map['maxWallets'], 3),
       maxEmployees: NumberParser.toInt(map['maxEmployees'], 1),
-      smsEnabled: map['smsEnabled'] ?? false,
+      smsEnabled: map['smsEnabled'] as bool? ?? false,
       pendingRequestDate: map['pendingRequestDate'] != null 
           ? (map['pendingRequestDate'] as Timestamp).toDate() 
           : null,
@@ -268,7 +277,6 @@ class StoreSubscription {
   }
 }
 
-// ... StoreSettings and StoreStats remain same ...
 class StoreSettings {
   final String currency;
   final String timezone;
@@ -280,8 +288,8 @@ class StoreSettings {
 
   factory StoreSettings.fromMap(Map<String, dynamic> map) {
     return StoreSettings(
-      currency: map['currency'] ?? 'EGP',
-      timezone: map['timezone'] ?? 'Africa/Cairo',
+      currency: map['currency'] as String? ?? 'EGP',
+      timezone: map['timezone'] as String? ?? 'Africa/Cairo',
     );
   }
 
@@ -305,23 +313,24 @@ class StoreStats {
   final int activeWallets;
   final int totalTransactionsToday;
   final double totalCommissionToday;
-  final DateTime lastUpdated;
+  final DateTime? lastUpdated; // Made nullable
 
   StoreStats({
     this.totalWallets = 0,
     this.activeWallets = 0,
     this.totalTransactionsToday = 0,
     this.totalCommissionToday = 0.0,
-    required this.lastUpdated,
+    this.lastUpdated,
   });
 
   factory StoreStats.fromMap(Map<String, dynamic> map) {
+    final lastUpdated = (map['lastUpdated'] as Timestamp?)?.toDate();
     return StoreStats(
       totalWallets: NumberParser.toInt(map['totalWallets']),
       activeWallets: NumberParser.toInt(map['activeWallets']),
       totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
       totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
-      lastUpdated: (map['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastUpdated: lastUpdated,
     );
   }
 
@@ -331,7 +340,7 @@ class StoreStats {
       'activeWallets': activeWallets,
       'totalTransactionsToday': totalTransactionsToday,
       'totalCommissionToday': totalCommissionToday,
-      'lastUpdated': Timestamp.fromDate(lastUpdated),
+      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
 

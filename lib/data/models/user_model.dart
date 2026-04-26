@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/user_enums.dart';
+import '../../core/errors/app_error_handler.dart';
 
 import 'user_permissions.dart';
 
@@ -28,11 +29,11 @@ class UserModel {
   final bool isActive;
 
   // Timestamps
-  final DateTime createdAt;
+  final DateTime? createdAt; // Made nullable
   final String?
       createdBy; // ID of the user who created this user (e.g., owner ID)
   final DateTime? updatedAt;
-  final DateTime lastLogin;
+  final DateTime? lastLogin; // Made nullable
 
   // Nested objects (for employees)
   final UserPermissions? permissions;
@@ -49,10 +50,10 @@ class UserModel {
     this.firebaseUid,
     this.pin,
     this.isActive = true,
-    required this.createdAt,
+    this.createdAt,
     this.createdBy,
     this.updatedAt,
-    required this.lastLogin,
+    this.lastLogin,
     this.permissions,
     this.stats,
   });
@@ -78,25 +79,35 @@ class UserModel {
     final roleStr = data['role'] as String? ?? 'employee';
     final role = UserRole.fromString(roleStr);
 
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    final lastLogin = (data['lastLogin'] as Timestamp?)?.toDate();
+
+    if (createdAt == null || lastLogin == null) {
+      AppErrorHandler.handle(
+        'Missing timestamps in User document: ${doc.id}',
+        operation: 'UserModel.fromFirestore',
+      );
+    }
+
     return UserModel(
       userId: doc.id,
-      storeId: data['storeId'] ?? '',
+      storeId: data['storeId'] as String? ?? '',
       role: role,
-      fullName: data['fullName'] ?? '',
-      email: data['email'],
-      phone: data['phone'],
-      photoURL: data['photoURL'],
-      firebaseUid: data['firebaseUid'], // Default to null for backward compat
-      pin: data['pin'],
-      isActive: data['isActive'] ?? true,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      createdBy: data['createdBy'],
+      fullName: data['fullName'] as String? ?? '',
+      email: data['email'] as String?,
+      phone: data['phone'] as String?,
+      photoURL: data['photoURL'] as String?,
+      firebaseUid: data['firebaseUid'] as String?,
+      pin: data['pin'] as String?,
+      isActive: data['isActive'] as bool? ?? true,
+      createdAt: createdAt,
+      createdBy: data['createdBy'] as String?,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
-      lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastLogin: lastLogin,
       permissions: role == UserRole.employee
-          ? UserPermissions.fromMap(data['permissions'] ?? {})
+          ? UserPermissions.fromMap(data['permissions'] as Map<String, dynamic>? ?? {})
           : null,
-      stats: role == UserRole.employee ? UserStats.fromMap(data['stats'] ?? {}) : null,
+      stats: role == UserRole.employee ? UserStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {}) : null,
     );
   }
 
@@ -112,10 +123,10 @@ class UserModel {
       'firebaseUid': firebaseUid,
       'pin': pin,
       'isActive': isActive,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'createdBy': createdBy,
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
-      'lastLogin': Timestamp.fromDate(lastLogin),
+      'lastLogin': lastLogin != null ? Timestamp.fromDate(lastLogin!) : null,
     };
 
     if (isEmployee) {
@@ -182,7 +193,6 @@ class UserModel {
   int get hashCode => userId.hashCode ^ storeId.hashCode;
 }
 
-// ... UserStats remains same ...
 class UserStats {
   final int totalTransactions;
   final double totalCommission;

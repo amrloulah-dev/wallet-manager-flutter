@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/debt_enums.dart';
+import '../../core/errors/app_error_handler.dart';
 
 class DebtModel {
   // Identity
@@ -22,12 +23,12 @@ class DebtModel {
   final DebtStatus debtStatus; // ENUM refactor
 
   // Dates
-  final DateTime debtDate; 
+  final DateTime? debtDate; // Made nullable
   final DateTime? paidDate; 
 
   // Tracking
   final String createdBy; 
-  final DateTime createdAt;
+  final DateTime? createdAt; // Made nullable
   final String? markedPaidBy; 
   final DateTime? updatedAt;
   final String? lastUpdatedBy;
@@ -44,10 +45,10 @@ class DebtModel {
     required this.totalAmount,
     this.notes,
     this.debtStatus = DebtStatus.open,
-    required this.debtDate,
+    this.debtDate,
     this.paidDate,
     required this.createdBy,
-    required this.createdAt,
+    this.createdAt,
     this.markedPaidBy,
     this.updatedAt,
     this.lastUpdatedBy,
@@ -73,23 +74,33 @@ class DebtModel {
       totalAmount = amountDue;
     }
 
+    final debtDate = (data['debtDate'] as Timestamp?)?.toDate();
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+    if (debtDate == null || createdAt == null) {
+      AppErrorHandler.handle(
+        'Missing timestamps in Debt document: ${doc.id}',
+        operation: 'DebtModel.fromFirestore',
+      );
+    }
+
     return DebtModel(
       debtId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      customerName: data['customerName'] ?? '',
-      customerPhone: data['customerPhone'] ?? '',
+      storeId: data[FirebaseConstants.storeId] as String? ?? '',
+      customerName: data['customerName'] as String? ?? '',
+      customerPhone: data['customerPhone'] as String? ?? '',
       debtType: debtType,
       amountDue: amountDue,
       totalAmount: totalAmount,
-      notes: data[FirebaseConstants.notes],
+      notes: data[FirebaseConstants.notes] as String?,
       debtStatus: debtStatus,
-      debtDate: (data['debtDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      debtDate: debtDate,
       paidDate: (data['paidDate'] as Timestamp?)?.toDate(),
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      createdAt: (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate() ?? DateTime.now(),
-      markedPaidBy: data['markedPaidBy'],
+      createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
+      createdAt: createdAt,
+      markedPaidBy: data['markedPaidBy'] as String?,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
-      lastUpdatedBy: data['lastUpdatedBy'],
+      lastUpdatedBy: data['lastUpdatedBy'] as String?,
     );
   }
 
@@ -104,10 +115,10 @@ class DebtModel {
       'totalAmount': totalAmount,
       FirebaseConstants.notes: notes,
       'debtStatus': debtStatus.name,
-      'debtDate': Timestamp.fromDate(debtDate),
+      'debtDate': debtDate != null ? Timestamp.fromDate(debtDate!) : null,
       'paidDate': paidDate != null ? Timestamp.fromDate(paidDate!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.createdAt: Timestamp.fromDate(createdAt),
+      FirebaseConstants.createdAt: createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'markedPaidBy': markedPaidBy,
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'lastUpdatedBy': lastUpdatedBy,

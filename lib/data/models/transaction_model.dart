@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/transaction_enums.dart';
+import '../../core/errors/app_error_handler.dart';
 
 class TransactionModel {
   final String transactionId;
@@ -16,8 +17,8 @@ class TransactionModel {
   final PaymentStatus paymentStatus; // ENUM refactor
   final String? debtId;
   final String? notes;
-  final DateTime transactionDate;
-  final DateTime createdAt;
+  final DateTime? transactionDate; // Made nullable
+  final DateTime? createdAt; // Made nullable
   final String createdBy;
   final String? createdById;
   final String? createdByName;
@@ -41,8 +42,8 @@ class TransactionModel {
     this.paymentStatus = PaymentStatus.paid,
     this.debtId,
     this.notes,
-    required this.transactionDate,
-    required this.createdAt,
+    this.transactionDate,
+    this.createdAt,
     required this.createdBy,
     this.createdById,
     this.createdByName,
@@ -58,38 +59,39 @@ class TransactionModel {
     final data = doc.data() as Map<String, dynamic>;
     
     final transactionDate = (data['transactionDate'] as Timestamp?)?.toDate();
-    if (transactionDate == null) {
-      throw const FormatException('Missing or invalid transactionDate in TransactionModel');
-    }
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
-    if (createdAt == null) {
-      throw const FormatException('Missing or invalid createdAt in TransactionModel');
+
+    if (transactionDate == null || createdAt == null) {
+      AppErrorHandler.handle(
+        'Missing timestamps in Transaction document: ${doc.id}',
+        operation: 'TransactionModel.fromFirestore',
+      );
     }
 
     return TransactionModel(
       transactionId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      walletId: data[FirebaseConstants.walletId] ?? '',
-      transactionType: TransactionType.fromString(data['transactionType'] ?? 'send'),
-      customerPhone: data['customerPhone'],
-      customerName: data['customerName'],
+      storeId: data[FirebaseConstants.storeId] as String? ?? '',
+      walletId: data[FirebaseConstants.walletId] as String? ?? '',
+      transactionType: TransactionType.fromString(data['transactionType'] as String? ?? 'send'),
+      customerPhone: data['customerPhone'] as String?,
+      customerName: data['customerName'] as String?,
       amount: NumberParser.toDouble(data['amount']),
       commission: NumberParser.toDouble(data['commission']),
       serviceFee: NumberParser.toDouble(data['serviceFee']),
-      paymentStatus: PaymentStatus.fromString(data['paymentStatus'] ?? 'paid'),
-      debtId: data['debtId'],
-      notes: data[FirebaseConstants.notes],
+      paymentStatus: PaymentStatus.fromString(data['paymentStatus'] as String? ?? 'paid'),
+      debtId: data['debtId'] as String?,
+      notes: data[FirebaseConstants.notes] as String?,
       transactionDate: transactionDate,
       createdAt: createdAt,
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      createdById: data['createdById'],
-      createdByName: data['createdByName'],
-      creatorRole: data['creatorRole'],
+      createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
+      createdById: data['createdById'] as String?,
+      createdByName: data['createdByName'] as String?,
+      creatorRole: data['creatorRole'] as String?,
       updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
-      updatedBy: data['updatedBy'],
-      isDeleted: data['isDeleted'] ?? false,
+      updatedBy: data['updatedBy'] as String?,
+      isDeleted: data['isDeleted'] as bool? ?? false,
       deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
-      deletedBy: data['deletedBy'],
+      deletedBy: data['deletedBy'] as String?,
     );
   }
 
@@ -106,8 +108,8 @@ class TransactionModel {
       'paymentStatus': paymentStatus.name,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
-      'transactionDate': Timestamp.fromDate(transactionDate),
-      FirebaseConstants.createdAt: Timestamp.fromDate(createdAt),
+      'transactionDate': transactionDate != null ? Timestamp.fromDate(transactionDate!) : null,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       FirebaseConstants.createdBy: createdBy,
       'createdById': createdById,
       'createdByName': createdByName,
