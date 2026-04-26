@@ -1,6 +1,6 @@
 # Implementation Plan: Business Logic & Domain Integrity Execution Plan (V2)
 
-## Phase 1: Critical Crash Prevention & Error Decoupling
+## Phase 1: Critical Crash Prevention & Error Decoupling [checkpoint: d8709ac]
 - [x] Task: Decouple AppErrorHandler from UI components (d5fb222)
     - [ ] Update `lib/core/errors/app_error_handler.dart` to remove `BotToast` and `showDialog` dependencies.
     - [ ] Ensure `AppErrorHandler` only handles logging.
@@ -13,7 +13,7 @@
     - [ ] Update `wallet_repository.dart` (`getTotalBalance`, `getWalletsCount`) to re-throw exceptions instead of returning `0.0`.
 - [x] Task: Add null-guards for TransactionFeeCalculator (37a6ed1)
     - [ ] Update `transaction_fee_calculator.dart` to early return if `wallet == null`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Critical Crash Prevention & Error Decoupling' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Critical Crash Prevention & Error Decoupling' (Protocol in workflow.md) (d8709ac)
 
 ## Phase 2: Financial Logic & Boundary Fortification
 - [ ] Task: Write failing unit tests for AmountValidator and NumberParser
