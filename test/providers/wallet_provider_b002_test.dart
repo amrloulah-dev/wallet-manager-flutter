@@ -81,20 +81,21 @@ void main() {
     when(() => mockAuth.currentUserId).thenReturn('user1');
     // NOTE: subscriptionProvider is NOT provided, so it is null in the WalletProvider
 
-    // 2. Act: Attempt to create a wallet
-    final result = await walletProvider.createWallet(
-      phoneNumber: '01012345678',
-      walletType: WalletType.vodafoneCash, // ENUM refactor
-      walletStatus: WalletStatus.active, // ENUM refactor
-      balance: 100.0,
-      createdBy: 'user1',
-    );
-
-    // 3. Assert: 
-    // CURRENT BEHAVIOR (Buggy): It proceeds to try creating in repo because it bypasses limits
-    // DESIRED BEHAVIOR (Fixed): It should return false and set an error message
+    // 2. Act & Assert: Attempt to create a wallet
+    // DESIRED BEHAVIOR (Fixed): It should throw ValidationException
+    try {
+      await walletProvider.createWallet(
+        phoneNumber: '01012345678',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        balance: 100.0,
+        createdBy: 'user1',
+      );
+      fail('Should have thrown ValidationException');
+    } catch (e) {
+      expect(e, isA<Exception>());
+    }
     
-    expect(result, isFalse, reason: 'Wallet creation should fail if subscription state is unresolved');
     expect(walletProvider.errorMessage, equals('wallet_error_subscription_unresolved'));
   });
 

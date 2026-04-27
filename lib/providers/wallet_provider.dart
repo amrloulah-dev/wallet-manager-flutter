@@ -327,15 +327,13 @@ class WalletProvider extends BaseProvider {
 
       // Bug B-002: Fail-closed if subscription provider is missing
       if (_subscriptionProvider == null) {
-        setError('wallet_error_subscription_unresolved');
-        return false;
+        throw ValidationException('wallet_error_subscription_unresolved');
       }
 
       final currentCount =
           await _walletRepository.getWalletsCount(storeId);
       if (!_subscriptionProvider!.canAddWallet(currentCount)) {
-        setError('wallet_error_limit_reached');
-        return false;
+        throw ValidationException('wallet_error_limit_reached');
       }
 
       final newWallet = WalletModel.fromWalletStatus(
@@ -360,7 +358,6 @@ class WalletProvider extends BaseProvider {
         _updateStatus(WalletProviderStatus.loaded);
         return true;
       } catch (e) {
-        // Re-throw to propagate to UI/caller
         rethrow;
       }
     } on AppException catch (e) {
@@ -384,7 +381,7 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      if (_currentStoreId == null) throw ValidationException('Store ID missing');
+      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
@@ -419,9 +416,7 @@ class WalletProvider extends BaseProvider {
       await _validateUserAndPermission((p) => p.addBalance);
 
       if (amount <= 0) throw ValidationException('Amount must be positive.');
-      if (_currentStoreId == null) {
-        throw ValidationException('Store ID not found.');
-      }
+      final storeId = _currentStoreId ?? (throw ValidationException('Store ID not found.'));
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
@@ -430,7 +425,7 @@ class WalletProvider extends BaseProvider {
 
       await _transactionRepository.createDeposit(
         transactionId: _transactionRepository.generateId(),
-        storeId: _currentStoreId!,
+        storeId: storeId,
         walletId: walletId,
         amount: amount,
         createdBy: createdBy,
