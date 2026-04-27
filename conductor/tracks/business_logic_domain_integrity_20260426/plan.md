@@ -33,9 +33,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md) (58b1f8d)
 
 ## Phase 3: Domain Model Purity & Serialization Safety
-- [x] Task: Write failing unit tests for Model Deserialization Guards (566cad0)
+- [x] Task: Write failing unit tests for Model Deserialization Guards (528c3b6)
     - [x] Create/update tests in `test/data/models/transaction_model_test.dart` and `wallet_model_test.dart`.
-- [x] Task: Implement Domain Model Purity & Serialization Safety (566cad0)
+- [x] Task: Implement Domain Model Purity & Serialization Safety (528c3b6)
     - [x] Add `AmountValidator` to `TransactionModel.fromFirestore` for `amount` and `commission`.
     - [x] Update `StatsSummaryModel` (and similar) to parse missing timestamps as `null` instead of `DateTime.now()`.
     - [x] Deep copy nested maps/lists in `TransactionModel.toFirestore`.
