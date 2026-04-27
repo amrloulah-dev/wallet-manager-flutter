@@ -43,14 +43,14 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Domain Model Purity & Serialization Safety' (Protocol in workflow.md) (e77f69a)
 
 ## Phase 4: State Logic & Pagination Fixes
-- [ ] Task: Write failing unit tests for State Logic & Pagination Fixes
-    - [ ] Create/update tests in `test/data/repositories/transaction_repository_test.dart`, `test/providers/transaction_provider_test.dart`, and `test/data/repositories/stats_repository_test.dart`.
-- [ ] Task: Implement State Logic & Pagination Fixes
-    - [ ] Remove global mutable `_lastDocument` in `TransactionRepository` and require it as a parameter.
-    - [ ] Dynamically initialize `_dateRange` in `TransactionProvider`.
-    - [ ] Add `await` to `initializeStats()` in `StatsRepository.watchStatsSummary`.
-    - [ ] Add `AppErrorHandler.handle(e)` to empty catch blocks in `WalletProvider` overlay listener.
-    - [ ] Remove unused `_walletRepository` field in `WalletUseCase` and redundant `setFilter` alias in `TransactionProvider`.
+- [x] Task: Write failing unit tests for State Logic & Pagination Fixes (4ce0c03)
+    - [x] Create/update tests in `test/data/repositories/transaction_repository_test.dart`, `test/providers/transaction_provider_test.dart`, and `test/data/repositories/stats_repository_test.dart`.
+- [x] Task: Implement State Logic & Pagination Fixes (4ce0c03)
+    - [x] Remove global mutable `_lastDocument` in `TransactionRepository` and require it as a parameter.
+    - [x] Dynamically initialize `_dateRange` in `TransactionProvider`.
+    - [x] Add `await` to `initializeStats()` in `StatsRepository.watchStatsSummary`.
+    - [x] Add `AppErrorHandler.handle(e)` to empty catch blocks in `WalletProvider` overlay listener.
+    - [x] Remove unused `_walletRepository` field in `WalletUseCase` and redundant `setFilter` alias in `TransactionProvider`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: State Logic & Pagination Fixes' (Protocol in workflow.md)
 
 ## Phase 5: Provider Error Transparency
