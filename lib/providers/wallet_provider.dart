@@ -397,13 +397,9 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_frozen');
       }
 
-      try {
-        await _walletRepository.updateWallet(walletId, data);
-        _updateStatus(WalletProviderStatus.loaded);
-        return true;
-      } catch (e) {
-        rethrow;
-      }
+      await _walletRepository.updateWallet(walletId, data);
+      _updateStatus(WalletProviderStatus.loaded);
+      return true;
     } on ServerException catch (e) {
       setError(e.message);
       rethrow;
