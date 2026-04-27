@@ -5,6 +5,7 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 
@@ -19,6 +20,8 @@ class MockTransactionRepository extends Mock implements TransactionRepository {}
 class MockWalletCacheManager extends Mock implements WalletCacheManager {}
 class MockWalletUseCase extends Mock implements WalletUseCase {}
 
+class FakeWalletModel extends Fake implements WalletModel {}
+
 void main() {
   late MockAuthProvider mockAuth;
   late MockWalletRepository mockWalletRepo;
@@ -26,6 +29,10 @@ void main() {
   late MockWalletCacheManager mockCacheManager;
   late MockWalletUseCase mockUseCase;
   late WalletProvider walletProvider;
+
+  setUpAll(() {
+    registerFallbackValue(FakeWalletModel());
+  });
 
   setUp(() {
     AppErrorHandler.isTestMode = true;
@@ -89,5 +96,33 @@ void main() {
     
     expect(result, isFalse, reason: 'Wallet creation should fail if subscription state is unresolved');
     expect(walletProvider.errorMessage, equals('wallet_error_subscription_unresolved'));
+  });
+
+  group('WalletProvider Error Transparency (Phase 5)', () {
+    test('createWallet should propagate ServerException from repository', () async {
+      final mockUser = UserModel(
+        userId: 'user1',
+        storeId: 'test_store',
+        role: UserRole.owner,
+        fullName: 'Test Owner',
+        createdAt: DateTime.now(),
+        lastLogin: DateTime.now(),
+      );
+      when(() => mockAuth.ensureUserLoaded()).thenAnswer((_) async => mockUser);
+      when(() => mockAuth.currentUserId).thenReturn('user1');
+
+      // Stub repo to throw
+      when(() => mockWalletRepo.createWallet(any()))
+          .thenThrow(Exception('Firestore crash'));
+
+      // Should currently FAIL this test because it catches internally and returns false
+      expect(() => walletProvider.createWallet(
+        phoneNumber: '01012345678',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        balance: 100.0,
+        createdBy: 'user1',
+      ), throwsA(isA<Exception>()));
+    });
   });
 }

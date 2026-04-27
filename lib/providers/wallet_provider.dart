@@ -360,14 +360,15 @@ class WalletProvider extends BaseProvider {
         _updateStatus(WalletProviderStatus.loaded);
         return true;
       } catch (e) {
+        // Re-throw to propagate to UI/caller
         rethrow;
       }
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('wallet_error_create_failed', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == WalletProviderStatus.creating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -383,12 +384,11 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      if (_currentStoreId == null) return false;
+      if (_currentStoreId == null) throw ValidationException('Store ID missing');
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
-        setError('wallet_error_frozen');
-        return false;
+        throw ValidationException('wallet_error_frozen');
       }
 
       try {
@@ -400,10 +400,10 @@ class WalletProvider extends BaseProvider {
       }
     } on ServerException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('wallet_error_update_failed', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == WalletProviderStatus.updating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -439,10 +439,10 @@ class WalletProvider extends BaseProvider {
       return true;
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('wallet_error_balance_update_failed', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == WalletProviderStatus.updating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -469,10 +469,10 @@ class WalletProvider extends BaseProvider {
       }
     } on Exception catch (e) {
       setError(e.toString(), e);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == WalletProviderStatus.deleting) {
         _updateStatus(WalletProviderStatus.loaded);

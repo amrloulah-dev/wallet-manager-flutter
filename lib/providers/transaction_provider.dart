@@ -306,10 +306,10 @@ class TransactionProvider extends BaseProvider {
       return true;
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في إنشاء المعاملة.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == TransactionProviderStatus.creating) {
         _updateStatus(TransactionProviderStatus.loaded);

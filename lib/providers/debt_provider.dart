@@ -273,10 +273,10 @@ class DebtProvider extends BaseProvider {
       return true;
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في إنشاء الدين.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == DebtProviderStatus.creating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -301,10 +301,10 @@ class DebtProvider extends BaseProvider {
       return true;
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في إضافة المبلغ إلى الدين.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -328,10 +328,10 @@ class DebtProvider extends BaseProvider {
       return true;
     } on ServerException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في تحديث الدين.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -356,10 +356,10 @@ class DebtProvider extends BaseProvider {
       return true;
     } on AppException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في تسديد الدين.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -383,10 +383,10 @@ class DebtProvider extends BaseProvider {
       return true;
     } on ServerException catch (e) {
       setError(e.message);
-      return false;
+      rethrow;
     } catch (e, stack) {
       setError('فشل في حذف الدين.', e, stack);
-      return false;
+      rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
