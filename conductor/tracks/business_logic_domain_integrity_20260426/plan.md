@@ -53,9 +53,9 @@
     - [x] Remove unused `_walletRepository` field in `WalletUseCase` and redundant `setFilter` alias in `TransactionProvider`.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: State Logic & Pagination Fixes' (Protocol in workflow.md) (4ce0c03)
 
-## Phase 5: Provider Error Transparency
+## Phase 5: Provider Error Transparency [checkpoint: 7bdf96a]
 - [x] Task: Write failing unit tests for Provider Error Transparency (a80d176)
     - [x] Create/update tests in `test/providers/wallet_provider_b002_test.dart` (verified exception propagation).
 - [x] Task: Implement Provider Error Transparency (a80d176)
     - [x] Refactor methods returning `Future<bool>` in `TransactionProvider`, `DebtProvider`, and `WalletProvider` to propagate `DomainException` to the UI layer instead of returning false.
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Provider Error Transparency' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Provider Error Transparency' (Protocol in workflow.md) (7bdf96a)
