@@ -1,22 +1,17 @@
 import '../../data/models/user_model.dart';
 import '../../data/models/user_permissions.dart';
 import '../../data/models/wallet_model.dart';
-import '../../data/repositories/wallet_repository.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/subscription_provider.dart';
 
 /// UseCase for wallet-related business logic.
 class WalletUseCase {
-  // ignore: unused_field
-  final WalletRepository _walletRepository;
   final AuthProvider _authProvider;
 
   WalletUseCase({
-    required WalletRepository walletRepository,
     required AuthProvider authProvider,
-  })  : _walletRepository = walletRepository,
-        _authProvider = authProvider;
+  })  : _authProvider = authProvider;
 
   /// Validates user permissions before performing an action.
   Future<UserModel> validatePermission(

@@ -6,6 +6,7 @@ import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/paginated_result.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
@@ -52,7 +53,7 @@ void main() {
     );
   });
 
-  group('TransactionRepository Pagination (Phase 2)', () {
+  group('TransactionRepository Pagination (Phase 4 Refactor)', () {
     test('getAllTransactions should return a paginated result with limit 20', () async {
       when(() => mockCollection.where('storeId', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
       when(() => mockQuery.where('isDeleted', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
@@ -62,11 +63,11 @@ void main() {
 
       final result = await repository.getAllTransactions(storeId);
 
-      expect(result, isA<List>()); // It returns a List, not a PaginatedResult
+      expect(result, isA<PaginatedResult<TransactionModel>>());
       verify(() => mockQuery.limit(20)).called(1);
     });
 
-    test('getAllTransactions should fetch next page when loadMore is true', () async {
+    test('getAllTransactions should use explicit lastDocument parameter', () async {
       final mockDoc = MockQueryDocumentSnapshot();
       when(() => mockDoc.id).thenReturn('test_id');
       when(() => mockDoc.data()).thenReturn({
@@ -88,11 +89,43 @@ void main() {
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.docs).thenReturn(<QueryDocumentSnapshot<Map<String, dynamic>>>[mockDoc]);
 
-      await repository.getAllTransactions(storeId);
-      await repository.getAllTransactions(storeId, loadMore: true);
+      await repository.getAllTransactions(storeId, lastDocument: mockDoc);
 
       verify(() => mockQuery.startAfterDocument(mockDoc)).called(1);
-      verify(() => mockQuery.limit(20)).called(2);
     });
+
+    test('getTransactionsByDateRange should use explicit lastDocument parameter', () async {
+      final mockDoc = MockQueryDocumentSnapshot();
+      when(() => mockDoc.id).thenReturn('test_id');
+      when(() => mockDoc.data()).thenReturn({
+        'transactionId': 'test_id',
+        'storeId': storeId,
+        'walletId': 'wallet_id',
+        'transactionType': 'deposit',
+        'amount': 100.0,
+        'transactionDate': Timestamp.now(),
+        'createdAt': Timestamp.now(),
+        'createdBy': 'user1',
+        'isDeleted': false,
+      });
+
+      when(() => mockCollection.where('storeId', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.where('transactionDate', isGreaterThanOrEqualTo: any(named: 'isGreaterThanOrEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.where('transactionDate', isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.where('isDeleted', isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+      when(() => mockQuery.orderBy('transactionDate', descending: true)).thenReturn(mockQuery);
+      when(() => mockQuery.startAfterDocument(any())).thenReturn(mockQuery);
+      when(() => mockQuery.limit(any())).thenReturn(mockQuery);
+      when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
+      when(() => mockSnapshot.docs).thenReturn(<QueryDocumentSnapshot<Map<String, dynamic>>>[mockDoc]);
+
+      final now = DateTime.now();
+      await repository.getTransactionsByDateRange(storeId, now, now, lastDocument: mockDoc);
+
+      verify(() => mockQuery.startAfterDocument(mockDoc)).called(1);
+    });
+   group('TransactionRepository Logic Fixes (Phase 4)', () {
+    // ... logic tests ...
+  });
   });
 }

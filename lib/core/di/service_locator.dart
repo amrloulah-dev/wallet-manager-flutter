@@ -51,10 +51,8 @@ Future<void> setupServiceLocator() async {
   // UseCases
   sl.registerLazySingleton<TransactionFeeCalculator>(() => TransactionFeeCalculator());
   sl.registerLazySingleton<WalletUseCase>(() => WalletUseCase(
-    walletRepository: sl<WalletRepository>(),
-    authProvider: sl<AuthProvider>(),
-  ));
-
+        authProvider: sl<AuthProvider>(),
+      ));
 
   // Repositories — Lazy Singletons
   sl.registerLazySingleton<AuthRepository>(() => AuthRepository());

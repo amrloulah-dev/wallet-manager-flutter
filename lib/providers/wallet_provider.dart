@@ -133,7 +133,8 @@ class WalletProvider extends BaseProvider {
       }, onError: (error) {
         AppErrorHandler.handle(error, operation: 'WalletProvider.overlayListener');
       });
-    } catch (_) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, operation: 'wallet_overlay_listener', stackTrace: stack);
     }
   }
 

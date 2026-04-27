@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
@@ -27,9 +28,8 @@ class TransactionProvider extends BaseProvider {
   Map<String, dynamic> _summary = {};
 
   bool _hasMore = true;
-  DateTimeRange _dateRange = DateTimeRange(
-      start: DateHelper.getStartOfDay(DateTime.now()),
-      end: DateHelper.getEndOfDay(DateTime.now()));
+  DocumentSnapshot? _lastDocument;
+  late DateTimeRange _dateRange;
 
   // Status
   TransactionProviderStatus _status = TransactionProviderStatus.idle;
@@ -49,7 +49,17 @@ class TransactionProvider extends BaseProvider {
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
-        _currentStoreId = storeId;
+        _currentStoreId = storeId {
+    _initializeDateRange();
+  }
+
+  void _initializeDateRange() {
+    final now = DateTime.now();
+    _dateRange = DateTimeRange(
+      start: DateHelper.getStartOfDay(now),
+      end: DateHelper.getEndOfDay(now),
+    );
+  }
 
   @override
   void dispose() {
@@ -126,9 +136,6 @@ class TransactionProvider extends BaseProvider {
     fetchInitialTransactions();
   }
 
-  // Alias for setFilterType to fix analyze error
-  void setFilter(TransactionType? type) => setFilterType(type);
-
   void _updateStatus(TransactionProviderStatus status) {
     if (isDisposed) return;
     _status = status;
@@ -173,16 +180,17 @@ class TransactionProvider extends BaseProvider {
 
     try {
       debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
-      final items = await _transactionRepository.getTransactionsByDateRange(
+      final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
-        loadMore: false,
+        lastDocument: null,
       );
-      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${items.length} transactions.');
+      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
 
-      _transactions = items;
-      _hasMore = items.length >= 20;
+      _transactions = result.items;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
@@ -198,7 +206,7 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
       return;
     }
 
@@ -206,18 +214,19 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final items = await _transactionRepository.getTransactionsByDateRange(
+      final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
-        loadMore: true,
+        lastDocument: _lastDocument,
       );
 
-      if (items.isEmpty) {
+      if (result.items.isEmpty) {
         _hasMore = false;
       } else {
-        _transactions.addAll(items);
-        _hasMore = items.length >= 20;
+        _transactions.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
       }
 
       _rebuildTransactionMap();
