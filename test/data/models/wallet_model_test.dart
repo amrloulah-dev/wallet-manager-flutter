@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   group('WalletModel (Phase 3)', () {

@@ -4,7 +4,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
-import 'package:walletmanager/data/models/paginated_result.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}

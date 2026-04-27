@@ -73,7 +73,7 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
               return PopupMenuButton<TransactionType?>( // ENUM refactor
                 icon: const Icon(Icons.filter_list),
                 onSelected: (TransactionType? value) {
-                  provider.setFilter(value);
+                  provider.setFilterType(value);
                 },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),

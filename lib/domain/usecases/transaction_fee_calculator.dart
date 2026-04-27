@@ -67,7 +67,7 @@ class TransactionFeeCalculator {
     bool dailyExceeded = false;
     bool monthlyExceeded = false;
 
-    if (wallet != null && transactionType != null) {
+    if (transactionType != null) {
       final isSend = transactionType == TransactionType.debit;
       final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
       newDailyUsed = limits.dailyUsed + amount;

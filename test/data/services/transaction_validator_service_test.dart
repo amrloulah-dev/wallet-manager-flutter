@@ -3,8 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
-import 'package:walletmanager/data/models/wallet_model.dart';
-import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 

@@ -6,7 +6,6 @@ import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
-import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/enums/debt_enums.dart';
