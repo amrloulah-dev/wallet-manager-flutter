@@ -40,8 +40,12 @@ class WalletUseCase {
     if (wallets.length <= maxWallets) return frozenIds;
 
     final sortedWallets = List<WalletModel>.from(wallets);
-    // Safe comparison for nullable timestamps
-    sortedWallets.sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
+    // Use epoch as sentinel for wallets with null createdAt to ensure stable sort
+    sortedWallets.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime(1970);
+      final bDate = b.createdAt ?? DateTime(1970);
+      return aDate.compareTo(bDate);
+    });
     
     for (int i = maxWallets; i < sortedWallets.length; i++) {
       frozenIds.add(sortedWallets[i].walletId);

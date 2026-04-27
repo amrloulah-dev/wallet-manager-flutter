@@ -32,6 +32,9 @@ class DebtRepository {
 
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
+    // Pre-transaction validation
+    AmountValidator.ensurePositive(debt.amountDue);
+    
     try {
       await _firestore.runTransaction((transaction) async {
         final statsRef = _firestore

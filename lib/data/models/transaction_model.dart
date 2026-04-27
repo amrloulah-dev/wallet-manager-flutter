@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/transaction_enums.dart';
-import '../../core/errors/app_error_handler.dart';
+import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/amount_validator.dart';
 
 class TransactionModel {
@@ -66,9 +66,8 @@ class TransactionModel {
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
 
     if (transactionDate == null || createdAt == null) {
-      AppErrorHandler.handle(
-        'Missing timestamps in Transaction document: $docId',
-        operation: 'TransactionModel.fromMap',
+      throw NotFoundException(
+        'Transaction document $docId missing required timestamps (transactionDate or createdAt)'
       );
     }
 

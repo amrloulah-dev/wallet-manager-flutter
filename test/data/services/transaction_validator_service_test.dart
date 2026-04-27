@@ -101,6 +101,7 @@ void main() {
         'walletType': 'vodafoneCash',
         'sendLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
         'receiveLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
+        'createdAt': Timestamp.now(),
         'lastDailyReset': Timestamp.now(),
         'lastMonthlyReset': Timestamp.now(),
       });
@@ -143,6 +144,7 @@ void main() {
         'walletType': 'vodafoneCash',
         'sendLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
         'receiveLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
+        'createdAt': Timestamp.now(),
         'lastDailyReset': Timestamp.now(),
         'lastMonthlyReset': Timestamp.now(),
       });

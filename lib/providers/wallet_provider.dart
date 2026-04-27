@@ -154,8 +154,17 @@ class WalletProvider extends BaseProvider {
     final newBalance =
         isSend ? oldWallet.balance - deduction : oldWallet.balance + deduction;
 
-    // In-place update for performance (Phase 3)
-    _wallets[index] = oldWallet.copyWith(balance: newBalance);
+    // VALIDATION: Ensure balance won't go negative for send transactions
+    if (newBalance < 0 && isSend) {
+      throw DomainException('Insufficient balance for local deduction');
+    }
+
+    // Create new list to avoid in-place mutation (immutable approach using List.of)
+    _wallets = [
+      for (int i = 0; i < _wallets.length; i++)
+        if (i == index) oldWallet.copyWith(balance: newBalance) else _wallets[i],
+    ];
+    
     _rebuildWalletMap();
     safeNotify();
     debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '

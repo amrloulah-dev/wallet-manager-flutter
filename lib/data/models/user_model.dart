@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/user_enums.dart';
-import '../../core/errors/app_error_handler.dart';
+import '../../core/errors/app_exceptions.dart';
 
 import 'user_permissions.dart';
 
@@ -83,9 +83,8 @@ class UserModel {
     final lastLogin = (data['lastLogin'] as Timestamp?)?.toDate();
 
     if (createdAt == null || lastLogin == null) {
-      AppErrorHandler.handle(
-        'Missing timestamps in User document: ${doc.id}',
-        operation: 'UserModel.fromFirestore',
+      throw NotFoundException(
+        'User document ${doc.id} missing required audit timestamps (createdAt or lastLogin)'
       );
     }
 

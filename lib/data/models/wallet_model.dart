@@ -3,7 +3,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/wallet_enums.dart';
-import '../../core/errors/app_error_handler.dart';
+import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/amount_validator.dart';
 
 class WalletLimits {
@@ -54,9 +54,9 @@ class WalletLimits {
   double get dailyRemaining => dailyLimit - dailyUsed;
   double get monthlyRemaining => monthlyLimit - monthlyUsed;
   double get dailyPercentage =>
-      dailyLimit > 0 ? (dailyUsed / dailyLimit) * 100 : 0;
+      dailyLimit > 0 ? ((dailyUsed / dailyLimit) * 100).clamp(0, 100) : 0;
   double get monthlyPercentage =>
-      monthlyLimit > 0 ? (monthlyUsed / monthlyLimit) * 100 : 0;
+      monthlyLimit > 0 ? ((monthlyUsed / monthlyLimit) * 100).clamp(0, 100) : 0;
   bool get isDailyLimitReached => dailyUsed >= dailyLimit;
   bool get isMonthlyLimitReached => monthlyUsed >= monthlyLimit;
 
@@ -197,15 +197,24 @@ class WalletModel {
     final lastMonthlyReset = (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
 
     if (createdAt == null || lastDailyReset == null || lastMonthlyReset == null) {
-      AppErrorHandler.handle(
-        'Missing timestamps in Wallet document: $docId',
-        operation: 'WalletModel.fromMap',
+      throw NotFoundException(
+        'Wallet document $docId missing required reset timestamps (createdAt, lastDailyReset, or lastMonthlyReset)'
       );
     }
 
     final balance = NumberParser.toDouble(data['balance']);
     // Phase 3: Boundary Guard
     AmountValidator.ensurePositiveOrZero(balance);
+
+    final sendLimitsMap = data[FirebaseConstants.sendLimits] as Map<String, dynamic>?;
+    if (sendLimitsMap == null || sendLimitsMap.isEmpty) {
+      throw DomainException('Wallet $docId: sendLimits must be provided and non-empty');
+    }
+
+    final receiveLimitsMap = data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
+    if (receiveLimitsMap == null || receiveLimitsMap.isEmpty) {
+      throw DomainException('Wallet $docId: receiveLimits must be provided and non-empty');
+    }
 
     return WalletModel(
       walletId: docId,
@@ -219,10 +228,8 @@ class WalletModel {
       createdAt: createdAt,
       createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
       updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
-      sendLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.sendLimits] as Map<String, dynamic>? ?? {}),
-      receiveLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] as Map<String, dynamic>? ?? {}),
+      sendLimits: WalletLimits.fromMap(sendLimitsMap),
+      receiveLimits: WalletLimits.fromMap(receiveLimitsMap),
       lastDailyReset: lastDailyReset,
       lastMonthlyReset: lastMonthlyReset,
       stats: WalletStats.fromMap(data[FirebaseConstants.stats] as Map<String, dynamic>? ?? {}),
