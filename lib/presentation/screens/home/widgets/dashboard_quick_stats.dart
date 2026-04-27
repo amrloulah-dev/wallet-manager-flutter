@@ -53,7 +53,9 @@ class DashboardQuickStats extends StatelessWidget {
           }
 
           final lastUpdated = stats.lastUpdated;
-          final formattedTime = DateFormat.yMMMd().add_jm().format(lastUpdated);
+          final formattedTime = lastUpdated != null
+              ? DateFormat.yMMMd().add_jm().format(lastUpdated)
+              : 'N/A';
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

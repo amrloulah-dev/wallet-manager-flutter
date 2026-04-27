@@ -124,6 +124,44 @@ class StatsSummaryModel {
     };
   }
 
+  StatsSummaryModel copyWith({
+    int? totalWallets,
+    int? activeWallets,
+    double? totalBalance,
+    int? totalTransactions,
+    int? totalTransactionsToday,
+    double? totalSentAmount,
+    double? totalReceivedAmount,
+    int? sendCount,
+    int? receiveCount,
+    double? totalCommission,
+    double? totalCommissionToday,
+    int? openDebtsCount,
+    int? paidDebtsCount,
+    double? totalOpenAmount,
+    double? totalPaidAmount,
+    DateTime? lastUpdated,
+  }) {
+    return StatsSummaryModel(
+      totalWallets: totalWallets ?? this.totalWallets,
+      activeWallets: activeWallets ?? this.activeWallets,
+      totalBalance: totalBalance ?? this.totalBalance,
+      totalTransactions: totalTransactions ?? this.totalTransactions,
+      totalTransactionsToday: totalTransactionsToday ?? this.totalTransactionsToday,
+      totalSentAmount: totalSentAmount ?? this.totalSentAmount,
+      totalReceivedAmount: totalReceivedAmount ?? this.totalReceivedAmount,
+      sendCount: sendCount ?? this.sendCount,
+      receiveCount: receiveCount ?? this.receiveCount,
+      totalCommission: totalCommission ?? this.totalCommission,
+      totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
+      openDebtsCount: openDebtsCount ?? this.openDebtsCount,
+      paidDebtsCount: paidDebtsCount ?? this.paidDebtsCount,
+      totalOpenAmount: totalOpenAmount ?? this.totalOpenAmount,
+      totalPaidAmount: totalPaidAmount ?? this.totalPaidAmount,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+    );
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
