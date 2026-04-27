@@ -42,7 +42,7 @@
     - [x] Update `WalletModel` `==` operator and `hashCode` to evaluate all fields.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Domain Model Purity & Serialization Safety' (Protocol in workflow.md) (e77f69a)
 
-## Phase 4: State Logic & Pagination Fixes
+## Phase 4: State Logic & Pagination Fixes [checkpoint: 4ce0c03]
 - [x] Task: Write failing unit tests for State Logic & Pagination Fixes (4ce0c03)
     - [x] Create/update tests in `test/data/repositories/transaction_repository_test.dart`, `test/providers/transaction_provider_test.dart`, and `test/data/repositories/stats_repository_test.dart`.
 - [x] Task: Implement State Logic & Pagination Fixes (4ce0c03)
@@ -51,7 +51,7 @@
     - [x] Add `await` to `initializeStats()` in `StatsRepository.watchStatsSummary`.
     - [x] Add `AppErrorHandler.handle(e)` to empty catch blocks in `WalletProvider` overlay listener.
     - [x] Remove unused `_walletRepository` field in `WalletUseCase` and redundant `setFilter` alias in `TransactionProvider`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: State Logic & Pagination Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: State Logic & Pagination Fixes' (Protocol in workflow.md) (4ce0c03)
 
 ## Phase 5: Provider Error Transparency
 - [ ] Task: Write failing unit tests for Provider Error Transparency
