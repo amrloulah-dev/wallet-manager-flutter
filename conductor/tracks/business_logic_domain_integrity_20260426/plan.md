@@ -22,12 +22,12 @@
 - [x] Task: Implement robust AmountValidator and NumberParser (cf378b6)
     - [x] Update `AmountValidator` (`ensurePositive`, `ensurePositiveOrZero`).
     - [x] Update `NumberParser.toDouble()` to strip non-numeric characters using Regex.
-- [ ] Task: Write failing unit tests for TransactionValidatorService
-    - [ ] Create/update tests in `test/data/services/transaction_validator_service_test.dart` for commission math and floating-point epsilon checks.
-- [ ] Task: Implement TransactionValidatorService financial boundary fixes
-    - [ ] Correct `balanceChange` logic for `isReceive` to account for `commission`.
-    - [ ] Move `needsDailyReset`/`needsMonthlyReset` check and reset logic into atomic Firestore Transactions.
-    - [ ] Introduce floating-point epsilon tolerance for strict balance checks.
+- [x] Task: Write failing unit tests for TransactionValidatorService (3b5866d)
+    - [x] Create/update tests in `test/data/services/transaction_validator_service_test.dart` for commission math and floating-point epsilon checks.
+- [x] Task: Implement TransactionValidatorService financial boundary fixes (3b5866d)
+    - [x] Correct `balanceChange` logic for `isReceive` to account for `commission`.
+    - [x] Move `needsDailyReset`/`needsMonthlyReset` check and reset logic into atomic Firestore Transactions.
+    - [x] Introduce floating-point epsilon tolerance for strict balance checks.
 - [ ] Task: Guard Debt Payments
     - [ ] Update `DebtRepository.processPayment` with `AmountValidator.ensurePositive()`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md)
