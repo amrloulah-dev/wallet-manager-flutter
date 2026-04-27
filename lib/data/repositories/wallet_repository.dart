@@ -1,5 +1,6 @@
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
+import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
@@ -129,7 +130,11 @@ class WalletRepository {
 
       double totalBalance = 0.0;
       for (var doc in snapshot.docs) {
-        totalBalance += (doc.data() as Map<String, dynamic>)['balance'] ?? 0.0;
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data != null) {
+          final balance = NumberParser.toDouble(data['balance']);
+          totalBalance += balance;
+        }
       }
       return totalBalance;
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class DeviceRegistrationModel {
   final String deviceId; // Local generated UUID
@@ -26,8 +27,10 @@ class DeviceRegistrationModel {
       deviceId: doc.id,
       deviceModel: data['deviceModel'] ?? '',
       osVersion: data['osVersion'] ?? '',
-      firstSeenAt: (data['firstSeenAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastSeenAt: (data['lastSeenAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      firstSeenAt: (data['firstSeenAt'] as Timestamp?)?.toDate() ?? 
+        (throw NotFoundException('DeviceRegistration document missing required field: firstSeenAt')),
+      lastSeenAt: (data['lastSeenAt'] as Timestamp?)?.toDate() ?? 
+        (throw NotFoundException('DeviceRegistration document missing required field: lastSeenAt')),
       ownerUid: data['ownerUid'],
     );
   }

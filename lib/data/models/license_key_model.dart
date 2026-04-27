@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class LicenseKeyModel {
   final String keyId;
@@ -28,7 +29,8 @@ class LicenseKeyModel {
       isUsed: data['isUsed'] ?? false,
       usedBy: data['usedBy'],
       usedAt: (data['usedAt'] as Timestamp?)?.toDate(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
+        (throw NotFoundException('LicenseKey document missing required field: createdAt')),
       expiryMonths: NumberParser.toInt(data['expiryMonths'], 12),
     );
   }

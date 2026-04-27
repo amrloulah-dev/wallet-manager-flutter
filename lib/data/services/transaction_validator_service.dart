@@ -11,6 +11,10 @@ import '../models/wallet_model.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 
 class TransactionValidatorService {
+  // Currency-aware epsilon for EGP (Egyptian Pound)
+  // Minimum unit: 0.01 EGP (1 fils)
+  static const double _epsilonEGP = 0.01;
+
   final FirebaseFirestore _firestore;
 
   TransactionValidatorService({FirebaseFirestore? firestore})
@@ -103,21 +107,20 @@ class TransactionValidatorService {
         throw ValidationException('الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.');
       }
 
-      // ------------------------------------------------------------------
-      // 3. CORE RULE: Balance Sufficiency Check (with Epsilon)
-      // ------------------------------------------------------------------
-      if (transaction.isSend) {
-        final totalDeduction = transaction.amount + transaction.serviceFee;
-        const epsilon = 0.0001;
-        
-        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
-            'BALANCE CHECK | balance=${validationWallet.balance}, '
-            'totalDeduction=$totalDeduction');
-            
-        if (validationWallet.balance < (totalDeduction - epsilon)) {
-          throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
-        }
-      }
+       // ------------------------------------------------------------------
+       // 3. CORE RULE: Balance Sufficiency Check (with Currency-Aware Epsilon)
+       // ------------------------------------------------------------------
+       if (transaction.isSend) {
+         final totalDeduction = transaction.amount + transaction.serviceFee;
+         
+         debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+             'BALANCE CHECK | balance=${validationWallet.balance}, '
+             'totalDeduction=$totalDeduction');
+             
+         if (validationWallet.balance < (totalDeduction - _epsilonEGP)) {
+           throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
+         }
+       }
 
       // ------------------------------------------------------------------
       // 4. CUMULATIVE LIMITS (InstaPay & General Capacity)

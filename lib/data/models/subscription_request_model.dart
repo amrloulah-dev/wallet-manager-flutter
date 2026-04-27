@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class SubscriptionRequestModel {
   final String id;
@@ -40,7 +41,8 @@ class SubscriptionRequestModel {
       receiptNumber: data['receiptNumber'] ?? '',
       status: data['status'] ?? 'pending',
       rejectionReason: data['rejectionReason'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
+        (throw NotFoundException('SubscriptionRequest document missing required field: createdAt')),
       processedAt: (data['processedAt'] as Timestamp?)?.toDate(),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/utils/amount_validator.dart';
 import '../../core/enums/debt_enums.dart';
 import '../../core/errors/app_error_handler.dart';
 
@@ -67,11 +68,20 @@ class DebtModel {
     final debtType = DebtType.fromString(typeStr);
 
     final amountDue = NumberParser.toDouble(data['amountDue']);
+    final totalAmount = NumberParser.toDouble(data['totalAmount']);
+
+    // VALIDATION: Ensure amounts are positive (P1-8 FIX)
+    AmountValidator.ensurePositive(amountDue);
+    AmountValidator.ensurePositive(totalAmount);
 
     // Fallback for old data where totalAmount didn't exist
-    double totalAmount = NumberParser.toDouble(data['totalAmount']);
     if (totalAmount == 0.0 && debtStatus == DebtStatus.open) {
-      totalAmount = amountDue;
+      // If totalAmount was zero but now passes validation, it means data is inconsistent
+      // This should not happen with the new validation
+      AppErrorHandler.handle(
+        'Debt document has zero totalAmount: ${doc.id}',
+        operation: 'DebtModel.fromFirestore',
+      );
     }
 
     final debtDate = (data['debtDate'] as Timestamp?)?.toDate();

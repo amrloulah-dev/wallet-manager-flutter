@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class DeviceUsageModel {
   final String deviceId;
@@ -24,7 +25,8 @@ class DeviceUsageModel {
     return DeviceUsageModel(
       deviceId: doc.id,
       trialCount: NumberParser.toInt(data['trialCount']),
-      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ?? 
+        (throw NotFoundException('DeviceUsage document missing required field: lastTrialDate')),
       associatedStoreIds: List<String>.from(data['associatedStoreIds'] ?? []),
     );
   }

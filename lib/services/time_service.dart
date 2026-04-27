@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:ntp/ntp.dart';
+import '../core/errors/app_exceptions.dart';
 
 class TimeService {
   static int _offset = 0;
@@ -10,9 +12,10 @@ class TimeService {
       _offset = ntpTime.difference(DateTime.now()).inMilliseconds;
       _isSynced = true;
     } catch (e) {
-      // Fallback to local time if NTP sync fails
-      _offset = 0;
-      _isSynced = false;
+      debugPrint('🔴 [TIME_SERVICE] CRITICAL: NTP sync failed - $e');
+      throw DomainException(
+        'NTP time synchronization failed. Cannot proceed with financial transactions. Please check your internet connection and try again.',
+      );
     }
   }
 
