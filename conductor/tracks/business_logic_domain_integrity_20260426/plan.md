@@ -15,7 +15,7 @@
     - [ ] Update `transaction_fee_calculator.dart` to early return if `wallet == null`.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Critical Crash Prevention & Error Decoupling' (Protocol in workflow.md) (d8709ac)
 
-## Phase 2: Financial Logic & Boundary Fortification
+## Phase 2: Financial Logic & Boundary Fortification [checkpoint: 58b1f8d]
 - [x] Task: Write failing unit tests for AmountValidator and NumberParser (cf378b6)
     - [x] Create/update tests in `test/core/utils/amount_validator_test.dart` for negative, zero, NaN, and Infinity.
     - [x] Create/update tests in `test/core/utils/number_parser_test.dart` for regex logic.
@@ -30,7 +30,7 @@
     - [x] Introduce floating-point epsilon tolerance for strict balance checks.
 - [x] Task: Guard Debt Payments (cc57369)
     - [x] Update `DebtRepository.processPayment` with `AmountValidator.ensurePositive()`. (Verified already exists, added test)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md) (58b1f8d)
 
 ## Phase 3: Domain Model Purity & Serialization Safety
 - [ ] Task: Write failing unit tests for Model Deserialization Guards
