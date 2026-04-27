@@ -28,8 +28,8 @@
     - [x] Correct `balanceChange` logic for `isReceive` to account for `commission`.
     - [x] Move `needsDailyReset`/`needsMonthlyReset` check and reset logic into atomic Firestore Transactions.
     - [x] Introduce floating-point epsilon tolerance for strict balance checks.
-- [ ] Task: Guard Debt Payments
-    - [ ] Update `DebtRepository.processPayment` with `AmountValidator.ensurePositive()`.
+- [x] Task: Guard Debt Payments (cc57369)
+    - [x] Update `DebtRepository.processPayment` with `AmountValidator.ensurePositive()`. (Verified already exists, added test)
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md)
 
 ## Phase 3: Domain Model Purity & Serialization Safety
