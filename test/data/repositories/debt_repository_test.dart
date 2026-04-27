@@ -62,4 +62,10 @@ void main() {
       verify(() => mockQuery.limit(20)).called(1);
     });
   });
+
+  group('DebtRepository Validation (Phase 2)', () {
+    test('processPayment should throw DomainException if amount is negative', () async {
+      expect(() => repository.processPayment('debt1', -10.0, 'user1'), throwsA(isA<Exception>()));
+    });
+  });
 }
