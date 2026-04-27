@@ -32,7 +32,7 @@
     - [x] Update `DebtRepository.processPayment` with `AmountValidator.ensurePositive()`. (Verified already exists, added test)
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Financial Logic & Boundary Fortification' (Protocol in workflow.md) (58b1f8d)
 
-## Phase 3: Domain Model Purity & Serialization Safety
+## Phase 3: Domain Model Purity & Serialization Safety [checkpoint: e77f69a]
 - [x] Task: Write failing unit tests for Model Deserialization Guards (528c3b6)
     - [x] Create/update tests in `test/data/models/transaction_model_test.dart` and `wallet_model_test.dart`.
 - [x] Task: Implement Domain Model Purity & Serialization Safety (528c3b6)
@@ -40,7 +40,7 @@
     - [x] Update `StatsSummaryModel` (and similar) to parse missing timestamps as `null` instead of `DateTime.now()`.
     - [x] Deep copy nested maps/lists in `TransactionModel.toFirestore`.
     - [x] Update `WalletModel` `==` operator and `hashCode` to evaluate all fields.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Domain Model Purity & Serialization Safety' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Domain Model Purity & Serialization Safety' (Protocol in workflow.md) (e77f69a)
 
 ## Phase 4: State Logic & Pagination Fixes
 - [ ] Task: Write failing unit tests for State Logic & Pagination Fixes
