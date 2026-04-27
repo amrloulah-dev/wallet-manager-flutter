@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../errors/app_exceptions.dart';
 
 class FeeCalculator {
   // Network Prefixes
@@ -46,7 +47,9 @@ class FeeCalculator {
     required String sourceWalletType,
     required String receiverPhone,
   }) {
-    if (amount <= 0) return 0.0;
+    if (amount <= 0) {
+      throw DomainException('Amount must be positive; received: $amount');
+    }
 
     final provider = identifyProvider(receiverPhone);
     debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '

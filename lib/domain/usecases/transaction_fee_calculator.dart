@@ -1,6 +1,7 @@
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class TransactionCalculationResult {
   final double serviceFee;
@@ -35,17 +36,7 @@ class TransactionFeeCalculator {
     required String receiverPhone,
   }) {
     if (wallet == null) {
-      return TransactionCalculationResult(
-        serviceFee: 0.0,
-        totalAmount: amount + commission,
-        willExceedLimits: true,
-        newDailyUsed: 0.0,
-        newMonthlyUsed: 0.0,
-        dailyLimit: 0.0,
-        monthlyLimit: 0.0,
-        dailyExceeded: false,
-        monthlyExceeded: false,
-      );
+      throw NotFoundException('Wallet not found for fee calculation');
     }
 
     double fee = 0.0;

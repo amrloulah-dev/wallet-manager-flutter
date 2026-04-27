@@ -32,11 +32,17 @@ class SubscriptionRequestModel {
       throw Exception('SubscriptionRequest document does not exist!');
     }
     final data = doc.data() as Map<String, dynamic>;
+    
+    final amount = NumberParser.toDouble(data['amount']);
+    if (!amount.isFinite || amount < 0) {
+      throw DomainException('Invalid subscription amount: $amount');
+    }
+    
     return SubscriptionRequestModel(
       id: doc.id,
       storeId: data['storeId'] ?? '',
       planId: data['planId'] ?? '',
-      amount: NumberParser.toDouble(data['amount']),
+      amount: amount,
       paymentMethod: data['paymentMethod'] ?? '',
       receiptNumber: data['receiptNumber'] ?? '',
       status: data['status'] ?? 'pending',

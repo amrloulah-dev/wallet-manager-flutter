@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/subscription_enums.dart';
 import '../../core/errors/app_error_handler.dart';
@@ -75,7 +76,7 @@ class StoreModel {
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       subscription: data['subscription'] != null 
           ? StoreSubscription.fromMap(data['subscription'] as Map<String, dynamic>)
-          : StoreSubscription.migratedLifetime(), // FR-17 legacy migration
+          : _withMigrationWarning(), // FR-17 legacy migration
       settings: StoreSettings.fromMap(data['settings'] as Map<String, dynamic>? ?? {}),
       stats: StoreStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {}),
       legacyData: data['legacyData'] as Map<String, dynamic>? ?? {
@@ -84,6 +85,11 @@ class StoreModel {
         if (data.containsKey('activeLicenseKey')) 'activeLicenseKey': data['activeLicenseKey'],
       },
     );
+  }
+
+  static StoreSubscription _withMigrationWarning() {
+    debugPrint('⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
+    return StoreSubscription.migratedLifetime();
   }
 
   /// Converts the StoreModel instance to a map for Firestore.
