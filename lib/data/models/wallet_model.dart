@@ -4,6 +4,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/wallet_enums.dart';
 import '../../core/errors/app_error_handler.dart';
+import '../../core/utils/amount_validator.dart';
 
 class WalletLimits {
   final double dailyLimit;
@@ -58,6 +59,23 @@ class WalletLimits {
       monthlyLimit > 0 ? (monthlyUsed / monthlyLimit) * 100 : 0;
   bool get isDailyLimitReached => dailyUsed >= dailyLimit;
   bool get isMonthlyLimitReached => monthlyUsed >= monthlyLimit;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WalletLimits &&
+        other.dailyLimit == dailyLimit &&
+        other.dailyUsed == dailyUsed &&
+        other.monthlyLimit == monthlyLimit &&
+        other.monthlyUsed == monthlyUsed;
+  }
+
+  @override
+  int get hashCode =>
+      dailyLimit.hashCode ^
+      dailyUsed.hashCode ^
+      monthlyLimit.hashCode ^
+      monthlyUsed.hashCode;
 }
 
 class WalletStats {
@@ -112,6 +130,23 @@ class WalletStats {
   }
 
   double get totalAmount => totalSentAmount + totalReceivedAmount;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WalletStats &&
+        other.totalTransactions == totalTransactions &&
+        other.totalSentAmount == totalSentAmount &&
+        other.totalReceivedAmount == totalReceivedAmount &&
+        other.totalCommission == totalCommission;
+  }
+
+  @override
+  int get hashCode =>
+      totalTransactions.hashCode ^
+      totalSentAmount.hashCode ^
+      totalReceivedAmount.hashCode ^
+      totalCommission.hashCode;
 }
 
 class WalletModel {
@@ -168,13 +203,17 @@ class WalletModel {
       );
     }
 
+    final balance = NumberParser.toDouble(data['balance']);
+    // Phase 3: Boundary Guard
+    AmountValidator.ensurePositiveOrZero(balance);
+
     return WalletModel(
       walletId: docId,
       storeId: data[FirebaseConstants.storeId] as String? ?? '',
       phoneNumber: data[FirebaseConstants.phoneNumber] as String? ?? '',
       walletType: WalletType.fromString(data[FirebaseConstants.walletType] as String? ?? ''),
       walletStatus: WalletStatus.fromString(data[FirebaseConstants.walletStatus] as String? ?? 'active'),
-      balance: NumberParser.toDouble(data['balance']),
+      balance: balance,
       notes: data[FirebaseConstants.notes] as String?,
       isActive: data[FirebaseConstants.isActive] as bool? ?? true,
       createdAt: createdAt,
@@ -370,10 +409,27 @@ class WalletModel {
 
     return other is WalletModel &&
         other.walletId == walletId &&
+        other.storeId == storeId &&
+        other.phoneNumber == phoneNumber &&
+        other.walletType == walletType &&
+        other.walletStatus == walletStatus &&
         other.balance == balance &&
-        other.isActive == isActive;
+        other.isActive == isActive &&
+        other.sendLimits == sendLimits &&
+        other.receiveLimits == receiveLimits &&
+        other.stats == stats;
   }
 
   @override
-  int get hashCode => walletId.hashCode ^ balance.hashCode ^ isActive.hashCode;
+  int get hashCode =>
+      walletId.hashCode ^
+      storeId.hashCode ^
+      phoneNumber.hashCode ^
+      walletType.hashCode ^
+      walletStatus.hashCode ^
+      balance.hashCode ^
+      isActive.hashCode ^
+      sendLimits.hashCode ^
+      receiveLimits.hashCode ^
+      stats.hashCode;
 }

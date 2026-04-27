@@ -3,6 +3,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/transaction_enums.dart';
 import '../../core/errors/app_error_handler.dart';
+import '../../core/utils/amount_validator.dart';
 
 class TransactionModel {
   final String transactionId;
@@ -57,27 +58,39 @@ class TransactionModel {
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    
+    return TransactionModel.fromMap(data, doc.id);
+  }
+
+  factory TransactionModel.fromMap(Map<String, dynamic> data, String docId) {
     final transactionDate = (data['transactionDate'] as Timestamp?)?.toDate();
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
 
     if (transactionDate == null || createdAt == null) {
       AppErrorHandler.handle(
-        'Missing timestamps in Transaction document: ${doc.id}',
-        operation: 'TransactionModel.fromFirestore',
+        'Missing timestamps in Transaction document: $docId',
+        operation: 'TransactionModel.fromMap',
       );
     }
 
+    final amount = NumberParser.toDouble(data['amount']);
+    final commission = NumberParser.toDouble(data['commission']);
+    final serviceFee = NumberParser.toDouble(data['serviceFee']);
+
+    // Phase 3: Domain Model Purity Guards
+    AmountValidator.ensurePositive(amount);
+    AmountValidator.ensurePositiveOrZero(commission);
+    AmountValidator.ensurePositiveOrZero(serviceFee);
+
     return TransactionModel(
-      transactionId: doc.id,
+      transactionId: docId,
       storeId: data[FirebaseConstants.storeId] as String? ?? '',
       walletId: data[FirebaseConstants.walletId] as String? ?? '',
       transactionType: TransactionType.fromString(data['transactionType'] as String? ?? 'send'),
       customerPhone: data['customerPhone'] as String?,
       customerName: data['customerName'] as String?,
-      amount: NumberParser.toDouble(data['amount']),
-      commission: NumberParser.toDouble(data['commission']),
-      serviceFee: NumberParser.toDouble(data['serviceFee']),
+      amount: amount,
+      commission: commission,
+      serviceFee: serviceFee,
       paymentStatus: PaymentStatus.fromString(data['paymentStatus'] as String? ?? 'paid'),
       debtId: data['debtId'] as String?,
       notes: data[FirebaseConstants.notes] as String?,
@@ -187,4 +200,33 @@ class TransactionModel {
   String toString() {
     return 'TransactionModel(id: $transactionId, type: $transactionType, amount: $amount, serviceFee: $serviceFee, status: $paymentStatus)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TransactionModel &&
+        other.transactionId == transactionId &&
+        other.storeId == storeId &&
+        other.walletId == walletId &&
+        other.transactionType == transactionType &&
+        other.amount == amount &&
+        other.commission == commission &&
+        other.serviceFee == serviceFee &&
+        other.paymentStatus == paymentStatus &&
+        other.debtId == debtId &&
+        other.isDeleted == isDeleted;
+  }
+
+  @override
+  int get hashCode =>
+      transactionId.hashCode ^
+      storeId.hashCode ^
+      walletId.hashCode ^
+      transactionType.hashCode ^
+      amount.hashCode ^
+      commission.hashCode ^
+      serviceFee.hashCode ^
+      paymentStatus.hashCode ^
+      debtId.hashCode ^
+      isDeleted.hashCode;
 }
