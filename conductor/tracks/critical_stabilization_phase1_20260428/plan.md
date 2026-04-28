@@ -1,6 +1,6 @@
 # Implementation Plan: Phase 1 (Steps 1.1-1.4) - Critical Stabilization
 
-## Phase 1.1: Fee Calculation Hardening
+## Phase 1.1: Fee Calculation Hardening [checkpoint: 7f9a19b]
 - [x] Task: Write failing tests for fee calculation and validation [7291a52]
     - [x] Unit test: `transactionType` is null -> throws `DomainException`
     - [x] Unit test: unknown wallet type -> throws `DomainException`
@@ -11,7 +11,7 @@
     - [x] `transaction_fee_calculator.dart`: Enforce non-null `transactionType` guard
     - [x] `transaction_fee_calculator.dart`: Fix `totalAmount` formula
     - [x] `transaction_fee_calculator.dart`: Add `AmountValidator.ensurePositive(amount)`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1.1: Fee Calculation Hardening' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1.1: Fee Calculation Hardening' (Protocol in workflow.md)
 
 ## Phase 1.2: Balance Precision & Negative-Balance Prevention
 - [ ] Task: Write failing tests for balance precision
