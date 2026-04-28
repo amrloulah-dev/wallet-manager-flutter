@@ -7,6 +7,7 @@ import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
@@ -305,7 +306,8 @@ class TransactionProvider extends BaseProvider {
       _updateStatus(TransactionProviderStatus.loaded);
       return true;
     } on AppException catch (e) {
-      setError(e.message);
+      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
+      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
       rethrow;
     } catch (e, stack) {
       setError('فشل في إنشاء المعاملة.', e, stack);

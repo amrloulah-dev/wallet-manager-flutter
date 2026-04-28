@@ -13,6 +13,7 @@ import 'auth_provider.dart';
 import 'base_provider.dart';
 import 'subscription_provider.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
@@ -280,6 +281,7 @@ class WalletProvider extends BaseProvider {
       debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
       debugPrint('🔍 [STACK TRACE]: $stack');
       setError('wallet_error_fetch_failed', e, stack);
+      ToastUtils.showError('wallet_error_fetch_failed');
     } finally {
       safeNotify();
     }
@@ -370,7 +372,8 @@ class WalletProvider extends BaseProvider {
         rethrow;
       }
     } on AppException catch (e) {
-      setError(e.message);
+      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
+      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
       rethrow;
     } catch (e, stack) {
       setError('wallet_error_create_failed', e, stack);
@@ -436,7 +439,8 @@ class WalletProvider extends BaseProvider {
       _updateStatus(WalletProviderStatus.loaded);
       return true;
     } on AppException catch (e) {
-      setError(e.message);
+      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
+      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
       rethrow;
     } catch (e, stack) {
       setError('wallet_error_balance_update_failed', e, stack);
