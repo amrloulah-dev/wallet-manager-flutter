@@ -371,13 +371,26 @@ class WalletProvider extends BaseProvider {
       } catch (e) {
         rethrow;
       }
+    } on DomainException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on ValidationException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } on AppException catch (e) {
-      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
-      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
-      rethrow;
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } catch (e, stack) {
-      setError('wallet_error_create_failed', e, stack);
-      rethrow;
+      setError('حدث خطأ غير متوقع أثناء إنشاء المحفظة.', e, stack);
+      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } finally {
       if (_status == WalletProviderStatus.creating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -401,12 +414,26 @@ class WalletProvider extends BaseProvider {
       await _walletRepository.updateWallet(walletId, data);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on ServerException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on DomainException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on ValidationException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on AppException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } catch (e, stack) {
-      setError('wallet_error_update_failed', e, stack);
-      rethrow;
+      setError('حدث خطأ غير متوقع أثناء تحديث المحفظة.', e, stack);
+      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } finally {
       if (_status == WalletProviderStatus.updating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -438,13 +465,26 @@ class WalletProvider extends BaseProvider {
       );
       _updateStatus(WalletProviderStatus.loaded);
       return true;
+    } on DomainException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on ValidationException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } on AppException catch (e) {
-      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
-      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
-      rethrow;
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } catch (e, stack) {
-      setError('wallet_error_balance_update_failed', e, stack);
-      rethrow;
+      setError('حدث خطأ غير متوقع أثناء شحن الرصيد.', e, stack);
+      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } finally {
       if (_status == WalletProviderStatus.updating) {
         _updateStatus(WalletProviderStatus.loaded);
@@ -469,12 +509,26 @@ class WalletProvider extends BaseProvider {
             stackTrace: stack);
         rethrow;
       }
-    } on Exception catch (e) {
-      setError(e.toString(), e);
-      rethrow;
+    } on DomainException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on ValidationException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
+    } on AppException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } catch (e, stack) {
-      setError('wallet_error_delete_failed', e, stack);
-      rethrow;
+      setError('حدث خطأ غير متوقع أثناء حذف المحفظة.', e, stack);
+      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      _updateStatus(WalletProviderStatus.error);
+      return false;
     } finally {
       if (_status == WalletProviderStatus.deleting) {
         _updateStatus(WalletProviderStatus.loaded);

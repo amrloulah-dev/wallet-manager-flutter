@@ -306,13 +306,26 @@ class TransactionProvider extends BaseProvider {
       _activateFetchShield();
       _updateStatus(TransactionProviderStatus.loaded);
       return true;
+    } on DomainException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(TransactionProviderStatus.error);
+      return false;
+    } on ValidationException catch (e) {
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(TransactionProviderStatus.error);
+      return false;
     } on AppException catch (e) {
-      setError(e.message, e); // Pass 'e' to ensure AppErrorHandler.handle is called
-      ToastUtils.showError(e.message); // Visible surfacing for Phase 1.1-1.4 Reqs
-      rethrow;
+      setError(e.message, e);
+      ToastUtils.showError(e.message);
+      _updateStatus(TransactionProviderStatus.error);
+      return false;
     } catch (e, stack) {
-      setError('فشل في إنشاء المعاملة.', e, stack);
-      rethrow;
+      setError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.', e, stack);
+      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      _updateStatus(TransactionProviderStatus.error);
+      return false;
     } finally {
       if (_status == TransactionProviderStatus.creating) {
         _updateStatus(TransactionProviderStatus.loaded);
