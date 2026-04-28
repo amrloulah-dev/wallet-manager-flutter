@@ -1,6 +1,7 @@
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import '../../core/errors/app_exceptions.dart';
 
 class TransactionCalculationResult {
@@ -30,7 +31,7 @@ class TransactionCalculationResult {
 class TransactionFeeCalculator {
   TransactionCalculationResult calculate({
     required WalletModel? wallet,
-    required TransactionType? transactionType, // ENUM refactor
+    required TransactionType? transactionType,
     required double amount,
     required double commission,
     required String receiverPhone,
@@ -39,16 +40,24 @@ class TransactionFeeCalculator {
       throw NotFoundException('Wallet not found for fee calculation');
     }
 
+    if (transactionType == null) {
+      throw DomainException('Transaction type is required for fee calculation');
+    }
+
+    // Step 1.1: Ensure positive amount at entry
+    AmountValidator.ensurePositive(amount);
+
     double fee = 0.0;
     if (transactionType == TransactionType.debit) {
       fee = FeeCalculator.calculateTransactionFee(
         amount: amount,
-        sourceWalletType: wallet.walletType.name, // ENUM refactor
+        sourceWalletType: wallet.walletType.dbValue,
         receiverPhone: receiverPhone,
       );
     }
 
-    final totalAmount = amount + commission;
+    // Step 1.1: Total amount must include service fee
+    final totalAmount = amount + commission + fee;
 
     bool willExceed = false;
     double newDailyUsed = 0.0;
@@ -58,18 +67,16 @@ class TransactionFeeCalculator {
     bool dailyExceeded = false;
     bool monthlyExceeded = false;
 
-    if (transactionType != null) {
-      final isSend = transactionType == TransactionType.debit;
-      final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
-      newDailyUsed = limits.dailyUsed + amount;
-      newMonthlyUsed = limits.monthlyUsed + amount;
-      dailyLimit = limits.dailyLimit;
-      monthlyLimit = limits.monthlyLimit;
+    final isSend = transactionType == TransactionType.debit;
+    final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
+    newDailyUsed = limits.dailyUsed + amount;
+    newMonthlyUsed = limits.monthlyUsed + amount;
+    dailyLimit = limits.dailyLimit;
+    monthlyLimit = limits.monthlyLimit;
 
-      dailyExceeded = newDailyUsed > dailyLimit;
-      monthlyExceeded = newMonthlyUsed > monthlyLimit;
-      willExceed = dailyExceeded || monthlyExceeded;
-    }
+    dailyExceeded = newDailyUsed > dailyLimit;
+    monthlyExceeded = newMonthlyUsed > monthlyLimit;
+    willExceed = dailyExceeded || monthlyExceeded;
 
     return TransactionCalculationResult(
       serviceFee: fee,

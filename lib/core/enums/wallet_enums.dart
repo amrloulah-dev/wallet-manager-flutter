@@ -23,6 +23,23 @@ enum WalletType {
     }
   }
 
+  String get dbValue {
+    switch (this) {
+      case WalletType.vodafoneCash:
+        return 'vodafone_cash';
+      case WalletType.instaPay:
+        return 'instapay';
+      case WalletType.orangeCash:
+        return 'orange_cash';
+      case WalletType.etisalatCash:
+        return 'etisalat_cash';
+      case WalletType.wePay:
+        return 'we_pay';
+      case WalletType.other:
+        return 'other';
+    }
+  }
+
   static WalletType fromString(String type) {
     switch (type.toLowerCase()) {
       case 'vodafone_cash':

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../errors/app_exceptions.dart';
+import 'amount_validator.dart';
 
 class FeeCalculator {
   // Network Prefixes
@@ -47,9 +48,7 @@ class FeeCalculator {
     required String sourceWalletType,
     required String receiverPhone,
   }) {
-    if (amount <= 0) {
-      throw DomainException('Amount must be positive; received: $amount');
-    }
+    AmountValidator.ensurePositive(amount);
 
     final provider = identifyProvider(receiverPhone);
     debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
@@ -89,9 +88,9 @@ class FeeCalculator {
         return _calculatePercentageFee(amount, 0.001, 0.5, 20.0);
 
       default:
-        debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
-            'WARNING — unknown walletType=$sourceWalletType, fee=0.0');
-        return 0.0;
+        throw DomainException(
+            'Unknown wallet type for fee calculation: $sourceWalletType. '
+            'Transaction cannot proceed without a valid fee.');
     }
   }
 
