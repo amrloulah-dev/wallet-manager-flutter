@@ -10,10 +10,10 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../domain/usecases/transaction_fee_calculator.dart';
+import '../../../core/errors/app_exceptions.dart';
 import '../../../core/di/service_locator.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
@@ -123,7 +123,6 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final commission = double.tryParse(_commissionController.text) ?? 0.0;
-    final authProvider = context.read<AuthProvider>();
     final transactionProvider = context.read<TransactionProvider>();
 
     try {

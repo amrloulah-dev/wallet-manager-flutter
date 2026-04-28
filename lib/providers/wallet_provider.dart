@@ -390,8 +390,6 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
-
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
         throw ValidationException('wallet_error_frozen');
