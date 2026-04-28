@@ -1,16 +1,16 @@
 # Implementation Plan: Phase 1 (Steps 1.1-1.4) - Critical Stabilization
 
 ## Phase 1.1: Fee Calculation Hardening
-- [ ] Task: Write failing tests for fee calculation and validation
-    - [ ] Unit test: `transactionType` is null -> throws `DomainException`
-    - [ ] Unit test: unknown wallet type -> throws `DomainException`
-    - [ ] Unit test: verify `totalAmount == amount + commission + serviceFee`
-    - [ ] Unit test: negative amount -> throws `FormatException`
-- [ ] Task: Implement fee calculation hardening
-    - [ ] `fee_calculator.dart`: Replace `default` return 0.0 with `throw DomainException`
-    - [ ] `transaction_fee_calculator.dart`: Enforce non-null `transactionType` guard
-    - [ ] `transaction_fee_calculator.dart`: Fix `totalAmount` formula
-    - [ ] `transaction_fee_calculator.dart`: Add `AmountValidator.ensurePositive(amount)`
+- [x] Task: Write failing tests for fee calculation and validation [7291a52]
+    - [x] Unit test: `transactionType` is null -> throws `DomainException`
+    - [x] Unit test: unknown wallet type -> throws `DomainException`
+    - [x] Unit test: verify `totalAmount == amount + commission + serviceFee`
+    - [x] Unit test: negative amount -> throws `DomainException`
+- [x] Task: Implement fee calculation hardening [7291a52]
+    - [x] `fee_calculator.dart`: Replace `default` return 0.0 with `throw DomainException`
+    - [x] `transaction_fee_calculator.dart`: Enforce non-null `transactionType` guard
+    - [x] `transaction_fee_calculator.dart`: Fix `totalAmount` formula
+    - [x] `transaction_fee_calculator.dart`: Add `AmountValidator.ensurePositive(amount)`
 - [ ] Task: Conductor - User Manual Verification 'Phase 1.1: Fee Calculation Hardening' (Protocol in workflow.md)
 
 ## Phase 1.2: Balance Precision & Negative-Balance Prevention
