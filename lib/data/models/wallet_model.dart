@@ -86,6 +86,8 @@ class WalletStats {
   final double totalServiceFee;
   final DateTime? lastTransactionDate;
 
+  double get totalEarnings => totalCommission + totalServiceFee;
+
   WalletStats({
     this.totalTransactions = 0,
     this.totalSentAmount = 0.0,

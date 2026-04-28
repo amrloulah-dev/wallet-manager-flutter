@@ -79,25 +79,37 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   void _updateTotal() {
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final commission = double.tryParse(_commissionController.text) ?? 0.0;
+    try {
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+      final commission = double.tryParse(_commissionController.text) ?? 0.0;
 
-    final wallet = _selectedWalletId != null 
-        ? context.read<WalletProvider>().walletMap[_selectedWalletId!] 
-        : null;
+      final wallet = _selectedWalletId != null 
+          ? context.read<WalletProvider>().walletMap[_selectedWalletId!] 
+          : null;
 
-    final result = sl<TransactionFeeCalculator>().calculate(
-      wallet: wallet,
-      transactionType: _transactionType,
-      amount: amount,
-      commission: commission,
-      receiverPhone: _customerPhoneController.text,
-    );
+      final result = sl<TransactionFeeCalculator>().calculate(
+        wallet: wallet,
+        transactionType: _transactionType,
+        amount: amount,
+        commission: commission,
+        receiverPhone: _customerPhoneController.text,
+      );
 
-    setState(() {
-      _serviceFee = result.serviceFee;
-      _totalAmount = result.totalAmount;
-    });
+      setState(() {
+        _serviceFee = result.serviceFee;
+        _totalAmount = result.totalAmount;
+      });
+    } on DomainException catch (e) {
+      // Surface domain errors (like negative amount) via toast or similar
+      debugPrint('⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
+      // We don't want to show a toast on every keystroke, but we should clear the total
+      setState(() {
+        _serviceFee = 0.0;
+        _totalAmount = 0.0;
+      });
+    } catch (e) {
+      debugPrint('❌ [TX_CALC] Unexpected error during calculation: $e');
+    }
   }
 
   Future<void> _handleCreate() async {
@@ -114,39 +126,43 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     final authProvider = context.read<AuthProvider>();
     final transactionProvider = context.read<TransactionProvider>();
 
-    final currentUserId = authProvider.currentUserId;
-    if (currentUserId == null) {
-      ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
-      return;
-    }
+    try {
+      final success = await transactionProvider.createTransaction(
+        walletId: _selectedWalletId!,
+        transactionType: _transactionType!,
+        customerPhone: _customerPhoneController.text,
+        customerName: _customerNameController.text,
+        amount: amount,
+        commission: commission,
+        serviceFee: _serviceFee,
+        paymentStatus: _paymentStatus,
+        notes: _notesController.text,
+      );
 
-    final success = await transactionProvider.createTransaction(
-      walletId: _selectedWalletId!,
-      transactionType: _transactionType!,
-      customerPhone: _customerPhoneController.text,
-      customerName: _customerNameController.text,
-      amount: amount,
-      commission: commission,
-      serviceFee: _serviceFee,
-      paymentStatus: _paymentStatus,
-      notes: _notesController.text,
-    );
-
-    if (mounted && success) {
-      ToastUtils.showSuccess(AppLocalizations.of(context)!.transactionCreatedSuccess);
-      Navigator.pop(context, true);
-    } else if (mounted) {
-      AwesomeDialog(
-        context: context,
-        dialogType: DialogType.error,
-        animType: AnimType.bottomSlide,
-        title: AppLocalizations.of(context)!.errorTitle,
-        desc: transactionProvider.errorMessage ?? AppLocalizations.of(context)!.transactionCreateFailed,
-        btnOkOnPress: () {},
-        btnOkColor: Colors.red,
-        btnOkText: AppLocalizations.of(context)!.okButton,
-      ).show();
+      if (mounted && success) {
+        ToastUtils.showSuccess(AppLocalizations.of(context)!.transactionCreatedSuccess);
+        Navigator.pop(context, true);
+      } else if (mounted) {
+        _showErrorDialog(transactionProvider.errorMessage ?? AppLocalizations.of(context)!.transactionCreateFailed);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog(transactionProvider.errorMessage ?? e.toString());
+      }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.bottomSlide,
+      title: AppLocalizations.of(context)!.errorTitle,
+      desc: message,
+      btnOkOnPress: () {},
+      btnOkColor: Colors.red,
+      btnOkText: AppLocalizations.of(context)!.okButton,
+    ).show();
   }
 
   @override

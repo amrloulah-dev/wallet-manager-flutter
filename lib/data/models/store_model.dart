@@ -74,16 +74,22 @@ class StoreModel {
       isSuspended: data['isSuspended'] as bool? ?? false,
       createdAt: createdAt,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
-      subscription: data['subscription'] != null 
+      subscription: data['subscription'] is Map<String, dynamic>
           ? StoreSubscription.fromMap(data['subscription'] as Map<String, dynamic>)
           : _withMigrationWarning(), // FR-17 legacy migration
-      settings: StoreSettings.fromMap(data['settings'] as Map<String, dynamic>? ?? {}),
-      stats: StoreStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {}),
-      legacyData: data['legacyData'] as Map<String, dynamic>? ?? {
-        if (data.containsKey('licenseKey')) 'licenseKey': data['licenseKey'],
-        if (data.containsKey('licenseKeyId')) 'licenseKeyId': data['licenseKeyId'],
-        if (data.containsKey('activeLicenseKey')) 'activeLicenseKey': data['activeLicenseKey'],
-      },
+      settings: data['settings'] is Map<String, dynamic>
+          ? StoreSettings.fromMap(data['settings'] as Map<String, dynamic>)
+          : StoreSettings(),
+      stats: data['stats'] is Map<String, dynamic>
+          ? StoreStats.fromMap(data['stats'] as Map<String, dynamic>)
+          : StoreStats(),
+      legacyData: data['legacyData'] is Map<String, dynamic>
+          ? data['legacyData'] as Map<String, dynamic>
+          : {
+              if (data.containsKey('licenseKey')) 'licenseKey': data['licenseKey'],
+              if (data.containsKey('licenseKeyId')) 'licenseKeyId': data['licenseKeyId'],
+              if (data.containsKey('activeLicenseKey')) 'activeLicenseKey': data['activeLicenseKey'],
+            },
     );
   }
 
@@ -321,6 +327,8 @@ class StoreStats {
   final double totalCommissionToday;
   final double totalServiceFeeToday;
   final DateTime? lastUpdated; // Made nullable
+
+  double get totalEarningsToday => totalCommissionToday + totalServiceFeeToday;
 
   StoreStats({
     this.totalWallets = 0,
