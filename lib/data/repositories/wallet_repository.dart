@@ -169,21 +169,73 @@ class WalletRepository {
     }
   }
 
-  Future<void> updateWalletBalance(String walletId, double amount) async {
+  Future<void> creditWallet(String walletId, double amount) async {
     AmountValidator.ensurePositive(amount);
     try {
-      final wallet = await getWalletById(walletId);
-      if (wallet == null) throw NotFoundException('Wallet');
+      await _firestore.runTransaction((transaction) async {
+        final walletRef = _walletsCollection.doc(walletId);
+        final walletSnap = await transaction.get(walletRef);
+        if (!walletSnap.exists) throw NotFoundException('Wallet');
 
-      await _walletsCollection.doc(walletId).update({
-        'balance': FieldValue.increment(amount),
+        transaction.update(walletRef, {
+          'balance': FieldValue.increment(amount),
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
       });
-      await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
-          balanceChange: amount);
+
+      final wallet = await getWalletById(walletId);
+      if (wallet != null) {
+        await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
+            balanceChange: amount);
+      }
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
-      throw ServerException('فشل تحديث رصيد المحفظة: $e');
+      if (e is AppException) rethrow;
+      throw ServerException('فشل شحن رصيد المحفظة: $e');
+    }
+  }
+
+  Future<void> debitWallet(String walletId, double amount) async {
+    AmountValidator.ensurePositive(amount);
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final walletRef = _walletsCollection.doc(walletId);
+        final walletSnap = await transaction.get(walletRef);
+        if (!walletSnap.exists) throw NotFoundException('Wallet');
+
+        final data = walletSnap.data() as Map<String, dynamic>?;
+        final currentBalance = NumberParser.toDouble(data?['balance']);
+        if ((currentBalance + 0.01) < amount) {
+          throw DomainException('رصيد المحفظة غير كافٍ.');
+        }
+
+        transaction.update(walletRef, {
+          'balance': currentBalance - amount,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+
+      final wallet = await getWalletById(walletId);
+      if (wallet != null) {
+        await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
+            balanceChange: -amount);
+      }
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clear('wallet_details_$walletId');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw ServerException('فشل خصم رصيد من المحفظة: $e');
+    }
+  }
+
+  @Deprecated('Use creditWallet or debitWallet instead')
+  Future<void> updateWalletBalance(String walletId, double amount) async {
+    AmountValidator.ensurePositive(amount);
+    if (amount > 0) {
+      await creditWallet(walletId, amount);
+    } else if (amount < 0) {
+      await debitWallet(walletId, amount.abs());
     }
   }
 

@@ -71,7 +71,7 @@ class DebtModel {
     final totalAmount = NumberParser.toDouble(data['totalAmount']);
 
     // VALIDATION: Ensure amounts are positive (P1-8 FIX)
-    AmountValidator.ensurePositive(amountDue);
+    AmountValidator.ensurePositiveOrZero(amountDue); // Allow 0 for paid debts
     AmountValidator.ensurePositive(totalAmount);
 
     // Fallback for old data where totalAmount didn't exist

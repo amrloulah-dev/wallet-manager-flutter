@@ -244,6 +244,7 @@ void main() {
         'customerPhone': '01234567890',
         'debtType': 'transaction',
         'amountDue': 100.0,
+        'totalAmount': 100.0,
         'debtStatus': 'open',
         // Missing debtDate, createdAt, etc.
       });

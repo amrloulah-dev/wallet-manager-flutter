@@ -75,6 +75,7 @@ void main() {
       await fakeFirestore.collection('debts').doc(debtId).set({
         'storeId': storeId,
         'amountDue': 100.0,
+        'totalAmount': 100.0,
         'debtStatus': 'open',
         'customerName': 'Test',
         'customerPhone': '123',
