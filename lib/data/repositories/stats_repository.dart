@@ -98,6 +98,8 @@ class StatsRepository {
       'totalTransactionsToday': FieldValue.increment(1),
       'totalCommission': FieldValue.increment(tx.commission),
       'totalCommissionToday': FieldValue.increment(tx.commission),
+      'totalServiceFee': FieldValue.increment(tx.serviceFee),
+      'totalServiceFeeToday': FieldValue.increment(tx.serviceFee),
       'lastUpdated': FieldValue.serverTimestamp(),
     };
 

@@ -319,6 +319,7 @@ class StoreStats {
   final int activeWallets;
   final int totalTransactionsToday;
   final double totalCommissionToday;
+  final double totalServiceFeeToday;
   final DateTime? lastUpdated; // Made nullable
 
   StoreStats({
@@ -326,6 +327,7 @@ class StoreStats {
     this.activeWallets = 0,
     this.totalTransactionsToday = 0,
     this.totalCommissionToday = 0.0,
+    this.totalServiceFeeToday = 0.0,
     this.lastUpdated,
   });
 
@@ -336,6 +338,7 @@ class StoreStats {
       activeWallets: NumberParser.toInt(map['activeWallets']),
       totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
       totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
+      totalServiceFeeToday: NumberParser.toDouble(map['totalServiceFeeToday']),
       lastUpdated: lastUpdated,
     );
   }
@@ -346,6 +349,7 @@ class StoreStats {
       'activeWallets': activeWallets,
       'totalTransactionsToday': totalTransactionsToday,
       'totalCommissionToday': totalCommissionToday,
+      'totalServiceFeeToday': totalServiceFeeToday,
       'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
@@ -355,6 +359,7 @@ class StoreStats {
     int? activeWallets,
     int? totalTransactionsToday,
     double? totalCommissionToday,
+    double? totalServiceFeeToday,
     DateTime? lastUpdated,
   }) {
     return StoreStats(
@@ -363,6 +368,7 @@ class StoreStats {
       totalTransactionsToday:
           totalTransactionsToday ?? this.totalTransactionsToday,
       totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
+      totalServiceFeeToday: totalServiceFeeToday ?? this.totalServiceFeeToday,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }

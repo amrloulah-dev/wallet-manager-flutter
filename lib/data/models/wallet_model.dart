@@ -83,6 +83,7 @@ class WalletStats {
   final double totalSentAmount;
   final double totalReceivedAmount;
   final double totalCommission;
+  final double totalServiceFee;
   final DateTime? lastTransactionDate;
 
   WalletStats({
@@ -90,6 +91,7 @@ class WalletStats {
     this.totalSentAmount = 0.0,
     this.totalReceivedAmount = 0.0,
     this.totalCommission = 0.0,
+    this.totalServiceFee = 0.0,
     this.lastTransactionDate,
   });
 
@@ -99,6 +101,7 @@ class WalletStats {
       totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
       totalReceivedAmount: NumberParser.toDouble(map['totalReceivedAmount']),
       totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalServiceFee: NumberParser.toDouble(map['totalServiceFee']),
       lastTransactionDate: (map['lastTransactionDate'] as Timestamp?)?.toDate(),
     );
   }
@@ -109,6 +112,7 @@ class WalletStats {
       'totalSentAmount': totalSentAmount,
       'totalReceivedAmount': totalReceivedAmount,
       'totalCommission': totalCommission,
+      'totalServiceFee': totalServiceFee,
       'lastTransactionDate': lastTransactionDate != null ? Timestamp.fromDate(lastTransactionDate!) : null,
     };
   }
@@ -118,6 +122,7 @@ class WalletStats {
     double? totalSentAmount,
     double? totalReceivedAmount,
     double? totalCommission,
+    double? totalServiceFee,
     DateTime? lastTransactionDate,
   }) {
     return WalletStats(
@@ -125,6 +130,7 @@ class WalletStats {
       totalSentAmount: totalSentAmount ?? this.totalSentAmount,
       totalReceivedAmount: totalReceivedAmount ?? this.totalReceivedAmount,
       totalCommission: totalCommission ?? this.totalCommission,
+      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
       lastTransactionDate: lastTransactionDate ?? this.lastTransactionDate,
     );
   }

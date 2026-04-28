@@ -193,7 +193,7 @@ class TransactionModel {
   bool get isPaid => paymentStatus == PaymentStatus.paid;
   bool get isDebt => paymentStatus == PaymentStatus.debt;
   double get totalAmount =>
-      amount + commission; // Original total amount (base + comm)
+      amount + commission + serviceFee; // Total deduction/credit including all fees
 
   @override
   String toString() {

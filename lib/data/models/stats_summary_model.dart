@@ -54,6 +54,10 @@ class StatsSummaryModel {
   final double totalCommission;
   final double totalCommissionToday;
 
+  // Service Fee
+  final double totalServiceFee;
+  final double totalServiceFeeToday;
+
   // Debts
   final int openDebtsCount;
   final int paidDebtsCount;
@@ -74,6 +78,8 @@ class StatsSummaryModel {
     this.receiveCount = 0,
     this.totalCommission = 0.0,
     this.totalCommissionToday = 0.0,
+    this.totalServiceFee = 0.0,
+    this.totalServiceFeeToday = 0.0,
     this.openDebtsCount = 0,
     this.paidDebtsCount = 0,
     this.totalOpenAmount = 0.0,
@@ -94,6 +100,8 @@ class StatsSummaryModel {
       receiveCount: NumberParser.toInt(data['receiveCount']),
       totalCommission: NumberParser.toDouble(data['totalCommission']),
       totalCommissionToday: NumberParser.toDouble(data['totalCommissionToday']),
+      totalServiceFee: NumberParser.toDouble(data['totalServiceFee']),
+      totalServiceFeeToday: NumberParser.toDouble(data['totalServiceFeeToday']),
       openDebtsCount: NumberParser.toInt(data['openDebtsCount']),
       paidDebtsCount: NumberParser.toInt(data['paidDebtsCount']),
       totalOpenAmount: NumberParser.toDouble(data['totalOpenAmount']),
@@ -116,6 +124,8 @@ class StatsSummaryModel {
       'receiveCount': receiveCount,
       'totalCommission': totalCommission,
       'totalCommissionToday': totalCommissionToday,
+      'totalServiceFee': totalServiceFee,
+      'totalServiceFeeToday': totalServiceFeeToday,
       'openDebtsCount': openDebtsCount,
       'paidDebtsCount': paidDebtsCount,
       'totalOpenAmount': totalOpenAmount,
@@ -136,6 +146,8 @@ class StatsSummaryModel {
     int? receiveCount,
     double? totalCommission,
     double? totalCommissionToday,
+    double? totalServiceFee,
+    double? totalServiceFeeToday,
     int? openDebtsCount,
     int? paidDebtsCount,
     double? totalOpenAmount,
@@ -154,6 +166,8 @@ class StatsSummaryModel {
       receiveCount: receiveCount ?? this.receiveCount,
       totalCommission: totalCommission ?? this.totalCommission,
       totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
+      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
+      totalServiceFeeToday: totalServiceFeeToday ?? this.totalServiceFeeToday,
       openDebtsCount: openDebtsCount ?? this.openDebtsCount,
       paidDebtsCount: paidDebtsCount ?? this.paidDebtsCount,
       totalOpenAmount: totalOpenAmount ?? this.totalOpenAmount,

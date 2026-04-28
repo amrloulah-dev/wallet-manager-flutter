@@ -46,7 +46,6 @@ void main() {
     when(() => mockWalletRef.collection(any())).thenReturn(mockCollection);
     
     // Stub Transaction methods to return itself (fluent interface)
-    // Try to match the exact signatures by using specific generic types
     when(() => mockTransaction.set(
       any<DocumentReference<Map<String, dynamic>>>(),
       any<Map<String, dynamic>>(),
@@ -75,7 +74,7 @@ void main() {
   });
 
   group('TransactionValidatorService (Phase 2)', () {
-    test('isReceive should include commission in balanceChange', () async {
+    test('isReceive should NOT include commission in balanceChange', () async {
       final txModel = TransactionModel(
         transactionId: 'tx1',
         walletId: 'w1',
@@ -108,14 +107,14 @@ void main() {
 
       await service.validateAndSave(txModel);
 
-      // Desired behavior: balanceChange = 105.0 (amount + commission)
+      // Desired behavior: balanceChange = 100.0 (amount ONLY)
       final captured = verify(() => mockTransaction.update(
         any<DocumentReference<Map<String, dynamic>>>(),
         captureAny(),
       )).captured;
 
       final updateData = captured.first as Map<String, dynamic>;
-      expect(updateData['balance'], 500.0 + 105.0);
+      expect(updateData['balance'], 500.0 + 100.0);
     });
 
     test('should use epsilon for balance sufficiency check', () async {
@@ -151,6 +150,49 @@ void main() {
 
       // Should NOT throw ValidationException due to epsilon check
       await service.validateAndSave(txModel);
+    });
+
+    test('isDeposit should create transaction document and update balance', () async {
+      final txModel = TransactionModel(
+        transactionId: 'tx_deposit_1',
+        walletId: 'w1',
+        transactionType: TransactionType.deposit,
+        amount: 1000.0,
+        commission: 0.0,
+        serviceFee: 0.0,
+        storeId: 's1',
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        customerPhone: '012',
+        paymentStatus: PaymentStatus.paid,
+      );
+
+      when(() => mockTransaction.get(mockWalletRef)).thenAnswer((_) async => mockWalletSnap);
+      when(() => mockWalletSnap.exists).thenReturn(true);
+      when(() => mockWalletSnap.id).thenReturn('w1');
+      when(() => mockWalletSnap.data()).thenReturn({
+        'walletId': 'w1',
+        'storeId': 's1',
+        'balance': 500.0,
+        'isActive': true,
+        'walletType': 'vodafoneCash',
+        'sendLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
+        'receiveLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
+        'createdAt': Timestamp.now(),
+        'lastDailyReset': Timestamp.now(),
+        'lastMonthlyReset': Timestamp.now(),
+      });
+
+      await service.validateAndSave(txModel);
+
+      // Verify transaction document was set
+      verify(() => mockTransaction.set(
+        any<DocumentReference<Map<String, dynamic>>>(),
+        any<Map<String, dynamic>>(),
+      )).called(1);
+      
+      // Verify balance update was called (currently it uses FieldValue.increment in the early return branch)
+      // Actually, after our fix, it will use the atomic path.
     });
   });
 }

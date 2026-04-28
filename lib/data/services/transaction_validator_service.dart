@@ -35,7 +35,9 @@ class TransactionValidatorService {
 
     final balanceChange = transaction.isSend
         ? -(transaction.amount + transaction.serviceFee)
-        : (transaction.amount + transaction.commission);
+        : (transaction.isReceive 
+            ? transaction.amount // Phase 1.4: Receive is amount only (omitting commission)
+            : (transaction.amount + transaction.commission)); // Default for other types (e.g. deposit)
 
     // Wrap the successful validation states inside FirebaseFirestore.instance.runTransaction()
     await _firestore.runTransaction<void>((tx) async {
@@ -50,13 +52,6 @@ class TransactionValidatorService {
       // Bug B-004: Prevent transactions on logically deleted/inactive wallets
       if (!wallet.isActive) {
         throw ValidationException('لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها');
-      }
-
-      // Handle simple deposit immediately
-      if (transaction.isDeposit) {
-        tx.update(
-            walletRef, {'balance': FieldValue.increment(transaction.amount)});
-        return;
       }
 
       final now = Timestamp.now();
@@ -117,7 +112,7 @@ class TransactionValidatorService {
              'BALANCE CHECK | balance=${validationWallet.balance}, '
              'totalDeduction=$totalDeduction');
              
-         if (validationWallet.balance < (totalDeduction - _epsilonEGP)) {
+         if ((validationWallet.balance + _epsilonEGP) < totalDeduction) {
            throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
          }
        }
@@ -201,6 +196,9 @@ class TransactionValidatorService {
             FieldValue.increment(transaction.amount);
         walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
             FieldValue.increment(transaction.commission);
+        // Phase 1.4: Track totalServiceFee in wallet stats
+        walletUpdateData['${FirebaseConstants.stats}.totalServiceFee'] =
+            FieldValue.increment(transaction.serviceFee);
       }
 
       // Commit Wallet Updates
@@ -218,6 +216,9 @@ class TransactionValidatorService {
         'totalTransactionsToday': FieldValue.increment(1),
         'totalCommission': FieldValue.increment(transaction.commission),
         'totalCommissionToday': FieldValue.increment(transaction.commission),
+        // Phase 1.4: Track totalServiceFee in summary stats
+        'totalServiceFee': FieldValue.increment(transaction.serviceFee),
+        'totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
 
@@ -236,6 +237,7 @@ class TransactionValidatorService {
       tx.update(storeRef, {
         'stats.totalTransactionsToday': FieldValue.increment(1),
         'stats.totalCommissionToday': FieldValue.increment(transaction.commission),
+        'stats.totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
         'stats.lastUpdated': FieldValue.serverTimestamp(),
       });
 
@@ -251,6 +253,7 @@ class TransactionValidatorService {
         {
           'transactionCount': FieldValue.increment(1),
           'totalCommission': FieldValue.increment(transaction.commission),
+          'totalServiceFee': FieldValue.increment(transaction.serviceFee),
           'totalAmount': FieldValue.increment(transaction.amount),
         },
         SetOptions(merge: true),
