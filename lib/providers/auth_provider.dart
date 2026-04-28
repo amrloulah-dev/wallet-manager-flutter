@@ -372,11 +372,11 @@ class AuthProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'auth_operation']) {
     debugPrint('💥 [AUTH ERROR] $errorCode | Error: $error');
     _errorMessage = errorCode;
     _status = AuthStatus.error;
-    super.setError(errorCode, error, stack);
+    super.setError(errorCode, error, stack, showToast, operation);
     safeNotify();
   }
 

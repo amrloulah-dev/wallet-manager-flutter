@@ -2,6 +2,8 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../services/analytics_service.dart';
+import '../utils/toast_utils.dart';
+import 'app_exceptions.dart';
 import 'error_severity.dart';
 
 /// Centralized error handler responsible for logging and diagnostics.
@@ -61,18 +63,32 @@ class AppErrorHandler {
 
   /// Handles an error by logging diagnostics and reporting to analytics.
   /// 
-  /// UI notifications should be handled at the call site or via a dedicated
-  /// UI notification service to maintain core decoupling.
+  /// UI notifications can be triggered via [showToast] if the environment allows.
   static void handle(
     Object error, {
     ErrorSeverity severity = ErrorSeverity.medium,
     String operation = 'unspecified',
     StackTrace? stackTrace,
+    bool showToast = false,
   }) {
     if (isTestMode) return;
     
-    final message = error.toString();
+    final message = error is AppException ? error.message : error.toString();
     _logDiagnostic(severity, operation, message, stackTrace);
+
+    // Visible Surfacing
+    if (showToast) {
+      try {
+        // We use a dynamic lookup or specific utility to show toast
+        // to keep the core decoupled from specific toast libraries if possible,
+        // but here we'll use ToastUtils directly as it's the project standard.
+        // Since AppErrorHandler is decoupled, we should check if ToastUtils is available.
+        // For now, we'll assume it is as per project structure.
+        ToastUtils.showError(message);
+      } catch (e) {
+        debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e');
+      }
+    }
 
     // Report to Analytics
     AnalyticsService.logError(

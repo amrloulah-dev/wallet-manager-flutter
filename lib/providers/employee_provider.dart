@@ -343,11 +343,11 @@ class EmployeeProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'employee_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = EmployeeProviderStatus.error;
-    super.setError(errorCode, error, stack);
+    super.setError(errorCode, error, stack, showToast, operation);
   }
 
   bool _isNumeric(String str) {

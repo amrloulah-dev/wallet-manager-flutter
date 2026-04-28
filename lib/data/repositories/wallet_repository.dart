@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/wallet_model.dart';
 import '../services/firebase_service.dart';
@@ -73,7 +74,18 @@ class WalletRepository {
       query = query.orderBy(FirebaseConstants.createdAt, descending: true);
 
       return query.limit(limit).snapshots().map((snapshot) {
-        return snapshot.docs.map((doc) => WalletModel.fromFirestore(doc)).toList();
+        final List<WalletModel> wallets = [];
+        for (final doc in snapshot.docs) {
+          try {
+            wallets.add(WalletModel.fromFirestore(doc));
+          } catch (e) {
+            AppErrorHandler.logSilentError(
+              'Malformed wallet doc: ${doc.id} | error: $e',
+              'wallet_stream_corruption'
+            );
+          }
+        }
+        return wallets;
       });
     } catch (e) {
       return Stream.error(ServerException('فشل الحصول على تيار المحافظ: $e'));
@@ -95,6 +107,7 @@ class WalletRepository {
           duration: const Duration(minutes: 10));
       return wallet;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ServerException('فشل العثور على المحفظة: $e');
     }
   }
@@ -110,9 +123,17 @@ class WalletRepository {
       }
 
       final snapshot = await query.limit(20).get();
-      final items = snapshot.docs
-          .map((doc) => WalletModel.fromFirestore(doc))
-          .toList();
+      final items = <WalletModel>[];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(WalletModel.fromFirestore(doc));
+        } catch (e) {
+          AppErrorHandler.logSilentError(
+            'Malformed wallet doc in list: ${doc.id} | error: $e',
+            'wallet_list_corruption'
+          );
+        }
+      }
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
 
       return PaginatedResult(items: items, lastDocument: lastDoc);

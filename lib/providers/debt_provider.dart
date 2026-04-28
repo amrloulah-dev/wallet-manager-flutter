@@ -84,17 +84,19 @@ class DebtProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'debt_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = DebtProviderStatus.error;
-    if (error != null) {
-      AppErrorHandler.handle(error,
-          severity: ErrorSeverity.medium,
-          operation: 'debt_operation',
-          stackTrace: stack);
-    }
-    super.setError(errorCode, error, stack);
+    
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+    
     safeNotify();
   }
 

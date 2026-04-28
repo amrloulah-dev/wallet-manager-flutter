@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/transaction_validator_service.dart';
 
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/date_helper.dart';
 import '../models/paginated_result.dart';
@@ -117,9 +118,18 @@ class TransactionRepository {
       }
 
       return query.limit(limit).snapshots().map((snapshot) {
-        return snapshot.docs
-            .map((doc) => TransactionModel.fromFirestore(doc))
-            .toList();
+        final items = <TransactionModel>[];
+        for (final doc in snapshot.docs) {
+          try {
+            items.add(TransactionModel.fromFirestore(doc));
+          } catch (e) {
+            AppErrorHandler.logSilentError(
+              'Malformed tx doc in stream: ${doc.id} | error: $e',
+              'transaction_stream_corruption'
+            );
+          }
+        }
+        return items;
       });
     } catch (e) {
       return Stream.error(ServerException('فشل الحصول على تيار المعاملات: $e'));
@@ -141,6 +151,7 @@ class TransactionRepository {
       throw ServerException('Failed to get transaction: ${e.message}',
           code: e.code);
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while fetching the transaction.');
     }
@@ -166,9 +177,17 @@ class TransactionRepository {
       }
 
       final snapshot = await query.limit(20).get();
-      final items = snapshot.docs
-          .map((doc) => TransactionModel.fromFirestore(doc))
-          .toList();
+      final items = <TransactionModel>[];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(TransactionModel.fromFirestore(doc));
+        } catch (e) {
+          AppErrorHandler.logSilentError(
+            'Malformed tx doc in date range list: ${doc.id} | error: $e',
+            'transaction_date_list_corruption'
+          );
+        }
+      }
       
       return PaginatedResult(
         items: items,
@@ -236,9 +255,17 @@ class TransactionRepository {
       }
 
       final snapshot = await query.limit(20).get();
-      final items = snapshot.docs
-          .map((doc) => TransactionModel.fromFirestore(doc))
-          .toList();
+      final items = <TransactionModel>[];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(TransactionModel.fromFirestore(doc));
+        } catch (e) {
+          AppErrorHandler.logSilentError(
+            'Malformed tx doc in all list: ${doc.id} | error: $e',
+            'transaction_all_list_corruption'
+          );
+        }
+      }
 
       return PaginatedResult(
         items: items,

@@ -521,11 +521,20 @@ class WalletProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'wallet_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = WalletProviderStatus.error;
-    super.setError(errorCode, error, stack);
+    
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+    
+    safeNotify();
   }
 
   void clearError() {

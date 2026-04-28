@@ -12,8 +12,6 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
-import '../core/errors/app_error_handler.dart';
-import '../core/errors/error_severity.dart';
 
 enum TransactionProviderStatus { idle, loading, loadingMore, loaded, creating, error }
 
@@ -149,18 +147,21 @@ class TransactionProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'transaction_operation']) {
     debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = TransactionProviderStatus.error;
-    if (error != null) {
-      AppErrorHandler.handle(error,
-          severity: ErrorSeverity.medium,
-          operation: 'transaction_operation',
-          stackTrace: stack);
-    }
+    
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+    
     safeNotify();
   }
 

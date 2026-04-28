@@ -4,8 +4,6 @@ import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
-import '../core/errors/app_error_handler.dart';
-import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
 import 'base_provider.dart';
 
@@ -254,19 +252,21 @@ class StatisticsProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [dynamic error, StackTrace? stack]) {
+  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'stats_operation']) {
     debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
     if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
     if (isDisposed) return;
     _errorMessage = errorCode;
     _isLoading = false;
-    if (error != null) {
-      AppErrorHandler.handle(error,
-          severity: ErrorSeverity.medium,
-          operation: 'stats_operation',
-          stackTrace: stack);
-    }
-    super.setError(errorCode, error, stack);
+    
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+    
     safeNotify();
   }
 }
