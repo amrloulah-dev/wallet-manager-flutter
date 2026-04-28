@@ -77,7 +77,7 @@ class AppErrorHandler {
     _logDiagnostic(severity, operation, message, stackTrace);
 
     // Visible Surfacing
-    if (showToast) {
+    if (showToast && !isTestMode) {
       try {
         // We use a dynamic lookup or specific utility to show toast
         // to keep the core decoupled from specific toast libraries if possible,

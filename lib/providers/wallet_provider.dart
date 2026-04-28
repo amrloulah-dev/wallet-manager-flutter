@@ -373,22 +373,22 @@ class WalletProvider extends BaseProvider {
       }
     } on DomainException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع أثناء إنشاء المحفظة.', e, stack);
-      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {

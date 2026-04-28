@@ -7,6 +7,7 @@ import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
+import '../core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
@@ -308,22 +309,22 @@ class TransactionProvider extends BaseProvider {
       return true;
     } on DomainException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.', e, stack);
-      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {

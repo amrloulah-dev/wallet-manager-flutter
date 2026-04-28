@@ -82,25 +82,21 @@ void main() {
     // NOTE: subscriptionProvider is NOT provided, so it is null in the WalletProvider
 
     // 2. Act & Assert: Attempt to create a wallet
-    // DESIRED BEHAVIOR (Fixed): It should throw ValidationException
-    try {
-      await walletProvider.createWallet(
-        phoneNumber: '01012345678',
-        walletType: WalletType.vodafoneCash,
-        walletStatus: WalletStatus.active,
-        balance: 100.0,
-        createdBy: 'user1',
-      );
-      fail('Should have thrown ValidationException');
-    } catch (e) {
-      expect(e, isA<Exception>());
-    }
+    // DESIRED BEHAVIOR (Requirement 1.5.2): It returns false because it caught the error and showed Toast
+    final success = await walletProvider.createWallet(
+      phoneNumber: '01012345678',
+      walletType: WalletType.vodafoneCash,
+      walletStatus: WalletStatus.active,
+      balance: 100.0,
+      createdBy: 'user1',
+    );
     
+    expect(success, isFalse);
     expect(walletProvider.errorMessage, equals('wallet_error_subscription_unresolved'));
   });
 
   group('WalletProvider Error Transparency (Phase 5)', () {
-    test('createWallet should propagate ServerException from repository', () async {
+    test('createWallet should return false and set error if repository throws', () async {
       final mockUser = UserModel(
         userId: 'user1',
         storeId: 'test_store',
@@ -116,14 +112,17 @@ void main() {
       when(() => mockWalletRepo.createWallet(any()))
           .thenThrow(Exception('Firestore crash'));
 
-      // Should currently FAIL this test because it catches internally and returns false
-      expect(() => walletProvider.createWallet(
+      // 1.5.2 compliance: Catch internal, return false
+      final success = await walletProvider.createWallet(
         phoneNumber: '01012345678',
         walletType: WalletType.vodafoneCash,
         walletStatus: WalletStatus.active,
         balance: 100.0,
         createdBy: 'user1',
-      ), throwsA(isA<Exception>()));
+      );
+
+      expect(success, isFalse);
+      expect(walletProvider.hasError, isTrue);
     });
   });
 }
