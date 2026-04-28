@@ -1,0 +1,214 @@
+{
+  "auditScope": "lib/core, lib/domain, lib/data, lib/services",
+  "modelsByDomain": {
+    "User Management": [
+      "user_model.dart",
+      "user_permissions.dart"
+    ],
+    "Administrative": [
+      "store_model.dart",
+      "subscription_request_model.dart"
+    ],
+    "License & Subscription": [
+      "license_key_model.dart",
+      "system_configs_model.dart"
+    ],
+    "Device Tracking": [
+      "device_registration_model.dart",
+      "device_usage_model.dart"
+    ],
+    "Financial": [
+      "wallet_model.dart",
+      "transaction_model.dart",
+      "debt_model.dart"
+    ],
+    "Analytics": [
+      "stats_summary_model.dart",
+      "daily_stats_model.dart"
+    ]
+  },
+  "timestamp": "2026-04-28 17:41:14",
+  "auditChecklist": {
+    "Phase4_Enums": [
+      "debt_enums.dart - Debt domain enums",
+      "subscription_enums.dart - Subscription enums",
+      "transaction_enums.dart - Transaction enums",
+      "wallet_enums.dart - Wallet enums",
+      "store_enums.dart - Store enums",
+      "user_enums.dart - User enums"
+    ],
+    "Phase3_Validation": [
+      "validators.dart - Input validation rules",
+      "app_exceptions.dart - Exception types & messages",
+      "transaction_validator_service.dart - Transaction validation",
+      "store_model.dart - Store entity",
+      "transaction_model.dart - Transaction entity"
+    ],
+    "Phase2_DataLayer": [
+      "wallet_repository.dart - CRUD & queries",
+      "debt_repository.dart - Debt operations",
+      "user_repository.dart - User operations",
+      "transaction_repository.dart - Transaction operations",
+      "store_repository.dart - Store operations"
+    ],
+    "Phase1_CoreBusiness": [
+      "database_sync_service.dart - License & session validation",
+      "transaction_fee_calculator.dart - Fee calculation & limits",
+      "fee_calculator.dart - Fee rules by provider",
+      "sms_processing_pipeline.dart - Transaction extraction",
+      "wallet_model.dart - Wallet logic & limits"
+    ]
+  },
+  "repositoriesByEntity": [
+    {
+      "repository": "wallet_repository.dart",
+      "operations": "CRUD, Stream, Pagination, Cache",
+      "entity": "Wallet"
+    },
+    {
+      "repository": "transaction_repository.dart",
+      "operations": "CRUD, Filter, DateRange",
+      "entity": "Transaction"
+    },
+    {
+      "repository": "debt_repository.dart",
+      "operations": "CRUD, Settlement, Query",
+      "entity": "Debt"
+    },
+    {
+      "repository": "user_repository.dart",
+      "operations": "Auth, CRUD, Permissions",
+      "entity": "User"
+    },
+    {
+      "repository": "store_repository.dart",
+      "operations": "CRUD, Settings",
+      "entity": "Store"
+    },
+    {
+      "repository": "employee_repository.dart",
+      "operations": "CRUD, RoleBased",
+      "entity": "Employee"
+    },
+    {
+      "repository": "subscription_repository.dart",
+      "operations": "CRUD, Plan",
+      "entity": "Subscription"
+    },
+    {
+      "repository": "stats_repository.dart",
+      "operations": "Aggregate, Update",
+      "entity": "Statistics"
+    },
+    {
+      "repository": "device_repository.dart",
+      "operations": "Register, Track",
+      "entity": "Device"
+    },
+    {
+      "repository": "license_key_repository.dart",
+      "operations": "Validate, Manage",
+      "entity": "License"
+    },
+    {
+      "repository": "auth_repository.dart",
+      "operations": "Login, Signup",
+      "entity": "Authentication"
+    },
+    {
+      "repository": "system_config_repository.dart",
+      "operations": "Get",
+      "entity": "Config"
+    }
+  ],
+  "businessLogicFiles": {
+    "Validation": [
+      "validators.dart",
+      "amount_validator.dart",
+      "transaction_validator_service.dart"
+    ],
+    "Fee Calculations": [
+      "fee_calculator.dart",
+      "transaction_fee_calculator.dart"
+    ],
+    "Business Rules": [
+      "wallet_usecase.dart",
+      "overlay_usecase.dart"
+    ],
+    "SMS Automation": [
+      "sms_processing_pipeline.dart",
+      "sms_parser_engine.dart",
+      "vodafone_cash_strategy.dart",
+      "generic_bank_strategy.dart"
+    ],
+    "Session & Auth": [
+      "database_sync_service.dart",
+      "identity_service.dart"
+    ]
+  },
+  "priorityFiles": [
+    {
+      "file": "lib/core/services/database_sync_service.dart",
+      "purpose": "Session management, device registration, license validation, store/user/subscription sync",
+      "rank": 1,
+      "auditFocus": "License validation logic, device trial period management, session expiration",
+      "sizeKB": 15.7
+    },
+    {
+      "file": "lib/domain/usecases/transaction_fee_calculator.dart",
+      "purpose": "Fee calculation for transactions, limit validation (daily/monthly)",
+      "rank": 2,
+      "auditFocus": "Fee calculation accuracy, limit boundary conditions",
+      "sizeKB": 2.8
+    },
+    {
+      "file": "lib/core/utils/fee_calculator.dart",
+      "purpose": "Transaction fee rules by provider, network identification",
+      "rank": 3,
+      "auditFocus": "Fee rules correctness, provider identification logic",
+      "sizeKB": 3.4
+    },
+    {
+      "file": "lib/core/services/sms_processing_pipeline.dart",
+      "purpose": "Automatic SMS transaction extraction, multi-provider support",
+      "rank": 4,
+      "auditFocus": "SMS parsing accuracy, transaction extraction correctness",
+      "sizeKB": 9.9
+    },
+    {
+      "file": "lib/data/models/wallet_model.dart",
+      "purpose": "Complex wallet entity with transaction limits and balances",
+      "rank": 5,
+      "auditFocus": "Limit calculations, transaction tracking, serialization",
+      "sizeKB": 15.1
+    }
+  ],
+  "project": "Flutter Wallet Manager",
+  "summary": {
+    "totalSize_KB": 358,
+    "totalFiles": 85,
+    "categories": [
+      {
+        "name": "Core (Constants, Enums, Errors, Services, Utils)",
+        "files": 45,
+        "sizeKB": 195
+      },
+      {
+        "name": "Data (Models, Repositories, Services)",
+        "files": 28,
+        "sizeKB": 183
+      },
+      {
+        "name": "Domain (Entities, UseCases)",
+        "files": 4,
+        "sizeKB": 9
+      },
+      {
+        "name": "Standalone Services",
+        "files": 2,
+        "sizeKB": 2.3
+      }
+    ],
+    "totalLines": 7831
+  }
+}
