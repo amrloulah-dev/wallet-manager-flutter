@@ -40,4 +40,6 @@
     - [x] `wallet_model.dart` / `store_model.dart`: Add `totalServiceFee` field and update UI getters (`totalEarnings`)
     - [x] `transaction_validator_service.dart`: Update receive balance formula (`amount` only)
     - [x] `transaction_validator_service.dart`: Update stats tracking to increment `totalServiceFee`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1.4: Commission/ServiceFee Accounting' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions b1ff084
