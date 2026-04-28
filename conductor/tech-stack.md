@@ -27,5 +27,6 @@
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
 - **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers.
 - **Data Integrity:** Centralized `NumberParser` utility for safe numeric parsing and null-safety from dynamic sources.
+- **Financial Integrity:** Epsilon-aware balance sufficiency checks (0.01 EGP tolerance) and atomic Firestore transactions for all wallet updates.
 - **Domain Fortification:** Type-safe Enums for all statuses/types and centralized `AmountValidator` guards.
 - **Reactive Resilience:** Error-aware Stream pipelines, stateless repository pagination, and transparent exception propagation from providers to the UI layer.
