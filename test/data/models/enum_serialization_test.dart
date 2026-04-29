@@ -10,6 +10,7 @@ import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
+import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
@@ -234,7 +235,7 @@ void main() {
   });
 
   group('Safe Serialization & Null Safety', () {
-    test('DebtModel should handle missing timestamps and return null', () {
+    test('DebtModel should throw NotFoundException on missing timestamps', () {
       final mockSnapshot = MockDocumentSnapshot();
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.id).thenReturn('debt1');
@@ -249,9 +250,11 @@ void main() {
         // Missing debtDate, createdAt, etc.
       });
 
-      final fromFirestore = DebtModel.fromFirestore(mockSnapshot);
-      expect(fromFirestore.debtDate, isNull);
-      expect(fromFirestore.createdAt, isNull);
+      expect(
+        () => DebtModel.fromFirestore(mockSnapshot),
+        throwsA(isA<NotFoundException>()),
+      );
     });
   });
 }
+

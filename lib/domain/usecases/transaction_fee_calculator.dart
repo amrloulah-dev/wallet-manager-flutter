@@ -46,6 +46,8 @@ class TransactionFeeCalculator {
 
     // Step 1.1: Ensure positive amount at entry
     AmountValidator.ensurePositive(amount);
+    // Step 1.2: Ensure commission is non-negative (zero is valid for no-commission txns)
+    AmountValidator.ensurePositiveOrZero(commission);
 
     double fee = 0.0;
     if (transactionType == TransactionType.debit) {

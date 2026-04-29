@@ -376,17 +376,19 @@ class WalletModel {
     return now.month != lastReset.month || now.year != lastReset.year;
   }
 
-  bool canSendAmount(double amount) {
+  bool canSendAmount(double amount, {double totalFees = 0.0}) {
+    final totalDeduction = amount + totalFees;
     final limits = getLimits();
-    return amount <= limits.dailyLimit &&
+    return balance >= totalDeduction &&
+        totalDeduction <= limits.dailyRemaining &&
         !limits.isMonthlyLimitReached &&
-        (limits.monthlyRemaining >= amount);
+        (limits.monthlyRemaining >= totalDeduction);
   }
 
   bool canReceiveAmount(double amount) {
     final limits = getReceiveLimits();
 
-    return amount <= limits.dailyLimit &&
+    return amount <= limits.dailyRemaining &&
         !limits.isMonthlyLimitReached &&
         (limits.monthlyRemaining >= amount);
   }

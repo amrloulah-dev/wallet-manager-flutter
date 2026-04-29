@@ -3,7 +3,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/utils/amount_validator.dart';
 import '../../core/enums/debt_enums.dart';
-import '../../core/errors/app_error_handler.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class DebtModel {
   // Identity
@@ -74,23 +74,12 @@ class DebtModel {
     AmountValidator.ensurePositiveOrZero(amountDue); // Allow 0 for paid debts
     AmountValidator.ensurePositive(totalAmount);
 
-    // Fallback for old data where totalAmount didn't exist
-    if (totalAmount == 0.0 && debtStatus == DebtStatus.open) {
-      // If totalAmount was zero but now passes validation, it means data is inconsistent
-      // This should not happen with the new validation
-      AppErrorHandler.handle(
-        'Debt document has zero totalAmount: ${doc.id}',
-        operation: 'DebtModel.fromFirestore',
-      );
-    }
-
     final debtDate = (data['debtDate'] as Timestamp?)?.toDate();
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
 
     if (debtDate == null || createdAt == null) {
-      AppErrorHandler.handle(
-        'Missing timestamps in Debt document: ${doc.id}',
-        operation: 'DebtModel.fromFirestore',
+      throw NotFoundException(
+        'Debt document ${doc.id} missing required timestamps (debtDate or createdAt)',
       );
     }
 

@@ -88,5 +88,18 @@ void main() {
         throwsA(isA<DomainException>()),
       );
     });
+
+    test('should throw DomainException when commission is negative', () {
+      expect(
+        () => calculator.calculate(
+          wallet: mockWallet,
+          transactionType: TransactionType.debit,
+          amount: 100.0,
+          commission: -5.0,
+          receiverPhone: '01012345678',
+        ),
+        throwsA(isA<DomainException>()),
+      );
+    });
   });
 }

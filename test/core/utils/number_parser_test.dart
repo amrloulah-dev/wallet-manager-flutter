@@ -38,6 +38,17 @@ void main() {
       test('should return default value when value is unexpected type', () {
         expect(NumberParser.toDouble([]), 0.0);
       });
+
+      test('should preserve leading negative sign in strings', () {
+        expect(NumberParser.toDouble('-500'), -500.0);
+        expect(NumberParser.toDouble('-10.5'), -10.5);
+        expect(NumberParser.toDouble('EGP -123.45'), -123.45);
+      });
+
+      test('should handle negative numbers correctly', () {
+        expect(NumberParser.toDouble(-10), -10.0);
+        expect(NumberParser.toDouble(-10.5), -10.5);
+      });
     });
 
     group('toInt', () {
@@ -68,6 +79,16 @@ void main() {
 
       test('should return default value when value is unexpected type', () {
         expect(NumberParser.toInt({}), 0);
+      });
+
+      test('should preserve leading negative sign in strings', () {
+        expect(NumberParser.toInt('-42'), -42);
+        expect(NumberParser.toInt('-1,000'), -1000);
+        expect(NumberParser.toInt(' -50 '), -50);
+      });
+
+      test('should handle negative numbers correctly', () {
+        expect(NumberParser.toInt(-10), -10);
       });
     });
   });

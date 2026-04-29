@@ -4,6 +4,7 @@ import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/debt_model.dart';
 import '../services/firebase_service.dart';
@@ -85,7 +86,19 @@ class DebtRepository {
       }
 
       return query.limit(limit).snapshots().map((snapshot) {
-        return snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+        final List<DebtModel> debts = [];
+        for (final doc in snapshot.docs) {
+          try {
+            debts.add(DebtModel.fromFirestore(doc));
+          } catch (e, stackTrace) {
+            AppErrorHandler.logSilentError(
+              'Skipping corrupt Debt document ${doc.id}: $e',
+              'DebtRepository.getDebtsStream',
+              stackTrace: stackTrace,
+            );
+          }
+        }
+        return debts;
       });
     } catch (e) {
       return Stream.error(ServerException('فشل الحصول على تيار الديون: $e'));
@@ -335,7 +348,18 @@ class DebtRepository {
       }
 
       final snapshot = await query.limit(20).get();
-      final items = snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
+      final List<DebtModel> items = [];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(DebtModel.fromFirestore(doc));
+        } catch (e, stackTrace) {
+          AppErrorHandler.logSilentError(
+            'Skipping corrupt Debt document ${doc.id}: $e',
+            'DebtRepository.getDebtsByDateRange',
+            stackTrace: stackTrace,
+          );
+        }
+      }
       if (snapshot.docs.isNotEmpty) {
         _lastDocument = snapshot.docs.last;
       }

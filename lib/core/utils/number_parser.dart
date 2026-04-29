@@ -6,11 +6,13 @@ class NumberParser {
     if (value == null) return defaultValue;
     if (value is num) return value.toDouble();
     if (value is String) {
-      // Robust sanitization: Keep only digits and the first decimal point
+      // Preserve leading negative sign, strip all other non-numeric chars
+      final isNegative = value.trimLeft().startsWith('-');
       final sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
       
       // If there are multiple dots, double.tryParse will fail correctly
-      return double.tryParse(sanitized) ?? defaultValue;
+      final result = double.tryParse(isNegative ? '-$sanitized' : sanitized);
+      return result ?? defaultValue;
     }
     return defaultValue;
   }
@@ -23,8 +25,11 @@ class NumberParser {
     if (value is int) return value;
     if (value is double) return value.toInt();
     if (value is String) {
+      // Preserve leading negative sign, strip all other non-numeric chars
+      final isNegative = value.trimLeft().startsWith('-');
       final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '').trim();
-      return int.tryParse(cleaned) ?? defaultValue;
+      final result = int.tryParse(isNegative ? '-$cleaned' : cleaned);
+      return result ?? defaultValue;
     }
     return defaultValue;
   }
