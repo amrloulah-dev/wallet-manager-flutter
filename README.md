@@ -12,7 +12,7 @@
 <br />
 
 <!-- DOWNLOAD BUTTON -->
-<a href="https://drive.google.com/drive/folders/1JAbu5a8COLMpTgSXJsPSxh3M8OOI_-VQ?usp=sharing" target="_blank">
+<a href="https://www.mediafire.com/file/zcazgxw5npuhm8p/Wallet_Manager.apk/file" target="_blank">
   <img src="https://img.shields.io/badge/Download_Demo_APK-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" height="40" />
 </a>
 
