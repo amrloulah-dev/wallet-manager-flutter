@@ -9,3 +9,8 @@
 
 - [x] **Track: Business Logic & Domain Integrity Execution Plan (V2)**
 *Link: [./tracks/business_logic_domain_integrity_20260426/](./tracks/business_logic_domain_integrity_20260426/)*
+
+---
+
+- [ ] **Track: Firestore Architecture & Billing Optimization**
+*Link: [./tracks/firestore_billing_opt_20260429/](./tracks/firestore_billing_opt_20260429/)*
