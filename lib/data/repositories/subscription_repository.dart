@@ -33,7 +33,7 @@ class SubscriptionRepository {
       
       if (doc.exists) {
         transaction.update(docRef, {
-          FirebaseConstants.lastDailyReset: FieldValue.serverTimestamp(), // Wait, lastSeenAt?
+          FirebaseConstants.lastSeenAt: FieldValue.serverTimestamp(),
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
           'ownerUid': _auth.currentUser?.uid,
         });
@@ -41,7 +41,8 @@ class SubscriptionRepository {
         transaction.set(docRef, {
           'deviceModel': deviceModel,
           'osVersion': osVersion,
-          FirebaseConstants.createdAt: FieldValue.serverTimestamp(),
+          FirebaseConstants.firstSeenAt: FieldValue.serverTimestamp(),
+          FirebaseConstants.lastSeenAt: FieldValue.serverTimestamp(),
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
           'ownerUid': _auth.currentUser?.uid,
         });

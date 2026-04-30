@@ -19,6 +19,8 @@ class FirebaseConstants {
   static const String updatedAt = 'updatedAt';
   static const String isActive = 'isActive';
   static const String notes = 'notes';
+  static const String firstSeenAt = 'firstSeenAt';
+  static const String lastSeenAt = 'lastSeenAt';
 
   // Store
   static const String ownerIdField = 'ownerId';

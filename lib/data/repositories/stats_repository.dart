@@ -5,9 +5,10 @@ import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/errors/error_severity.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;

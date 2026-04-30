@@ -22,19 +22,19 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Atomic Operations & Race Condition Prevention' (Protocol in workflow.md) [f65ff4d]
 
 ## Phase 3: Eradicating Tech Debt & Silent Failures [checkpoint: 552c126]
-- [ ] Task: The Silent Fraud Bypass (M-003, M-006, M-009)
-    - [ ] Write failing test: Enforce failure using the Firebase Emulator (e.g., via strict Firebase Security Rules that deny writes) to ensure `DomainException` propagates correctly.
-    - [ ] Implement to pass tests: Remove empty `catch` blocks and replace silent defaults with `throw` or `return false`, propagating `DomainException`.
-- [ ] Task: Time Travel and Magic Strings (M-002, M-008, M-004)
-    - [ ] Write failing test: Verify timestamps and strings use `FirebaseConstants` and `FieldValue.serverTimestamp()` in the Emulator.
-    - [ ] Implement to pass tests: Standardize strings to constants, update all `Timestamp.now()` writes to `FieldValue.serverTimestamp()`, and fix string interpolations.
-- [ ] Task: The Duplicate Stats Hazard (M-001)
-    - [ ] Write failing test: Verify `StatsRepository` no longer exposes isolated transaction stats update methods.
-    - [ ] Implement to pass tests: Delete `updateStatsOnTransactionCreate` from `StatsRepository` to enforce `TransactionValidatorService` usage.
-- [ ] Task: Untestable Repositories (M-005) in `SystemConfigRepository`
-    - [ ] Write failing test: Verify `SystemConfigRepository` correctly uses the injected `FirebaseFirestore` instance connected to the Emulator.
-    - [ ] Implement to pass tests: Refactor the constructor to inject `FirebaseFirestore` alongside standard dependency injection.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Eradicating Tech Debt & Silent Failures' (Protocol in workflow.md)
+- [x] Task: The Silent Fraud Bypass (M-003, M-006, M-009) [552c126]
+    - [x] Write failing test: Enforce failure using the Firebase Emulator (e.g., via strict Firebase Security Rules that deny writes) to ensure `DomainException` propagates correctly. [552c126]
+    - [x] Implement to pass tests: Remove empty `catch` blocks and replace silent defaults with `throw` or `return false`, propagating `DomainException`. [552c126]
+- [x] Task: Time Travel and Magic Strings (M-002, M-008, M-004) [552c126]
+    - [x] Write failing test: Verify timestamps and strings use `FirebaseConstants` and `FieldValue.serverTimestamp()` in the Emulator. [552c126]
+    - [x] Implement to pass tests: Standardize strings to constants, update all `Timestamp.now()` writes to `FieldValue.serverTimestamp()`, and fix string interpolations. [552c126]
+- [x] Task: The Duplicate Stats Hazard (M-001) [552c126]
+    - [x] Write failing test: Verify `StatsRepository` no longer exposes isolated transaction stats update methods. [552c126]
+    - [x] Implement to pass tests: Delete `updateStatsOnTransactionCreate` from `StatsRepository` to enforce `TransactionValidatorService` usage. [552c126]
+- [x] Task: Untestable Repositories (M-005) in `SystemConfigRepository` [552c126]
+    - [x] Write failing test: Verify `SystemConfigRepository` correctly uses the injected `FirebaseFirestore` instance connected to the Emulator. [552c126]
+    - [x] Implement to pass tests: Refactor the constructor to inject `FirebaseFirestore` alongside standard dependency injection. [552c126]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Eradicating Tech Debt & Silent Failures' (Protocol in workflow.md) [ef82810]
 
 ## Phase 4: Data Migration
 - [ ] Task: One-Time Migration Script
