@@ -41,3 +41,6 @@
     - [x] Write failing test: Write tests against the Emulator to ensure the migration script correctly recalculates actual wallet balances and document counts, and successfully overwrites the desynced `stats/summary` document. [28f1cba]
     - [x] Implement to pass tests: Implement the migration script to perform the recalculation and `stats/summary` update to restore financial integrity. [28f1cba]
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Data Migration' (Protocol in workflow.md) [28f1cba]
+
+## Phase: Review Fixes
+- [~] Task: Apply review suggestions and final refinements

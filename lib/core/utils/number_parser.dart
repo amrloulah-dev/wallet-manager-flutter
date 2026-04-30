@@ -6,8 +6,9 @@ class NumberParser {
     if (value == null) return defaultValue;
     if (value is num) return value.toDouble();
     if (value is String) {
-      // Preserve leading negative sign, strip all other non-numeric chars
-      final isNegative = value.trimLeft().startsWith('-');
+      // Preserve negative sign if it exists anywhere before or between characters
+      // but ensure we only keep the first one if multiple exist.
+      final isNegative = value.contains('-');
       final sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
       
       // If there are multiple dots, double.tryParse will fail correctly
@@ -25,8 +26,8 @@ class NumberParser {
     if (value is int) return value;
     if (value is double) return value.toInt();
     if (value is String) {
-      // Preserve leading negative sign, strip all other non-numeric chars
-      final isNegative = value.trimLeft().startsWith('-');
+      // Preserve negative sign
+      final isNegative = value.contains('-');
       final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '').trim();
       final result = int.tryParse(isNegative ? '-$cleaned' : cleaned);
       return result ?? defaultValue;

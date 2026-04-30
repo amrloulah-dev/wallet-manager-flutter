@@ -147,7 +147,7 @@ class WalletRepository {
       final summary = await _statsRepository.getStatsSummary(storeId);
       return summary.totalBalance;
     } catch (e) {
-      throw ServerException('فشل الحصول على إجمالي الرصيد: $e');
+      throw ServerException('Failed to get total balance: $e');
     }
   }
 
@@ -156,7 +156,7 @@ class WalletRepository {
       final summary = await _statsRepository.getStatsSummary(storeId);
       return summary.activeWallets;
     } catch (e) {
-      throw ServerException('فشل الحصول على عدد المحافظ: $e');
+      throw ServerException('Failed to get wallets count: $e');
     }
   }
 
@@ -294,7 +294,7 @@ class WalletRepository {
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
       if (e is AppException) rethrow;
-      throw ServerException('فشل تحديث حالة المحفظة: $e');
+      throw ServerException('Failed to update wallet active status: $e');
     }
   }
 
@@ -305,7 +305,7 @@ class WalletRepository {
         .snapshots()
         .map((doc) => doc.exists ? WalletModel.fromFirestore(doc) : null)
         .handleError((e) {
-      return Stream.error(ServerException('فشل مراقبة المحفظة: $e'));
+      return Stream.error(ServerException('Failed to watch wallet: $e'));
     });
   }
 

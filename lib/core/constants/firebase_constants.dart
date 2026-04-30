@@ -67,6 +67,10 @@ class FirebaseConstants {
   static const String activeWallets = 'activeWallets';
   static const String totalTransactionsToday = 'totalTransactionsToday';
   static const String totalCommissionToday = 'totalCommissionToday';
+  static const String totalServiceFeeToday = 'totalServiceFeeToday';
+  static const String totalSentAmountToday = 'totalSentAmountToday';
+  static const String totalReceivedAmountToday = 'totalReceivedAmountToday';
   static const String totalCommission = 'totalCommission';
+  static const String totalServiceFee = 'totalServiceFee';
   static const String totalDebtsCreated = 'totalDebtsCreated';
 }

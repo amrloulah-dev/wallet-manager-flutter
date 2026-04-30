@@ -131,8 +131,6 @@ class EmployeeRepository {
       userData[FirebaseConstants.updatedAt] = FieldValue.serverTimestamp();
 
       transaction.set(_usersCollection.doc(newUserId), userData);
-      transaction
-          .update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
 
       // Update Store Stats Summary Document
       final statsSummaryRef = _firestore
@@ -163,7 +161,7 @@ class EmployeeRepository {
           .get();
       return snapshot.count ?? 0;
     } catch (e) {
-      throw ServerException('فشل الحصول على عدد الموظفين: $e');
+      throw ServerException('Failed to get employee count: $e');
     }
   }
 

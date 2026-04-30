@@ -219,30 +219,22 @@ class TransactionValidatorService {
         FirebaseConstants.totalTransactionsToday: FieldValue.increment(1),
         FirebaseConstants.totalCommission: FieldValue.increment(transaction.commission),
         FirebaseConstants.totalCommissionToday: FieldValue.increment(transaction.commission),
-        // Phase 1.4: Track totalServiceFee in summary stats
-        'totalServiceFee': FieldValue.increment(transaction.serviceFee),
-        'totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
+        FirebaseConstants.totalServiceFee: FieldValue.increment(transaction.serviceFee),
+        FirebaseConstants.totalServiceFeeToday: FieldValue.increment(transaction.serviceFee),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
 
       if (transaction.isSend) {
         summaryUpdates['sendCount'] = FieldValue.increment(1);
-        summaryUpdates['totalSentAmount'] = FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalSentAmount] = FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalSentAmountToday] = FieldValue.increment(transaction.amount);
       } else if (transaction.isReceive) {
         summaryUpdates['receiveCount'] = FieldValue.increment(1);
-        summaryUpdates['totalReceivedAmount'] = FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalReceivedAmount] = FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalReceivedAmountToday] = FieldValue.increment(transaction.amount);
       }
 
       tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
-
-      // Update Store Document's root stats field (Legacy support)
-      final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(transaction.storeId);
-      tx.update(storeRef, {
-        '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}': FieldValue.increment(1),
-        '${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}': FieldValue.increment(transaction.commission),
-        '${FirebaseConstants.stats}.totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
-        '${FirebaseConstants.stats}.lastUpdated': FieldValue.serverTimestamp(),
-      });
 
       // Update Daily Stats Document
       final dailyStatsRef = _firestore

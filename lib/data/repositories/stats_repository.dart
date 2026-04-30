@@ -214,12 +214,7 @@ class StatsRepository {
       }
 
       if (balanceChange != 0.0) {
-        double currentBalance = 0.0;
-        if (summarySnap.exists) {
-          final data = summarySnap.data() as Map<String, dynamic>?;
-          currentBalance = NumberParser.toDouble(data?['totalBalance']);
-        }
-        summaryUpdates['totalBalance'] = currentBalance + balanceChange;
+        summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
       }
 
       transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
