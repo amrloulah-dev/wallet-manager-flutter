@@ -254,18 +254,34 @@ class WalletRepository {
 
   Future<void> setWalletActiveStatus(String walletId, bool isActive) async {
     try {
-      final wallet = await getWalletById(walletId);
-      if (wallet == null) throw NotFoundException('Wallet');
+      await _firestore.runTransaction((transaction) async {
+        final walletRef = _walletsCollection.doc(walletId);
+        final walletSnap = await transaction.get(walletRef);
+        if (!walletSnap.exists) throw NotFoundException('Wallet');
 
-      await updateWallet(walletId, {FirebaseConstants.isActive: isActive});
+        final wallet = WalletModel.fromFirestore(walletSnap);
 
-      await _statsRepository.updateStatsOnWalletChange(
-        wallet.storeId,
-        countChange: isActive ? 1 : -1,
-        activeCountChange: isActive ? 1 : -1,
-        balanceChange: isActive ? wallet.balance : -wallet.balance,
-      );
+        // Perform Stats update FIRST (because it has a internal READ)
+        // We must call it before any writes in this transaction
+        await _statsRepository.updateStatsOnWalletChange(
+          wallet.storeId,
+          countChange: isActive ? 1 : -1,
+          activeCountChange: isActive ? 1 : -1,
+          balanceChange: isActive ? wallet.balance : -wallet.balance,
+          firestoreTransaction: transaction,
+        );
+
+        // Now perform the wallet update (WRITE)
+        transaction.update(walletRef, {
+          FirebaseConstants.isActive: isActive,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
+      if (e is AppException) rethrow;
       throw ServerException('فشل تحديث حالة المحفظة: $e');
     }
   }
@@ -283,37 +299,43 @@ class WalletRepository {
 
   // 6️⃣ RESET Methods
   Future<void> resetLimitsForWallets(List<WalletModel> wallets) async {
-    final batch = _firestore.batch();
-    var walletsToResetCount = 0;
+    const int chunkSize = 450;
+    
+    for (var i = 0; i < wallets.length; i += chunkSize) {
+      final chunk = wallets.sublist(i, i + chunkSize > wallets.length ? wallets.length : i + chunkSize);
+      final batch = _firestore.batch();
+      var walletsToResetInBatch = 0;
 
-    for (final wallet in wallets) {
-      final updates = <String, dynamic>{};
-      final serverTs = FieldValue.serverTimestamp();
+      for (final wallet in chunk) {
+        final updates = <String, dynamic>{};
+        final serverTs = FieldValue.serverTimestamp();
 
-      if (wallet.needsDailyReset) {
-        updates['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
-        updates['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
-        updates[FirebaseConstants.lastDailyReset] = serverTs;
+        if (wallet.needsDailyReset) {
+          updates['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
+          updates['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
+          updates[FirebaseConstants.lastDailyReset] = serverTs;
+        }
+        if (wallet.needsMonthlyReset) {
+          updates['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
+          updates['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
+          updates[FirebaseConstants.lastMonthlyReset] = serverTs;
+        }
+
+        if (updates.isNotEmpty) {
+          final walletRef = _walletsCollection.doc(wallet.walletId);
+          batch.update(walletRef, updates);
+          walletsToResetInBatch++;
+        }
       }
-      if (wallet.needsMonthlyReset) {
-        updates['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
-        updates['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
-        updates[FirebaseConstants.lastMonthlyReset] = serverTs;
-      }
 
-      if (updates.isNotEmpty) {
-        final walletRef = _walletsCollection.doc(wallet.walletId);
-        batch.update(walletRef, updates);
-        walletsToResetCount++;
+      if (walletsToResetInBatch > 0) {
+        await batch.commit();
       }
     }
 
-    if (walletsToResetCount > 0) {
-      await batch.commit();
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
-      for (final wallet in wallets) {
-        _cacheManager.clear('wallet_details_${wallet.walletId}');
-      }
+    _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+    for (final wallet in wallets) {
+      _cacheManager.clear('wallet_details_${wallet.walletId}');
     }
   }
 }

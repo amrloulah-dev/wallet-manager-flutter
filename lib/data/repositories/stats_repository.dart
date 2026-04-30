@@ -7,6 +7,7 @@ import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
+import 'package:walletmanager/core/utils/number_parser.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;
@@ -191,24 +192,18 @@ class StatsRepository {
   Future<void> updateStatsOnWalletChange(String storeId,
       {int countChange = 0,
       int activeCountChange = 0,
-      double balanceChange = 0.0}) async {
+      double balanceChange = 0.0,
+      Transaction? firestoreTransaction}) async {
     if (countChange == 0 && activeCountChange == 0 && balanceChange == 0.0) {
       return;
     }
 
-    await _firestore.runTransaction((transaction) async {
+    final updateLogic = (Transaction transaction) async {
       final summaryRef = _getSummaryDocRef(storeId);
-      final storeRef = _firestore.collection('stores').doc(storeId);
-
       final summarySnap = await transaction.get(summaryRef);
-      // ignore: unused_local_variable
-      final storeSnap = await transaction.get(storeRef);
 
       final Map<String, dynamic> summaryUpdates = {
         'lastUpdated': FieldValue.serverTimestamp(),
-      };
-      final Map<String, dynamic> storeUpdates = {
-        'stats.lastUpdated': FieldValue.serverTimestamp(),
       };
 
       if (countChange != 0) {
@@ -219,7 +214,6 @@ class StatsRepository {
         }
         final newTotal = (currentTotal + countChange).clamp(0, 999999).toInt();
         summaryUpdates['totalWallets'] = newTotal;
-        storeUpdates['stats.totalWallets'] = newTotal;
       }
 
       if (activeCountChange != 0) {
@@ -231,15 +225,26 @@ class StatsRepository {
         final newActive =
             (currentActive + activeCountChange).clamp(0, 999999).toInt();
         summaryUpdates['activeWallets'] = newActive;
-        storeUpdates['stats.activeWallets'] = newActive;
       }
 
       if (balanceChange != 0.0) {
-        summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
+        double currentBalance = 0.0;
+        if (summarySnap.exists) {
+          final data = summarySnap.data() as Map<String, dynamic>?;
+          currentBalance = NumberParser.toDouble(data?['totalBalance']);
+        }
+        summaryUpdates['totalBalance'] = currentBalance + balanceChange;
       }
 
       transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
-      transaction.update(storeRef, storeUpdates);
-    });
+    };
+
+    if (firestoreTransaction != null) {
+      await updateLogic(firestoreTransaction);
+    } else {
+      await _firestore.runTransaction((transaction) async {
+        await updateLogic(transaction);
+      });
+    }
   }
 }
