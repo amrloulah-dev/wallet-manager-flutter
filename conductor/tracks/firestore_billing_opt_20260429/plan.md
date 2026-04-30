@@ -36,8 +36,8 @@
     - [x] Implement to pass tests: Refactor the constructor to inject `FirebaseFirestore` alongside standard dependency injection. [552c126]
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Eradicating Tech Debt & Silent Failures' (Protocol in workflow.md) [ef82810]
 
-## Phase 4: Data Migration
-- [ ] Task: One-Time Migration Script
-    - [ ] Write failing test: Write tests against the Emulator to ensure the migration script correctly recalculates actual wallet balances and document counts, and successfully overwrites the desynced `stats/summary` document.
-    - [ ] Implement to pass tests: Implement the migration script to perform the recalculation and `stats/summary` update to restore financial integrity.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Data Migration' (Protocol in workflow.md)
+## Phase 4: Data Migration [checkpoint: 28f1cba]
+- [x] Task: One-Time Migration Script [28f1cba]
+    - [x] Write failing test: Write tests against the Emulator to ensure the migration script correctly recalculates actual wallet balances and document counts, and successfully overwrites the desynced `stats/summary` document. [28f1cba]
+    - [x] Implement to pass tests: Implement the migration script to perform the recalculation and `stats/summary` update to restore financial integrity. [28f1cba]
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Data Migration' (Protocol in workflow.md) [28f1cba]
