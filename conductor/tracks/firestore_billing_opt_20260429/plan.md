@@ -13,12 +13,12 @@
 - [x] Task: The TOCTOU Registration Race (C-007) in `subscription_repository.dart` [ca6e8f8]
     - [x] Write failing test: Simulate concurrent `verifyDevice` calls in the Emulator and assert atomic writes to `firstSeenAt`/`lastSeenAt`. [ca6e8f8]
     - [x] Implement to pass tests: Wrap `verifyDevice` logic inside `_firestore.runTransaction`. [ca6e8f8]
-- [ ] Task: The Stats Desync Nightmare (C-004, C-005) in `wallet_repository.dart` and `stats_repository.dart`
-    - [ ] Write failing test: Verify `toggleWalletStatus` atomically updates the wallet state and `stats/summary` metrics simultaneously in the Emulator.
-    - [ ] Implement to pass tests: Implement a unified `runTransaction` for wallet toggles and remove dual-write to legacy root stats fields.
-- [ ] Task: The 500-Limit Batch Crash (C-008) in `wallet_repository.dart`
-    - [ ] Write failing test: Attempt to invoke `resetLimitsForWallets` with over 500 wallets in the Emulator and verify successful sequential processing.
-    - [ ] Implement to pass tests: Introduce a chunk size of 450 items and implement array chunking for the `WriteBatch`.
+- [x] Task: The Stats Desync Nightmare (C-004, C-005) in `wallet_repository.dart` and `stats_repository.dart` [64abd47]
+    - [x] Write failing test: Verify `toggleWalletStatus` atomically updates the wallet state and `stats/summary` metrics simultaneously in the Emulator. [64abd47]
+    - [x] Implement to pass tests: Implement a unified `runTransaction` for wallet toggles and remove dual-write to legacy root stats fields. [64abd47]
+- [x] Task: The 500-Limit Batch Crash (C-008) in `wallet_repository.dart` [64abd47]
+    - [x] Write failing test: Attempt to invoke `resetLimitsForWallets` with over 500 wallets in the Emulator and verify successful sequential processing. [64abd47]
+    - [x] Implement to pass tests: Introduce a chunk size of 450 items and implement array chunking for the `WriteBatch`. [64abd47]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Atomic Operations & Race Condition Prevention' (Protocol in workflow.md)
 
 ## Phase 3: Eradicating Tech Debt & Silent Failures
