@@ -198,7 +198,7 @@ class StatsRepository {
       return;
     }
 
-    final updateLogic = (Transaction transaction) async {
+    Future<void> updateLogic(Transaction transaction) async {
       final summaryRef = _getSummaryDocRef(storeId);
       final summarySnap = await transaction.get(summaryRef);
 
@@ -237,7 +237,7 @@ class StatsRepository {
       }
 
       transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
-    };
+    }
 
     if (firestoreTransaction != null) {
       await updateLogic(firestoreTransaction);

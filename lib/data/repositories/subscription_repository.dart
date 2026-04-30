@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/device_registration_model.dart';
 import '../models/subscription_request_model.dart';
 import '../../services/device_tracking_service.dart';
 import '../../core/utils/number_parser.dart';
