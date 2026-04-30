@@ -144,20 +144,8 @@ class WalletRepository {
 
   Future<double> getTotalBalance(String storeId) async {
     try {
-      final snapshot = await _walletsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.isActive, isEqualTo: true)
-          .get();
-
-      double totalBalance = 0.0;
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>?;
-        if (data != null) {
-          final balance = NumberParser.toDouble(data['balance']);
-          totalBalance += balance;
-        }
-      }
-      return totalBalance;
+      final summary = await _statsRepository.getStatsSummary(storeId);
+      return summary.totalBalance;
     } catch (e) {
       throw ServerException('فشل الحصول على إجمالي الرصيد: $e');
     }
@@ -165,11 +153,8 @@ class WalletRepository {
 
   Future<int> getWalletsCount(String storeId) async {
     try {
-      final snapshot = await _walletsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.isActive, isEqualTo: true)
-          .get();
-      return snapshot.docs.length;
+      final summary = await _statsRepository.getStatsSummary(storeId);
+      return summary.activeWallets;
     } catch (e) {
       throw ServerException('فشل الحصول على عدد المحافظ: $e');
     }
