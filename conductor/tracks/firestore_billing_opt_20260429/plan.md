@@ -21,7 +21,7 @@
     - [x] Implement to pass tests: Introduce a chunk size of 450 items and implement array chunking for the `WriteBatch`. [64abd47]
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Atomic Operations & Race Condition Prevention' (Protocol in workflow.md) [f65ff4d]
 
-## Phase 3: Eradicating Tech Debt & Silent Failures
+## Phase 3: Eradicating Tech Debt & Silent Failures [checkpoint: 552c126]
 - [ ] Task: The Silent Fraud Bypass (M-003, M-006, M-009)
     - [ ] Write failing test: Enforce failure using the Firebase Emulator (e.g., via strict Firebase Security Rules that deny writes) to ensure `DomainException` propagates correctly.
     - [ ] Implement to pass tests: Remove empty `catch` blocks and replace silent defaults with `throw` or `return false`, propagating `DomainException`.
