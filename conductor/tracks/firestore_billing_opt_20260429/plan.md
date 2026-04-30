@@ -9,7 +9,7 @@
     - [x] Implement to pass tests: Replace querying all employee documents with the `.count()` method. [56f1069]
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Stopping the Billing Leaks' (Protocol in workflow.md) [5c2e2e6]
 
-## Phase 2: Atomic Operations & Race Condition Prevention
+## Phase 2: Atomic Operations & Race Condition Prevention [checkpoint: e02fb63]
 - [x] Task: The TOCTOU Registration Race (C-007) in `subscription_repository.dart` [ca6e8f8]
     - [x] Write failing test: Simulate concurrent `verifyDevice` calls in the Emulator and assert atomic writes to `firstSeenAt`/`lastSeenAt`. [ca6e8f8]
     - [x] Implement to pass tests: Wrap `verifyDevice` logic inside `_firestore.runTransaction`. [ca6e8f8]
