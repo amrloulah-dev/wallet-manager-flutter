@@ -28,27 +28,24 @@ class SubscriptionRepository {
         .collection('device_registrations')
         .doc(deviceId);
     
-    // T047: Explicitly perform client-side Firestore query against device_registrations
-    // For this MVP phase, we use direct client-side reads rather than server-side Cloud Functions.
-    final doc = await docRef.get();
-    
-    if (doc.exists) {
-      await docRef.update({
-        'lastSeenAt': FieldValue.serverTimestamp(),
-        'ownerUid': _auth.currentUser?.uid,
-      });
-    } else {
-      final registrationModel = DeviceRegistrationModel(
-        deviceId: deviceId,
-        deviceModel: deviceModel,
-        osVersion: osVersion,
-        firstSeenAt: DateTime.now(),
-        lastSeenAt: DateTime.now(),
-        ownerUid: _auth.currentUser?.uid,
-      );
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
       
-      await docRef.set(registrationModel.toFirestore());
-    }
+      if (doc.exists) {
+        transaction.update(docRef, {
+          'lastSeenAt': FieldValue.serverTimestamp(),
+          'ownerUid': _auth.currentUser?.uid,
+        });
+      } else {
+        transaction.set(docRef, {
+          'deviceModel': deviceModel,
+          'osVersion': osVersion,
+          'firstSeenAt': FieldValue.serverTimestamp(),
+          'lastSeenAt': FieldValue.serverTimestamp(),
+          'ownerUid': _auth.currentUser?.uid,
+        });
+      }
+    });
   }
 
   Future<SubscriptionRequestModel?> getLatestSubscriptionRequest(String storeId) async {
