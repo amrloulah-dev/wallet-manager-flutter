@@ -11,6 +11,3 @@
 *Link: [./tracks/business_logic_domain_integrity_20260426/](./tracks/business_logic_domain_integrity_20260426/)*
 
 ---
-
-- [x] **Track: Firestore Architecture & Billing Optimization**
-*Link: [./tracks/firestore_billing_opt_20260429/](./tracks/firestore_billing_opt_20260429/)*
