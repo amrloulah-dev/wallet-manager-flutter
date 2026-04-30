@@ -7,7 +7,6 @@ import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
-import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/errors/error_severity.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
