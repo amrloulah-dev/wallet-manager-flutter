@@ -2,11 +2,11 @@
 
 ## Phase 1: Stopping the Billing Leaks (Query Optimization)
 - [x] Task: Wallet Aggregation Leak (C-001, C-002) in `wallet_repository.dart` [e5aad90]
-    - [ ] Write failing test: Verify `getTotalBalance` and `getWalletsCount` fetch from `stats/summary` instead of the `wallets` collection using the Firebase Emulator.
-    - [ ] Implement to pass tests: Replace unbounded `.get()` queries with single document reads.
+    - [x] Write failing test: Verify `getTotalBalance` and `getWalletsCount` fetch from `stats/summary` instead of the `wallets` collection using the Firebase Emulator. [e5aad90]
+    - [x] Implement to pass tests: Replace unbounded `.get()` queries with single document reads. [e5aad90]
 - [x] Task: Employee Count Leak (C-003) in `employee_repository.dart` [56f1069]
-    - [ ] Write failing test: Verify employee count calculation uses the native index counting `.count()` using the Firebase Emulator.
-    - [ ] Implement to pass tests: Replace querying all employee documents with the `.count()` method.
+    - [x] Write failing test: Verify employee count calculation uses the native index counting `.count()` using the Firebase Emulator. [56f1069]
+    - [x] Implement to pass tests: Replace querying all employee documents with the `.count()` method. [56f1069]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Stopping the Billing Leaks' (Protocol in workflow.md)
 
 ## Phase 2: Atomic Operations & Race Condition Prevention
