@@ -12,5 +12,5 @@
 
 ---
 
-- [~] **Track: Firestore Architecture & Billing Optimization**
+- [x] **Track: Firestore Architecture & Billing Optimization**
 *Link: [./tracks/firestore_billing_opt_20260429/](./tracks/firestore_billing_opt_20260429/)*
