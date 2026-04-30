@@ -39,10 +39,10 @@ class DebtRepository {
     try {
       await _firestore.runTransaction((transaction) async {
         final statsRef = _firestore
-            .collection('stores')
+            .collection(FirebaseConstants.storesCollection)
             .doc(debt.storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
 
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
@@ -199,10 +199,10 @@ class DebtRepository {
         };
 
         final statsRef = _firestore
-            .collection('stores')
+            .collection(FirebaseConstants.storesCollection)
             .doc(oldDebt.storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
 
         final statsSnap = await transaction.get(statsRef);
         int currentOpenDebts = 0;
@@ -274,10 +274,10 @@ class DebtRepository {
         };
 
         final statsRef = _firestore
-            .collection('stores')
+            .collection(FirebaseConstants.storesCollection)
             .doc(oldDebt.storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
 
         final statsSnap = await transaction.get(statsRef);
         int currentPaidDebts = 0;
@@ -410,7 +410,8 @@ class DebtRepository {
       final snapshot = await aggregateQuery.get();
 
       return snapshot.getSum('amountDue') ?? 0.0;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.getDebtsTotalAmount');
       return 0.0;
     }
   }
@@ -431,10 +432,10 @@ class DebtRepository {
 
         // Stats Reference
         final statsRef = _firestore
-            .collection('stores')
+            .collection(FirebaseConstants.storesCollection)
             .doc(storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
 
         final statsSnap = await transaction.get(statsRef);
         int currentOpenDebts = 0;
@@ -465,10 +466,12 @@ class DebtRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       throw ServerException('Failed to delete debt: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while deleting the debt: $e');
@@ -482,6 +485,9 @@ class DebtRepository {
         throw NotFoundException('Debt');
       }
       return DebtModel.fromFirestore(doc);
+    }).handleError((error) {
+      AppErrorHandler.handle(error, operation: 'DebtRepository.watchDebt');
+      throw error;
     });
   }
 
@@ -522,7 +528,8 @@ class DebtRepository {
         'paidCount': paidSnapshot.count ?? 0,
         'paidTotal': paidSnapshot.getSum('totalAmount') ?? 0.0,
       };
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.fetchDebtStatistics');
       return {
         'openCount': 0,
         'openTotal': 0.0,

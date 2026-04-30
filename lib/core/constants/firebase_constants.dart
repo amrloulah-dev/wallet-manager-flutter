@@ -10,6 +10,9 @@ class FirebaseConstants {
   static const String subscriptionRequestsCollection = 'subscription_requests';
   static const String statsCollection = 'stats';
   static const String summaryDoc = 'summary';
+  static const String systemConfigsCollection = 'system_configs';
+  static const String defaultConfigDoc = 'default';
+  static const String licenseKeysCollection = 'license_keys';
 
   // Common
   static const String storeId = 'storeId';

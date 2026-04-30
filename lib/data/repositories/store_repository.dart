@@ -9,7 +9,6 @@ import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
 import '../../services/time_service.dart';
 
-
 /// Repository for all Firestore operations related to the 'stores' collection.
 class StoreRepository {
   final FirebaseService _firebaseService;
@@ -70,26 +69,34 @@ class StoreRepository {
       );
       // -----------------------------
 
+      final storeData = storeWithTrial.toFirestore();
+      storeData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+      storeData[FirebaseConstants.updatedAt] = FieldValue.serverTimestamp();
+
       // 1. Set Store Document
-      batch.set(_storesCollection.doc(storeWithTrial.storeId),
-          storeWithTrial.toFirestore());
+      batch.set(_storesCollection.doc(storeWithTrial.storeId), storeData);
 
       // 2. Initialize Stats Document
       // Note: We use the same sub-collection path structure as found in StatsRepository:
       // stores/{storeId}/stats/summary
       final statsRef = _storesCollection
           .doc(storeWithTrial.storeId)
-          .collection('stats')
-          .doc('summary');
+          .collection(FirebaseConstants.statsCollection)
+          .doc(FirebaseConstants.summaryDoc);
 
       final initialStats = StatsSummaryModel.empty();
-      batch.set(statsRef, initialStats.toMap());
+      final statsData = initialStats.toMap();
+      statsData['lastUpdated'] = FieldValue.serverTimestamp();
+      
+      batch.set(statsRef, statsData);
       // Commit all changes atomically
       await batch.commit();
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.createStore');
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.createStore');
+      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل: $e');
     }
   }
 
@@ -105,11 +112,13 @@ class StoreRepository {
         return StoreModel.fromFirestore(doc);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreById');
       throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -125,11 +134,13 @@ class StoreRepository {
         return StoreModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
       throw ServerException('فشل في البحث عن المحل: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -145,11 +156,13 @@ class StoreRepository {
         return StoreModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
       throw ServerException('فشل في البحث عن المحل: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -158,7 +171,8 @@ class StoreRepository {
     try {
       final doc = await _storesCollection.doc(storeId).get();
       return doc.exists;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.storeExists');
       return false;
     }
   }
@@ -175,11 +189,13 @@ class StoreRepository {
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _storesCollection.doc(storeId).update(updateData);
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStore');
       throw ServerException('فشل تحديث بيانات المحل: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStore');
+      throw ServerException('حدث خطأ غير متوقع أثناء التحديث: $e');
     }
   }
 
@@ -231,11 +247,13 @@ class StoreRepository {
             FieldValue.increment(incrementTotalCommissionToday);
       }
       await _storesCollection.doc(storeId).update(statsData);
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
       throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -275,7 +293,8 @@ class StoreRepository {
       // T058: Pure POJO — time resolved here rather than inside StoreSubscription
       return store.subscription.status == SubscriptionStatus.active &&
           !store.subscription.isExpiredAt(TimeService.now());
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.isSubscriptionValid');
       return false;
     }
   }
@@ -285,12 +304,15 @@ class StoreRepository {
     try {
       await _storesCollection.doc(storeId).update({
         'subscription.status': status.name,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       });
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateSubscriptionStatus');
       throw ServerException('فشل تحديث حالة الاشتراك: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateSubscriptionStatus');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
@@ -311,13 +333,18 @@ class StoreRepository {
   }
 
   Future<List<StoreModel>> getStoresByPassword(String password) async {
-    final hashedPassword = PasswordHasher.hashPassword(password);
-    final querySnapshot = await _storesCollection
-        .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
-        .limit(1)
-        .get();
-    return querySnapshot.docs
-        .map((doc) => StoreModel.fromFirestore(doc))
-        .toList();
+    try {
+      final hashedPassword = PasswordHasher.hashPassword(password);
+      final querySnapshot = await _storesCollection
+          .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
+          .limit(1)
+          .get();
+      return querySnapshot.docs
+          .map((doc) => StoreModel.fromFirestore(doc))
+          .toList();
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');
+      throw ServerException('فشل البحث عن المحل: $e');
+    }
   }
 }

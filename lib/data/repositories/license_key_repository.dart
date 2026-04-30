@@ -3,15 +3,18 @@ import '../models/license_key_model.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/license_key_generator.dart';
 import '../../core/enums/subscription_enums.dart';
+import '../../core/constants/firebase_constants.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/errors/app_error_handler.dart';
 
 class LicenseKeyRepository {
-  late final FirebaseFirestore _firestore;
-  late final CollectionReference _keysCollection;
+  final FirebaseFirestore _firestore;
+  final CollectionReference _keysCollection;
 
-  LicenseKeyRepository({FirebaseFirestore? firestore}) {
-    _firestore = firestore ?? FirebaseFirestore.instance;
-    _keysCollection = _firestore.collection('license_keys');
-  }
+  LicenseKeyRepository({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? sl<FirebaseFirestore>(),
+        _keysCollection = (firestore ?? sl<FirebaseFirestore>())
+            .collection(FirebaseConstants.licenseKeysCollection);
 
   /// Verify if a license key exists and fetch its data
   Future<LicenseKeyModel?> verifyLicenseKey(String licenseKey) async {
@@ -31,8 +34,9 @@ class LicenseKeyRepository {
       final keyDoc = querySnapshot.docs.first;
 
       return LicenseKeyModel.fromFirestore(keyDoc);
-    } catch (e) {
-      throw ServerException('حدث خطأ أثناء التحقق من المفتاح');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.verifyLicenseKey');
+      throw ServerException('حدث خطأ أثناء التحقق من المفتاح: $e');
     }
   }
 
@@ -42,7 +46,7 @@ class LicenseKeyRepository {
     required String storeId,
   }) async {
     final keyRef = _keysCollection.doc(keyId);
-    final storeRef = _firestore.collection('stores').doc(storeId);
+    final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
 
     try {
       await _firestore.runTransaction((transaction) async {
@@ -73,6 +77,7 @@ class LicenseKeyRepository {
           'isUsed': true,
           'usedBy': storeId,
           'usedAt': FieldValue.serverTimestamp(),
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
 
         // 3. Update Store Doc
@@ -80,10 +85,11 @@ class LicenseKeyRepository {
           'subscription.planId': SubscriptionPlan.proYearly.name, // ENUM refactor
           'subscription.status': SubscriptionStatus.active.name, // ENUM refactor
           'subscription.endDate': Timestamp.fromDate(newExpiryDate),
-          'updatedAt': FieldValue.serverTimestamp(),
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
       });
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.activateLicenseKey');
       if (e is ServerException) rethrow; // Pass up our custom exceptions
       throw ServerException('فشل في تفعيل الاشتراك: $e');
     }
@@ -94,7 +100,7 @@ class LicenseKeyRepository {
     try {
       int remaining = count;
       while (remaining > 0) {
-        final batchCount = remaining > 500 ? 500 : remaining;
+        final batchCount = remaining > 450 ? 450 : remaining;
         final batch = _firestore.batch();
 
         for (int i = 0; i < batchCount; i++) {
@@ -107,7 +113,7 @@ class LicenseKeyRepository {
             'isUsed': false,
             'usedBy': null,
             'usedAt': null,
-            'createdAt': FieldValue.serverTimestamp(),
+            FirebaseConstants.createdAt: FieldValue.serverTimestamp(),
             'expiryMonths': 12,
           });
         }
@@ -115,7 +121,8 @@ class LicenseKeyRepository {
         await batch.commit();
         remaining -= batchCount;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.generateAndSaveBatch');
       throw ServerException('Failed to generate license keys: $e');
     }
   }
@@ -127,7 +134,8 @@ class LicenseKeyRepository {
       if (keyData == null) return false;
       if (keyData.isUsed == true) return false;
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.isKeyAvailable');
       return false;
     }
   }

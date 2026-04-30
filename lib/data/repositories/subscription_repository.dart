@@ -89,16 +89,21 @@ class SubscriptionRepository {
       paymentMethod: paymentMethod,
       receiptNumber: receiptNumber,
       status: 'pending',
-      createdAt: now,
+      createdAt: now, // This will be overridden
     );
     
     final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
     
     // We throw and let the caller (Provider) handle the optimistic rollback
     final batch = _firestore.batch();
-    batch.set(rootRef, request.toFirestore());
+    
+    final requestData = request.toFirestore();
+    requestData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+    
+    batch.set(rootRef, requestData);
     batch.update(storeRef, {
       'subscription.pendingRequestDate': FieldValue.serverTimestamp(),
+      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
     });
     await batch.commit();
   }

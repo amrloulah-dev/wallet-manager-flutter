@@ -85,8 +85,8 @@ class EmployeeRepository {
       firebaseUid: null,
       pin: hashedPin,
       isActive: true,
-      createdAt: DateTime.now(),
-      lastLogin: DateTime.now(),
+      createdAt: null, // Set by FieldValue.serverTimestamp
+      lastLogin: null, // Set by FieldValue.serverTimestamp
       permissions: permissions,
       stats: UserStats(),
     );
@@ -125,7 +125,12 @@ class EmployeeRepository {
         throw ServerException('الرقم السري مستخدم بالفعل');
       }
 
-      transaction.set(_usersCollection.doc(newUserId), newUser.toFirestore());
+      final userData = newUser.toFirestore();
+      userData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+      userData[FirebaseConstants.lastLogin] = FieldValue.serverTimestamp();
+      userData[FirebaseConstants.updatedAt] = FieldValue.serverTimestamp();
+
+      transaction.set(_usersCollection.doc(newUserId), userData);
       transaction
           .update(storeRef, {'stats.totalEmployees': FieldValue.increment(1)});
 
@@ -133,8 +138,8 @@ class EmployeeRepository {
       final statsSummaryRef = _firestore
           .collection(FirebaseConstants.storesCollection)
           .doc(storeId)
-          .collection('stats')
-          .doc('summary');
+          .collection(FirebaseConstants.statsCollection)
+          .doc(FirebaseConstants.summaryDoc);
       transaction.set(
           statsSummaryRef,
           {
@@ -182,8 +187,8 @@ class EmployeeRepository {
         final statsSummaryRef = _firestore
             .collection(FirebaseConstants.storesCollection)
             .doc(storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
 
         final storeSnap = await transaction.get(storeRef);
         final statsSnap = await transaction.get(statsSummaryRef);
@@ -208,7 +213,8 @@ class EmployeeRepository {
         transaction.update(storeRef, {
           'stats.totalEmployees': currentStoreEmployees > 0
               ? currentStoreEmployees - 1
-              : 0
+              : 0,
+          'stats.lastUpdated': FieldValue.serverTimestamp(),
         });
 
         transaction.set(
@@ -258,8 +264,14 @@ class EmployeeRepository {
       });
 
       return true;
-    } catch (e) {
-      throw ServerException('Failed to reset PIN: \$e');
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'EmployeeRepository.resetEmployeePIN',
+      );
+      if (e is AppException) rethrow;
+      throw ServerException('Failed to reset PIN: $e');
     }
   }
 
@@ -270,9 +282,14 @@ class EmployeeRepository {
     try {
       await _usersCollection.doc(userId).update({
         'permissions': permissions.toMap(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       });
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'EmployeeRepository.updateEmployeePermissions',
+      );
       throw ServerException('Failed to update permissions: $e');
     }
   }
@@ -307,6 +324,7 @@ class EmployeeRepository {
       if (uid != null) {
         await _usersCollection.doc(employee.userId).update({
           'firebaseUid': uid,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
       }
     } catch (e, stack) {
@@ -316,6 +334,7 @@ class EmployeeRepository {
         severity: ErrorSeverity.low,
         operation: 'EmployeeRepository.provisionIdentity',
       );
+      rethrow;
     }
   }
 
@@ -330,6 +349,10 @@ class EmployeeRepository {
         storeId: employee.storeId,
         newPin: hashedPin, 
       );
+
+      await _usersCollection.doc(employee.userId).update({
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+      });
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,
@@ -337,6 +360,7 @@ class EmployeeRepository {
         severity: ErrorSeverity.low,
         operation: 'EmployeeRepository.syncCredential',
       );
+      rethrow;
     }
   }
 
@@ -354,6 +378,7 @@ class EmployeeRepository {
         severity: ErrorSeverity.low,
         operation: 'EmployeeRepository.cleanupIdentity',
       );
+      rethrow;
     }
   }
 }

@@ -5,6 +5,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/utils/number_parser.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/core/constants/firebase_constants.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class DeviceRepository {
   final FirebaseFirestore _firestore;
@@ -15,8 +18,8 @@ class DeviceRepository {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     DeviceInfoPlugin? deviceInfoPlugin,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
+  })  : _firestore = firestore ?? sl<FirebaseFirestore>(),
+        _auth = auth ?? sl<FirebaseAuth>(),
         _deviceInfoPlugin = deviceInfoPlugin ?? DeviceInfoPlugin();
 
   /// Retrieves a unique device identifier.
@@ -39,7 +42,8 @@ class DeviceRepository {
         // request focused on Android/iOS checks.
         return const Uuid().v4();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.getDeviceId');
       return const Uuid().v4();
     }
   }
@@ -50,7 +54,7 @@ class DeviceRepository {
   Future<bool> checkDeviceEligibility(String deviceId) async {
     try {
       final docSnapshot = await _firestore
-          .collection('device_registrations')
+          .collection(FirebaseConstants.deviceRegistrationsCollection)
           .doc(deviceId)
           .get();
 
@@ -63,11 +67,8 @@ class DeviceRepository {
 
       final trialCount = NumberParser.toInt(data['trialCount']);
       return trialCount < 2;
-    } catch (e) {
-      // Fail safe: return true or false based on policy.
-      // Returning false might block legitimate users if error is transient,
-      // but returning true might allow abuse.
-      // Assuming "fail open" for UX, but ideally handle error explicitly.
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.checkDeviceEligibility');
       return true;
     }
   }
@@ -76,7 +77,9 @@ class DeviceRepository {
   ///
   /// Increments `trialCount` and adds `newStoreId` to `associatedStoreIds`.
   Future<void> registerDeviceUsage(String deviceId, String newStoreId) async {
-    final docRef = _firestore.collection('device_registrations').doc(deviceId);
+    final docRef = _firestore
+        .collection(FirebaseConstants.deviceRegistrationsCollection)
+        .doc(deviceId);
 
     try {
       await docRef.set({
@@ -84,8 +87,10 @@ class DeviceRepository {
         'associatedStoreIds': FieldValue.arrayUnion([newStoreId]),
         'lastTrialDate': FieldValue.serverTimestamp(),
         'ownerUid': _auth.currentUser?.uid,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.registerDeviceUsage');
       rethrow;
     }
   }

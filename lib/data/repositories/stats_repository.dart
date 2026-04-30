@@ -5,23 +5,25 @@ import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/errors/error_severity.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;
 
   StatsRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? sl<FirebaseFirestore>();
 
   DocumentReference _getSummaryDocRef(String storeId) {
     return _firestore
-        .collection('stores')
+        .collection(FirebaseConstants.storesCollection)
         .doc(storeId)
-        .collection('stats')
-        .doc('summary');
+        .collection(FirebaseConstants.statsCollection)
+        .doc(FirebaseConstants.summaryDoc);
   }
 
   Future<StatsSummaryModel> getStatsSummary(String storeId) async {
@@ -38,9 +40,9 @@ class StatsRepository {
     try {
       final todayDate = DateHelper.getCurrentDateString();
       final docRef = _firestore
-          .collection('stores')
+          .collection(FirebaseConstants.storesCollection)
           .doc(storeId)
-          .collection('daily_stats')
+          .collection(FirebaseConstants.dailyStatsCollection)
           .doc(todayDate);
 
       final doc = await docRef.get();
@@ -64,9 +66,9 @@ class StatsRepository {
   Stream<DailyStatsModel> watchTodayStats(String storeId) {
     final todayDate = DateHelper.getCurrentDateString();
     return _firestore
-        .collection('stores')
+        .collection(FirebaseConstants.storesCollection)
         .doc(storeId)
-        .collection('daily_stats')
+        .collection(FirebaseConstants.dailyStatsCollection)
         .doc(todayDate)
         .snapshots()
         .map((doc) {
