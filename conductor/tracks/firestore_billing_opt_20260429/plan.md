@@ -1,6 +1,6 @@
 # Implementation Plan: Firestore Architecture & Billing Optimization
 
-## Phase 1: Stopping the Billing Leaks (Query Optimization)
+## Phase 1: Stopping the Billing Leaks (Query Optimization) [checkpoint: 78df0d4]
 - [x] Task: Wallet Aggregation Leak (C-001, C-002) in `wallet_repository.dart` [e5aad90]
     - [x] Write failing test: Verify `getTotalBalance` and `getWalletsCount` fetch from `stats/summary` instead of the `wallets` collection using the Firebase Emulator. [e5aad90]
     - [x] Implement to pass tests: Replace unbounded `.get()` queries with single document reads. [e5aad90]
