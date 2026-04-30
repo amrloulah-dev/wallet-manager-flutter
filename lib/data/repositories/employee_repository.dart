@@ -154,8 +154,9 @@ class EmployeeRepository {
           .where(FirebaseConstants.role,
               isEqualTo: UserRole.employee.name) // ENUM refactor
           .where(FirebaseConstants.isActive, isEqualTo: true)
+          .count()
           .get();
-      return snapshot.docs.length;
+      return snapshot.count ?? 0;
     } catch (e) {
       return 0;
     }
