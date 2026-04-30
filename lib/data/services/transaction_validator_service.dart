@@ -54,7 +54,7 @@ class TransactionValidatorService {
         throw ValidationException('لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها');
       }
 
-      final now = Timestamp.now();
+      final now = DateTime.now();
 
       // ------------------------------------------------------------------
       // ATOMIC LIMIT RESET LOGIC
@@ -66,14 +66,14 @@ class TransactionValidatorService {
       var validationWallet = wallet;
       if (needsDailyReset) {
         validationWallet = validationWallet.copyWith(
-          lastDailyReset: now.toDate(),
+          lastDailyReset: now,
           sendLimits: validationWallet.sendLimits.copyWith(dailyUsed: 0),
           receiveLimits: validationWallet.receiveLimits.copyWith(dailyUsed: 0),
         );
       }
       if (needsMonthlyReset) {
         validationWallet = validationWallet.copyWith(
-          lastMonthlyReset: now.toDate(),
+          lastMonthlyReset: now,
           sendLimits: validationWallet.sendLimits.copyWith(monthlyUsed: 0),
           receiveLimits: validationWallet.receiveLimits.copyWith(monthlyUsed: 0),
         );
@@ -154,7 +154,10 @@ class TransactionValidatorService {
       final txRef = _firestore
           .collection(FirebaseConstants.transactions)
           .doc(transaction.transactionId);
-      tx.set(txRef, transaction.toFirestore());
+      final txData = transaction.toFirestore();
+      txData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+      txData['transactionDate'] = FieldValue.serverTimestamp();
+      tx.set(txRef, txData);
 
       // Prepare Wallet Updates
       final Map<String, dynamic> walletUpdateData = {};
@@ -164,31 +167,31 @@ class TransactionValidatorService {
       walletUpdateData['balance'] = validationWallet.balance + balanceChange;
       
       walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] = FieldValue.increment(1);
-      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] = now;
+      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] = FieldValue.serverTimestamp();
 
-      if (needsDailyReset) walletUpdateData['lastDailyReset'] = now;
-      if (needsMonthlyReset) walletUpdateData['lastMonthlyReset'] = now;
+      if (needsDailyReset) walletUpdateData[FirebaseConstants.lastDailyReset] = FieldValue.serverTimestamp();
+      if (needsMonthlyReset) walletUpdateData[FirebaseConstants.lastMonthlyReset] = FieldValue.serverTimestamp();
 
       if (transaction.isSend) {
-        walletUpdateData['sendLimits.dailyUsed'] = needsDailyReset
+        walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] = needsDailyReset
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
-        walletUpdateData['sendLimits.monthlyUsed'] = needsMonthlyReset
+        walletUpdateData['${FirebaseConstants.sendLimits}.monthlyUsed'] = needsMonthlyReset
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
         
-        if (needsDailyReset) walletUpdateData['receiveLimits.dailyUsed'] = 0.0;
-        if (needsMonthlyReset) walletUpdateData['receiveLimits.monthlyUsed'] = 0.0;
+        if (needsDailyReset) walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
+        if (needsMonthlyReset) walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
       } else if (transaction.isReceive) {
-        walletUpdateData['receiveLimits.dailyUsed'] = needsDailyReset
+        walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] = needsDailyReset
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
-        walletUpdateData['receiveLimits.monthlyUsed'] = needsMonthlyReset
+        walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] = needsMonthlyReset
             ? transaction.amount
             : FieldValue.increment(transaction.amount);
             
-        if (needsDailyReset) walletUpdateData['sendLimits.dailyUsed'] = 0.0;
-        if (needsMonthlyReset) walletUpdateData['sendLimits.monthlyUsed'] = 0.0;
+        if (needsDailyReset) walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
+        if (needsMonthlyReset) walletUpdateData['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
       }
 
       if (transaction.isSend || transaction.isReceive) {
@@ -206,16 +209,16 @@ class TransactionValidatorService {
 
       // Update Store Stats Summary Document
       final statsSummaryRef = _firestore
-          .collection('stores')
+          .collection(FirebaseConstants.storesCollection)
           .doc(transaction.storeId)
-          .collection('stats')
-          .doc('summary');
+          .collection(FirebaseConstants.statsCollection)
+          .doc(FirebaseConstants.summaryDoc);
 
       final Map<String, dynamic> summaryUpdates = {
-        'totalTransactions': FieldValue.increment(1),
-        'totalTransactionsToday': FieldValue.increment(1),
-        'totalCommission': FieldValue.increment(transaction.commission),
-        'totalCommissionToday': FieldValue.increment(transaction.commission),
+        FirebaseConstants.totalTransactions: FieldValue.increment(1),
+        FirebaseConstants.totalTransactionsToday: FieldValue.increment(1),
+        FirebaseConstants.totalCommission: FieldValue.increment(transaction.commission),
+        FirebaseConstants.totalCommissionToday: FieldValue.increment(transaction.commission),
         // Phase 1.4: Track totalServiceFee in summary stats
         'totalServiceFee': FieldValue.increment(transaction.serviceFee),
         'totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
@@ -233,26 +236,26 @@ class TransactionValidatorService {
       tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
 
       // Update Store Document's root stats field (Legacy support)
-      final storeRef = _firestore.collection('stores').doc(transaction.storeId);
+      final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(transaction.storeId);
       tx.update(storeRef, {
-        'stats.totalTransactionsToday': FieldValue.increment(1),
-        'stats.totalCommissionToday': FieldValue.increment(transaction.commission),
-        'stats.totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
-        'stats.lastUpdated': FieldValue.serverTimestamp(),
+        '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}': FieldValue.increment(1),
+        '${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}': FieldValue.increment(transaction.commission),
+        '${FirebaseConstants.stats}.totalServiceFeeToday': FieldValue.increment(transaction.serviceFee),
+        '${FirebaseConstants.stats}.lastUpdated': FieldValue.serverTimestamp(),
       });
 
       // Update Daily Stats Document
       final dailyStatsRef = _firestore
-          .collection('stores')
+          .collection(FirebaseConstants.storesCollection)
           .doc(transaction.storeId)
-          .collection('daily_stats')
+          .collection(FirebaseConstants.dailyStatsCollection)
           .doc(DateHelper.getCurrentDateString());
 
       tx.set(
         dailyStatsRef,
         {
           'transactionCount': FieldValue.increment(1),
-          'totalCommission': FieldValue.increment(transaction.commission),
+          FirebaseConstants.totalCommission: FieldValue.increment(transaction.commission),
           'totalServiceFee': FieldValue.increment(transaction.serviceFee),
           'totalAmount': FieldValue.increment(transaction.amount),
         },

@@ -5,6 +5,11 @@ class FirebaseConstants {
   static const String walletsCollection = 'wallets';
   static const String transactions = 'transactions';
   static const String debts = 'debts';
+  static const String dailyStatsCollection = 'daily_stats';
+  static const String deviceRegistrationsCollection = 'device_registrations';
+  static const String subscriptionRequestsCollection = 'subscription_requests';
+  static const String statsCollection = 'stats';
+  static const String summaryDoc = 'summary';
 
   // Common
   static const String storeId = 'storeId';

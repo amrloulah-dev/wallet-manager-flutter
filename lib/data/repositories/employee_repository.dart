@@ -158,7 +158,7 @@ class EmployeeRepository {
           .get();
       return snapshot.count ?? 0;
     } catch (e) {
-      return 0;
+      throw ServerException('فشل الحصول على عدد الموظفين: $e');
     }
   }
 

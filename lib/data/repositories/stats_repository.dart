@@ -49,7 +49,13 @@ class StatsRepository {
       } else {
         return DailyStatsModel.empty(todayDate);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.fetchTodayStats',
+      );
       return DailyStatsModel.empty(DateHelper.getCurrentDateString());
     }
   }
@@ -89,29 +95,6 @@ class StatsRepository {
     final summary = StatsSummaryModel.empty();
     await _getSummaryDocRef(storeId).set(summary.toMap());
     return summary;
-  }
-
-  Future<void> updateStatsOnTransactionCreate(
-      String storeId, TransactionModel tx) async {
-    final docRef = _getSummaryDocRef(storeId);
-    final Map<String, dynamic> updates = {
-      'totalTransactions': FieldValue.increment(1),
-      'totalTransactionsToday': FieldValue.increment(1),
-      'totalCommission': FieldValue.increment(tx.commission),
-      'totalCommissionToday': FieldValue.increment(tx.commission),
-      'totalServiceFee': FieldValue.increment(tx.serviceFee),
-      'totalServiceFeeToday': FieldValue.increment(tx.serviceFee),
-      'lastUpdated': FieldValue.serverTimestamp(),
-    };
-
-    if (tx.isSend) {
-      updates['sendCount'] = FieldValue.increment(1);
-      updates['totalSentAmount'] = FieldValue.increment(tx.amount);
-    } else if (tx.isReceive) {
-      updates['receiveCount'] = FieldValue.increment(1);
-      updates['totalReceivedAmount'] = FieldValue.increment(tx.amount);
-    }
-    await docRef.update(updates);
   }
 
   Future<void> incrementOpenDebtStats(String storeId, double amount) async {

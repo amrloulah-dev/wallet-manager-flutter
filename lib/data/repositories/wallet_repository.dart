@@ -163,14 +163,26 @@ class WalletRepository {
   // 3️⃣ UPDATE Methods
   Future<void> updateWallet(String walletId, Map<String, dynamic> data) async {
     try {
-      final updateData = {
-        ...data,
-        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
-      };
-      await _walletsCollection.doc(walletId).update(updateData);
+      await _firestore.runTransaction((transaction) async {
+        final docRef = _walletsCollection.doc(walletId);
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) throw NotFoundException('Wallet');
+
+        final updateData = {
+          ...data,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
+        };
+        transaction.update(docRef, updateData);
+      });
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
       _cacheManager.clear('wallet_details_$walletId');
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'WalletRepository.updateWallet',
+      );
+      if (e is AppException) rethrow;
       throw ServerException('فشل تحديث المحفظة: $e');
     }
   }

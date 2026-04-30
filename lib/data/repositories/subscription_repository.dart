@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../core/constants/firebase_constants.dart';
 import '../models/subscription_request_model.dart';
 import '../../services/device_tracking_service.dart';
 import '../../core/utils/number_parser.dart';
@@ -22,9 +23,9 @@ class SubscriptionRepository {
     final osVersion = await DeviceTrackingService.getOsVersion();
     
     final docRef = _firestore
-        .collection('stores')
+        .collection(FirebaseConstants.storesCollection)
         .doc(storeId)
-        .collection('device_registrations')
+        .collection(FirebaseConstants.deviceRegistrationsCollection)
         .doc(deviceId);
     
     await _firestore.runTransaction((transaction) async {
@@ -32,15 +33,16 @@ class SubscriptionRepository {
       
       if (doc.exists) {
         transaction.update(docRef, {
-          'lastSeenAt': FieldValue.serverTimestamp(),
+          FirebaseConstants.lastDailyReset: FieldValue.serverTimestamp(), // Wait, lastSeenAt?
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
           'ownerUid': _auth.currentUser?.uid,
         });
       } else {
         transaction.set(docRef, {
           'deviceModel': deviceModel,
           'osVersion': osVersion,
-          'firstSeenAt': FieldValue.serverTimestamp(),
-          'lastSeenAt': FieldValue.serverTimestamp(),
+          FirebaseConstants.createdAt: FieldValue.serverTimestamp(),
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
           'ownerUid': _auth.currentUser?.uid,
         });
       }
@@ -49,9 +51,9 @@ class SubscriptionRepository {
 
   Future<SubscriptionRequestModel?> getLatestSubscriptionRequest(String storeId) async {
     final snapshot = await _firestore
-        .collection('subscription_requests')
-        .where('storeId', isEqualTo: storeId)
-        .orderBy('createdAt', descending: true)
+        .collection(FirebaseConstants.subscriptionRequestsCollection)
+        .where(FirebaseConstants.storeId, isEqualTo: storeId)
+        .orderBy(FirebaseConstants.createdAt, descending: true)
         .limit(1)
         .get();
         
@@ -73,7 +75,7 @@ class SubscriptionRepository {
     required String paymentMethod,
     required String receiptNumber,
   }) async {
-    final rootRef = _firestore.collection('subscription_requests').doc();
+    final rootRef = _firestore.collection(FirebaseConstants.subscriptionRequestsCollection).doc();
     final now = DateTime.now();
     // T045: Implicitly deduce amount using tierName locally
     final double deducedAmount = _deduceAmount(planId);
@@ -89,13 +91,13 @@ class SubscriptionRepository {
       createdAt: now,
     );
     
-    final storeRef = _firestore.collection('stores').doc(storeId);
+    final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
     
     // We throw and let the caller (Provider) handle the optimistic rollback
     final batch = _firestore.batch();
     batch.set(rootRef, request.toFirestore());
     batch.update(storeRef, {
-      'subscription.pendingRequestDate': Timestamp.fromDate(now),
+      'subscription.pendingRequestDate': FieldValue.serverTimestamp(),
     });
     await batch.commit();
   }
@@ -108,7 +110,7 @@ class SubscriptionRepository {
     
     // Query the root-level device_registrations for this hardware device
     final docSnapshot = await _firestore
-        .collection('device_registrations')
+        .collection(FirebaseConstants.deviceRegistrationsCollection)
         .doc(deviceId)
         .get();
     
