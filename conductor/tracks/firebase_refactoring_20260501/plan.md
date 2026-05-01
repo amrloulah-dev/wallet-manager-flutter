@@ -1,16 +1,16 @@
 # Implementation Plan: Firebase & Firestore Refactoring
 
-## Phase 1: Financial Race Conditions
+## Phase 1: Financial Race Conditions [checkpoint: 14a33a8]
 - [x] Task: TDD - `WalletRepository` and `stats_repository.dart` Math Operations [840ea34]
     - [x] Write failing test for concurrent balance/stats updates (using `fake_cloud_firestore`).
     - [x] Implement `FieldValue.increment()` for `debitWallet`, `totalWallets`, and `activeWallets`.
     - [x] Verify test passes.
-- [~] Task: TDD - Atomic Initialization & Entity Creation
-    - [ ] Write failing test for `DatabaseSyncService._createStoreAndUser` creation conflicts and `stats_repository.dart` initialization conflicts.
-    - [ ] Wrap `_storeRepository.createStore` and `_userRepository.createUser` in a single `WriteBatch`.
-    - [ ] Implement `SetOptions(merge: true)` for `initializeStats`.
-    - [ ] Verify test passes.
-- [ ] Task: Conductor - User Manual Verification 'Financial Race Conditions' (Protocol in workflow.md)
+- [x] Task: TDD - Atomic Initialization & Entity Creation [b1bedab]
+    - [x] Write failing test for `DatabaseSyncService._createStoreAndUser` creation conflicts and `stats_repository.dart` initialization conflicts.
+    - [x] Wrap `_storeRepository.createStore` and `_userRepository.createUser` in a single `WriteBatch`.
+    - [x] Implement `SetOptions(merge: true)` for `initializeStats`.
+    - [x] Verify test passes.
+- [x] Task: Conductor - User Manual Verification 'Financial Race Conditions' (Protocol in workflow.md)
 
 ## Phase 2: Billing & Read Optimization
 - [ ] Task: TDD - Unbounded Queries
