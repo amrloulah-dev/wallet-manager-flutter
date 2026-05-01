@@ -40,7 +40,7 @@ class WalletRepository {
         activeCountChange: wallet.isActive ? 1 : 0,
         balanceChange: wallet.balance,
       );
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     } catch (e) {
       throw ServerException('فشل إنشاء المحفظة: $e');
     }
@@ -174,7 +174,7 @@ class WalletRepository {
         };
         transaction.update(docRef, updateData);
       });
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e, stack) {
       AppErrorHandler.handle(
@@ -206,7 +206,7 @@ class WalletRepository {
         await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
             balanceChange: amount);
       }
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
       if (e is AppException) rethrow;
@@ -239,7 +239,7 @@ class WalletRepository {
         await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
             balanceChange: -amount);
       }
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
       if (e is AppException) rethrow;
@@ -290,7 +290,7 @@ class WalletRepository {
         });
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {
       if (e is AppException) rethrow;
@@ -345,7 +345,7 @@ class WalletRepository {
       }
     }
 
-    _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+    _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     for (final wallet in wallets) {
       _cacheManager.clear('wallet_details_${wallet.walletId}');
     }
