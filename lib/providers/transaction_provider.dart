@@ -197,7 +197,6 @@ class TransactionProvider extends BaseProvider {
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
-      _calculateSummary();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
@@ -234,7 +233,6 @@ class TransactionProvider extends BaseProvider {
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
-      _calculateSummary();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       setError('فشل في جلب المزيد من المعاملات.', e, stack);
@@ -243,25 +241,13 @@ class TransactionProvider extends BaseProvider {
     }
   }
 
-  void _calculateSummary() {
-    double totalCommission = 0;
-    double totalAmount = 0;
-    int sendCount = 0;
-    int receiveCount = 0;
-
-    for (var tx in _transactions) {
-      totalCommission += tx.commission;
-      totalAmount += tx.amount;
-      if (tx.isSend) sendCount++;
-      if (tx.isReceive) receiveCount++;
-    }
-
+  void _initializeEmptySummary() {
     _summary = {
-      'totalTransactions': _transactions.length,
-      'totalCommission': totalCommission,
-      'totalAmount': totalAmount,
-      'sendCount': sendCount,
-      'receiveCount': receiveCount,
+      'totalTransactions': 0,
+      'totalCommission': 0.0,
+      'totalAmount': 0.0,
+      'sendCount': 0,
+      'receiveCount': 0,
     };
   }
 
@@ -349,7 +335,6 @@ class TransactionProvider extends BaseProvider {
     
     _rebuildTransactionMap();
     _recomputeTodayTransactions();
-    _calculateSummary();
     _activateFetchShield();
     safeNotify();
   }

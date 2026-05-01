@@ -162,22 +162,22 @@ class StatisticsProvider extends BaseProvider {
       // Check if it's today's range
       final isToday = DateHelper.isToday(dateRange.start) && DateHelper.isToday(dateRange.end);
 
-      if (isToday && _todayStats != null && _dashboardSummary != null) {
+      if (isToday && _dashboardSummary != null) {
+        final s = _dashboardSummary!;
         _filteredStats = {
-          'totalBalance': _dashboardSummary?.totalBalance ?? 0.0,
-          'totalWallets': _dashboardSummary?.totalWallets ?? 0,
-          'totalTransactions': _todayStats?.transactionCount ?? 0,
-          'totalCommission': _todayStats?.totalCommission ?? 0.0,
-          'sendCount': 0, // Breakdown not in daily_stats yet
-          'totalSentAmount': _todayStats?.totalAmount ?? 0.0, // Assuming total for today
-          'receiveCount': 0,
-          'totalReceivedAmount': 0.0,
-          'openDebtsCount': _dashboardSummary?.openDebtsCount ?? 0,
-          'totalOpenAmount': _dashboardSummary?.totalOpenAmount ?? 0.0,
-          'paidDebtsCount': _dashboardSummary?.paidDebtsCount ?? 0,
-          'totalPaidAmount': _dashboardSummary?.totalPaidAmount ?? 0.0,
-          'totalDebtsCount': (_dashboardSummary?.openDebtsCount ?? 0) +
-              (_dashboardSummary?.paidDebtsCount ?? 0),
+          'totalBalance': s.totalBalance,
+          'totalWallets': s.totalWallets,
+          'totalTransactions': s.totalTransactionsToday,
+          'totalCommission': s.totalCommissionToday,
+          'sendCount': s.sendCount, 
+          'totalSentAmount': s.totalSentAmount,
+          'receiveCount': s.receiveCount,
+          'totalReceivedAmount': s.totalReceivedAmount,
+          'openDebtsCount': s.openDebtsCount,
+          'totalOpenAmount': s.totalOpenAmount,
+          'paidDebtsCount': s.paidDebtsCount,
+          'totalPaidAmount': s.totalPaidAmount,
+          'totalDebtsCount': s.openDebtsCount + s.paidDebtsCount,
         };
       } else if (_dashboardSummary != null) {
         // Fallback to global summary for other ranges (Phase 3 constraint)
