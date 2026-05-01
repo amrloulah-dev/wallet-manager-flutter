@@ -1,11 +1,11 @@
 # Implementation Plan: Firebase & Firestore Refactoring
 
 ## Phase 1: Financial Race Conditions
-- [~] Task: TDD - `WalletRepository` and `stats_repository.dart` Math Operations
-    - [ ] Write failing test for concurrent balance/stats updates (using `fake_cloud_firestore`).
-    - [ ] Implement `FieldValue.increment()` for `debitWallet`, `totalWallets`, and `activeWallets`.
-    - [ ] Verify test passes.
-- [ ] Task: TDD - Atomic Initialization & Entity Creation
+- [x] Task: TDD - `WalletRepository` and `stats_repository.dart` Math Operations [840ea34]
+    - [x] Write failing test for concurrent balance/stats updates (using `fake_cloud_firestore`).
+    - [x] Implement `FieldValue.increment()` for `debitWallet`, `totalWallets`, and `activeWallets`.
+    - [x] Verify test passes.
+- [~] Task: TDD - Atomic Initialization & Entity Creation
     - [ ] Write failing test for `DatabaseSyncService._createStoreAndUser` creation conflicts and `stats_repository.dart` initialization conflicts.
     - [ ] Wrap `_storeRepository.createStore` and `_userRepository.createUser` in a single `WriteBatch`.
     - [ ] Implement `SetOptions(merge: true)` for `initializeStats`.

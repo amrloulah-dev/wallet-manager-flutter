@@ -34,9 +34,9 @@ class StoreRepository {
   /// **NOTE:** This method now enforces a "Trial Mode" for all new stores.
   /// It overwrites any license information passed in the [store] object with
   /// a generated trial license.
-  Future<void> createStore(StoreModel store, {bool isEligibleForTrial = true}) async {
+  Future<void> createStore(StoreModel store, {bool isEligibleForTrial = true, WriteBatch? batch}) async {
     try {
-      final batch = _firestore.batch();
+      final activeBatch = batch ?? _firestore.batch();
 
       // --- Generate Subscription based on trial eligibility ---
       final StoreSubscription subscription;
@@ -74,7 +74,7 @@ class StoreRepository {
       storeData[FirebaseConstants.updatedAt] = FieldValue.serverTimestamp();
 
       // 1. Set Store Document
-      batch.set(_storesCollection.doc(storeWithTrial.storeId), storeData);
+      activeBatch.set(_storesCollection.doc(storeWithTrial.storeId), storeData);
 
       // 2. Initialize Stats Document
       // Note: We use the same sub-collection path structure as found in StatsRepository:
@@ -88,9 +88,12 @@ class StoreRepository {
       final statsData = initialStats.toMap();
       statsData['lastUpdated'] = FieldValue.serverTimestamp();
       
-      batch.set(statsRef, statsData);
-      // Commit all changes atomically
-      await batch.commit();
+      activeBatch.set(statsRef, statsData);
+
+      // Commit all changes atomically only if we created the batch
+      if (batch == null) {
+        await activeBatch.commit();
+      }
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.createStore');
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);

@@ -1,5 +1,5 @@
-
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
@@ -37,6 +37,8 @@ class DatabaseSyncService {
   final UserRepository _userRepository;
   final DeviceRepository _deviceRepository;
   final LocalStorageService _localStorage;
+  final FirebaseFirestore _firestore;
+  final SubscriptionRepository _subscriptionRepository;
 
   DatabaseSyncService({
     required AuthRepository authRepository,
@@ -44,11 +46,15 @@ class DatabaseSyncService {
     required UserRepository userRepository,
     required DeviceRepository deviceRepository,
     required LocalStorageService localStorage,
+    FirebaseFirestore? firestore,
+    SubscriptionRepository? subscriptionRepository,
   })  : _authRepository = authRepository,
         _storeRepository = storeRepository,
         _userRepository = userRepository,
         _deviceRepository = deviceRepository,
-        _localStorage = localStorage;
+        _localStorage = localStorage,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _subscriptionRepository = subscriptionRepository ?? SubscriptionRepository();
 
   bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());
 
@@ -260,7 +266,7 @@ class DatabaseSyncService {
     var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
 
     if (isEligibleForTrial) {
-      final hasConsumed = await SubscriptionRepository().hasDeviceConsumedTrial();
+      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
       if (hasConsumed) {
         isEligibleForTrial = false;
       }
@@ -285,7 +291,7 @@ class DatabaseSyncService {
 
     try {
       await _deviceRepository.registerDeviceUsage(deviceId, result.store.storeId);
-      await SubscriptionRepository().verifyDevice(result.store.storeId);
+      await _subscriptionRepository.verifyDevice(result.store.storeId);
     } catch (e, stack) {
       AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'cache_write', stackTrace: stack);
     }
@@ -304,7 +310,7 @@ class DatabaseSyncService {
     var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
 
     if (isEligibleForTrial) {
-      final hasConsumed = await SubscriptionRepository().hasDeviceConsumedTrial();
+      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
       if (hasConsumed) {
         isEligibleForTrial = false;
       }
@@ -389,8 +395,11 @@ class DatabaseSyncService {
       lastLogin: DateTime.now(),
     );
 
-    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial);
-    await _userRepository.createUser(newOwner);
+    // Phase 4: Atomic Batch Creation
+    final batch = _firestore.batch();
+    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial, batch: batch);
+    await _userRepository.createUser(newOwner, batch: batch);
+    await batch.commit();
 
     final freshStore = await _storeRepository.getStoreById(storeId);
     final resolvedStore = freshStore ?? newStore;

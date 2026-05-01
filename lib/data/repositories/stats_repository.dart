@@ -95,7 +95,7 @@ class StatsRepository {
 
   Future<StatsSummaryModel> initializeStats(String storeId) async {
     final summary = StatsSummaryModel.empty();
-    await _getSummaryDocRef(storeId).set(summary.toMap());
+    await _getSummaryDocRef(storeId).set(summary.toMap(), SetOptions(merge: true));
     return summary;
   }
 

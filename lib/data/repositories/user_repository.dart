@@ -27,9 +27,13 @@ class UserRepository {
   // ===========================
 
   /// Creates a new user document in Firestore.
-  Future<void> createUser(UserModel user) async {
+  Future<void> createUser(UserModel user, {WriteBatch? batch}) async {
     try {
-      await _usersCollection.doc(user.userId).set(user.toFirestore());
+      if (batch != null) {
+        batch.set(_usersCollection.doc(user.userId), user.toFirestore());
+      } else {
+        await _usersCollection.doc(user.userId).set(user.toFirestore());
+      }
     } on FirebaseException catch (e) {
       throw ServerException('فشل إنشاء المستخدم: ${e.message}', code: e.code);
     } catch (e) {

@@ -46,6 +46,8 @@ Future<void> setupServiceLocator() async {
     userRepository: sl<UserRepository>(),
     deviceRepository: sl<DeviceRepository>(),
     localStorage: sl<LocalStorageService>(),
+    firestore: sl<FirebaseFirestore>(),
+    subscriptionRepository: sl<SubscriptionRepository>(),
   ));
 
   // UseCases
