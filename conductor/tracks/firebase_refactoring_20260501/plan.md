@@ -12,7 +12,7 @@
     - [x] Verify test passes.
 - [x] Task: Conductor - User Manual Verification 'Financial Race Conditions' (Protocol in workflow.md)
 
-## Phase 2: Billing & Read Optimization
+## Phase 2: Billing & Read Optimization [checkpoint: 873c942]
 - [x] Task: TDD - Unbounded Queries [e1ed650]
     - [x] Write failing test verifying pagination/limits for `getUsersByStoreId` and `getEmployeesByStoreId`.
     - [x] Implement `.limit(20)` and Firestore `count()` where applicable.
@@ -25,7 +25,7 @@
     - [x] Write failing test for employee search via Firestore query parameters.
     - [x] Delegate search filtering in `employee_provider.dart` to Firestore using `.where()` clauses.
     - [x] Verify test passes.
-- [ ] Task: Conductor - User Manual Verification 'Billing & Read Optimization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Billing & Read Optimization' (Protocol in workflow.md) [873c942]
 
 ## Phase 3: State Management & Architecture
 - [ ] Task: TDD - Stale Cache Eviction
