@@ -17,14 +17,14 @@
     - [x] Write failing test verifying pagination/limits for `getUsersByStoreId` and `getEmployeesByStoreId`.
     - [x] Implement `.limit(20)` and Firestore `count()` where applicable.
     - [x] Verify test passes.
-- [~] Task: TDD - Client-Side Aggregation Removal
-    - [ ] Write failing test verifying stats reading directly from `StatsSummaryModel`.
-    - [ ] Refactor `statistics_provider.dart` and `transaction_provider.dart` to remove Dart `for loop` aggregations.
-    - [ ] Verify test passes.
-- [ ] Task: TDD - Client-Side Search Filtering
-    - [ ] Write failing test for employee search via Firestore query parameters.
-    - [ ] Delegate search filtering in `employee_provider.dart` to Firestore using `.where()` clauses.
-    - [ ] Verify test passes.
+- [x] Task: TDD - Client-Side Aggregation Removal [17d390e]
+    - [x] Write failing test verifying stats reading directly from `StatsSummaryModel`.
+    - [x] Refactor `statistics_provider.dart` and `transaction_provider.dart` to remove Dart `for loop` aggregations.
+    - [x] Verify test passes.
+- [x] Task: TDD - Client-Side Search Filtering [8e3c0c6]
+    - [x] Write failing test for employee search via Firestore query parameters.
+    - [x] Delegate search filtering in `employee_provider.dart` to Firestore using `.where()` clauses.
+    - [x] Verify test passes.
 - [ ] Task: Conductor - User Manual Verification 'Billing & Read Optimization' (Protocol in workflow.md)
 
 ## Phase 3: State Management & Architecture
