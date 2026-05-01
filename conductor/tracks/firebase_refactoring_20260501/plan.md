@@ -13,7 +13,7 @@
 - [x] Task: Conductor - User Manual Verification 'Financial Race Conditions' (Protocol in workflow.md)
 
 ## Phase 2: Billing & Read Optimization
-- [ ] Task: TDD - Unbounded Queries
+- [~] Task: TDD - Unbounded Queries
     - [ ] Write failing test verifying pagination/limits for `getUsersByStoreId` and `getEmployeesByStoreId`.
     - [ ] Implement `.limit(20)` and Firestore `count()` where applicable.
     - [ ] Verify test passes.

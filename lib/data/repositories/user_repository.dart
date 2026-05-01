@@ -105,11 +105,12 @@ class UserRepository {
   }
 
   /// Fetches all active users for a given store ID.
-  Future<List<UserModel>> getUsersByStoreId(String storeId) async {
+  Future<List<UserModel>> getUsersByStoreId(String storeId, {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.isActive, isEqualTo: true)
+          .limit(limit)
           .get();
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
@@ -118,12 +119,12 @@ class UserRepository {
       throw ServerException('فشل في جلب المستخدمين: ${e.message}',
           code: e.code);
     } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 
   /// Fetches all active employees for a given store ID, ordered by name.
-  Future<List<UserModel>> getEmployeesByStoreId(String storeId) async {
+  Future<List<UserModel>> getEmployeesByStoreId(String storeId, {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -131,6 +132,7 @@ class UserRepository {
               isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .orderBy(FirebaseConstants.fullName)
+          .limit(limit)
           .get();
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
@@ -138,7 +140,7 @@ class UserRepository {
     } on FirebaseException catch (e) {
       throw ServerException('فشل في جلب الموظفين: ${e.message}', code: e.code);
     } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
 

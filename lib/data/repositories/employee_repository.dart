@@ -21,6 +21,7 @@ class EmployeeRepository {
   Future<List<UserModel>> getEmployeesByStoreId({
     required String storeId,
     bool activeOnly = true,
+    int limit = 20,
   }) async {
     try {
       Query query = _usersCollection
@@ -34,10 +35,11 @@ class EmployeeRepository {
 
       final snapshot = await query
           .orderBy(FirebaseConstants.createdAt, descending: true)
+          .limit(limit)
           .get();
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e) {
-      throw ServerException('Failed to get employees: \$e');
+      throw ServerException('Failed to get employees: $e');
     }
   }
 
