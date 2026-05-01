@@ -13,11 +13,11 @@
 - [x] Task: Conductor - User Manual Verification 'Financial Race Conditions' (Protocol in workflow.md)
 
 ## Phase 2: Billing & Read Optimization
-- [~] Task: TDD - Unbounded Queries
-    - [ ] Write failing test verifying pagination/limits for `getUsersByStoreId` and `getEmployeesByStoreId`.
-    - [ ] Implement `.limit(20)` and Firestore `count()` where applicable.
-    - [ ] Verify test passes.
-- [ ] Task: TDD - Client-Side Aggregation Removal
+- [x] Task: TDD - Unbounded Queries [e1ed650]
+    - [x] Write failing test verifying pagination/limits for `getUsersByStoreId` and `getEmployeesByStoreId`.
+    - [x] Implement `.limit(20)` and Firestore `count()` where applicable.
+    - [x] Verify test passes.
+- [~] Task: TDD - Client-Side Aggregation Removal
     - [ ] Write failing test verifying stats reading directly from `StatsSummaryModel`.
     - [ ] Refactor `statistics_provider.dart` and `transaction_provider.dart` to remove Dart `for loop` aggregations.
     - [ ] Verify test passes.
