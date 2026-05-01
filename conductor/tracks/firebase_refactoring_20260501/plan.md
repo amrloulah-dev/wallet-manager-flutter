@@ -42,7 +42,7 @@
     - [x] Verify test passes.
 - [x] Task: Conductor - User Manual Verification 'State Management & Architecture' (Protocol in workflow.md) [64d7215]
 
-## Phase 4: Technical Debt Cleanup
+## Phase 4: Technical Debt Cleanup [checkpoint: 4cdcc5a]
 - [x] Task: TDD - Path Constants and Dependency Injection [6e10333]
     - [x] Write failing test verifying correct paths and singleton access.
     - [x] Refactor `transaction_repository.dart` and `subscription_repository.dart` to use central path builders.
