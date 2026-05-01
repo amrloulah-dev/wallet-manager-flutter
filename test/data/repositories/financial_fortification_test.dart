@@ -10,20 +10,28 @@ import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/enums/debt_enums.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/core/utils/cache_manager.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
+class MockCacheManager extends Mock implements CacheManager {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late FakeFirebaseFirestore fakeFirestore;
   late MockFirebaseService mockFirebaseService;
+  late MockCacheManager mockCacheManager;
   late StatsRepository statsRepository;
 
   setUp(() {
     AppErrorHandler.isTestMode = true;
     fakeFirestore = FakeFirebaseFirestore();
     mockFirebaseService = MockFirebaseService();
+    mockCacheManager = MockCacheManager();
     statsRepository = StatsRepository(firestore: fakeFirestore);
+    
+    sl.allowReassignment = true;
+    sl.registerSingleton<CacheManager>(mockCacheManager);
     
     when(() => mockFirebaseService.firestore).thenReturn(fakeFirestore);
   });

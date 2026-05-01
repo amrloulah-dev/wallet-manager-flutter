@@ -24,6 +24,9 @@ import '../../domain/usecases/transaction_fee_calculator.dart';
 import '../../domain/usecases/wallet_usecase.dart';
 import '../../core/services/database_sync_service.dart';
 
+import '../../data/services/firebase_service.dart';
+import '../../core/utils/cache_manager.dart';
+
 final GetIt sl = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
@@ -32,6 +35,8 @@ Future<void> setupServiceLocator() async {
   sl.registerFactoryParam<FirebaseAuth, FirebaseApp?, void>(
     (app, _) => app != null ? FirebaseAuth.instanceFor(app: app) : FirebaseAuth.instance,
   );
+  sl.registerLazySingleton<FirebaseService>(() => FirebaseService());
+  sl.registerLazySingleton<CacheManager>(() => CacheManager());
 
   // Services
   final localStorage = LocalStorageService();

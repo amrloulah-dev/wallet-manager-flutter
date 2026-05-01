@@ -54,6 +54,7 @@ void main() {
     final mockStatsCollection = MockCollectionReference();
 
     when(() => mockFirestore.collection('stores')).thenReturn(mockStoresCollection);
+    when(() => mockFirestore.doc(any())).thenReturn(mockSummaryDocRef);
     when(() => mockStoresCollection.doc(any())).thenReturn(mockStoreDoc);
     when(() => mockStoreDoc.collection('stats')).thenReturn(mockStatsCollection);
     when(() => mockStatsCollection.doc('summary')).thenReturn(mockSummaryDocRef);

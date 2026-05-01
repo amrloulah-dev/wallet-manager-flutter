@@ -13,6 +13,9 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
@@ -28,6 +31,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockDeviceRepository extends Mock implements DeviceRepository {}
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
 class MockUser extends Mock implements User {}
+class MockFirebaseService extends Mock implements FirebaseService {}
+class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +60,14 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     mockDeviceRepo = MockDeviceRepository();
     mockLicenseRepo = MockLicenseKeyRepository();
+    mockAuth = MockFirebaseAuth();
+    final mockFirebaseService = MockFirebaseService();
+    final mockFirestore = MockFirebaseFirestore();
+    
+    when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+    sl.allowReassignment = true;
+    sl.registerSingleton<FirebaseService>(mockFirebaseService);
+    sl.registerSingleton<FirebaseAuth>(mockAuth);
     
     when(() => mockAuthRepo.getCurrentUser()).thenReturn(null);
 

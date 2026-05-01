@@ -42,6 +42,7 @@ void main() {
     service = TransactionValidatorService(firestore: mockFirestore);
 
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
+    when(() => mockFirestore.doc(any())).thenReturn(mockWalletRef);
     when(() => mockCollection.doc(any())).thenReturn(mockWalletRef);
     when(() => mockWalletRef.collection(any())).thenReturn(mockCollection);
     

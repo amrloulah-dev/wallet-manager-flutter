@@ -33,11 +33,7 @@ class DebtRepository {
     
     try {
       await _firestore.runTransaction((transaction) async {
-        final statsRef = _firestore
-            .collection(FirebaseConstants.storesCollection)
-            .doc(debt.storeId)
-            .collection(FirebaseConstants.statsCollection)
-            .doc(FirebaseConstants.summaryDoc);
+        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(debt.storeId));
 
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
@@ -193,11 +189,7 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        final statsRef = _firestore
-            .collection(FirebaseConstants.storesCollection)
-            .doc(oldDebt.storeId)
-            .collection(FirebaseConstants.statsCollection)
-            .doc(FirebaseConstants.summaryDoc);
+        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
         final statsSnap = await transaction.get(statsRef);
         int currentOpenDebts = 0;
@@ -268,11 +260,7 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        final statsRef = _firestore
-            .collection(FirebaseConstants.storesCollection)
-            .doc(oldDebt.storeId)
-            .collection(FirebaseConstants.statsCollection)
-            .doc(FirebaseConstants.summaryDoc);
+        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
         final statsSnap = await transaction.get(statsRef);
         int currentPaidDebts = 0;

@@ -78,6 +78,7 @@ void main() {
     when(() => mockTxModel.toFirestore()).thenReturn({});
 
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
+    when(() => mockFirestore.doc(any())).thenReturn(mockWalletRef);
     when(() => mockCollection.doc(any())).thenReturn(mockWalletRef);
     when(() => mockWalletRef.collection(any())).thenReturn(mockCollection);
     when(() => mockWalletRef.get()).thenAnswer((_) async => mockWalletSnap);

@@ -18,6 +18,8 @@ import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/utils/password_hasher.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
 
 class AuthSessionResult {
   final UserModel user;
@@ -53,7 +55,7 @@ class DatabaseSyncService {
         _userRepository = userRepository,
         _deviceRepository = deviceRepository,
         _localStorage = localStorage,
-        _firestore = firestore ?? FirebaseFirestore.instance,
+        _firestore = firestore ?? sl<FirebaseService>().firestore,
         _subscriptionRepository = subscriptionRepository ?? SubscriptionRepository();
 
   bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());

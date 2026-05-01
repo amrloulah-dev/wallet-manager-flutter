@@ -208,11 +208,7 @@ class TransactionValidatorService {
       tx.update(walletRef, walletUpdateData);
 
       // Update Store Stats Summary Document
-      final statsSummaryRef = _firestore
-          .collection(FirebaseConstants.storesCollection)
-          .doc(transaction.storeId)
-          .collection(FirebaseConstants.statsCollection)
-          .doc(FirebaseConstants.summaryDoc);
+      final statsSummaryRef = _firestore.doc(FirebaseConstants.statsSummaryPath(transaction.storeId));
 
       final Map<String, dynamic> summaryUpdates = {
         FirebaseConstants.totalTransactions: FieldValue.increment(1),
@@ -237,11 +233,7 @@ class TransactionValidatorService {
       tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
 
       // Update Daily Stats Document
-      final dailyStatsRef = _firestore
-          .collection(FirebaseConstants.storesCollection)
-          .doc(transaction.storeId)
-          .collection(FirebaseConstants.dailyStatsCollection)
-          .doc(DateHelper.getCurrentDateString());
+      final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(transaction.storeId, DateHelper.getCurrentDateString()));
 
       tx.set(
         dailyStatsRef,

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
@@ -11,13 +12,19 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
 class MockStoreRepository extends Mock implements StoreRepository {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 class MockAuthRepository extends Mock implements AuthRepository {}
+class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockDeviceRepository extends Mock implements DeviceRepository {}
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+class MockFirebaseService extends Mock implements FirebaseService {}
+class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +45,15 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     mockDeviceRepo = MockDeviceRepository();
     mockLicenseRepo = MockLicenseKeyRepository();
+    final mockFirebaseService = MockFirebaseService();
+    final mockFirestore = MockFirebaseFirestore();
+    
+    final mockAuth = MockFirebaseAuth();
+    
+    when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+    sl.allowReassignment = true;
+    sl.registerSingleton<FirebaseService>(mockFirebaseService);
+    sl.registerSingleton<FirebaseAuth>(mockAuth);
 
     final databaseSyncService = DatabaseSyncService(
       authRepository: mockAuthRepo,
