@@ -27,7 +27,7 @@
     - [x] Verify test passes.
 - [x] Task: Conductor - User Manual Verification 'Billing & Read Optimization' (Protocol in workflow.md) [873c942]
 
-## Phase 3: State Management & Architecture
+## Phase 3: State Management & Architecture [checkpoint: 64d7215]
 - [x] Task: TDD - Stale Cache Eviction [253406e]
     - [x] Write failing test for cache eviction behavior in `TransactionRepository` and `DebtRepository`.
     - [x] Update regex to `startsWith('transactions_page_')` to clear all pages.
@@ -40,7 +40,7 @@
     - [x] Write failing test for `watchStatsSummary` initialization and stream emission.
     - [x] Remove `.asyncMap` from `watchStatsSummary` and move initialization to the provider/repository init phase.
     - [x] Verify test passes.
-- [ ] Task: Conductor - User Manual Verification 'State Management & Architecture' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'State Management & Architecture' (Protocol in workflow.md) [64d7215]
 
 ## Phase 4: Technical Debt Cleanup
 - [ ] Task: TDD - Path Constants and Dependency Injection
