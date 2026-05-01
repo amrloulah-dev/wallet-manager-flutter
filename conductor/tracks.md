@@ -11,3 +11,6 @@
 *Link: [./tracks/business_logic_domain_integrity_20260426/](./tracks/business_logic_domain_integrity_20260426/)*
 
 ---
+
+- [ ] **Track: Firebase & Firestore Refactoring**
+*Link: [./tracks/firebase_refactoring_20260501/](./tracks/firebase_refactoring_20260501/)*
