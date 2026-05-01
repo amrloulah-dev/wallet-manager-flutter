@@ -35,15 +35,7 @@ class EmployeeProvider extends BaseProvider {
   String get searchQuery => _searchQuery;
   bool get showActiveOnly => _showActiveOnly;
 
-  List<UserModel> get filteredEmployees {
-    return _employees.where((employee) {
-      final query = _searchQuery.toLowerCase();
-      final nameMatch = employee.fullName.toLowerCase().contains(query);
-      final phoneMatch = employee.phone?.contains(query) ?? false;
-      final activeMatch = !_showActiveOnly || employee.isActive;
-      return (nameMatch || phoneMatch) && activeMatch;
-    }).toList();
-  }
+  List<UserModel> get filteredEmployees => _employees;
 
   int get employeesCount =>
       _employees.where((e) => e.isActive && e.role != UserRole.owner).length;
@@ -90,9 +82,14 @@ class EmployeeProvider extends BaseProvider {
 
   void _listenToEmployees(String storeId) {
     _updateStatus(EmployeeProviderStatus.loading);
-    safeNotify();
+    _employeeStreamSubscription?.cancel();
+    
     _employeeStreamSubscription =
-        _employeeRepository.watchEmployees(storeId).listen(
+        _employeeRepository.watchEmployees(
+          storeId,
+          searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+          activeOnly: _showActiveOnly,
+        ).listen(
       (employees) {
         _employees = employees;
         _recalculateSuspendedEmployees();
@@ -310,19 +307,36 @@ class EmployeeProvider extends BaseProvider {
   }
 
   void setSearchQuery(String query) {
-    _searchQuery = query;
-    safeNotify();
+    if (_searchQuery != query) {
+      _searchQuery = query;
+      if (_currentStoreId != null) {
+        _listenToEmployees(_currentStoreId!);
+      } else {
+        safeNotify();
+      }
+    }
   }
 
   void toggleActiveFilter() {
     _showActiveOnly = !_showActiveOnly;
-    safeNotify();
+    if (_currentStoreId != null) {
+      _listenToEmployees(_currentStoreId!);
+    } else {
+      safeNotify();
+    }
   }
 
   void clearSearch() {
-    _searchQuery = '';
-    safeNotify();
+    if (_searchQuery.isNotEmpty) {
+      _searchQuery = '';
+      if (_currentStoreId != null) {
+        _listenToEmployees(_currentStoreId!);
+      } else {
+        safeNotify();
+      }
+    }
   }
+
 
   UserModel? getEmployeeById(String userId) {
     try {
