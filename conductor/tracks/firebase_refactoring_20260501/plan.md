@@ -1,7 +1,7 @@
 # Implementation Plan: Firebase & Firestore Refactoring
 
 ## Phase 1: Financial Race Conditions
-- [ ] Task: TDD - `WalletRepository` and `stats_repository.dart` Math Operations
+- [~] Task: TDD - `WalletRepository` and `stats_repository.dart` Math Operations
     - [ ] Write failing test for concurrent balance/stats updates (using `fake_cloud_firestore`).
     - [ ] Implement `FieldValue.increment()` for `debitWallet`, `totalWallets`, and `activeWallets`.
     - [ ] Verify test passes.

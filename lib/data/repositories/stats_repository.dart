@@ -192,31 +192,22 @@ class StatsRepository {
       };
 
       if (countChange != 0) {
-        int currentTotal = 0;
-        if (summarySnap.exists) {
-          final data = summarySnap.data() as Map<String, dynamic>?;
-          currentTotal = (data?['totalWallets'] as int?) ?? 0;
-        }
-        final newTotal = (currentTotal + countChange).clamp(0, 999999).toInt();
-        summaryUpdates['totalWallets'] = newTotal;
+        summaryUpdates['totalWallets'] = FieldValue.increment(countChange);
       }
 
       if (activeCountChange != 0) {
-        int currentActive = 0;
-        if (summarySnap.exists) {
-          final data = summarySnap.data() as Map<String, dynamic>?;
-          currentActive = (data?['activeWallets'] as int?) ?? 0;
-        }
-        final newActive =
-            (currentActive + activeCountChange).clamp(0, 999999).toInt();
-        summaryUpdates['activeWallets'] = newActive;
+        summaryUpdates['activeWallets'] = FieldValue.increment(activeCountChange);
       }
 
       if (balanceChange != 0.0) {
         summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
       }
 
-      transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
+      if (summarySnap.exists) {
+        transaction.update(summaryRef, summaryUpdates);
+      } else {
+        transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
+      }
     }
 
     if (firestoreTransaction != null) {

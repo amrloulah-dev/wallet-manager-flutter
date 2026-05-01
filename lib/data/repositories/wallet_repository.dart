@@ -229,7 +229,7 @@ class WalletRepository {
         }
 
         transaction.update(walletRef, {
-          'balance': currentBalance - amount,
+          'balance': FieldValue.increment(-amount),
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
       });
