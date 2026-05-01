@@ -294,13 +294,29 @@ class EmployeeRepository {
     }
   }
 
-  Stream<List<UserModel>> watchEmployees(String storeId) {
-    return _usersCollection
+  Stream<List<UserModel>> watchEmployees(String storeId, {String? searchQuery, bool activeOnly = true}) {
+    Query query = _usersCollection
         .where(FirebaseConstants.storeId, isEqualTo: storeId)
         .where(FirebaseConstants.role,
-            isEqualTo: UserRole.employee.name) // ENUM refactor
-        .orderBy(FirebaseConstants.createdAt, descending: true)
-        .limit(100)
+            isEqualTo: UserRole.employee.name); // ENUM refactor
+
+    if (activeOnly) {
+      query = query.where(FirebaseConstants.isActive, isEqualTo: true);
+    }
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      // Basic prefix search: query >= search && query <= search + \uf8ff
+      // Note: This is case-sensitive in Firestore. 
+      // For better search, a separate lowercase field or Algolia is needed,
+      // but this is a standard Firestore optimization step.
+      query = query
+          .where(FirebaseConstants.fullName, isGreaterThanOrEqualTo: searchQuery)
+          .where(FirebaseConstants.fullName, isLessThanOrEqualTo: '$searchQuery\uf8ff');
+    }
+
+    return query
+        .orderBy(FirebaseConstants.fullName)
+        .limit(20) // Limit results to prevent billing explosions
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
