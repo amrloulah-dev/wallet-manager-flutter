@@ -32,10 +32,10 @@
     - [x] Write failing test for cache eviction behavior in `TransactionRepository` and `DebtRepository`.
     - [x] Update regex to `startsWith('transactions_page_')` to clear all pages.
     - [x] Verify test passes.
-- [ ] Task: TDD - Stateless Pagination
-    - [ ] Write failing test for stateless `getDebtsByDateRange` in `debt_repository.dart`.
-    - [ ] Remove `_lastDocument` instance variable and refactor method signature.
-    - [ ] Verify test passes.
+- [x] Task: TDD - Stateless Pagination [2c8b415]
+    - [x] Write failing test for stateless `getDebtsByDateRange` in `debt_repository.dart`.
+    - [x] Remove `_lastDocument` instance variable and refactor method signature.
+    - [x] Verify test passes.
 - [ ] Task: TDD - Stream Pipeline Fixes
     - [ ] Write failing test for `watchStatsSummary` initialization and stream emission.
     - [ ] Remove `.asyncMap` from `watchStatsSummary` and move initialization to the provider/repository init phase.
