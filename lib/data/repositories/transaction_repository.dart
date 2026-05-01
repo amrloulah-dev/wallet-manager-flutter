@@ -81,8 +81,8 @@ class TransactionRepository {
             transaction.storeId, transaction.amount);
       }
 
-      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
-      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
+      _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_${transaction.walletId}');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to create transaction: ${e.message}',
@@ -212,7 +212,7 @@ class TransactionRepository {
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _transactionsCollection.doc(transactionId).update(updateData);
-      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to update transaction: ${e.message}',
@@ -231,7 +231,7 @@ class TransactionRepository {
         'deletedAt': FieldValue.serverTimestamp(),
         'deletedBy': deletedBy,
       });
-      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to delete transaction: ${e.message}',

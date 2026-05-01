@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
+import 'package:walletmanager/data/models/debt_model.dart';
+import 'package:walletmanager/data/models/paginated_result.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 
@@ -57,7 +59,7 @@ void main() {
 
       final result = await repository.getDebtsByDateRange(storeId, DateTime.now(), DateTime.now());
 
-      expect(result, isA<List>()); // It returns a List, not a PaginatedResult
+      expect(result, isA<PaginatedResult<DebtModel>>());
       verify(() => mockQuery.limit(20)).called(1);
     });
   });

@@ -7,6 +7,7 @@ import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/debt_model.dart';
+import '../models/paginated_result.dart';
 import '../services/firebase_service.dart';
 
 class DebtRepository {
@@ -24,12 +25,6 @@ class DebtRepository {
       _firestore.collection(FirebaseConstants.debts);
 
   String generateId() => _debtsCollection.doc().id;
-
-  DocumentSnapshot? _lastDocument;
-
-  void resetPagination() {
-    _lastDocument = null;
-  }
 
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
@@ -55,7 +50,7 @@ class DebtRepository {
         transaction.set(debtDocRef, debt.toFirestore());
         transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
     } on FirebaseException catch (e) {
       throw ServerException('Failed to create debt: ${e.message}',
           code: e.code);
@@ -237,7 +232,7 @@ class DebtRepository {
         transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to process payment: ${e.message}',
@@ -304,7 +299,7 @@ class DebtRepository {
         transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to add partial debt: ${e.message}',
@@ -319,7 +314,7 @@ class DebtRepository {
   Future<void> updateDebt(String debtId, Map<String, dynamic> data) async {
     try {
       await _debtsCollection.doc(debtId).update(data);
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e) {
       throw ServerException('Failed to update debt: ${e.message}',
@@ -330,8 +325,8 @@ class DebtRepository {
     }
   }
 
-  Future<List<DebtModel>> getDebtsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate, {bool loadMore = false}) async {
+  Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
     try {
       Query query = _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -339,12 +334,8 @@ class DebtRepository {
           .where('createdAt', isLessThanOrEqualTo: endDate)
           .orderBy('createdAt', descending: true);
 
-      if (!loadMore) {
-        _lastDocument = null;
-      }
-
-      if (_lastDocument != null) {
-        query = query.startAfterDocument(_lastDocument!);
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
       }
 
       final snapshot = await query.limit(20).get();
@@ -360,11 +351,11 @@ class DebtRepository {
           );
         }
       }
-      if (snapshot.docs.isNotEmpty) {
-        _lastDocument = snapshot.docs.last;
-      }
 
-      return items;
+      return PaginatedResult(
+        items: items,
+        lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      );
     } on FirebaseException catch (e) {
       throw ServerException('Failed to get debts by date range: ${e.message}',
           code: e.code);
@@ -464,7 +455,7 @@ class DebtRepository {
         transaction.set(statsRef, updates, SetOptions(merge: true));
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.deleteDebt');
