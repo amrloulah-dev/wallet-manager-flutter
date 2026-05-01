@@ -119,6 +119,14 @@ class StatisticsProvider extends BaseProvider {
     _activateFetchShield();
 
     debugPrint('⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
+    
+    // Phase 4: Ensure stats are initialized before watching
+    try {
+      await _statsRepository.getStatsSummary(_storeId!);
+    } catch (e) {
+      debugPrint('⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
+    }
+
     // 1. Establish Summary Stream
     _summarySubscription = _statsRepository
         .watchStatsSummary(_storeId!)

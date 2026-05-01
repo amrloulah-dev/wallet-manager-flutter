@@ -81,13 +81,11 @@ class StatsRepository {
   }
 
   Stream<StatsSummaryModel> watchStatsSummary(String storeId) {
-    return _getSummaryDocRef(storeId).snapshots().asyncMap((doc) async {
+    return _getSummaryDocRef(storeId).snapshots().map((doc) {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         return StatsSummaryModel.fromMap(data);
       } else {
-        // Phase 4: Properly await initialization to avoid race conditions
-        await initializeStats(storeId);
         return StatsSummaryModel.empty();
       }
     });
