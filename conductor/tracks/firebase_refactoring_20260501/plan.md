@@ -36,10 +36,10 @@
     - [x] Write failing test for stateless `getDebtsByDateRange` in `debt_repository.dart`.
     - [x] Remove `_lastDocument` instance variable and refactor method signature.
     - [x] Verify test passes.
-- [ ] Task: TDD - Stream Pipeline Fixes
-    - [ ] Write failing test for `watchStatsSummary` initialization and stream emission.
-    - [ ] Remove `.asyncMap` from `watchStatsSummary` and move initialization to the provider/repository init phase.
-    - [ ] Verify test passes.
+- [x] Task: TDD - Stream Pipeline Fixes [6887efd]
+    - [x] Write failing test for `watchStatsSummary` initialization and stream emission.
+    - [x] Remove `.asyncMap` from `watchStatsSummary` and move initialization to the provider/repository init phase.
+    - [x] Verify test passes.
 - [ ] Task: Conductor - User Manual Verification 'State Management & Architecture' (Protocol in workflow.md)
 
 ## Phase 4: Technical Debt Cleanup
