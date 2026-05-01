@@ -43,9 +43,9 @@
 - [x] Task: Conductor - User Manual Verification 'State Management & Architecture' (Protocol in workflow.md) [64d7215]
 
 ## Phase 4: Technical Debt Cleanup
-- [ ] Task: TDD - Path Constants and Dependency Injection
-    - [ ] Write failing test verifying correct paths and singleton access.
-    - [ ] Refactor `transaction_repository.dart` and `subscription_repository.dart` to use central path builders.
-    - [ ] Replace `FirebaseFirestore.instance` in `employee_repository.dart` with `sl<FirebaseService>().firestore`.
-    - [ ] Verify test passes.
+- [x] Task: TDD - Path Constants and Dependency Injection [6e10333]
+    - [x] Write failing test verifying correct paths and singleton access.
+    - [x] Refactor `transaction_repository.dart` and `subscription_repository.dart` to use central path builders.
+    - [x] Replace `FirebaseFirestore.instance` in `employee_repository.dart` with `sl<FirebaseService>().firestore`.
+    - [x] Verify test passes.
 - [ ] Task: Conductor - User Manual Verification 'Technical Debt Cleanup' (Protocol in workflow.md)
