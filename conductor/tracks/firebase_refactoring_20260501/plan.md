@@ -28,10 +28,10 @@
 - [x] Task: Conductor - User Manual Verification 'Billing & Read Optimization' (Protocol in workflow.md) [873c942]
 
 ## Phase 3: State Management & Architecture
-- [ ] Task: TDD - Stale Cache Eviction
-    - [ ] Write failing test for cache eviction behavior in `TransactionRepository` and `DebtRepository`.
-    - [ ] Update regex to `startsWith('transactions_page_')` to clear all pages.
-    - [ ] Verify test passes.
+- [x] Task: TDD - Stale Cache Eviction [253406e]
+    - [x] Write failing test for cache eviction behavior in `TransactionRepository` and `DebtRepository`.
+    - [x] Update regex to `startsWith('transactions_page_')` to clear all pages.
+    - [x] Verify test passes.
 - [ ] Task: TDD - Stateless Pagination
     - [ ] Write failing test for stateless `getDebtsByDateRange` in `debt_repository.dart`.
     - [ ] Remove `_lastDocument` instance variable and refactor method signature.
