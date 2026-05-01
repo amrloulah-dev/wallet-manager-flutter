@@ -10,19 +10,16 @@ import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/errors/error_severity.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;
 
   StatsRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? sl<FirebaseFirestore>();
+      : _firestore = firestore ?? sl<FirebaseService>().firestore;
 
   DocumentReference _getSummaryDocRef(String storeId) {
-    return _firestore
-        .collection(FirebaseConstants.storesCollection)
-        .doc(storeId)
-        .collection(FirebaseConstants.statsCollection)
-        .doc(FirebaseConstants.summaryDoc);
+    return _firestore.doc(FirebaseConstants.statsSummaryPath(storeId));
   }
 
   Future<StatsSummaryModel> getStatsSummary(String storeId) async {
@@ -38,11 +35,7 @@ class StatsRepository {
   Future<DailyStatsModel> fetchTodayStats(String storeId) async {
     try {
       final todayDate = DateHelper.getCurrentDateString();
-      final docRef = _firestore
-          .collection(FirebaseConstants.storesCollection)
-          .doc(storeId)
-          .collection(FirebaseConstants.dailyStatsCollection)
-          .doc(todayDate);
+      final docRef = _firestore.doc(FirebaseConstants.dailyStatsPath(storeId, todayDate));
 
       final doc = await docRef.get();
       if (doc.exists) {
@@ -65,10 +58,7 @@ class StatsRepository {
   Stream<DailyStatsModel> watchTodayStats(String storeId) {
     final todayDate = DateHelper.getCurrentDateString();
     return _firestore
-        .collection(FirebaseConstants.storesCollection)
-        .doc(storeId)
-        .collection(FirebaseConstants.dailyStatsCollection)
-        .doc(todayDate)
+        .doc(FirebaseConstants.dailyStatsPath(storeId, todayDate))
         .snapshots()
         .map((doc) {
       if (doc.exists) {

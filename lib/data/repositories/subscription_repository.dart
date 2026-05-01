@@ -7,6 +7,8 @@ import '../../core/utils/number_parser.dart';
 
 import 'package:walletmanager/core/di/service_locator.dart';
 
+import 'package:walletmanager/data/services/firebase_service.dart';
+
 class SubscriptionRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -14,7 +16,7 @@ class SubscriptionRepository {
   SubscriptionRepository({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-  })  : _firestore = firestore ?? sl<FirebaseFirestore>(),
+  })  : _firestore = firestore ?? sl<FirebaseService>().firestore,
         _auth = auth ?? sl<FirebaseAuth>();
 
   Future<void> verifyDevice(String storeId) async {
@@ -22,11 +24,7 @@ class SubscriptionRepository {
     final deviceModel = await DeviceTrackingService.getDeviceModel();
     final osVersion = await DeviceTrackingService.getOsVersion();
     
-    final docRef = _firestore
-        .collection(FirebaseConstants.storesCollection)
-        .doc(storeId)
-        .collection(FirebaseConstants.deviceRegistrationsCollection)
-        .doc(deviceId);
+    final docRef = _firestore.doc(FirebaseConstants.deviceRegistrationPath(storeId, deviceId));
     
     await _firestore.runTransaction((transaction) async {
       final doc = await transaction.get(docRef);
@@ -92,7 +90,7 @@ class SubscriptionRepository {
       createdAt: now, // This will be overridden
     );
     
-    final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
+    final storeRef = _firestore.doc(FirebaseConstants.storePath(storeId));
     
     // We throw and let the caller (Provider) handle the optimistic rollback
     final batch = _firestore.batch();
@@ -116,8 +114,7 @@ class SubscriptionRepository {
     
     // Query the root-level device_registrations for this hardware device
     final docSnapshot = await _firestore
-        .collection(FirebaseConstants.deviceRegistrationsCollection)
-        .doc(deviceId)
+        .doc(FirebaseConstants.hardwareDeviceRegistrationPath(deviceId))
         .get();
     
     if (!docSnapshot.exists) return false;

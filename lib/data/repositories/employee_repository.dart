@@ -8,14 +8,16 @@ import '../../core/services/identity_service.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_permissions.dart';
 import '../../core/enums/user_enums.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
 
 class EmployeeRepository {
   final FirebaseFirestore _firestore;
   final CollectionReference _usersCollection;
 
   EmployeeRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _usersCollection = (firestore ?? FirebaseFirestore.instance)
+      : _firestore = firestore ?? sl<FirebaseService>().firestore,
+        _usersCollection = (firestore ?? sl<FirebaseService>().firestore)
             .collection(FirebaseConstants.usersCollection);
 
   Future<List<UserModel>> getEmployeesByStoreId({

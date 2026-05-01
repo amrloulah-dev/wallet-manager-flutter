@@ -73,4 +73,28 @@ class FirebaseConstants {
   static const String totalCommission = 'totalCommission';
   static const String totalServiceFee = 'totalServiceFee';
   static const String totalDebtsCreated = 'totalDebtsCreated';
+
+  // Path Builders
+  static String storePath(String storeId) => '$storesCollection/$storeId';
+
+  static String statsSubcollection(String storeId) =>
+      '${storePath(storeId)}/$statsCollection';
+
+  static String statsSummaryPath(String storeId) =>
+      '${statsSubcollection(storeId)}/$summaryDoc';
+
+  static String dailyStatsSubcollection(String storeId) =>
+      '${storePath(storeId)}/$dailyStatsCollection';
+
+  static String dailyStatsPath(String storeId, String date) =>
+      '${dailyStatsSubcollection(storeId)}/$date';
+
+  static String deviceRegistrationsSubcollection(String storeId) =>
+      '${storePath(storeId)}/$deviceRegistrationsCollection';
+
+  static String deviceRegistrationPath(String storeId, String deviceId) =>
+      '${deviceRegistrationsSubcollection(storeId)}/$deviceId';
+
+  static String hardwareDeviceRegistrationPath(String deviceId) =>
+      '$deviceRegistrationsCollection/$deviceId';
 }

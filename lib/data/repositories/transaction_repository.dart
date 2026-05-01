@@ -14,6 +14,8 @@ import '../models/paginated_result.dart';
 import '../models/transaction_model.dart';
 import '../services/firebase_service.dart';
 
+import 'package:walletmanager/core/di/service_locator.dart';
+
 class TransactionRepository {
   final FirebaseService _firebaseService;
   final CacheManager _cacheManager;
@@ -23,9 +25,9 @@ class TransactionRepository {
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
     StatsRepository? statsRepository,
-  })  : _firebaseService = firebaseService ?? FirebaseService(),
-        _cacheManager = cacheManager ?? CacheManager(),
-        _statsRepository = statsRepository ?? StatsRepository();
+  })  : _firebaseService = firebaseService ?? sl<FirebaseService>(),
+        _cacheManager = cacheManager ?? sl<CacheManager>(),
+        _statsRepository = statsRepository ?? sl<StatsRepository>();
 
   FirebaseFirestore get _firestore => _firebaseService.firestore;
   CollectionReference get _transactionsCollection =>
