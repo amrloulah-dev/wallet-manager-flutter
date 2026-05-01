@@ -12,5 +12,5 @@
 
 ---
 
-- [~] **Track: Firebase & Firestore Refactoring**
+- [x] **Track: Firebase & Firestore Refactoring**
 *Link: [./tracks/firebase_refactoring_20260501/](./tracks/firebase_refactoring_20260501/)*
