@@ -73,15 +73,21 @@ class TransactionRepository {
 
       // Delegate entirely to the unified validator which handles
       // balance, stats, and daily_stats atomically inside runTransaction.
-      await TransactionValidatorService().validateAndSave(transaction);
+      await TransactionValidatorService().validateAndSave(
+        transaction,
+        extraWrites: (tx) async {
+          // Handle debt stats inside the SAME transaction
+          if (transaction.isDebt) {
+            await _statsRepository.incrementOpenDebtStats(
+              transaction.storeId,
+              transaction.amount,
+              firestoreTransaction: tx,
+            );
+          }
+        },
+      );
       debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
           'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
-
-      // Handle debt stats separately (not covered by the validator)
-      if (transaction.isDebt) {
-        await _statsRepository.incrementOpenDebtStats(
-            transaction.storeId, transaction.amount);
-      }
 
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));

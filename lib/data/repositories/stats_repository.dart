@@ -87,14 +87,20 @@ class StatsRepository {
     return summary;
   }
 
-  Future<void> incrementOpenDebtStats(String storeId, double amount) async {
+  Future<void> incrementOpenDebtStats(String storeId, double amount, {Transaction? firestoreTransaction}) async {
     AmountValidator.ensurePositive(amount);
     final docRef = _getSummaryDocRef(storeId);
-    await docRef.update({
+    final Map<String, dynamic> updates = {
       'openDebtsCount': FieldValue.increment(1),
       'totalOpenAmount': FieldValue.increment(amount),
       'lastUpdated': FieldValue.serverTimestamp(),
-    });
+    };
+    
+    if (firestoreTransaction != null) {
+      firestoreTransaction.update(docRef, updates);
+    } else {
+      await docRef.update(updates);
+    }
   }
 
   @visibleForTesting

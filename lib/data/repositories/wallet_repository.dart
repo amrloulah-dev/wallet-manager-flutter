@@ -33,13 +33,20 @@ class WalletRepository {
   // 1️⃣ CREATE Methods
   Future<void> createWallet(WalletModel wallet) async {
     try {
-      await _walletsCollection.doc(wallet.walletId).set(wallet.toFirestore());
-      await _statsRepository.updateStatsOnWalletChange(
-        wallet.storeId,
-        countChange: 1,
-        activeCountChange: wallet.isActive ? 1 : 0,
-        balanceChange: wallet.balance,
-      );
+      await _firestore.runTransaction((transaction) async {
+        final walletRef = _walletsCollection.doc(wallet.walletId);
+        
+        transaction.set(walletRef, wallet.toFirestore());
+        
+        await _statsRepository.updateStatsOnWalletChange(
+          wallet.storeId,
+          countChange: 1,
+          activeCountChange: wallet.isActive ? 1 : 0,
+          balanceChange: wallet.balance,
+          firestoreTransaction: transaction,
+        );
+      });
+      
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     } catch (e) {
       throw ServerException('فشل إنشاء المحفظة: $e');
@@ -195,20 +202,25 @@ class WalletRepository {
         final walletSnap = await transaction.get(walletRef);
         if (!walletSnap.exists) throw NotFoundException('Wallet');
 
+        final wallet = WalletModel.fromFirestore(walletSnap);
+
+        await _statsRepository.updateStatsOnWalletChange(
+          wallet.storeId,
+          balanceChange: amount,
+          firestoreTransaction: transaction,
+        );
+
         transaction.update(walletRef, {
           'balance': FieldValue.increment(amount),
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
       });
 
-      final wallet = await getWalletById(walletId);
-      if (wallet != null) {
-        await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
-            balanceChange: amount);
-      }
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
-    } catch (e) {
+    } catch (e, stack) {
+      print('ERROR: $e');
+      print('STACKTRACE: $stack');
       if (e is AppException) rethrow;
       throw ServerException('فشل شحن رصيد المحفظة: $e');
     }
@@ -222,11 +234,18 @@ class WalletRepository {
         final walletSnap = await transaction.get(walletRef);
         if (!walletSnap.exists) throw NotFoundException('Wallet');
 
+        final wallet = WalletModel.fromFirestore(walletSnap);
         final data = walletSnap.data() as Map<String, dynamic>?;
         final currentBalance = NumberParser.toDouble(data?['balance']);
         if ((currentBalance + 0.01) < amount) {
           throw DomainException('رصيد المحفظة غير كافٍ.');
         }
+
+        await _statsRepository.updateStatsOnWalletChange(
+          wallet.storeId,
+          balanceChange: -amount,
+          firestoreTransaction: transaction,
+        );
 
         transaction.update(walletRef, {
           'balance': FieldValue.increment(-amount),
@@ -234,11 +253,6 @@ class WalletRepository {
         });
       });
 
-      final wallet = await getWalletById(walletId);
-      if (wallet != null) {
-        await _statsRepository.updateStatsOnWalletChange(wallet.storeId,
-            balanceChange: -amount);
-      }
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e) {

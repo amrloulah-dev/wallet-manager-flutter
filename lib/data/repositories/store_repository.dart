@@ -116,11 +116,11 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }

@@ -20,7 +20,7 @@ class TransactionValidatorService {
   TransactionValidatorService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? sl<FirebaseFirestore>();
 
-  Future<void> validateAndSave(TransactionModel transaction) async {
+  Future<void> validateAndSave(TransactionModel transaction, {Future<void> Function(Transaction)? extraWrites}) async {
     debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
         'ENTRY | txId=${transaction.transactionId}, walletId=${transaction.walletId}, '
         'type=${transaction.transactionType}, amount=${transaction.amount}, '
@@ -245,6 +245,13 @@ class TransactionValidatorService {
         },
         SetOptions(merge: true),
       );
+
+      // ------------------------------------------------------------------
+      // 6. EXTRA WRITES (Provided by caller)
+      // ------------------------------------------------------------------
+      if (extraWrites != null) {
+        await extraWrites(tx);
+      }
 
       debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
           'SUCCESS — all Firestore writes queued atomically for '

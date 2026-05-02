@@ -40,7 +40,8 @@ class EmployeeRepository {
           .limit(limit)
           .get();
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'EmployeeRepository');
       throw ServerException('Failed to get employees: $e');
     }
   }
@@ -95,6 +96,17 @@ class EmployeeRepository {
       stats: UserStats(),
     );
 
+    // Ensure PIN uniqueness BEFORE the transaction (Queries cannot run inside transactions)
+    final pinQuery = await _usersCollection
+        .where(FirebaseConstants.storeId, isEqualTo: storeId)
+        .where(FirebaseConstants.pin, isEqualTo: hashedPin)
+        .limit(1)
+        .get();
+
+    if (pinQuery.docs.isNotEmpty) {
+      throw ServerException('الرقم السري مستخدم بالفعل');
+    }
+
     await _firestore.runTransaction((transaction) async {
       final storeRef = _firestore
           .collection(FirebaseConstants.storesCollection)
@@ -116,17 +128,6 @@ class EmployeeRepository {
       if (currentEmployees >= maxEmployees && maxEmployees != -1) {
         throw ServerException(
             'تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
-      }
-
-      // Ensure PIN uniqueness within the transaction
-      final pinQuery = await _usersCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.pin, isEqualTo: hashedPin)
-          .limit(1)
-          .get();
-
-      if (pinQuery.docs.isNotEmpty) {
-        throw ServerException('الرقم السري مستخدم بالفعل');
       }
 
       final userData = newUser.toFirestore();

@@ -13,88 +13,57 @@ class MigrationService {
 
   Future<void> recalculateStoreStats(String storeId) async {
     // 1. Recalculate Wallets
-    final walletsSnapshot = await _firestore
+    final walletsBaseQuery = _firestore
         .collection(FirebaseConstants.walletsCollection)
-        .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .get();
-
-    int totalWallets = 0;
-    int activeWallets = 0;
-    double totalBalance = 0.0;
-
-    for (var doc in walletsSnapshot.docs) {
-      final data = doc.data();
-      final bool isActive = data[FirebaseConstants.isActive] as bool? ?? false;
-      final double balance = NumberParser.toDouble(data['balance']);
-
-      totalWallets++;
-      if (isActive) {
-        activeWallets++;
-        totalBalance += balance;
-      }
-    }
+        .where(FirebaseConstants.storeId, isEqualTo: storeId);
+    
+    final walletsTotalCount = await walletsBaseQuery.count().get();
+    
+    final activeWalletsQuery = walletsBaseQuery.where(FirebaseConstants.isActive, isEqualTo: true);
+    final activeWalletsStats = await activeWalletsQuery.aggregate(
+      count(),
+      sum('balance'),
+    ).get();
 
     // 2. Recalculate Debts
-    final debtsSnapshot = await _firestore
+    final debtsBaseQuery = _firestore
         .collection(FirebaseConstants.debts)
-        .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .get();
+        .where(FirebaseConstants.storeId, isEqualTo: storeId);
+    
+    final openDebtsQuery = debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
+    final openDebtsStats = await openDebtsQuery.aggregate(
+      count(),
+      sum('amountDue'),
+    ).get();
 
-    int openDebtsCount = 0;
-    int paidDebtsCount = 0;
-    double totalOpenAmount = 0.0;
-    double totalPaidAmount = 0.0;
-
-    for (var doc in debtsSnapshot.docs) {
-      final data = doc.data();
-      final statusStr = data['debtStatus'] as String? ?? 'open';
-      final status = DebtStatus.fromString(statusStr);
-      final double amountDue = NumberParser.toDouble(data['amountDue']);
-      final double amountPaid = NumberParser.toDouble(data['amountPaid']);
-
-      if (status == DebtStatus.open) {
-        openDebtsCount++;
-        totalOpenAmount += amountDue;
-      } else if (status == DebtStatus.paid) {
-        paidDebtsCount++;
-        totalPaidAmount += amountPaid;
-      }
-    }
+    final paidDebtsQuery = debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
+    final paidDebtsStats = await paidDebtsQuery.aggregate(
+      count(),
+      sum('amountPaid'),
+    ).get();
 
     // 3. Recalculate Transactions
-    final transactionsSnapshot = await _firestore
+    final transactionsBaseQuery = _firestore
         .collection(FirebaseConstants.transactions)
-        .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .get();
+        .where(FirebaseConstants.storeId, isEqualTo: storeId);
+    
+    final transactionsStats = await transactionsBaseQuery.aggregate(
+      count(),
+      sum('commission'),
+      sum('serviceFee'),
+    ).get();
 
-    int totalTransactions = 0;
-    int sendCount = 0;
-    int receiveCount = 0;
-    double totalSentAmount = 0.0;
-    double totalReceivedAmount = 0.0;
-    double totalCommission = 0.0;
-    double totalServiceFee = 0.0;
+    final sendTransactionsQuery = transactionsBaseQuery.where('transactionType', isEqualTo: TransactionType.debit.name);
+    final sendStats = await sendTransactionsQuery.aggregate(
+      count(),
+      sum('amount'),
+    ).get();
 
-    for (var doc in transactionsSnapshot.docs) {
-      final data = doc.data();
-      final typeStr = data['transactionType'] as String? ?? 'send';
-      final type = TransactionType.fromString(typeStr);
-      final double amount = NumberParser.toDouble(data['amount']);
-      final double commission = NumberParser.toDouble(data['commission']);
-      final double serviceFee = NumberParser.toDouble(data['serviceFee']);
-
-      totalTransactions++;
-      totalCommission += commission;
-      totalServiceFee += serviceFee;
-
-      if (type == TransactionType.debit) {
-        sendCount++;
-        totalSentAmount += amount;
-      } else if (type == TransactionType.credit) {
-        receiveCount++;
-        totalReceivedAmount += amount;
-      }
-    }
+    final receiveTransactionsQuery = transactionsBaseQuery.where('transactionType', isEqualTo: TransactionType.credit.name);
+    final receiveStats = await receiveTransactionsQuery.aggregate(
+      count(),
+      sum('amount'),
+    ).get();
 
     // 4. Update Stats Summary
     final summaryRef = _firestore
@@ -104,20 +73,20 @@ class MigrationService {
         .doc(FirebaseConstants.summaryDoc);
 
     await summaryRef.set({
-      'totalWallets': totalWallets,
-      'activeWallets': activeWallets,
-      'totalBalance': totalBalance,
-      'openDebtsCount': openDebtsCount,
-      'paidDebtsCount': paidDebtsCount,
-      'totalOpenAmount': totalOpenAmount,
-      'totalPaidAmount': totalPaidAmount,
-      'totalTransactions': totalTransactions,
-      'sendCount': sendCount,
-      'receiveCount': receiveCount,
-      'totalSentAmount': totalSentAmount,
-      'totalReceivedAmount': totalReceivedAmount,
-      'totalCommission': totalCommission,
-      'totalServiceFee': totalServiceFee,
+      'totalWallets': walletsTotalCount.count ?? 0,
+      'activeWallets': activeWalletsStats.count ?? 0,
+      'totalBalance': activeWalletsStats.getSum('balance') ?? 0.0,
+      'openDebtsCount': openDebtsStats.count ?? 0,
+      'paidDebtsCount': paidDebtsStats.count ?? 0,
+      'totalOpenAmount': openDebtsStats.getSum('amountDue') ?? 0.0,
+      'totalPaidAmount': paidDebtsStats.getSum('amountPaid') ?? 0.0,
+      'totalTransactions': transactionsStats.count ?? 0,
+      'sendCount': sendStats.count ?? 0,
+      'receiveCount': receiveStats.count ?? 0,
+      'totalSentAmount': sendStats.getSum('amount') ?? 0.0,
+      'totalReceivedAmount': receiveStats.getSum('amount') ?? 0.0,
+      'totalCommission': transactionsStats.getSum('commission') ?? 0.0,
+      'totalServiceFee': transactionsStats.getSum('serviceFee') ?? 0.0,
       'lastUpdated': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

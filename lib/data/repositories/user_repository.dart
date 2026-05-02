@@ -53,10 +53,12 @@ class UserRepository {
         return UserModel.fromFirestore(doc);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }
@@ -73,10 +75,12 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المستخدم: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }
@@ -115,11 +119,13 @@ class UserRepository {
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب المستخدمين: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع: $e');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('حدث خطأ غير متوقع.');
     }
   }
 
@@ -137,10 +143,13 @@ class UserRepository {
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب الموظفين: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع: $e');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+          code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('حدث خطأ غير متوقع.');
     }
   }
 
@@ -156,10 +165,12 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المالك: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }
@@ -196,11 +207,13 @@ class UserRepository {
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _usersCollection.doc(userId).update(updateData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث بيانات المستخدم: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('حدث خطأ غير متوقع.');
     }
   }
 
@@ -210,10 +223,12 @@ class UserRepository {
       await _usersCollection
           .doc(userId)
           .update({FirebaseConstants.lastLogin: FieldValue.serverTimestamp()});
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث وقت تسجيل الدخول: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }
@@ -337,10 +352,12 @@ class UserRepository {
       }
 
       await _usersCollection.doc(userId).update(statsData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث إحصائيات الموظف: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('حدث خطأ غير متوقع.');
     }
   }

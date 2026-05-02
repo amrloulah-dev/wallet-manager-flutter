@@ -31,4 +31,4 @@
 - **Financial Integrity:** Epsilon-aware balance sufficiency checks (0.01 EGP tolerance), atomic Firestore transactions for all wallet and state updates, and $O(1)$ aggregate synchronization. Includes a "Zero-Unbounded-Read" guarantee by utilizing Firestore Aggregate Queries and cursor-based pagination for all list operations.
 - **Domain Fortification:** Type-safe Enums for all statuses/types and centralized `AmountValidator` guards.
 - **Reactive Resilience:** Error-aware Stream pipelines, stateless repository pagination, and transparent exception propagation from providers to the UI layer.
-- **Performance Optimization:** Efficient document batching (450-item chunks) to bypass Firestore's 500-operation limit during bulk resets.
+- **Performance Optimization:** Efficient document batching (450-item chunks) to bypass Firestore's 500-operation limit during bulk resets. Includes a "Zero-Unbounded-Read" guarantee for statistical operations by utilizing Firestore Aggregate Queries (count/sum) instead of full collection fetches.
