@@ -48,4 +48,5 @@
     - [x] Refactor `transaction_repository.dart` and `subscription_repository.dart` to use central path builders.
     - [x] Replace `FirebaseFirestore.instance` in `employee_repository.dart` with `sl<FirebaseService>().firestore`.
     - [x] Verify test passes.
-- [x] Task: Conductor - User Manual Verification 'Technical Debt Cleanup' (Protocol in workflow.md) [4cdcc5a]
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [4baa538]
