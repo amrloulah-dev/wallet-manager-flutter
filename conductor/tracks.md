@@ -12,7 +12,7 @@
 
 ---
 
-- [ ] **Track: Firebase & Firestore Refactoring (Phase 4.2: Surgical Strikes)**
+- [x] **Track: Firebase & Firestore Refactoring (Phase 4.2: Surgical Strikes)**
 *Link: [./tracks/surgical_refactoring_20260502/](./tracks/surgical_refactoring_20260502/)*
 
 
