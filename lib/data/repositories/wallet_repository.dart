@@ -264,18 +264,6 @@ class WalletRepository {
     }
   }
 
-  @Deprecated('Use creditWallet or debitWallet instead')
-  Future<void> updateWalletBalance(String walletId, double amount) async {
-    AmountValidator.ensurePositive(amount);
-    if (amount > 0) {
-      await creditWallet(walletId, amount);
-    } else if (amount < 0) {
-      await debitWallet(walletId, amount.abs());
-    }
-  }
-
-  // ... other update methods like reset limits, etc. should also clear cache ...
-
   // 4️⃣ DELETE Methods
   Future<void> deleteWallet(String walletId) async {
     await setWalletActiveStatus(walletId, false);

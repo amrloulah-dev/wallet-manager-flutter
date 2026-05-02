@@ -326,11 +326,6 @@ class UserRepository {
     int? incrementDebts,
   }) async {
     try {
-      final user = await getUserById(userId);
-      if (user == null || !user.isEmployee) {
-        throw NotFoundException('الموظف');
-      }
-
       final statsData = <String, dynamic>{
         '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}':
             FieldValue.serverTimestamp(),

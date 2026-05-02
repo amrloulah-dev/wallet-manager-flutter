@@ -63,15 +63,6 @@ void main() {
       ), throwsA(isA<DomainException>()));
     });
 
-    test('WalletRepository.updateWalletBalance should throw DomainException for negative amount', () async {
-      final repository = WalletRepository(
-        firebaseService: mockFirebaseService,
-        statsRepository: statsRepository,
-      );
-      expect(() => repository.updateWalletBalance('wallet1', -100.0),
-          throwsA(isA<DomainException>()));
-    });
-
     test('DebtRepository.processPayment should throw InvalidAmountException for overpayment', () async {
       final repository = DebtRepository(firebaseService: mockFirebaseService);
       

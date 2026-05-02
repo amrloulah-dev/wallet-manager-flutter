@@ -12,6 +12,7 @@ import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockTransactionModel extends Mock implements TransactionModel {}
@@ -43,6 +44,7 @@ void main() {
   final nowTs = Timestamp.now();
 
   setUpAll(() {
+    AppErrorHandler.isTestMode = true;
     registerFallbackValue(FakeDocumentReference());
     registerFallbackValue(FakeTransaction());
     registerFallbackValue(FakeSetOptions());
@@ -93,6 +95,11 @@ void main() {
       return await callback(mockTx);
     });
 
+    when(() => mockFirestore.runTransaction<Null>(any())).thenAnswer((invocation) async {
+      final callback = invocation.positionalArguments[0] as Function;
+      await callback(mockTx);
+    });
+
     when(() => mockTx.get<Map<String, dynamic>>(any())).thenAnswer((_) async => mockWalletSnap);
     
     when(() => mockTx.set<Map<String, dynamic>>(any(), any()))
@@ -118,9 +125,11 @@ void main() {
     // Patterns for creditWallet and debitWallet
     when(() => mockStatsRepository.updateStatsOnWalletChange(
       any(),
+      countChange: any(named: 'countChange'),
+      activeCountChange: any(named: 'activeCountChange'),
       balanceChange: any(named: 'balanceChange'),
       firestoreTransaction: any(named: 'firestoreTransaction'),
-    )).thenAnswer((_) async {});
+    )).thenAnswer((_) async => {});
   });
 
   Map<String, dynamic> createValidWalletData({required double balance}) {

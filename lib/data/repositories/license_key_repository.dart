@@ -65,12 +65,15 @@ class LicenseKeyRepository {
 
         final expiryMonths = keyData['expiryMonths'] ?? 12; // Default to 1 year
 
-        // Calculate new expiry date
-        // We add days: 30 * months as a standard approximation or use DateTime logic
+        // 1. Calculate new expiry date with precise month logic
         final DateTime now = DateTime.now();
-        // Careful with month addition in Dart, simplified approach:
-        final DateTime newExpiryDate =
-            now.add(Duration(days: expiryMonths * 30));
+        final DateTime newExpiryDate = DateTime(
+          now.year,
+          now.month + (expiryMonths as int),
+          now.day,
+          now.hour,
+          now.minute,
+        );
 
         // 2. Update License Key Doc
         transaction.update(keyRef, {

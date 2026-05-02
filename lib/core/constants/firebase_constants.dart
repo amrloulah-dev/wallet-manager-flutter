@@ -13,6 +13,7 @@ class FirebaseConstants {
   static const String systemConfigsCollection = 'system_configs';
   static const String defaultConfigDoc = 'default';
   static const String licenseKeysCollection = 'license_keys';
+  static const String pinLocksCollection = 'pin_locks';
 
   // Common
   static const String storeId = 'storeId';
@@ -97,4 +98,10 @@ class FirebaseConstants {
 
   static String hardwareDeviceRegistrationPath(String deviceId) =>
       '$deviceRegistrationsCollection/$deviceId';
+
+  static String pinLocksSubcollection(String storeId) =>
+      '${storePath(storeId)}/$pinLocksCollection';
+
+  static String pinLockPath(String storeId, String hashedPin) =>
+      '${pinLocksSubcollection(storeId)}/$hashedPin';
 }

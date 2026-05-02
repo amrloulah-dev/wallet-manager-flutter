@@ -211,7 +211,7 @@ class AuthRepository {
     try {
       await _auth.currentUser?.reload();
     } catch (e) {
-      throw AuthException('فشل في تحديث بيانات المستخدم: \${e.toString()}');
+      throw AuthException('فشل في تحديث بيانات المستخدم: ${e.toString()}');
     }
   }
 }

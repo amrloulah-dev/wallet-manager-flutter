@@ -274,6 +274,7 @@ class LocalStorageService {
   // Vault (Background → Overlay Data Bridge)
   // ===========================
   static const String _kPendingOverlayData = 'pending_overlay_data';
+  static const String _kPersistentDeviceId = 'persistent_device_id';
 
   /// Saves transaction data from the background isolate so the
   /// overlay can read it even if [FlutterOverlayWindow.shareData] fails.
@@ -298,4 +299,17 @@ class LocalStorageService {
     _ensureInitialized();
     await _prefs!.remove(_kPendingOverlayData);
   }
+
+  // ===========================
+  // Persistent Device ID
+  // ===========================
+
+  /// Saves a persistent device ID (UUID fallback).
+  Future<void> savePersistentDeviceId(String deviceId) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kPersistentDeviceId, deviceId);
+  }
+
+  /// Retrieves the saved persistent device ID.
+  String? get persistentDeviceId => _prefs?.getString(_kPersistentDeviceId);
 }

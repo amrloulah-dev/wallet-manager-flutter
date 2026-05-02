@@ -99,9 +99,22 @@ void main() {
        final handler = invocation.positionalArguments[0] as Function;
        return await handler(mockTransaction);
     });
+    when(() => mockFirestore.runTransaction<Null>(any())).thenAnswer((invocation) async {
+       final handler = invocation.positionalArguments[0] as Function;
+       await handler(mockTransaction);
+    });
     when(() => mockTransaction.set<Object?>(any(), any())).thenReturn(mockTransaction);
     when(() => mockTransaction.update(any(), any())).thenReturn(mockTransaction);
     when(() => mockStatsRepository.getStatsSummary(any())).thenAnswer((_) async => StatsSummaryModel.empty());
+    
+    // Add global stub for updateStatsOnWalletChange
+    when(() => mockStatsRepository.updateStatsOnWalletChange(
+      any(),
+      countChange: any(named: 'countChange'),
+      activeCountChange: any(named: 'activeCountChange'),
+      balanceChange: any(named: 'balanceChange'),
+      firestoreTransaction: any(named: 'firestoreTransaction'),
+    )).thenAnswer((_) async {});
     
     // Support where() minimally
     when(() => mockFirestore.collection(any())).thenReturn(MockCollectionReference());

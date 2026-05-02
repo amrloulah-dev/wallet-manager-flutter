@@ -50,7 +50,7 @@ void main() {
     final mockAuth = sl<AuthRepository>();
     when(() => mockAuth.getCurrentUser()).thenReturn(null);
     when(() => mockAuth.authStateChanges()).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuth.signOut()).thenAnswer((_) async => null);
+    when(() => mockAuth.signOut()).thenAnswer((_) async {});
   });
 
   group('T053-T054 Notification Batching', () {
@@ -75,7 +75,7 @@ void main() {
 
       test('safeNotify (via tryAutoLogin) fires if not disposed', () async {
         final mockSync = sl<DatabaseSyncService>();
-        when(() => mockSync.tryAutoLogin()).thenAnswer((_) async => null);
+        when(() => mockSync.tryAutoLogin()).thenAnswer((_) async {});
 
         final authProvider = AuthProvider();
         

@@ -8,43 +8,68 @@ import '../../core/utils/number_parser.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 
 class DeviceRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final DeviceInfoPlugin _deviceInfoPlugin;
+  final LocalStorageService _localStorageService;
 
   DeviceRepository({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     DeviceInfoPlugin? deviceInfoPlugin,
+    LocalStorageService? localStorageService,
   })  : _firestore = firestore ?? sl<FirebaseFirestore>(),
         _auth = auth ?? sl<FirebaseAuth>(),
-        _deviceInfoPlugin = deviceInfoPlugin ?? DeviceInfoPlugin();
+        _deviceInfoPlugin = deviceInfoPlugin ?? DeviceInfoPlugin(),
+        _localStorageService = localStorageService ?? LocalStorageService();
 
   /// Retrieves a unique device identifier.
   ///
   /// Strategies:
-  /// - Android: Returns `androidInfo.id`.
-  /// - iOS: Returns `iosInfo.identifierForVendor`.
-  /// - Fallback: Returns a generated UUID (should be persuasive to use standard persistent IDs where possible).
+  /// 1. Check LocalStorageService for a previously saved persistent UUID.
+  /// 2. If not found, attempt to get platform-specific ID (Android/iOS).
+  /// 3. If platform check fails, generate a new UUID, save it, and return.
   Future<String> getDeviceId() async {
     try {
+      // 1. Try local storage first (Surgical Strike Fix)
+      final savedId = _localStorageService.persistentDeviceId;
+      if (savedId != null && savedId.isNotEmpty) {
+        return savedId;
+      }
+
+      String? deviceId;
+
+      // 2. Platform Specific Logic
       if (Platform.isAndroid) {
         final androidInfo = await _deviceInfoPlugin.androidInfo;
-        return androidInfo.id;
+        deviceId = androidInfo.id;
       } else if (Platform.isIOS) {
         final iosInfo = await _deviceInfoPlugin.iosInfo;
-        return iosInfo.identifierForVendor ?? const Uuid().v4();
-      } else {
-        // Fallback for other platforms or if platform check fails somehow
-        // Note: For web, user agent or specific web implementation would be needed but
-        // request focused on Android/iOS checks.
-        return const Uuid().v4();
+        deviceId = iosInfo.identifierForVendor;
       }
+
+      // 3. Fallback & Persistence
+      if (deviceId == null || deviceId.isEmpty || deviceId == 'unknown') {
+        deviceId = const Uuid().v4();
+        await _localStorageService.savePersistentDeviceId(deviceId);
+      } else {
+        // Even if we got a platform ID, save it to local storage for future speed/consistency
+        await _localStorageService.savePersistentDeviceId(deviceId);
+      }
+
+      return deviceId;
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.getDeviceId');
-      return const Uuid().v4();
+      
+      // Last resort fallback
+      final fallbackId = _localStorageService.persistentDeviceId ?? const Uuid().v4();
+      if (_localStorageService.persistentDeviceId == null) {
+        await _localStorageService.savePersistentDeviceId(fallbackId);
+      }
+      return fallbackId;
     }
   }
 

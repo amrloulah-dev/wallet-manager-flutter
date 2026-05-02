@@ -96,18 +96,20 @@ class EmployeeRepository {
       stats: UserStats(),
     );
 
-    // Ensure PIN uniqueness BEFORE the transaction (Queries cannot run inside transactions)
-    final pinQuery = await _usersCollection
-        .where(FirebaseConstants.storeId, isEqualTo: storeId)
-        .where(FirebaseConstants.pin, isEqualTo: hashedPin)
-        .limit(1)
-        .get();
-
-    if (pinQuery.docs.isNotEmpty) {
-      throw ServerException('الرقم السري مستخدم بالفعل');
-    }
+    // PIN uniqueness is enforced atomically via a deterministic pin-lock document
+    // inside the transaction — eliminating the check-then-act race window.
+    final pinLockRef = _firestore.doc(
+      FirebaseConstants.pinLockPath(storeId, hashedPin),
+    );
 
     await _firestore.runTransaction((transaction) async {
+      // 1. Atomic PIN uniqueness check
+      final pinLockSnap = await transaction.get(pinLockRef);
+      if (pinLockSnap.exists) {
+        throw ServerException('الرقم السري مستخدم بالفعل');
+      }
+
+      // 2. Employee capacity check
       final storeRef = _firestore
           .collection(FirebaseConstants.storesCollection)
           .doc(storeId);
@@ -130,6 +132,7 @@ class EmployeeRepository {
             'تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
       }
 
+      // 3. Write employee doc
       final userData = newUser.toFirestore();
       userData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
       userData[FirebaseConstants.lastLogin] = FieldValue.serverTimestamp();
@@ -137,7 +140,13 @@ class EmployeeRepository {
 
       transaction.set(_usersCollection.doc(newUserId), userData);
 
-      // Update Store Stats Summary Document
+      // 4. Claim the PIN lock atomically
+      transaction.set(pinLockRef, {
+        'userId': newUserId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // 5. Update Store Stats Summary Document
       final statsSummaryRef = _firestore
           .collection(FirebaseConstants.storesCollection)
           .doc(storeId)
@@ -151,7 +160,7 @@ class EmployeeRepository {
           },
           SetOptions(merge: true));
     });
-    
+
     return newUser;
   }
 
@@ -182,6 +191,7 @@ class EmployeeRepository {
       final userData = userSnap.data() as Map<String, dynamic>;
       final wasActive = userData[FirebaseConstants.isActive] == true;
       final storeId = userData[FirebaseConstants.storeId];
+      final hashedPin = userData[FirebaseConstants.pin] as String?;
 
       if (wasActive && storeId != null) {
         final storeRef = _firestore
@@ -193,42 +203,28 @@ class EmployeeRepository {
             .collection(FirebaseConstants.statsCollection)
             .doc(FirebaseConstants.summaryDoc);
 
-        final storeSnap = await transaction.get(storeRef);
-        final statsSnap = await transaction.get(statsSummaryRef);
-
-        int currentStoreEmployees = 0;
-        if (storeSnap.exists) {
-          currentStoreEmployees = (storeSnap.data()?['stats']
-                  ?['totalEmployees'] as int?) ??
-              0;
-        }
-
-        int currentSummaryEmployees = 0;
-        if (statsSnap.exists) {
-          currentSummaryEmployees = (statsSnap.data()?['totalEmployees'] as int?) ?? 0;
-        }
-
         transaction.update(userRef, {
           FirebaseConstants.isActive: false,
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
 
         transaction.update(storeRef, {
-          'stats.totalEmployees': currentStoreEmployees > 0
-              ? currentStoreEmployees - 1
-              : 0,
+          'stats.totalEmployees': FieldValue.increment(-1),
           'stats.lastUpdated': FieldValue.serverTimestamp(),
         });
 
-        transaction.set(
-            statsSummaryRef,
-            {
-              'totalEmployees': currentSummaryEmployees > 0
-                  ? currentSummaryEmployees - 1
-                  : 0,
-              'lastUpdated': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true));
+        transaction.update(statsSummaryRef, {
+          'totalEmployees': FieldValue.increment(-1),
+          'lastUpdated': FieldValue.serverTimestamp(),
+        });
+
+        // Release the PIN lock so the PIN can be reused by another employee.
+        if (hashedPin != null && hashedPin.isNotEmpty) {
+          final pinLockRef = _firestore.doc(
+            FirebaseConstants.pinLockPath(storeId, hashedPin),
+          );
+          transaction.delete(pinLockRef);
+        }
       } else {
         transaction.update(userRef, {
           FirebaseConstants.isActive: false,
@@ -247,23 +243,55 @@ class EmployeeRepository {
     }
 
     try {
-      final userDoc = await _usersCollection.doc(userId).get();
-      if (!userDoc.exists) {
-        throw NotFoundException('Employee');
-      }
-      final userData = userDoc.data() as Map<String, dynamic>;
-      final storeId = userData[FirebaseConstants.storeId];
+      final newHashedPin = PasswordHasher.hashPassword(newPin);
 
-      final existingEmployee =
-          await getEmployeeByPIN(storeId: storeId, pin: newPin);
-      if (existingEmployee != null && existingEmployee.userId != userId) {
-        throw ValidationException('New PIN is already in use');
-      }
+      await _firestore.runTransaction((transaction) async {
+        // 1. Read employee doc inside the transaction
+        final userSnap = await transaction.get(_usersCollection.doc(userId));
+        if (!userSnap.exists) {
+          throw NotFoundException('Employee');
+        }
+        final userData = userSnap.data() as Map<String, dynamic>;
+        final storeId = userData[FirebaseConstants.storeId] as String?;
+        final oldHashedPin = userData[FirebaseConstants.pin] as String?;
 
-      final hashedPin = PasswordHasher.hashPassword(newPin);
-      await _usersCollection.doc(userId).update({
-        FirebaseConstants.pin: hashedPin,
-        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        if (storeId == null || storeId.isEmpty) {
+          throw ServerException('لا يمكن تحديد المتجر الخاص بهذا الموظف.');
+        }
+
+        // 2. Atomic uniqueness check via pin-lock document
+        final newPinLockRef = _firestore.doc(
+          FirebaseConstants.pinLockPath(storeId, newHashedPin),
+        );
+        final newPinLockSnap = await transaction.get(newPinLockRef);
+
+        // Allow if the lock belongs to this employee (same userId) — idempotent reset
+        if (newPinLockSnap.exists &&
+            newPinLockSnap.data()?['userId'] != userId) {
+          throw ValidationException('الرقم السري الجديد مستخدم بالفعل');
+        }
+
+        // 3. Release old pin lock (only if PIN is actually changing)
+        if (oldHashedPin != null &&
+            oldHashedPin.isNotEmpty &&
+            oldHashedPin != newHashedPin) {
+          final oldPinLockRef = _firestore.doc(
+            FirebaseConstants.pinLockPath(storeId, oldHashedPin),
+          );
+          transaction.delete(oldPinLockRef);
+        }
+
+        // 4. Claim new pin lock
+        transaction.set(newPinLockRef, {
+          'userId': userId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // 5. Update employee PIN
+        transaction.update(_usersCollection.doc(userId), {
+          FirebaseConstants.pin: newHashedPin,
+          FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+        });
       });
 
       return true;

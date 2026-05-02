@@ -28,31 +28,31 @@ class DebtRepository {
 
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
-    // Pre-transaction validation
+    // Pre-validation
     AmountValidator.ensurePositive(debt.amountDue);
-    
+
     try {
-      await _firestore.runTransaction((transaction) async {
-        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(debt.storeId));
+      final batch = _firestore.batch();
+      final statsRef =
+          _firestore.doc(FirebaseConstants.statsSummaryPath(debt.storeId));
 
-        final Map<String, dynamic> statsUpdates = {
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'openDebtsCount': FieldValue.increment(1),
-          'totalOpenAmount': FieldValue.increment(debt.amountDue),
-        };
+      final Map<String, dynamic> statsUpdates = {
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'openDebtsCount': FieldValue.increment(1),
+        'totalOpenAmount': FieldValue.increment(debt.amountDue),
+      };
 
-        // 2. Perform all writes after all reads
-        final debtDocRef = _debtsCollection.doc(debt.debtId);
-        transaction.set(debtDocRef, debt.toFirestore());
-        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
-      });
+      final debtDocRef = _debtsCollection.doc(debt.debtId);
+      batch.set(debtDocRef, debt.toFirestore());
+      batch.set(statsRef, statsUpdates, SetOptions(merge: true));
+
+      await batch.commit();
+
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to create debt: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while creating the debt: $e');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.createDebt');
+      throw ServerException('Failed to create debt: $e');
     }
   }
 
@@ -207,7 +207,7 @@ class DebtRepository {
           updateData['paidDate'] = FieldValue.serverTimestamp();
           updateData['markedPaidBy'] = userId;
 
-          statsUpdates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
+          statsUpdates['openDebtsCount'] = FieldValue.increment(-1);
           statsUpdates['totalOpenAmount'] =
               FieldValue.increment(-oldDebt.amountDue);
           statsUpdates['paidDebtsCount'] = FieldValue.increment(1);
@@ -221,7 +221,7 @@ class DebtRepository {
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
-        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
+        transaction.update(statsRef, statsUpdates);
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
@@ -277,14 +277,14 @@ class DebtRepository {
         if (wasPaid) {
           updateData['debtStatus'] = DebtStatus.open.name;
           statsUpdates['openDebtsCount'] = FieldValue.increment(1);
-          statsUpdates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
+          statsUpdates['paidDebtsCount'] = FieldValue.increment(-1);
           statsUpdates['totalPaidAmount'] =
               FieldValue.increment(-oldDebt.totalAmount);
         }
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
-        transaction.set(statsRef, statsUpdates, SetOptions(merge: true));
+        transaction.update(statsRef, statsUpdates);
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
@@ -431,16 +431,16 @@ class DebtRepository {
         };
 
         if (debt.isOpen) {
-          updates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
+          updates['openDebtsCount'] = FieldValue.increment(-1);
           updates['totalOpenAmount'] = FieldValue.increment(-debt.amountDue);
         } else if (debt.isPaid) {
-          updates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
+          updates['paidDebtsCount'] = FieldValue.increment(-1);
           updates['totalPaidAmount'] = FieldValue.increment(-debt.totalAmount);
         }
 
         // Perform Writes
         transaction.delete(debtDocRef);
-        transaction.set(statsRef, updates, SetOptions(merge: true));
+        transaction.update(statsRef, updates);
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));

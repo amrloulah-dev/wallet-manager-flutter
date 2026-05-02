@@ -164,9 +164,8 @@ class TransactionValidatorService {
         // Prepare Wallet Updates
         final Map<String, dynamic> walletUpdateData = {};
 
-        // Calculate NEW balance in memory to avoid FieldValue.increment testing issues
-        // and ensure precision control.
-        walletUpdateData['balance'] = validationWallet.balance + balanceChange;
+        // Use atomic increment for balance update
+        walletUpdateData['balance'] = FieldValue.increment(balanceChange);
         
         walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] = FieldValue.increment(1);
         walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] = FieldValue.serverTimestamp();

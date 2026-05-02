@@ -56,7 +56,7 @@ class DatabaseSyncService {
         _deviceRepository = deviceRepository,
         _localStorage = localStorage,
         _firestore = firestore ?? sl<FirebaseService>().firestore,
-        _subscriptionRepository = subscriptionRepository ?? SubscriptionRepository();
+        _subscriptionRepository = subscriptionRepository ?? sl<SubscriptionRepository>();
 
   bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());
 

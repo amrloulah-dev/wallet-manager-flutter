@@ -13,6 +13,7 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
+import 'package:walletmanager/data/repositories/subscription_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,6 +31,7 @@ class MockUserCredential extends Mock implements UserCredential {}
 class MockAuthRepository extends Mock implements AuthRepository {}
 class MockDeviceRepository extends Mock implements DeviceRepository {}
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+class MockSubscriptionRepository extends Mock implements SubscriptionRepository {}
 class MockUser extends Mock implements User {}
 class MockFirebaseService extends Mock implements FirebaseService {}
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
@@ -43,6 +45,7 @@ void main() {
   late MockAuthRepository mockAuthRepo;
   late MockDeviceRepository mockDeviceRepo;
   late MockLicenseKeyRepository mockLicenseRepo;
+  late MockSubscriptionRepository mockSubRepo;
   
   late MockFirebaseAuth mockAuth;
   late MockUserCredential mockUserCredential;
@@ -60,6 +63,7 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     mockDeviceRepo = MockDeviceRepository();
     mockLicenseRepo = MockLicenseKeyRepository();
+    mockSubRepo = MockSubscriptionRepository();
     mockAuth = MockFirebaseAuth();
     final mockFirebaseService = MockFirebaseService();
     final mockFirestore = MockFirebaseFirestore();
@@ -68,6 +72,7 @@ void main() {
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
     sl.registerSingleton<FirebaseAuth>(mockAuth);
+    sl.registerSingleton<SubscriptionRepository>(mockSubRepo);
     
     when(() => mockAuthRepo.getCurrentUser()).thenReturn(null);
 
@@ -87,7 +92,6 @@ void main() {
       storeRepository: mockStoreRepo,
       localStorage: mockStorage,
     );
-    mockAuth = MockFirebaseAuth();
     mockUserCredential = MockUserCredential();
     mockUser = MockUser();
     
@@ -105,8 +109,8 @@ void main() {
       ownerEmail: 'owner@store.com',
       createdAt: DateTime.now(),
       subscription: StoreSubscription(
-        planId: SubscriptionPlan.free, // ENUM refactor
-        status: SubscriptionStatus.active, // ENUM refactor
+        planId: SubscriptionPlan.free,
+        status: SubscriptionStatus.active,
         trialConsumed: false,
         maxWallets: 3,
         maxEmployees: 1,
@@ -119,11 +123,11 @@ void main() {
     mockEmployee = UserModel(
       userId: 'emp-123',
       storeId: 'store-123',
-      role: UserRole.employee, // ENUM refactor
+      role: UserRole.employee,
       fullName: 'Test Employee',
       phone: '123456789',
       pin: 'hashed_pin',
-      firebaseUid: 'test-uid', // initially setup with uid
+      firebaseUid: 'test-uid',
       isActive: true,
       createdAt: DateTime.now(),
       lastLogin: DateTime.now(),
@@ -156,7 +160,6 @@ void main() {
       final success = await authProvider.loginAsEmployee(mockEmployee, mockStore);
 
       expect(success, isTrue);
-      // It attempts signIn instead of just local pin check
       verify(() => mockAuth.signInWithEmailAndPassword(
             email: 'emp_${mockEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
@@ -164,7 +167,6 @@ void main() {
     });
 
     test('login without firebaseUid falls back to local pin silently and triggers background provision', () async {
-      // Create employee without firebaseUid
       final legacyEmployee = mockEmployee.copyWith(firebaseUid: '');
       
       when(() => mockAuth.createUserWithEmailAndPassword(
@@ -178,14 +180,11 @@ void main() {
 
       expect(success, isTrue);
       
-      // Should not call signIn since uid was not present at start
       verifyNever(() => mockAuth.signInWithEmailAndPassword(
             email: 'emp_${legacyEmployee.phone}_${mockStore.storeId}@store.com',
             password: 'hashed_pin',
           ));
           
-      // Should attempt creation in background because it noticed no UID
-      // We need a short delay since it's fire-and-forget
       await Future.delayed(const Duration(milliseconds: 50));
       verify(() => mockAuth.createUserWithEmailAndPassword(
             email: 'emp_${legacyEmployee.phone}_${mockStore.storeId}@store.com',
@@ -205,8 +204,6 @@ void main() {
 
       expect(success, isFalse);
       expect(authProvider.errorMessage, equals('auth_error_invalid_credentials'));
-      // Since AppErrorHandler sets things up globally, the error routing is tested mostly via mocked dependencies internally
-      // Ensure local state represents an error
     });
   });
 }

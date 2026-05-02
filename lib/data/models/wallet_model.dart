@@ -146,7 +146,9 @@ class WalletStats {
         other.totalTransactions == totalTransactions &&
         other.totalSentAmount == totalSentAmount &&
         other.totalReceivedAmount == totalReceivedAmount &&
-        other.totalCommission == totalCommission;
+        other.totalCommission == totalCommission &&
+        other.totalServiceFee == totalServiceFee &&
+        other.lastTransactionDate == lastTransactionDate;
   }
 
   @override
@@ -154,7 +156,9 @@ class WalletStats {
       totalTransactions.hashCode ^
       totalSentAmount.hashCode ^
       totalReceivedAmount.hashCode ^
-      totalCommission.hashCode;
+      totalCommission.hashCode ^
+      totalServiceFee.hashCode ^
+      lastTransactionDate.hashCode;
 }
 
 class WalletModel {

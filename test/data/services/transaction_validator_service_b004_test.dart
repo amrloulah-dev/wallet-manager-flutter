@@ -7,6 +7,7 @@ import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 // A subclass to allow injecting a fake firestore
 class TestTransactionValidatorService extends TransactionValidatorService {
@@ -20,6 +21,7 @@ void main() {
   late String storeId;
 
   setUp(() {
+    AppErrorHandler.isTestMode = true;
     fakeFirestore = FakeFirebaseFirestore();
     service = TestTransactionValidatorService(fakeFirestore);
     walletId = 'test_wallet';
@@ -32,8 +34,8 @@ void main() {
     await walletRef.set({
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.phoneNumber: '01012345678',
-      FirebaseConstants.walletType: WalletType.vodafoneCash.name, // ENUM refactor
-      FirebaseConstants.walletStatus: WalletStatus.active.name, // ENUM refactor
+      FirebaseConstants.walletType: WalletType.vodafoneCash.name,
+      FirebaseConstants.walletStatus: WalletStatus.active.name,
       'balance': 1000.0,
       FirebaseConstants.isActive: false, // 🚩 Inactive
       FirebaseConstants.createdAt: Timestamp.now(),
@@ -64,23 +66,18 @@ void main() {
       transactionId: 'tx1',
       storeId: storeId,
       walletId: walletId,
-      transactionType: TransactionType.debit, // ENUM refactor
+      transactionType: TransactionType.debit,
       amount: 100.0,
       commission: 5.0,
       serviceFee: 1.0,
-      paymentStatus: PaymentStatus.paid, // ENUM refactor
+      paymentStatus: PaymentStatus.paid,
       transactionDate: DateTime.now(),
       createdAt: DateTime.now(),
       createdBy: 'user1',
     );
 
-    // 2. Act & Assert: Expect ValidationException with specific message
-    // CURRENT BEHAVIOR (Buggy): It should NOT throw (or throw something else if it proceeds to limit checks, but it will probably succeed in the fake)
-    // DESIRED BEHAVIOR (Fixed): It should throw ValidationException
-    
     try {
       await service.validateAndSave(transaction);
-      // If we reach here, it means it didn't throw, which is the BUG.
       fail('Should have thrown ValidationException for inactive wallet');
     } on ValidationException catch (e) {
       expect(e.message, contains('المحفظة غير مفعلة أو تم حذفها'));

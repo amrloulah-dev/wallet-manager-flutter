@@ -8,6 +8,7 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/data/repositories/auth_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
+import 'package:walletmanager/data/repositories/subscription_repository.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
@@ -23,6 +24,7 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockDeviceRepository extends Mock implements DeviceRepository {}
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+class MockSubscriptionRepository extends Mock implements SubscriptionRepository {}
 class MockFirebaseService extends Mock implements FirebaseService {}
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
@@ -35,6 +37,7 @@ void main() {
   late MockAuthRepository mockAuthRepo;
   late MockDeviceRepository mockDeviceRepo;
   late MockLicenseKeyRepository mockLicenseRepo;
+  late MockSubscriptionRepository mockSubRepo;
 
   setUp(() {
     AppErrorHandler.isTestMode = true;
@@ -45,6 +48,7 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     mockDeviceRepo = MockDeviceRepository();
     mockLicenseRepo = MockLicenseKeyRepository();
+    mockSubRepo = MockSubscriptionRepository();
     final mockFirebaseService = MockFirebaseService();
     final mockFirestore = MockFirebaseFirestore();
     
@@ -54,6 +58,7 @@ void main() {
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
     sl.registerSingleton<FirebaseAuth>(mockAuth);
+    sl.registerSingleton<SubscriptionRepository>(mockSubRepo);
 
     final databaseSyncService = DatabaseSyncService(
       authRepository: mockAuthRepo,
