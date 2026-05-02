@@ -19,6 +19,7 @@
 ## Dependency Injection
 - **GetIt:** For centralized service and repository registration and decoupled access.
     - Includes `AppEvents` bus for decoupled system events.
+    - Provides a unified `FirebaseService` for managed access to Firestore and Auth instances.
 
 ## Local Storage
 - **Shared Preferences:** Storing local settings and non-sensitive metadata.
