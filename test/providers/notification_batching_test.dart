@@ -50,6 +50,7 @@ void main() {
     final mockAuth = sl<AuthRepository>();
     when(() => mockAuth.getCurrentUser()).thenReturn(null);
     when(() => mockAuth.authStateChanges()).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.signOut()).thenAnswer((_) async => null);
   });
 
   group('T053-T054 Notification Batching', () {

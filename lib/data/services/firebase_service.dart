@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 /// A singleton service class to initialize and provide Firebase services.
 class FirebaseService {
@@ -77,8 +78,12 @@ class FirebaseService {
         persistenceEnabled: true,
         cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
-    } catch (e) {
-      // Log the error and rethrow to allow for handling at the app's root.
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'FirebaseService.initialize',
+      );
       rethrow;
     }
   }

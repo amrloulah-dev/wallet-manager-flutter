@@ -8,6 +8,10 @@ import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/paginated_result.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
+
+import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
@@ -40,6 +44,8 @@ void main() {
   const walletId = 'test_wallet';
 
   setUpAll(() {
+    AnalyticsService.isTestMode = true;
+    AppErrorHandler.isTestMode = true;
     registerFallbackValue(MockDocumentSnapshot());
     registerFallbackValue(FakeDocumentReferenceMap());
     registerFallbackValue(MockTransaction());
@@ -61,15 +67,44 @@ void main() {
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
     when(() => mockCollection.doc(any())).thenReturn(mockDocRef);
     
-    // Support where() - SIMPLER STUB
-    when(() => mockCollection.where(any(), isEqualTo: any())).thenReturn(mockQuery);
-    when(() => mockQuery.where(any(), isEqualTo: any())).thenReturn(mockQuery);
+    // Support where() - positional any() for field and value
+    when(() => mockCollection.where(any(),
+      isEqualTo: any(named: 'isEqualTo'),
+      isNull: any(named: 'isNull'),
+      isNotEqualTo: any(named: 'isNotEqualTo'),
+      isLessThan: any(named: 'isLessThan'),
+      isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo'),
+      isGreaterThan: any(named: 'isGreaterThan'),
+      isGreaterThanOrEqualTo: any(named: 'isGreaterThanOrEqualTo'),
+      arrayContains: any(named: 'arrayContains'),
+      arrayContainsAny: any(named: 'arrayContainsAny'),
+      whereIn: any(named: 'whereIn'),
+      whereNotIn: any(named: 'whereNotIn'),
+    )).thenReturn(mockQuery);
 
-    // Stub runTransaction to execute the handler immediately and return Future<void>
+    when(() => mockQuery.where(any(),
+      isEqualTo: any(named: 'isEqualTo'),
+      isNull: any(named: 'isNull'),
+      isNotEqualTo: any(named: 'isNotEqualTo'),
+      isLessThan: any(named: 'isLessThan'),
+      isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo'),
+      isGreaterThan: any(named: 'isGreaterThan'),
+      isGreaterThanOrEqualTo: any(named: 'isGreaterThanOrEqualTo'),
+      arrayContains: any(named: 'arrayContains'),
+      arrayContainsAny: any(named: 'arrayContainsAny'),
+      whereIn: any(named: 'whereIn'),
+      whereNotIn: any(named: 'whereNotIn'),
+    )).thenReturn(mockQuery);
+
+    // Stub runTransaction to execute the handler immediately (Matched for both void and dynamic)
     when(() => mockFirestore.runTransaction<void>(any())).thenAnswer((invocation) async {
-      final handler = invocation.positionalArguments[0] as Future<void> Function(Transaction);
+      final handler = invocation.positionalArguments[0] as Function;
       await handler(mockTransaction);
-      return Future<void>.value();
+    });
+
+    when(() => mockFirestore.runTransaction<dynamic>(any())).thenAnswer((invocation) async {
+      final handler = invocation.positionalArguments[0] as Function;
+      return await handler(mockTransaction);
     });
 
     when(() => mockTransaction.get<Map<String, dynamic>>(any())).thenAnswer((_) async => mockDocSnap);
@@ -77,6 +112,9 @@ void main() {
     when(() => mockTransaction.update(any(), any())).thenReturn(mockTransaction);
     when(() => mockDocSnap.exists).thenReturn(true);
     when(() => mockDocSnap.id).thenReturn(walletId);
+    
+    // Stub getStatsSummary to avoid Null subtype errors
+    when(() => mockStatsRepository.getStatsSummary(any())).thenAnswer((_) async => StatsSummaryModel.empty());
 
     repository = WalletRepository(
       firebaseService: mockFirebaseService,
@@ -87,12 +125,8 @@ void main() {
 
   group('WalletRepository', () {
     test('getWalletsCount returns correctly', () async {
-      final mockAggregateQuery = MockAggregateQuery();
-      final mockAggregateSnapshot = MockAggregateQuerySnapshot();
-      
-      when(() => mockQuery.count()).thenReturn(mockAggregateQuery);
-      when(() => mockAggregateQuery.get()).thenAnswer((_) async => mockAggregateSnapshot);
-      when(() => mockAggregateSnapshot.count).thenReturn(5);
+      final summary = StatsSummaryModel.empty().copyWith(activeWallets: 5);
+      when(() => mockStatsRepository.getStatsSummary(storeId)).thenAnswer((_) async => summary);
 
       final count = await repository.getWalletsCount(storeId);
 
@@ -100,9 +134,9 @@ void main() {
     });
 
     test('getWalletsCount throws ServerException on error', () async {
-      when(() => mockQuery.count()).thenThrow(Exception('Firestore error'));
+      when(() => mockStatsRepository.getStatsSummary(storeId)).thenThrow(Exception('Firestore error'));
 
-      expect(() => repository.getWalletsCount(storeId), throwsA(isA<Exception>()));
+      expect(() => repository.getWalletsCount(storeId), throwsA(isA<ServerException>()));
     });
    group('WalletRepository Atomicity (Phase 1)', () {
     test('creditWallet executes stats updates within the same transaction', () async {
@@ -113,8 +147,9 @@ void main() {
       when(() => mockCacheManager.clearWhere(any())).thenAnswer((_) async {});
       when(() => mockCacheManager.clear(any())).thenAnswer((_) async {});
 
+      // Patterns for creditWallet and debitWallet
       when(() => mockStatsRepository.updateStatsOnWalletChange(
-        storeId,
+        any(),
         balanceChange: any(named: 'balanceChange'),
         firestoreTransaction: any(named: 'firestoreTransaction'),
       )).thenAnswer((_) async {});
@@ -136,8 +171,9 @@ void main() {
       when(() => mockCacheManager.clearWhere(any())).thenAnswer((_) async {});
       when(() => mockCacheManager.clear(any())).thenAnswer((_) async {});
 
+      // Patterns for creditWallet and debitWallet
       when(() => mockStatsRepository.updateStatsOnWalletChange(
-        storeId,
+        any(),
         balanceChange: any(named: 'balanceChange'),
         firestoreTransaction: any(named: 'firestoreTransaction'),
       )).thenAnswer((_) async {});

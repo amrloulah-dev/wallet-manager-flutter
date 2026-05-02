@@ -83,21 +83,13 @@ void main() {
     when(() => mockWalletRef.collection(any())).thenReturn(mockCollection);
     when(() => mockWalletRef.get()).thenAnswer((_) async => mockWalletSnap);
 
-    when(() => mockFirestore.runTransaction<void>(any<Future<void> Function(Transaction)>()))
-        .thenAnswer((invocation) async {
-      final callback = invocation.positionalArguments[0] as Future<void> Function(Transaction);
-      return await callback(mockTx);
-    });
-    
-    when(() => mockFirestore.runTransaction<Null>(any<Future<Null> Function(Transaction)>()))
-        .thenAnswer((invocation) async {
-      final callback = invocation.positionalArguments[0] as Future<Null> Function(Transaction);
-      return await callback(mockTx);
+    when(() => mockFirestore.runTransaction<void>(any())).thenAnswer((invocation) async {
+      final callback = invocation.positionalArguments[0] as Function;
+      await callback(mockTx);
     });
 
-    when(() => mockFirestore.runTransaction<dynamic>(any<Future<dynamic> Function(Transaction)>()))
-        .thenAnswer((invocation) async {
-      final callback = invocation.positionalArguments[0] as Future<dynamic> Function(Transaction);
+    when(() => mockFirestore.runTransaction<dynamic>(any())).thenAnswer((invocation) async {
+      final callback = invocation.positionalArguments[0] as Function;
       return await callback(mockTx);
     });
 
@@ -123,12 +115,12 @@ void main() {
     
     when(() => mockCacheManager.get<WalletModel>(any())).thenReturn(null);
     
-    // Stats Repository mock
-    when(() => mockStatsRepository.updateStatsOnWalletChange(any(),
-            countChange: any(named: 'countChange'),
-            activeCountChange: any(named: 'activeCountChange'),
-            balanceChange: any(named: 'balanceChange')))
-        .thenAnswer((_) async => Future<void>.value());
+    // Patterns for creditWallet and debitWallet
+    when(() => mockStatsRepository.updateStatsOnWalletChange(
+      any(),
+      balanceChange: any(named: 'balanceChange'),
+      firestoreTransaction: any(named: 'firestoreTransaction'),
+    )).thenAnswer((_) async {});
   });
 
   Map<String, dynamic> createValidWalletData({required double balance}) {

@@ -219,8 +219,11 @@ class WalletRepository {
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e, stack) {
-      print('ERROR: $e');
-      print('STACKTRACE: $stack');
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'WalletRepository.creditWallet',
+      );
       if (e is AppException) rethrow;
       throw ServerException('فشل شحن رصيد المحفظة: $e');
     }

@@ -11,6 +11,10 @@ import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
+
+import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
 class MockStatsRepository extends Mock implements StatsRepository {}
@@ -19,6 +23,7 @@ class MockCollectionReference extends Mock implements CollectionReference<Map<St
 class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
 class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
 class MockTransaction extends Mock implements Transaction {}
+class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
 class FakeDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {
   @override
@@ -28,6 +33,7 @@ class FakeDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, 
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late CacheManager cacheManager;
   late TransactionRepository transactionRepository;
   late DebtRepository debtRepository;
@@ -35,6 +41,13 @@ void main() {
   late MockFirebaseService mockFirebaseService;
   late MockStatsRepository mockStatsRepository;
   late MockFirestore mockFirestore;
+  late MockTransaction mockTransaction;
+  late MockQuery mockQuery;
+
+  setUpAll(() {
+    AnalyticsService.isTestMode = true;
+    AppErrorHandler.isTestMode = true;
+  });
 
   setUp(() {
     cacheManager = CacheManager();
@@ -43,6 +56,8 @@ void main() {
     mockFirebaseService = MockFirebaseService();
     mockStatsRepository = MockStatsRepository();
     mockFirestore = MockFirestore();
+    mockTransaction = MockTransaction();
+    mockQuery = MockQuery();
     
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
 
@@ -73,6 +88,26 @@ void main() {
     ));
     registerFallbackValue(MockDocumentReference());
     registerFallbackValue(<String, dynamic>{});
+    registerFallbackValue(MockTransaction());
+    
+    // Global stubs to prevent common errors
+    when(() => mockFirestore.runTransaction<void>(any())).thenAnswer((invocation) async {
+       final handler = invocation.positionalArguments[0] as Function;
+       await handler(mockTransaction);
+    });
+    when(() => mockFirestore.runTransaction<dynamic>(any())).thenAnswer((invocation) async {
+       final handler = invocation.positionalArguments[0] as Function;
+       return await handler(mockTransaction);
+    });
+    when(() => mockTransaction.set<Object?>(any(), any())).thenReturn(mockTransaction);
+    when(() => mockTransaction.update(any(), any())).thenReturn(mockTransaction);
+    when(() => mockStatsRepository.getStatsSummary(any())).thenAnswer((_) async => StatsSummaryModel.empty());
+    
+    // Support where() minimally
+    when(() => mockFirestore.collection(any())).thenReturn(MockCollectionReference());
+    final mockCol = MockCollectionReference();
+    when(() => mockCol.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
+    when(() => mockQuery.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
   });
 
   group('Stale Cache Eviction (TDD - Phase 3)', () {
@@ -128,7 +163,8 @@ void main() {
         countChange: any(named: 'countChange'),
         activeCountChange: any(named: 'activeCountChange'),
         balanceChange: any(named: 'balanceChange'),
-      )).thenAnswer((_) async => null);
+        firestoreTransaction: any(named: 'firestoreTransaction'),
+      )).thenAnswer((_) async {});
 
       final wallet = WalletModel(
         walletId: 'w1',
@@ -150,4 +186,3 @@ void main() {
     });
   });
 }
-

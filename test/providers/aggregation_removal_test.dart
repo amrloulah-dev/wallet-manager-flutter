@@ -48,6 +48,7 @@ void main() {
           .thenAnswer((_) => Stream.fromIterable([summary]));
       when(() => mockStatsRepository.watchTodayStats(storeId))
           .thenAnswer((_) => Stream.empty());
+      when(() => mockStatsRepository.getStatsSummary(any())).thenAnswer((_) async => summary);
 
       statisticsProvider.setStoreId(storeId);
       

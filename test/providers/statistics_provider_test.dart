@@ -24,6 +24,7 @@ void main() {
 
     when(() => mockStatsRepo.watchStatsSummary(storeId)).thenAnswer((_) => Stream.value(summary));
     when(() => mockStatsRepo.watchTodayStats(storeId)).thenAnswer((_) => const Stream.empty());
+    when(() => mockStatsRepo.getStatsSummary(any())).thenAnswer((_) async => summary);
 
     provider = StatisticsProvider(
       statsRepository: mockStatsRepo,
