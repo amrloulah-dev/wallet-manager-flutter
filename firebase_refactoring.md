@@ -1,70 +1,47 @@
-# 🛠️ Wallet Manager - Firebase & Firestore Refactoring Blueprint (Phase 4)
+# 🛠️ Wallet Manager - Firebase & Firestore Refactoring Blueprint (Phase 4.1: Architecture Leaks)
 
 ## 📌 1. General Context & System Prompt
 **To the AI Agent (Antigravity / Gemini CLI):**
-You are working on "Wallet Manager", a Flutter-based financial operations app for Egyptian store owners to manage digital wallets (like Vodafone Cash), track debts, and process transactions. 
+You are working on "Wallet Manager", a Flutter-based financial operations app for Egyptian store owners. 
 **Core Constraints:**
-1. The project operates on a strictly **$0 Budget** (Firebase Spark Plan). We CANNOT use Cloud Functions. 
-2. All financial data must be 100% accurate. **Atomicity is non-negotiable**.
-3. We must minimize Firestore reads/writes to avoid billing explosions.
-4. Follow **Clean Architecture** principles.
+1. **$0 Budget (Spark Plan):** No Cloud Functions. Minimal Firestore reads.
+2. **100% Financial Atomicity:** No partial failures are allowed in financial operations.
+3. **GLOBAL SEARCH & DESTROY INSTRUCTION:** For every issue listed below, do NOT just fix the explicitly mentioned file. You MUST scan the ENTIRE codebase for the exact same anti-pattern and apply the fix globally.
 
-Your task is to refactor specific repositories and providers based on the following specific issues and solutions. Do not change the overall architecture; only apply the targeted fixes.
-
----
-
-## 📌 2. Fix Financial Race Conditions (Data Corruption Risks)
-
-### 2.1. Dart-Side Math in Transactions
-* **Context:** In `WalletRepository.debitWallet` and `transaction_validator_service.dart`, the balance and stats calculations are currently done in Dart memory (e.g., `currentBalance - amount`) inside a `runTransaction` block, then written as hard values. This causes race conditions if concurrent events (like background SMS parsing) trigger simultaneously.
-* **Solution:** 
-  * Refactor all math operations inside Firestore transactions to use `FieldValue.increment()`.
-  * For `debitWallet`, replace Dart math with `'balance': FieldValue.increment(-amount)`.
-  * For `stats_repository.dart` (`totalWallets` and `activeWallets`), remove the `.clamp()` logic from Dart and use `FieldValue.increment(countChange)` inside a `runTransaction`.
-
-### 2.2. Initialization & Entity Creation Conflicts
-* **Context:** `DatabaseSyncService._createStoreAndUser` runs sequential `awaits` to create a store then a user, which can cause partial failures. Also, `stats_repository.dart` initializes stats using a "read then write" pattern that conflicts if two devices open the app simultaneously.
-* **Solution:**
-  * In `DatabaseSyncService`, wrap `_storeRepository.createStore` and `_userRepository.createUser` inside a single `WriteBatch` to ensure atomic creation.
-  * In `stats_repository.dart` (`initializeStats`), use `SetOptions(merge: true)` when setting the initial summary document to handle concurrent initializations gracefully without overwriting existing data.
+Your task is to fix critical atomicity leaks, unbounded queries, and error handling oversights, ensuring these fixes are applied project-wide.
 
 ---
 
-## 📌 3. Prevent Billing Explosions & Optimize Reads
+## 📌 2. Global Issue: Data Integrity & Atomicity Leaks
 
-### 3.1. Unbounded Queries
-* **Context:** `UserRepository` and `EmployeeRepository` fetch lists of users/employees without a `.limit()`. As the data grows, this will consume massive read quotas.
-* **Solution:** Add `.limit(20)` (or a suitable number for pagination) to `getUsersByStoreId` and `getEmployeesByStoreId`. If a total count is needed for the UI, use Firestore's `count()` aggregation function.
+### The Anti-Pattern
+Running a Firestore `runTransaction`, waiting for it to complete, and then sequentially running another repository function to update stats (e.g., calling `_statsRepository.updateStatsOnWalletChange` after a wallet debit transaction completes). This causes data desync if the app crashes between the two operations.
 
-### 3.2. Client-Side Aggregation (CPU & Read Waste)
-* **Context:** `statistics_provider.dart` and `transaction_provider.dart` (`_calculateSummary`) currently fetch all transaction documents and use a `for loop` in Dart to calculate `totalCommission`, `totalAmount`, etc.
-* **Solution:** Delete the client-side `for loop` aggregation completely. The database already maintains a pre-aggregated document at `stores/{storeId}/stats/summary`. Read directly from this `StatsSummaryModel` to display the data.
-
-### 3.3. Client-Side Search Filtering
-* **Context:** In `employee_provider.dart`, the `filteredEmployees` getter filters employees by name/phone in Dart memory after fetching the whole list.
-* **Solution:** Delegate the search to Firestore. Use query parameters: `.where('fullName', isGreaterThanOrEqualTo: query).where('fullName', isLessThanOrEqualTo: query + '\uf8ff')`.
+### The Fix (Apply Project-Wide)
+All related mutations MUST happen inside a single `runTransaction` block. 
+1. **In `WalletRepository` (`creditWallet`, `debitWallet`):** Modify the logic so the stats update happens *inside* the main wallet transaction. You may need to update the method signature of `_statsRepository.updateStatsOnWalletChange` to accept a `Transaction` parameter (e.g., `Transaction tx`), or move the stats mutation logic directly into the wallet's `runTransaction` block.
+2. **In `TransactionRepository` (`createTransaction`):** Move the call to `_statsRepository.incrementOpenDebtStats` (and any similar stats calls) entirely inside the `TransactionValidatorService.validateAndSave(transaction)` transaction block.
+3. **Global Audit:** Scan ALL repositories. If you find any database write or stats update occurring sequentially *after* a `runTransaction` or `WriteBatch` has concluded, refactor it to be included INSIDE the atomic block.
 
 ---
 
-## 📌 4. State Management & Architecture Fixes
+## 📌 3. Global Issue: Billing Explosions & Unbounded Queries (Memory Leaks)
 
-### 4.1. Stale Data in Cache
-* **Context:** `TransactionRepository` and `DebtRepository` clear cached data by specifically matching `startsWith('transactions_page_0_')`. If a mutation occurs, subsequent pages remain stale.
-* **Solution:** Update the cache eviction Regex/logic to clear ALL pages: `startsWith('transactions_page_')`.
+### The Anti-Pattern
+Calling `.get()` on collections (like `wallets`, `debts`, `transactions`) without a `.limit()` clause or pagination, pulling massive datasets into memory at once.
 
-### 4.2. Stateful Pagination Anti-Pattern
-* **Context:** `debt_repository.dart` (`getDebtsByDateRange`) stores `_lastDocument` as an instance variable, breaking reentrancy and causing state bugs during concurrent calls.
-* **Solution:** Remove `_lastDocument` as an instance variable. Refactor the method signature to accept `DocumentSnapshot? lastDocument` as a parameter (stateless pagination).
-
-### 4.3. Stream Pipeline Async Gaps
-* **Context:** `stats_repository.dart` (`watchStatsSummary`) uses `.asyncMap` to initialize stats inside the stream, causing the UI to briefly flash empty data.
-* **Solution:** Remove `.asyncMap`. Ensure initialization is handled at the provider level or repository initialization phase before watching the stream.
+### The Fix (Apply Project-Wide)
+1. **In `MigrationService` (`recalculateStoreStats`):** Refactor the unbounded `.get()` queries. Use Firestore Aggregate Queries (`count()`, `sum()`) where possible to calculate stats directly on the server without downloading documents. If document processing is strictly required, implement cursor-based pagination (chunking) with a `.limit(500)`.
+2. **Global Audit:** Scan ALL services and repositories (especially utility/migration scripts). Add `.limit()` or use aggregate queries for any unbounded `.get()` list operations found.
 
 ---
 
-## 📌 5. Technical Debt Cleanup
+## 📌 4. Global Issue: Incomplete Error Handling (FirebaseExceptions)
 
-* **Context:** Several files use hardcoded strings for paths and bypass Dependency Injection.
-* **Solution:**
-  * Refactor `transaction_repository.dart` and `subscription_repository.dart` to use central path builders, e.g., `FirebaseConstants.statsSubcollection`.
-  * In `employee_repository.dart`, replace `FirebaseFirestore.instance` in the constructor with the singleton access: `sl<FirebaseService>().firestore`.
+### The Anti-Pattern
+Executing Firebase operations in background services or migration scripts without explicit `try/catch` blocks targeting `FirebaseException`, allowing raw exceptions to bypass the global error handler.
+
+### The Fix (Apply Project-Wide)
+1. **In `MigrationService`:** Wrap the entire logic of `recalculateStoreStats` (and similar methods) in a robust `try/catch` block.
+2. Catch `FirebaseException` explicitly, map it to the domain's `ServerException`, and pass it to the `AppErrorHandler` for standardized logging and UI feedback.
+3. **Global Audit:** Scan all `services/` (like background processors or sync services). Ensure all Firebase interactions are securely wrapped and mapped to `AppErrorHandler`.
