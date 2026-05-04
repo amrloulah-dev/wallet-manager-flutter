@@ -27,7 +27,7 @@
     - [x] Scan for UI-bound functions in background services/cold starts.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Isolate Crashes & UX Blindspots Fixes' (Protocol in workflow.md) [8ada1e4]
 
-## Phase 3: OS Constraints & Hybrid Kill-Switch Fixes
+## Phase 3: OS Constraints & Hybrid Kill-Switch Fixes [checkpoint: a041bc9]
 - [x] Task: Write Failing Tests for OS Constraints [0993dd5]
     - [x] Write test verifying `BackgroundService._onStart()` calls `stopSelf()` when automation is disabled.
     - [x] Write test verifying `SmsService.init()` requests battery optimization permission and handles denial.
@@ -37,7 +37,7 @@
     - [x] Display warning if battery optimization permission is denied.
 - [x] Task: Global Audit for Feature Flag Enforcement [0993dd5]
     - [x] Ensure background tasks correctly abort/stop when respective features are disabled.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: OS Constraints & Hybrid Kill-Switch Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: OS Constraints & Hybrid Kill-Switch Fixes' (Protocol in workflow.md) [a041bc9]
 
 ## Phase 4: Tech Debt & Hot Path Optimization
 - [ ] Task: Write Failing Tests for Tech Debt
