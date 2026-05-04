@@ -175,8 +175,10 @@ Future<void> handleIncomingSms(
           if (uniqueWallets.length == 1) {
             // User mapped all SIMs to the same wallet, or only has 1 mapping. Safe to auto-select!
             matchedWalletId = uniqueWallets.first;
-            debugPrint(
-                "🧠 SMART FALLBACK: OS hid SIM info, but unique wallet found -> $matchedWalletId");
+            if (kDebugMode) {
+              debugPrint(
+                  "🧠 SMART FALLBACK: OS hid SIM info, but unique wallet found -> $matchedWalletId");
+            }
           }
         }
       } catch (e, stack) {

@@ -23,15 +23,6 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 // in sms_processing_pipeline.dart and is shared between both.
 // ============================================================
 
-/// Top-level background SMS handler required by another_telephony
-/// to ensure the OS delivers incoming SMS when the app is killed.
-@pragma('vm:entry-point')
-void topLevelBackgroundSmsHandler(SmsMessage message) async {
-  final storage = LocalStorageService();
-  await storage.initialize();
-  await handleIncomingSms(message, storage);
-}
-
 class SmsService {
   final Telephony _telephony;
 

@@ -111,7 +111,9 @@ void overlayMain() async {
     await Firebase.initializeApp();
     firebaseInitialized = true;
   } catch (e) {
-    debugPrint("Firebase init error in overlay: $e");
+    if (kDebugMode) {
+      debugPrint("Firebase init error in overlay: $e");
+    }
   }
 
   if (firebaseInitialized) {
