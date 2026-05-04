@@ -40,12 +40,12 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: OS Constraints & Hybrid Kill-Switch Fixes' (Protocol in workflow.md) [a041bc9]
 
 ## Phase 4: Tech Debt & Hot Path Optimization
-- [ ] Task: Write Failing Tests for Tech Debt
-    - [ ] Write test ensuring pipeline logic remains intact after removing dead code.
-- [ ] Task: Implement Tech Debt & Optimization
-    - [ ] Delete `topLevelBackgroundSmsHandler` from `sms_service.dart`.
-    - [ ] Wrap `debugPrint` calls in `sms_processing_pipeline.dart` within `if (kDebugMode)`.
-- [ ] Task: Global Audit for Tech Debt
-    - [ ] Delete unused `@pragma('vm:entry-point')` functions.
-    - [ ] Wrap naked `debugPrint` calls in `lib/core/services/` with `kDebugMode`.
+- [x] Task: Write Failing Tests for Tech Debt [202cf87]
+    - [x] Write test ensuring pipeline logic remains intact after removing dead code.
+- [x] Task: Implement Tech Debt & Optimization [202cf87]
+    - [x] Delete `topLevelBackgroundSmsHandler` from `sms_service.dart`.
+    - [x] Wrap `debugPrint` calls in `sms_processing_pipeline.dart` within `if (kDebugMode)`.
+- [x] Task: Global Audit for Tech Debt [202cf87]
+    - [x] Delete unused `@pragma('vm:entry-point')` functions.
+    - [x] Wrap naked `debugPrint` calls in `lib/core/services/` with `kDebugMode`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Tech Debt & Hot Path Optimization' (Protocol in workflow.md)
