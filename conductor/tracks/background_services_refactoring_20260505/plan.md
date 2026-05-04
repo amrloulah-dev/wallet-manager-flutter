@@ -28,15 +28,15 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Isolate Crashes & UX Blindspots Fixes' (Protocol in workflow.md) [8ada1e4]
 
 ## Phase 3: OS Constraints & Hybrid Kill-Switch Fixes
-- [ ] Task: Write Failing Tests for OS Constraints
-    - [ ] Write test verifying `BackgroundService._onStart()` calls `stopSelf()` when automation is disabled.
-    - [ ] Write test verifying `SmsService.init()` requests battery optimization permission and handles denial.
-- [ ] Task: Implement Hybrid Kill-Switch & Battery Optimization
-    - [ ] Add `service.stopSelf()` in `BackgroundService._onStart()` if `isSmsAutomationEnabled` is false.
-    - [ ] Request `Permission.ignoreBatteryOptimizations` in `SmsService.init()`.
-    - [ ] Display warning if battery optimization permission is denied.
-- [ ] Task: Global Audit for Feature Flag Enforcement
-    - [ ] Ensure background tasks correctly abort/stop when respective features are disabled.
+- [x] Task: Write Failing Tests for OS Constraints [0993dd5]
+    - [x] Write test verifying `BackgroundService._onStart()` calls `stopSelf()` when automation is disabled.
+    - [x] Write test verifying `SmsService.init()` requests battery optimization permission and handles denial.
+- [x] Task: Implement Hybrid Kill-Switch & Battery Optimization [0993dd5]
+    - [x] Add `service.stopSelf()` in `BackgroundService._onStart()` if `isSmsAutomationEnabled` is false.
+    - [x] Request `Permission.ignoreBatteryOptimizations` in `SmsService.init()`.
+    - [x] Display warning if battery optimization permission is denied.
+- [x] Task: Global Audit for Feature Flag Enforcement [0993dd5]
+    - [x] Ensure background tasks correctly abort/stop when respective features are disabled.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: OS Constraints & Hybrid Kill-Switch Fixes' (Protocol in workflow.md)
 
 ## Phase 4: Tech Debt & Hot Path Optimization
