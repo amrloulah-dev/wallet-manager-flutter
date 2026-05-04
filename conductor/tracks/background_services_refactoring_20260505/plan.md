@@ -1,7 +1,7 @@
 # Implementation Plan: Background Services & OS Constraints Refactoring
 
 ## Phase 1: Data Duplication & Stale State Fixes
-- [ ] Task: Write Failing Tests for Data Duplication & Stale State
+- [x] Task: Write Failing Tests for Data Duplication & Stale State [079fce7]
     - [ ] Write test verifying `SmsService.init()` does not register duplicate listener.
     - [ ] Write test verifying overlay dismissal calls `LocalStorageService().clearVault()`.
 - [ ] Task: Implement Data Duplication & Stale State Fixes
