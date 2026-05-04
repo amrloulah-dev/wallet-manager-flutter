@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/services/background_service.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
-import 'package:walletmanager/data/services/local_storage_service.dart';
-import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +44,7 @@ void main() {
       // SharedPreferences for SmsService.init
       SharedPreferences.setMockInitialValues({});
       
-      final smsService = SmsService(telephony: mockTelephony);
+      SmsService(telephony: mockTelephony);
       
       // We can't easily verify Permission.ignoreBatteryOptimizations.request() 
       // without a wrapper, but we can verify the code doesn't crash 

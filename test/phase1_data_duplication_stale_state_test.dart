@@ -37,6 +37,15 @@ void main() {
 
     // Mock telephony permissions
     when(() => mockTelephony.requestPhoneAndSmsPermissions).thenAnswer((_) async => true);
+
+    // Mock permission_handler
+    const MethodChannel('flutter.baseflow.com/permissions/methods')
+        .setMockMethodCallHandler((methodCall) async {
+      if (methodCall.method == 'checkPermissionStatus') {
+        return 1; // granted
+      }
+      return null;
+    });
   });
 
   group('Phase 1: Data Duplication & Stale State Fixes', () {

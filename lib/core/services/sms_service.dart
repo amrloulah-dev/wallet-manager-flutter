@@ -2,7 +2,6 @@ import 'package:another_telephony/telephony.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:walletmanager/core/services/sms_processing_pipeline.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 
