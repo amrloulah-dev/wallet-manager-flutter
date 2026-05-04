@@ -1,15 +1,15 @@
 # Implementation Plan: Background Services & OS Constraints Refactoring
 
-## Phase 1: Data Duplication & Stale State Fixes
+## Phase 1: Data Duplication & Stale State Fixes [checkpoint: 380f8ac]
 - [x] Task: Write Failing Tests for Data Duplication & Stale State [079fce7]
-    - [ ] Write test verifying `SmsService.init()` does not register duplicate listener.
-    - [ ] Write test verifying overlay dismissal calls `LocalStorageService().clearVault()`.
+    - [x] Write test verifying `SmsService.init()` does not register duplicate listener.
+    - [x] Write test verifying overlay dismissal calls `LocalStorageService().clearVault()`.
 - [x] Task: Implement Data Duplication & Stale State Fixes [23a8c2b]
-    - [ ] Remove `_telephony.listenIncomingSms` from `SmsService.init()`.
-    - [ ] Add `LocalStorageService().clearVault()` (or equivalent) when overlay closes without submission.
+    - [x] Remove `_telephony.listenIncomingSms` from `SmsService.init()`.
+    - [x] Add `LocalStorageService().clearVault()` (or equivalent) when overlay closes without submission.
 - [x] Task: Global Audit for Duplicate Listeners [2c8a7eb]
-    - [ ] Scan and ensure no other duplicate telephony/BroadcastReceiver registrations exist.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Duplication & Stale State Fixes' (Protocol in workflow.md)
+    - [x] Scan and ensure no other duplicate telephony/BroadcastReceiver registrations exist.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Data Duplication & Stale State Fixes' (Protocol in workflow.md) [380f8ac]
 
 ## Phase 2: Isolate Crashes & UX Blindspots Fixes
 - [ ] Task: Write Failing Tests for Error Handler & Overlay Firebase Failsafe
