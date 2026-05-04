@@ -10,4 +10,7 @@
 - [x] **Track: Business Logic & Domain Integrity Execution Plan (V2)**
 *Link: [./tracks/business_logic_domain_integrity_20260426/](./tracks/business_logic_domain_integrity_20260426/)*
 
+---
 
+- [ ] **Track: Wallet Manager - Background Services & OS Constraints Refactoring Blueprint (Phase 8: Deep Architecture)**
+*Link: [./tracks/background_services_refactoring_20260505/](./tracks/background_services_refactoring_20260505/)*
