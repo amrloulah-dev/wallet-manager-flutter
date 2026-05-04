@@ -11,7 +11,7 @@
     - [x] Scan and ensure no other duplicate telephony/BroadcastReceiver registrations exist.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Data Duplication & Stale State Fixes' (Protocol in workflow.md) [380f8ac]
 
-## Phase 2: Isolate Crashes & UX Blindspots Fixes
+## Phase 2: Isolate Crashes & UX Blindspots Fixes [checkpoint: 8ada1e4]
 - [x] Task: Write Failing Tests for Error Handler & Overlay Firebase Failsafe [6f9876f]
     - [x] Write test verifying `AppErrorHandler.handle()` checks for foreground context.
     - [x] Write test verifying background context errors trigger local notification and not UI.
@@ -25,7 +25,7 @@
     - [x] Display Error UI in overlay ("❌ Connection Error. Please use the main app.") and skip service locator setup.
 - [x] Task: Global Audit for UI in Background [e8521d3]
     - [x] Scan for UI-bound functions in background services/cold starts.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Isolate Crashes & UX Blindspots Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Isolate Crashes & UX Blindspots Fixes' (Protocol in workflow.md) [8ada1e4]
 
 ## Phase 3: OS Constraints & Hybrid Kill-Switch Fixes
 - [ ] Task: Write Failing Tests for OS Constraints
