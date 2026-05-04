@@ -13,18 +13,18 @@
 
 ## Phase 2: Isolate Crashes & UX Blindspots Fixes
 - [x] Task: Write Failing Tests for Error Handler & Overlay Firebase Failsafe [6f9876f]
-    - [ ] Write test verifying `AppErrorHandler.handle()` checks for foreground context.
-    - [ ] Write test verifying background context errors trigger local notification and not UI.
-    - [ ] Write test verifying `overlayMain` catches Firebase init failures and shows error UI.
-- [ ] Task: Implement Smart Error Handler
-    - [ ] Modify `AppErrorHandler.handle()` to check `NavigationService.navigatorKey.currentContext`.
-    - [ ] Add logic to display `BotToast`/`showDialog` if context exists.
-    - [ ] Add logic to trigger actionable local notification (opening Main App) and log to Crashlytics if context is null.
-- [ ] Task: Implement Overlay Firebase Failsafe
-    - [ ] Catch `Firebase.initializeApp()` in `overlayMain`.
-    - [ ] Display Error UI in overlay ("❌ Connection Error. Please use the main app.") and skip service locator setup.
-- [ ] Task: Global Audit for UI in Background
-    - [ ] Scan for UI-bound functions in background services/cold starts.
+    - [x] Write test verifying `AppErrorHandler.handle()` checks for foreground context.
+    - [x] Write test verifying background context errors trigger local notification and not UI.
+    - [x] Write test verifying `overlayMain` catches Firebase init failures and shows error UI.
+- [x] Task: Implement Smart Error Handler [e8521d3]
+    - [x] Modify `AppErrorHandler.handle()` to check `NavigationService.navigatorKey.currentContext`.
+    - [x] Add logic to display `BotToast`/`showDialog` if context exists.
+    - [x] Add logic to trigger actionable local notification (opening Main App) and log to Crashlytics if context is null.
+- [x] Task: Implement Overlay Firebase Failsafe [e8521d3]
+    - [x] Catch `Firebase.initializeApp()` in `overlayMain`.
+    - [x] Display Error UI in overlay ("❌ Connection Error. Please use the main app.") and skip service locator setup.
+- [x] Task: Global Audit for UI in Background [e8521d3]
+    - [x] Scan for UI-bound functions in background services/cold starts.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Isolate Crashes & UX Blindspots Fixes' (Protocol in workflow.md)
 
 ## Phase 3: OS Constraints & Hybrid Kill-Switch Fixes
