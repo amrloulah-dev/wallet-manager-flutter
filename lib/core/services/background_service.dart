@@ -27,11 +27,11 @@ Future<void> initializeBackgroundService() async {
   await service.configure(
     iosConfiguration: IosConfiguration(
       autoStart: false, // iOS is not our target for this feature
-      onForeground: _onStart,
+      onForeground: onStart,
       onBackground: _onIosBackground,
     ),
     androidConfiguration: AndroidConfiguration(
-      onStart: _onStart,
+      onStart: onStart,
       autoStart: true,
       isForegroundMode: true,
       autoStartOnBoot: true,
@@ -55,7 +55,7 @@ Future<bool> _onIosBackground(ServiceInstance service) async {
 //  THE CORE: Background Isolate Entry Point
 // ============================================================
 @pragma('vm:entry-point')
-void _onStart(ServiceInstance service) async {
+Future<void> onStart(ServiceInstance service) async {
   // ── 1. Bootstrap the Isolate ──────────────────────────────
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
@@ -71,9 +71,8 @@ void _onStart(ServiceInstance service) async {
 
   // ── 4. Guard: Only listen if SMS automation is enabled ────
   if (!storage.isSmsAutomationEnabled) {
-    // The service stays alive but idle.
-    // If the user enables automation later, the service will
-    // pick it up on the next restart (or we can invoke 'restart').
+    debugPrint('🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
+    service.stopSelf();
     return;
   }
 
@@ -103,6 +102,11 @@ void _backgroundSmsCallback(SmsMessage message) async {
 
     final storage = LocalStorageService();
     await storage.initialize();
+
+    if (!storage.isSmsAutomationEnabled) {
+      debugPrint('ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
+      return;
+    }
 
     await handleIncomingSms(message, storage);
   } catch (e) {

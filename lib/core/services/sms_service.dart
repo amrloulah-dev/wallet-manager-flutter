@@ -1,8 +1,10 @@
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:walletmanager/core/services/sms_processing_pipeline.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 
 // ============================================================
 //  SMS SERVICE — Permissions + Foreground Listener
@@ -61,6 +63,17 @@ class SmsService {
     // Initialize LocalStorage if not already (it should be, but safe to call)
     final storage = LocalStorageService();
     await storage.initialize();
+
+    // Request Battery Optimization exemption for reliable background work
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryStatus.isGranted) {
+      final requested = await Permission.ignoreBatteryOptimizations.request();
+      if (!requested.isGranted) {
+        ToastUtils.showWarning(
+          'Background reliability may be reduced without battery optimization exemption.',
+        );
+      }
+    }
 
     // ── REMOVED DUPLICATE LISTENER ──────────
     // The Guardian Isolate (background_service.dart) handles all SMS events.
