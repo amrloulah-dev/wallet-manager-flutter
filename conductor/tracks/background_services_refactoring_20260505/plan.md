@@ -39,7 +39,7 @@
     - [x] Ensure background tasks correctly abort/stop when respective features are disabled.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: OS Constraints & Hybrid Kill-Switch Fixes' (Protocol in workflow.md) [a041bc9]
 
-## Phase 4: Tech Debt & Hot Path Optimization
+## Phase 4: Tech Debt & Hot Path Optimization [checkpoint: 3114fb7]
 - [x] Task: Write Failing Tests for Tech Debt [202cf87]
     - [x] Write test ensuring pipeline logic remains intact after removing dead code.
 - [x] Task: Implement Tech Debt & Optimization [202cf87]
@@ -48,4 +48,4 @@
 - [x] Task: Global Audit for Tech Debt [202cf87]
     - [x] Delete unused `@pragma('vm:entry-point')` functions.
     - [x] Wrap naked `debugPrint` calls in `lib/core/services/` with `kDebugMode`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Tech Debt & Hot Path Optimization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Tech Debt & Hot Path Optimization' (Protocol in workflow.md) [3114fb7]
