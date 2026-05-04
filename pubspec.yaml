@@ -67,6 +67,7 @@ dependencies:
 
   meta: any
   firebase_crashlytics: ^4.3.10
+  permission_handler: ^11.3.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
