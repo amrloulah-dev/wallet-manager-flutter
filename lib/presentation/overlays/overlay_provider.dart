@@ -10,11 +10,14 @@ import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/state/safe_change_notifier.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
-  final LocalStorageService _localStorageService = LocalStorageService();
+  final LocalStorageService _localStorageService;
   final OverlayUseCase _overlayUseCase;
 
-  OverlayProvider({OverlayUseCase? overlayUseCase})
-      : _overlayUseCase = overlayUseCase ?? sl<OverlayUseCase>();
+  OverlayProvider({
+    OverlayUseCase? overlayUseCase,
+    LocalStorageService? localStorageService,
+  })  : _overlayUseCase = overlayUseCase ?? sl<OverlayUseCase>(),
+        _localStorageService = localStorageService ?? LocalStorageService();
 
   bool _isLoading = false;
   bool _isStorageInitialized = false;
@@ -261,7 +264,8 @@ class OverlayProvider extends SafeChangeNotifier {
     super.dispose();
   }
 
-  void close() async {
+  Future<void> close() async {
+    await _localStorageService.clearVault();
     await FlutterOverlayWindow.closeOverlay();
   }
 }

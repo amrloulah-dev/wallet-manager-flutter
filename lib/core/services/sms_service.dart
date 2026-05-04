@@ -31,12 +31,19 @@ void topLevelBackgroundSmsHandler(SmsMessage message) async {
 }
 
 class SmsService {
+  final Telephony _telephony;
+
   // Singleton
   static final SmsService _instance = SmsService._internal();
-  factory SmsService() => _instance;
-  SmsService._internal();
-
-  final Telephony _telephony = Telephony.instance;
+  factory SmsService({Telephony? telephony}) {
+    if (telephony != null) {
+       return SmsService._withTelephony(telephony);
+    }
+    return _instance;
+  }
+  
+  SmsService._internal() : _telephony = Telephony.instance;
+  SmsService._withTelephony(this._telephony);
 
   /// Initializes SMS automation: requests permissions and
   /// registers the foreground-only SMS listener.
@@ -55,14 +62,9 @@ class SmsService {
     final storage = LocalStorageService();
     await storage.initialize();
 
-    // ── Register listener ────────────────────
-    _telephony.listenIncomingSms(
-      onNewMessage: (SmsMessage message) async {
-        await handleIncomingSms(message, storage);
-      },
-      onBackgroundMessage: topLevelBackgroundSmsHandler,
-      listenInBackground: true, // <--- RESTORES BACKGROUND OS WAKE-UP
-    );
+    // ── REMOVED DUPLICATE LISTENER ──────────
+    // The Guardian Isolate (background_service.dart) handles all SMS events.
+    // Registering here would cause double processing.
   }
 
   /// Requests SMS permissions (Receive & Read).
