@@ -12,7 +12,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Data Duplication & Stale State Fixes' (Protocol in workflow.md) [380f8ac]
 
 ## Phase 2: Isolate Crashes & UX Blindspots Fixes
-- [ ] Task: Write Failing Tests for Error Handler & Overlay Firebase Failsafe
+- [x] Task: Write Failing Tests for Error Handler & Overlay Firebase Failsafe [6f9876f]
     - [ ] Write test verifying `AppErrorHandler.handle()` checks for foreground context.
     - [ ] Write test verifying background context errors trigger local notification and not UI.
     - [ ] Write test verifying `overlayMain` catches Firebase init failures and shows error UI.
