@@ -4,7 +4,7 @@
 - [x] Task: Write Failing Tests for Data Duplication & Stale State [079fce7]
     - [ ] Write test verifying `SmsService.init()` does not register duplicate listener.
     - [ ] Write test verifying overlay dismissal calls `LocalStorageService().clearVault()`.
-- [ ] Task: Implement Data Duplication & Stale State Fixes
+- [x] Task: Implement Data Duplication & Stale State Fixes [23a8c2b]
     - [ ] Remove `_telephony.listenIncomingSms` from `SmsService.init()`.
     - [ ] Add `LocalStorageService().clearVault()` (or equivalent) when overlay closes without submission.
 - [ ] Task: Global Audit for Duplicate Listeners
