@@ -7,7 +7,7 @@
 - [x] Task: Implement Data Duplication & Stale State Fixes [23a8c2b]
     - [ ] Remove `_telephony.listenIncomingSms` from `SmsService.init()`.
     - [ ] Add `LocalStorageService().clearVault()` (or equivalent) when overlay closes without submission.
-- [ ] Task: Global Audit for Duplicate Listeners
+- [x] Task: Global Audit for Duplicate Listeners [2c8a7eb]
     - [ ] Scan and ensure no other duplicate telephony/BroadcastReceiver registrations exist.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Duplication & Stale State Fixes' (Protocol in workflow.md)
 
