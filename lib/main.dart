@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.dart';
 import 'app.dart';
 import 'data/services/firebase_service.dart';
@@ -104,17 +105,70 @@ void main() async {
 void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  bool firebaseInitialized = false;
   // 1. Initialize Firebase (Crucial for Overlay Provider/Repo)
   try {
     await Firebase.initializeApp();
+    firebaseInitialized = true;
   } catch (e) {
     debugPrint("Firebase init error in overlay: $e");
   }
 
-  // 2. Initialize Dependency Injection (Includes Storage init)
-  await setupServiceLocator();
+  if (firebaseInitialized) {
+    // 2. Initialize Dependency Injection (Includes Storage init)
+    await setupServiceLocator();
+    runApp(const TransactionOverlayApp());
+  } else {
+    // 3. Failsafe: Show elegant Error UI if Firebase fails
+    runApp(const OverlayFirebaseFailsafeApp());
+  }
+}
 
-  runApp(const TransactionOverlayApp());
+@visibleForTesting
+class OverlayFirebaseFailsafeApp extends StatelessWidget {
+  const OverlayFirebaseFailsafeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  "❌ Connection Error",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Please use the main app to record your transaction.",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => FlutterOverlayWindow.closeOverlay(),
+                  child: const Text("Close"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class TransactionOverlayApp extends StatelessWidget {

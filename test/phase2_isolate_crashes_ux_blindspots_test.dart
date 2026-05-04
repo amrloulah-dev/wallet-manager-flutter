@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,9 @@ import 'package:walletmanager/routes/navigation_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bot_toast/bot_toast.dart';
+
+import 'package:walletmanager/main.dart';
 
 class MockFlutterLocalNotificationsPlugin extends Mock implements FlutterLocalNotificationsPlugin {}
 
@@ -72,14 +76,14 @@ void main() {
       // Ensure context is null
       expect(NavigationService.navigatorKey.currentContext, isNull);
 
-      // AppErrorHandler.handle is now async but we call it from non-async context usually.
+      // AppErrorHandler.handle is async void.
       AppErrorHandler.handle(
         'Test Error',
         severity: ErrorSeverity.critical,
         showToast: true,
       );
 
-      // Wait a bit for the async notification logic
+      // Wait for async notification logic
       await Future.delayed(const Duration(milliseconds: 200));
 
       verify(() => mockNotificationsPlugin.show(
@@ -90,8 +94,54 @@ void main() {
       )).called(1);
     });
 
-    test('overlayMain catches Firebase failure and shows error UI', () async {
-      // This is a placeholder test for the logic change in main.dart
+    testWidgets('AppErrorHandler.handle() does NOT trigger notification when context is present (foreground)', (WidgetTester tester) async {
+      final botToastBuilder = BotToastInit();
+      
+      // Setup the navigator key with a MaterialApp
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: NavigationService.navigatorKey,
+          builder: (context, child) {
+            child = botToastBuilder(context, child);
+            return child;
+          },
+          navigatorObservers: [BotToastNavigatorObserver()],
+          home: const Scaffold(body: Text('Home')),
+        ),
+      );
+
+      // Ensure context is NOT null
+      expect(NavigationService.navigatorKey.currentContext, isNotNull);
+
+      // Trigger error
+      AppErrorHandler.handle(
+        'Test Foreground Error',
+        severity: ErrorSeverity.critical,
+        showToast: true,
+      );
+
+      // Wait for async logic
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Verify notification was NOT called
+      verifyNever(() => mockNotificationsPlugin.show(
+        any(),
+        any(),
+        any(),
+        any(),
+      ));
+
+      // Cleanup timers from BotToast
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('OverlayFirebaseFailsafeApp shows error UI', (WidgetTester tester) async {
+      await tester.pumpWidget(const OverlayFirebaseFailsafeApp());
+
+      expect(find.text('❌ Connection Error'), findsOneWidget);
+      expect(find.text('Please use the main app to record your transaction.'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.text('Close'), findsOneWidget);
     });
   });
 }
