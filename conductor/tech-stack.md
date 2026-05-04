@@ -24,6 +24,12 @@
 ## Local Storage
 - **Shared Preferences:** Storing local settings and non-sensitive metadata.
 
+## Background Architecture & OS Resilience
+- **Single-Isolate Guardian:** Persistent background service (`flutter_background_service`) acting as the single source of truth for SMS automation to prevent data duplication.
+- **Hybrid Kill-Switch:** State-aware service lifecycle management that calls `stopSelf()` when features are disabled to minimize battery impact and resource usage.
+- **Smart Error Handling:** Context-aware error routing via `AppErrorHandler` that displays UI feedback in the foreground and triggers actionable Local Notifications (`flutter_local_notifications`) in the background.
+- **OS Constraint Strategy:** Explicit handling of modern Android (12+) constraints, including Battery Optimization exemption requests and high-priority notification triggers for overlay reliability.
+
 ## Tools & Utilities
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
 - **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers.
