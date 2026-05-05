@@ -9,6 +9,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 class MockFirebaseCrashlytics extends Mock implements FirebaseCrashlytics {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late List<String> printLogs;
   late void Function(String?, {int? wrapWidth}) originalDebugPrint;
 

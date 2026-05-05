@@ -54,18 +54,13 @@ class SmsService {
     final storage = LocalStorageService();
     await storage.initialize();
 
-    // Request Battery Optimization exemption for reliable background work
-    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
-    if (!batteryStatus.isGranted) {
-      final requested = await Permission.ignoreBatteryOptimizations.request();
-      if (!requested.isGranted) {
-        ToastUtils.showWarning(
-          'Background reliability may be reduced without battery optimization exemption.',
-        );
-      }
-    }
+    // Request Battery Optimization and Notification permissions for reliable background work
+    await [
+      Permission.ignoreBatteryOptimizations,
+      Permission.notification,
+    ].request();
 
-    // ── REMOVED DUPLICATE LISTENER ──────────
+    // ΓöÇΓöÇ REMOVED DUPLICATE LISTENER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     // The Guardian Isolate (background_service.dart) handles all SMS events.
     // Registering here would cause double processing.
   }

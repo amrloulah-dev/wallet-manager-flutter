@@ -44,6 +44,12 @@ void main() {
       if (methodCall.method == 'checkPermissionStatus') {
         return 1; // granted
       }
+      if (methodCall.method == 'requestPermissions') {
+        return {
+          21: 1, // ignoreBatteryOptimizations
+          33: 1, // notification
+        };
+      }
       return null;
     });
   });

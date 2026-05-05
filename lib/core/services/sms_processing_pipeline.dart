@@ -32,11 +32,18 @@ const String _kChannelDesc =
     'إشعارات عالية الأولوية للمعاملات الواردة عبر الرسائل القصيرة';
 
 /// Singleton-ish plugin instance — safe to reuse across calls.
-final FlutterLocalNotificationsPlugin _notificationsPlugin =
+FlutterLocalNotificationsPlugin _notificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 /// Whether the notifications plugin has been initialized this session.
 bool _notificationsInitialized = false;
+
+/// Sets a custom notifications plugin (for testing).
+@visibleForTesting
+void setNotificationsPlugin(FlutterLocalNotificationsPlugin plugin) {
+  _notificationsPlugin = plugin;
+  _notificationsInitialized = true;
+}
 
 /// Initializes the local notifications plugin (idempotent).
 Future<void> _ensureNotificationsInitialized() async {

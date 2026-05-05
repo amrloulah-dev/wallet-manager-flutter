@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:another_telephony/telephony.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
@@ -71,7 +72,9 @@ Future<void> onStart(ServiceInstance service) async {
 
   // ── 4. Guard: Only listen if SMS automation is enabled ────
   if (!storage.isSmsAutomationEnabled) {
-    debugPrint('🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
+    if (kDebugMode) {
+      debugPrint('🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
+    }
     service.stopSelf();
     return;
   }
@@ -104,13 +107,17 @@ void _backgroundSmsCallback(SmsMessage message) async {
     await storage.initialize();
 
     if (!storage.isSmsAutomationEnabled) {
-      debugPrint('ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
+      if (kDebugMode) {
+        debugPrint('ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
+      }
       return;
     }
 
     await handleIncomingSms(message, storage);
   } catch (e) {
-    debugPrint('[ERROR] [low] [background_sms_callback] $e');
+    if (kDebugMode) {
+      debugPrint('[ERROR] [low] [background_sms_callback] $e');
+    }
     // Swallow — background isolate must never crash
   }
 }

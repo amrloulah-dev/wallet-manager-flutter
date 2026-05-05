@@ -5,16 +5,30 @@ import 'package:walletmanager/core/services/sms_processing_pipeline.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+class MockFlutterLocalNotificationsPlugin extends Mock implements FlutterLocalNotificationsPlugin {}
+class FakeInitializationSettings extends Fake implements InitializationSettings {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  
+  setUpAll(() {
+    registerFallbackValue(FakeInitializationSettings());
+  });
+
   late MockLocalStorageService mockStorage;
+  late MockFlutterLocalNotificationsPlugin mockNotificationsPlugin;
 
   setUp(() async {
     mockStorage = MockLocalStorageService();
+    mockNotificationsPlugin = MockFlutterLocalNotificationsPlugin();
     SharedPreferences.setMockInitialValues({});
+
+    setNotificationsPlugin(mockNotificationsPlugin);
+    when(() => mockNotificationsPlugin.initialize(any())).thenAnswer((_) async => true);
+    when(() => mockNotificationsPlugin.show(any(), any(), any(), any())).thenAnswer((_) async {});
 
     // Mock local notifications channel
     const MethodChannel('dexterous.com/flutter_local_notifications')
