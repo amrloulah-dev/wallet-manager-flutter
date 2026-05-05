@@ -91,7 +91,9 @@ void main() {
         any(that: contains('SMS Processing Error')),
         any(),
         any(),
+        payload: any(named: 'payload'),
       )).called(1);
+
     });
 
     testWidgets('AppErrorHandler.handle() does NOT trigger notification when context is present (foreground)', (WidgetTester tester) async {
