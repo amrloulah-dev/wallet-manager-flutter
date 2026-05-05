@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../../routes/navigation_service.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
@@ -32,7 +33,22 @@ class AppErrorHandler {
     const fln.InitializationSettings initSettings = fln.InitializationSettings(
       android: androidSettings,
     );
-    await _notificationsPlugin.initialize(initSettings);
+    await _notificationsPlugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (fln.NotificationResponse response) async {
+        // Tapping the notification should bring the app to foreground.
+        // We also close any active overlays to ensure the user sees the main app.
+        try {
+          if (await FlutterOverlayWindow.isActive()) {
+            await FlutterOverlayWindow.closeOverlay();
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [ERROR_HANDLER] Failed to close overlay on notification tap: $e');
+          }
+        }
+      },
+    );
     _notificationsInitialized = true;
   }
   
@@ -105,7 +121,9 @@ class AppErrorHandler {
         try {
           ToastUtils.showError(message);
         } catch (e) {
-          debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e');
+          if (kDebugMode) {
+            debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e');
+          }
         }
       }
     } else {
@@ -129,9 +147,12 @@ class AppErrorHandler {
           '⚠️ SMS Processing Error',
           'Please open the app to verify your recent transactions.',
           details,
+          payload: 'error_notification',
         );
       } catch (e) {
-        debugPrint('⚠️ [ERROR_HANDLER] Failed to show notification: $e');
+        if (kDebugMode) {
+          debugPrint('⚠️ [ERROR_HANDLER] Failed to show notification: $e');
+        }
       }
     }
 
@@ -143,7 +164,11 @@ class AppErrorHandler {
           message,
           severity: severity.name,
           operation: operation,
-        ).catchError((e) => debugPrint('⚠️ [ERROR_HANDLER] Analytics failed: $e'));
+        ).catchError((e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [ERROR_HANDLER] Analytics failed: $e');
+          }
+        });
 
         if (!kDebugMode && (severity == ErrorSeverity.critical || severity == ErrorSeverity.medium)) {
           FirebaseCrashlytics.instance.recordError(
@@ -151,11 +176,17 @@ class AppErrorHandler {
             stackTrace,
             reason: 'Operation: $operation',
             fatal: severity == ErrorSeverity.critical,
-          ).catchError((e) => debugPrint('⚠️ [ERROR_HANDLER] Crashlytics failed: $e'));
+          ).catchError((e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ [ERROR_HANDLER] Crashlytics failed: $e');
+            }
+          });
         }
       }
     } catch (e) {
-      debugPrint('⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e');
+      }
     }
   }
 
@@ -165,13 +196,16 @@ class AppErrorHandler {
     String message,
     StackTrace? stackTrace,
   ) {
-    final timestamp = DateTime.now().toUtc().toIso8601String();
-    final stack = stackTrace?.toString() ?? 'No stack trace available';
-    
-    debugPrint(
-      '[ERROR] [${severity.name}] [$operation] $message\n'
-      '  Stack: $stack\n'
-      '  Timestamp: $timestamp',
-    );
+    if (kDebugMode) {
+      final timestamp = DateTime.now().toUtc().toIso8601String();
+      final stack = stackTrace?.toString() ?? 'No stack trace available';
+      
+      debugPrint(
+        '[ERROR] [${severity.name}] [$operation] $message\n'
+        '  Stack: $stack\n'
+        '  Timestamp: $timestamp',
+      );
+    }
   }
 }
+

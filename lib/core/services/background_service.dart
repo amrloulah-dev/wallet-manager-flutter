@@ -72,9 +72,7 @@ Future<void> onStart(ServiceInstance service) async {
 
   // ── 4. Guard: Only listen if SMS automation is enabled ────
   if (!storage.isSmsAutomationEnabled) {
-    if (kDebugMode) {
-      debugPrint('🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
-    }
+    if (kDebugMode) debugPrint('🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
     service.stopSelf();
     return;
   }
@@ -107,17 +105,14 @@ void _backgroundSmsCallback(SmsMessage message) async {
     await storage.initialize();
 
     if (!storage.isSmsAutomationEnabled) {
-      if (kDebugMode) {
-        debugPrint('ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
-      }
+      if (kDebugMode) debugPrint('ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
       return;
     }
 
     await handleIncomingSms(message, storage);
   } catch (e) {
-    if (kDebugMode) {
-      debugPrint('[ERROR] [low] [background_sms_callback] $e');
-    }
+    if (kDebugMode) debugPrint('[ERROR] [low] [background_sms_callback] $e');
     // Swallow — background isolate must never crash
   }
 }
+
