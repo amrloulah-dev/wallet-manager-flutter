@@ -9,7 +9,7 @@
     - [x] Implement fix: Add `if (Firebase.apps.isEmpty) { await Firebase.initializeApp(); }` to `backgroundSmsCallback`.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Background Isolate Stabilization' (Protocol in workflow.md)
 
-## Phase 2: Subscription TTL & Notifications
+## Phase 2: Subscription TTL & Notifications [checkpoint: a1523ff]
 - [x] Task: Implement 24h Subscription TTL [ea47ce5]
     - [x] Write failing test for stale subscription check (> 24 hours).
     - [x] Implement fix: Add TTL validation logic in `lib/core/services/sms_processing_pipeline.dart`.
@@ -18,7 +18,8 @@
     - [x] Write failing test for multiple notifications overwriting each other and actionable intents.
     - [x] Implement fix: Trigger local notification on TTL block with unique hash ID and localized Arabic text exactly as specified.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Subscription TTL & Notifications' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Subscription TTL & Notifications' (Protocol in workflow.md)
+
 
 ## Phase 3: Unified Vault & Dependency Injection
 - [ ] Task: Refactor and Delete OverlayRepository
