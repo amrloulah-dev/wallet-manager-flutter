@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:flutter/services.dart';
 import '../../routes/navigation_service.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
@@ -42,9 +43,14 @@ class AppErrorHandler {
           if (await FlutterOverlayWindow.isActive()) {
             await FlutterOverlayWindow.closeOverlay();
           }
+
+          // Launch main app if user tapped notification
+          if (response.payload == 'error_notification') {
+            await _launchMainApp();
+          }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('⚠️ [ERROR_HANDLER] Failed to close overlay on notification tap: $e');
+            debugPrint('⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e');
           }
         }
       },
@@ -97,6 +103,21 @@ class AppErrorHandler {
         printDetails: false,
         fatal: false,
       );
+    }
+  }
+
+  /// Launches the main application using a platform channel.
+  static Future<void> _launchMainApp() async {
+    try {
+      final result = await const MethodChannel('com.ewallet.manager/app')
+          .invokeMethod('launchMainApp');
+      if (kDebugMode) {
+        debugPrint('🚀 [ERROR_HANDLER] Launched main app: $result');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [ERROR_HANDLER] Failed to launch main app: $e');
+      }
     }
   }
 
