@@ -4,9 +4,9 @@
 - [x] Task: Make background entrypoints public [2d15d7f]
     - [x] Write failing test/verification script ensuring `backgroundSmsCallback` and `onIosBackground` cannot be aggressively tree-shaken.
     - [x] Implement fix: Remove underscores from `_backgroundSmsCallback` and `_onIosBackground` in `lib/core/services/background_service.dart` and update references.
-- [ ] Task: Safe Firebase Initialization in Isolate
-    - [ ] Write failing test simulating cold-start isolate environment for Firebase access.
-    - [ ] Implement fix: Add `if (Firebase.apps.isEmpty) { await Firebase.initializeApp(); }` to `backgroundSmsCallback`.
+- [x] Task: Safe Firebase Initialization in Isolate [f5e3b55]
+    - [x] Write failing test simulating cold-start isolate environment for Firebase access.
+    - [x] Implement fix: Add `if (Firebase.apps.isEmpty) { await Firebase.initializeApp(); }` to `backgroundSmsCallback`.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Background Isolate Stabilization' (Protocol in workflow.md)
 
 ## Phase 2: Subscription TTL & Notifications
