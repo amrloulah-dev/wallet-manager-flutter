@@ -10,11 +10,11 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Background Isolate Stabilization' (Protocol in workflow.md)
 
 ## Phase 2: Subscription TTL & Notifications
-- [ ] Task: Implement 24h Subscription TTL
-    - [ ] Write failing test for stale subscription check (> 24 hours).
-    - [ ] Implement fix: Add TTL validation logic in `lib/core/services/sms_processing_pipeline.dart`.
-    - [ ] Refactor: Ensure clean separation of time-checking logic.
-- [ ] Task: Actionable TTL Notification & Unique IDs
+- [x] Task: Implement 24h Subscription TTL [ea47ce5]
+    - [x] Write failing test for stale subscription check (> 24 hours).
+    - [x] Implement fix: Add TTL validation logic in `lib/core/services/sms_processing_pipeline.dart`.
+    - [x] Refactor: Ensure clean separation of time-checking logic.
+- [~] Task: Actionable TTL Notification & Unique IDs
     - [ ] Write failing test for multiple notifications overwriting each other and actionable intents.
     - [ ] Implement fix: Trigger local notification on TTL block with unique hash ID and localized Arabic text exactly as specified.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Subscription TTL & Notifications' (Protocol in workflow.md)
