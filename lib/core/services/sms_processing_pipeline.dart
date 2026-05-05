@@ -112,13 +112,17 @@ Future<void> _showStaleSyncNotification() async {
     android: androidDetails,
   );
 
+  // Unique ID so multiple notifications stack gracefully as per Phase 8.1 requirements
+  final int notificationId = DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
+
   await _notificationsPlugin.show(
-    8888, // Dedicated ID for stale-sync notifications
-    '⚠️ تنبيه مزامنة',
-    'انتهت صلاحية مزامنة الاشتراك. يرجى فتح التطبيق لتحديث بياناتك.',
+    notificationId,
+    'تنبيه المزامنة', // "Sync Alert"
+    '⚠️ انتهت صلاحية مزامنة الاشتراك. يرجى فتح التطبيق لتحديث بياناتك.',
     details,
   );
 }
+
 
 /// Processes an incoming SMS through the full pipeline:
 /// Parse → Match Wallet → Save to Vault → Wake Screen → Trigger Overlay.
