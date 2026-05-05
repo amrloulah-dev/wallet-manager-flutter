@@ -138,10 +138,9 @@ void main() {
     testWidgets('OverlayErrorApp shows error UI', (WidgetTester tester) async {
       await tester.pumpWidget(const OverlayErrorApp());
 
-      expect(find.text('❌ Connection Error'), findsOneWidget);
-      expect(find.text('Please use the main app to record your transaction.'), findsOneWidget);
+      expect(find.text('❌ خطأ في الاتصال'), findsOneWidget);
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
-      expect(find.text('Close'), findsOneWidget);
+      expect(find.text('إغلاق'), findsOneWidget);
     });
   });
 }
