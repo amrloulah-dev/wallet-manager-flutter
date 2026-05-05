@@ -49,3 +49,6 @@
     - [x] Delete unused `@pragma('vm:entry-point')` functions.
     - [x] Wrap naked `debugPrint` calls in `lib/core/services/` with `kDebugMode`.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Tech Debt & Hot Path Optimization' (Protocol in workflow.md) [3114fb7]
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [be03710]
