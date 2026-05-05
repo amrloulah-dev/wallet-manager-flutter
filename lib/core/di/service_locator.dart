@@ -14,7 +14,6 @@ import '../../data/repositories/system_config_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/wallet_repository.dart';
-import '../../data/repositories/overlay_repository.dart';
 import '../../data/services/local_storage_service.dart';
 import '../../data/services/wallet_cache_manager.dart';
 import '../../providers/auth_provider.dart';
@@ -74,11 +73,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<DeviceRepository>(() => DeviceRepository());
   sl.registerLazySingleton<LicenseKeyRepository>(() => LicenseKeyRepository());
   sl.registerLazySingleton<UserRepository>(() => UserRepository());
-  sl.registerLazySingleton<OverlayRepository>(() => OverlayRepository());
 
   // UseCases
   sl.registerLazySingleton<OverlayUseCase>(() => OverlayUseCase(
     transactionRepository: sl<TransactionRepository>(),
-    overlayRepository: sl<OverlayRepository>(),
+    localStorage: sl<LocalStorageService>(),
   ));
 }

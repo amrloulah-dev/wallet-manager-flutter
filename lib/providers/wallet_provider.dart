@@ -102,8 +102,10 @@ class WalletProvider extends BaseProvider {
     try {
       _overlayDataSubscription =
           FlutterOverlayWindow.overlayListener.listen((event) {
-        debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-            'event received=$event');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+              'event received=$event');
+        }
 
         if (event is Map && event['action'] == 'local_deduct') {
           // ── Zero-cost local state mutation ──
@@ -125,10 +127,12 @@ class WalletProvider extends BaseProvider {
             _wallets[index] = oldWallet.copyWith(balance: newBalance);
             _rebuildWalletMap();
             safeNotify();
-            debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-                'local_deduct applied! walletId=$walletId, '
-                'oldBalance=${oldWallet.balance}, newBalance=$newBalance, '
-                'isSend=$isSend. No Firebase read needed!');
+            if (kDebugMode) {
+              debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
+                  'local_deduct applied! walletId=$walletId, '
+                  'oldBalance=${oldWallet.balance}, newBalance=$newBalance, '
+                  'isSend=$isSend. No Firebase read needed!');
+            }
           }
         }
       }, onError: (error) {
@@ -147,7 +151,7 @@ class WalletProvider extends BaseProvider {
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) {
-      debugPrint('🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
+      if (kDebugMode) debugPrint('🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
       return;
     }
 
@@ -168,9 +172,11 @@ class WalletProvider extends BaseProvider {
     
     _rebuildWalletMap();
     safeNotify();
-    debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '
-        'walletId=$walletId | oldBalance=${oldWallet.balance} → New Balance: $newBalance | '
-        'isSend=$isSend | No Firestore read.');
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '
+          'walletId=$walletId | oldBalance=${oldWallet.balance} → New Balance: $newBalance | '
+          'isSend=$isSend | No Firestore read.');
+    }
   }
 
   @override
@@ -233,13 +239,13 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    debugPrint('🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
+    if (kDebugMode) debugPrint('🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
     if (_currentStoreId == null) {
-      debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
+      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      debugPrint('🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
+      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
       return;
     }
 
@@ -248,14 +254,14 @@ class WalletProvider extends BaseProvider {
     safeNotify();
 
     try {
-      debugPrint('⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
+      if (kDebugMode) debugPrint('⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
       
       final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
       
       final result = await _walletRepository.getAllWallets(
         storeId,
       );
-      debugPrint('✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
 
       _wallets = result.items;
       _lastDocument = result.lastDocument;
@@ -267,7 +273,7 @@ class WalletProvider extends BaseProvider {
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
-        debugPrint('🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
+        if (kDebugMode) debugPrint('🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
         // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
@@ -278,8 +284,8 @@ class WalletProvider extends BaseProvider {
       // Cache the wallets locally for SMS Automation
       _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
-      debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
-      debugPrint('🔍 [STACK TRACE]: $stack');
+      if (kDebugMode) debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
+      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('wallet_error_fetch_failed', e, stack);
       ToastUtils.showError('wallet_error_fetch_failed');
     } finally {

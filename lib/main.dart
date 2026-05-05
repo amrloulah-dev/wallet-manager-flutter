@@ -106,30 +106,21 @@ void main() async {
 void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  bool firebaseInitialized = false;
-  // 1. Initialize Firebase (Crucial for Overlay Provider/Repo)
   try {
     await Firebase.initializeApp();
-    firebaseInitialized = true;
-  } catch (e) {
-    if (kDebugMode) {
-      debugPrint("Firebase init error in overlay: $e");
-    }
-  }
-
-  if (firebaseInitialized) {
-    // 2. Initialize Dependency Injection (Includes Storage init)
     await setupServiceLocator();
     runApp(const TransactionOverlayApp());
-  } else {
-    // 3. Failsafe: Show elegant Error UI if Firebase fails
-    runApp(const OverlayFirebaseFailsafeApp());
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint("❌ Overlay init error: $e");
+    }
+    runApp(const OverlayErrorApp());
   }
 }
 
 @visibleForTesting
-class OverlayFirebaseFailsafeApp extends StatelessWidget {
-  const OverlayFirebaseFailsafeApp({super.key});
+class OverlayErrorApp extends StatelessWidget {
+  const OverlayErrorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -152,18 +143,18 @@ class OverlayFirebaseFailsafeApp extends StatelessWidget {
                 const Icon(Icons.error_outline, color: Colors.red, size: 48),
                 const SizedBox(height: 16),
                 const Text(
-                  "❌ Connection Error",
+                  '❌ خطأ في الاتصال',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Please use the main app to record your transaction.",
+                  'يرجى إتمام المعاملة من التطبيق الأساسي.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => FlutterOverlayWindow.closeOverlay(),
-                  child: const Text("Close"),
+                  child: const Text('إغلاق'),
                 ),
               ],
             ),

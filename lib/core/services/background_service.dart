@@ -1,10 +1,12 @@
 import 'dart:ui';
 
 import 'package:another_telephony/telephony.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/sms_processing_pipeline.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 
@@ -29,7 +31,7 @@ Future<void> initializeBackgroundService() async {
     iosConfiguration: IosConfiguration(
       autoStart: false, // iOS is not our target for this feature
       onForeground: onStart,
-      onBackground: _onIosBackground,
+      onBackground: onIosBackground,
     ),
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
@@ -46,7 +48,7 @@ Future<void> initializeBackgroundService() async {
 
 /// iOS background stub — not used, but required by the API.
 @pragma('vm:entry-point')
-Future<bool> _onIosBackground(ServiceInstance service) async {
+Future<bool> onIosBackground(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
   return true;
@@ -84,7 +86,7 @@ Future<void> onStart(ServiceInstance service) async {
     onNewMessage: (SmsMessage message) async {
       await handleIncomingSms(message, storage);
     },
-    onBackgroundMessage: _backgroundSmsCallback,
+    onBackgroundMessage: backgroundSmsCallback,
     listenInBackground: true,
   );
 }
@@ -96,11 +98,23 @@ Future<void> onStart(ServiceInstance service) async {
 /// native BroadcastReceiver when the app is completely killed.
 /// It runs in a fresh Isolate spun up by the plugin.
 @pragma('vm:entry-point')
-void _backgroundSmsCallback(SmsMessage message) async {
+void backgroundSmsCallback(SmsMessage message) async {
+  // ── Safe Firebase Init (cold-start isolate) ────────────
+  // Firebase must be initialized before any Crashlytics usage.
+  // This isolate has its own memory space — Firebase.apps will be empty.
   try {
     WidgetsFlutterBinding.ensureInitialized();
     DartPluginRegistrant.ensureInitialized();
 
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    // If Firebase itself fails, we can only debugPrint — no Crashlytics available
+    if (kDebugMode) debugPrint('[CRITICAL] [backgroundSmsCallback] Firebase init failed: $e');
+  }
+
+  try {
     final storage = LocalStorageService();
     await storage.initialize();
 
@@ -110,8 +124,12 @@ void _backgroundSmsCallback(SmsMessage message) async {
     }
 
     await handleIncomingSms(message, storage);
-  } catch (e) {
-    if (kDebugMode) debugPrint('[ERROR] [low] [background_sms_callback] $e');
+  } catch (e, stack) {
+    AppErrorHandler.logSilentError(
+      e.toString(),
+      'backgroundSmsCallback',
+      stackTrace: stack,
+    );
     // Swallow — background isolate must never crash
   }
 }

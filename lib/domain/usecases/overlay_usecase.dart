@@ -2,7 +2,7 @@
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/repositories/overlay_repository.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 
@@ -20,13 +20,13 @@ class TransactionResult {
 
 class OverlayUseCase {
   final TransactionRepository _transactionRepository;
-  final OverlayRepository _overlayRepository;
+  final LocalStorageService _localStorage;
 
   OverlayUseCase({
     required TransactionRepository transactionRepository,
-    required OverlayRepository overlayRepository,
+    required LocalStorageService localStorage,
   })  : _transactionRepository = transactionRepository,
-        _overlayRepository = overlayRepository;
+        _localStorage = localStorage;
 
   Future<TransactionResult> execute({
     required String storeId,
@@ -98,7 +98,8 @@ class OverlayUseCase {
       'blockAutoFetch': true,
     };
 
-    await _overlayRepository.savePendingTransaction(txData);
+    // Unified vault storage via LocalStorageService (replaces OverlayRepository)
+    await _localStorage.saveToVault(txData);
 
     return TransactionResult(
       txId: txId,

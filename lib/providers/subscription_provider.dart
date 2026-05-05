@@ -173,6 +173,7 @@ class SubscriptionProvider extends BaseProvider {
         smsEnabled: sub.smsEnabled,
         isSuspended: sub.status == SubscriptionStatus.suspended,
       );
+      LocalStorageService.instance.saveSubLastSyncMs();
     }
   }
 

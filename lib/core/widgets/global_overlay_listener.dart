@@ -1,9 +1,9 @@
-import 'dart:convert';
-import 'dart:ui';
 import 'dart:isolate';
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
@@ -37,14 +37,14 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         _fetchAndApplyData();
       }
     }, onError: (error) {
-      debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
+      if (kDebugMode) debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Apply any pending overlay tx from SharedPreferences vault.
+      // Apply any pending overlay tx from the unified vault.
       // DO NOT call refresh() here — it triggers a Firestore fetch that
       // overwrites optimistic mutations with stale cached data.
       _fetchAndApplyData();
@@ -53,13 +53,13 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
 
   Future<void> _fetchAndApplyData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload();
+      // Use LocalStorageService as the single source of truth for vault data.
+      // This replaces the orphan 'pending_overlay_tx' SharedPreferences key.
+      final storage = LocalStorageService.instance;
+      await storage.reloadDisk();
 
-      final txString = prefs.getString('pending_overlay_tx');
-      if (txString == null) return;
-
-      final data = jsonDecode(txString) as Map<String, dynamic>;
+      final data = storage.readFromVault();
+      if (data == null) return;
 
       if (mounted) {
         context.read<StatisticsProvider>().addTransactionOptimistically(data);
@@ -100,9 +100,9 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         }
       }
 
-      await prefs.remove('pending_overlay_tx');
+      await storage.clearVault();
     } catch (e) {
-      debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
+      if (kDebugMode) debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
     }
   }
 

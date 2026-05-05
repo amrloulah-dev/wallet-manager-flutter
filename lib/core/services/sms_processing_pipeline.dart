@@ -83,10 +83,39 @@ Future<void> _showWakeUpNotification(double amount) async {
     android: androidDetails,
   );
 
+  // Unique ID so multiple pending notifications stack instead of replacing each other
+  final int notificationId = DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
   await _notificationsPlugin.show(
-    0, // Notification ID — using 0, will replace itself on repeat
+    notificationId,
     'معاملة جديدة', // "New Transaction"
     'تم استلام رسالة، افتح لتسجيل المعاملة', // "SMS received, open to register"
+    details,
+  );
+}
+
+/// Fires a notification when subscription sync data is >24h stale,
+/// prompting the user to open the app to refresh.
+Future<void> _showStaleSyncNotification() async {
+  await _ensureNotificationsInitialized();
+
+  const AndroidNotificationDetails androidDetails =
+      AndroidNotificationDetails(
+    _kChannelId,
+    _kChannelName,
+    channelDescription: _kChannelDesc,
+    importance: Importance.max,
+    priority: Priority.high,
+    autoCancel: true,
+  );
+
+  const NotificationDetails details = NotificationDetails(
+    android: androidDetails,
+  );
+
+  await _notificationsPlugin.show(
+    8888, // Dedicated ID for stale-sync notifications
+    '⚠️ تنبيه مزامنة',
+    'انتهت صلاحية مزامنة الاشتراك. يرجى فتح التطبيق لتحديث بياناتك.',
     details,
   );
 }
@@ -117,6 +146,14 @@ Future<void> handleIncomingSms(
         final endDate = DateTime.fromMillisecondsSinceEpoch(endDateMs);
         if (DateTime.now().isAfter(endDate)) return;
       }
+    }
+
+    // ── Guard: 24h Subscription Sync Staleness ───────────────
+    // If the main app hasn't synced subscription data in >24 hours,
+    // block processing and notify the user to open the app.
+    if (!storage.isSubscriptionSyncFresh) {
+      await _showStaleSyncNotification();
+      return;
     }
 
     final String? body = message.body;
@@ -222,24 +259,26 @@ Future<void> handleIncomingSms(
     if (!isGranted) return;
 
     if (await FlutterOverlayWindow.isActive()) {
-      await FlutterOverlayWindow.closeOverlay();
+      // Dynamic update: push new data to the existing overlay
+      // instead of closing and reopening (avoids MIUI/EMUI race conditions).
+      await FlutterOverlayWindow.shareData(overlayArgs);
+    } else {
+      await FlutterOverlayWindow.showOverlay(
+        enableDrag: true,
+        overlayTitle: 'New Transaction',
+        overlayContent: 'Amount: ${dto.amount} EGP',
+        flag: OverlayFlag.focusPointer,
+        alignment: OverlayAlignment.center,
+        visibility: NotificationVisibility.visibilityPublic,
+        positionGravity: PositionGravity.auto,
+        height: WindowSize.matchParent,
+        width: WindowSize.matchParent,
+        startPosition: const OverlayPosition(0, 0),
+      );
+
+      // ── Share data with the overlay UI ──────────────────────
+      await FlutterOverlayWindow.shareData(overlayArgs);
     }
-
-    await FlutterOverlayWindow.showOverlay(
-      enableDrag: true,
-      overlayTitle: 'New Transaction',
-      overlayContent: 'Amount: ${dto.amount} EGP',
-      flag: OverlayFlag.focusPointer,
-      alignment: OverlayAlignment.center,
-      visibility: NotificationVisibility.visibilityPublic,
-      positionGravity: PositionGravity.auto,
-      height: WindowSize.matchParent,
-      width: WindowSize.matchParent,
-      startPosition: const OverlayPosition(0, 0),
-    );
-
-    // ── Share data with the overlay UI ──────────────────────
-    await FlutterOverlayWindow.shareData(overlayArgs);
   } catch (e, stack) {
     AppErrorHandler.logSilentError(
       e.toString(),

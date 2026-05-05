@@ -174,6 +174,40 @@ class LocalStorageService {
   bool get subSmsEnabled => _prefs?.getBool(_kSubSmsEnabled) ?? false;
   bool get subIsSuspended => _prefs?.getBool(_kSubIsSuspended) ?? false;
 
+  // Subscription sync timestamp for 24h TTL check
+  static const String _kSubLastSyncMs = 'sub_last_sync_ms';
+
+  /// Persists the current timestamp as the last subscription sync time.
+  Future<void> saveSubLastSyncMs() async {
+    _ensureInitialized();
+    await _prefs!.setInt(_kSubLastSyncMs, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Returns the last subscription sync timestamp in milliseconds, or null.
+  int? get subLastSyncMs => _prefs?.getInt(_kSubLastSyncMs);
+
+  /// Returns true if the subscription data was synced within the last 24 hours.
+  bool get isSubscriptionSyncFresh {
+    final lastSync = subLastSyncMs;
+    if (lastSync == null) return false;
+    final elapsed = DateTime.now().millisecondsSinceEpoch - lastSync;
+    return elapsed < const Duration(hours: 24).inMilliseconds;
+  }
+
+  // ===========================
+  // Locale (Clean DI for LocalizationProvider)
+  // ===========================
+  static const String _kLocale = 'app_locale';
+
+  /// Saves the app locale string.
+  Future<void> saveLocale(String localeCode) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kLocale, localeCode);
+  }
+
+  /// Retrieves the saved locale code, or null if not set.
+  String? get savedLocale => _prefs?.getString(_kLocale);
+
   // Subscription UI states
   static const String _kHasSeenSuccessModal = 'has_seen_success_modal';
   static const String _kHasDismissedRejection = 'has_dismissed_rejection';

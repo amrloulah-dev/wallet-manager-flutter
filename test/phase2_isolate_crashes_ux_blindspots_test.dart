@@ -135,8 +135,8 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
-    testWidgets('OverlayFirebaseFailsafeApp shows error UI', (WidgetTester tester) async {
-      await tester.pumpWidget(const OverlayFirebaseFailsafeApp());
+    testWidgets('OverlayErrorApp shows error UI', (WidgetTester tester) async {
+      await tester.pumpWidget(const OverlayErrorApp());
 
       expect(find.text('❌ Connection Error'), findsOneWidget);
       expect(find.text('Please use the main app to record your transaction.'), findsOneWidget);

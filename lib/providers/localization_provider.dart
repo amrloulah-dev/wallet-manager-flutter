@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'base_provider.dart';
 
 class LocalizationProvider extends BaseProvider {
   Locale _locale = const Locale('ar');
-  static const String _localeKey = 'app_locale';
 
   Locale get locale => _locale;
 
@@ -13,8 +12,8 @@ class LocalizationProvider extends BaseProvider {
   }
 
   Future<void> _loadLocale() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLocale = prefs.getString(_localeKey);
+    final storage = LocalStorageService.instance;
+    final savedLocale = storage.savedLocale;
     if (savedLocale != null) {
       _locale = Locale(savedLocale);
       safeNotify();
@@ -24,8 +23,7 @@ class LocalizationProvider extends BaseProvider {
   Future<void> setLocale(Locale locale) async {
     if (_locale == locale) return;
     _locale = locale;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_localeKey, locale.languageCode);
+    await LocalStorageService.instance.saveLocale(locale.languageCode);
     safeNotify();
   }
 
