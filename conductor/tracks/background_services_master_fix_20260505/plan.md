@@ -14,9 +14,10 @@
     - [x] Write failing test for stale subscription check (> 24 hours).
     - [x] Implement fix: Add TTL validation logic in `lib/core/services/sms_processing_pipeline.dart`.
     - [x] Refactor: Ensure clean separation of time-checking logic.
-- [~] Task: Actionable TTL Notification & Unique IDs
-    - [ ] Write failing test for multiple notifications overwriting each other and actionable intents.
-    - [ ] Implement fix: Trigger local notification on TTL block with unique hash ID and localized Arabic text exactly as specified.
+- [x] Task: Actionable TTL Notification & Unique IDs [677d34e]
+    - [x] Write failing test for multiple notifications overwriting each other and actionable intents.
+    - [x] Implement fix: Trigger local notification on TTL block with unique hash ID and localized Arabic text exactly as specified.
+
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Subscription TTL & Notifications' (Protocol in workflow.md)
 
 ## Phase 3: Unified Vault & Dependency Injection
