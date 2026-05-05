@@ -22,9 +22,11 @@
 
 
 ## Phase 3: Unified Vault & Dependency Injection
-- [ ] Task: Refactor and Delete OverlayRepository
-    - [ ] Write failing test verifying dependency decoupling.
-    - [ ] Implement fix: Migrate all logic from `OverlayRepository` to use `LocalStorageService.saveToVault()`. Delete `lib/data/repositories/overlay_repository.dart`.
+- [x] Task: Refactor and Delete OverlayRepository [41c5d83]
+    - [x] Write failing test verifying dependency decoupling.
+    - [x] Implement fix: Migrate all logic from `OverlayRepository` to use `LocalStorageService.saveToVault()`. Delete `lib/data/repositories/overlay_repository.dart`.
+
+
 - [ ] Task: Unify Local Storage Keys
     - [ ] Write failing test verifying SMS pipeline writes/reads from a unified key.
     - [ ] Implement fix: Unify keys using `LocalStorageService._kPendingOverlayData` and clean up orphans.
