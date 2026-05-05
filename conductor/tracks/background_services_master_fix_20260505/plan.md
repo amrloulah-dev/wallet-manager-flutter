@@ -1,9 +1,9 @@
 # Implementation Plan: Background Services Master Fix (Phase 8.1)
 
 ## Phase 1: Background Isolate Stabilization
-- [ ] Task: Make background entrypoints public
-    - [ ] Write failing test/verification script ensuring `backgroundSmsCallback` and `onIosBackground` cannot be aggressively tree-shaken.
-    - [ ] Implement fix: Remove underscores from `_backgroundSmsCallback` and `_onIosBackground` in `lib/core/services/background_service.dart` and update references.
+- [x] Task: Make background entrypoints public [2d15d7f]
+    - [x] Write failing test/verification script ensuring `backgroundSmsCallback` and `onIosBackground` cannot be aggressively tree-shaken.
+    - [x] Implement fix: Remove underscores from `_backgroundSmsCallback` and `_onIosBackground` in `lib/core/services/background_service.dart` and update references.
 - [ ] Task: Safe Firebase Initialization in Isolate
     - [ ] Write failing test simulating cold-start isolate environment for Firebase access.
     - [ ] Implement fix: Add `if (Firebase.apps.isEmpty) { await Firebase.initializeApp(); }` to `backgroundSmsCallback`.
