@@ -98,8 +98,9 @@ class OverlayUseCase {
       'blockAutoFetch': true,
     };
 
-    // Unified vault storage via LocalStorageService (replaces OverlayRepository)
+    // Unified vault storage via LocalStorageService
     await _localStorage.saveToVault(txData);
+
 
     return TransactionResult(
       txId: txId,
