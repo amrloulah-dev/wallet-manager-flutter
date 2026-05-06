@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sim_wallet_config.dart';
 import '../models/wallet_model.dart';
@@ -16,6 +17,12 @@ class LocalStorageService {
 
   SharedPreferences? _prefs;
 
+  /// Resets the internal state for testing.
+  @visibleForTesting
+  static void reset() {
+    _instance._prefs = null;
+  }
+
   // ===========================
   // Initialize
   // ===========================
@@ -26,6 +33,25 @@ class LocalStorageService {
       return;
     }
     _prefs = await SharedPreferences.getInstance();
+
+    // ── Clean up orphans & Migrate (Phase 8.1 Unification) ──────────
+    // 1. Remove the legacy 'pending_overlay_tx' key used by OverlayRepository
+    if (_prefs!.containsKey('pending_overlay_tx')) {
+      await _prefs!.remove('pending_overlay_tx');
+    }
+
+    // 2. Migrate 'languageCode' to 'app_locale' if needed
+    const String oldLangKey = 'languageCode';
+    const String newLocaleKey = 'app_locale';
+    if (_prefs!.containsKey(oldLangKey)) {
+      if (!_prefs!.containsKey(newLocaleKey)) {
+        final String? code = _prefs!.getString(oldLangKey);
+        if (code != null) {
+          await _prefs!.setString(newLocaleKey, code);
+        }
+      }
+      await _prefs!.remove(oldLangKey);
+    }
   }
 
   /// Throws an exception if the service is not initialized.
@@ -116,18 +142,24 @@ class LocalStorageService {
   bool get isDarkMode => themeMode == 'dark';
 
   // ===========================
-  // Language Handling
+  // Language & Locale Handling
   // ===========================
-  static const String _keyLanguageCode = 'languageCode';
+  static const String _kLocale = 'app_locale';
 
-  /// Saves the language code
+  /// Saves the language code/locale.
   Future<void> saveLanguageCode(String code) async {
     _ensureInitialized();
-    await _prefs!.setString(_keyLanguageCode, code);
+    await _prefs!.setString(_kLocale, code);
   }
 
-  /// Retrieves the saved language code, defaulting to 'ar'
-  String get languageCode => _prefs?.getString(_keyLanguageCode) ?? 'ar';
+  /// Retrieves the saved language code, defaulting to 'ar'.
+  String get languageCode => _prefs?.getString(_kLocale) ?? 'ar';
+
+  /// Saves the app locale string (alias for saveLanguageCode).
+  Future<void> saveLocale(String localeCode) => saveLanguageCode(localeCode);
+
+  /// Retrieves the saved locale code, or null if not set.
+  String? get savedLocale => _prefs?.getString(_kLocale);
 
   // ===========================
   // Clear All Data
@@ -193,20 +225,6 @@ class LocalStorageService {
     final elapsed = DateTime.now().millisecondsSinceEpoch - lastSync;
     return elapsed < const Duration(hours: 24).inMilliseconds;
   }
-
-  // ===========================
-  // Locale (Clean DI for LocalizationProvider)
-  // ===========================
-  static const String _kLocale = 'app_locale';
-
-  /// Saves the app locale string.
-  Future<void> saveLocale(String localeCode) async {
-    _ensureInitialized();
-    await _prefs!.setString(_kLocale, localeCode);
-  }
-
-  /// Retrieves the saved locale code, or null if not set.
-  String? get savedLocale => _prefs?.getString(_kLocale);
 
   // Subscription UI states
   static const String _kHasSeenSuccessModal = 'has_seen_success_modal';
