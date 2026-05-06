@@ -9,8 +9,8 @@
 - [x] Task: Conductor - User Manual Verification 'Memory Integrity & Listener Lifecycles' (Protocol in workflow.md)
 
 ## Phase 2: Rendering & Layout Efficiency
-- [~] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`.
-- [ ] Task: Replace nested `ListView` (with `shrinkWrap: true`) with `CustomScrollView` and `SliverList.builder` in `manage_employees_screen.dart`.
+- [x] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`. ac69a3e
+- [x] Task: Replace nested `ListView` (with `shrinkWrap: true`) with `CustomScrollView` and `SliverList.builder` in `manage_employees_screen.dart`. ac69a3e
 - [ ] Task: Global Audit - Replace `shrinkWrap: true` instances globally with Slivers.
 - [ ] Task: Global Audit - Replace `Opacity` widgets with `Color.withAlpha()` / `Color.withOpacity()` in `wallet_card.dart`, `employee_card.dart`, and globally.
 - [ ] Task: Hoist `context.read<EmployeeProvider>()` outside the `itemBuilder` in `manage_employees_screen.dart`.
