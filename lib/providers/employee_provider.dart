@@ -374,10 +374,4 @@ class EmployeeProvider extends BaseProvider {
     _status = EmployeeProviderStatus.loaded;
     safeNotify();
   }
-
-  @override
-  void dispose() {
-    _employeeStreamSubscription?.cancel();
-    super.dispose();
-  }
 }
