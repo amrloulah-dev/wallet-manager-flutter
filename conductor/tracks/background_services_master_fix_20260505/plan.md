@@ -30,7 +30,7 @@
 - [x] Task: Unify Local Storage Keys [857d544]
     - [ ] Write failing test verifying SMS pipeline writes/reads from a unified key.
     - [ ] Implement fix: Unify keys using `LocalStorageService._kPendingOverlayData` and clean up orphans.
-- [ ] Task: Refactor GlobalOverlayListener and LocalizationProvider DI
+- [x] Task: Refactor GlobalOverlayListener and LocalizationProvider DI [20beefc]
     - [ ] Write failing test to ensure components use `LocalStorageService` instead of direct `SharedPreferences`.
     - [ ] Implement fix: Refactor `GlobalOverlayListener` and `LocalizationProvider` to strictly use `LocalStorageService.instance` or injected instances.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Unified Vault & Dependency Injection' (Protocol in workflow.md)
