@@ -3,17 +3,18 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'base_provider.dart';
 
 class LocalizationProvider extends BaseProvider {
+  final LocalStorageService _localStorage;
   Locale _locale = const Locale('ar');
 
   Locale get locale => _locale;
 
-  LocalizationProvider() {
+  LocalizationProvider({LocalStorageService? localStorage})
+      : _localStorage = localStorage ?? LocalStorageService.instance {
     Future.microtask(() => _loadLocale());
   }
 
   Future<void> _loadLocale() async {
-    final storage = LocalStorageService.instance;
-    final savedLocale = storage.savedLocale;
+    final savedLocale = _localStorage.savedLocale;
     if (savedLocale != null) {
       _locale = Locale(savedLocale);
       safeNotify();
@@ -23,7 +24,7 @@ class LocalizationProvider extends BaseProvider {
   Future<void> setLocale(Locale locale) async {
     if (_locale == locale) return;
     _locale = locale;
-    await LocalStorageService.instance.saveLocale(locale.languageCode);
+    await _localStorage.saveLocale(locale.languageCode);
     safeNotify();
   }
 

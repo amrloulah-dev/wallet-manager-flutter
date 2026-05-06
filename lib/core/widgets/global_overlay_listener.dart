@@ -14,8 +14,13 @@ import 'package:walletmanager/core/enums/transaction_enums.dart';
 
 class GlobalOverlayListener extends StatefulWidget {
   final Widget child;
+  final LocalStorageService? localStorage;
 
-  const GlobalOverlayListener({super.key, required this.child});
+  const GlobalOverlayListener({
+    super.key,
+    required this.child,
+    this.localStorage,
+  });
 
   @override
   State<GlobalOverlayListener> createState() => _GlobalOverlayListenerState();
@@ -24,10 +29,12 @@ class GlobalOverlayListener extends StatefulWidget {
 class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
     with WidgetsBindingObserver {
   final ReceivePort _port = ReceivePort();
+  late final LocalStorageService _storage;
 
   @override
   void initState() {
     super.initState();
+    _storage = widget.localStorage ?? LocalStorageService.instance;
     WidgetsBinding.instance.addObserver(this);
     IsolateNameServer.removePortNameMapping('main_app_port');
     IsolateNameServer.registerPortWithName(_port.sendPort, 'main_app_port');
@@ -55,10 +62,9 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
     try {
       // Use LocalStorageService as the single source of truth for vault data.
       // This replaces the orphan 'pending_overlay_tx' SharedPreferences key.
-      final storage = LocalStorageService.instance;
-      await storage.reloadDisk();
+      await _storage.reloadDisk();
 
-      final data = storage.readFromVault();
+      final data = _storage.readFromVault();
       if (data == null) return;
 
       if (mounted) {
@@ -100,7 +106,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         }
       }
 
-      await storage.clearVault();
+      await _storage.clearVault();
     } catch (e) {
       if (kDebugMode) debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
     }

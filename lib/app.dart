@@ -9,6 +9,7 @@ import 'core/constants/route_constants.dart';
 import 'core/services/analytics_service.dart';
 import 'core/widgets/global_overlay_listener.dart';
 
+import 'data/services/local_storage_service.dart';
 import 'data/services/transaction_validator_service.dart';
 import 'data/repositories/system_config_repository.dart';
 import 'data/repositories/employee_repository.dart';
@@ -47,7 +48,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => LocalizationProvider()),
+        ChangeNotifierProvider(create: (_) => LocalizationProvider(
+          localStorage: sl<LocalStorageService>(),
+        )),
         ChangeNotifierProvider(
           create: (_) => SystemConfigProvider(
               repository: sl<SystemConfigRepository>()),
@@ -103,6 +106,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: GlobalOverlayListener(
+        localStorage: sl<LocalStorageService>(),
         child: Consumer2<ThemeProvider, LocalizationProvider>(
           builder: (context, themeProvider, localizationProvider, child) {
             return MaterialApp(
