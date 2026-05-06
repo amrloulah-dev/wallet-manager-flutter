@@ -48,7 +48,7 @@
 - [x] Task: Isolate Permission Guarding [36a9152]
     - [x] Write failing test ensuring no permission requests originate from background isolate.
     - [x] Implement fix: Move all permission requests to `init` in `lib/core/services/sms_service.dart`.
-- [ ] Task: Global Logging Audit
-    - [ ] Write failing test verifying `debugPrint` calls are suppressed in release mode.
-    - [ ] Implement fix: Wrap all `debugPrint` statements in `if (kDebugMode)` across the `lib/` directory.
+- [x] Task: Global Logging Audit [4834b4d]
+    - [x] Write failing test verifying `debugPrint` calls are suppressed in release mode.
+    - [x] Implement fix: Wrap all `debugPrint` statements in `if (kDebugMode)` across the `lib/` directory.
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Global Audit & Tech Debt Cleanup' (Protocol in workflow.md)
