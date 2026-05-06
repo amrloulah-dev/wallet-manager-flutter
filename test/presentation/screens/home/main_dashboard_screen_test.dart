@@ -3,95 +3,158 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/screens/home/main_dashboard_screen.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/providers/subscription_provider.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/providers/debt_provider.dart';
-import 'package:walletmanager/providers/statistics_provider.dart';
-import 'package:walletmanager/providers/subscription_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:walletmanager/data/models/store_model.dart';
+import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/data/models/subscription_request_model.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
 
-class MockAuthProvider extends Mock implements AuthProvider {}
-class MockWalletProvider extends Mock implements WalletProvider {}
-class MockTransactionProvider extends Mock implements TransactionProvider {}
-class MockDebtProvider extends Mock implements DebtProvider {}
-class MockStatisticsProvider extends Mock implements StatisticsProvider {}
-class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
+  @override
+  String? get currentStoreId => 'store_123';
+  @override
+  StoreModel? get currentStore => null;
+  @override
+  UserModel? get currentUser => null;
+  @override
+  bool get isTrial => true;
+  @override
+  int? get trialDaysRemaining => 14;
+  @override
+  bool get isOwner => true;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
-class AuthProviderFake extends Fake implements AuthProvider {}
+class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionProvider {
+  @override
+  bool get hasSeenSuccessModal => true;
+  @override
+  bool get hasDismissedRejection => true;
+  @override
+  bool get isSuspended => false;
+  @override
+  bool get isExpired => false;
+  @override
+  SubscriptionRequestModel? get latestRequest => null;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class DummyStatisticsProvider extends ChangeNotifier implements StatisticsProvider {
+  int setStoreIdCallCount = 0;
+  @override
+  void setStoreId(String? storeId) {
+    setStoreIdCallCount++;
+  }
+  @override
+  Future<void> fetchDashboardStats({bool forceRefresh = false}) async {}
+  @override
+  bool get isLoading => false;
+  @override
+  StatsSummaryModel? get dashboardSummary => null;
+  @override
+  DailyStatsModel? get today => null;
+  @override
+  DailyStatsModel? get todayStats => null;
+  @override
+  String? get errorMessage => null;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class DummyWalletProvider extends ChangeNotifier implements WalletProvider {
+  @override
+  void setStoreId(String? storeId) {}
+  @override
+  Future<void> fetchInitialWallets({bool forceRefresh = false}) async {}
+  @override
+  bool get isLoading => false;
+  @override
+  List<WalletModel> get alertWallets => [];
+  @override
+  List<WalletModel> get wallets => [];
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class DummyTransactionProvider extends ChangeNotifier implements TransactionProvider {
+  @override
+  void updateAuthState(AuthProvider auth) {}
+  @override
+  Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {}
+  @override
+  bool get isLoading => false;
+  @override
+  List<TransactionModel> get recentFive => [];
+  @override
+  List<TransactionModel> get transactions => [];
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class DummyDebtProvider extends ChangeNotifier implements DebtProvider {
+  @override
+  void setStoreId(String? storeId) {}
+  @override
+  Future<void> fetchInitialDebts({bool forceRefresh = false}) async {}
+  @override
+  bool get isLoading => false;
+  @override
+  Map<String, dynamic> get summary => {};
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
-  setUpAll(() {
-    registerFallbackValue(AuthProviderFake());
-  });
+  testWidgets('MainDashboardScreen caches initializations on rebuilds', (WidgetTester tester) async {
+    final subProvider = DummySubscriptionProvider();
+    final statProvider = DummyStatisticsProvider();
 
-  group('MainDashboardScreen Dependency Check', () {
-    testWidgets('should attempt to read SubscriptionProvider during initialization', (tester) async {
-      final mockAuth = MockAuthProvider();
-      final mockWallet = MockWalletProvider();
-      final mockTxn = MockTransactionProvider();
-      final mockDebt = MockDebtProvider();
-      final mockStats = MockStatisticsProvider();
-      final mockSub = MockSubscriptionProvider();
-
-      when(() => mockAuth.currentStoreId).thenReturn('test_store');
-      when(() => mockAuth.currentStore).thenReturn(null);
-      when(() => mockAuth.isTrial).thenReturn(false);
-      when(() => mockAuth.trialDaysRemaining).thenReturn(null);
-      
-      // Stub the fetch calls
-      when(() => mockStats.fetchDashboardStats(forceRefresh: any(named: 'forceRefresh'))).thenAnswer((_) async {});
-      when(() => mockWallet.fetchInitialWallets()).thenAnswer((_) async {});
-      when(() => mockTxn.fetchInitialTransactions(forceRefresh: any(named: 'forceRefresh'))).thenAnswer((_) async {});
-      when(() => mockDebt.fetchInitialDebts(forceRefresh: any(named: 'forceRefresh'))).thenAnswer((_) async {});
-      
-      // Minimal stubs for initialization (if they are called in initState/microtask)
-      when(() => mockStats.setStoreId(any())).thenReturn(null);
-      when(() => mockWallet.setStoreId(any())).thenReturn(null);
-      when(() => mockTxn.updateAuthState(any())).thenReturn(null);
-      when(() => mockDebt.setStoreId(any())).thenReturn(null);
-
-      // Provider isLoading stubs to avoid _TypeError: type 'Null' is not a subtype of type 'bool'
-      when(() => mockStats.isLoading).thenReturn(false);
-      when(() => mockWallet.isLoading).thenReturn(false);
-      when(() => mockTxn.isLoading).thenReturn(false);
-      when(() => mockDebt.isLoading).thenReturn(false);
-
-      // List and Map stubs to avoid _TypeError
-      when(() => mockWallet.wallets).thenReturn([]);
-      when(() => mockTxn.transactions).thenReturn([]);
-      when(() => mockDebt.summary).thenReturn({});
-
-      // Subscription stubs
-      when(() => mockSub.hasSeenSuccessModal).thenReturn(true);
-      when(() => mockSub.isExpired).thenReturn(false);
-      when(() => mockSub.hasDismissedRejection).thenReturn(false);
-      when(() => mockSub.latestRequest).thenReturn(null);
-      when(() => mockSub.addListener(any())).thenReturn(null);
-      when(() => mockSub.removeListener(any())).thenReturn(null);
-
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider<AuthProvider>.value(value: mockAuth),
-            ChangeNotifierProvider<WalletProvider>.value(value: mockWallet),
-            ChangeNotifierProvider<TransactionProvider>.value(value: mockTxn),
-            ChangeNotifierProvider<DebtProvider>.value(value: mockDebt),
-            ChangeNotifierProvider<StatisticsProvider>.value(value: mockStats),
-            ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSub),
+    Widget createTestWidget() {
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthProvider>(create: (_) => DummyAuthProvider()),
+          ChangeNotifierProvider<SubscriptionProvider>.value(value: subProvider),
+          ChangeNotifierProvider<StatisticsProvider>.value(value: statProvider),
+          ChangeNotifierProvider<WalletProvider>(create: (_) => DummyWalletProvider()),
+          ChangeNotifierProvider<TransactionProvider>(create: (_) => DummyTransactionProvider()),
+          ChangeNotifierProvider<DebtProvider>(create: (_) => DummyDebtProvider()),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
           ],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: MainDashboardScreen(),
-          ),
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: MainDashboardScreen()),
         ),
       );
+    }
 
-      // Trigger the microtask (_checkPaymentSuccessModal runs here)
-      await tester.pump();
-      
-      expect(find.byType(MainDashboardScreen), findsOneWidget);
-    });
+    await tester.pumpWidget(createTestWidget());
+    await tester.pumpAndSettle();
+
+    // Check initial setup calls
+    final initialCallCount = statProvider.setStoreIdCallCount;
+    expect(initialCallCount, greaterThan(0), reason: 'Initialization should happen');
+
+    // Force a rebuild by pumping again
+    await tester.pumpWidget(createTestWidget());
+    await tester.pumpAndSettle();
+
+    // Verify it wasn't called again due to didChangeDependencies
+    expect(statProvider.setStoreIdCallCount, initialCallCount, reason: 'Should not re-initialize on rebuild');
   });
 }

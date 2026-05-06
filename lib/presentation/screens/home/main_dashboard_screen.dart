@@ -29,25 +29,41 @@ class MainDashboardScreen extends StatefulWidget {
 }
 
 class _MainDashboardScreenState extends State<MainDashboardScreen> {
+  late VoidCallback _subListener;
+  late SubscriptionProvider _subscriptionProvider;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
+    _subscriptionProvider = context.read<SubscriptionProvider>();
+    _subListener = () {
+      if (mounted) {
+        _maybeShowSuccessModal(_subscriptionProvider);
+      }
+    };
     Future.microtask(() {
+      _initializeProviders();
       _fetchInitialData();
       // H010: Listen for payment success modal trigger
       _checkPaymentSuccessModal();
     });
   }
 
+  @override
+  void dispose() {
+    _subscriptionProvider.removeListener(_subListener);
+    super.dispose();
+  }
+
   /// H010: Check if SubscriptionProvider signals an unseen payment success.
   /// Shows the PaymentSuccessModal and marks it as seen so it won't fire again.
   void _checkPaymentSuccessModal() {
     if (!mounted) return;
-    final subProvider = context.read<SubscriptionProvider>();
     // Initial check
-    _maybeShowSuccessModal(subProvider);
+    _maybeShowSuccessModal(_subscriptionProvider);
     // Ongoing listener for real-time transitions
-    subProvider.addListener(() => _maybeShowSuccessModal(subProvider));
+    _subscriptionProvider.addListener(_subListener);
   }
 
   void _maybeShowSuccessModal(SubscriptionProvider subProvider) {
@@ -66,9 +82,8 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void _initializeProviders() {
+    if (_isInitialized || !mounted) return;
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentStoreId != null) {
       context
@@ -77,6 +92,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
       context.read<WalletProvider>().setStoreId(authProvider.currentStoreId!);
       context.read<TransactionProvider>().updateAuthState(authProvider);
       context.read<DebtProvider>().setStoreId(authProvider.currentStoreId!);
+      _isInitialized = true;
     }
   }
 
