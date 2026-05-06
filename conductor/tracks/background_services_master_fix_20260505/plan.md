@@ -39,7 +39,7 @@
 - [x] Task: Dynamic Overlay Update [fe40457]
     - [x] Write failing test simulating active overlay receiving new data (should not close).
     - [x] Implement fix: Update `lib/core/services/sms_processing_pipeline.dart` to use `shareData()` if overlay is already active.
-- [ ] Task: Graceful Overlay Fallback UI
+- [~] Task: Graceful Overlay Fallback UI
     - [ ] Write failing test for overlay initialization failure.
     - [ ] Implement fix: Wrap `overlayMain` in `try/catch` and run `OverlayErrorApp` with hardcoded Arabic error text on failure.
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Overlay Resilience & Graceful Failure' (Protocol in workflow.md)
