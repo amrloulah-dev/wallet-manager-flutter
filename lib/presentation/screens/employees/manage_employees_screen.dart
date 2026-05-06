@@ -86,14 +86,26 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
 
           final activeEmployees = provider.activeEmployees;
           final inactiveEmployees = provider.inactiveEmployees;
+          final employeeProvider = context.read<EmployeeProvider>();
 
-          return ListView(
-            padding: const EdgeInsets.only(bottom: 80), // For FAB
-            children: [
+          return CustomScrollView(
+            slivers: [
               if (activeEmployees.isNotEmpty)
-                _buildEmployeeSection(AppLocalizations.of(context)!.activeEmployees, activeEmployees),
+                ..._buildSliverSection(
+                  context,
+                  AppLocalizations.of(context)!.activeEmployees,
+                  activeEmployees,
+                  employeeProvider,
+                ),
               if (inactiveEmployees.isNotEmpty)
-                _buildEmployeeSection(AppLocalizations.of(context)!.inactiveEmployees, inactiveEmployees),
+                ..._buildSliverSection(
+                  context,
+                  AppLocalizations.of(context)!.inactiveEmployees,
+                  inactiveEmployees,
+                  employeeProvider,
+                ),
+              // Bottom padding for FAB
+              const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
             ],
           );
         },
@@ -108,22 +120,26 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
     );
   }
 
-  Widget _buildEmployeeSection(String title, List<UserModel> employees) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
+  List<Widget> _buildSliverSection(
+    BuildContext context,
+    String title,
+    List<UserModel> employees,
+    EmployeeProvider provider,
+  ) {
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: employees.length,
-          itemBuilder: (context, index) {
+      ),
+      SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
             final employee = employees[index];
             return EmployeeCard(
-              key: ValueKey('${employee.userId}_${employee.isActive}_${context.read<EmployeeProvider>().isEmployeeFrozen(employee)}'),
+              key: ValueKey(
+                  '${employee.userId}_${employee.isActive}_${provider.isEmployeeFrozen(employee)}'),
               employee: employee,
               onDelete: employee.isActive
                   ? () => _showDeactivateDialog(employee)
@@ -138,8 +154,9 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
               },
             );
           },
+          childCount: employees.length,
         ),
-      ],
-    );
+      ),
+    ];
   }
 }
