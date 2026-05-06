@@ -21,19 +21,19 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Subscription TTL & Notifications' (Protocol in workflow.md)
 
 
-## Phase 3: Unified Vault & Dependency Injection
+## Phase 3: Unified Vault & Dependency Injection [checkpoint: 350d877]
 - [x] Task: Refactor and Delete OverlayRepository [41c5d83]
     - [x] Write failing test verifying dependency decoupling.
     - [x] Implement fix: Migrate all logic from `OverlayRepository` to use `LocalStorageService.saveToVault()`. Delete `lib/data/repositories/overlay_repository.dart`.
 
 
 - [x] Task: Unify Local Storage Keys [857d544]
-    - [ ] Write failing test verifying SMS pipeline writes/reads from a unified key.
-    - [ ] Implement fix: Unify keys using `LocalStorageService._kPendingOverlayData` and clean up orphans.
+    - [x] Write failing test verifying SMS pipeline writes/reads from a unified key.
+    - [x] Implement fix: Unify keys using `LocalStorageService._kPendingOverlayData` and clean up orphans.
 - [x] Task: Refactor GlobalOverlayListener and LocalizationProvider DI [20beefc]
-    - [ ] Write failing test to ensure components use `LocalStorageService` instead of direct `SharedPreferences`.
-    - [ ] Implement fix: Refactor `GlobalOverlayListener` and `LocalizationProvider` to strictly use `LocalStorageService.instance` or injected instances.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Unified Vault & Dependency Injection' (Protocol in workflow.md)
+    - [x] Write failing test to ensure components use `LocalStorageService` instead of direct `SharedPreferences`.
+    - [x] Implement fix: Refactor `GlobalOverlayListener` and `LocalizationProvider` to strictly use `LocalStorageService.instance` or injected instances.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Unified Vault & Dependency Injection' (Protocol in workflow.md)
 
 ## Phase 4: Overlay Resilience & Graceful Failure
 - [ ] Task: Dynamic Overlay Update
