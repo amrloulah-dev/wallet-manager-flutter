@@ -11,29 +11,41 @@ import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
-class UpgradeScreen extends StatelessWidget {
+class UpgradeScreen extends StatefulWidget {
   final bool isTrial;
 
   const UpgradeScreen({super.key, required this.isTrial});
+
+  @override
+  State<UpgradeScreen> createState() => _UpgradeScreenState();
+}
+
+class _UpgradeScreenState extends State<UpgradeScreen> {
+  final TextEditingController _keyController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _keyController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isTrial ? l10n.upgradeToFullVersionTitle : l10n.licenseInfo),
+        title: Text(widget.isTrial ? l10n.upgradeToFullVersionTitle : l10n.licenseInfo),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: isTrial ? _buildTrialUI(context) : _buildPremiumUI(context),
+        child: widget.isTrial ? _buildTrialUI(context) : _buildPremiumUI(context),
       ),
     );
   }
 
   Widget _buildTrialUI(BuildContext context) {
-    final TextEditingController keyController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -79,7 +91,7 @@ class UpgradeScreen extends StatelessWidget {
 
         // Activation Form
         Form(
-          key: formKey,
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,7 +99,7 @@ class UpgradeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               CustomTextField(
                 labelText: l10n.activationKey,
-                controller: keyController,
+                controller: _keyController,
                 hintText: l10n.enterActivationKeyHere,
                 prefixIcon: const Icon(Icons.vpn_key_outlined),
                 validator: (value) {
@@ -104,10 +116,10 @@ class UpgradeScreen extends StatelessWidget {
                     text: l10n.activate,
                     isLoading: auth.isLoading,
                     onPressed: () async {
-                      if (formKey.currentState!.validate()) {
+                      if (_formKey.currentState!.validate()) {
                         try {
                           await auth
-                              .activateNewLicense(keyController.text.trim());
+                              .activateNewLicense(_keyController.text.trim());
                           if (context.mounted) {
                             ToastUtils.showSuccess(l10n.subscriptionActivatedSuccessfully);
                             Navigator.pop(context);
