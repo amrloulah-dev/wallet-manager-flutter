@@ -51,35 +51,28 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
 
   Future<void> _toggleSmsAutomation(bool value) async {
     if (value) {
-      // 1. Request SMS Permission FIRST
-      final smsGranted = await SmsService().requestSmsPermission();
-
-      if (!smsGranted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(AppLocalizations.of(context)!.smsPermissionRequired),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Enable
       try {
-        // 2. Request Overlay Permission SECOND
-        await SmsService().requestOverlayPermission();
+        // Use init() as the single entry point for all required permissions
+        final success = await SmsService().init();
 
-        // 3. Enable Logic
+        if (!success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content:
+                    Text(AppLocalizations.of(context)!.smsPermissionRequired),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Enable Logic
         await _storage.setSmsAutomationEnabled(true);
         setState(() {
           _isEnabled = true;
         });
-
-        // Ensure service is listening
-        await SmsService().init();
       } catch (e) {
         if (mounted) {
           ToastUtils.showError('Required permissions missing: $e');
