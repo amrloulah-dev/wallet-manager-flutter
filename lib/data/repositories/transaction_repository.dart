@@ -64,12 +64,12 @@ class TransactionRepository {
   Future<void> createTransaction(TransactionModel transaction) async {
     AmountValidator.ensurePositive(transaction.amount);
     try {
-      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
-          'RECEIVED | txId=${transaction.transactionId}, '
-          'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
-          'amount=${transaction.amount}, commission=${transaction.commission}');
-      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
-          'Delegating to TransactionValidatorService.validateAndSave ...');
+      if (kDebugMode) debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+            'RECEIVED | txId=${transaction.transactionId}, '
+            'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
+            'amount=${transaction.amount}, commission=${transaction.commission}');
+      if (kDebugMode) debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+            'Delegating to TransactionValidatorService.validateAndSave ...');
 
       // Delegate entirely to the unified validator which handles
       // balance, stats, and daily_stats atomically inside runTransaction.
@@ -86,8 +86,10 @@ class TransactionRepository {
           }
         },
       );
-      debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
-          'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+            'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
+      }
 
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));

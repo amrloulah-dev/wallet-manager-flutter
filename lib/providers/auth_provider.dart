@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../domain/entities/auth_user.dart';
@@ -373,7 +374,9 @@ class AuthProvider extends BaseProvider {
 
   @override
   void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'auth_operation']) {
-    debugPrint('💥 [AUTH ERROR] $errorCode | Error: $error');
+    if (kDebugMode) {
+      debugPrint('💥 [AUTH ERROR] $errorCode | Error: $error');
+    }
     _errorMessage = errorCode;
     _status = AuthStatus.error;
     super.setError(errorCode, error, stack, showToast, operation);

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
@@ -149,8 +150,13 @@ class TransactionProvider extends BaseProvider {
 
   @override
   void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'transaction_operation']) {
-    debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
-    if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
+    if (kDebugMode) {
+      if (kDebugMode) debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
+      if (stack != null) {
+        if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
+      }
+    }
+    
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = TransactionProviderStatus.error;
@@ -167,13 +173,13 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
-    debugPrint('🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
+    if (kDebugMode) debugPrint('🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
     if (_currentStoreId == null) {
-      debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
+      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      debugPrint('🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
+      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
       return;
     }
 
@@ -182,14 +188,14 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
+      if (kDebugMode) debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
       final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
         lastDocument: null,
       );
-      debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
 
       _transactions = result.items;
       _lastDocument = result.lastDocument;
@@ -199,8 +205,8 @@ class TransactionProvider extends BaseProvider {
       _recomputeTodayTransactions();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
-      debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
-      debugPrint('🔍 [STACK TRACE]: $stack');
+      if (kDebugMode) debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
+      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('فشل في جلب المعاملات.', e, stack);
     } finally {
       safeNotify();

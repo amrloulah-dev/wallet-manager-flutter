@@ -94,7 +94,9 @@ class StoreModel {
   }
 
   static StoreSubscription _withMigrationWarning() {
-    debugPrint('⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
+    if (kDebugMode) {
+      debugPrint('⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
+    }
     return StoreSubscription.migratedLifetime();
   }
 

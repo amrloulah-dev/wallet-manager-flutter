@@ -12,7 +12,7 @@ class TimeService {
       _offset = ntpTime.difference(DateTime.now()).inMilliseconds;
       _isSynced = true;
     } catch (e) {
-      debugPrint('🔴 [TIME_SERVICE] CRITICAL: NTP sync failed - $e');
+      if (kDebugMode) debugPrint('🔴 [TIME_SERVICE] CRITICAL: NTP sync failed - $e');
       throw DomainException(
         'NTP time synchronization failed. Cannot proceed with financial transactions. Please check your internet connection and try again.',
       );

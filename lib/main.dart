@@ -16,53 +16,56 @@ import 'core/errors/error_severity.dart';
 void main() async {
   // Ensure all bindings are initialized before async operations.
   WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
+  if (kDebugMode) debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
 
   // Initialize Error Handler early
   AppErrorHandler.init();
 
   try {
     // Step 1: Initialize Firebase.
-    debugPrint('⏳ [INIT DATA] Initializing Firebase...');
+    if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing Firebase...');
     await FirebaseService().initialize();
-    debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
+    if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
 
     // Step 2: Setup Dependency Injection.
-    debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
+    if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
     await setupServiceLocator();
-    debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
+    if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
 
     // Step 3: Check and initialize SMS automation if enabled
     if (sl<LocalStorageService>().isSmsAutomationEnabled) {
-      debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
+      if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
       unawaited(SmsService().init());
     }
 
     // Step 4: Run the application IMMEDIATELY (Do not wait for heavy background services)
-    debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
+    if (kDebugMode) debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
     runApp(const MyApp());
 
     // Step 5: Configure the Guardian Isolate (background service).
     // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
     Future.delayed(const Duration(seconds: 3), () async {
       try {
-        debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+        if (kDebugMode) debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
         await initializeBackgroundService();
-        debugPrint('✅ [BACKGROUND] Service is now active and monitoring SMS.');
+        if (kDebugMode) debugPrint('✅ [BACKGROUND] Service is now active and monitoring SMS.');
       } catch (e) {
-        debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+        if (kDebugMode) debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
       }
     });
 
   } catch (e, stackTrace) {
-    debugPrint('❌ [INIT FATAL] App initialization failed: $e');
-    debugPrint('🔍 [STACK TRACE]: $stackTrace');
+    if (kDebugMode) debugPrint('❌ [INIT FATAL] App initialization failed: $e');
+    if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
+    
     AppErrorHandler.handle(e,
         severity: ErrorSeverity.critical,
         operation: 'app_initialization',
         stackTrace: stackTrace);
-    debugPrint("🚨 INIT ERROR: $e");
-    debugPrint("🚨 STACKTRACE: $stackTrace");
+        
+    if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
+    if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
+    
     runApp(
       MaterialApp(
         home: Scaffold(

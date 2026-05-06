@@ -84,8 +84,8 @@ class AppErrorHandler {
   /// Logs a non-fatal error silently without interrupting the user.
   /// In debug mode, logs to console. In release mode, reports to Crashlytics.
   static void logSilentError(String error, String reason, {StackTrace? stackTrace}) {
-    if (isTestMode || kDebugMode) {
-      debugPrint(
+    if (kDebugMode || isTestMode) {
+      if (kDebugMode) debugPrint(
         '🤫 [SILENT ERROR] [$reason] $error\n'
         '  Stack: ${stackTrace ?? StackTrace.current}',
       );
@@ -220,8 +220,7 @@ class AppErrorHandler {
     if (kDebugMode) {
       final timestamp = DateTime.now().toUtc().toIso8601String();
       final stack = stackTrace?.toString() ?? 'No stack trace available';
-      
-      debugPrint(
+      if (kDebugMode) debugPrint(
         '[ERROR] [${severity.name}] [$operation] $message\n'
         '  Stack: $stack\n'
         '  Timestamp: $timestamp',

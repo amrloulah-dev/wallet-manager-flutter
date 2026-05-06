@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -78,7 +79,9 @@ class _OverlayContentState extends State<_OverlayContent> {
           _provider.ingestNewEvent(event);
         }
       }, onError: (error) {
-        debugPrint('❌ [OVERLAY] overlayListener error: $error');
+        if (kDebugMode) {
+          debugPrint('❌ [OVERLAY] overlayListener error: $error');
+        }
       });
 
       Future.delayed(const Duration(milliseconds: 300), () {

@@ -51,9 +51,11 @@ class FeeCalculator {
     AmountValidator.ensurePositive(amount);
 
     final provider = identifyProvider(receiverPhone);
-    debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
-        'amount=$amount, sourceWalletType=$sourceWalletType, '
-        'receiverPhone=$receiverPhone, identifiedProvider=$provider');
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] [fee_calculator] -> calculateTransactionFee: '
+          'amount=$amount, sourceWalletType=$sourceWalletType, '
+          'receiverPhone=$receiverPhone, identifiedProvider=$provider');
+    }
 
     switch (sourceWalletType) {
       case walletVodafone:

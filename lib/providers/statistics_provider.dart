@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
@@ -85,14 +86,14 @@ class StatisticsProvider extends BaseProvider {
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
-    debugPrint('🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
+    if (kDebugMode) debugPrint('🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
     if (_storeId == null) {
-      debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
+      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
       return;
     }
 
     if (!forceRefresh && _fetchShieldActive) {
-      debugPrint('🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
+      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
       return; // Abort the fetch
     }
 
@@ -102,7 +103,7 @@ class StatisticsProvider extends BaseProvider {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
-        debugPrint('✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
+        if (kDebugMode) debugPrint('✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
         _dashboardSummary = _cachedSummary;
         safeNotify();
       }
@@ -118,27 +119,27 @@ class StatisticsProvider extends BaseProvider {
 
     _activateFetchShield();
 
-    debugPrint('⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
+    if (kDebugMode) debugPrint('⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
     
     // Phase 4: Ensure stats are initialized before watching
     try {
       await _statsRepository.getStatsSummary(_storeId!);
     } catch (e) {
-      debugPrint('⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
+      if (kDebugMode) debugPrint('⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
     }
 
     // 1. Establish Summary Stream
     _summarySubscription = _statsRepository
         .watchStatsSummary(_storeId!)
         .listen((summary) {
-      debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
       _dashboardSummary = summary;
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
+      if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
       setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
     });
 
@@ -146,12 +147,12 @@ class StatisticsProvider extends BaseProvider {
     _todayStatsSubscription = _statsRepository
         .watchTodayStats(_storeId!)
         .listen((today) {
-      debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
       _todayStats = today;
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
+      if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
       setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
     });
   }
@@ -261,8 +262,13 @@ class StatisticsProvider extends BaseProvider {
 
   @override
   void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'stats_operation']) {
-    debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
-    if (stack != null) debugPrint('🔍 [STACK TRACE]: $stack');
+    if (kDebugMode) {
+      if (kDebugMode) debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
+      if (stack != null) {
+        if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
+      }
+    }
+    
     if (isDisposed) return;
     _errorMessage = errorCode;
     _isLoading = false;

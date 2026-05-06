@@ -1,5 +1,6 @@
 import 'dart:isolate';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
@@ -50,8 +51,10 @@ class OverlayProvider extends SafeChangeNotifier {
   /// to prevent unnecessary janky UI rebuilds during batch state mutations.
   void _guardedNotify() {
     if (_blockAutoFetch) {
-      debugPrint('🛡️ [Fetch Shield] _blockAutoFetch active — suppressed '
-          'safeNotify() to prevent unnecessary janky UI rebuilds');
+      if (kDebugMode) {
+        debugPrint('🛡️ [Fetch Shield] _blockAutoFetch active — suppressed '
+            'safeNotify() to prevent unnecessary janky UI rebuilds');
+      }
       return;
     }
     safeNotify();
@@ -76,8 +79,10 @@ class OverlayProvider extends SafeChangeNotifier {
     _sender = data['sender']?.toString() ?? 'Unknown';
     _type   = data['type']?.toString()   ?? 'credit';
 
-    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
-        'raw data=$data | parsed amount=$_amount, sender=$_sender, type=$_type');
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
+          'raw data=$data | parsed amount=$_amount, sender=$_sender, type=$_type');
+    }
 
     _isLoading = true;
     
@@ -94,7 +99,9 @@ class OverlayProvider extends SafeChangeNotifier {
       await LocalStorageService.instance.reloadDisk();
 
       if (_localStorageService.subIsSuspended || !_localStorageService.subSmsEnabled) {
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: SMS gating failed. Aborting overlay.');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: SMS gating failed. Aborting overlay.');
+        }
         await FlutterOverlayWindow.closeOverlay();
         return;
       }
@@ -115,9 +122,11 @@ class OverlayProvider extends SafeChangeNotifier {
           sourceWalletType: walletType,
           receiverPhone: _sender,
         );
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
-            'auto-selected walletId=$passedId, walletType=$walletType, '
-            'calculatedCommission=$_commission');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
+              'auto-selected walletId=$passedId, walletType=$walletType, '
+              'calculatedCommission=$_commission');
+        }
 
         final isInstaPay = walletType == 'instapay';
         final isTelecom = ['vodafone_cash', 'orange_cash', 'etisalat_cash', 'we_pay'].contains(walletType);
@@ -155,8 +164,10 @@ class OverlayProvider extends SafeChangeNotifier {
 
   void setSelectedWallet(String? walletId) {
     _selectedWalletId = walletId;
-    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-        'new walletId=$walletId, current amount=$_amount');
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+          'new walletId=$walletId, current amount=$_amount');
+    }
 
     if (walletId != null && _amount > 0) {
       final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
@@ -170,13 +181,17 @@ class OverlayProvider extends SafeChangeNotifier {
           sourceWalletType: walletType,
           receiverPhone: _sender,
         );
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-            'walletType=$walletType, recalculatedCommission=$_commission');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+              'walletType=$walletType, recalculatedCommission=$_commission');
+        }
       }
     } else {
       _commission = 0.0;
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-          'walletId is null or amount=0, commission reset to 0.0');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+            'walletId is null or amount=0, commission reset to 0.0');
+      }
     }
 
     _guardedNotify();
@@ -221,16 +236,22 @@ class OverlayProvider extends SafeChangeNotifier {
       final SendPort? sendPort = IsolateNameServer.lookupPortByName('main_app_port');
       if (sendPort != null) {
         sendPort.send('update_ui');
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-            'IsolateNameServer ping sent to main_app_port');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+              'IsolateNameServer ping sent to main_app_port');
+        }
       } else {
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-            'WARNING — main_app_port SendPort is null, ping NOT sent');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+              'WARNING — main_app_port SendPort is null, ping NOT sent');
+        }
       }
 
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'shareData(local_deduct) → walletId=$_selectedWalletId, '
-          'deduction=${result.totalDeduction}, isSend=${result.isSend}');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+            'shareData(local_deduct) → walletId=$_selectedWalletId, '
+            'deduction=${result.totalDeduction}, isSend=${result.isSend}');
+      }
       
       _isLoading = false;
       _guardedNotify();
@@ -243,14 +264,18 @@ class OverlayProvider extends SafeChangeNotifier {
         "blockAutoFetch": true,
       });
 
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'closing overlay window ...');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+            'closing overlay window ...');
+      }
       await FlutterOverlayWindow.closeOverlay();
 
     } catch (e) {
       _errorMessage = e.toString();
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-          'CATCH → $e');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
+            'CATCH → $e');
+      }
     } finally {
       _isLoading = false;
       _guardedNotify();
@@ -259,7 +284,9 @@ class OverlayProvider extends SafeChangeNotifier {
 
   @override
   void dispose() {
-    debugPrint('🔥 [TX_FLOW] [overlay_provider] -> dispose(): Cleaning up overlay provider resources.');
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> dispose(): Cleaning up overlay provider resources.');
+    }
     // Any future StreamSubscriptions or Timers specific to OverlayProvider MUST be cancelled here.
     super.dispose();
   }

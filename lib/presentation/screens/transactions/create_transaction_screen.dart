@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -101,14 +102,18 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       });
     } on DomainException catch (e) {
       // Surface domain errors (like negative amount) via toast or similar
-      debugPrint('⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
+      if (kDebugMode) {
+        debugPrint('⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
+      }
       // We don't want to show a toast on every keystroke, but we should clear the total
       setState(() {
         _serviceFee = 0.0;
         _totalAmount = 0.0;
       });
     } catch (e) {
-      debugPrint('❌ [TX_CALC] Unexpected error during calculation: $e');
+      if (kDebugMode) {
+        debugPrint('❌ [TX_CALC] Unexpected error during calculation: $e');
+      }
     }
   }
 

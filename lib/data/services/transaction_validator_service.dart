@@ -23,11 +23,13 @@ class TransactionValidatorService {
 
   Future<void> validateAndSave(TransactionModel transaction, {Future<void> Function(Transaction)? extraWrites}) async {
     try {
-      debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
-          'ENTRY | txId=${transaction.transactionId}, walletId=${transaction.walletId}, '
-          'type=${transaction.transactionType}, amount=${transaction.amount}, '
-          'serviceFee=${transaction.serviceFee}, commission=${transaction.commission}, '
-          'storeId=${transaction.storeId}');
+      if (kDebugMode) {
+        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> validateAndSave: '
+            'ENTRY | txId=${transaction.transactionId}, walletId=${transaction.walletId}, '
+            'type=${transaction.transactionType}, amount=${transaction.amount}, '
+            'serviceFee=${transaction.serviceFee}, commission=${transaction.commission}, '
+            'storeId=${transaction.storeId}');
+      }
 
       // 1. Positive Amount Check
       AmountValidator.ensurePositive(transaction.amount);
@@ -81,10 +83,12 @@ class TransactionValidatorService {
           );
         }
 
-        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
-            'walletFetched | walletId=${wallet.walletId}, '
-            'walletType=${wallet.walletType}, currentBalance=${wallet.balance}, '
-            'balanceChange=$balanceChange');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+              'walletFetched | walletId=${wallet.walletId}, '
+              'walletType=${wallet.walletType}, currentBalance=${wallet.balance}, '
+              'balanceChange=$balanceChange');
+        }
 
         // ------------------------------------------------------------------
         // 2. EXPLICIT NETWORK LIMITS (InstaPay / Telecom) - Single Transaction
@@ -110,9 +114,11 @@ class TransactionValidatorService {
          if (transaction.isSend) {
            final totalDeduction = transaction.amount + transaction.serviceFee;
            
-           debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
-               'BALANCE CHECK | balance=${validationWallet.balance}, '
-               'totalDeduction=$totalDeduction');
+           if (kDebugMode) {
+             debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+                 'BALANCE CHECK | balance=${validationWallet.balance}, '
+                 'totalDeduction=$totalDeduction');
+           }
                
            if ((validationWallet.balance + _epsilonEGP) < totalDeduction) {
              throw ValidationException('المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
@@ -254,9 +260,11 @@ class TransactionValidatorService {
           await extraWrites(tx);
         }
 
-        debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
-            'SUCCESS — all Firestore writes queued atomically for '
-            'txId=${transaction.transactionId}');
+        if (kDebugMode) {
+          debugPrint('🔥 [TX_FLOW] [transaction_validator_service] -> runTransaction: '
+              'SUCCESS — all Firestore writes queued atomically for '
+              'txId=${transaction.transactionId}');
+        }
       });
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(
