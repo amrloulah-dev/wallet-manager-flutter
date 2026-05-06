@@ -1,7 +1,7 @@
 # Implementation Plan: Performance Optimization (Phase 7)
 
 ## Phase 1: Memory Integrity & Listener Lifecycles
-- [ ] Task: Convert `upgrade_screen.dart` to `StatefulWidget` and dispose `keyController`.
+- [x] Task: Convert `upgrade_screen.dart` to `StatefulWidget` and dispose `keyController`. 273b474
 - [ ] Task: Global Audit - Search and fix any `TextEditingController`, `FocusNode`, or `ScrollController` instantiated in `StatelessWidget`s.
 - [ ] Task: Write tests to ensure listeners are registered and unregistered correctly in `main_dashboard_screen.dart` (if testable).
 - [ ] Task: Implement named listeners in `main_dashboard_screen.dart` and remove anonymous listener usage.
