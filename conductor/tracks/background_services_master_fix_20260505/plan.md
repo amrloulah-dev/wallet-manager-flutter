@@ -45,9 +45,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Overlay Resilience & Graceful Failure' (Protocol in workflow.md)
 
 ## Phase 5: Global Audit & Tech Debt Cleanup
-- [ ] Task: Isolate Permission Guarding
-    - [ ] Write failing test ensuring no permission requests originate from background isolate.
-    - [ ] Implement fix: Move all permission requests to `init` in `lib/core/services/sms_service.dart`.
+- [x] Task: Isolate Permission Guarding [36a9152]
+    - [x] Write failing test ensuring no permission requests originate from background isolate.
+    - [x] Implement fix: Move all permission requests to `init` in `lib/core/services/sms_service.dart`.
 - [ ] Task: Global Logging Audit
     - [ ] Write failing test verifying `debugPrint` calls are suppressed in release mode.
     - [ ] Implement fix: Wrap all `debugPrint` statements in `if (kDebugMode)` across the `lib/` directory.
