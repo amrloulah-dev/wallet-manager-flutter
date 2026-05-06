@@ -6,10 +6,10 @@
 - [x] Task: Write tests to ensure listeners are registered and unregistered correctly in `main_dashboard_screen.dart` (if testable). 158c71d
 - [x] Task: Implement named listeners in `main_dashboard_screen.dart` and remove anonymous listener usage. 158c71d
 - [x] Task: Global Audit - Search and verify corresponding `removeListener` for every `.addListener` usage across the app. 9b1a410
-- [~] Task: Conductor - User Manual Verification 'Memory Integrity & Listener Lifecycles' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Memory Integrity & Listener Lifecycles' (Protocol in workflow.md)
 
 ## Phase 2: Rendering & Layout Efficiency
-- [ ] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`.
+- [~] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`.
 - [ ] Task: Replace nested `ListView` (with `shrinkWrap: true`) with `CustomScrollView` and `SliverList.builder` in `manage_employees_screen.dart`.
 - [ ] Task: Global Audit - Replace `shrinkWrap: true` instances globally with Slivers.
 - [ ] Task: Global Audit - Replace `Opacity` widgets with `Color.withAlpha()` / `Color.withOpacity()` in `wallet_card.dart`, `employee_card.dart`, and globally.
