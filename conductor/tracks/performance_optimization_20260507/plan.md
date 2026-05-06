@@ -5,8 +5,8 @@
 - [x] Task: Global Audit - Search and fix any `TextEditingController`, `FocusNode`, or `ScrollController` instantiated in `StatelessWidget`s. 76aa9ac
 - [x] Task: Write tests to ensure listeners are registered and unregistered correctly in `main_dashboard_screen.dart` (if testable). 158c71d
 - [x] Task: Implement named listeners in `main_dashboard_screen.dart` and remove anonymous listener usage. 158c71d
-- [ ] Task: Global Audit - Search and verify corresponding `removeListener` for every `.addListener` usage across the app.
-- [ ] Task: Conductor - User Manual Verification 'Memory Integrity & Listener Lifecycles' (Protocol in workflow.md)
+- [x] Task: Global Audit - Search and verify corresponding `removeListener` for every `.addListener` usage across the app. 9b1a410
+- [~] Task: Conductor - User Manual Verification 'Memory Integrity & Listener Lifecycles' (Protocol in workflow.md)
 
 ## Phase 2: Rendering & Layout Efficiency
 - [ ] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`.
