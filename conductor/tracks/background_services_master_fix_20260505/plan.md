@@ -27,7 +27,7 @@
     - [x] Implement fix: Migrate all logic from `OverlayRepository` to use `LocalStorageService.saveToVault()`. Delete `lib/data/repositories/overlay_repository.dart`.
 
 
-- [ ] Task: Unify Local Storage Keys
+- [x] Task: Unify Local Storage Keys [857d544]
     - [ ] Write failing test verifying SMS pipeline writes/reads from a unified key.
     - [ ] Implement fix: Unify keys using `LocalStorageService._kPendingOverlayData` and clean up orphans.
 - [ ] Task: Refactor GlobalOverlayListener and LocalizationProvider DI
