@@ -35,14 +35,14 @@
     - [x] Implement fix: Refactor `GlobalOverlayListener` and `LocalizationProvider` to strictly use `LocalStorageService.instance` or injected instances.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Unified Vault & Dependency Injection' (Protocol in workflow.md)
 
-## Phase 4: Overlay Resilience & Graceful Failure
+## Phase 4: Overlay Resilience & Graceful Failure [checkpoint: 334b992]
 - [x] Task: Dynamic Overlay Update [fe40457]
     - [x] Write failing test simulating active overlay receiving new data (should not close).
     - [x] Implement fix: Update `lib/core/services/sms_processing_pipeline.dart` to use `shareData()` if overlay is already active.
-- [~] Task: Graceful Overlay Fallback UI
-    - [ ] Write failing test for overlay initialization failure.
-    - [ ] Implement fix: Wrap `overlayMain` in `try/catch` and run `OverlayErrorApp` with hardcoded Arabic error text on failure.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Overlay Resilience & Graceful Failure' (Protocol in workflow.md)
+- [x] Task: Graceful Overlay Fallback UI [334b992]
+    - [x] Write failing test for overlay initialization failure.
+    - [x] Implement fix: Wrap `overlayMain` in `try/catch` and run `OverlayErrorApp` with hardcoded Arabic error text on failure.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Overlay Resilience & Graceful Failure' (Protocol in workflow.md)
 
 ## Phase 5: Global Audit & Tech Debt Cleanup
 - [ ] Task: Isolate Permission Guarding
