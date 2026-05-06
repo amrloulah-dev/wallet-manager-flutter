@@ -22,18 +22,22 @@
     - Provides a unified `FirebaseService` for managed access to Firestore and Auth instances.
 
 ## Local Storage
-- **Shared Preferences:** Storing local settings and non-sensitive metadata.
+- **Unified Vault Architecture:** Centralized `LocalStorageService` acting as the single source of truth for all disk I/O, abstracting `SharedPreferences` and providing safe data persistence for both UI and background isolates.
 
 ## Background Architecture & OS Resilience
 - **Single-Isolate Guardian:** Persistent background service (`flutter_background_service`) acting as the single source of truth for SMS automation to prevent data duplication.
 - **Hybrid Kill-Switch:** State-aware service lifecycle management that calls `stopSelf()` when features are disabled to minimize battery impact and resource usage.
 - **Smart Error Handling:** Context-aware error routing via `AppErrorHandler` that displays UI feedback in the foreground and triggers actionable Local Notifications (`flutter_local_notifications`) in the background.
 - **OS Constraint Strategy:** Explicit handling of modern Android (12+) constraints, including Battery Optimization exemption requests and high-priority notification triggers for overlay reliability.
+- **Isolate Permission Guarding:** Strict enforcement of permission requests (Battery, Notifications, SMS) solely from the main UI isolate to prevent background crashes and comply with modern OS constraints.
+- **Dynamic Overlay Refresh:** Resilient overlay communication using `shareData()` for state updates instead of the close/reopen pattern, ensuring stability on restrictive ROMs.
+- **Graceful Failure UI:** Dedicated fallback Error UI for overlay initialization failures to prevent silent crashes and guide user recovery.
 
 ## Tools & Utilities
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
-- **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers.
+- **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers. Includes global `kDebugMode` guards for all `debugPrint` calls to prevent sensitive data leakage in release builds.
 - **Data Integrity:** Centralized `NumberParser` utility for safe numeric parsing and null-safety from dynamic sources.
+- **Background State TTL:** Strict 24-hour Time-to-Live (TTL) enforcement for subscription and critical metadata in the background isolate, triggering user re-validation via actionable notifications if data becomes stale.
 - **Financial Integrity:** Epsilon-aware balance sufficiency checks (0.01 EGP tolerance), atomic Firestore transactions and FieldValue.increment() for all wallet, balance, and stat counter updates, and $O(1)$ aggregate synchronization. Includes a "Zero-Unbounded-Read" guarantee by utilizing Firestore Aggregate Queries and cursor-based pagination for all list operations.
 - **Domain Fortification:** Type-safe Enums for all statuses/types and centralized `AmountValidator` guards.
 - **Reactive Resilience:** Error-aware Stream pipelines, stateless repository pagination, and transparent exception propagation from providers to the UI layer.
