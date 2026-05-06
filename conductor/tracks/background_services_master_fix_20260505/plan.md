@@ -44,11 +44,11 @@
     - [x] Implement fix: Wrap `overlayMain` in `try/catch` and run `OverlayErrorApp` with hardcoded Arabic error text on failure.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Overlay Resilience & Graceful Failure' (Protocol in workflow.md)
 
-## Phase 5: Global Audit & Tech Debt Cleanup
+## Phase 5: Global Audit & Tech Debt Cleanup [checkpoint: c2fe30a]
 - [x] Task: Isolate Permission Guarding [36a9152]
     - [x] Write failing test ensuring no permission requests originate from background isolate.
     - [x] Implement fix: Move all permission requests to `init` in `lib/core/services/sms_service.dart`.
 - [x] Task: Global Logging Audit [4834b4d]
     - [x] Write failing test verifying `debugPrint` calls are suppressed in release mode.
     - [x] Implement fix: Wrap all `debugPrint` statements in `if (kDebugMode)` across the `lib/` directory.
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Global Audit & Tech Debt Cleanup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Global Audit & Tech Debt Cleanup' (Protocol in workflow.md) [c2fe30a]
