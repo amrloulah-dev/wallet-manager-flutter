@@ -29,11 +29,11 @@
 - [~] Task: Conductor - User Manual Verification 'State Management & UI Thread Optimization' (Protocol in workflow.md)
 
 ## Phase 4: Tech Debt & L10n
-- [ ] Task: Write tests verifying background startup failures are logged.
-- [ ] Task: Add `AppErrorHandler.logSilentError` or `.handle()` to the `initializeBackgroundService` catch block in `main.dart` so background startup failures reach Crashlytics.
-- [ ] Task: Write widget tests for `_StatItemWidget` ensuring it renders correctly independently.
-- [ ] Task: Convert `_StatItemWidget` in `general_statistics_screen.dart` to a `const StatelessWidget`.
-- [ ] Task: Global Audit - Scan for private helper methods returning Widgets and convert them to `StatelessWidget`s.
-- [ ] Task: Replace hardcoded Arabic error strings in `statistics_provider.dart` with `l10n` localization keys.
-- [ ] Task: Cache `ThemeData.light()` as a `static final` constant in `transaction_overlay_screen.dart`.
-- [ ] Task: Conductor - User Manual Verification 'Tech Debt & L10n' (Protocol in workflow.md)
+- [x] Task: Write tests verifying background startup failures are logged. 1cfae30
+- [x] Task: Add `AppErrorHandler.logSilentError` or `.handle()` to the `initializeBackgroundService` catch block in `main.dart` so background startup failures reach Crashlytics. 1cfae30
+- [x] Task: Write widget tests for `_StatItemWidget` ensuring it renders correctly independently. 1cfae30
+- [x] Task: Convert `_StatItemWidget` in `general_statistics_screen.dart` to a `const StatelessWidget`. 1cfae30
+- [x] Task: Global Audit - Scan for private helper methods returning Widgets and convert them to `StatelessWidget`s. 1cfae30
+- [x] Task: Replace hardcoded Arabic error strings in `statistics_provider.dart` with `l10n` localization keys. 1cfae30
+- [x] Task: Cache `ThemeData.light()` as a `static final` constant in `transaction_overlay_screen.dart`. 1cfae30
+- [~] Task: Conductor - User Manual Verification 'Tech Debt & L10n' (Protocol in workflow.md)
