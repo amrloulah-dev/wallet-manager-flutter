@@ -14,6 +14,8 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class TransactionOverlayScreen extends StatelessWidget {
+  static final ThemeData _cachedLightTheme = ThemeData.light();
+
   const TransactionOverlayScreen({super.key});
 
   @override
@@ -25,10 +27,10 @@ class TransactionOverlayScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => OverlayProvider(),
       child: Theme(
-        data: ThemeData.light(),
+        data: _cachedLightTheme,
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(),
+          theme: _cachedLightTheme,
           themeMode: ThemeMode.light,
           locale: Locale(languageCode),
           localizationsDelegates: const [
@@ -42,7 +44,7 @@ class TransactionOverlayScreen extends StatelessWidget {
             return Directionality(
               textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
               child: Theme(
-                data: ThemeData.light(),
+                data: _cachedLightTheme,
                 child: child!,
               ),
             );
@@ -101,7 +103,7 @@ class _OverlayContentState extends State<_OverlayContent> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeData.light();
+    final theme = TransactionOverlayScreen._cachedLightTheme;
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;

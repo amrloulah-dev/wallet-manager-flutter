@@ -30,6 +30,12 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
   final _receiptController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _receiptController.dispose();
+    super.dispose();
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
     

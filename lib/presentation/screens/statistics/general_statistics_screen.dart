@@ -114,7 +114,28 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
           selector: (context, provider) => provider.errorMessage,
           builder: (context, errorMessage, child) {
             if (errorMessage != null) {
-              return CustomErrorWidget(message: errorMessage);
+              final l10n = AppLocalizations.of(context)!;
+              String displayMessage;
+              
+              // Resolve localization keys (Workaround until gen-l10n is run)
+              switch (errorMessage) {
+                case 'stats_error_summary_fetch':
+                  displayMessage = 'حدث خطأ في جلب ملخص الإحصائيات.';
+                  break;
+                case 'stats_error_today_fetch':
+                  displayMessage = 'حدث خطأ في جلب إحصائيات اليوم.';
+                  break;
+                case 'stats_error_filtered_fetch':
+                  displayMessage = 'فشل جلب الإحصائيات المفلترة.';
+                  break;
+                case 'stats_error_init_failed':
+                  displayMessage = 'فشل تهيئة الإحصائيات.';
+                  break;
+                default:
+                  displayMessage = errorMessage;
+              }
+              
+              return CustomErrorWidget(message: displayMessage);
             }
 
             return Selector<StatisticsProvider, StatsMode>(
