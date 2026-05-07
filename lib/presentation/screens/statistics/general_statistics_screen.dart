@@ -117,19 +117,19 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
               final l10n = AppLocalizations.of(context)!;
               String displayMessage;
               
-              // Resolve localization keys (Workaround until gen-l10n is run)
+              // Resolve localization keys
               switch (errorMessage) {
                 case 'stats_error_summary_fetch':
-                  displayMessage = 'حدث خطأ في جلب ملخص الإحصائيات.';
+                  displayMessage = l10n.stats_error_summary_fetch;
                   break;
                 case 'stats_error_today_fetch':
-                  displayMessage = 'حدث خطأ في جلب إحصائيات اليوم.';
+                  displayMessage = l10n.stats_error_today_fetch;
                   break;
                 case 'stats_error_filtered_fetch':
-                  displayMessage = 'فشل جلب الإحصائيات المفلترة.';
+                  displayMessage = l10n.stats_error_filtered_fetch;
                   break;
                 case 'stats_error_init_failed':
-                  displayMessage = 'فشل تهيئة الإحصائيات.';
+                  displayMessage = l10n.stats_error_init_failed;
                   break;
                 default:
                   displayMessage = errorMessage;
