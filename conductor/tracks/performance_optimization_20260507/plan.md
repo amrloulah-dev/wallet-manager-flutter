@@ -19,14 +19,14 @@
 ## Phase 3: State Management & UI Thread Optimization
 - [x] Task: Write tests for provider initialization logic in `main_dashboard_screen.dart` to verify re-fetches are avoided on rebuilds. 158c71d
 - [x] Task: Move provider initializations (`setStoreId`) from `didChangeDependencies` to `initState` using `Future.microtask` and an initialization flag in `main_dashboard_screen.dart`. 158c71d
-- [x] Task: Write tests for `OverlayProvider.notifyListeners()` ensuring `_errorMessage` is propagated correctly. 7f98022
-- [x] Task: Fix `OverlayProvider.notifyListeners()` to ensure that errors (`_errorMessage`) are NOT silently dropped by the `_blockAutoFetch` shield. 7f98022
-- [~] Task: Write widget tests for `transaction_overlay_screen.dart` to verify isolated rebuilds via `Selector`.
-- [ ] Task: Replace `context.watch<OverlayProvider>()` with granular `Selector`s in `transaction_overlay_screen.dart`.
-- [ ] Task: Apply `Selector` or scoped `Consumer` refactoring to `CreateTransactionScreen` and `AddDebtScreen`.
-- [ ] Task: Ensure `SharedPreferences` is not fetched during `submitTransaction` in `overlay_provider.dart`. Ensure `LocalStorageService` is used instead.
-- [ ] Task: Remove unnecessary `Future.microtask` calls from `_safeNotify()` in `WalletProvider` and `StatisticsProvider`.
-- [ ] Task: Conductor - User Manual Verification 'State Management & UI Thread Optimization' (Protocol in workflow.md)
+- [x] Task: Write tests for `OverlayProvider.notifyListeners()` ensuring `_errorMessage` is propagated correctly. e57d868
+- [x] Task: Fix `OverlayProvider.notifyListeners()` to ensure that errors (`_errorMessage`) are NOT silently dropped by the `_blockAutoFetch` shield. e57d868
+- [x] Task: Write widget tests for `transaction_overlay_screen.dart` to verify isolated rebuilds via `Selector`. e57d868
+- [x] Task: Replace `context.watch<OverlayProvider>()` with granular `Selector`s in `transaction_overlay_screen.dart`. e57d868
+- [x] Task: Apply `Selector` or scoped `Consumer` refactoring to `CreateTransactionScreen` and `AddDebtScreen`. e57d868
+- [x] Task: Ensure `SharedPreferences` is not fetched during `submitTransaction` in `overlay_provider.dart`. Ensure `LocalStorageService` is used instead. e57d868
+- [x] Task: Remove unnecessary `Future.microtask` calls from `_safeNotify()` in `WalletProvider` and `StatisticsProvider`. e57d868
+- [~] Task: Conductor - User Manual Verification 'State Management & UI Thread Optimization' (Protocol in workflow.md)
 
 ## Phase 4: Tech Debt & L10n
 - [ ] Task: Write tests verifying background startup failures are logged.
