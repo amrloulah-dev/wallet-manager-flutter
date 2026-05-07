@@ -140,7 +140,7 @@ class StatisticsProvider extends BaseProvider {
       safeNotify();
     }, onError: (e, stack) {
       if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
-      setError('حدث خطأ في تيار ملخص الإحصائيات.', e, stack);
+      setError('stats_error_summary_fetch', e, stack);
     });
 
     // 2. Establish Today Stats Stream
@@ -153,7 +153,7 @@ class StatisticsProvider extends BaseProvider {
       safeNotify();
     }, onError: (e, stack) {
       if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
-      setError('حدث خطأ في تيار إحصائيات اليوم.', e, stack);
+      setError('stats_error_today_fetch', e, stack);
     });
   }
 
@@ -193,7 +193,7 @@ class StatisticsProvider extends BaseProvider {
         _filteredStats = _dashboardSummary?.toMap();
       }
     } catch (e, stack) {
-      setError("فشل جلب الإحصائيات المفلترة.", e, stack);
+      setError("stats_error_filtered_fetch", e, stack);
       _filteredStats = null;
     } finally {
       _isLoading = false;

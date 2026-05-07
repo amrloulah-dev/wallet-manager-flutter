@@ -49,8 +49,13 @@ void main() async {
         if (kDebugMode) debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
         await initializeBackgroundService();
         if (kDebugMode) debugPrint('✅ [BACKGROUND] Service is now active and monitoring SMS.');
-      } catch (e) {
+      } catch (e, stack) {
         if (kDebugMode) debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+        AppErrorHandler.handle(e, 
+          severity: ErrorSeverity.medium, 
+          operation: 'background_service_init',
+          stackTrace: stack
+        );
       }
     });
 

@@ -187,7 +187,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
               onRefresh: () => context.read<WalletProvider>().refresh(),
               child: Column(
                 children: [
-                  _buildSummaryCard(filteredWallets),
+                  _SummaryCard(wallets: filteredWallets),
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
@@ -294,8 +294,16 @@ class _WalletsListScreenState extends State<WalletsListScreen>
       ),
     );
   }
+}
 
-  Widget _buildSummaryCard(List<WalletModel> wallets) {
+class _SummaryCard extends StatelessWidget {
+  final List<WalletModel> wallets;
+
+  const _SummaryCard({required this.wallets});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
@@ -308,12 +316,12 @@ class _WalletsListScreenState extends State<WalletsListScreen>
         children: [
           _SummaryItem(
             icon: Icons.wallet,
-            label: AppLocalizations.of(context)!.totalWallets,
+            label: l10n.totalWallets,
             value: wallets.length.toString(),
           ),
           _SummaryItem(
             icon: Icons.check_circle_outline,
-            label: AppLocalizations.of(context)!.activeWallets,
+            label: l10n.activeWallets,
             value: wallets.where((w) => w.isActive).length.toString(),
           ),
         ],

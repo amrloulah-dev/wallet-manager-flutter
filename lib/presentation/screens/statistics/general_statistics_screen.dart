@@ -262,8 +262,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       title: l10n.balance,
       color: Colors.teal,
       children: [
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.totalWalletBalance,
           value: NumberFormatter.formatAmount(totalBalance),
         ),
@@ -280,19 +279,16 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       title: l10n.transactions,
       color: Colors.blueGrey,
       children: [
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.totalTransactions,
           value: NumberFormatter.formatNumber(stats.totalTransactions),
         ),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.sendTransactions,
           value: NumberFormatter.formatNumber(stats.sendCount),
           valueColor: AppColors.send,
         ),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.receiveTransactions,
           value: NumberFormatter.formatNumber(stats.receiveCount),
           valueColor: AppColors.receive,
@@ -309,21 +305,18 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       title: l10n.amounts,
       color: Colors.purple,
       children: [
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.sendAmount,
           value: NumberFormatter.formatAmount(stats.totalSentAmount),
           valueColor: AppColors.send,
         ),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.receiveAmount,
           value: NumberFormatter.formatAmount(stats.totalReceivedAmount),
           valueColor: AppColors.receive,
         ),
         const Divider(height: 10),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.totalAmountCombined,
           value: NumberFormatter.formatAmount(
               stats.totalSentAmount + stats.totalReceivedAmount),
@@ -345,13 +338,11 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       title: l10n.commission,
       color: AppColors.success,
       children: [
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.totalCommissionLabel,
           value: NumberFormatter.formatAmount(totalCommission),
         ),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.averageCommission,
           value: NumberFormatter.formatAmount(averageCommission),
         ),
@@ -367,14 +358,12 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       title: l10n.debts,
       color: AppColors.error,
       children: [
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.openDebtsLabel,
           value: NumberFormatter.formatNumber(stats.openDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalOpenAmount),
         ),
-        _StatItemWidget(
-          context: context,
+        StatItemWidget(
           label: l10n.paidDebtsLabel,
           value: NumberFormatter.formatNumber(stats.paidDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalPaidAmount),
@@ -413,14 +402,24 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       ),
     );
   }
+}
 
-  Widget _StatItemWidget({
-    required BuildContext context,
-    required String label,
-    required String value,
-    String? subtitle,
-    Color? valueColor,
-  }) {
+class StatItemWidget extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? subtitle;
+  final Color? valueColor;
+
+  const StatItemWidget({
+    super.key,
+    required this.label,
+    required this.value,
+    this.subtitle,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -432,7 +431,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
               Text(label, style: AppTextStyles.bodyLarge),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
-                Text(subtitle,
+                Text(subtitle!,
                     style: AppTextStyles.bodySmall
                         .copyWith(color: AppColors.textSecondary(context))),
               ],
