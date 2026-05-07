@@ -15,6 +15,7 @@
     - [ ] Ensure `_isLoading = false` (or equivalent) is strictly inside `finally` blocks for `StoreRegistrationScreen`, `EmployeeLoginScreen`, `LoginLandingScreen`, and `AuthProvider.findStoreByEmail`
     - [ ] Fix broken `.handleError` callback in `WalletRepository.watchWallet`
     - [ ] Fix `TransactionDetailsScreen` and `TransactionProvider.selectTransaction` to ensure UI explicitly checks for errors and shows actual errors instead of "Not Found" state
+    - [ ] Fix missing UI feedback: Add a fallback `ToastUtils.showError(l10n.unexpectedError)` to `EmployeeLoginScreen`'s catch block (C-07), and add a final `else` branch in `LoginLandingScreen._handleFindStore` to handle unknown null states (C-09).
 - [ ] Task: Platform Boundaries & Isolate Pipelines
     - [ ] Update `PlatformDispatcher.instance.onError` to explicitly await `Crashlytics.recordError(error, stack, fatal: true)` before returning `false`
     - [ ] Replace silent swallow `// Swallow` in `handleIncomingSms` with `AppErrorHandler.logSilentError(e.toString(), 'SMS_Pipeline', stackTrace: stack, fatal: false)`
