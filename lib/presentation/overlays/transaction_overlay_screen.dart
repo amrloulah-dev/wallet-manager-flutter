@@ -101,41 +101,15 @@ class _OverlayContentState extends State<_OverlayContent> {
 
   @override
   Widget build(BuildContext context) {
-    _provider = context.watch<OverlayProvider>();
     final theme = ThemeData.light();
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
 
-    // Error Snackbar
-    if (_provider.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Map hardcoded technical errors to localized ones if possible
-        String displayError = _provider.errorMessage!;
-        if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
-           displayError = l10n.transactionExceedsLimitWarning;
-        } else if (displayError == 'Please select a wallet') {
-           displayError = l10n.pleaseSelectWallet;
-        } else if (displayError == 'Session invalid. Please login again inside the app.') {
-           displayError = l10n.authErrorRelogin;
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(displayError,
-                style:
-                    textTheme.bodyMedium?.copyWith(color: colorScheme.onError)),
-            backgroundColor: colorScheme.error,
-          ),
-        );
-      });
-    }
-
     return Theme(
-      data: ThemeData.light(),
+      data: theme,
       child: Scaffold(
-        backgroundColor:
-            const Color(0x00000000),
+        backgroundColor: const Color(0x00000000),
         body: Center(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -161,46 +135,60 @@ class _OverlayContentState extends State<_OverlayContent> {
                   children: [
                     _HeaderWidget(
                       title: l10n.newTransaction,
-                      onClose: _provider.close,
+                      onClose: () => context.read<OverlayProvider>().close(),
                     ),
                     Divider(height: 24, color: Colors.grey.shade300),
-                    if (!_provider.isLoading ||
-                        _provider.availableWallets.isNotEmpty) ...[
-                      _HeroAmountWidget(
-                        txtAmount: l10n.amount,
-                        amount: NumberFormatter.formatAmount(_provider.amount),
-                        type: _provider.type,
-                      ),
-                      const SizedBox(height: 16),
-                      _SenderDisplayWidget(
-                        txtSender: l10n.send,
-                        sender: _provider.sender,
-                      ),
-                      const SizedBox(height: 16),
-                      _WalletDropdownWidget(
-                        provider: _provider,
-                        txtWallet: l10n.selectWallet,
-                        txtUnknown: l10n.unknown,
-                      ),
-                      const SizedBox(height: 16),
-                      _CommissionFieldWidget(
-                        provider: _provider,
-                        txtCommission: l10n.commission,
-                        focusNode: _commissionFocusNode,
-                      ),
-                      const SizedBox(height: 24),
-                      CustomButton(
-                        text: l10n.confirmPayment,
-                        isLoading: _provider.isLoading,
-                        onPressed: _provider.submitTransaction,
-                        fullWidth: true,
-                      ),
-                    ] else
-                      const Center(
-                          child: Padding(
-                              padding: EdgeInsets.all(20),
-                              child: CircularProgressIndicator(
-                                  color: AppColors.primary))),
+                    // Listen for errors
+                    const _ErrorListener(),
+                    Selector<OverlayProvider, bool>(
+                      selector: (_, p) => p.isLoading && p.availableWallets.isEmpty,
+                      builder: (context, isLoadingInitial, _) {
+                        if (isLoadingInitial) {
+                          return const Center(
+                              child: Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: CircularProgressIndicator(
+                                      color: AppColors.primary)));
+                        }
+
+                        return Column(
+                          children: [
+                            Selector<OverlayProvider, ({double amount, String type})>(
+                              selector: (_, p) => (amount: p.amount, type: p.type),
+                              builder: (context, data, _) => _HeroAmountWidget(
+                                txtAmount: l10n.amount,
+                                amount: NumberFormatter.formatAmount(data.amount),
+                                type: data.type,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Selector<OverlayProvider, String>(
+                              selector: (_, p) => p.sender,
+                              builder: (context, sender, _) => _SenderDisplayWidget(
+                                txtSender: l10n.send,
+                                sender: sender,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const _WalletDropdownWidget(),
+                            const SizedBox(height: 16),
+                            _CommissionFieldWidget(
+                              focusNode: _commissionFocusNode,
+                            ),
+                            const SizedBox(height: 24),
+                            Selector<OverlayProvider, bool>(
+                              selector: (_, p) => p.isLoading,
+                              builder: (context, isLoading, _) => CustomButton(
+                                text: l10n.confirmPayment,
+                                isLoading: isLoading,
+                                onPressed: () => context.read<OverlayProvider>().submitTransaction(),
+                                fullWidth: true,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -208,6 +196,42 @@ class _OverlayContentState extends State<_OverlayContent> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ErrorListener extends StatelessWidget {
+  const _ErrorListener();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<OverlayProvider>(
+      builder: (context, provider, child) {
+        if (provider.errorMessage != null) {
+          final l10n = AppLocalizations.of(context)!;
+          final theme = Theme.of(context);
+          
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            String displayError = provider.errorMessage!;
+            if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
+               displayError = l10n.transactionExceedsLimitWarning;
+            } else if (displayError == 'Please select a wallet') {
+               displayError = l10n.pleaseSelectWallet;
+            } else if (displayError == 'Session invalid. Please login again inside the app.') {
+               displayError = l10n.authErrorRelogin;
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(displayError,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onError)),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          });
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
@@ -330,59 +354,52 @@ class _SenderDisplayWidget extends StatelessWidget {
 }
 
 class _WalletDropdownWidget extends StatelessWidget {
-  final OverlayProvider provider;
-  final String txtWallet;
-  final String txtUnknown;
-
-  const _WalletDropdownWidget({
-    required this.provider,
-    required this.txtWallet,
-    required this.txtUnknown,
-  });
+  const _WalletDropdownWidget();
 
   @override
   Widget build(BuildContext context) {
-    return CustomDropdown<String>(
-      value: provider.selectedWalletId,
-      labelText: txtWallet,
-      prefixIcon: const Icon(
-        Icons.account_balance_wallet,
+    final l10n = AppLocalizations.of(context)!;
+    return Selector<OverlayProvider, ({String? selectedId, List<Map<String, dynamic>> wallets})>(
+      selector: (_, p) => (selectedId: p.selectedWalletId, wallets: p.availableWallets),
+      builder: (context, data, _) => CustomDropdown<String>(
+        value: data.selectedId,
+        labelText: l10n.selectWallet,
+        prefixIcon: const Icon(
+          Icons.account_balance_wallet,
+        ),
+        itemsList: data.wallets
+            .map((wallet) => wallet['id'].toString())
+            .toList(),
+        itemLabelBuilder: (String id) {
+          final wallet = data.wallets.firstWhere(
+            (w) => w['id'] == id,
+            orElse: () => {'name': l10n.unknown},
+          );
+          return wallet['name'] ?? l10n.unknown;
+        },
+        onChanged: (val) => context.read<OverlayProvider>().setSelectedWallet(val),
       ),
-      itemsList: provider.availableWallets
-          .map((wallet) => wallet['id'].toString())
-          .toList(),
-      itemLabelBuilder: (String id) {
-        final wallet = provider.availableWallets.firstWhere(
-          (w) => w['id'] == id,
-          orElse: () => {'name': txtUnknown},
-        );
-        return wallet['name'] ?? txtUnknown;
-      },
-      onChanged: provider.setSelectedWallet,
     );
   }
 }
 
 class _CommissionFieldWidget extends StatelessWidget {
-  final OverlayProvider provider;
-  final String txtCommission;
   final FocusNode focusNode;
 
   const _CommissionFieldWidget({
-    required this.provider,
-    required this.txtCommission,
     required this.focusNode,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return CustomTextField(
       focusNode: focusNode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      labelText: txtCommission,
+      labelText: l10n.commission,
       prefixIcon: const Icon(Icons
           .attach_money),
-      onChanged: provider.setCommission,
+      onChanged: (val) => context.read<OverlayProvider>().setCommission(val),
     );
   }
 }

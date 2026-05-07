@@ -207,12 +207,17 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildWalletSelection(AppLocalizations l10n) {
-    return Consumer<WalletProvider>(
-      builder: (context, walletProvider, child) {
-        if (walletProvider.isLoading) {
+    return Selector<WalletProvider, ({bool isLoading, List<WalletModel> wallets, Map<String, WalletModel> walletMap})>(
+      selector: (_, provider) => (
+        isLoading: provider.isLoading,
+        wallets: provider.wallets,
+        walletMap: provider.walletMap
+      ),
+      builder: (context, data, child) {
+        if (data.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (walletProvider.wallets.isEmpty) {
+        if (data.wallets.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -224,12 +229,12 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         }
 
        return CustomDropdown<WalletModel>(
-  value: _selectedWalletId != null ? walletProvider.walletMap[_selectedWalletId!] : null,
+  value: _selectedWalletId != null ? data.walletMap[_selectedWalletId!] : null,
   hint: l10n.selectWalletHint,
   fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
   
   // 1. تمرير قائمة المحافظ (Data) مباشرة
-  itemsList: walletProvider.wallets,
+  itemsList: data.wallets,
   
   // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
   itemLabelBuilder: (WalletModel wallet) {
@@ -546,12 +551,17 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildCreateButton(AppLocalizations l10n) {
-    return Consumer<TransactionProvider>(
-      builder: (context, provider, child) {
+    return Selector<TransactionProvider, ({bool isCreating, String? errorMessage, bool hasError})>(
+      selector: (_, provider) => (
+        isCreating: provider.isCreating,
+        errorMessage: provider.errorMessage,
+        hasError: provider.hasError
+      ),
+      builder: (context, data, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (provider.hasError && provider.errorMessage != null)
+            if (data.hasError && data.errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -565,7 +575,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        provider.errorMessage!,
+                        data.errorMessage!,
                         style: AppTextStyles.bodyMedium
                             .copyWith(color: AppColors.error),
                       ),
@@ -576,7 +586,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             CustomButton(
               text: l10n.createTransactionButton,
               onPressed: _handleCreate,
-              isLoading: provider.isCreating,
+              isLoading: data.isCreating,
               icon: const Icon(Icons.add_circle_outline),
             ),
           ],

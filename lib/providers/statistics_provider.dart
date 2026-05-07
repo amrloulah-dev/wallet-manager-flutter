@@ -261,6 +261,13 @@ class StatisticsProvider extends BaseProvider {
   }
 
   @override
+  void safeNotify() {
+    if (!isDisposed && hasListeners) {
+      notifyListeners();
+    }
+  }
+
+  @override
   void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'stats_operation']) {
     if (kDebugMode) {
       if (kDebugMode) debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');

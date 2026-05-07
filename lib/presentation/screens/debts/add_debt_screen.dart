@@ -237,12 +237,16 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   }
 
   Widget _buildCreateButton() {
-    return Consumer<DebtProvider>(
-      builder: (context, provider, child) {
+    return Selector<DebtProvider, ({bool isCreating, String? errorMessage})>(
+      selector: (_, provider) => (
+        isCreating: provider.isCreating,
+        errorMessage: provider.errorMessage,
+      ),
+      builder: (context, data, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (provider.errorMessage != null)
+            if (data.errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -256,7 +260,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        provider.errorMessage!,
+                        data.errorMessage!,
                         style: AppTextStyles.bodyMedium
                             .copyWith(color: AppColors.error),
                       ),
@@ -267,7 +271,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
             CustomButton(
               text: AppLocalizations.of(context)!.addDebtAction,
               onPressed: _handleCreate,
-              isLoading: provider.isCreating,
+              isLoading: data.isCreating,
               size: ButtonSize.large,
             ),
           ],

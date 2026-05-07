@@ -1,42 +1,50 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
-  late MockOverlayUseCase mockOverlayUseCase;
-  // ignore: unused_local_variable
-  late OverlayProvider overlayProvider;
+  test('OverlayProvider.notifyListeners() should propagate errors even if _blockAutoFetch is true', () async {
+    final mockUseCase = MockOverlayUseCase();
+    final mockStorage = MockLocalStorageService();
+    
+    final provider = OverlayProvider(
+      overlayUseCase: mockUseCase,
+      localStorageService: mockStorage,
+    );
 
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-    mockOverlayUseCase = MockOverlayUseCase();
-    overlayProvider = OverlayProvider(overlayUseCase: mockOverlayUseCase);
-  });
-
-  group('OverlayProvider semantic errors', () {
-    test('emits semantic error for InstaPay limit', () async {
-      // Setup data that triggers InstaPay limit
-      // ignore: unused_local_variable
-      final data = {
-        'amount': 70001,
-        'sender': '01012345678',
-        'type': 'debit',
-        'walletId': 'w1'
-      };
-
-      // Mock available wallets in LocalStorage
-      // Note: This is tricky because LocalStorageService uses a singleton and static methods.
-      // For this test, we assume the logic inside ingestNewEvent correctly sets the error.
-      // We might need to further refactor OverlayProvider to be more testable if this fails.
-      
-      // Since we can't easily mock the static/singleton LocalStorageService in this environment 
-      // without more setup, we focus on the logic flow.
+    int notificationCount = 0;
+    provider.addListener(() {
+      notificationCount++;
     });
+
+    // Simulate ingestNewEvent setting an error while _blockAutoFetch is active
+    // We can't directly set _blockAutoFetch, so we simulate the flow in ingestNewEvent
+    
+    when(() => mockStorage.initialize()).thenAnswer((_) async {});
+    // ingestNewEvent sets _blockAutoFetch = true
+    
+    final data = {
+      'amount': 100000, // Trigger limit error
+      'type': 'credit',
+      'sender': '0123456789',
+      'walletId': 'w1'
+    };
+
+    when(() => mockStorage.getCachedWalletLiteList()).thenReturn([
+      {'id': 'w1', 'walletType': 'instapay'}
+    ]);
+    when(() => mockStorage.subIsSuspended).thenReturn(false);
+    when(() => mockStorage.subSmsEnabled).thenReturn(true);
+
+    await provider.ingestNewEvent(data);
+
+    // After ingestNewEvent, _errorMessage should be set and UI should be notified
+    expect(provider.errorMessage, isNotNull);
+    expect(notificationCount, greaterThan(0), reason: 'UI should be notified of the error');
   });
 }

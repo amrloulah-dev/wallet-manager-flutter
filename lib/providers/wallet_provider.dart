@@ -660,6 +660,13 @@ class WalletProvider extends BaseProvider {
     return _frozenWalletIds.contains(walletId);
   }
 
+  @override
+  void safeNotify() {
+    if (!isDisposed && hasListeners) {
+      notifyListeners();
+    }
+  }
+
   // Synchronous check for UI bindings based on local RAM loaded items
   bool isWalletFrozenSync(String walletId) {
     return _frozenWalletIds.contains(walletId);

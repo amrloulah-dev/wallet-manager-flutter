@@ -35,6 +35,12 @@ class OverlayProvider extends SafeChangeNotifier {
 
   bool _blockAutoFetch = false;
 
+  // Session Cache
+  String? _cachedUserId;
+  String? _cachedStoreId;
+  String? _cachedUserName;
+  String? _cachedUserRole;
+
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -50,7 +56,7 @@ class OverlayProvider extends SafeChangeNotifier {
   /// When [_blockAutoFetch] is true, notifications are suppressed
   /// to prevent unnecessary janky UI rebuilds during batch state mutations.
   void _guardedNotify() {
-    if (_blockAutoFetch) {
+    if (_blockAutoFetch && _errorMessage == null) {
       if (kDebugMode) {
         debugPrint('🛡️ [Fetch Shield] _blockAutoFetch active — suppressed '
             'safeNotify() to prevent unnecessary janky UI rebuilds');
@@ -96,7 +102,13 @@ class OverlayProvider extends SafeChangeNotifier {
         _isStorageInitialized = true;
       }
 
-      await LocalStorageService.instance.reloadDisk();
+      await _localStorageService.reloadDisk();
+
+      // Cache session data to avoid sync I/O during submission
+      _cachedUserId = _localStorageService.userId;
+      _cachedStoreId = _localStorageService.storeId;
+      _cachedUserName = _localStorageService.userName;
+      _cachedUserRole = _localStorageService.userRole;
 
       if (_localStorageService.subIsSuspended || !_localStorageService.subSmsEnabled) {
         if (kDebugMode) {
@@ -204,12 +216,7 @@ class OverlayProvider extends SafeChangeNotifier {
       return;
     }
 
-    final userId = _localStorageService.userId;
-    final storeId = _localStorageService.storeId;
-    final userName = _localStorageService.userName;
-    final userRole = _localStorageService.userRole;
-
-    if (userId == null || storeId == null) {
+    if (_cachedUserId == null || _cachedStoreId == null) {
       _errorMessage = 'Session invalid. Please login again inside the app.';
       _guardedNotify();
       return;
@@ -221,10 +228,10 @@ class OverlayProvider extends SafeChangeNotifier {
 
     try {
       final result = await _overlayUseCase.execute(
-        storeId: storeId,
-        userId: userId,
-        userName: userName,
-        userRole: userRole,
+        storeId: _cachedStoreId!,
+        userId: _cachedUserId!,
+        userName: _cachedUserName ?? 'Unknown',
+        userRole: _cachedUserRole ?? 'employee',
         selectedWalletId: _selectedWalletId!,
         type: _type,
         amount: _amount,
