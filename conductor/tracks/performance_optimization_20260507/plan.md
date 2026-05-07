@@ -11,10 +11,10 @@
 ## Phase 2: Rendering & Layout Efficiency
 - [x] Task: Write UI tests to verify Sliver layout structure in `manage_employees_screen.dart`. ac69a3e
 - [x] Task: Replace nested `ListView` (with `shrinkWrap: true`) with `CustomScrollView` and `SliverList.builder` in `manage_employees_screen.dart`. ac69a3e
-- [ ] Task: Global Audit - Replace `shrinkWrap: true` instances globally with Slivers.
-- [ ] Task: Global Audit - Replace `Opacity` widgets with `Color.withAlpha()` / `Color.withOpacity()` in `wallet_card.dart`, `employee_card.dart`, and globally.
-- [ ] Task: Hoist `context.read<EmployeeProvider>()` outside the `itemBuilder` in `manage_employees_screen.dart`.
-- [ ] Task: Conductor - User Manual Verification 'Rendering & Layout Efficiency' (Protocol in workflow.md)
+- [x] Task: Global Audit - Replace `shrinkWrap: true` instances globally with Slivers. 7f98022
+- [x] Task: Global Audit - Replace `Opacity` widgets with `Color.withAlpha()` / `Color.withOpacity()` in `wallet_card.dart`, `employee_card.dart`, and globally. 7f98022
+- [x] Task: Hoist `context.read<EmployeeProvider>()` outside the `itemBuilder` in `manage_employees_screen.dart`. 7f98022
+- [~] Task: Conductor - User Manual Verification 'Rendering & Layout Efficiency' (Protocol in workflow.md)
 
 ## Phase 3: State Management & UI Thread Optimization
 - [ ] Task: Write tests for provider initialization logic in `main_dashboard_screen.dart` to verify re-fetches are avoided on rebuilds.
