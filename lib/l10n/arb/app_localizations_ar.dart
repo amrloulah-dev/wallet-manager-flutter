@@ -1724,6 +1724,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'حدث خطأ في جلب المزيد من المحافظ.';
 
   @override
+  String get stats_error_summary_fetch => 'حدث خطأ في جلب ملخص الإحصائيات.';
+
+  @override
+  String get stats_error_today_fetch => 'حدث خطأ في جلب إحصائيات اليوم.';
+
+  @override
+  String get stats_error_filtered_fetch => 'فشل جلب الإحصائيات المفلترة.';
+
+  @override
+  String get stats_error_init_failed => 'فشل تهيئة الإحصائيات.';
+
+  @override
   String get wallet_error_create_failed => 'فشل في إنشاء المحفظة.';
 
   @override

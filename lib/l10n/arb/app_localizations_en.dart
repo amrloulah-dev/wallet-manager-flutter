@@ -1732,6 +1732,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wallet_error_fetch_more_failed => 'Error fetching more wallets.';
 
   @override
+  String get stats_error_summary_fetch => 'Error fetching statistics summary.';
+
+  @override
+  String get stats_error_today_fetch => 'Error fetching today\'s statistics.';
+
+  @override
+  String get stats_error_filtered_fetch =>
+      'Failed to fetch filtered statistics.';
+
+  @override
+  String get stats_error_init_failed => 'Statistics initialization failed.';
+
+  @override
   String get wallet_error_create_failed => 'Failed to create wallet.';
 
   @override

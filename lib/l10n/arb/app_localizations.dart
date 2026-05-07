@@ -3386,6 +3386,30 @@ abstract class AppLocalizations {
   /// **'حدث خطأ في جلب المزيد من المحافظ.'**
   String get wallet_error_fetch_more_failed;
 
+  /// No description provided for @stats_error_summary_fetch.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ في جلب ملخص الإحصائيات.'**
+  String get stats_error_summary_fetch;
+
+  /// No description provided for @stats_error_today_fetch.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ في جلب إحصائيات اليوم.'**
+  String get stats_error_today_fetch;
+
+  /// No description provided for @stats_error_filtered_fetch.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل جلب الإحصائيات المفلترة.'**
+  String get stats_error_filtered_fetch;
+
+  /// No description provided for @stats_error_init_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تهيئة الإحصائيات.'**
+  String get stats_error_init_failed;
+
   /// No description provided for @wallet_error_create_failed.
   ///
   /// In ar, this message translates to:
