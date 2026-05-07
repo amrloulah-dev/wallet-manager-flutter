@@ -67,6 +67,7 @@ class _OverlayContentState extends State<_OverlayContent> {
   late OverlayProvider _provider;
   late FocusNode _commissionFocusNode;
   StreamSubscription? _overlaySubscription;
+  Timer? _focusTimer;
 
   @override
   void initState() {
@@ -86,7 +87,7 @@ class _OverlayContentState extends State<_OverlayContent> {
         }
       });
 
-      Future.delayed(const Duration(milliseconds: 300), () {
+      _focusTimer = Timer(const Duration(milliseconds: 300), () {
         if (mounted) {
           _commissionFocusNode.requestFocus();
         }
@@ -97,6 +98,7 @@ class _OverlayContentState extends State<_OverlayContent> {
   @override
   void dispose() {
     _overlaySubscription?.cancel();
+    _focusTimer?.cancel();
     _commissionFocusNode.dispose();
     super.dispose();
   }
@@ -215,7 +217,14 @@ class _ErrorListener extends StatelessWidget {
           
           WidgetsBinding.instance.addPostFrameCallback((_) {
             String displayError = provider.errorMessage!;
-            if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
+            // 1. Check for raw keys from OverlayProvider
+            if (displayError == 'pleaseSelectWallet') {
+              displayError = l10n.pleaseSelectWallet;
+            } else if (displayError == 'authErrorRelogin') {
+              displayError = l10n.authErrorRelogin;
+            } 
+            // 2. Check for legacy hardcoded Arabic from repository/models
+            else if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
                displayError = l10n.transactionExceedsLimitWarning;
             } else if (displayError == 'Please select a wallet') {
                displayError = l10n.pleaseSelectWallet;

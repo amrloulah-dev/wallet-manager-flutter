@@ -211,13 +211,13 @@ class OverlayProvider extends SafeChangeNotifier {
 
   Future<void> submitTransaction() async {
     if (_selectedWalletId == null) {
-      _errorMessage = 'Please select a wallet';
+      _errorMessage = 'pleaseSelectWallet';
       _guardedNotify();
       return;
     }
 
     if (_cachedUserId == null || _cachedStoreId == null) {
-      _errorMessage = 'Session invalid. Please login again inside the app.';
+      _errorMessage = 'authErrorRelogin';
       _guardedNotify();
       return;
     }
