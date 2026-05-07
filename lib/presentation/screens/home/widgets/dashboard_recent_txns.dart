@@ -32,70 +32,60 @@ class DashboardRecentTxns extends StatelessWidget {
             next.recentFive.map((t) => t.transactionId).toList(),
           ),
       builder: (context, data, child) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 24),
-              SectionHeader(
-                title: l10n.recentTransactions,
-                actionText: l10n.viewAll,
-                onActionTap: () {
-                  final user = context.read<AuthProvider>().currentUser;
-                  if (user != null &&
-                      (user.role == UserRole.owner || // ENUM refactor
-                          user.hasPermission((p) => p.createTransaction) ||
-                          user.hasPermission((p) => p.viewAllTransactions))) {
-                    Navigator.pushNamed(
-                        context, RouteConstants.todayTransactions);
-                  } else {
-                    ToastUtils.showError(
-                        l10n.accessDenied);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              if (data.isLoading)
-                const SkeletonList(itemCount: 2, itemHeight: 80)
-              else if (data.recentFive.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Text(
-                    l10n.noTransactionsToday,
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: data.recentFive.length,
-                  itemBuilder: (context, index) {
-                    final transaction = data.recentFive[index];
-                    return TransactionCard(
-                      key: ValueKey('recent_tx_${transaction.transactionId}'),
-                      transaction: transaction,
-                      onTap: () {
-                        final user = context.read<AuthProvider>().currentUser;
-                        if (user != null &&
-                            user.hasPermission((p) => p.viewAllTransactions)) {
-                          Navigator.pushNamed(
-                            context,
-                            RouteConstants.transactionDetails,
-                            arguments: transaction.transactionId,
-                          );
-                        } else {
-                          ToastUtils.showError(
-                              l10n.noPermissionViewTransactionDetails);
-                        }
-                      },
-                    );
-                  },
-                ),
-            ],
+        final List<Widget> children = [
+          const SizedBox(height: 24),
+          SectionHeader(
+            title: l10n.recentTransactions,
+            actionText: l10n.viewAll,
+            onActionTap: () {
+              final user = context.read<AuthProvider>().currentUser;
+              if (user != null &&
+                  (user.role == UserRole.owner || // ENUM refactor
+                      user.hasPermission((p) => p.createTransaction) ||
+                      user.hasPermission((p) => p.viewAllTransactions))) {
+                Navigator.pushNamed(context, RouteConstants.todayTransactions);
+              } else {
+                ToastUtils.showError(l10n.accessDenied);
+              }
+            },
           ),
+          const SizedBox(height: 12),
+        ];
+
+        if (data.isLoading) {
+          children.add(const SkeletonList(itemCount: 2, itemHeight: 80));
+        } else if (data.recentFive.isEmpty) {
+          children.add(Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Text(
+              l10n.noTransactionsToday,
+              style: AppTextStyles.bodyMedium,
+            ),
+          ));
+        } else {
+          children.addAll(data.recentFive.map((transaction) {
+            return TransactionCard(
+              key: ValueKey('recent_tx_${transaction.transactionId}'),
+              transaction: transaction,
+              onTap: () {
+                final user = context.read<AuthProvider>().currentUser;
+                if (user != null &&
+                    user.hasPermission((p) => p.viewAllTransactions)) {
+                  Navigator.pushNamed(
+                    context,
+                    RouteConstants.transactionDetails,
+                    arguments: transaction.transactionId,
+                  );
+                } else {
+                  ToastUtils.showError(l10n.noPermissionViewTransactionDetails);
+                }
+              },
+            );
+          }));
+        }
+
+        return SliverList(
+          delegate: SliverChildListDelegate(children),
         );
       },
     );

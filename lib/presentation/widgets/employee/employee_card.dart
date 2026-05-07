@@ -27,20 +27,22 @@ class EmployeeCard extends StatelessWidget {
     return Selector<EmployeeProvider, bool>(
       selector: (_, provider) => provider.isEmployeeFrozen(employee),
       builder: (context, isFrozen, child) {
+        final double alphaScale = isFrozen ? 0.5 : 1.0;
+
         Widget cardContent = Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.surface(context)
-                : AppColors.surface(context).withAlpha((0.5 * 255).round()),
+                : AppColors.surface(context).withAlpha((0.5 * alphaScale * 255).round()),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.primary.withAlpha((0.1 * 255).round()),
+              color: AppColors.primary.withAlpha((0.1 * alphaScale * 255).round()),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow.withAlpha((0.05 * 255).round()),
+                color: AppColors.shadow.withAlpha((0.05 * alphaScale * 255).round()),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -62,13 +64,13 @@ class EmployeeCard extends StatelessWidget {
                     CircleAvatar(
                       radius: 24,
                       backgroundColor:
-                          AppColors.primary.withAlpha((0.1 * 255).round()),
+                          AppColors.primary.withAlpha((0.1 * alphaScale * 255).round()),
                       child: Text(
                         employee.fullName.isNotEmpty
                             ? employee.fullName[0].toUpperCase()
                             : 'E',
                         style: AppTextStyles.h3.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.primary.withAlpha((alphaScale * 255).round()),
                           fontSize: 18,
                         ),
                       ),
@@ -84,6 +86,7 @@ class EmployeeCard extends StatelessWidget {
                             employee.fullName,
                             style: AppTextStyles.bodyLarge.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyLarge?.color?.withAlpha((alphaScale * 255).round()),
                               decoration:
                                   isActive ? null : TextDecoration.lineThrough,
                             ),
@@ -92,7 +95,7 @@ class EmployeeCard extends StatelessWidget {
                           Text(
                             employee.phone ?? employee.email ?? l10n.notAvailable,
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary(context),
+                              color: AppColors.textSecondary(context).withAlpha((alphaScale * 255).round()),
                               decoration:
                                   isActive ? null : TextDecoration.lineThrough,
                             ),
@@ -130,8 +133,8 @@ class EmployeeCard extends StatelessWidget {
                     if (onDelete != null) ...[
                       const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: AppColors.error, size: 20),
+                        icon: Icon(Icons.delete_outline,
+                            color: AppColors.error.withAlpha((alphaScale * 255).round()), size: 20),
                         onPressed: onDelete,
                         tooltip: l10n.deactivate,
                         padding: EdgeInsets.zero,
@@ -144,7 +147,7 @@ class EmployeeCard extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 16,
-                        color: AppColors.primary.withAlpha((0.5 * 255).round()),
+                        color: AppColors.primary.withAlpha((0.5 * alphaScale * 255).round()),
                       ),
                     ],
                   ],
@@ -157,10 +160,7 @@ class EmployeeCard extends StatelessWidget {
         return Stack(
           alignment: Alignment.center,
           children: [
-            Opacity(
-              opacity: isFrozen ? 0.5 : 1.0,
-              child: cardContent,
-            ),
+            cardContent,
             if (isFrozen)
               const Positioned(
                 child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),

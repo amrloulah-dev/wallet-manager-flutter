@@ -46,28 +46,25 @@ class WalletCard extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Opacity(
-                opacity: isFrozen ? 0.5 : 1.0,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(context, reactiveWallet, isFrozen),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(context, reactiveWallet, isFrozen),
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 12),
+                    _buildLimits(context, reactiveWallet, isFrozen),
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 12),
+                    _buildStats(context, reactiveWallet, isFrozen),
+                    if (onEdit != null || onDelete != null) ...[
                       const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      _buildLimits(context, reactiveWallet),
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      _buildStats(context, reactiveWallet),
-                      if (onEdit != null || onDelete != null) ...[
-                        const SizedBox(height: 12),
-                        _buildActions(context, isFrozen),
-                      ]
-                    ],
-                  ),
+                      _buildActions(context, isFrozen),
+                    ]
+                  ],
                 ),
               ),
               if (isFrozen)
@@ -83,10 +80,12 @@ class WalletCard extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
     final l10n = AppLocalizations.of(context)!;
+    final primaryColor = isFrozen ? Colors.grey : AppColors.primary;
+    final textColor = isFrozen ? Colors.grey : null;
+
     return Row(
       children: [
-        Icon(wallet.walletTypeIcon,
-            size: 32, color: isFrozen ? Colors.grey : AppColors.primary),
+        Icon(wallet.walletTypeIcon, size: 32, color: primaryColor),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -95,15 +94,17 @@ class WalletCard extends StatelessWidget {
               Text(
                 NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
                 style: AppTextStyles.h3.copyWith(
-                  color: isFrozen ? Colors.grey : null,
+                  color: textColor,
                   decoration: isFrozen ? TextDecoration.lineThrough : null,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 wallet.walletTypeDisplayName,
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary(context)),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary(context)
+                      .withAlpha(isFrozen ? 128 : 255),
+                ),
               ),
             ],
           ),
@@ -155,7 +156,7 @@ class WalletCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLimits(BuildContext context, WalletModel wallet) {
+  Widget _buildLimits(BuildContext context, WalletModel wallet, bool isFrozen) {
     final l10n = AppLocalizations.of(context)!;
     final sendLimits = wallet.getLimits();
     final receiveLimits = wallet.getReceiveLimits();
@@ -168,7 +169,7 @@ class WalletCard extends StatelessWidget {
           used: sendLimits.dailyUsed,
           limit: sendLimits.dailyLimit,
           percentage: sendLimits.dailyPercentage,
-          warningLevel: wallet.sendDailyWarningLevel,
+          warningLevel: isFrozen ? 'grey' : wallet.sendDailyWarningLevel,
         ),
         const SizedBox(height: 8),
         WalletLimitBar(
@@ -176,15 +177,19 @@ class WalletCard extends StatelessWidget {
           used: receiveLimits.dailyUsed,
           limit: receiveLimits.dailyLimit,
           percentage: receiveLimits.dailyPercentage,
-          warningLevel:
-              'green', // This should be calculated in the model ideally
+          warningLevel: isFrozen ? 'grey' : 'green',
         ),
       ],
     );
   }
 
-  Widget _buildStats(BuildContext context, WalletModel wallet) {
+  Widget _buildStats(BuildContext context, WalletModel wallet, bool isFrozen) {
     final l10n = AppLocalizations.of(context)!;
+    final iconColor = isFrozen ? Colors.grey : AppColors.primary;
+    final secondaryIconColor = isFrozen ? Colors.grey : AppColors.textSecondary(context);
+    final valueColor = isFrozen ? Colors.grey : AppColors.primary;
+    final commissionColor = isFrozen ? Colors.grey : AppColors.success;
+
     return Column(
       children: [
         Row(
@@ -192,16 +197,22 @@ class WalletCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.account_balance_wallet_outlined,
-                    size: 16, color: AppColors.primary),
+                Icon(Icons.account_balance_wallet_outlined,
+                    size: 16, color: iconColor),
                 const SizedBox(width: 4),
-                Text(l10n.currentBalance, style: AppTextStyles.bodySmall),
+                Text(l10n.currentBalance,
+                    style: AppTextStyles.bodySmall.copyWith(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.color
+                            ?.withAlpha(isFrozen ? 128 : 255))),
               ],
             ),
             Text(
               NumberFormatter.formatAmount(wallet.balance),
               style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary, fontWeight: FontWeight.bold),
+                  color: valueColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -211,24 +222,26 @@ class WalletCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.swap_horiz,
-                    size: 16, color: AppColors.textSecondary(context)),
+                Icon(Icons.swap_horiz, size: 16, color: secondaryIconColor),
                 const SizedBox(width: 4),
                 Text(
                   '${l10n.transactions}: ${NumberFormatter.formatNumber(wallet.stats.totalTransactions)}',
-                  style: AppTextStyles.bodySmall,
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.color
+                          ?.withAlpha(isFrozen ? 128 : 255)),
                 ),
               ],
             ),
             Row(
               children: [
-                Icon(Icons.attach_money,
-                    size: 16, color: AppColors.textSecondary(context)),
+                Icon(Icons.attach_money, size: 16, color: secondaryIconColor),
                 const SizedBox(width: 4),
                 Text(
                   '${l10n.commission}: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.success),
+                  style: AppTextStyles.bodySmall.copyWith(color: commissionColor),
                 ),
               ],
             ),

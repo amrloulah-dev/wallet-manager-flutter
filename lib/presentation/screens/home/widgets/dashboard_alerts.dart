@@ -34,7 +34,7 @@ class DashboardAlerts extends StatelessWidget {
           ),
       builder: (context, walletData, child) {
         if (walletData.isLoading) {
-          return const SkeletonCard(height: 80);
+          return const SliverToBoxAdapter(child: SkeletonCard(height: 80));
         }
 
         return Selector<DebtProvider, int>(
@@ -89,24 +89,19 @@ class DashboardAlerts extends StatelessWidget {
             }
 
             if (alerts.isEmpty) {
-              return const SizedBox.shrink();
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
             }
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 24),
-                  SectionHeader(title: AppLocalizations.of(context)!.alerts),
-                  const SizedBox(height: 12),
-                  ...alerts.map((alert) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: alert,
-                      )),
-                ],
-              ),
+            return SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 24),
+                SectionHeader(title: AppLocalizations.of(context)!.alerts),
+                const SizedBox(height: 12),
+                ...alerts.map((alert) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: alert,
+                    )),
+              ]),
             );
           },
         );

@@ -32,6 +32,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
   late VoidCallback _subListener;
   late SubscriptionProvider _subscriptionProvider;
   bool _isInitialized = false;
+  bool _isListenerAdded = false;
 
   @override
   void initState() {
@@ -52,18 +53,22 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
 
   @override
   void dispose() {
-    _subscriptionProvider.removeListener(_subListener);
+    if (_isListenerAdded) {
+      _subscriptionProvider.removeListener(_subListener);
+      _isListenerAdded = false;
+    }
     super.dispose();
   }
 
   /// H010: Check if SubscriptionProvider signals an unseen payment success.
   /// Shows the PaymentSuccessModal and marks it as seen so it won't fire again.
   void _checkPaymentSuccessModal() {
-    if (!mounted) return;
+    if (!mounted || _isListenerAdded) return;
     // Initial check
     _maybeShowSuccessModal(_subscriptionProvider);
     // Ongoing listener for real-time transitions
     _subscriptionProvider.addListener(_subListener);
+    _isListenerAdded = true;
   }
 
   void _maybeShowSuccessModal(SubscriptionProvider subProvider) {
@@ -140,29 +145,31 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
           drawer: const AppDrawer(),
           body: RefreshIndicator(
             onRefresh: _refreshData,
-            child: SingleChildScrollView(
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const DashboardWelcomeHeader(),
-                  const SubscriptionBanner(),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        DashboardQuickStats(),
-                        SizedBox(height: 24),
-                        DashboardQuickActions(),
-                        SizedBox(height: 24),
-                        DashboardAlerts(),
-                        DashboardRecentTxns(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              slivers: [
+                const SliverToBoxAdapter(child: DashboardWelcomeHeader()),
+                const SliverToBoxAdapter(child: SubscriptionBanner()),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: DashboardQuickStats(),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: DashboardQuickActions(),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: DashboardAlerts(),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  sliver: DashboardRecentTxns(),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(bottom: 80),
+                ),
+              ],
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
