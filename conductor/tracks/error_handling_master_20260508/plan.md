@@ -1,7 +1,7 @@
 # Implementation Plan: Error Handling Master Blueprint
 
 ## Phase 1: Surgical Fixes - Error Propagation & Architecture
-- [ ] Task: AuthProvider Overhaul
+- [x] Task: AuthProvider Overhaul [6baa4e6]
     - [ ] Write failing test for `AuthProvider` error propagation
     - [ ] Update 9 methods in `auth_provider.dart` to use `catch (e, stack)` and forward to `setError(code, e, stack)`
     - [ ] Ensure no `rethrow` is used in these methods
