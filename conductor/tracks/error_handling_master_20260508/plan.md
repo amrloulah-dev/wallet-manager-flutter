@@ -10,7 +10,7 @@
     - [ ] Write failing test for `EmployeeProvider` error propagation
     - [ ] Add generic `catch (e, stack)` fallback to `deactivateEmployee` and `resetEmployeePIN` in `employee_provider.dart`
     - [ ] Update `_listenToEmployees` stream `onError: (error)` to `onError: (error, stack)` and forward both
-- [ ] Task: Infinite Loading Fixes
+- [x] Task: Infinite Loading Fixes [2e5284d]
     - [ ] Write failing test for loading states
     - [ ] Ensure `_isLoading = false` (or equivalent) is strictly inside `finally` blocks for `StoreRegistrationScreen`, `EmployeeLoginScreen`, `LoginLandingScreen`, and `AuthProvider.findStoreByEmail`
     - [ ] Fix broken `.handleError` callback in `WalletRepository.watchWallet`
