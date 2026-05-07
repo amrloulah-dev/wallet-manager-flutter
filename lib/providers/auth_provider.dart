@@ -160,7 +160,8 @@ class AuthProvider extends BaseProvider {
     try {
       final result = await _databaseSyncService.tryAutoLogin();
       _applySessionResult(result);
-    } catch (e) {
+    } catch (e, stack) {
+      setError('auth_error_auto_login_failed', e, stack);
       await logout();
       _setStatus(AuthStatus.unauthenticated);
     }
@@ -178,7 +179,8 @@ class AuthProvider extends BaseProvider {
       );
       _applySessionResult(result);
       return result.store.storeId;
-    } catch (e) {
+    } catch (e, stack) {
+      setError('auth_error_registration_failed', e, stack);
       await logout();
       throw e is AppException ? e : ServerException('auth_error_unexpected');
     }
@@ -202,7 +204,8 @@ class AuthProvider extends BaseProvider {
       );
       _applySessionResult(result);
       return result.store.storeId;
-    } catch (e) {
+    } catch (e, stack) {
+      setError('auth_error_registration_failed', e, stack);
       await logout();
       if (e is EmailAlreadyInUseException || e is WeakPasswordException) {
         rethrow;
@@ -218,8 +221,8 @@ class AuthProvider extends BaseProvider {
           await _databaseSyncService.loginOwnerWithEmail(email, password);
       _applySessionResult(result);
       return true;
-    } catch (e) {
-      setError('auth_error_login_failed');
+    } catch (e, stack) {
+      setError('auth_error_login_failed', e, stack);
       await logout();
       rethrow;
     }
@@ -232,9 +235,11 @@ class AuthProvider extends BaseProvider {
           await _databaseSyncService.loginAsEmployee(employee, store);
       _applySessionResult(result);
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       setError(
-          e is AppException ? e.message : 'auth_error_employee_login_failed');
+          e is AppException ? e.message : 'auth_error_employee_login_failed',
+          e,
+          stack);
       await logout();
       return false;
     } finally {
@@ -252,9 +257,11 @@ class AuthProvider extends BaseProvider {
       if (store == null) throw AuthException('auth_error_store_not_found');
       _setStatus(AuthStatus.idle);
       return store;
-    } catch (e) {
+    } catch (e, stack) {
       setError(
-          e is AppException ? e.message : 'auth_error_store_lookup_failed');
+          e is AppException ? e.message : 'auth_error_store_lookup_failed',
+          e,
+          stack);
       return null;
     }
   }
@@ -270,7 +277,8 @@ class AuthProvider extends BaseProvider {
         _applySessionResult(result);
         return true;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      setError('auth_error_google_login_failed', e, stack);
       await logout();
       _setStatus(AuthStatus.unauthenticated);
       return false;
@@ -287,9 +295,11 @@ class AuthProvider extends BaseProvider {
       } else {
         throw InvalidCredentialsException();
       }
-    } catch (e) {
+    } catch (e, stack) {
       setError(
-          e is AppException ? e.message : 'auth_error_invalid_store_password');
+          e is AppException ? e.message : 'auth_error_invalid_store_password',
+          e,
+          stack);
       return null;
     }
   }
@@ -300,10 +310,13 @@ class AuthProvider extends BaseProvider {
       final result =
           await _databaseSyncService.finalizeEmployeeSession(employee);
       _applySessionResult(result);
-    } catch (e) {
-      setError(e is AppException
-          ? e.message
-          : 'Failed to finalize employee session.');
+    } catch (e, stack) {
+      setError(
+          e is AppException
+              ? e.message
+              : 'Failed to finalize employee session.',
+          e,
+          stack);
       _setStatus(AuthStatus.idle);
     }
   }
@@ -311,8 +324,9 @@ class AuthProvider extends BaseProvider {
   Future<void> activateNewLicense(String newKey) async {
     _setStatus(AuthStatus.loading);
     try {
-      if (_currentStore == null)
+      if (_currentStore == null) {
         throw AuthException('auth_error_store_not_active');
+      }
       final keyData = await _licenseKeyRepository.verifyLicenseKey(newKey);
       if (keyData == null) throw AuthException('auth_error_invalid_key');
       if (keyData.isUsed) throw AuthException('auth_error_key_already_used');
@@ -326,9 +340,10 @@ class AuthProvider extends BaseProvider {
       AnalyticsService.logLicenseUpgraded(
           _currentStore?.subscription.planId.name ?? 'premium');
       _setStatus(AuthStatus.idle);
-    } catch (e) {
+    } catch (e, stack) {
       _setStatus(AuthStatus.idle);
-      setError(e is AppException ? e.message : 'auth_operation_failed');
+      setError(e is AppException ? e.message : 'auth_operation_failed', e,
+          stack);
       rethrow;
     }
   }
@@ -357,8 +372,8 @@ class AuthProvider extends BaseProvider {
         _currentUser = await _userRepository.getUserById(_currentUser!.userId);
         _currentStore =
             await _storeRepository.getStoreById(_currentStore!.storeId);
-      } catch (e) {
-        setError('auth_error_update_failed');
+      } catch (e, stack) {
+        setError('auth_error_update_failed', e, stack);
       } finally {
         safeNotify();
       }
@@ -371,12 +386,16 @@ class AuthProvider extends BaseProvider {
     double? incrementCommission,
     int? incrementDebts,
   }) async {
-    await _userRepository.updateEmployeeStats(
-      userId: userId,
-      incrementTransactions: incrementTransactions,
-      incrementCommission: incrementCommission,
-      incrementDebts: incrementDebts,
-    );
+    try {
+      await _userRepository.updateEmployeeStats(
+        userId: userId,
+        incrementTransactions: incrementTransactions,
+        incrementCommission: incrementCommission,
+        incrementDebts: incrementDebts,
+      );
+    } catch (e, stack) {
+      setError('auth_error_update_stats_failed', e, stack);
+    }
   }
 
   void _setStatus(AuthStatus status) {
