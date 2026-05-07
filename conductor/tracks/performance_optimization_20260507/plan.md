@@ -36,4 +36,7 @@
 - [x] Task: Global Audit - Scan for private helper methods returning Widgets and convert them to `StatelessWidget`s. 1cfae30
 - [x] Task: Replace hardcoded Arabic error strings in `statistics_provider.dart` with `l10n` localization keys. 1cfae30
 - [x] Task: Cache `ThemeData.light()` as a `static final` constant in `transaction_overlay_screen.dart`. 1cfae30
-- [~] Task: Conductor - User Manual Verification 'Tech Debt & L10n' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Tech Debt & L10n' (Protocol in workflow.md)
+
+---
+**Track Complete** 1cfae30
