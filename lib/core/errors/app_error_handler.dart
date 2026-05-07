@@ -81,7 +81,7 @@ class AppErrorHandler {
         severity: ErrorSeverity.critical,
         operation: 'platform_dispatcher_error',
       );
-      return true;
+      return false;
     };
   }
 

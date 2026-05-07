@@ -258,7 +258,15 @@ Future<void> handleIncomingSms(
     // If the device is sleeping/locked, SYSTEM_ALERT_WINDOW
     // can't render. This fullScreenIntent notification forces
     // the screen on and gives the overlay a chance to appear.
-    await _showWakeUpNotification(dto.amount);
+    try {
+      await _showWakeUpNotification(dto.amount);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+        'Failed to show wake-up notification: $e',
+        'SMS_Pipeline_WakeUp',
+        stackTrace: stack,
+      );
+    }
 
     // ── Trigger Overlay ─────────────────────────────────────
     final bool isGranted = await FlutterOverlayWindow.isPermissionGranted();
