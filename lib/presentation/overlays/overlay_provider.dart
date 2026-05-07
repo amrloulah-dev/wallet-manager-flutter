@@ -83,7 +83,7 @@ class OverlayProvider extends SafeChangeNotifier {
 
     _amount = NumberParser.toDouble(data['amount']);
     _sender = data['sender']?.toString() ?? 'Unknown';
-    _type   = data['type']?.toString()   ?? 'credit';
+    _type = data['type']?.toString() ?? 'credit';
 
     if (kDebugMode) {
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
@@ -91,7 +91,7 @@ class OverlayProvider extends SafeChangeNotifier {
     }
 
     _isLoading = true;
-    
+
     _blockAutoFetch = false;
     _guardedNotify();
     _blockAutoFetch = true;
@@ -110,15 +110,18 @@ class OverlayProvider extends SafeChangeNotifier {
       _cachedUserName = _localStorageService.userName;
       _cachedUserRole = _localStorageService.userRole;
 
-      if (_localStorageService.subIsSuspended || !_localStorageService.subSmsEnabled) {
+      if (_localStorageService.subIsSuspended ||
+          !_localStorageService.subSmsEnabled) {
         if (kDebugMode) {
-          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: SMS gating failed. Aborting overlay.');
+          debugPrint(
+              '🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: SMS gating failed. Aborting overlay.');
         }
         await FlutterOverlayWindow.closeOverlay();
         return;
       }
 
-      _availableWallets = LocalStorageService.instance.getCachedWalletLiteList();
+      _availableWallets =
+          LocalStorageService.instance.getCachedWalletLiteList();
 
       String? passedId = data['walletId']?.toString();
       if (passedId != null && passedId.trim().isEmpty) passedId = null;
@@ -127,8 +130,10 @@ class OverlayProvider extends SafeChangeNotifier {
 
       if (exists) {
         _selectedWalletId = passedId;
-        final selectedWallet = _availableWallets.firstWhere((w) => w['id'] == passedId);
-        final walletType = selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
+        final selectedWallet =
+            _availableWallets.firstWhere((w) => w['id'] == passedId);
+        final walletType =
+            selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
         _commission = FeeCalculator.calculateTransactionFee(
           amount: _amount,
           sourceWalletType: walletType,
@@ -141,8 +146,13 @@ class OverlayProvider extends SafeChangeNotifier {
         }
 
         final isInstaPay = walletType == 'instapay';
-        final isTelecom = ['vodafone_cash', 'orange_cash', 'etisalat_cash', 'we_pay'].contains(walletType);
-        
+        final isTelecom = [
+          'vodafone_cash',
+          'orange_cash',
+          'etisalat_cash',
+          'we_pay'
+        ].contains(walletType);
+
         if (isInstaPay && _amount > 70000) {
           _errorMessage = "overlay_error_amount_limit_instapay";
         } else if (isTelecom && _amount > 60000) {
@@ -153,7 +163,6 @@ class OverlayProvider extends SafeChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Failed to load data: $e';
-
     } finally {
       _isLoading = false;
       _blockAutoFetch = false;
@@ -240,7 +249,8 @@ class OverlayProvider extends SafeChangeNotifier {
         availableWallets: _availableWallets,
       );
 
-      final SendPort? sendPort = IsolateNameServer.lookupPortByName('main_app_port');
+      final SendPort? sendPort =
+          IsolateNameServer.lookupPortByName('main_app_port');
       if (sendPort != null) {
         sendPort.send('update_ui');
         if (kDebugMode) {
@@ -259,10 +269,10 @@ class OverlayProvider extends SafeChangeNotifier {
             'shareData(local_deduct) → walletId=$_selectedWalletId, '
             'deduction=${result.totalDeduction}, isSend=${result.isSend}');
       }
-      
+
       _isLoading = false;
       _guardedNotify();
-      
+
       FlutterOverlayWindow.shareData({
         "action": "local_deduct",
         "walletId": _selectedWalletId,
@@ -276,7 +286,6 @@ class OverlayProvider extends SafeChangeNotifier {
             'closing overlay window ...');
       }
       await FlutterOverlayWindow.closeOverlay();
-
     } catch (e) {
       _errorMessage = e.toString();
       if (kDebugMode) {
@@ -292,7 +301,8 @@ class OverlayProvider extends SafeChangeNotifier {
   @override
   void dispose() {
     if (kDebugMode) {
-      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> dispose(): Cleaning up overlay provider resources.');
+      debugPrint(
+          '🔥 [TX_FLOW] [overlay_provider] -> dispose(): Cleaning up overlay provider resources.');
     }
     // Any future StreamSubscriptions or Timers specific to OverlayProvider MUST be cancelled here.
     super.dispose();

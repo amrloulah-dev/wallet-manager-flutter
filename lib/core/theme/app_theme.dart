@@ -133,7 +133,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: AppColors.dark.surface,
       elevation: 2,
-      shadowColor: Color.fromARGB((0.4 * 255).round(), 0, 0, 0),
+      shadowColor: Color.fromARGB(102, 0, 0, 0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

@@ -109,7 +109,8 @@ class UserRepository {
   }
 
   /// Fetches all active users for a given store ID.
-  Future<List<UserModel>> getUsersByStoreId(String storeId, {int limit = 20}) async {
+  Future<List<UserModel>> getUsersByStoreId(String storeId,
+      {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -130,7 +131,8 @@ class UserRepository {
   }
 
   /// Fetches all active employees for a given store ID, ordered by name.
-  Future<List<UserModel>> getEmployeesByStoreId(String storeId, {int limit = 20}) async {
+  Future<List<UserModel>> getEmployeesByStoreId(String storeId,
+      {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)

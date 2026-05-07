@@ -35,7 +35,8 @@ class StatsRepository {
   Future<DailyStatsModel> fetchTodayStats(String storeId) async {
     try {
       final todayDate = DateHelper.getCurrentDateString();
-      final docRef = _firestore.doc(FirebaseConstants.dailyStatsPath(storeId, todayDate));
+      final docRef =
+          _firestore.doc(FirebaseConstants.dailyStatsPath(storeId, todayDate));
 
       final doc = await docRef.get();
       if (doc.exists) {
@@ -83,11 +84,13 @@ class StatsRepository {
 
   Future<StatsSummaryModel> initializeStats(String storeId) async {
     final summary = StatsSummaryModel.empty();
-    await _getSummaryDocRef(storeId).set(summary.toMap(), SetOptions(merge: true));
+    await _getSummaryDocRef(storeId)
+        .set(summary.toMap(), SetOptions(merge: true));
     return summary;
   }
 
-  Future<void> incrementOpenDebtStats(String storeId, double amount, {Transaction? firestoreTransaction}) async {
+  Future<void> incrementOpenDebtStats(String storeId, double amount,
+      {Transaction? firestoreTransaction}) async {
     AmountValidator.ensurePositive(amount);
     final docRef = _getSummaryDocRef(storeId);
     final Map<String, dynamic> updates = {
@@ -95,7 +98,7 @@ class StatsRepository {
       'totalOpenAmount': FieldValue.increment(amount),
       'lastUpdated': FieldValue.serverTimestamp(),
     };
-    
+
     if (firestoreTransaction != null) {
       firestoreTransaction.update(docRef, updates);
     } else {
@@ -153,12 +156,14 @@ class StatsRepository {
       // --- Handle Status Changes ---
       if (wasOpen && isNowPaid) {
         // Open -> Paid (Full Payment)
-        updates['openDebtsCount'] = currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
+        updates['openDebtsCount'] =
+            currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
         updates['paidDebtsCount'] = FieldValue.increment(1);
       } else if (wasPaid && isNowOpen) {
         // Paid -> Open (Re-opening a paid debt)
         updates['openDebtsCount'] = FieldValue.increment(1);
-        updates['paidDebtsCount'] = currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
+        updates['paidDebtsCount'] =
+            currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
       }
     }
 
@@ -190,7 +195,8 @@ class StatsRepository {
       }
 
       if (activeCountChange != 0) {
-        summaryUpdates['activeWallets'] = FieldValue.increment(activeCountChange);
+        summaryUpdates['activeWallets'] =
+            FieldValue.increment(activeCountChange);
       }
 
       if (balanceChange != 0.0) {

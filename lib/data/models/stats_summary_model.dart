@@ -93,7 +93,8 @@ class StatsSummaryModel {
       activeWallets: NumberParser.toInt(data['activeWallets']),
       totalBalance: NumberParser.toDouble(data['totalBalance']),
       totalTransactions: NumberParser.toInt(data['totalTransactions']),
-      totalTransactionsToday: NumberParser.toInt(data['totalTransactionsToday']),
+      totalTransactionsToday:
+          NumberParser.toInt(data['totalTransactionsToday']),
       totalSentAmount: NumberParser.toDouble(data['totalSentAmount']),
       totalReceivedAmount: NumberParser.toDouble(data['totalReceivedAmount']),
       sendCount: NumberParser.toInt(data['sendCount']),
@@ -130,7 +131,8 @@ class StatsSummaryModel {
       'paidDebtsCount': paidDebtsCount,
       'totalOpenAmount': totalOpenAmount,
       'totalPaidAmount': totalPaidAmount,
-      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'lastUpdated':
+          lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
 
@@ -159,7 +161,8 @@ class StatsSummaryModel {
       activeWallets: activeWallets ?? this.activeWallets,
       totalBalance: totalBalance ?? this.totalBalance,
       totalTransactions: totalTransactions ?? this.totalTransactions,
-      totalTransactionsToday: totalTransactionsToday ?? this.totalTransactionsToday,
+      totalTransactionsToday:
+          totalTransactionsToday ?? this.totalTransactionsToday,
       totalSentAmount: totalSentAmount ?? this.totalSentAmount,
       totalReceivedAmount: totalReceivedAmount ?? this.totalReceivedAmount,
       sendCount: sendCount ?? this.sendCount,

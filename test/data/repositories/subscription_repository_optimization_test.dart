@@ -7,6 +7,7 @@ import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/data/repositories/subscription_repository.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockUser extends Mock implements User {}
 
 void main() {
@@ -32,7 +33,8 @@ void main() {
   });
 
   group('TOCTOU Registration Race (TDD)', () {
-    test('verifyDevice should create a registration with server timestamps', () async {
+    test('verifyDevice should create a registration with server timestamps',
+        () async {
       // ACT
       await repository.verifyDevice(storeId);
 
@@ -42,7 +44,7 @@ void main() {
           .doc(storeId)
           .collection('device_registrations')
           .get();
-      
+
       expect(registrations.docs.length, 1);
       final data = registrations.docs.first.data();
       expect(data[FirebaseConstants.firstSeenAt], isNotNull);
@@ -52,13 +54,13 @@ void main() {
 
     test('verifyDevice should update existing registration', () async {
       // ARRANGE
-      final deviceId = 'unsupported_device_type'; 
+      final deviceId = 'unsupported_device_type';
       final docRef = fakeFirestore
           .collection('stores')
           .doc(storeId)
           .collection('device_registrations')
           .doc(deviceId);
-      
+
       final oldDate = DateTime(2020, 1, 1);
       await docRef.set({
         FirebaseConstants.firstSeenAt: oldDate,
@@ -72,8 +74,10 @@ void main() {
       // ASSERT
       final doc = await docRef.get();
       final data = doc.data()!;
-      expect((data[FirebaseConstants.firstSeenAt] as Timestamp).toDate(), oldDate); // Should not change
-      expect((data[FirebaseConstants.lastSeenAt] as Timestamp).toDate(), isNot(oldDate)); // Should be updated
+      expect((data[FirebaseConstants.firstSeenAt] as Timestamp).toDate(),
+          oldDate); // Should not change
+      expect((data[FirebaseConstants.lastSeenAt] as Timestamp).toDate(),
+          isNot(oldDate)); // Should be updated
       expect(data['ownerUid'], 'test_uid');
     });
   });

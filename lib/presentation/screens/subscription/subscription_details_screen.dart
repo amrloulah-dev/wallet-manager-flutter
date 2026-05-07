@@ -19,7 +19,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     final stats = context.select<AuthProvider, StoreStats?>(
       (p) => p.currentStore?.stats,
     );
-    
+
     if (subscription == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -27,7 +27,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     final isPro = subscription.planId == SubscriptionPlan.proYearly;
     final isLifetime = subscription.planId == SubscriptionPlan.lifetime;
     final isTrial = subscription.planId == SubscriptionPlan.trial;
-    
+
     String planName = loc.freePlan;
     if (isPro) planName = loc.proYearlyPlan;
     if (isLifetime) planName = loc.lifetimeVipPlan;
@@ -45,11 +45,13 @@ class SubscriptionDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildStatusCard(context, loc, planName, subscription, isLifetime),
+              _buildStatusCard(
+                  context, loc, planName, subscription, isLifetime),
               const SizedBox(height: 24),
               Text(
                 loc.currentUsage,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _buildLimitItem(
@@ -63,7 +65,8 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               _buildLimitItem(
                 context,
                 title: loc.employeeAccounts,
-                current: context.select<EmployeeProvider, int>((p) => p.employeesCount), // dynamic employee count
+                current: context.select<EmployeeProvider, int>(
+                    (p) => p.employeesCount), // dynamic employee count
                 max: subscription.maxEmployees,
                 icon: Icons.people,
               ),
@@ -75,7 +78,8 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const PaywallScreen()),
                       );
                     },
                     icon: const Icon(Icons.upgrade),
@@ -98,13 +102,15 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, AppLocalizations loc, String planName, StoreSubscription subscription, bool isLifetime) {
+  Widget _buildStatusCard(BuildContext context, AppLocalizations loc,
+      String planName, StoreSubscription subscription, bool isLifetime) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,14 +123,18 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  subscription.status == SubscriptionStatus.active ? loc.active : loc.suspended,
-                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  subscription.status == SubscriptionStatus.active
+                      ? loc.active
+                      : loc.suspended,
+                  style: const TextStyle(
+                      color: Colors.green, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -136,28 +146,33 @@ class SubscriptionDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (!isLifetime && subscription.endDate != null) ...[
-             const Divider(),
-             const SizedBox(height: 8),
-             Row(
-               children: [
-                 const Icon(Icons.event, size: 20, color: Colors.grey),
-                 const SizedBox(width: 8),
-                 Text(
-                   loc.expiryDateValue('${subscription.endDate!.year}-${subscription.endDate!.month.toString().padLeft(2, '0')}-${subscription.endDate!.day.toString().padLeft(2, '0')}'),
-                   style: const TextStyle(fontSize: 16),
-                 ),
-               ],
-             ),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.event, size: 20, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  loc.expiryDateValue(
+                      '${subscription.endDate!.year}-${subscription.endDate!.month.toString().padLeft(2, '0')}-${subscription.endDate!.day.toString().padLeft(2, '0')}'),
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildLimitItem(BuildContext context, {required String title, required int current, required int max, required IconData icon}) {
+  Widget _buildLimitItem(BuildContext context,
+      {required String title,
+      required int current,
+      required int max,
+      required IconData icon}) {
     final double percent = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final isMax = max == 999;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -180,12 +195,14 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               Text(
                 isMax ? '$current / ∞' : '$current / $max',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),

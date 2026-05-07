@@ -10,7 +10,7 @@ class NumberParser {
       // but ensure we only keep the first one if multiple exist.
       final isNegative = value.contains('-');
       final sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
-      
+
       // If there are multiple dots, double.tryParse will fail correctly
       final result = double.tryParse(isNegative ? '-$sanitized' : sanitized);
       return result ?? defaultValue;

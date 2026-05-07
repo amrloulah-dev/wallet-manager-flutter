@@ -25,8 +25,9 @@ class DeviceUsageModel {
     return DeviceUsageModel(
       deviceId: doc.id,
       trialCount: NumberParser.toInt(data['trialCount']),
-      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ?? 
-        (throw NotFoundException('DeviceUsage document missing required field: lastTrialDate')),
+      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'DeviceUsage document missing required field: lastTrialDate')),
       associatedStoreIds: List<String>.from(data['associatedStoreIds'] ?? []),
     );
   }

@@ -84,8 +84,7 @@ class UserModel {
 
     if (createdAt == null || lastLogin == null) {
       throw NotFoundException(
-        'User document ${doc.id} missing required audit timestamps (createdAt or lastLogin)'
-      );
+          'User document ${doc.id} missing required audit timestamps (createdAt or lastLogin)');
     }
 
     return UserModel(
@@ -104,9 +103,12 @@ class UserModel {
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       lastLogin: lastLogin,
       permissions: role == UserRole.employee
-          ? UserPermissions.fromMap(data['permissions'] as Map<String, dynamic>? ?? {})
+          ? UserPermissions.fromMap(
+              data['permissions'] as Map<String, dynamic>? ?? {})
           : null,
-      stats: role == UserRole.employee ? UserStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {}) : null,
+      stats: role == UserRole.employee
+          ? UserStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {})
+          : null,
     );
   }
 
@@ -124,7 +126,9 @@ class UserModel {
       'isActive': isActive,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'createdBy': createdBy,
-      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
+      'updatedAt': updatedAt != null
+          ? Timestamp.fromDate(updatedAt!)
+          : FieldValue.serverTimestamp(),
       'lastLogin': lastLogin != null ? Timestamp.fromDate(lastLogin!) : null,
     };
 
@@ -219,7 +223,9 @@ class UserStats {
       'totalTransactions': totalTransactions,
       'totalCommission': totalCommission,
       'totalDebtsCreated': totalDebtsCreated,
-      'lastTransactionDate': lastTransactionDate != null ? Timestamp.fromDate(lastTransactionDate!) : null,
+      'lastTransactionDate': lastTransactionDate != null
+          ? Timestamp.fromDate(lastTransactionDate!)
+          : null,
     };
   }
 

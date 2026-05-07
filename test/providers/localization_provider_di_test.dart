@@ -15,12 +15,12 @@ void main() {
 
     test('should use injected LocalStorageService', () async {
       when(() => mockStorage.savedLocale).thenReturn('en');
-      
+
       final provider = LocalizationProvider(localStorage: mockStorage);
-      
+
       // Wait for microtask in constructor to finish
       await Future.microtask(() {});
-      
+
       expect(provider.locale.languageCode, 'en');
     });
   });

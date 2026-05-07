@@ -21,7 +21,8 @@ class DashboardQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Selector<StatisticsProvider, int>(
-      selector: (context, provider) => provider.dashboardSummary?.openDebtsCount ?? 0,
+      selector: (context, provider) =>
+          provider.dashboardSummary?.openDebtsCount ?? 0,
       builder: (context, openDebtsCount, child) {
         return SliverList(
           delegate: SliverChildListDelegate([
@@ -56,7 +57,8 @@ class DashboardQuickActions extends StatelessWidget {
                           user.hasPermission((p) => p.createTransaction)) {
                         _navigateToCreateTransaction(context);
                       } else {
-                        ToastUtils.showError(l10n.noPermissionCreateTransaction);
+                        ToastUtils.showError(
+                            l10n.noPermissionCreateTransaction);
                       }
                     },
                   ),
@@ -66,7 +68,8 @@ class DashboardQuickActions extends StatelessWidget {
                     color: Colors.orange.shade700,
                     onTap: () {
                       final user = context.read<AuthProvider>().currentUser;
-                      if (user != null && user.hasPermission((p) => p.createWallet)) {
+                      if (user != null &&
+                          user.hasPermission((p) => p.createWallet)) {
                         Navigator.pushNamed(context, RouteConstants.walletForm);
                       } else {
                         ToastUtils.showError(l10n.noPermissionCreateWallet);
@@ -79,7 +82,8 @@ class DashboardQuickActions extends StatelessWidget {
                     color: AppColors.error,
                     onTap: () {
                       final user = context.read<AuthProvider>().currentUser;
-                      if (user != null && user.hasPermission((p) => p.createDebt)) {
+                      if (user != null &&
+                          user.hasPermission((p) => p.createDebt)) {
                         Navigator.pushNamed(context, RouteConstants.addDebt);
                       } else {
                         ToastUtils.showError(l10n.noPermissionCreateDebt);
@@ -92,11 +96,13 @@ class DashboardQuickActions extends StatelessWidget {
                     color: Colors.blue.shade700,
                     onTap: () {
                       final user = context.read<AuthProvider>().currentUser;
-                      final canAccess = user?.role == UserRole.owner || // ENUM refactor
-                          (user?.permissions?.viewWallets ?? false);
+                      final canAccess =
+                          user?.role == UserRole.owner || // ENUM refactor
+                              (user?.permissions?.viewWallets ?? false);
 
                       if (canAccess) {
-                        Navigator.pushNamed(context, RouteConstants.walletsList);
+                        Navigator.pushNamed(
+                            context, RouteConstants.walletsList);
                       } else {
                         ToastUtils.showError(l10n.accessDenied);
                       }
@@ -110,7 +116,8 @@ class DashboardQuickActions extends StatelessWidget {
                       final user = context.read<AuthProvider>().currentUser;
                       if (user != null &&
                           user.hasPermission((p) => p.viewDashboardStats)) {
-                        Navigator.pushNamed(context, RouteConstants.generalStatistics);
+                        Navigator.pushNamed(
+                            context, RouteConstants.generalStatistics);
                       } else {
                         ToastUtils.showError(l10n.noPermissionViewStats);
                       }
@@ -122,8 +129,9 @@ class DashboardQuickActions extends StatelessWidget {
                     color: Colors.red.shade700,
                     onTap: () {
                       final user = context.read<AuthProvider>().currentUser;
-                      final canAccess = user?.role == UserRole.owner || // ENUM refactor
-                          (user?.permissions?.viewDebts ?? false);
+                      final canAccess =
+                          user?.role == UserRole.owner || // ENUM refactor
+                              (user?.permissions?.viewDebts ?? false);
 
                       if (canAccess) {
                         Navigator.pushNamed(context, RouteConstants.debtsList);
@@ -138,8 +146,10 @@ class DashboardQuickActions extends StatelessWidget {
                     color: Colors.teal.shade700,
                     onTap: () {
                       final user = context.read<AuthProvider>().currentUser;
-                      if (user != null && user.role == UserRole.owner) { // ENUM refactor
-                        Navigator.pushNamed(context, RouteConstants.manageEmployees);
+                      if (user != null && user.role == UserRole.owner) {
+                        // ENUM refactor
+                        Navigator.pushNamed(
+                            context, RouteConstants.manageEmployees);
                       } else {
                         ToastUtils.showError(l10n.ownerOnlyFeature);
                       }
@@ -149,7 +159,8 @@ class DashboardQuickActions extends StatelessWidget {
 
                 // Calculate fixed height based on aspect ratio and rows
                 final rowCount = (actions.length / crossAxisCount).ceil();
-                final itemWidth = (width - (crossAxisCount - 1) * 10) / crossAxisCount;
+                final itemWidth =
+                    (width - (crossAxisCount - 1) * 10) / crossAxisCount;
                 final itemHeight = itemWidth / childAspectRatio;
                 final gridHeight = rowCount * itemHeight + (rowCount - 1) * 10;
 

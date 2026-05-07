@@ -1,4 +1,3 @@
-
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
@@ -44,7 +43,9 @@ class OverlayUseCase {
       await FirebaseService().initialize();
     }
 
-    TransactionType transactionType = type == 'debit' ? TransactionType.debit : TransactionType.credit; // ENUM refactor
+    TransactionType transactionType = type == 'debit'
+        ? TransactionType.debit
+        : TransactionType.credit; // ENUM refactor
     final now = DateTime.now();
     final txId = _transactionRepository.generateId();
 
@@ -53,7 +54,7 @@ class OverlayUseCase {
           orElse: () => null,
         );
     final walletType = match?['walletType']?.toString() ?? 'vodafone_cash';
-    
+
     final calculatedServiceFee = FeeCalculator.calculateTransactionFee(
       amount: amount,
       sourceWalletType: walletType,
@@ -82,8 +83,9 @@ class OverlayUseCase {
 
     await _transactionRepository.createTransaction(newTransaction);
 
-    final totalDeductionForVault = newTransaction.amount + newTransaction.serviceFee;
-    
+    final totalDeductionForVault =
+        newTransaction.amount + newTransaction.serviceFee;
+
     final txData = {
       'transactionId': txId,
       'amount': totalDeductionForVault,
@@ -100,7 +102,6 @@ class OverlayUseCase {
 
     // Unified vault storage via LocalStorageService
     await _localStorage.saveToVault(txData);
-
 
     return TransactionResult(
       txId: txId,

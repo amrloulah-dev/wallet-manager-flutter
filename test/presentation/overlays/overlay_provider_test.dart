@@ -5,13 +5,16 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
-  test('OverlayProvider.notifyListeners() should propagate errors even if _blockAutoFetch is true', () async {
+  test(
+      'OverlayProvider.notifyListeners() should propagate errors even if _blockAutoFetch is true',
+      () async {
     final mockUseCase = MockOverlayUseCase();
     final mockStorage = MockLocalStorageService();
-    
+
     final provider = OverlayProvider(
       overlayUseCase: mockUseCase,
       localStorageService: mockStorage,
@@ -24,10 +27,10 @@ void main() {
 
     // Simulate ingestNewEvent setting an error while _blockAutoFetch is active
     // We can't directly set _blockAutoFetch, so we simulate the flow in ingestNewEvent
-    
+
     when(() => mockStorage.initialize()).thenAnswer((_) async {});
     // ingestNewEvent sets _blockAutoFetch = true
-    
+
     final data = {
       'amount': 100000, // Trigger limit error
       'type': 'credit',
@@ -45,6 +48,7 @@ void main() {
 
     // After ingestNewEvent, _errorMessage should be set and UI should be notified
     expect(provider.errorMessage, isNotNull);
-    expect(notificationCount, greaterThan(0), reason: 'UI should be notified of the error');
+    expect(notificationCount, greaterThan(0),
+        reason: 'UI should be notified of the error');
   });
 }

@@ -18,20 +18,35 @@ void main() {
   });
 
   group('TransactionValidatorService (Atomic Increment Verification)', () {
-    test('wallet balance should increment atomically using FieldValue.increment', () async {
+    test(
+        'wallet balance should increment atomically using FieldValue.increment',
+        () async {
       // Setup initial state
       final walletId = 'w1';
       final storeId = 's1';
       final initialBalance = 500.0;
-      
-      await fakeFirestore.collection(FirebaseConstants.walletsCollection).doc(walletId).set({
+
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
         'walletId': walletId,
         'storeId': storeId,
         'balance': initialBalance,
         'isActive': true,
         'walletType': 'vodafoneCash',
-        'sendLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
-        'receiveLimits': {'dailyLimit': 1000.0, 'dailyUsed': 0.0, 'monthlyLimit': 5000.0, 'monthlyUsed': 0.0},
+        'sendLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
         'createdAt': Timestamp.now(),
         'lastDailyReset': Timestamp.now(),
         'lastMonthlyReset': Timestamp.now(),
@@ -58,28 +73,44 @@ void main() {
       await service.validateAndSave(txModel);
 
       // Verify final state
-      final walletSnap = await fakeFirestore.collection(FirebaseConstants.walletsCollection).doc(walletId).get();
+      final walletSnap = await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .get();
       final finalBalance = walletSnap.data()?['balance'];
-      
+
       // Note: TransactionValidatorService (Phase 1.4) for Receive uses amount only.
       // Expected: 500.0 + 100.0 = 600.0
       expect(finalBalance, initialBalance + 100.0);
     });
 
     test('isSend should decrement balance atomically', () async {
-       // Setup initial state
+      // Setup initial state
       final walletId = 'w2';
       final storeId = 's1';
       final initialBalance = 1000.0;
-      
-      await fakeFirestore.collection(FirebaseConstants.walletsCollection).doc(walletId).set({
+
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
         'walletId': walletId,
         'storeId': storeId,
         'balance': initialBalance,
         'isActive': true,
         'walletType': 'vodafoneCash',
-        'sendLimits': {'dailyLimit': 2000.0, 'dailyUsed': 0.0, 'monthlyLimit': 10000.0, 'monthlyUsed': 0.0},
-        'receiveLimits': {'dailyLimit': 2000.0, 'dailyUsed': 0.0, 'monthlyLimit': 10000.0, 'monthlyUsed': 0.0},
+        'sendLimits': {
+          'dailyLimit': 2000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 10000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 2000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 10000.0,
+          'monthlyUsed': 0.0
+        },
         'createdAt': Timestamp.now(),
         'lastDailyReset': Timestamp.now(),
         'lastMonthlyReset': Timestamp.now(),
@@ -106,9 +137,12 @@ void main() {
       await service.validateAndSave(txModel);
 
       // Verify final state
-      final walletSnap = await fakeFirestore.collection(FirebaseConstants.walletsCollection).doc(walletId).get();
+      final walletSnap = await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .get();
       final finalBalance = walletSnap.data()?['balance'];
-      
+
       // Expected: 1000.0 - 305.0 = 695.0
       expect(finalBalance, initialBalance - 305.0);
     });

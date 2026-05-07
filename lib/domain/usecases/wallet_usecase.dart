@@ -11,7 +11,7 @@ class WalletUseCase {
 
   WalletUseCase({
     required AuthProvider authProvider,
-  })  : _authProvider = authProvider;
+  }) : _authProvider = authProvider;
 
   /// Validates user permissions before performing an action.
   Future<UserModel> validatePermission(
@@ -35,7 +35,7 @@ class WalletUseCase {
   }) {
     final frozenIds = <String>{};
     if (subscriptionProvider == null || storeId == null) return frozenIds;
-    
+
     final maxWallets = subscriptionProvider.maxWallets;
     if (wallets.length <= maxWallets) return frozenIds;
 
@@ -46,7 +46,7 @@ class WalletUseCase {
       final bDate = b.createdAt ?? DateTime(1970);
       return aDate.compareTo(bDate);
     });
-    
+
     for (int i = maxWallets; i < sortedWallets.length; i++) {
       frozenIds.add(sortedWallets[i].walletId);
     }

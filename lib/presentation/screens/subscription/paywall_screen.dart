@@ -65,7 +65,8 @@ class PaywallScreen extends StatelessWidget {
                       loc.proFeature4,
                     ],
                     isPopular: true,
-                    onTap: () => PaymentModalScreen.show(context, SubscriptionPlan.proYearly), // ENUM refactor
+                    onTap: () => PaymentModalScreen.show(
+                        context, SubscriptionPlan.proYearly), // ENUM refactor
                   ),
                   const SizedBox(height: 24),
 
@@ -90,7 +91,8 @@ class PaywallScreen extends StatelessWidget {
                       isPopular: false,
                       color: Colors.purple.shade700,
                       onTap: systemConfigs.remainingLifetimeSeats > 0
-                          ? () => PaymentModalScreen.show(context, SubscriptionPlan.lifetime) // ENUM refactor
+                          ? () => PaymentModalScreen.show(context,
+                              SubscriptionPlan.lifetime) // ENUM refactor
                           : null,
                     ),
                   if (systemConfigs.lifetimePlanEnabled)
@@ -124,17 +126,21 @@ class PaywallScreen extends StatelessWidget {
     Color? color,
   }) {
     final themeColor = color ?? Theme.of(context).primaryColor;
-    
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isPopular ? Colors.amber : (isDisabled ? Colors.grey : themeColor.withValues(alpha: 0.3)),
+          color: isPopular
+              ? Colors.amber
+              : (isDisabled ? Colors.grey : themeColor.withValues(alpha: 0.3)),
           width: isPopular ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDisabled ? Colors.transparent : themeColor.withValues(alpha: 0.1),
+            color: isDisabled
+                ? Colors.transparent
+                : themeColor.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -144,7 +150,9 @@ class PaywallScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).cardColor,
-            isDisabled ? Colors.grey.withValues(alpha: 0.05) : themeColor.withValues(alpha: 0.05),
+            isDisabled
+                ? Colors.grey.withValues(alpha: 0.05)
+                : themeColor.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -157,7 +165,8 @@ class PaywallScreen extends StatelessWidget {
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: const BoxDecoration(
                     color: Colors.amber,
                     borderRadius: BorderRadius.only(
@@ -179,9 +188,12 @@ class PaywallScreen extends StatelessWidget {
                 top: 0,
                 left: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isDisabled ? Colors.red.shade100 : Colors.orange.shade100,
+                    color: isDisabled
+                        ? Colors.red.shade100
+                        : Colors.orange.shade100,
                     borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(16),
                     ),
@@ -189,7 +201,9 @@ class PaywallScreen extends StatelessWidget {
                   child: Text(
                     scarcityText,
                     style: TextStyle(
-                      color: isDisabled ? Colors.red.shade900 : Colors.deepOrange.shade900,
+                      color: isDisabled
+                          ? Colors.red.shade900
+                          : Colors.deepOrange.shade900,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -216,7 +230,8 @@ class PaywallScreen extends StatelessWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                       color: isDisabled ? Colors.grey : themeColor,
-                      decoration: isDisabled ? TextDecoration.lineThrough : null,
+                      decoration:
+                          isDisabled ? TextDecoration.lineThrough : null,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -224,9 +239,16 @@ class PaywallScreen extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle, color: isDisabled ? Colors.grey : Colors.green, size: 20),
+                            Icon(Icons.check_circle,
+                                color: isDisabled ? Colors.grey : Colors.green,
+                                size: 20),
                             const SizedBox(width: 12),
-                            Expanded(child: Text(f, style: TextStyle(fontSize: 16, color: isDisabled ? Colors.grey : null))),
+                            Expanded(
+                                child: Text(f,
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color:
+                                            isDisabled ? Colors.grey : null))),
                           ],
                         ),
                       )),
@@ -243,7 +265,10 @@ class PaywallScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(isDisabled ? loc.unavailable : loc.subscribeNow, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text(
+                          isDisabled ? loc.unavailable : loc.subscribeNow,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

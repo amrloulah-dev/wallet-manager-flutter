@@ -110,7 +110,8 @@ class IdentityService {
         return true;
       } else {
         // If they are not signed in, we can't update it from the client SDK without old pin!
-        throw Exception('Cannot update credential without being signed in as the target user in the secondary app.');
+        throw Exception(
+            'Cannot update credential without being signed in as the target user in the secondary app.');
       }
     } catch (e, stack) {
       AppErrorHandler.handle(
@@ -138,7 +139,8 @@ class IdentityService {
         await auth.currentUser?.delete();
         return true;
       } else {
-         throw Exception('Cannot delete identity without being signed in as the target user.');
+        throw Exception(
+            'Cannot delete identity without being signed in as the target user.');
       }
     } catch (e, stack) {
       AppErrorHandler.handle(

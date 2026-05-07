@@ -13,10 +13,12 @@ import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 
-
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 class MockThemeProvider extends Mock implements ThemeProvider {}
+
 class MockLocalizationProvider extends Mock implements LocalizationProvider {}
 
 void main() {
@@ -78,12 +80,12 @@ void main() {
     );
     when(() => mockAuthProvider.isTrial).thenReturn(true);
     when(() => mockAuthProvider.trialDaysRemaining).thenReturn(7);
-    
+
     when(() => mockSubProvider.isExpired).thenReturn(false);
     when(() => mockSubProvider.daysRemaining).thenReturn(7);
-    
+
     when(() => mockThemeProvider.themeMode).thenReturn(ThemeMode.light);
-    
+
     when(() => mockLocProvider.locale).thenReturn(const Locale('en'));
     when(() => mockLocProvider.isArabic).thenReturn(false);
   });
@@ -92,9 +94,11 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
-        ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSubProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubProvider),
         ChangeNotifierProvider<ThemeProvider>.value(value: mockThemeProvider),
-        ChangeNotifierProvider<LocalizationProvider>.value(value: mockLocProvider),
+        ChangeNotifierProvider<LocalizationProvider>.value(
+            value: mockLocProvider),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -105,7 +109,8 @@ void main() {
     );
   }
 
-  testWidgets('SettingsScreen displays basic structure', (WidgetTester tester) async {
+  testWidgets('SettingsScreen displays basic structure',
+      (WidgetTester tester) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 

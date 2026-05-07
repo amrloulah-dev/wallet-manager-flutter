@@ -59,7 +59,8 @@ class GoogleSignInService {
         stackTrace: stack,
         operation: 'GoogleSignInService.signInWithGoogle',
       );
-      throw AuthException('فشل تسجيل الدخول باستخدام جوجل: ${e.message}', code: e.code);
+      throw AuthException('فشل تسجيل الدخول باستخدام جوجل: ${e.message}',
+          code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

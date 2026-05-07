@@ -52,47 +52,52 @@ class SubscriptionBanner extends StatelessWidget {
             icon: Icons.error,
             color: Colors.red,
             message: l10n.rejectedSubscriptionRequest,
-            onDismiss: () => context.read<SubscriptionProvider>().dismissRejectionBanner(),
+            onDismiss: () =>
+                context.read<SubscriptionProvider>().dismissRejectionBanner(),
           );
         }
       }
     } else if (subscription.pendingRequestDate != null) {
       // Fallback if latestRequest isn't available yet or something
       return _buildBanner(
-        context, 
-        icon: Icons.access_time_filled, 
-        color: Colors.orange, 
+        context,
+        icon: Icons.access_time_filled,
+        color: Colors.orange,
         message: l10n.pendingSubscriptionReview,
       );
     }
-    
+
     // Check if expired
     if (isExpired) {
-       return _buildBanner(
-         context, 
-         icon: Icons.warning_rounded, 
-         color: Colors.redAccent, 
-         message: l10n.subscriptionExpiredRenew,
-       );
+      return _buildBanner(
+        context,
+        icon: Icons.warning_rounded,
+        color: Colors.redAccent,
+        message: l10n.subscriptionExpiredRenew,
+      );
     }
-    
+
     // Check if trial with <= 3 days left
     if (isTrial) {
       final daysLeft = trialDaysRemaining ?? 0;
       if (daysLeft <= 3 && daysLeft > 0) {
         return _buildBanner(
-         context, 
-         icon: Icons.info_outline, 
-         color: Colors.blueAccent, 
-         message: l10n.trialEndingSoon(daysLeft),
-       );
+          context,
+          icon: Icons.info_outline,
+          color: Colors.blueAccent,
+          message: l10n.trialEndingSoon(daysLeft),
+        );
       }
     }
 
     return const SizedBox.shrink();
   }
 
-  Widget _buildBanner(BuildContext context, {required IconData icon, required Color color, required String message, VoidCallback? onDismiss}) {
+  Widget _buildBanner(BuildContext context,
+      {required IconData icon,
+      required Color color,
+      required String message,
+      VoidCallback? onDismiss}) {
     final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -100,9 +105,9 @@ class SubscriptionBanner extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: color.withAlpha((0.1 * 255).round()),
+          color: color.withAlpha(26),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha((0.5 * 255).round())),
+          border: Border.all(color: color.withAlpha(128)),
         ),
         child: Row(
           children: [

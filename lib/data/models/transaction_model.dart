@@ -67,8 +67,7 @@ class TransactionModel {
 
     if (transactionDate == null || createdAt == null) {
       throw NotFoundException(
-        'Transaction document $docId missing required timestamps (transactionDate or createdAt)'
-      );
+          'Transaction document $docId missing required timestamps (transactionDate or createdAt)');
     }
 
     final amount = NumberParser.toDouble(data['amount']);
@@ -84,13 +83,15 @@ class TransactionModel {
       transactionId: docId,
       storeId: data[FirebaseConstants.storeId] as String? ?? '',
       walletId: data[FirebaseConstants.walletId] as String? ?? '',
-      transactionType: TransactionType.fromString(data['transactionType'] as String? ?? 'send'),
+      transactionType: TransactionType.fromString(
+          data['transactionType'] as String? ?? 'send'),
       customerPhone: data['customerPhone'] as String?,
       customerName: data['customerName'] as String?,
       amount: amount,
       commission: commission,
       serviceFee: serviceFee,
-      paymentStatus: PaymentStatus.fromString(data['paymentStatus'] as String? ?? 'paid'),
+      paymentStatus:
+          PaymentStatus.fromString(data['paymentStatus'] as String? ?? 'paid'),
       debtId: data['debtId'] as String?,
       notes: data[FirebaseConstants.notes] as String?,
       transactionDate: transactionDate,
@@ -120,13 +121,15 @@ class TransactionModel {
       'paymentStatus': paymentStatus.name,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
-      'transactionDate': transactionDate != null ? Timestamp.fromDate(transactionDate!) : null,
+      'transactionDate':
+          transactionDate != null ? Timestamp.fromDate(transactionDate!) : null,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       FirebaseConstants.createdBy: createdBy,
       'createdById': createdById,
       'createdByName': createdByName,
       'creatorRole': creatorRole,
-      FirebaseConstants.updatedAt: updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      FirebaseConstants.updatedAt:
+          updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'updatedBy': updatedBy,
       'isDeleted': isDeleted,
       'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
@@ -193,7 +196,9 @@ class TransactionModel {
   bool get isPaid => paymentStatus == PaymentStatus.paid;
   bool get isDebt => paymentStatus == PaymentStatus.debt;
   double get totalAmount =>
-      amount + commission + serviceFee; // Total deduction/credit including all fees
+      amount +
+      commission +
+      serviceFee; // Total deduction/credit including all fees
 
   @override
   String toString() {

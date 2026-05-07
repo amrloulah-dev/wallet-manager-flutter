@@ -41,17 +41,19 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             _employee.userId,
             newPermissions,
           );
-          
+
           if (!context.mounted) return;
-          
+
           if (success) {
             setState(() {
               _employee = _employee.copyWith(permissions: newPermissions);
             });
-            ToastUtils.showSuccess(AppLocalizations.of(context)!.permissionsUpdatedSuccess);
+            ToastUtils.showSuccess(
+                AppLocalizations.of(context)!.permissionsUpdatedSuccess);
             Navigator.pop(context);
           } else {
-            ToastUtils.showError(provider.errorMessage ?? AppLocalizations.of(context)!.unexpectedError);
+            ToastUtils.showError(provider.errorMessage ??
+                AppLocalizations.of(context)!.unexpectedError);
           }
         },
       ),
@@ -109,7 +111,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            _employee.isActive ? AppLocalizations.of(context)!.active : AppLocalizations.of(context)!.inactive,
+            _employee.isActive
+                ? AppLocalizations.of(context)!.active
+                : AppLocalizations.of(context)!.inactive,
             style: AppTextStyles.labelMedium.copyWith(
               color: _employee.isActive ? AppColors.success : AppColors.error,
             ),
@@ -136,7 +140,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.phone, AppLocalizations.of(context)!.phoneNumber, _employee.phone ?? '-'),
+          _buildInfoRow(Icons.phone, AppLocalizations.of(context)!.phoneNumber,
+              _employee.phone ?? '-'),
           const Divider(height: 32),
           _buildInfoRow(Icons.pin, 'PIN', '****'),
           const Divider(height: 32),
@@ -215,7 +220,8 @@ class _EditPermissionsSheetState extends State<_EditPermissionsSheet> {
             padding: const EdgeInsets.all(24),
             child: Row(
               children: [
-                Text(AppLocalizations.of(context)!.editPermissions, style: AppTextStyles.h3),
+                Text(AppLocalizations.of(context)!.editPermissions,
+                    style: AppTextStyles.h3),
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),

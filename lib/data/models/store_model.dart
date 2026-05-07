@@ -75,7 +75,8 @@ class StoreModel {
       createdAt: createdAt,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
       subscription: data['subscription'] is Map<String, dynamic>
-          ? StoreSubscription.fromMap(data['subscription'] as Map<String, dynamic>)
+          ? StoreSubscription.fromMap(
+              data['subscription'] as Map<String, dynamic>)
           : _withMigrationWarning(), // FR-17 legacy migration
       settings: data['settings'] is Map<String, dynamic>
           ? StoreSettings.fromMap(data['settings'] as Map<String, dynamic>)
@@ -86,16 +87,20 @@ class StoreModel {
       legacyData: data['legacyData'] is Map<String, dynamic>
           ? data['legacyData'] as Map<String, dynamic>
           : {
-              if (data.containsKey('licenseKey')) 'licenseKey': data['licenseKey'],
-              if (data.containsKey('licenseKeyId')) 'licenseKeyId': data['licenseKeyId'],
-              if (data.containsKey('activeLicenseKey')) 'activeLicenseKey': data['activeLicenseKey'],
+              if (data.containsKey('licenseKey'))
+                'licenseKey': data['licenseKey'],
+              if (data.containsKey('licenseKeyId'))
+                'licenseKeyId': data['licenseKeyId'],
+              if (data.containsKey('activeLicenseKey'))
+                'activeLicenseKey': data['activeLicenseKey'],
             },
     );
   }
 
   static StoreSubscription _withMigrationWarning() {
     if (kDebugMode) {
-      debugPrint('⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
+      debugPrint(
+          '⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
     }
     return StoreSubscription.migratedLifetime();
   }
@@ -112,13 +117,16 @@ class StoreModel {
       'isActive': isActive,
       'isSuspended': isSuspended,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
-      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
+      'updatedAt': updatedAt != null
+          ? Timestamp.fromDate(updatedAt!)
+          : FieldValue.serverTimestamp(),
       'subscription': subscription.toMap(),
       'settings': settings.toMap(),
       'stats': stats.toMap(),
-      if (legacyData != null && legacyData!.isNotEmpty) 'legacyData': legacyData,
+      if (legacyData != null && legacyData!.isNotEmpty)
+        'legacyData': legacyData,
     };
-    
+
     // Preserve legacy fields at root if they were stored in legacyData
     if (legacyData != null) {
       if (legacyData!.containsKey('licenseKey')) {
@@ -241,16 +249,17 @@ class StoreSubscription {
   factory StoreSubscription.fromMap(Map<String, dynamic> map) {
     return StoreSubscription(
       planId: SubscriptionPlan.fromString(map['planId'] as String? ?? 'free'),
-      status: SubscriptionStatus.fromString(map['status'] as String? ?? 'active'),
-      endDate: map['endDate'] != null 
-          ? (map['endDate'] as Timestamp).toDate() 
+      status:
+          SubscriptionStatus.fromString(map['status'] as String? ?? 'active'),
+      endDate: map['endDate'] != null
+          ? (map['endDate'] as Timestamp).toDate()
           : null,
       trialConsumed: map['trialConsumed'] as bool? ?? false,
       maxWallets: NumberParser.toInt(map['maxWallets'], 3),
       maxEmployees: NumberParser.toInt(map['maxEmployees'], 1),
       smsEnabled: map['smsEnabled'] as bool? ?? false,
-      pendingRequestDate: map['pendingRequestDate'] != null 
-          ? (map['pendingRequestDate'] as Timestamp).toDate() 
+      pendingRequestDate: map['pendingRequestDate'] != null
+          ? (map['pendingRequestDate'] as Timestamp).toDate()
           : null,
     );
   }
@@ -264,7 +273,9 @@ class StoreSubscription {
       'maxWallets': maxWallets,
       'maxEmployees': maxEmployees,
       'smsEnabled': smsEnabled,
-      'pendingRequestDate': pendingRequestDate != null ? Timestamp.fromDate(pendingRequestDate!) : null,
+      'pendingRequestDate': pendingRequestDate != null
+          ? Timestamp.fromDate(pendingRequestDate!)
+          : null,
     };
   }
 
@@ -360,7 +371,8 @@ class StoreStats {
       'totalTransactionsToday': totalTransactionsToday,
       'totalCommissionToday': totalCommissionToday,
       'totalServiceFeeToday': totalServiceFeeToday,
-      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'lastUpdated':
+          lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
     };
   }
 

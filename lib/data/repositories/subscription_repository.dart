@@ -26,12 +26,13 @@ class SubscriptionRepository {
       final deviceId = await DeviceTrackingService.getDeviceId();
       final deviceModel = await DeviceTrackingService.getDeviceModel();
       final osVersion = await DeviceTrackingService.getOsVersion();
-      
-      final docRef = _firestore.doc(FirebaseConstants.deviceRegistrationPath(storeId, deviceId));
-      
+
+      final docRef = _firestore
+          .doc(FirebaseConstants.deviceRegistrationPath(storeId, deviceId));
+
       await _firestore.runTransaction((transaction) async {
         final doc = await transaction.get(docRef);
-        
+
         if (doc.exists) {
           transaction.update(docRef, {
             FirebaseConstants.lastSeenAt: FieldValue.serverTimestamp(),
@@ -50,15 +51,18 @@ class SubscriptionRepository {
         }
       });
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
       throw ServerException('فشل التحقق من الجهاز: ${e.message}', code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
       throw ServerException('حدث خطأ غير متوقع أثناء التحقق من الجهاز.');
     }
   }
 
-  Future<SubscriptionRequestModel?> getLatestSubscriptionRequest(String storeId) async {
+  Future<SubscriptionRequestModel?> getLatestSubscriptionRequest(
+      String storeId) async {
     try {
       final snapshot = await _firestore
           .collection(FirebaseConstants.subscriptionRequestsCollection)
@@ -66,16 +70,20 @@ class SubscriptionRepository {
           .orderBy(FirebaseConstants.createdAt, descending: true)
           .limit(1)
           .get();
-          
+
       if (snapshot.docs.isNotEmpty) {
         return SubscriptionRequestModel.fromFirestore(snapshot.docs.first);
       }
       return null;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
       throw ServerException('فشل جلب طلب الاشتراك: ${e.message}', code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
       throw ServerException('حدث خطأ غير متوقع أثناء جلب طلب الاشتراك.');
     }
   }
@@ -93,11 +101,13 @@ class SubscriptionRepository {
     required String receiptNumber,
   }) async {
     try {
-      final rootRef = _firestore.collection(FirebaseConstants.subscriptionRequestsCollection).doc();
+      final rootRef = _firestore
+          .collection(FirebaseConstants.subscriptionRequestsCollection)
+          .doc();
       final now = DateTime.now();
       // T045: Implicitly deduce amount using tierName locally
       final double deducedAmount = _deduceAmount(planId);
-      
+
       final request = SubscriptionRequestModel(
         id: rootRef.id,
         storeId: storeId,
@@ -108,15 +118,15 @@ class SubscriptionRepository {
         status: 'pending',
         createdAt: now, // This will be overridden
       );
-      
+
       final storeRef = _firestore.doc(FirebaseConstants.storePath(storeId));
-      
+
       // We throw and let the caller (Provider) handle the optimistic rollback
       final batch = _firestore.batch();
-      
+
       final requestData = request.toFirestore();
       requestData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
-      
+
       batch.set(rootRef, requestData);
       batch.update(storeRef, {
         'subscription.pendingRequestDate': FieldValue.serverTimestamp(),
@@ -124,13 +134,19 @@ class SubscriptionRepository {
       });
       await batch.commit();
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.submitSubscriptionRequest');
-      throw ServerException('فشل تقديم طلب الاشتراك: ${e.message}', code: e.code);
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.submitSubscriptionRequest');
+      throw ServerException('فشل تقديم طلب الاشتراك: ${e.message}',
+          code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.submitSubscriptionRequest');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.submitSubscriptionRequest');
       throw ServerException('حدث خطأ غير متوقع أثناء تقديم طلب الاشتراك.');
     }
   }
+
   /// Anti-Fraud: Read-before-Write guard.
   /// Checks the hardware device_registrations subcollection across ALL stores
   /// to determine if this physical device has already consumed a trial.
@@ -138,22 +154,24 @@ class SubscriptionRepository {
   Future<bool> hasDeviceConsumedTrial() async {
     try {
       final deviceId = await DeviceTrackingService.getDeviceId();
-      
+
       // Query the root-level device_registrations for this hardware device
       final docSnapshot = await _firestore
           .doc(FirebaseConstants.hardwareDeviceRegistrationPath(deviceId))
           .get();
-      
+
       if (!docSnapshot.exists) return false;
-      
+
       final data = docSnapshot.data();
       if (data == null) return false;
-      
+
       // If trialCount >= 1, this device has already consumed a trial
       final trialCount = NumberParser.toInt(data['trialCount']);
       return trialCount >= 1;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'SubscriptionRepository.hasDeviceConsumedTrial');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.hasDeviceConsumedTrial');
       return false; // Fail safe (eligible) or throw? PRD says limit strictly, so returning false might allow abuse.
       // But for a check like this, throwing is better to prevent UI progress.
     }

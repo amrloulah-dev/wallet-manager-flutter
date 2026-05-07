@@ -36,7 +36,7 @@ class VodafoneCashStrategy extends SmsParserStrategy {
       if (rawAmount != null) {
         final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
         final amount = double.tryParse(sanitizedAmountStr);
-        
+
         if (amount != null) {
           return ParsedSmsDto(
             amount: amount,

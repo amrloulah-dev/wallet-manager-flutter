@@ -1,4 +1,3 @@
-
 import '../data/models/store_model.dart';
 import '../data/services/local_storage_service.dart';
 import 'package:walletmanager/services/time_service.dart';
@@ -15,7 +14,7 @@ class SubscriptionProvider extends BaseProvider {
   AuthProvider _authProvider;
   final SubscriptionRepository _repository;
   SubscriptionRequestModel? _latestRequest;
-  
+
   StoreSubscription? _previousSubscription;
 
   SubscriptionProvider({
@@ -137,7 +136,8 @@ class SubscriptionProvider extends BaseProvider {
     _latestRequest = SubscriptionRequestModel(
       id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
       storeId: storeId,
-      planId: planId.name, // Mapping to string for the model if it still uses string
+      planId: planId
+          .name, // Mapping to string for the model if it still uses string
       amount: _deduceAmount(planId),
       paymentMethod: paymentMethod,
       receiptNumber: receiptNumber,
@@ -185,8 +185,7 @@ class SubscriptionProvider extends BaseProvider {
   int get maxEmployees => _subscription?.maxEmployees ?? 1;
   bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
 
-  bool get isSuspended =>
-      _subscription?.status == SubscriptionStatus.suspended;
+  bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;
 
   /// T058: Expiration evaluated in the domain layer using NTP-resolved time.
   bool get isExpired => _subscription?.isExpiredAt(_serverNow()) ?? false;

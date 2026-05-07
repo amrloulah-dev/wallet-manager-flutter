@@ -7,16 +7,19 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('OverlayErrorApp', () {
-    testWidgets('should render correctly with Arabic error text', (tester) async {
+    testWidgets('should render correctly with Arabic error text',
+        (tester) async {
       await tester.pumpWidget(const OverlayErrorApp());
 
       expect(find.text('❌ خطأ في الاتصال'), findsOneWidget);
-      expect(find.text('يرجى إتمام المعاملة من التطبيق الأساسي.'), findsOneWidget);
+      expect(
+          find.text('يرجى إتمام المعاملة من التطبيق الأساسي.'), findsOneWidget);
       expect(find.text('إغلاق'), findsOneWidget);
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
-    testWidgets('close button should trigger FlutterOverlayWindow.closeOverlay', (tester) async {
+    testWidgets('close button should trigger FlutterOverlayWindow.closeOverlay',
+        (tester) async {
       int closeOverlayCount = 0;
       const channel = MethodChannel('x-slayer/overlay_channel');
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

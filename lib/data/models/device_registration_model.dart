@@ -27,10 +27,12 @@ class DeviceRegistrationModel {
       deviceId: doc.id,
       deviceModel: data['deviceModel'] ?? '',
       osVersion: data['osVersion'] ?? '',
-      firstSeenAt: (data['firstSeenAt'] as Timestamp?)?.toDate() ?? 
-        (throw NotFoundException('DeviceRegistration document missing required field: firstSeenAt')),
-      lastSeenAt: (data['lastSeenAt'] as Timestamp?)?.toDate() ?? 
-        (throw NotFoundException('DeviceRegistration document missing required field: lastSeenAt')),
+      firstSeenAt: (data['firstSeenAt'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'DeviceRegistration document missing required field: firstSeenAt')),
+      lastSeenAt: (data['lastSeenAt'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'DeviceRegistration document missing required field: lastSeenAt')),
       ownerUid: data['ownerUid'],
     );
   }

@@ -28,8 +28,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
   int _registrationMethod = 0; // 0: Email, 1: Google
 
   // Controllers
-  final GlobalKey<FormState> _formKey =
-      GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _storeNameController = TextEditingController();
   final TextEditingController _storePasswordController =
       TextEditingController();
@@ -179,7 +178,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: _registrationMethod == 0
-                              ? AppColors.primary.withAlpha((0.1 * 255).round())
+                              ? AppColors.primary.withAlpha(26)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
@@ -209,7 +208,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           color: _registrationMethod == 1
-                              ? AppColors.primary.withAlpha((0.1 * 255).round())
+                              ? AppColors.primary.withAlpha(26)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
@@ -278,8 +277,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                   icon: Icon(_obscureConfirmPassword
                       ? Icons.visibility_off
                       : Icons.visibility),
-                  onPressed: () => setState(() =>
-                      _obscureConfirmPassword = !_obscureConfirmPassword),
+                  onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),
               ),
 

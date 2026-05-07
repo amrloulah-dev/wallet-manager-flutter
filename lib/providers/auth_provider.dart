@@ -29,7 +29,7 @@ class AuthProvider extends BaseProvider {
   // Services
   final AuthRepository _authRepository;
   final DatabaseSyncService _databaseSyncService;
-  
+
   final StoreRepository _storeRepository;
   final UserRepository _userRepository;
   final LicenseKeyRepository _licenseKeyRepository;
@@ -56,7 +56,8 @@ class AuthProvider extends BaseProvider {
         _databaseSyncService = databaseSyncService ?? sl<DatabaseSyncService>(),
         _storeRepository = storeRepository ?? sl<StoreRepository>(),
         _userRepository = userRepository ?? sl<UserRepository>(),
-        _licenseKeyRepository = licenseKeyRepository ?? sl<LicenseKeyRepository>(),
+        _licenseKeyRepository =
+            licenseKeyRepository ?? sl<LicenseKeyRepository>(),
         _localStorage = localStorage ?? sl<LocalStorageService>() {
     Future.microtask(() => tryAutoLogin());
   }
@@ -81,14 +82,16 @@ class AuthProvider extends BaseProvider {
   }
 
   // License Getters
-  String get licenseKey => _currentStore?.subscription.planId.name ?? 'N/A'; // ENUM refactor
+  String get licenseKey =>
+      _currentStore?.subscription.planId.name ?? 'N/A'; // ENUM refactor
   DateTime get licenseExpiryDate =>
       _currentStore?.subscription.endDate ?? DateTime.now();
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
-  bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());
+  bool _isSubExpired(StoreSubscription sub) =>
+      sub.isExpiredAt(TimeService.now());
 
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isSubscriptionExpired =>
@@ -100,7 +103,9 @@ class AuthProvider extends BaseProvider {
 
   String? get currentStoreId => _currentStore?.storeId;
 
-  bool get isTrial => _currentStore?.subscription.planId == SubscriptionPlan.trial; // ENUM refactor
+  bool get isTrial =>
+      _currentStore?.subscription.planId ==
+      SubscriptionPlan.trial; // ENUM refactor
   int? get trialDaysRemaining {
     if (!isTrial || _currentStore?.subscription.endDate == null) return null;
     final expiry = _currentStore!.subscription.endDate!;
@@ -111,7 +116,8 @@ class AuthProvider extends BaseProvider {
   // ===== Methods =====
 
   Future<void> sendPasswordReset(String email) async {
-    if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+    if (email.isEmpty ||
+        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       setError('auth_error_invalid_email');
       return;
     }
@@ -119,7 +125,7 @@ class AuthProvider extends BaseProvider {
     try {
       await _authRepository.sendPasswordResetEmail(email);
       _setStatus(AuthStatus.idle);
-      _errorMessage = null; 
+      _errorMessage = null;
     } catch (e, stack) {
       if (e is UserNotFoundException) {
         setError('auth_error_account_not_found', e, stack);
@@ -208,7 +214,8 @@ class AuthProvider extends BaseProvider {
   Future<bool> loginOwnerWithEmail(String email, String password) async {
     _setStatus(AuthStatus.loading);
     try {
-      final result = await _databaseSyncService.loginOwnerWithEmail(email, password);
+      final result =
+          await _databaseSyncService.loginOwnerWithEmail(email, password);
       _applySessionResult(result);
       return true;
     } catch (e) {
@@ -221,11 +228,13 @@ class AuthProvider extends BaseProvider {
   Future<bool> loginAsEmployee(UserModel employee, StoreModel store) async {
     _setStatus(AuthStatus.loading);
     try {
-      final result = await _databaseSyncService.loginAsEmployee(employee, store);
+      final result =
+          await _databaseSyncService.loginAsEmployee(employee, store);
       _applySessionResult(result);
       return true;
     } catch (e) {
-      setError(e is AppException ? e.message : 'auth_error_employee_login_failed');
+      setError(
+          e is AppException ? e.message : 'auth_error_employee_login_failed');
       await logout();
       return false;
     } finally {
@@ -244,7 +253,8 @@ class AuthProvider extends BaseProvider {
       _setStatus(AuthStatus.idle);
       return store;
     } catch (e) {
-      setError(e is AppException ? e.message : 'auth_error_store_lookup_failed');
+      setError(
+          e is AppException ? e.message : 'auth_error_store_lookup_failed');
       return null;
     }
   }
@@ -278,7 +288,8 @@ class AuthProvider extends BaseProvider {
         throw InvalidCredentialsException();
       }
     } catch (e) {
-      setError(e is AppException ? e.message : 'auth_error_invalid_store_password');
+      setError(
+          e is AppException ? e.message : 'auth_error_invalid_store_password');
       return null;
     }
   }
@@ -286,10 +297,13 @@ class AuthProvider extends BaseProvider {
   Future<void> finalizeEmployeeSession({required UserModel employee}) async {
     _setStatus(AuthStatus.loading);
     try {
-      final result = await _databaseSyncService.finalizeEmployeeSession(employee);
+      final result =
+          await _databaseSyncService.finalizeEmployeeSession(employee);
       _applySessionResult(result);
     } catch (e) {
-      setError(e is AppException ? e.message : 'Failed to finalize employee session.');
+      setError(e is AppException
+          ? e.message
+          : 'Failed to finalize employee session.');
       _setStatus(AuthStatus.idle);
     }
   }
@@ -297,7 +311,8 @@ class AuthProvider extends BaseProvider {
   Future<void> activateNewLicense(String newKey) async {
     _setStatus(AuthStatus.loading);
     try {
-      if (_currentStore == null) throw AuthException('auth_error_store_not_active');
+      if (_currentStore == null)
+        throw AuthException('auth_error_store_not_active');
       final keyData = await _licenseKeyRepository.verifyLicenseKey(newKey);
       if (keyData == null) throw AuthException('auth_error_invalid_key');
       if (keyData.isUsed) throw AuthException('auth_error_key_already_used');
@@ -308,7 +323,8 @@ class AuthProvider extends BaseProvider {
       );
 
       await refreshUserData();
-      AnalyticsService.logLicenseUpgraded(_currentStore?.subscription.planId.name ?? 'premium');
+      AnalyticsService.logLicenseUpgraded(
+          _currentStore?.subscription.planId.name ?? 'premium');
       _setStatus(AuthStatus.idle);
     } catch (e) {
       _setStatus(AuthStatus.idle);
@@ -339,7 +355,8 @@ class AuthProvider extends BaseProvider {
     if (_currentUser != null && _currentStore != null) {
       try {
         _currentUser = await _userRepository.getUserById(_currentUser!.userId);
-        _currentStore = await _storeRepository.getStoreById(_currentStore!.storeId);
+        _currentStore =
+            await _storeRepository.getStoreById(_currentStore!.storeId);
       } catch (e) {
         setError('auth_error_update_failed');
       } finally {
@@ -373,7 +390,11 @@ class AuthProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'auth_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'auth_operation']) {
     if (kDebugMode) {
       debugPrint('💥 [AUTH ERROR] $errorCode | Error: $error');
     }

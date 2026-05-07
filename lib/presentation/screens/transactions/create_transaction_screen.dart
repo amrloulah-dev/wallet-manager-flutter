@@ -84,8 +84,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
       final commission = double.tryParse(_commissionController.text) ?? 0.0;
 
-      final wallet = _selectedWalletId != null 
-          ? context.read<WalletProvider>().walletMap[_selectedWalletId!] 
+      final wallet = _selectedWalletId != null
+          ? context.read<WalletProvider>().walletMap[_selectedWalletId!]
           : null;
 
       final result = sl<TransactionFeeCalculator>().calculate(
@@ -103,7 +103,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     } on DomainException catch (e) {
       // Surface domain errors (like negative amount) via toast or similar
       if (kDebugMode) {
-        debugPrint('⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
+        debugPrint(
+            '⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
       }
       // We don't want to show a toast on every keystroke, but we should clear the total
       setState(() {
@@ -144,10 +145,12 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       );
 
       if (mounted && success) {
-        ToastUtils.showSuccess(AppLocalizations.of(context)!.transactionCreatedSuccess);
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.transactionCreatedSuccess);
         Navigator.pop(context, true);
       } else if (mounted) {
-        _showErrorDialog(transactionProvider.errorMessage ?? AppLocalizations.of(context)!.transactionCreateFailed);
+        _showErrorDialog(transactionProvider.errorMessage ??
+            AppLocalizations.of(context)!.transactionCreateFailed);
       }
     } catch (e) {
       if (mounted) {
@@ -207,7 +210,13 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildWalletSelection(AppLocalizations l10n) {
-    return Selector<WalletProvider, ({bool isLoading, List<WalletModel> wallets, Map<String, WalletModel> walletMap})>(
+    return Selector<
+        WalletProvider,
+        ({
+          bool isLoading,
+          List<WalletModel> wallets,
+          Map<String, WalletModel> walletMap
+        })>(
       selector: (_, provider) => (
         isLoading: provider.isLoading,
         wallets: provider.wallets,
@@ -221,34 +230,36 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warning.withAlpha((0.1 * 255).round()),
+              color: AppColors.warning.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(l10n.noWalletsAvailableMessage),
           );
         }
 
-       return CustomDropdown<WalletModel>(
-  value: _selectedWalletId != null ? data.walletMap[_selectedWalletId!] : null,
-  hint: l10n.selectWalletHint,
-  fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-  
-  // 1. تمرير قائمة المحافظ (Data) مباشرة
-  itemsList: data.wallets,
-  
-  // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
-  itemLabelBuilder: (WalletModel wallet) {
-    return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
-  },
-  
-  onChanged: (wallet) {
-    setState(() {
-      _selectedWalletId = wallet?.walletId;
-      _updateTotal(); // Recalculate fees when wallet changes
-    });
-  },
-  validator: (value) => value == null ? l10n.pleaseSelectWallet : null,
-);
+        return CustomDropdown<WalletModel>(
+          value: _selectedWalletId != null
+              ? data.walletMap[_selectedWalletId!]
+              : null,
+          hint: l10n.selectWalletHint,
+          fillColor: AppColors.primary.withAlpha(13),
+
+          // 1. تمرير قائمة المحافظ (Data) مباشرة
+          itemsList: data.wallets,
+
+          // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
+          itemLabelBuilder: (WalletModel wallet) {
+            return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+          },
+
+          onChanged: (wallet) {
+            setState(() {
+              _selectedWalletId = wallet?.walletId;
+              _updateTotal(); // Recalculate fees when wallet changes
+            });
+          },
+          validator: (value) => value == null ? l10n.pleaseSelectWallet : null,
+        );
       },
     );
   }
@@ -266,7 +277,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 label: l10n.send,
                 icon: Icons.arrow_upward,
                 color: AppColors.send,
-                isSelected: _transactionType == TransactionType.debit, // ENUM refactor
+                isSelected:
+                    _transactionType == TransactionType.debit, // ENUM refactor
                 onTap: () {
                   setState(() => _transactionType = TransactionType.debit);
                   _updateTotal();
@@ -279,7 +291,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 label: l10n.receive,
                 icon: Icons.arrow_downward,
                 color: AppColors.receive,
-                isSelected: _transactionType == TransactionType.credit, // ENUM refactor
+                isSelected:
+                    _transactionType == TransactionType.credit, // ENUM refactor
                 onTap: () {
                   setState(() => _transactionType = TransactionType.credit);
                   _updateTotal();
@@ -376,7 +389,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha((0.05 * 255).round()),
+            color: AppColors.primary.withAlpha(13),
             borderRadius: BorderRadius.circular(8),
             border: null,
           ),
@@ -396,7 +409,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildFeeSection() {
-    if (_transactionType != TransactionType.debit || _serviceFee <= 0) { // ENUM refactor
+    if (_transactionType != TransactionType.debit || _serviceFee <= 0) {
+      // ENUM refactor
       return const SizedBox.shrink();
     }
 
@@ -461,10 +475,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         if (wallet == null) return const SizedBox.shrink();
 
         final amount = double.tryParse(_amountController.text) ?? 0.0;
-        final isSend = _transactionType == TransactionType.debit; // ENUM refactor
-        final limits = isSend
-            ? wallet.getLimits()
-            : wallet.getReceiveLimits();
+        final isSend =
+            _transactionType == TransactionType.debit; // ENUM refactor
+        final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
         final newUsed = limits.dailyUsed + amount;
         final newMonthlyUsed = limits.monthlyUsed + amount;
 
@@ -473,67 +486,71 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
         final bool willExceed = dailyExceeded || monthlyExceeded;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: willExceed
-            ? AppColors.error.withAlpha((0.05 * 255).round())
-            : AppColors.info.withAlpha((0.05 * 255).round()),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: willExceed
-              ? AppColors.error.withAlpha((0.2 * 255).round())
-              : AppColors.info.withAlpha((0.2 * 255).round()),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: willExceed
+                ? AppColors.error.withAlpha(13)
+                : AppColors.info.withAlpha(13),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: willExceed
+                  ? AppColors.error.withAlpha(51)
+                  : AppColors.info.withAlpha(51),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                willExceed ? Icons.warning_amber_rounded : Icons.info_outline,
-                color: willExceed ? AppColors.error : AppColors.info,
+              Row(
+                children: [
+                  Icon(
+                    willExceed
+                        ? Icons.warning_amber_rounded
+                        : Icons.info_outline,
+                    color: willExceed ? AppColors.error : AppColors.info,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.reviewWalletLimits,
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: willExceed ? AppColors.error : AppColors.info,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.reviewWalletLimits,
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: willExceed ? AppColors.error : AppColors.info,
+              const Divider(height: 20),
+              WalletLimitBar(
+                label: l10n.dailyLimitAfterTransaction,
+                used: newUsed,
+                limit: limits.dailyLimit,
+                percentage: limits.dailyLimit > 0
+                    ? (newUsed / limits.dailyLimit) * 100
+                    : 0,
+                warningLevel: dailyExceeded ? 'red' : 'green',
+              ),
+              const SizedBox(height: 16),
+              WalletLimitBar(
+                label: l10n.monthlyLimitAfterTransaction,
+                used: newMonthlyUsed,
+                limit: limits.monthlyLimit,
+                percentage: limits.monthlyLimit > 0
+                    ? (newMonthlyUsed / limits.monthlyLimit) * 100
+                    : 0,
+                warningLevel: monthlyExceeded ? 'red' : 'green',
+              ),
+              if (willExceed)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Text(
+                    l10n.walletLimitWarning,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.error),
+                  ),
                 ),
-              ),
             ],
           ),
-          const Divider(height: 20),
-          WalletLimitBar(
-            label: l10n.dailyLimitAfterTransaction,
-            used: newUsed,
-            limit: limits.dailyLimit,
-            percentage:
-                limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0,
-            warningLevel: dailyExceeded ? 'red' : 'green',
-          ),
-          const SizedBox(height: 16),
-          WalletLimitBar(
-            label: l10n.monthlyLimitAfterTransaction,
-            used: newMonthlyUsed,
-            limit: limits.monthlyLimit,
-            percentage: limits.monthlyLimit > 0
-                ? (newMonthlyUsed / limits.monthlyLimit) * 100
-                : 0,
-            warningLevel: monthlyExceeded ? 'red' : 'green',
-          ),
-          if (willExceed)
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Text(
-                l10n.walletLimitWarning,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-              ),
-            ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -551,7 +568,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildCreateButton(AppLocalizations l10n) {
-    return Selector<TransactionProvider, ({bool isCreating, String? errorMessage, bool hasError})>(
+    return Selector<TransactionProvider,
+        ({bool isCreating, String? errorMessage, bool hasError})>(
       selector: (_, provider) => (
         isCreating: provider.isCreating,
         errorMessage: provider.errorMessage,
@@ -566,7 +584,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha((0.1 * 255).round()),
+                  color: AppColors.error.withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -619,9 +637,7 @@ class _TransactionTypeButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withAlpha((0.1 * 255).round())
-              : AppColors.surface(context),
+          color: isSelected ? color.withAlpha(26) : AppColors.surface(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

@@ -20,8 +20,14 @@ class DashboardQuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<StatisticsProvider,
-        ({StatsSummaryModel? summary, DailyStatsModel? today, bool isLoading, String? error})>(
+    return Selector<
+        StatisticsProvider,
+        ({
+          StatsSummaryModel? summary,
+          DailyStatsModel? today,
+          bool isLoading,
+          String? error
+        })>(
       selector: (context, provider) => (
         summary: provider.dashboardSummary,
         today: provider.todayStats,
@@ -79,9 +85,11 @@ class DashboardQuickStats extends StatelessWidget {
 
                   // Calculate fixed height based on aspect ratio and rows
                   final rowCount = (4 / crossAxisCount).ceil();
-                  final itemWidth = (width - (crossAxisCount - 1) * 10) / crossAxisCount;
+                  final itemWidth =
+                      (width - (crossAxisCount - 1) * 10) / crossAxisCount;
                   final itemHeight = itemWidth / childAspectRatio;
-                  final gridHeight = rowCount * itemHeight + (rowCount - 1) * 10;
+                  final gridHeight =
+                      rowCount * itemHeight + (rowCount - 1) * 10;
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,13 +104,16 @@ class DashboardQuickStats extends StatelessWidget {
                           childAspectRatio: childAspectRatio,
                           children: [
                             StatsCard(
-                                title: AppLocalizations.of(context)!.totalWallets,
+                                title:
+                                    AppLocalizations.of(context)!.totalWallets,
                                 value: stats.totalWallets.toString(),
                                 icon: Icons.account_balance_wallet_outlined,
                                 color: Colors.blue.shade700,
                                 onTap: () {
-                                  final user = context.read<AuthProvider>().currentUser;
-                                  final canAccess = user?.role == UserRole.owner || // ENUM refactor
+                                  final user =
+                                      context.read<AuthProvider>().currentUser;
+                                  final canAccess = user?.role ==
+                                          UserRole.owner || // ENUM refactor
                                       (user?.permissions?.viewWallets ?? false);
 
                                   if (canAccess) {
@@ -110,50 +121,59 @@ class DashboardQuickStats extends StatelessWidget {
                                         context, RouteConstants.walletsList);
                                   } else {
                                     ToastUtils.showError(
-                                        AppLocalizations.of(context)!.accessDenied);
+                                        AppLocalizations.of(context)!
+                                            .accessDenied);
                                   }
                                 }),
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                              value: (data.today?.transactionCount ?? 0).toString(),
+                              value: (data.today?.transactionCount ?? 0)
+                                  .toString(),
                               icon: Icons.swap_horiz,
                               color: Colors.green.shade700,
                               onTap: () {
-                                final user = context.read<AuthProvider>().currentUser;
+                                final user =
+                                    context.read<AuthProvider>().currentUser;
                                 if (user != null &&
-                                    (user.role == UserRole.owner || // ENUM refactor
+                                    (user.role ==
+                                            UserRole.owner || // ENUM refactor
                                         user.hasPermission(
                                             (p) => p.createTransaction) ||
                                         user.hasPermission(
                                             (p) => p.viewAllTransactions))) {
-                                  Navigator.pushNamed(
-                                      context, RouteConstants.todayTransactions);
+                                  Navigator.pushNamed(context,
+                                      RouteConstants.todayTransactions);
                                 } else {
                                   ToastUtils.showError(
-                                      AppLocalizations.of(context)!.accessDenied);
+                                      AppLocalizations.of(context)!
+                                          .accessDenied);
                                 }
                               },
                             ),
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalCommission} ',
-                              value: NumberFormatter.formatAmount(data.today?.totalCommission),
+                              value: NumberFormatter.formatAmount(
+                                  data.today?.totalCommission),
                               icon: Icons.attach_money,
                               color: Colors.orange.shade800,
                               onTap: () {
-                                final user = context.read<AuthProvider>().currentUser;
+                                final user =
+                                    context.read<AuthProvider>().currentUser;
                                 if (user != null &&
-                                    (user.role == UserRole.owner || // ENUM refactor
+                                    (user.role ==
+                                            UserRole.owner || // ENUM refactor
                                         user.hasPermission(
                                             (p) => p.createTransaction) ||
                                         user.hasPermission(
                                             (p) => p.viewAllTransactions))) {
-                                  Navigator.pushNamed(
-                                      context, RouteConstants.todayTransactions);
+                                  Navigator.pushNamed(context,
+                                      RouteConstants.todayTransactions);
                                 } else {
                                   ToastUtils.showError(
-                                      AppLocalizations.of(context)!.accessDenied);
+                                      AppLocalizations.of(context)!
+                                          .accessDenied);
                                 }
                               },
                             ),
@@ -163,8 +183,10 @@ class DashboardQuickStats extends StatelessWidget {
                               icon: Icons.credit_card_off_outlined,
                               color: Colors.red.shade700,
                               onTap: () {
-                                final user = context.read<AuthProvider>().currentUser;
-                                final canAccess = user?.role == UserRole.owner || // ENUM refactor
+                                final user =
+                                    context.read<AuthProvider>().currentUser;
+                                final canAccess = user?.role ==
+                                        UserRole.owner || // ENUM refactor
                                     (user?.permissions?.viewDebts ?? false);
 
                                 if (canAccess) {
@@ -172,7 +194,8 @@ class DashboardQuickStats extends StatelessWidget {
                                       context, RouteConstants.debtsList);
                                 } else {
                                   ToastUtils.showError(
-                                      AppLocalizations.of(context)!.accessDenied);
+                                      AppLocalizations.of(context)!
+                                          .accessDenied);
                                 }
                               },
                             ),
@@ -183,8 +206,8 @@ class DashboardQuickStats extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         child: Text(
                           '${AppLocalizations.of(context)!.lastUpdated} $formattedTime',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textSecondary(context)),
+                          style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary(context)),
                         ),
                       ),
                     ],

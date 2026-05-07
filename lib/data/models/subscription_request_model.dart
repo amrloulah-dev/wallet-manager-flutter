@@ -32,12 +32,12 @@ class SubscriptionRequestModel {
       throw Exception('SubscriptionRequest document does not exist!');
     }
     final data = doc.data() as Map<String, dynamic>;
-    
+
     final amount = NumberParser.toDouble(data['amount']);
     if (!amount.isFinite || amount < 0) {
       throw DomainException('Invalid subscription amount: $amount');
     }
-    
+
     return SubscriptionRequestModel(
       id: doc.id,
       storeId: data['storeId'] ?? '',
@@ -47,8 +47,9 @@ class SubscriptionRequestModel {
       receiptNumber: data['receiptNumber'] ?? '',
       status: data['status'] ?? 'pending',
       rejectionReason: data['rejectionReason'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
-        (throw NotFoundException('SubscriptionRequest document missing required field: createdAt')),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'SubscriptionRequest document missing required field: createdAt')),
       processedAt: (data['processedAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -63,7 +64,8 @@ class SubscriptionRequestModel {
       'status': status,
       'rejectionReason': rejectionReason,
       'createdAt': Timestamp.fromDate(createdAt),
-      'processedAt': processedAt != null ? Timestamp.fromDate(processedAt!) : null,
+      'processedAt':
+          processedAt != null ? Timestamp.fromDate(processedAt!) : null,
     };
   }
 

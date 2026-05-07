@@ -4,8 +4,8 @@ import '../../core/utils/number_parser.dart';
 class SystemConfigsModel {
   final int trialDays; // Default 14
   final int gracePeriodHours; // Default 48
-  final String vfCashNumber; 
-  final String instaPayHandle; 
+  final String vfCashNumber;
+  final String instaPayHandle;
   final bool lifetimePlanEnabled;
   final int remainingLifetimeSeats;
 
@@ -27,7 +27,8 @@ class SystemConfigsModel {
       vfCashNumber: data['vfCashNumber'] ?? '',
       instaPayHandle: data['instaPayHandle'] ?? '',
       lifetimePlanEnabled: data['lifetimePlanEnabled'] ?? true,
-      remainingLifetimeSeats: NumberParser.toInt(data['remainingLifetimeSeats'], 100),
+      remainingLifetimeSeats:
+          NumberParser.toInt(data['remainingLifetimeSeats'], 100),
     );
   }
 }

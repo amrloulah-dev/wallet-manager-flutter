@@ -7,6 +7,7 @@ import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 class MockWalletModel extends Mock implements WalletModel {}
+
 class MockWalletLimits extends Mock implements WalletLimits {}
 
 void main() {
@@ -18,7 +19,7 @@ void main() {
     calculator = TransactionFeeCalculator();
     mockWallet = MockWalletModel();
     mockLimits = MockWalletLimits();
-    
+
     // Default mocks
     when(() => mockWallet.walletType).thenReturn(WalletType.vodafoneCash);
     when(() => mockWallet.getLimits()).thenReturn(mockLimits);
@@ -46,7 +47,7 @@ void main() {
     test('should include serviceFee in totalAmount', () {
       // Vodafone prefix '010' with Vodafone wallet should give 1.0 fee
       // We expect the implementation to be fixed to use the correct name/string
-      
+
       final result = calculator.calculate(
         wallet: mockWallet,
         transactionType: TransactionType.debit,
@@ -63,7 +64,7 @@ void main() {
 
     test('should throw DomainException for unknown wallet type', () {
       when(() => mockWallet.walletType).thenReturn(WalletType.other);
-      
+
       expect(
         () => calculator.calculate(
           wallet: mockWallet,

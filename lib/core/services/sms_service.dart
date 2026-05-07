@@ -15,8 +15,8 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 //   2. Register a FOREGROUND-ONLY SMS listener so that incoming
 //      SMS messages are processed while the app is actively open.
 //
-// CRITICAL: Permission requests MUST ONLY originate from the 
-// main UI isolate. Background isolates will crash if they 
+// CRITICAL: Permission requests MUST ONLY originate from the
+// main UI isolate. Background isolates will crash if they
 // attempt to trigger OS permission dialogs.
 // ============================================================
 
@@ -31,11 +31,11 @@ class SmsService {
   static final SmsService _instance = SmsService._internal();
   factory SmsService({Telephony? telephony}) {
     if (telephony != null) {
-       return SmsService._withTelephony(telephony);
+      return SmsService._withTelephony(telephony);
     }
     return _instance;
   }
-  
+
   SmsService._internal() : _telephony = Telephony.instance;
   SmsService._withTelephony(this._telephony);
 
@@ -59,7 +59,7 @@ class SmsService {
 
   /// Initializes SMS automation: requests permissions and
   /// registers the foreground-only SMS listener.
-  /// 
+  ///
   /// Returns true if critical permissions (SMS) are granted.
   Future<bool> init() async {
     _guardIsolate();
@@ -86,7 +86,8 @@ class SmsService {
       ].request();
 
       if (results[Permission.ignoreBatteryOptimizations]?.isDenied == true ||
-          results[Permission.ignoreBatteryOptimizations]?.isPermanentlyDenied == true) {
+          results[Permission.ignoreBatteryOptimizations]?.isPermanentlyDenied ==
+              true) {
         ToastUtils.showWarning(
           'Background reliability may be reduced without battery optimization exemption.',
         );

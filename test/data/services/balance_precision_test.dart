@@ -15,18 +15,31 @@ import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockTransactionModel extends Mock implements TransactionModel {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockCacheManager extends Mock implements CacheManager {}
+
 class MockStatsRepository extends Mock implements StatsRepository {}
 
 class MockTransaction extends Mock implements Transaction {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
 
-class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {}
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class FakeDocumentReference extends Fake
+    implements DocumentReference<Map<String, dynamic>> {}
+
 class FakeTransaction extends Fake implements Transaction {}
+
 class FakeSetOptions extends Fake implements SetOptions {}
 
 void main() {
@@ -55,7 +68,7 @@ void main() {
     mockFirestore = MockFirebaseFirestore();
     service = TransactionValidatorService(firestore: mockFirestore);
     mockTxModel = MockTransactionModel();
-    
+
     mockFirebaseService = MockFirebaseService();
     mockCacheManager = MockCacheManager();
     mockStatsRepository = MockStatsRepository();
@@ -65,7 +78,7 @@ void main() {
     mockWalletRef = MockDocumentReference();
 
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
-    
+
     // Transaction Model setup
     when(() => mockTxModel.transactionId).thenReturn('tx123');
     when(() => mockTxModel.walletId).thenReturn('w123');
@@ -85,51 +98,55 @@ void main() {
     when(() => mockWalletRef.collection(any())).thenReturn(mockCollection);
     when(() => mockWalletRef.get()).thenAnswer((_) async => mockWalletSnap);
 
-    when(() => mockFirestore.runTransaction<void>(any())).thenAnswer((invocation) async {
+    when(() => mockFirestore.runTransaction<void>(any()))
+        .thenAnswer((invocation) async {
       final callback = invocation.positionalArguments[0] as Function;
       await callback(mockTx);
     });
 
-    when(() => mockFirestore.runTransaction<dynamic>(any())).thenAnswer((invocation) async {
+    when(() => mockFirestore.runTransaction<dynamic>(any()))
+        .thenAnswer((invocation) async {
       final callback = invocation.positionalArguments[0] as Function;
       return await callback(mockTx);
     });
 
-    when(() => mockFirestore.runTransaction<Null>(any())).thenAnswer((invocation) async {
+    when(() => mockFirestore.runTransaction<Null>(any()))
+        .thenAnswer((invocation) async {
       final callback = invocation.positionalArguments[0] as Function;
       await callback(mockTx);
     });
 
-    when(() => mockTx.get<Map<String, dynamic>>(any())).thenAnswer((_) async => mockWalletSnap);
-    
+    when(() => mockTx.get<Map<String, dynamic>>(any()))
+        .thenAnswer((_) async => mockWalletSnap);
+
     when(() => mockTx.set<Map<String, dynamic>>(any(), any()))
         .thenReturn(mockTx);
 
     when(() => mockTx.set<Map<String, dynamic>>(any(), any(), any()))
         .thenReturn(mockTx);
 
-    when(() => mockTx.update(any(), any()))
-        .thenReturn(mockTx);
-    
+    when(() => mockTx.update(any(), any())).thenReturn(mockTx);
+
     // Also add stubs for Object? just in case for WalletRepository
-    when(() => mockTx.get<Object?>(any())).thenAnswer((_) async => mockWalletSnap);
+    when(() => mockTx.get<Object?>(any()))
+        .thenAnswer((_) async => mockWalletSnap);
     when(() => mockTx.set<Object?>(any(), any())).thenReturn(mockTx);
     when(() => mockTx.update(any(), any())).thenReturn(mockTx);
-    
+
     when(() => mockWalletSnap.exists).thenReturn(true);
     when(() => mockWalletSnap.id).thenReturn('w123');
     when(() => mockWalletSnap.reference).thenReturn(mockWalletRef);
-    
+
     when(() => mockCacheManager.get<WalletModel>(any())).thenReturn(null);
-    
+
     // Patterns for creditWallet and debitWallet
     when(() => mockStatsRepository.updateStatsOnWalletChange(
-      any(),
-      countChange: any(named: 'countChange'),
-      activeCountChange: any(named: 'activeCountChange'),
-      balanceChange: any(named: 'balanceChange'),
-      firestoreTransaction: any(named: 'firestoreTransaction'),
-    )).thenAnswer((_) async => {});
+          any(),
+          countChange: any(named: 'countChange'),
+          activeCountChange: any(named: 'activeCountChange'),
+          balanceChange: any(named: 'balanceChange'),
+          firestoreTransaction: any(named: 'firestoreTransaction'),
+        )).thenAnswer((_) async => {});
   });
 
   Map<String, dynamic> createValidWalletData({required double balance}) {
@@ -167,14 +184,20 @@ void main() {
   }
 
   group('Balance Precision (Step 1.2)', () {
-    test('should allow transaction when balance is slightly less than totalDeduction but within epsilon (Floating Point Ghost)', () async {
-      when(() => mockWalletSnap.data()).thenReturn(createValidWalletData(balance: 99.99));
+    test(
+        'should allow transaction when balance is slightly less than totalDeduction but within epsilon (Floating Point Ghost)',
+        () async {
+      when(() => mockWalletSnap.data())
+          .thenReturn(createValidWalletData(balance: 99.99));
 
       await service.validateAndSave(mockTxModel);
     });
 
-    test('should throw ValidationException when balance is clearly insufficient (Negative Balance Prevention)', () async {
-      when(() => mockWalletSnap.data()).thenReturn(createValidWalletData(balance: 50.0));
+    test(
+        'should throw ValidationException when balance is clearly insufficient (Negative Balance Prevention)',
+        () async {
+      when(() => mockWalletSnap.data())
+          .thenReturn(createValidWalletData(balance: 50.0));
 
       expect(
         () => service.validateAndSave(mockTxModel),
@@ -184,26 +207,32 @@ void main() {
   });
 
   group('WalletRepository (Step 1.2)', () {
-    test('debitWallet should use epsilon tolerance (99.99 balance allows 100.0 debit)', () async {
+    test(
+        'debitWallet should use epsilon tolerance (99.99 balance allows 100.0 debit)',
+        () async {
       final repo = WalletRepository(
         firebaseService: mockFirebaseService,
         cacheManager: mockCacheManager,
         statsRepository: mockStatsRepository,
       );
 
-      when(() => mockWalletSnap.data()).thenReturn(createValidWalletData(balance: 99.99));
+      when(() => mockWalletSnap.data())
+          .thenReturn(createValidWalletData(balance: 99.99));
 
       await repo.debitWallet('w123', 100.0);
     });
 
-    test('debitWallet should throw DomainException on clearly insufficient balance', () async {
+    test(
+        'debitWallet should throw DomainException on clearly insufficient balance',
+        () async {
       final repo = WalletRepository(
         firebaseService: mockFirebaseService,
         cacheManager: mockCacheManager,
         statsRepository: mockStatsRepository,
       );
 
-      when(() => mockWalletSnap.data()).thenReturn(createValidWalletData(balance: 50.0));
+      when(() => mockWalletSnap.data())
+          .thenReturn(createValidWalletData(balance: 50.0));
 
       expect(
         () => repo.debitWallet('w123', 100.0),

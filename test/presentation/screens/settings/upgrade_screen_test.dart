@@ -15,7 +15,8 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
   String get licenseKey => 'N/A';
 
   @override
-  DateTime get licenseExpiryDate => DateTime.now().add(const Duration(days: 30));
+  DateTime get licenseExpiryDate =>
+      DateTime.now().add(const Duration(days: 30));
 
   @override
   String? get errorMessage => null;
@@ -24,7 +25,8 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionProvider {
+class DummySubscriptionProvider extends ChangeNotifier
+    implements SubscriptionProvider {
   @override
   int? get daysRemaining => 30;
 
@@ -33,13 +35,16 @@ class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionPr
 }
 
 void main() {
-  testWidgets('UpgradeScreen should be a StatefulWidget to properly manage controller lifecycle',
+  testWidgets(
+      'UpgradeScreen should be a StatefulWidget to properly manage controller lifecycle',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<AuthProvider>(create: (_) => DummyAuthProvider()),
-          ChangeNotifierProvider<SubscriptionProvider>(create: (_) => DummySubscriptionProvider()),
+          ChangeNotifierProvider<AuthProvider>(
+              create: (_) => DummyAuthProvider()),
+          ChangeNotifierProvider<SubscriptionProvider>(
+              create: (_) => DummySubscriptionProvider()),
         ],
         child: const MaterialApp(
           localizationsDelegates: [

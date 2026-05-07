@@ -44,11 +44,12 @@ void main() {
       }
 
       final users = await userRepository.getUsersByStoreId(storeId);
-      
+
       expect(users.length, lessThanOrEqualTo(20));
     });
 
-    test('EmployeeRepository.getEmployeesByStoreId should respect limit', () async {
+    test('EmployeeRepository.getEmployeesByStoreId should respect limit',
+        () async {
       final now = Timestamp.now();
       // Setup: Create 30 employees
       for (int i = 0; i < 30; i++) {
@@ -63,8 +64,9 @@ void main() {
         });
       }
 
-      final employees = await employeeRepository.getEmployeesByStoreId(storeId: storeId);
-      
+      final employees =
+          await employeeRepository.getEmployeesByStoreId(storeId: storeId);
+
       expect(employees.length, lessThanOrEqualTo(20));
     });
   });

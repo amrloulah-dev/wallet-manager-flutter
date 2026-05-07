@@ -71,7 +71,6 @@ class WalletProvider extends BaseProvider {
     });
   }
 
-
   // Constructor
   WalletProvider({
     required AuthProvider authProvider, // Required authProvider
@@ -136,10 +135,12 @@ class WalletProvider extends BaseProvider {
           }
         }
       }, onError: (error) {
-        AppErrorHandler.handle(error, operation: 'WalletProvider.overlayListener');
+        AppErrorHandler.handle(error,
+            operation: 'WalletProvider.overlayListener');
       });
     } catch (e, stack) {
-      AppErrorHandler.handle(e, operation: 'wallet_overlay_listener', stackTrace: stack);
+      AppErrorHandler.handle(e,
+          operation: 'wallet_overlay_listener', stackTrace: stack);
     }
   }
 
@@ -151,7 +152,9 @@ class WalletProvider extends BaseProvider {
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) {
-      if (kDebugMode) debugPrint('🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
+      if (kDebugMode)
+        debugPrint(
+            '🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
       return;
     }
 
@@ -167,9 +170,12 @@ class WalletProvider extends BaseProvider {
     // Create new list to avoid in-place mutation (immutable approach using List.of)
     _wallets = [
       for (int i = 0; i < _wallets.length; i++)
-        if (i == index) oldWallet.copyWith(balance: newBalance) else _wallets[i],
+        if (i == index)
+          oldWallet.copyWith(balance: newBalance)
+        else
+          _wallets[i],
     ];
-    
+
     _rebuildWalletMap();
     safeNotify();
     if (kDebugMode) {
@@ -239,13 +245,18 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    if (kDebugMode) debugPrint('🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
+    if (kDebugMode)
+      debugPrint(
+          '🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
     if (_currentStoreId == null) {
-      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
+      if (kDebugMode)
+        debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
+      if (kDebugMode)
+        debugPrint(
+            '🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
       return;
     }
 
@@ -254,14 +265,19 @@ class WalletProvider extends BaseProvider {
     safeNotify();
 
     try {
-      if (kDebugMode) debugPrint('⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
-      
-      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
-      
+      if (kDebugMode)
+        debugPrint(
+            '⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
+
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
+
       final result = await _walletRepository.getAllWallets(
         storeId,
       );
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
+      if (kDebugMode)
+        debugPrint(
+            '✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
 
       _wallets = result.items;
       _lastDocument = result.lastDocument;
@@ -273,7 +289,9 @@ class WalletProvider extends BaseProvider {
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
-        if (kDebugMode) debugPrint('🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
+        if (kDebugMode)
+          debugPrint(
+              '🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
         // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
@@ -293,7 +311,11 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreWallets() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
     }
 
@@ -301,8 +323,9 @@ class WalletProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
-      
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
+
       final result = await _walletRepository.getAllWallets(
         storeId,
         lastDocument: _lastDocument,
@@ -339,15 +362,15 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
-      final storeId = _currentStoreId ?? (throw ValidationException('Store ID missing'));
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
       // Bug B-002: Fail-closed if subscription provider is missing
       if (_subscriptionProvider == null) {
         throw ValidationException('wallet_error_subscription_unresolved');
       }
 
-      final currentCount =
-          await _walletRepository.getWalletsCount(storeId);
+      final currentCount = await _walletRepository.getWalletsCount(storeId);
       if (!_subscriptionProvider!.canAddWallet(currentCount)) {
         throw ValidationException('wallet_error_limit_reached');
       }
@@ -387,7 +410,8 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('auth_operation_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('auth_operation_failed');
+      if (!AppErrorHandler.isTestMode)
+        ToastUtils.showError('auth_operation_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -430,7 +454,8 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_update_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_update_failed');
+      if (!AppErrorHandler.isTestMode)
+        ToastUtils.showError('wallet_error_update_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -448,7 +473,8 @@ class WalletProvider extends BaseProvider {
       await _validateUserAndPermission((p) => p.addBalance);
 
       if (amount <= 0) throw ValidationException('Amount must be positive.');
-      final storeId = _currentStoreId ?? (throw ValidationException('Store ID not found.'));
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID not found.'));
 
       // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
@@ -481,7 +507,8 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_balance_topup_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_balance_topup_failed');
+      if (!AppErrorHandler.isTestMode)
+        ToastUtils.showError('wallet_error_balance_topup_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -525,7 +552,8 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_delete_failed');
+      if (!AppErrorHandler.isTestMode)
+        ToastUtils.showError('wallet_error_delete_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -541,12 +569,14 @@ class WalletProvider extends BaseProvider {
     fetchInitialWallets();
   }
 
-  void setTypeFilter(WalletType? type) { // ENUM refactor
+  void setTypeFilter(WalletType? type) {
+    // ENUM refactor
     _filterByType = type;
     fetchInitialWallets();
   }
 
-  void setStatusFilter(WalletStatus? status) { // ENUM refactor
+  void setStatusFilter(WalletStatus? status) {
+    // ENUM refactor
     _filterByStatus = status;
     fetchInitialWallets();
   }
@@ -573,11 +603,15 @@ class WalletProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'wallet_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'wallet_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = WalletProviderStatus.error;
-    
+
     super.setError(
       errorCode,
       error,
@@ -585,7 +619,7 @@ class WalletProvider extends BaseProvider {
       showToast,
       operation,
     );
-    
+
     safeNotify();
   }
 

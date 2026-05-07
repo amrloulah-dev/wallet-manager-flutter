@@ -35,12 +35,14 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isTrial ? l10n.upgradeToFullVersionTitle : l10n.licenseInfo),
+        title: Text(
+            widget.isTrial ? l10n.upgradeToFullVersionTitle : l10n.licenseInfo),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: widget.isTrial ? _buildTrialUI(context) : _buildPremiumUI(context),
+        child:
+            widget.isTrial ? _buildTrialUI(context) : _buildPremiumUI(context),
       ),
     );
   }
@@ -121,7 +123,8 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                           await auth
                               .activateNewLicense(_keyController.text.trim());
                           if (context.mounted) {
-                            ToastUtils.showSuccess(l10n.subscriptionActivatedSuccessfully);
+                            ToastUtils.showSuccess(
+                                l10n.subscriptionActivatedSuccessfully);
                             Navigator.pop(context);
                           }
                         } catch (e) {
@@ -173,8 +176,8 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                     _buildInfoRow(context, l10n.expiryDate,
                         DateHelper.formatDateTime(expiryDate)),
                     const SizedBox(height: 16),
-                    _buildInfoRow(
-                        context, l10n.trialDaysRemainingLabel, l10n.daysRemainingCount(daysRemaining)),
+                    _buildInfoRow(context, l10n.trialDaysRemainingLabel,
+                        l10n.daysRemainingCount(daysRemaining)),
                   ],
                 ),
               ),
@@ -226,9 +229,9 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withAlpha((0.5 * 255).round())),
+          border: Border.all(color: color.withAlpha(128)),
           borderRadius: BorderRadius.circular(8),
-          color: color.withAlpha((0.1 * 255).round()),
+          color: color.withAlpha(26),
         ),
         child: Row(
           children: [
@@ -251,9 +254,8 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
       {bool isRenew = false}) async {
     final l10n = AppLocalizations.of(context)!;
     const phone = '201091264053';
-    final message = isRenew
-        ? l10n.renewWhatsappMessage
-        : l10n.activationWhatsappMessage;
+    final message =
+        isRenew ? l10n.renewWhatsappMessage : l10n.activationWhatsappMessage;
     final encodedMessage = Uri.encodeComponent(message);
     final url = 'https://wa.me/$phone?text=$encodedMessage';
     final uri = Uri.parse(url);

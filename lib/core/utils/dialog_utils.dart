@@ -330,7 +330,7 @@ class _DialogHeaderState extends State<_DialogHeader>
           ),
           boxShadow: [
             BoxShadow(
-              color: Color.fromARGB((0.15 * 255).round(), 0, 0, 0),
+              color: Color.fromARGB(38, 0, 0, 0),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),

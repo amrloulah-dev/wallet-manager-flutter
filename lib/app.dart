@@ -48,37 +48,42 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => LocalizationProvider(
-          localStorage: sl<LocalStorageService>(),
-        )),
         ChangeNotifierProvider(
-          create: (_) => SystemConfigProvider(
-              repository: sl<SystemConfigRepository>()),
+            create: (_) => LocalizationProvider(
+                  localStorage: sl<LocalStorageService>(),
+                )),
+        ChangeNotifierProvider(
+          create: (_) =>
+              SystemConfigProvider(repository: sl<SystemConfigRepository>()),
         ),
         ChangeNotifierProxyProvider<AuthProvider, SubscriptionProvider>(
           create: (context) => SubscriptionProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false)),
-          update: (_, auth, previous) => (previous ?? SubscriptionProvider(authProvider: auth))
-            ..updateAuthProvider(auth),
+          update: (_, auth, previous) =>
+              (previous ?? SubscriptionProvider(authProvider: auth))
+                ..updateAuthProvider(auth),
         ),
-        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider, EmployeeProvider>(
-            create: (_) =>
-                EmployeeProvider(employeeRepository: sl<EmployeeRepository>()),
-            update: (_, auth, subscription, previous) => (previous ??
-                EmployeeProvider(employeeRepository: sl<EmployeeRepository>()))
-              ..updateSubscriptionProvider(subscription)
-              ..setStoreId(auth.currentStoreId),
+        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider,
+            EmployeeProvider>(
+          create: (_) =>
+              EmployeeProvider(employeeRepository: sl<EmployeeRepository>()),
+          update: (_, auth, subscription, previous) => (previous ??
+              EmployeeProvider(employeeRepository: sl<EmployeeRepository>()))
+            ..updateSubscriptionProvider(subscription)
+            ..setStoreId(auth.currentStoreId),
         ),
         Provider(create: (_) => TransactionValidatorService()),
-        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider, WalletProvider>(
+        ChangeNotifierProxyProvider2<AuthProvider, SubscriptionProvider,
+            WalletProvider>(
           lazy: false,
           create: (context) => WalletProvider(
               authProvider: Provider.of<AuthProvider>(context, listen: false),
-              subscriptionProvider: Provider.of<SubscriptionProvider>(context, listen: false),
+              subscriptionProvider:
+                  Provider.of<SubscriptionProvider>(context, listen: false),
               walletRepository: sl<WalletRepository>()),
           update: (_, auth, subscription, previous) => (previous ??
               WalletProvider(
-                  authProvider: auth, 
+                  authProvider: auth,
                   subscriptionProvider: subscription,
                   walletRepository: sl<WalletRepository>()))
             ..updateAuthState(auth)
@@ -139,6 +144,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class AuthCheckWrapper extends StatefulWidget {
   const AuthCheckWrapper({super.key});
 
@@ -164,38 +170,44 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, child) {
-        
         // 1. Guard against Admin Block
-        if (auth.currentStore?.subscription.status == SubscriptionStatus.suspended) {
+        if (auth.currentStore?.subscription.status ==
+            SubscriptionStatus.suspended) {
           return const AdminBlockScreen();
         }
 
         // 2. Guard against Expired License
-        if (auth.isSubscriptionExpired && auth.currentStore?.subscription.planId != SubscriptionPlan.lifetime) {
+        if (auth.isSubscriptionExpired &&
+            auth.currentStore?.subscription.planId !=
+                SubscriptionPlan.lifetime) {
           return const PaywallScreen();
         }
 
         // 3. Check Authentication & Navigate Mapped
         if (auth.isAuthenticated && !_isNavigating) {
           _isNavigating = true; // نمنع أي محاولة انتقال أخرى
-          
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
             if (role == UserRole.owner || role == UserRole.employee) {
-               // استخدمنا pushReplacementNamed كما كانت في كودك الأصلي
-               Navigator.of(context).pushReplacementNamed(RouteConstants.ownerDashboard);
+              // استخدمنا pushReplacementNamed كما كانت في كودك الأصلي
+              Navigator.of(context)
+                  .pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {
-               auth.logout();
+              auth.logout();
             }
           });
-          
+
           // نرجع شاشة فاضية أو تحميل أثناء الانتقال
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         }
 
         // 4. Loading State
-        if (auth.status == AuthStatus.loading || auth.status == AuthStatus.idle) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (auth.status == AuthStatus.loading ||
+            auth.status == AuthStatus.idle) {
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         }
 
         // 5. Default Fallback (Not Authenticated)

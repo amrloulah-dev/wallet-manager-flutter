@@ -18,54 +18,71 @@ class MigrationService {
       final walletsBaseQuery = _firestore
           .collection(FirebaseConstants.walletsCollection)
           .where(FirebaseConstants.storeId, isEqualTo: storeId);
-      
+
       final walletsTotalCount = await walletsBaseQuery.count().get();
-      
-      final activeWalletsQuery = walletsBaseQuery.where(FirebaseConstants.isActive, isEqualTo: true);
-      final activeWalletsStats = await activeWalletsQuery.aggregate(
-        count(),
-        sum('balance'),
-      ).get();
+
+      final activeWalletsQuery =
+          walletsBaseQuery.where(FirebaseConstants.isActive, isEqualTo: true);
+      final activeWalletsStats = await activeWalletsQuery
+          .aggregate(
+            count(),
+            sum('balance'),
+          )
+          .get();
 
       // 2. Recalculate Debts
       final debtsBaseQuery = _firestore
           .collection(FirebaseConstants.debts)
           .where(FirebaseConstants.storeId, isEqualTo: storeId);
-      
-      final openDebtsQuery = debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
-      final openDebtsStats = await openDebtsQuery.aggregate(
-        count(),
-        sum('amountDue'),
-      ).get();
 
-      final paidDebtsQuery = debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
-      final paidDebtsStats = await paidDebtsQuery.aggregate(
-        count(),
-        sum('amountPaid'),
-      ).get();
+      final openDebtsQuery =
+          debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
+      final openDebtsStats = await openDebtsQuery
+          .aggregate(
+            count(),
+            sum('amountDue'),
+          )
+          .get();
+
+      final paidDebtsQuery =
+          debtsBaseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
+      final paidDebtsStats = await paidDebtsQuery
+          .aggregate(
+            count(),
+            sum('amountPaid'),
+          )
+          .get();
 
       // 3. Recalculate Transactions
       final transactionsBaseQuery = _firestore
           .collection(FirebaseConstants.transactions)
           .where(FirebaseConstants.storeId, isEqualTo: storeId);
-      
-      final transactionsStats = await transactionsBaseQuery.aggregate(
-        count(),
-        sum('commission'),
-        sum('serviceFee'),
-      ).get();
 
-      final sendTransactionsQuery = transactionsBaseQuery.where('transactionType', isEqualTo: TransactionType.debit.name);
-      final sendStats = await sendTransactionsQuery.aggregate(
-        count(),
-        sum('amount'),
-      ).get();
+      final transactionsStats = await transactionsBaseQuery
+          .aggregate(
+            count(),
+            sum('commission'),
+            sum('serviceFee'),
+          )
+          .get();
 
-      final receiveTransactionsQuery = transactionsBaseQuery.where('transactionType', isEqualTo: TransactionType.credit.name);
-      final receiveStats = await receiveTransactionsQuery.aggregate(
-        count(),
-        sum('amount'),
-      ).get();
+      final sendTransactionsQuery = transactionsBaseQuery
+          .where('transactionType', isEqualTo: TransactionType.debit.name);
+      final sendStats = await sendTransactionsQuery
+          .aggregate(
+            count(),
+            sum('amount'),
+          )
+          .get();
+
+      final receiveTransactionsQuery = transactionsBaseQuery
+          .where('transactionType', isEqualTo: TransactionType.credit.name);
+      final receiveStats = await receiveTransactionsQuery
+          .aggregate(
+            count(),
+            sum('amount'),
+          )
+          .get();
 
       // 4. Update Stats Summary
       final summaryRef = _firestore
@@ -97,7 +114,8 @@ class MigrationService {
         stackTrace: stack,
         operation: 'MigrationService.recalculateStoreStats',
       );
-      throw ServerException('فشل إعادة حساب الإحصائيات: ${e.message}', code: e.code);
+      throw ServerException('فشل إعادة حساب الإحصائيات: ${e.message}',
+          code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

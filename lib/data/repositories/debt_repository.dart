@@ -189,7 +189,8 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
+        final statsRef =
+            _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
         final statsSnap = await transaction.get(statsRef);
         int currentOpenDebts = 0;
@@ -260,7 +261,8 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        final statsRef = _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
+        final statsRef =
+            _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
         final statsSnap = await transaction.get(statsRef);
         int currentPaidDebts = 0;
@@ -314,7 +316,8 @@ class DebtRepository {
   }
 
   Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
+      String storeId, DateTime startDate, DateTime endDate,
+      {DocumentSnapshot? lastDocument}) async {
     try {
       Query query = _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -390,7 +393,8 @@ class DebtRepository {
 
       return snapshot.getSum('amountDue') ?? 0.0;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.getDebtsTotalAmount');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsTotalAmount');
       return 0.0;
     }
   }
@@ -446,11 +450,13 @@ class DebtRepository {
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.deleteDebt');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       throw ServerException('Failed to delete debt: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.deleteDebt');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while deleting the debt: $e');
@@ -481,14 +487,16 @@ class DebtRepository {
           .where('debtType', isEqualTo: type);
 
       // Open Debts Query
-      final openQuery = baseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
+      final openQuery =
+          baseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
       final openAggregate = openQuery.aggregate(
         sum('amountDue'),
         count(),
       );
 
       // Paid Debts Query
-      final paidQuery = baseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
+      final paidQuery =
+          baseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
 
       // We sum 'totalAmount' (original total)
       final paidAggregate = paidQuery.aggregate(
@@ -508,7 +516,8 @@ class DebtRepository {
         'paidTotal': paidSnapshot.getSum('totalAmount') ?? 0.0,
       };
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DebtRepository.fetchDebtStatistics');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.fetchDebtStatistics');
       return {
         'openCount': 0,
         'openTotal': 0.0,

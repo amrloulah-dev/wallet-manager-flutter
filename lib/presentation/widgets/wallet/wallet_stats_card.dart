@@ -143,8 +143,9 @@ class _StatItem extends StatelessWidget {
             style: AppTextStyles.h3.copyWith(color: color),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textDirection:
-                label == l10n.lastTransaction ? TextDirection.rtl : TextDirection.ltr,
+            textDirection: label == l10n.lastTransaction
+                ? TextDirection.rtl
+                : TextDirection.ltr,
           ),
         ],
       ),

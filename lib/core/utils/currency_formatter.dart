@@ -4,13 +4,14 @@ import 'package:intl/intl.dart';
 class CurrencyFormatter {
   /// Formats a number as a currency amount with thousand separators.
   /// Defaults to 'en_US' locale for standard comma separators.
-  static String formatAmount(num? amount, {bool showCurrency = false, String currencySymbol = 'ج'}) {
+  static String formatAmount(num? amount,
+      {bool showCurrency = false, String currencySymbol = 'ج'}) {
     if (amount == null) {
       return '0.00';
     }
     final formatter = NumberFormat('#,##0.00', 'en_US');
     final formatted = formatter.format(amount);
-    
+
     if (showCurrency) {
       return '$formatted $currencySymbol';
     }

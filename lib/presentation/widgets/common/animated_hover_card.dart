@@ -29,7 +29,8 @@ class _AnimatedHoverCardState extends State<AnimatedHoverCard> {
 
   @override
   Widget build(BuildContext context) {
-    final elevation = _isHighlighted ? widget.highlightedElevation : widget.initialElevation;
+    final elevation =
+        _isHighlighted ? widget.highlightedElevation : widget.initialElevation;
     final currentScale = _isHighlighted ? widget.scale : 1.0;
 
     return AnimatedContainer(

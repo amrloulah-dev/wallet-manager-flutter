@@ -33,33 +33,33 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
       );
   @override
   StoreModel? get currentStore => StoreModel(
-    storeId: 'store_123',
-    storeName: 'Test Store',
-    storePassword: 'hashed_password',
-    ownerId: 'owner_123',
-    ownerName: 'Owner',
-    ownerEmail: 'owner@test.com',
-    subscription: StoreSubscription(
-      planId: SubscriptionPlan.trial,
-      status: SubscriptionStatus.active,
-      trialConsumed: true,
-      maxWallets: 3,
-      maxEmployees: 1,
-      smsEnabled: true,
-    ),
-    settings: StoreSettings(
-      currency: 'EGP',
-      timezone: 'Africa/Cairo',
-    ),
-    stats: StoreStats(
-      totalWallets: 0,
-      activeWallets: 0,
-      totalTransactionsToday: 0,
-      totalCommissionToday: 0.0,
-      totalServiceFeeToday: 0.0,
-    ),
-    createdAt: DateTime.now(),
-  );
+        storeId: 'store_123',
+        storeName: 'Test Store',
+        storePassword: 'hashed_password',
+        ownerId: 'owner_123',
+        ownerName: 'Owner',
+        ownerEmail: 'owner@test.com',
+        subscription: StoreSubscription(
+          planId: SubscriptionPlan.trial,
+          status: SubscriptionStatus.active,
+          trialConsumed: true,
+          maxWallets: 3,
+          maxEmployees: 1,
+          smsEnabled: true,
+        ),
+        settings: StoreSettings(
+          currency: 'EGP',
+          timezone: 'Africa/Cairo',
+        ),
+        stats: StoreStats(
+          totalWallets: 0,
+          activeWallets: 0,
+          totalTransactionsToday: 0,
+          totalCommissionToday: 0.0,
+          totalServiceFeeToday: 0.0,
+        ),
+        createdAt: DateTime.now(),
+      );
   @override
   bool get isTrial => true;
   @override
@@ -70,7 +70,8 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionProvider {
+class DummySubscriptionProvider extends ChangeNotifier
+    implements SubscriptionProvider {
   @override
   bool get hasSeenSuccessModal => true;
   @override
@@ -85,7 +86,8 @@ class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionPr
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummyStatisticsProvider extends ChangeNotifier implements StatisticsProvider {
+class DummyStatisticsProvider extends ChangeNotifier
+    implements StatisticsProvider {
   @override
   bool get isLoading => false;
   @override
@@ -115,7 +117,8 @@ class DummyWalletProvider extends ChangeNotifier implements WalletProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummyTransactionProvider extends ChangeNotifier implements TransactionProvider {
+class DummyTransactionProvider extends ChangeNotifier
+    implements TransactionProvider {
   @override
   bool get isLoading => false;
   @override
@@ -140,16 +143,23 @@ class DummyDebtProvider extends ChangeNotifier implements DebtProvider {
 }
 
 void main() {
-  testWidgets('MainDashboardScreen uses CustomScrollView and Sliver components', (WidgetTester tester) async {
+  testWidgets('MainDashboardScreen uses CustomScrollView and Sliver components',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<AuthProvider>(create: (_) => DummyAuthProvider()),
-          ChangeNotifierProvider<SubscriptionProvider>(create: (_) => DummySubscriptionProvider()),
-          ChangeNotifierProvider<StatisticsProvider>(create: (_) => DummyStatisticsProvider()),
-          ChangeNotifierProvider<WalletProvider>(create: (_) => DummyWalletProvider()),
-          ChangeNotifierProvider<TransactionProvider>(create: (_) => DummyTransactionProvider()),
-          ChangeNotifierProvider<DebtProvider>(create: (_) => DummyDebtProvider()),
+          ChangeNotifierProvider<AuthProvider>(
+              create: (_) => DummyAuthProvider()),
+          ChangeNotifierProvider<SubscriptionProvider>(
+              create: (_) => DummySubscriptionProvider()),
+          ChangeNotifierProvider<StatisticsProvider>(
+              create: (_) => DummyStatisticsProvider()),
+          ChangeNotifierProvider<WalletProvider>(
+              create: (_) => DummyWalletProvider()),
+          ChangeNotifierProvider<TransactionProvider>(
+              create: (_) => DummyTransactionProvider()),
+          ChangeNotifierProvider<DebtProvider>(
+              create: (_) => DummyDebtProvider()),
         ],
         child: const MaterialApp(
           localizationsDelegates: [
@@ -170,17 +180,20 @@ void main() {
     expect(find.byType(CustomScrollView), findsOneWidget);
 
     // Verify child widgets are present (they are now slivers or wrapped in slivers)
-    expect(find.byType(SliverPadding).evaluate().length, greaterThanOrEqualTo(4));
-    
+    expect(
+        find.byType(SliverPadding).evaluate().length, greaterThanOrEqualTo(4));
+
     // Verify no GridView/ListView has shrinkWrap: true
     final grids = tester.widgetList<GridView>(find.byType(GridView));
     for (final grid in grids) {
-      expect(grid.shrinkWrap, isFalse, reason: 'GridView should not use shrinkWrap: true');
+      expect(grid.shrinkWrap, isFalse,
+          reason: 'GridView should not use shrinkWrap: true');
     }
-    
+
     final lists = tester.widgetList<ListView>(find.byType(ListView));
     for (final list in lists) {
-      expect(list.shrinkWrap, isFalse, reason: 'ListView should not use shrinkWrap: true');
+      expect(list.shrinkWrap, isFalse,
+          reason: 'ListView should not use shrinkWrap: true');
     }
   });
 }

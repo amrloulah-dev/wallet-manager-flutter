@@ -33,7 +33,7 @@ void main() {
     test('setError should update current error and log it', () {
       const errorCode = 'TEST_ERROR';
       provider.triggerError(errorCode);
-      
+
       // Assuming we expose error for testing or it triggers something observable
       // For now, we'll just check if it can be called
       expect(() => provider.triggerError(errorCode), returnsNormally);
@@ -43,7 +43,7 @@ void main() {
       expect(provider.isDisposed, isFalse);
       provider.dispose();
       expect(provider.isDisposed, isTrue);
-      
+
       // triggerNotify should fail silently because it checks isDisposed
       expect(() => provider.triggerNotify(), returnsNormally);
     });

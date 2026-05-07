@@ -38,9 +38,9 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final subProvider = context.read<SubscriptionProvider>();
       await subProvider.submitSubscriptionRequest(
@@ -48,12 +48,12 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
         paymentMethod: _selectedMethod,
         receiptNumber: _receiptController.text.trim(),
       );
-      
+
       if (!mounted) return;
 
       final authProvider = context.read<AuthProvider>();
-      await authProvider.tryAutoLogin(); 
-      
+      await authProvider.tryAutoLogin();
+
       if (!mounted) return;
 
       final loc = AppLocalizations.of(context)!;
@@ -79,8 +79,10 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final planName = widget.planId == SubscriptionPlan.lifetime ? loc.lifetimePlan : loc.proYearlyTitle;
-    
+    final planName = widget.planId == SubscriptionPlan.lifetime
+        ? loc.lifetimePlan
+        : loc.proYearlyTitle;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Padding(
@@ -102,28 +104,31 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                 Text(
                   loc.paymentDetails,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   loc.selectedPlan(planName),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: Colors.grey[600],
+                      ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                Text(loc.paymentMethod, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(loc.paymentMethod,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildMethodSelector('vodafone_cash', loc.vodafoneCash, Icons.phone_android),
+                      _buildMethodSelector('vodafone_cash', loc.vodafoneCash,
+                          Icons.phone_android),
                       const SizedBox(width: 12),
-                      _buildMethodSelector('instapay', loc.instaPay, Icons.account_balance),
+                      _buildMethodSelector(
+                          'instapay', loc.instaPay, Icons.account_balance),
                     ],
                   ),
                 ),
@@ -174,7 +179,8 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
                           loc.confirmPayment,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                 ),
               ],
@@ -187,8 +193,9 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
 
   Widget _buildMethodSelector(String value, String label, IconData icon) {
     final isSelected = _selectedMethod == value;
-    final color = isSelected ? Theme.of(context).primaryColor : Colors.grey[400];
-    
+    final color =
+        isSelected ? Theme.of(context).primaryColor : Colors.grey[400];
+
     return InkWell(
       onTap: () => setState(() => _selectedMethod = value),
       borderRadius: BorderRadius.circular(12),
@@ -197,7 +204,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: color!, width: 2),
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? color.withAlpha((0.1 * 255).round()) : Colors.transparent,
+          color: isSelected ? color.withAlpha(26) : Colors.transparent,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

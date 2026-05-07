@@ -32,7 +32,9 @@ Future<void> setupServiceLocator() async {
   // External Services
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerFactoryParam<FirebaseAuth, FirebaseApp?, void>(
-    (app, _) => app != null ? FirebaseAuth.instanceFor(app: app) : FirebaseAuth.instance,
+    (app, _) => app != null
+        ? FirebaseAuth.instanceFor(app: app)
+        : FirebaseAuth.instance,
   );
   sl.registerLazySingleton<FirebaseService>(() => FirebaseService());
   sl.registerLazySingleton<CacheManager>(() => CacheManager());
@@ -41,21 +43,23 @@ Future<void> setupServiceLocator() async {
   final localStorage = LocalStorageService();
   await localStorage.initialize();
   sl.registerSingleton<LocalStorageService>(localStorage);
-  sl.registerLazySingleton<WalletCacheManager>(() => WalletCacheManager(storage: localStorage));
+  sl.registerLazySingleton<WalletCacheManager>(
+      () => WalletCacheManager(storage: localStorage));
   sl.registerLazySingleton<AppEvents>(() => AppEvents());
 
   sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
-    authRepository: sl<AuthRepository>(),
-    storeRepository: sl<StoreRepository>(),
-    userRepository: sl<UserRepository>(),
-    deviceRepository: sl<DeviceRepository>(),
-    localStorage: sl<LocalStorageService>(),
-    firestore: sl<FirebaseFirestore>(),
-    subscriptionRepository: sl<SubscriptionRepository>(),
-  ));
+        authRepository: sl<AuthRepository>(),
+        storeRepository: sl<StoreRepository>(),
+        userRepository: sl<UserRepository>(),
+        deviceRepository: sl<DeviceRepository>(),
+        localStorage: sl<LocalStorageService>(),
+        firestore: sl<FirebaseFirestore>(),
+        subscriptionRepository: sl<SubscriptionRepository>(),
+      ));
 
   // UseCases
-  sl.registerLazySingleton<TransactionFeeCalculator>(() => TransactionFeeCalculator());
+  sl.registerLazySingleton<TransactionFeeCalculator>(
+      () => TransactionFeeCalculator());
   sl.registerLazySingleton<WalletUseCase>(() => WalletUseCase(
         authProvider: sl<AuthProvider>(),
       ));
@@ -63,20 +67,23 @@ Future<void> setupServiceLocator() async {
   // Repositories — Lazy Singletons
   sl.registerLazySingleton<AuthRepository>(() => AuthRepository());
   sl.registerLazySingleton<WalletRepository>(() => WalletRepository());
-  sl.registerLazySingleton<TransactionRepository>(() => TransactionRepository());
+  sl.registerLazySingleton<TransactionRepository>(
+      () => TransactionRepository());
   sl.registerLazySingleton<DebtRepository>(() => DebtRepository());
   sl.registerLazySingleton<EmployeeRepository>(() => EmployeeRepository());
   sl.registerLazySingleton<StoreRepository>(() => StoreRepository());
   sl.registerLazySingleton<StatsRepository>(() => StatsRepository());
-  sl.registerLazySingleton<SubscriptionRepository>(() => SubscriptionRepository());
-  sl.registerLazySingleton<SystemConfigRepository>(() => SystemConfigRepository());
+  sl.registerLazySingleton<SubscriptionRepository>(
+      () => SubscriptionRepository());
+  sl.registerLazySingleton<SystemConfigRepository>(
+      () => SystemConfigRepository());
   sl.registerLazySingleton<DeviceRepository>(() => DeviceRepository());
   sl.registerLazySingleton<LicenseKeyRepository>(() => LicenseKeyRepository());
   sl.registerLazySingleton<UserRepository>(() => UserRepository());
 
   // UseCases
   sl.registerLazySingleton<OverlayUseCase>(() => OverlayUseCase(
-    transactionRepository: sl<TransactionRepository>(),
-    localStorage: sl<LocalStorageService>(),
-  ));
+        transactionRepository: sl<TransactionRepository>(),
+        localStorage: sl<LocalStorageService>(),
+      ));
 }

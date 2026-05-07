@@ -39,8 +39,7 @@ class AccountInfoSection extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor:
-                          AppColors.primary.withAlpha((0.1 * 255).round()),
+                      backgroundColor: AppColors.primary.withAlpha(26),
                       child: Text(avatarLetter,
                           style: AppTextStyles.h2
                               .copyWith(color: AppColors.primary)),
@@ -102,7 +101,8 @@ class AccountInfoSection extends StatelessWidget {
                       _buildInfoRow(
                           context: context,
                           label: AppLocalizations.of(context)!.creationDate,
-                          value: DateHelper.formatDateTime(store.createdAt ?? DateTime.now())),
+                          value: DateHelper.formatDateTime(
+                              store.createdAt ?? DateTime.now())),
                     ],
                   ),
                 ),
@@ -121,7 +121,8 @@ class AccountInfoSection extends StatelessWidget {
     );
   }
 
-  Widget _buildLicenseCard(BuildContext context, StoreSubscription subscription) {
+  Widget _buildLicenseCard(
+      BuildContext context, StoreSubscription subscription) {
     return Consumer2<AuthProvider, SubscriptionProvider>(
         builder: (context, authProvider, subProvider, _) {
       final isTrial = authProvider.isTrial;
@@ -248,7 +249,7 @@ class AccountInfoSection extends StatelessWidget {
                           isDark ? Colors.amber.shade200 : AppColors.primary,
                       backgroundColor:
                           (isDark ? Colors.amber.shade900 : AppColors.primary)
-                              .withAlpha((0.1 * 255).round()),
+                              .withAlpha(26),
                     ),
                   ),
                 ),

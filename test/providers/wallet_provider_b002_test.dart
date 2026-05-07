@@ -15,9 +15,13 @@ import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockWalletCacheManager extends Mock implements WalletCacheManager {}
+
 class MockWalletUseCase extends Mock implements WalletUseCase {}
 
 class FakeWalletModel extends Fake implements WalletModel {}
@@ -44,7 +48,7 @@ void main() {
 
     // Stub cache manager
     when(() => mockCacheManager.cacheWallets(any())).thenAnswer((_) async {});
-    
+
     // Stub UseCase
     final mockUser = UserModel(
       userId: 'user1',
@@ -67,7 +71,9 @@ void main() {
     );
   });
 
-  test('Bug B-002: createWallet should return false if subscriptionProvider is null', () async {
+  test(
+      'Bug B-002: createWallet should return false if subscriptionProvider is null',
+      () async {
     // 1. Setup: Auth indicates a user is logged in
     final mockUser = UserModel(
       userId: 'user1',
@@ -90,13 +96,15 @@ void main() {
       balance: 100.0,
       createdBy: 'user1',
     );
-    
+
     expect(success, isFalse);
-    expect(walletProvider.errorMessage, equals('wallet_error_subscription_unresolved'));
+    expect(walletProvider.errorMessage,
+        equals('wallet_error_subscription_unresolved'));
   });
 
   group('WalletProvider Error Transparency (Phase 5)', () {
-    test('createWallet should return false and set error if repository throws', () async {
+    test('createWallet should return false and set error if repository throws',
+        () async {
       final mockUser = UserModel(
         userId: 'user1',
         storeId: 'test_store',

@@ -28,7 +28,7 @@ class PaymentSuccessModal extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.green.withAlpha((0.1 * 255).round()),
+                  color: Colors.green.withAlpha(26),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -73,7 +73,8 @@ class PaymentSuccessModal extends StatelessWidget {
                   ),
                   child: Text(
                     loc.continueButton,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

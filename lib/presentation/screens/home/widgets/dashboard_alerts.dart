@@ -49,8 +49,9 @@ class DashboardAlerts extends StatelessWidget {
                 type: AlertType.warning,
                 onActionTap: () {
                   final user = context.read<AuthProvider>().currentUser;
-                  final canAccess = user?.role == UserRole.owner || // ENUM refactor
-                      (user?.permissions?.viewWallets ?? false);
+                  final canAccess =
+                      user?.role == UserRole.owner || // ENUM refactor
+                          (user?.permissions?.viewWallets ?? false);
 
                   if (canAccess) {
                     Navigator.pushNamed(
@@ -69,13 +70,14 @@ class DashboardAlerts extends StatelessWidget {
 
             if (openDebtsCount > 0) {
               alerts.add(AlertCard(
-                message:
-                    AppLocalizations.of(context)!.openDebtsAlert(openDebtsCount),
+                message: AppLocalizations.of(context)!
+                    .openDebtsAlert(openDebtsCount),
                 type: AlertType.error,
                 onActionTap: () {
                   final user = context.read<AuthProvider>().currentUser;
-                  final canAccess = user?.role == UserRole.owner || // ENUM refactor
-                      (user?.permissions?.viewDebts ?? false);
+                  final canAccess =
+                      user?.role == UserRole.owner || // ENUM refactor
+                          (user?.permissions?.viewDebts ?? false);
 
                   if (canAccess) {
                     Navigator.pushNamed(context, RouteConstants.debtsList);

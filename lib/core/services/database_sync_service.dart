@@ -56,9 +56,11 @@ class DatabaseSyncService {
         _deviceRepository = deviceRepository,
         _localStorage = localStorage,
         _firestore = firestore ?? sl<FirebaseService>().firestore,
-        _subscriptionRepository = subscriptionRepository ?? sl<SubscriptionRepository>();
+        _subscriptionRepository =
+            subscriptionRepository ?? sl<SubscriptionRepository>();
 
-  bool _isSubExpired(StoreSubscription sub) => sub.isExpiredAt(TimeService.now());
+  bool _isSubExpired(StoreSubscription sub) =>
+      sub.isExpiredAt(TimeService.now());
 
   Future<AuthSessionResult?> tryAutoLogin() async {
     final savedUserId = _localStorage.userId;
@@ -66,12 +68,14 @@ class DatabaseSyncService {
     final savedUserRole = _localStorage.userRole;
 
     if (savedUserId != null && savedStoreId != null && savedUserRole != null) {
-      if (savedUserRole == UserRole.owner.name) { // ENUM refactor
+      if (savedUserRole == UserRole.owner.name) {
+        // ENUM refactor
         final firebaseUser = _authRepository.getCurrentUser();
         if (firebaseUser != null) {
           return await _finalizeOwnerLogin(firebaseUser.uid);
         }
-      } else if (savedUserRole == UserRole.employee.name) { // ENUM refactor
+      } else if (savedUserRole == UserRole.employee.name) {
+        // ENUM refactor
         final user = await _userRepository.getUserById(savedUserId);
         final store = await _storeRepository.getStoreById(savedStoreId);
 
@@ -81,7 +85,8 @@ class DatabaseSyncService {
             await _ensureEmployeePermissions(user);
             await _userRepository.updateLastLogin(user.userId);
           }
-          return AuthSessionResult(user: user, store: store, isExpired: isExpired);
+          return AuthSessionResult(
+              user: user, store: store, isExpired: isExpired);
         }
       }
     }
@@ -111,7 +116,8 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(userModel.userId);
       AnalyticsService.setUserId(userModel.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: userModel.role.name); // ENUM refactor
+      AnalyticsService.setUserProperty(
+          name: 'role', value: userModel.role.name); // ENUM refactor
       AnalyticsService.logLogin('email_password');
 
       await _localStorage.saveSession(
@@ -123,12 +129,15 @@ class DatabaseSyncService {
       );
     }
 
-    return AuthSessionResult(user: userModel, store: store, isExpired: isExpired);
+    return AuthSessionResult(
+        user: userModel, store: store, isExpired: isExpired);
   }
 
-  Future<AuthSessionResult> loginOwnerWithEmail(String email, String password) async {
+  Future<AuthSessionResult> loginOwnerWithEmail(
+      String email, String password) async {
     try {
-      final userCredential = await _authRepository.signInWithEmail(email, password);
+      final userCredential =
+          await _authRepository.signInWithEmail(email, password);
       final user = userCredential.user!;
       return await _finalizeOwnerLogin(user.uid);
     } catch (e) {
@@ -140,12 +149,12 @@ class DatabaseSyncService {
   Future<AuthSessionResult?> loginWithGoogleOrNull() async {
     final userCredential = await _authRepository.signInWithGoogle();
     if (userCredential?.user == null) return null;
-    
+
     final googleUser = userCredential!.user!;
     final user = await _userRepository.getUserByFirebaseUid(googleUser.uid);
-    
+
     if (user == null || !user.isOwner) return null;
-    
+
     final store = await _storeRepository.getStoreById(user.storeId);
     if (store == null) {
       await _authRepository.signOut();
@@ -157,7 +166,8 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(user.userId);
       AnalyticsService.setUserId(user.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: user.role.name); // ENUM refactor
+      AnalyticsService.setUserProperty(
+          name: 'role', value: user.role.name); // ENUM refactor
       AnalyticsService.logLogin('google');
 
       await _localStorage.saveSession(
@@ -172,7 +182,8 @@ class DatabaseSyncService {
     return AuthSessionResult(user: user, store: store, isExpired: isExpired);
   }
 
-  Future<AuthSessionResult> loginAsEmployee(UserModel employee, StoreModel store) async {
+  Future<AuthSessionResult> loginAsEmployee(
+      UserModel employee, StoreModel store) async {
     if (!store.isActive) throw StoreInactiveException();
 
     bool identityAuthSuccess = false;
@@ -190,10 +201,12 @@ class DatabaseSyncService {
       }
     }
 
-    if (!identityAuthSuccess && (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
+    if (!identityAuthSuccess &&
+        (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
       try {
         final newUid = await _lazyProvision(employee);
-        await _userRepository.updateUser(employee.userId, {'firebaseUid': newUid});
+        await _userRepository
+            .updateUser(employee.userId, {'firebaseUid': newUid});
         employee = employee.copyWith(firebaseUid: newUid);
       } catch (e) {
         await _authRepository.signOut();
@@ -205,7 +218,8 @@ class DatabaseSyncService {
     if (!isExpired) {
       await _userRepository.updateLastLogin(employee.userId);
       AnalyticsService.setUserId(employee.userId);
-      AnalyticsService.setUserProperty(name: 'role', value: UserRole.employee.name); // ENUM refactor
+      AnalyticsService.setUserProperty(
+          name: 'role', value: UserRole.employee.name); // ENUM refactor
       AnalyticsService.logLogin('pin_code');
 
       await _localStorage.saveSession(
@@ -217,25 +231,29 @@ class DatabaseSyncService {
       );
     }
 
-    return AuthSessionResult(user: employee, store: store, isExpired: isExpired);
+    return AuthSessionResult(
+        user: employee, store: store, isExpired: isExpired);
   }
 
   Future<AuthSessionResult> finalizeEmployeeSession(UserModel employee) async {
     final firebaseUser = _authRepository.getCurrentUser();
     if (firebaseUser == null) {
-      throw AuthException("No authenticated Google user found. Please sign in first.");
+      throw AuthException(
+          "No authenticated Google user found. Please sign in first.");
     }
 
     await _ensureEmployeePermissions(employee);
 
     final updatedEmployee = await _userRepository.getUserById(employee.userId);
     if (updatedEmployee == null) {
-      throw ServerException('Could not re-fetch employee details after permission check.');
+      throw ServerException(
+          'Could not re-fetch employee details after permission check.');
     }
 
     final store = await _storeRepository.getStoreById(updatedEmployee.storeId);
     if (store == null) {
-      throw ServerException('The store associated with this employee could not be found.');
+      throw ServerException(
+          'The store associated with this employee could not be found.');
     }
 
     if (!store.isActive) throw StoreInactiveException();
@@ -252,7 +270,8 @@ class DatabaseSyncService {
       await _userRepository.updateLastLogin(updatedEmployee.userId);
     }
 
-    return AuthSessionResult(user: updatedEmployee, store: store, isExpired: isExpired);
+    return AuthSessionResult(
+        user: updatedEmployee, store: store, isExpired: isExpired);
   }
 
   Future<AuthSessionResult> registerStoreWithGoogle({
@@ -265,16 +284,19 @@ class DatabaseSyncService {
     }
 
     final deviceId = await _deviceRepository.getDeviceId();
-    var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
+    var isEligibleForTrial =
+        await _deviceRepository.checkDeviceEligibility(deviceId);
 
     if (isEligibleForTrial) {
-      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
+      final hasConsumed =
+          await _subscriptionRepository.hasDeviceConsumedTrial();
       if (hasConsumed) {
         isEligibleForTrial = false;
       }
     }
 
-    final existingStore = await _storeRepository.getStoreByOwnerId(googleUser.uid);
+    final existingStore =
+        await _storeRepository.getStoreByOwnerId(googleUser.uid);
     if (existingStore != null) {
       throw AuthException('هذا الحساب يمتلك متجرًا بالفعل.');
     }
@@ -292,10 +314,14 @@ class DatabaseSyncService {
     AnalyticsService.logSignUp('google');
 
     try {
-      await _deviceRepository.registerDeviceUsage(deviceId, result.store.storeId);
+      await _deviceRepository.registerDeviceUsage(
+          deviceId, result.store.storeId);
       await _subscriptionRepository.verifyDevice(result.store.storeId);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'cache_write', stackTrace: stack);
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'cache_write',
+          stackTrace: stack);
     }
 
     return result;
@@ -309,16 +335,19 @@ class DatabaseSyncService {
     required String storePassword,
   }) async {
     final deviceId = await _deviceRepository.getDeviceId();
-    var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
+    var isEligibleForTrial =
+        await _deviceRepository.checkDeviceEligibility(deviceId);
 
     if (isEligibleForTrial) {
-      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
+      final hasConsumed =
+          await _subscriptionRepository.hasDeviceConsumedTrial();
       if (hasConsumed) {
         isEligibleForTrial = false;
       }
     }
 
-    UserCredential userCredential = await _authRepository.createUserWithEmail(email, password);
+    UserCredential userCredential =
+        await _authRepository.createUserWithEmail(email, password);
     final user = userCredential.user!;
 
     await user.updateDisplayName(ownerName);
@@ -336,9 +365,13 @@ class DatabaseSyncService {
     AnalyticsService.logSignUp('email');
 
     try {
-      await _deviceRepository.registerDeviceUsage(deviceId, result.store.storeId);
+      await _deviceRepository.registerDeviceUsage(
+          deviceId, result.store.storeId);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, severity: ErrorSeverity.low, operation: 'device_registration', stackTrace: stack);
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'device_registration',
+          stackTrace: stack);
     }
 
     return result;
@@ -399,7 +432,8 @@ class DatabaseSyncService {
 
     // Phase 4: Atomic Batch Creation
     final batch = _firestore.batch();
-    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial, batch: batch);
+    await _storeRepository.createStore(newStore,
+        isEligibleForTrial: isEligibleForTrial, batch: batch);
     await _userRepository.createUser(newOwner, batch: batch);
     await batch.commit();
 
@@ -435,13 +469,15 @@ class DatabaseSyncService {
     final pin = employee.pin ?? '';
 
     try {
-      final uid = await IdentityService.provisionIdentity(phone: phone, storeId: storeId, pin: pin);
+      final uid = await IdentityService.provisionIdentity(
+          phone: phone, storeId: storeId, pin: pin);
       if (uid != null) return uid;
       throw Exception('Initial provisioning returned null');
     } catch (e) {
       await Future.delayed(const Duration(seconds: 1));
       try {
-        final uid = await IdentityService.provisionIdentity(phone: phone, storeId: storeId, pin: pin);
+        final uid = await IdentityService.provisionIdentity(
+            phone: phone, storeId: storeId, pin: pin);
         if (uid != null) return uid;
         throw Exception('Retry provisioning returned null');
       } catch (retryError) {

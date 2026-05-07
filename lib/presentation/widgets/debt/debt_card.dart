@@ -77,7 +77,7 @@ class DebtCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: debt.statusColor.withAlpha((0.1 * 255).round()),
+            color: debt.statusColor.withAlpha(26),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -120,9 +120,9 @@ class DebtCard extends StatelessWidget {
 
                 if (confirm == true) {
                   if (context.mounted) {
-                    final success =
-                        await context.read<DebtProvider>()
-                            .deleteDebt(debt.debtId);
+                    final success = await context
+                        .read<DebtProvider>()
+                        .deleteDebt(debt.debtId);
 
                     if (success && context.mounted) {
                       context
@@ -181,8 +181,8 @@ class DebtCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: debt.isOpen
-            ? AppColors.error.withAlpha((0.05 * 255).round())
-            : AppColors.success.withAlpha((0.05 * 255).round()),
+            ? AppColors.error.withAlpha(13)
+            : AppColors.success.withAlpha(13),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -205,7 +205,8 @@ class DebtCard extends StatelessWidget {
 
   Widget _buildDebtType(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final displayType = debt.isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
+    final displayType =
+        debt.isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
 
     return Padding(
       padding: const EdgeInsets.only(top: 12.0),

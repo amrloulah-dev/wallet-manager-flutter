@@ -16,7 +16,8 @@ import 'core/errors/error_severity.dart';
 void main() async {
   // Ensure all bindings are initialized before async operations.
   WidgetsFlutterBinding.ensureInitialized();
-  if (kDebugMode) debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
+  if (kDebugMode)
+    debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
 
   // Initialize Error Handler early
   AppErrorHandler.init();
@@ -46,31 +47,33 @@ void main() async {
     // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
     Future.delayed(const Duration(seconds: 3), () async {
       try {
-        if (kDebugMode) debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+        if (kDebugMode)
+          debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
         await initializeBackgroundService();
-        if (kDebugMode) debugPrint('✅ [BACKGROUND] Service is now active and monitoring SMS.');
+        if (kDebugMode)
+          debugPrint(
+              '✅ [BACKGROUND] Service is now active and monitoring SMS.');
       } catch (e, stack) {
-        if (kDebugMode) debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
-        AppErrorHandler.handle(e, 
-          severity: ErrorSeverity.medium, 
-          operation: 'background_service_init',
-          stackTrace: stack
-        );
+        if (kDebugMode)
+          debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+        AppErrorHandler.handle(e,
+            severity: ErrorSeverity.medium,
+            operation: 'background_service_init',
+            stackTrace: stack);
       }
     });
-
   } catch (e, stackTrace) {
     if (kDebugMode) debugPrint('❌ [INIT FATAL] App initialization failed: $e');
     if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
-    
+
     AppErrorHandler.handle(e,
         severity: ErrorSeverity.critical,
         operation: 'app_initialization',
         stackTrace: stackTrace);
-        
+
     if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
     if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
-    
+
     runApp(
       MaterialApp(
         home: Scaffold(
@@ -95,8 +98,7 @@ void main() async {
                   const Text('Stack Trace:',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(stackTrace.toString(),
-                      style:
-                          const TextStyle(fontSize: 10, color: Colors.grey)),
+                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
               ),
             ),
@@ -143,7 +145,9 @@ class OverlayErrorApp extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 10)
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

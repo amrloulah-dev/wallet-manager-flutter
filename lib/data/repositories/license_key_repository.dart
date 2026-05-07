@@ -35,7 +35,9 @@ class LicenseKeyRepository {
 
       return LicenseKeyModel.fromFirestore(keyDoc);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.verifyLicenseKey');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'LicenseKeyRepository.verifyLicenseKey');
       throw ServerException('حدث خطأ أثناء التحقق من المفتاح: $e');
     }
   }
@@ -46,7 +48,8 @@ class LicenseKeyRepository {
     required String storeId,
   }) async {
     final keyRef = _keysCollection.doc(keyId);
-    final storeRef = _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
+    final storeRef =
+        _firestore.collection(FirebaseConstants.storesCollection).doc(storeId);
 
     try {
       await _firestore.runTransaction((transaction) async {
@@ -85,14 +88,18 @@ class LicenseKeyRepository {
 
         // 3. Update Store Doc
         transaction.update(storeRef, {
-          'subscription.planId': SubscriptionPlan.proYearly.name, // ENUM refactor
-          'subscription.status': SubscriptionStatus.active.name, // ENUM refactor
+          'subscription.planId':
+              SubscriptionPlan.proYearly.name, // ENUM refactor
+          'subscription.status':
+              SubscriptionStatus.active.name, // ENUM refactor
           'subscription.endDate': Timestamp.fromDate(newExpiryDate),
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
         });
       });
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.activateLicenseKey');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'LicenseKeyRepository.activateLicenseKey');
       if (e is ServerException) rethrow; // Pass up our custom exceptions
       throw ServerException('فشل في تفعيل الاشتراك: $e');
     }
@@ -125,7 +132,9 @@ class LicenseKeyRepository {
         remaining -= batchCount;
       }
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.generateAndSaveBatch');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'LicenseKeyRepository.generateAndSaveBatch');
       throw ServerException('Failed to generate license keys: $e');
     }
   }
@@ -138,7 +147,8 @@ class LicenseKeyRepository {
       if (keyData.isUsed == true) return false;
       return true;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'LicenseKeyRepository.isKeyAvailable');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LicenseKeyRepository.isKeyAvailable');
       return false;
     }
   }

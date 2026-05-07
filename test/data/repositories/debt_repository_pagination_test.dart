@@ -25,7 +25,8 @@ void main() {
   });
 
   group('DebtRepository Stateless Pagination', () {
-    test('getDebtsByDateRange should be stateless and use passed lastDocument', () async {
+    test('getDebtsByDateRange should be stateless and use passed lastDocument',
+        () async {
       // 1. Seed data (25 debts)
       for (int i = 0; i < 25; i++) {
         final date = DateTime(2023, 1, 1).add(Duration(minutes: i));
@@ -47,27 +48,30 @@ void main() {
       final endDate = DateTime(2023, 1, 2);
 
       // 2. Fetch first page (should return 20 items)
-      final firstPage = await repository.getDebtsByDateRange(storeId, startDate, endDate);
-      
+      final firstPage =
+          await repository.getDebtsByDateRange(storeId, startDate, endDate);
+
       expect(firstPage.items.length, 20);
       expect(firstPage.lastDocument, isNotNull);
-      
+
       final lastDocFirstPage = firstPage.lastDocument;
 
       // 3. Fetch second page using lastDocument
       final secondPage = await repository.getDebtsByDateRange(
-        storeId, 
-        startDate, 
-        endDate, 
+        storeId,
+        startDate,
+        endDate,
         lastDocument: lastDocFirstPage,
       );
 
       expect(secondPage.items.length, 5);
       expect(secondPage.lastDocument, isNotNull);
-      
+
       // 4. Verify that fetching again without lastDocument still returns first page (statelessness)
-      final firstPageAgain = await repository.getDebtsByDateRange(storeId, startDate, endDate);
-      expect(firstPageAgain.items.first.customerName, firstPage.items.first.customerName);
+      final firstPageAgain =
+          await repository.getDebtsByDateRange(storeId, startDate, endDate);
+      expect(firstPageAgain.items.first.customerName,
+          firstPage.items.first.customerName);
     });
   });
 }

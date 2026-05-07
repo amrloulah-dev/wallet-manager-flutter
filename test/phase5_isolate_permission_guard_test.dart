@@ -21,17 +21,22 @@ void main() {
   });
 
   group('SmsService Isolate Permission Guarding', () {
-    test('init() should request SMS, Overlay, Battery, and Notification permissions', () async {
-      when(() => mockTelephony.requestPhoneAndSmsPermissions).thenAnswer((_) async => true);
-      
+    test(
+        'init() should request SMS, Overlay, Battery, and Notification permissions',
+        () async {
+      when(() => mockTelephony.requestPhoneAndSmsPermissions)
+          .thenAnswer((_) async => true);
+
       // Mock FlutterOverlayWindow via MethodChannel
-      const MethodChannel('x-slayer/overlay_channel').setMockMethodCallHandler((method) async {
+      const MethodChannel('x-slayer/overlay_channel')
+          .setMockMethodCallHandler((method) async {
         if (method.method == 'checkPermission') return true;
         if (method.method == 'requestPermission') return true;
         return null;
       });
 
-      const MethodChannel('flutter.baseflow.com/permissions/methods').setMockMethodCallHandler((method) async {
+      const MethodChannel('flutter.baseflow.com/permissions/methods')
+          .setMockMethodCallHandler((method) async {
         if (method.method == 'requestPermissions') {
           return {
             30: 1, // ignoreBatteryOptimizations -> granted
@@ -50,7 +55,7 @@ void main() {
     test('init() should throw if called from a background isolate', () async {
       // Simulate being in a background isolate
       SmsService.debugIsMainIsolateOverride = false;
-      
+
       try {
         final smsService = SmsService(telephony: mockTelephony);
         await expectLater(smsService.init(), throwsA(isA<UnsupportedError>()));

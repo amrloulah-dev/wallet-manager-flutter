@@ -8,13 +8,22 @@ import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
-class MockFirebaseService extends Mock implements FirebaseService {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
-class MockTransaction extends Mock implements Transaction {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
 
-class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {}
+class MockFirebaseService extends Mock implements FirebaseService {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockTransaction extends Mock implements Transaction {}
+
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class FakeDocumentReference extends Fake
+    implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
   late MockFirebaseFirestore mockFirestore;
@@ -41,10 +50,12 @@ void main() {
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
     when(() => mockCollection.doc(any())).thenReturn(mockDocRef);
-    
+
     // Mock runTransaction
-    when(() => mockFirestore.runTransaction<void>(any())).thenAnswer((invocation) async {
-      final transactionHandler = invocation.positionalArguments[0] as Future<void> Function(Transaction);
+    when(() => mockFirestore.runTransaction<void>(any()))
+        .thenAnswer((invocation) async {
+      final transactionHandler = invocation.positionalArguments[0]
+          as Future<void> Function(Transaction);
       await transactionHandler(mockTransaction);
     });
 
@@ -56,14 +67,18 @@ void main() {
   });
 
   group('Silent Failure Remediation (TDD)', () {
-    test('updateWallet should propagate ServerException on Firestore error', () async {
+    test('updateWallet should propagate ServerException on Firestore error',
+        () async {
       // ARRANGE
-      when(() => mockTransaction.get(any())).thenAnswer((_) async => mockSnapshot);
+      when(() => mockTransaction.get(any()))
+          .thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.exists).thenReturn(true);
-      when(() => mockTransaction.update(any(), any())).thenThrow(Exception('Firestore Error'));
+      when(() => mockTransaction.update(any(), any()))
+          .thenThrow(Exception('Firestore Error'));
 
       // ACT & ASSERT
-      expect(() => repository.updateWallet('id', {}), throwsA(isA<ServerException>()));
+      expect(() => repository.updateWallet('id', {}),
+          throwsA(isA<ServerException>()));
     });
   });
 }

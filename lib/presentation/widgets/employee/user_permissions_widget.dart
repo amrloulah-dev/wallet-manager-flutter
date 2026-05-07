@@ -39,7 +39,8 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)!.employeePermissions, style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.employeePermissions,
+            style: AppTextStyles.h3),
         const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context)!.defineEmployeeActions,

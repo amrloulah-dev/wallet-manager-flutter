@@ -94,10 +94,12 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
 
     if (mounted) {
       if (success) {
-        ToastUtils.showSuccess(AppLocalizations.of(context)!.debtUpdatedSuccess);
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.debtUpdatedSuccess);
         Navigator.pop(context);
       } else {
-        ToastUtils.showError(debtProvider.errorMessage ?? AppLocalizations.of(context)!.debtUpdateFailed);
+        ToastUtils.showError(debtProvider.errorMessage ??
+            AppLocalizations.of(context)!.debtUpdateFailed);
       }
     }
   }
@@ -213,13 +215,14 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha((0.05 * 255).round()),
+        color: AppColors.primary.withAlpha(13),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(AppLocalizations.of(context)!.currentAmount, style: AppTextStyles.labelLarge),
+          Text(AppLocalizations.of(context)!.currentAmount,
+              style: AppTextStyles.labelLarge),
           Text(
             NumberFormatter.formatAmount(widget.debt.amountDue),
             style: AppTextStyles.h2.copyWith(color: AppColors.primary),
@@ -269,13 +272,14 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.info.withAlpha((0.1 * 255).round()),
+            color: AppColors.info.withAlpha(26),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(AppLocalizations.of(context)!.newAmount, style: AppTextStyles.bodyMedium),
+              Text(AppLocalizations.of(context)!.newAmount,
+                  style: AppTextStyles.bodyMedium),
               Text(
                 NumberFormatter.formatAmount(newAmount),
                 style: AppTextStyles.labelLarge.copyWith(color: AppColors.info),

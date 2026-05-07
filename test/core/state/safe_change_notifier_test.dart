@@ -9,10 +9,10 @@ void main() {
       notifier.addListener(() => notified = true);
 
       notifier.testSafeNotify();
-      
+
       // safeNotify uses Future.microtask, so we need to wait
       await Future.microtask(() {});
-      
+
       expect(notified, isTrue);
     });
 

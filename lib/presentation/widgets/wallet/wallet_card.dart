@@ -114,7 +114,7 @@ class WalletCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.red.withAlpha((0.1 * 255).round()),
+              color: Colors.red.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -136,10 +136,11 @@ class WalletCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: (wallet.walletStatus == WalletStatus.suspended // ENUM refactor (placeholder)
+              color: (wallet.walletStatus ==
+                          WalletStatus.suspended // ENUM refactor (placeholder)
                       ? AppColors.error
                       : AppColors.primary)
-                  .withAlpha((0.15 * 255).round()),
+                  .withAlpha(38),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -186,7 +187,8 @@ class WalletCard extends StatelessWidget {
   Widget _buildStats(BuildContext context, WalletModel wallet, bool isFrozen) {
     final l10n = AppLocalizations.of(context)!;
     final iconColor = isFrozen ? Colors.grey : AppColors.primary;
-    final secondaryIconColor = isFrozen ? Colors.grey : AppColors.textSecondary(context);
+    final secondaryIconColor =
+        isFrozen ? Colors.grey : AppColors.textSecondary(context);
     final valueColor = isFrozen ? Colors.grey : AppColors.primary;
     final commissionColor = isFrozen ? Colors.grey : AppColors.success;
 
@@ -211,8 +213,8 @@ class WalletCard extends StatelessWidget {
             ),
             Text(
               NumberFormatter.formatAmount(wallet.balance),
-              style: AppTextStyles.labelMedium.copyWith(
-                  color: valueColor, fontWeight: FontWeight.bold),
+              style: AppTextStyles.labelMedium
+                  .copyWith(color: valueColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -241,7 +243,8 @@ class WalletCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   '${l10n.commission}: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
-                  style: AppTextStyles.bodySmall.copyWith(color: commissionColor),
+                  style:
+                      AppTextStyles.bodySmall.copyWith(color: commissionColor),
                 ),
               ],
             ),
@@ -259,7 +262,8 @@ class WalletCard extends StatelessWidget {
         if (onEdit != null)
           ElevatedButton.icon(
             onPressed: isFrozen ? null : onEdit,
-            icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
+            icon:
+                const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
             label: Text(
               l10n.edit,
               style: const TextStyle(color: Colors.white),

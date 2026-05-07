@@ -7,14 +7,17 @@ import 'package:walletmanager/core/enums/debt_enums.dart';
 
 // Mocks
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockTransaction extends Mock implements Transaction {
   @override
-  Future<DocumentSnapshot<T>> get<T>(DocumentReference<T> documentReference) async {
+  Future<DocumentSnapshot<T>> get<T>(
+      DocumentReference<T> documentReference) async {
     return MockDocumentSnapshot<T>();
   }
-  
+
   @override
-  Transaction set<T>(DocumentReference<T> documentReference, T data, [SetOptions? options]) {
+  Transaction set<T>(DocumentReference<T> documentReference, T data,
+      [SetOptions? options]) {
     return this;
   }
 }
@@ -23,8 +26,13 @@ class MockDocumentSnapshot<T> extends Mock implements DocumentSnapshot<T> {
   @override
   bool get exists => false;
 }
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
 class MockFieldValue extends Mock implements FieldValue {}
 
 void main() {
@@ -53,11 +61,14 @@ void main() {
     final mockStoreDoc = MockDocumentReference();
     final mockStatsCollection = MockCollectionReference();
 
-    when(() => mockFirestore.collection('stores')).thenReturn(mockStoresCollection);
+    when(() => mockFirestore.collection('stores'))
+        .thenReturn(mockStoresCollection);
     when(() => mockFirestore.doc(any())).thenReturn(mockSummaryDocRef);
     when(() => mockStoresCollection.doc(any())).thenReturn(mockStoreDoc);
-    when(() => mockStoreDoc.collection('stats')).thenReturn(mockStatsCollection);
-    when(() => mockStatsCollection.doc('summary')).thenReturn(mockSummaryDocRef);
+    when(() => mockStoreDoc.collection('stats'))
+        .thenReturn(mockStatsCollection);
+    when(() => mockStatsCollection.doc('summary'))
+        .thenReturn(mockSummaryDocRef);
   });
 
   group('updateStatsOnDebtUpdate', () {
@@ -84,7 +95,8 @@ void main() {
       );
     }
 
-    test('should correctly increment stats when a new debt is created', () async {
+    test('should correctly increment stats when a new debt is created',
+        () async {
       // ARRANGE
       final newDebt = createTestDebt(id: debtId, amount: 100);
 

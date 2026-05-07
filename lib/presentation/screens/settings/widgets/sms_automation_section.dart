@@ -162,12 +162,12 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
                       ),
                       const SizedBox(height: 12),
                       // SIM 1
-                      _buildSimDropdown(
-                          0, AppLocalizations.of(context)!.sim1Label, _sim1Config),
+                      _buildSimDropdown(0,
+                          AppLocalizations.of(context)!.sim1Label, _sim1Config),
                       const SizedBox(height: 12),
                       // SIM 2
-                      _buildSimDropdown(
-                          1, AppLocalizations.of(context)!.sim2Label, _sim2Config),
+                      _buildSimDropdown(1,
+                          AppLocalizations.of(context)!.sim2Label, _sim2Config),
                     ],
                   ),
                 ),

@@ -65,8 +65,7 @@ Future<void> _ensureNotificationsInitialized() async {
 Future<void> _showWakeUpNotification(double amount) async {
   await _ensureNotificationsInitialized();
 
-  const AndroidNotificationDetails androidDetails =
-      AndroidNotificationDetails(
+  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
     _kChannelId,
     _kChannelName,
     channelDescription: _kChannelDesc,
@@ -84,7 +83,8 @@ Future<void> _showWakeUpNotification(double amount) async {
   );
 
   // Unique ID so multiple pending notifications stack instead of replacing each other
-  final int notificationId = DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
+  final int notificationId =
+      DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
   await _notificationsPlugin.show(
     notificationId,
     'معاملة جديدة', // "New Transaction"
@@ -98,8 +98,7 @@ Future<void> _showWakeUpNotification(double amount) async {
 Future<void> _showStaleSyncNotification() async {
   await _ensureNotificationsInitialized();
 
-  const AndroidNotificationDetails androidDetails =
-      AndroidNotificationDetails(
+  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
     _kChannelId,
     _kChannelName,
     channelDescription: _kChannelDesc,
@@ -113,7 +112,8 @@ Future<void> _showStaleSyncNotification() async {
   );
 
   // Unique ID so multiple notifications stack gracefully as per Phase 8.1 requirements
-  final int notificationId = DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
+  final int notificationId =
+      DateTime.now().millisecondsSinceEpoch.hashCode.abs() % 99999;
 
   await _notificationsPlugin.show(
     notificationId,
@@ -122,7 +122,6 @@ Future<void> _showStaleSyncNotification() async {
     details,
   );
 }
-
 
 /// Processes an incoming SMS through the full pipeline:
 /// Parse → Match Wallet → Save to Vault → Wake Screen → Trigger Overlay.
@@ -176,9 +175,12 @@ Future<void> handleIncomingSms(
     if (mappings.isNotEmpty) {
       try {
         // 1. Standard Matching (For compliant Android devices)
-        if (message.subscriptionId != null && message.subscriptionId.toString().isNotEmpty) {
+        if (message.subscriptionId != null &&
+            message.subscriptionId.toString().isNotEmpty) {
           final subIdStr = message.subscriptionId.toString().trim();
-          final match = mappings.where((c) => c.subscriptionId?.trim() == subIdStr).firstOrNull;
+          final match = mappings
+              .where((c) => c.subscriptionId?.trim() == subIdStr)
+              .firstOrNull;
           if (match != null) matchedWalletId = match.walletId;
         }
 

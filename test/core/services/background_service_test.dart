@@ -26,7 +26,8 @@ void main() {
     });
 
     // Mock Pigeon channel for firebase_core
-    const pigeonChannel = MethodChannel('dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi.initializeCore');
+    const pigeonChannel = MethodChannel(
+        'dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi.initializeCore');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pigeonChannel, (methodCall) async {
       return [
@@ -58,21 +59,21 @@ void main() {
       // Ensure Firebase.apps is empty initially (in test environment it might be)
       // Note: In real flutter_test, Firebase.apps might not be easily cleared
       // but we can check if initializeApp is called when apps is empty.
-      
+
       // Since backgroundSmsCallback is a top-level function that we can't easily
       // mock the internal Firebase state for, we'll verify it doesn't throw
       // and assume it follows the logic: if (Firebase.apps.isEmpty) { ... }
-      
+
       // We'll call it with a dummy message. backgroundSmsCallback is 'void' and 'async'
       // but it doesn't return a Future, so we might need to wait or check side effects.
       // However, the function itself has a try-catch.
-      
+
       // To properly "fail" first, we'd need a version without the check.
       // Since it's already there, this test serves as verification.
-      
+
       expect(() => Firebase.app(), throwsA(isA<FirebaseException>()));
-      
-      // This is tricky to test fully isolated because Firebase.initializeApp() 
+
+      // This is tricky to test fully isolated because Firebase.initializeApp()
       // is static and side-effect heavy.
     });
   });

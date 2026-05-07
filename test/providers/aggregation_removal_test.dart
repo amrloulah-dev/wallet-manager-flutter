@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:flutter/material.dart';
 
 class MockStatsRepository extends Mock implements StatsRepository {}
+
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 
 void main() {
@@ -23,7 +24,8 @@ void main() {
     mockStatsRepository = MockStatsRepository();
     mockTransactionRepository = MockTransactionRepository();
 
-    statisticsProvider = StatisticsProvider(statsRepository: mockStatsRepository);
+    statisticsProvider =
+        StatisticsProvider(statsRepository: mockStatsRepository);
     transactionProvider = TransactionProvider(
       transactionRepository: mockTransactionRepository,
       storeId: storeId,
@@ -31,7 +33,9 @@ void main() {
   });
 
   group('Client-Side Aggregation Removal (TDD - Phase 4)', () {
-    test('StatisticsProvider.fetchFilteredStats for today should use StatsSummaryModel from repository', () async {
+    test(
+        'StatisticsProvider.fetchFilteredStats for today should use StatsSummaryModel from repository',
+        () async {
       final summary = StatsSummaryModel(
         totalBalance: 5000.0,
         totalWallets: 5,
@@ -48,16 +52,17 @@ void main() {
           .thenAnswer((_) => Stream.fromIterable([summary]));
       when(() => mockStatsRepository.watchTodayStats(storeId))
           .thenAnswer((_) => Stream.empty());
-      when(() => mockStatsRepository.getStatsSummary(any())).thenAnswer((_) async => summary);
+      when(() => mockStatsRepository.getStatsSummary(any()))
+          .thenAnswer((_) async => summary);
 
       statisticsProvider.setStoreId(storeId);
-      
+
       // Wait for stream emission
       await Future.delayed(Duration.zero);
 
       final today = DateTime.now();
       final range = DateTimeRange(start: today, end: today);
-      
+
       await statisticsProvider.fetchFilteredStats(range);
 
       final stats = statisticsProvider.filteredStats!;
@@ -69,8 +74,9 @@ void main() {
       // which we want to move to reading from _dashboardSummary (StatsSummaryModel)
     });
 
-    test('TransactionProvider should not perform manual for-loop aggregations', () async {
-      // This is a code-level verification task. 
+    test('TransactionProvider should not perform manual for-loop aggregations',
+        () async {
+      // This is a code-level verification task.
       // We want to ensure _calculateSummary is removed or refactored to just read from summary data.
       // Currently TransactionProviderStatus.loaded calls _calculateSummary() which has a for loop.
     });

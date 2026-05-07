@@ -83,13 +83,14 @@ class EmployeeProvider extends BaseProvider {
   void _listenToEmployees(String storeId) {
     _updateStatus(EmployeeProviderStatus.loading);
     _employeeStreamSubscription?.cancel();
-    
-    _employeeStreamSubscription =
-        _employeeRepository.watchEmployees(
-          storeId,
-          searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-          activeOnly: _showActiveOnly,
-        ).listen(
+
+    _employeeStreamSubscription = _employeeRepository
+        .watchEmployees(
+      storeId,
+      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+      activeOnly: _showActiveOnly,
+    )
+        .listen(
       (employees) {
         _employees = employees;
         _recalculateSuspendedEmployees();
@@ -207,7 +208,8 @@ class EmployeeProvider extends BaseProvider {
     final activeStaff = _employees
         .where((e) => e.isActive && e.role != UserRole.owner)
         .toList()
-      ..sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
+      ..sort((a, b) => (a.createdAt ?? DateTime.now())
+          .compareTo(b.createdAt ?? DateTime.now()));
 
     if (activeStaff.length <= maxEmployees) return;
 
@@ -336,7 +338,6 @@ class EmployeeProvider extends BaseProvider {
     }
   }
 
-
   UserModel? getEmployeeById(String userId) {
     try {
       final index = _employees.indexWhere((e) => e.userId == userId);
@@ -356,7 +357,11 @@ class EmployeeProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'employee_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'employee_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = EmployeeProviderStatus.error;

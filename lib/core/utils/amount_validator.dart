@@ -1,7 +1,7 @@
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 class AmountValidator {
-  /// Throws [DomainException] if the [value] is less than or equal to zero, 
+  /// Throws [DomainException] if the [value] is less than or equal to zero,
   /// or if it is not a finite number (NaN/Infinity).
   static void ensurePositive(double value) {
     if (!value.isFinite) {

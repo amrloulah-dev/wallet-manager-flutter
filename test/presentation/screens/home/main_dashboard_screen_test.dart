@@ -35,7 +35,8 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionProvider {
+class DummySubscriptionProvider extends ChangeNotifier
+    implements SubscriptionProvider {
   @override
   bool get hasSeenSuccessModal => true;
   @override
@@ -50,12 +51,14 @@ class DummySubscriptionProvider extends ChangeNotifier implements SubscriptionPr
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummyStatisticsProvider extends ChangeNotifier implements StatisticsProvider {
+class DummyStatisticsProvider extends ChangeNotifier
+    implements StatisticsProvider {
   int setStoreIdCallCount = 0;
   @override
   void setStoreId(String? storeId) {
     setStoreIdCallCount++;
   }
+
   @override
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {}
   @override
@@ -87,7 +90,8 @@ class DummyWalletProvider extends ChangeNotifier implements WalletProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class DummyTransactionProvider extends ChangeNotifier implements TransactionProvider {
+class DummyTransactionProvider extends ChangeNotifier
+    implements TransactionProvider {
   @override
   void updateAuthState(AuthProvider auth) {}
   @override
@@ -116,19 +120,25 @@ class DummyDebtProvider extends ChangeNotifier implements DebtProvider {
 }
 
 void main() {
-  testWidgets('MainDashboardScreen caches initializations on rebuilds', (WidgetTester tester) async {
+  testWidgets('MainDashboardScreen caches initializations on rebuilds',
+      (WidgetTester tester) async {
     final subProvider = DummySubscriptionProvider();
     final statProvider = DummyStatisticsProvider();
 
     Widget createTestWidget() {
       return MultiProvider(
         providers: [
-          ChangeNotifierProvider<AuthProvider>(create: (_) => DummyAuthProvider()),
-          ChangeNotifierProvider<SubscriptionProvider>.value(value: subProvider),
+          ChangeNotifierProvider<AuthProvider>(
+              create: (_) => DummyAuthProvider()),
+          ChangeNotifierProvider<SubscriptionProvider>.value(
+              value: subProvider),
           ChangeNotifierProvider<StatisticsProvider>.value(value: statProvider),
-          ChangeNotifierProvider<WalletProvider>(create: (_) => DummyWalletProvider()),
-          ChangeNotifierProvider<TransactionProvider>(create: (_) => DummyTransactionProvider()),
-          ChangeNotifierProvider<DebtProvider>(create: (_) => DummyDebtProvider()),
+          ChangeNotifierProvider<WalletProvider>(
+              create: (_) => DummyWalletProvider()),
+          ChangeNotifierProvider<TransactionProvider>(
+              create: (_) => DummyTransactionProvider()),
+          ChangeNotifierProvider<DebtProvider>(
+              create: (_) => DummyDebtProvider()),
         ],
         child: const MaterialApp(
           localizationsDelegates: [
@@ -148,13 +158,15 @@ void main() {
 
     // Check initial setup calls
     final initialCallCount = statProvider.setStoreIdCallCount;
-    expect(initialCallCount, greaterThan(0), reason: 'Initialization should happen');
+    expect(initialCallCount, greaterThan(0),
+        reason: 'Initialization should happen');
 
     // Force a rebuild by pumping again
     await tester.pumpWidget(createTestWidget());
     await tester.pumpAndSettle();
 
     // Verify it wasn't called again due to didChangeDependencies
-    expect(statProvider.setStoreIdCallCount, initialCallCount, reason: 'Should not re-initialize on rebuild');
+    expect(statProvider.setStoreIdCallCount, initialCallCount,
+        reason: 'Should not re-initialize on rebuild');
   });
 }

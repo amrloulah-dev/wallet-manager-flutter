@@ -29,7 +29,8 @@ void main() {
   });
 
   group('Atomic Stats Sync (TDD)', () {
-    test('toggleWalletStatus should update both wallet and stats atomically', () async {
+    test('toggleWalletStatus should update both wallet and stats atomically',
+        () async {
       // ARRANGE
       await fakeFirestore.collection('stores').doc(storeId).set({
         'name': 'Test Store',
@@ -83,7 +84,8 @@ void main() {
       await repository.setWalletActiveStatus(walletId, false);
 
       // ASSERT
-      final walletDoc = await fakeFirestore.collection('wallets').doc(walletId).get();
+      final walletDoc =
+          await fakeFirestore.collection('wallets').doc(walletId).get();
       expect(walletDoc.data()!['isActive'], false);
 
       final summaryDoc = await fakeFirestore
@@ -97,8 +99,9 @@ void main() {
 
       // Verify legacy root field is NOT updated (or is removed/ignored)
       // The plan says "remove dual-write to legacy root stats fields"
-      final storeDoc = await fakeFirestore.collection('stores').doc(storeId).get();
-      expect(storeDoc.data()!['stats']['activeWallets'], 1, 
+      final storeDoc =
+          await fakeFirestore.collection('stores').doc(storeId).get();
+      expect(storeDoc.data()!['stats']['activeWallets'], 1,
           reason: 'Legacy root field should not have been updated');
     });
   });

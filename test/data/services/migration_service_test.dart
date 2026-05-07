@@ -17,9 +17,11 @@ void main() {
   });
 
   group('MigrationService - Recalculate Stats (TDD)', () {
-    test('recalculateStoreStats should correctly restore stats from collections', () async {
+    test(
+        'recalculateStoreStats should correctly restore stats from collections',
+        () async {
       // ARRANGE: Setup desynchronized state
-      
+
       // 1. Wallets (Actual: 2 wallets, 1 active, 150.0 total balance)
       await fakeFirestore.collection(FirebaseConstants.walletsCollection).add({
         FirebaseConstants.storeId: storeId,
@@ -56,7 +58,7 @@ void main() {
           .doc(storeId)
           .collection(FirebaseConstants.statsCollection)
           .doc(FirebaseConstants.summaryDoc);
-      
+
       await summaryRef.set({
         'totalWallets': 0,
         'activeWallets': 0,

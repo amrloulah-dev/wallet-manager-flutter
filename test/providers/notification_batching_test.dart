@@ -15,11 +15,17 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/database_sync_service.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockStoreRepository extends Mock implements StoreRepository {}
+
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockDeviceRepository extends Mock implements DeviceRepository {}
+
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockDatabaseSyncService extends Mock implements DatabaseSyncService {}
 
 void main() {
@@ -49,7 +55,8 @@ void main() {
 
     final mockAuth = sl<AuthRepository>();
     when(() => mockAuth.getCurrentUser()).thenReturn(null);
-    when(() => mockAuth.authStateChanges()).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.authStateChanges())
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.signOut()).thenAnswer((_) async {});
   });
 
@@ -59,18 +66,19 @@ void main() {
     group('AuthProvider._safeNotify disposal guard', () {
       test('_safeNotify does not fire after dispose()', () async {
         final authProvider = AuthProvider();
-        
+
         int callCount = 0;
         authProvider.addListener(() {
           callCount++;
         });
 
         authProvider.dispose();
-        
+
         // This will attempt to notifyListeners internally.
         expect(() => authProvider.logout(), returnsNormally);
-        
-        expect(callCount, 0, reason: 'Must not emit notification after dispose');
+
+        expect(callCount, 0,
+            reason: 'Must not emit notification after dispose');
       });
 
       test('safeNotify (via tryAutoLogin) fires if not disposed', () async {
@@ -78,7 +86,7 @@ void main() {
         when(() => mockSync.tryAutoLogin()).thenAnswer((_) async {});
 
         final authProvider = AuthProvider();
-        
+
         int callCount = 0;
         authProvider.addListener(() {
           callCount++;
@@ -86,10 +94,10 @@ void main() {
 
         // tryAutoLogin calls _setStatus(loading) then _setStatus(unauthenticated)
         await authProvider.tryAutoLogin();
-        
+
         // Wait for microtasks
         await Future.microtask(() {});
-        
+
         expect(callCount, greaterThan(0), reason: 'Must emit notification');
       });
     });

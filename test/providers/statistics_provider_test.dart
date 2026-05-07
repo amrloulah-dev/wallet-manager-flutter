@@ -15,16 +15,19 @@ void main() {
 
   setUp(() {
     mockStatsRepo = MockStatsRepository();
-    
+
     // Setup default mock behaviors
     final summary = StatsSummaryModel.empty().copyWith(
       totalBalance: 1000.0,
       totalWallets: 5,
     );
 
-    when(() => mockStatsRepo.watchStatsSummary(storeId)).thenAnswer((_) => Stream.value(summary));
-    when(() => mockStatsRepo.watchTodayStats(storeId)).thenAnswer((_) => const Stream.empty());
-    when(() => mockStatsRepo.getStatsSummary(any())).thenAnswer((_) async => summary);
+    when(() => mockStatsRepo.watchStatsSummary(storeId))
+        .thenAnswer((_) => Stream.value(summary));
+    when(() => mockStatsRepo.watchTodayStats(storeId))
+        .thenAnswer((_) => const Stream.empty());
+    when(() => mockStatsRepo.getStatsSummary(any()))
+        .thenAnswer((_) async => summary);
 
     provider = StatisticsProvider(
       statsRepository: mockStatsRepo,
@@ -38,7 +41,7 @@ void main() {
 
     test('fetchFilteredStats should use pre-aggregated summary data', () async {
       provider.setStoreId(storeId);
-      
+
       // Wait for the stream to emit and update the provider state
       await Future.delayed(Duration.zero);
 

@@ -15,9 +15,21 @@ class DummyEmployeeProvider extends ChangeNotifier implements EmployeeProvider {
   bool get hasError => false;
   @override
   List<UserModel> get employees => [
-    UserModel(userId: '1', storeId: 's1', role: UserRole.employee, fullName: 'Emp 1', email: 'e1@t.com', isActive: true),
-    UserModel(userId: '2', storeId: 's1', role: UserRole.employee, fullName: 'Emp 2', email: 'e2@t.com', isActive: false),
-  ];
+        UserModel(
+            userId: '1',
+            storeId: 's1',
+            role: UserRole.employee,
+            fullName: 'Emp 1',
+            email: 'e1@t.com',
+            isActive: true),
+        UserModel(
+            userId: '2',
+            storeId: 's1',
+            role: UserRole.employee,
+            fullName: 'Emp 2',
+            email: 'e2@t.com',
+            isActive: false),
+      ];
   @override
   List<UserModel> get activeEmployees => [employees[0]];
   @override
@@ -29,7 +41,9 @@ class DummyEmployeeProvider extends ChangeNotifier implements EmployeeProvider {
 }
 
 void main() {
-  testWidgets('ManageEmployeesScreen should use CustomScrollView and SliverList for efficiency', (WidgetTester tester) async {
+  testWidgets(
+      'ManageEmployeesScreen should use CustomScrollView and SliverList for efficiency',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<EmployeeProvider>(
         create: (_) => DummyEmployeeProvider(),
@@ -50,13 +64,15 @@ void main() {
 
     // Verify it uses CustomScrollView (Slivers)
     final customScrollViewFinder = find.byType(CustomScrollView);
-    expect(customScrollViewFinder, findsOneWidget, reason: 'Should use CustomScrollView instead of ListView');
+    expect(customScrollViewFinder, findsOneWidget,
+        reason: 'Should use CustomScrollView instead of ListView');
 
     // Verify it does NOT use shrinkWrap: true in any ListView
     final listViewFinder = find.byType(ListView);
     if (listViewFinder.evaluate().isNotEmpty) {
       for (final widget in tester.widgetList<ListView>(listViewFinder)) {
-        expect(widget.shrinkWrap, isFalse, reason: 'No ListView should use shrinkWrap: true');
+        expect(widget.shrinkWrap, isFalse,
+            reason: 'No ListView should use shrinkWrap: true');
       }
     }
   });

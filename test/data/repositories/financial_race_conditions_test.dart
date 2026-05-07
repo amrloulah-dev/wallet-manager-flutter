@@ -34,7 +34,9 @@ void main() {
   });
 
   group('Financial Race Conditions (TDD - Phase 4)', () {
-    test('WalletRepository.debitWallet should handle concurrent-like updates safely', () async {
+    test(
+        'WalletRepository.debitWallet should handle concurrent-like updates safely',
+        () async {
       // Setup
       final now = Timestamp.now();
       await fakeFirestore.collection('wallets').doc(walletId).set({
@@ -77,7 +79,9 @@ void main() {
       expect(doc.data()!['balance'], 650.0);
     });
 
-    test('WalletRepository.debitWallet should throw DomainException for insufficient balance', () async {
+    test(
+        'WalletRepository.debitWallet should throw DomainException for insufficient balance',
+        () async {
       // Setup
       final now = Timestamp.now();
       await fakeFirestore.collection('wallets').doc(walletId).set({
@@ -111,7 +115,9 @@ void main() {
           throwsA(isA<DomainException>()));
     });
 
-    test('StatsRepository.updateStatsOnWalletChange should handle concurrent-like updates safely', () async {
+    test(
+        'StatsRepository.updateStatsOnWalletChange should handle concurrent-like updates safely',
+        () async {
       // Setup
       await fakeFirestore
           .collection('stores')
@@ -126,9 +132,12 @@ void main() {
 
       // Simulate multiple concurrent updates
       await Future.wait([
-        statsRepository.updateStatsOnWalletChange(storeId, countChange: 1, activeCountChange: 1, balanceChange: 100.0),
-        statsRepository.updateStatsOnWalletChange(storeId, countChange: -1, activeCountChange: 0, balanceChange: -50.0),
-        statsRepository.updateStatsOnWalletChange(storeId, countChange: 2, activeCountChange: -1, balanceChange: 200.0),
+        statsRepository.updateStatsOnWalletChange(storeId,
+            countChange: 1, activeCountChange: 1, balanceChange: 100.0),
+        statsRepository.updateStatsOnWalletChange(storeId,
+            countChange: -1, activeCountChange: 0, balanceChange: -50.0),
+        statsRepository.updateStatsOnWalletChange(storeId,
+            countChange: 2, activeCountChange: -1, balanceChange: 200.0),
       ]);
 
       final doc = await fakeFirestore
@@ -137,7 +146,7 @@ void main() {
           .collection('stats')
           .doc('summary')
           .get();
-      
+
       final data = doc.data()!;
       expect(data['totalWallets'], 12); // 10 + 1 - 1 + 2 = 12
       expect(data['activeWallets'], 5); // 5 + 1 + 0 - 1 = 5

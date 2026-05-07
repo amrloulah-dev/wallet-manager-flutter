@@ -32,18 +32,19 @@ class CustomDropdown<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<T>(
-          initialValue: value, 
+          initialValue: value,
           isExpanded: true,
           onChanged: onChanged,
           validator: validator,
           itemHeight: null, // مهم جداً لمنع أي قص (Overflow) في شكل الصناديق
-          
+
           // 1. شكل الحقل من الخارج (نفس الألوان والشفافية)
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             filled: true,
-            fillColor: fillColor ?? AppColors.primary.withAlpha((0.05 * 255).round()),
+            fillColor: fillColor ?? AppColors.primary.withAlpha(13),
             hintText: hint,
             labelText: labelText,
             prefixIcon: prefixIcon,
@@ -53,22 +54,25 @@ class CustomDropdown<T> extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 2.0),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
               borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
           ),
-          
+
           // 2. شكل القائمة المفتوحة (تصميم الصناديق)
           items: itemsList.map((T item) {
             return DropdownMenuItem<T>(
@@ -77,12 +81,13 @@ class CustomDropdown<T> extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.05 * 255).round()),
+                    color: AppColors.primary.withAlpha(13),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
+                      color: AppColors.primary.withAlpha(77),
                       width: 1,
                     ),
                   ),

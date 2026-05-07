@@ -11,7 +11,7 @@ class SystemConfigProvider extends BaseProvider {
 
   SystemConfigsModel get configs => _configs;
 
-  SystemConfigProvider({required SystemConfigRepository repository}) 
+  SystemConfigProvider({required SystemConfigRepository repository})
       : _repository = repository {
     Future.microtask(() => _init());
   }

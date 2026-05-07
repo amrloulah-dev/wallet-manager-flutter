@@ -54,13 +54,9 @@ class AppColors {
       return isDark ? const Color(0xFF3E2723) : Colors.amber.shade50;
     }
     if (isExpired) {
-      return isDark
-          ? const Color(0xFF421412)
-          : error.withAlpha((0.05 * 255).round());
+      return isDark ? const Color(0xFF421412) : error.withAlpha(13);
     }
-    return isDark
-        ? const Color(0xFF1B321C)
-        : success.withAlpha((0.05 * 255).round());
+    return isDark ? const Color(0xFF1B321C) : success.withAlpha(13);
   }
 
   static Color licenseCardBorder(BuildContext context,
@@ -70,13 +66,9 @@ class AppColors {
       return isDark ? Colors.amber.shade900 : Colors.amber.shade200;
     }
     if (isExpired) {
-      return isDark
-          ? error.withAlpha((0.4 * 255).round())
-          : error.withAlpha((0.2 * 255).round());
+      return isDark ? error.withAlpha(102) : error.withAlpha(51);
     }
-    return isDark
-        ? success.withAlpha((0.4 * 255).round())
-        : success.withAlpha((0.2 * 255).round());
+    return isDark ? success.withAlpha(102) : success.withAlpha(51);
   }
 
   // Status & Semantic Colors

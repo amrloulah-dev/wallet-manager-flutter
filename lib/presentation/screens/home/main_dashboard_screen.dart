@@ -75,8 +75,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     if (!mounted) return;
     if (!subProvider.hasSeenSuccessModal) {
       // Verify the user actually upgraded (not just a flag reset)
-      final planId = context.read<AuthProvider>().currentStore?.subscription.planId;
-      if (planId == SubscriptionPlan.proYearly || planId == SubscriptionPlan.lifetime) { // ENUM refactor
+      final planId =
+          context.read<AuthProvider>().currentStore?.subscription.planId;
+      if (planId == SubscriptionPlan.proYearly ||
+          planId == SubscriptionPlan.lifetime) {
+        // ENUM refactor
         subProvider.markSuccessModalSeen();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {

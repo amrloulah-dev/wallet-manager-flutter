@@ -106,13 +106,15 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)!.customerDetails, style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.customerDetails,
+            style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _customerNameController,
           labelText: AppLocalizations.of(context)!.customerName,
           hintText: AppLocalizations.of(context)!.enterFullCustomerName,
-          validator: (val) => Validators.validateRequired(val, AppLocalizations.of(context)!.customerName),
+          validator: (val) => Validators.validateRequired(
+              val, AppLocalizations.of(context)!.customerName),
           prefixIcon: const Icon(Icons.person_outline),
         ),
         const SizedBox(height: 16),
@@ -163,7 +165,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Card(
       elevation: 0,
       color: isSelected
-          ? AppColors.primary.withAlpha((0.05 * 255).round())
+          ? AppColors.primary.withAlpha(13)
           : AppColors.surface(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -188,7 +190,8 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)!.amountDueTitle, style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.amountDueTitle,
+            style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _amountController,
@@ -203,7 +206,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.info.withAlpha((0.1 * 255).round()),
+            color: AppColors.info.withAlpha(26),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -251,7 +254,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha((0.1 * 255).round()),
+                  color: AppColors.error.withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

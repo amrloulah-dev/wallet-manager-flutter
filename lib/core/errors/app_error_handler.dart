@@ -1,4 +1,5 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart' as fln;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:flutter/services.dart';
@@ -14,13 +15,14 @@ import 'error_severity.dart';
 /// Centralized error handler responsible for logging and diagnostics.
 class AppErrorHandler {
   static bool isTestMode = false;
-  
+
   static fln.FlutterLocalNotificationsPlugin _notificationsPlugin =
       fln.FlutterLocalNotificationsPlugin();
 
   /// Sets a custom notifications plugin (for testing).
   @visibleForTesting
-  static void setNotificationsPlugin(fln.FlutterLocalNotificationsPlugin plugin) {
+  static void setNotificationsPlugin(
+      fln.FlutterLocalNotificationsPlugin plugin) {
     _notificationsPlugin = plugin;
     _notificationsInitialized = true; // Assume initialized if mocked
   }
@@ -36,7 +38,8 @@ class AppErrorHandler {
     );
     await _notificationsPlugin.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: (fln.NotificationResponse response) async {
+      onDidReceiveNotificationResponse:
+          (fln.NotificationResponse response) async {
         // Tapping the notification should bring the app to foreground.
         // We also close any active overlays to ensure the user sees the main app.
         try {
@@ -50,14 +53,15 @@ class AppErrorHandler {
           }
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e');
+            debugPrint(
+                '⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e');
           }
         }
       },
     );
     _notificationsInitialized = true;
   }
-  
+
   /// High-level initialization to hook into Flutter's global error reporting.
   static void init() {
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -83,12 +87,14 @@ class AppErrorHandler {
 
   /// Logs a non-fatal error silently without interrupting the user.
   /// In debug mode, logs to console. In release mode, reports to Crashlytics.
-  static void logSilentError(String error, String reason, {StackTrace? stackTrace}) {
+  static void logSilentError(String error, String reason,
+      {StackTrace? stackTrace}) {
     if (kDebugMode || isTestMode) {
-      if (kDebugMode) debugPrint(
-        '🤫 [SILENT ERROR] [$reason] $error\n'
-        '  Stack: ${stackTrace ?? StackTrace.current}',
-      );
+      if (kDebugMode)
+        debugPrint(
+          '🤫 [SILENT ERROR] [$reason] $error\n'
+          '  Stack: ${stackTrace ?? StackTrace.current}',
+        );
       developer.log(
         error,
         name: 'SILENT_ERROR',
@@ -129,7 +135,7 @@ class AppErrorHandler {
     bool showToast = false,
   }) async {
     if (isTestMode) return;
-    
+
     final message = error is AppException ? error.message : error.toString();
     _logDiagnostic(severity, operation, message, stackTrace);
 
@@ -191,13 +197,17 @@ class AppErrorHandler {
           }
         });
 
-        if (!kDebugMode && (severity == ErrorSeverity.critical || severity == ErrorSeverity.medium)) {
-          FirebaseCrashlytics.instance.recordError(
+        if (!kDebugMode &&
+            (severity == ErrorSeverity.critical ||
+                severity == ErrorSeverity.medium)) {
+          FirebaseCrashlytics.instance
+              .recordError(
             error,
             stackTrace,
             reason: 'Operation: $operation',
             fatal: severity == ErrorSeverity.critical,
-          ).catchError((e) {
+          )
+              .catchError((e) {
             if (kDebugMode) {
               debugPrint('⚠️ [ERROR_HANDLER] Crashlytics failed: $e');
             }
@@ -220,12 +230,12 @@ class AppErrorHandler {
     if (kDebugMode) {
       final timestamp = DateTime.now().toUtc().toIso8601String();
       final stack = stackTrace?.toString() ?? 'No stack trace available';
-      if (kDebugMode) debugPrint(
-        '[ERROR] [${severity.name}] [$operation] $message\n'
-        '  Stack: $stack\n'
-        '  Timestamp: $timestamp',
-      );
+      if (kDebugMode)
+        debugPrint(
+          '[ERROR] [${severity.name}] [$operation] $message\n'
+          '  Stack: $stack\n'
+          '  Timestamp: $timestamp',
+        );
     }
   }
 }
-

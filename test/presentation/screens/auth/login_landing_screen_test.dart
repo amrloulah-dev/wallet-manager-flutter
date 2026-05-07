@@ -37,18 +37,20 @@ void main() {
   group('LoginLandingScreen Forgot Password UI', () {
     testWidgets('should show Forgot Password button', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
-      // The button text is l10n.forgotPassword. 
+      // The button text is l10n.forgotPassword.
       // We expect it to be present.
       expect(find.byType(TextButton), findsWidgets);
       // More specific check depends on the actual text in l10n
     });
 
-    testWidgets('should open BottomSheet when Forgot Password is tapped', (tester) async {
+    testWidgets('should open BottomSheet when Forgot Password is tapped',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
-      
-      final forgotPasswordButton = find.byWidgetPredicate(
-        (widget) => widget is TextButton && widget.child is Text
-      ).first;
+
+      final forgotPasswordButton = find
+          .byWidgetPredicate(
+              (widget) => widget is TextButton && widget.child is Text)
+          .first;
 
       await tester.tap(forgotPasswordButton);
       await tester.pumpAndSettle();
@@ -56,27 +58,33 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
     });
 
-    testWidgets('BottomSheet should have email input and Send button', (tester) async {
+    testWidgets('BottomSheet should have email input and Send button',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
-      
-      final forgotPasswordButton = find.byWidgetPredicate(
-        (widget) => widget is TextButton && widget.child is Text
-      ).first;
+
+      final forgotPasswordButton = find
+          .byWidgetPredicate(
+              (widget) => widget is TextButton && widget.child is Text)
+          .first;
 
       await tester.tap(forgotPasswordButton);
       await tester.pumpAndSettle();
 
       // Find TextField inside BottomSheet
-      expect(find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.byType(TextField),
-      ), findsOneWidget);
+      expect(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(TextField),
+          ),
+          findsOneWidget);
 
       // Find CustomButton inside BottomSheet (the 'Send' button)
-      expect(find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.byType(CustomButton),
-      ), findsOneWidget);
+      expect(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(CustomButton),
+          ),
+          findsOneWidget);
     });
   });
 }

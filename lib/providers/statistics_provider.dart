@@ -54,7 +54,7 @@ class StatisticsProvider extends BaseProvider {
 
   StatisticsProvider({
     required StatsRepository statsRepository,
-  })  : _statsRepository = statsRepository {
+  }) : _statsRepository = statsRepository {
     // ── Streams-Driven Sync (Phase 1) ──
     // Manual AppEvents listener removed. Data sync is now handled by _summarySubscription
     // and _todayStatsSubscription established in fetchDashboardStats().
@@ -86,14 +86,19 @@ class StatisticsProvider extends BaseProvider {
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
-    if (kDebugMode) debugPrint('🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
+    if (kDebugMode)
+      debugPrint(
+          '🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
     if (_storeId == null) {
-      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
+      if (kDebugMode)
+        debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
       return;
     }
 
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
+      if (kDebugMode)
+        debugPrint(
+            '🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
       return; // Abort the fetch
     }
 
@@ -103,7 +108,9 @@ class StatisticsProvider extends BaseProvider {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
-        if (kDebugMode) debugPrint('✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
+        if (kDebugMode)
+          debugPrint(
+              '✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
         _dashboardSummary = _cachedSummary;
         safeNotify();
       }
@@ -119,40 +126,48 @@ class StatisticsProvider extends BaseProvider {
 
     _activateFetchShield();
 
-    if (kDebugMode) debugPrint('⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
-    
+    if (kDebugMode)
+      debugPrint(
+          '⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
+
     // Phase 4: Ensure stats are initialized before watching
     try {
       await _statsRepository.getStatsSummary(_storeId!);
     } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
+      if (kDebugMode)
+        debugPrint(
+            '⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
     }
 
     // 1. Establish Summary Stream
-    _summarySubscription = _statsRepository
-        .watchStatsSummary(_storeId!)
-        .listen((summary) {
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
+    _summarySubscription =
+        _statsRepository.watchStatsSummary(_storeId!).listen((summary) {
+      if (kDebugMode)
+        debugPrint(
+            '✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
       _dashboardSummary = summary;
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
+      if (kDebugMode)
+        debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
       setError('stats_error_summary_fetch', e, stack);
     });
 
     // 2. Establish Today Stats Stream
-    _todayStatsSubscription = _statsRepository
-        .watchTodayStats(_storeId!)
-        .listen((today) {
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
+    _todayStatsSubscription =
+        _statsRepository.watchTodayStats(_storeId!).listen((today) {
+      if (kDebugMode)
+        debugPrint(
+            '✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
       _todayStats = today;
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      if (kDebugMode) debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
+      if (kDebugMode)
+        debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
       setError('stats_error_today_fetch', e, stack);
     });
   }
@@ -169,7 +184,8 @@ class StatisticsProvider extends BaseProvider {
       if (_storeId == null) throw Exception("Store ID not found");
 
       // Check if it's today's range
-      final isToday = DateHelper.isToday(dateRange.start) && DateHelper.isToday(dateRange.end);
+      final isToday = DateHelper.isToday(dateRange.start) &&
+          DateHelper.isToday(dateRange.end);
 
       if (isToday && _dashboardSummary != null) {
         final s = _dashboardSummary!;
@@ -178,7 +194,7 @@ class StatisticsProvider extends BaseProvider {
           'totalWallets': s.totalWallets,
           'totalTransactions': s.totalTransactionsToday,
           'totalCommission': s.totalCommissionToday,
-          'sendCount': s.sendCount, 
+          'sendCount': s.sendCount,
           'totalSentAmount': s.totalSentAmount,
           'receiveCount': s.receiveCount,
           'totalReceivedAmount': s.totalReceivedAmount,
@@ -268,18 +284,22 @@ class StatisticsProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'stats_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'stats_operation']) {
     if (kDebugMode) {
       if (kDebugMode) debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
       if (stack != null) {
         if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       }
     }
-    
+
     if (isDisposed) return;
     _errorMessage = errorCode;
     _isLoading = false;
-    
+
     super.setError(
       errorCode,
       error,
@@ -287,7 +307,7 @@ class StatisticsProvider extends BaseProvider {
       showToast,
       operation,
     );
-    
+
     safeNotify();
   }
 }

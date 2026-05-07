@@ -12,7 +12,8 @@ import 'package:bot_toast/bot_toast.dart';
 
 import 'package:walletmanager/main.dart';
 
-class MockFlutterLocalNotificationsPlugin extends Mock implements FlutterLocalNotificationsPlugin {}
+class MockFlutterLocalNotificationsPlugin extends Mock
+    implements FlutterLocalNotificationsPlugin {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -22,14 +23,14 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     mockNotificationsPlugin = MockFlutterLocalNotificationsPlugin();
     AppErrorHandler.setNotificationsPlugin(mockNotificationsPlugin);
-    
+
     // Mock the show method
     when(() => mockNotificationsPlugin.show(
-      any(),
-      any(),
-      any(),
-      any(),
-    )).thenAnswer((_) async {});
+          any(),
+          any(),
+          any(),
+          any(),
+        )).thenAnswer((_) async {});
 
     // Mock Firebase channel (Standard)
     const firebaseChannel = MethodChannel('plugins.flutter.io/firebase_core');
@@ -50,7 +51,8 @@ void main() {
     });
 
     // Mock Pigeon channel for firebase_core
-    const pigeonChannel = MethodChannel('dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi.initializeCore');
+    const pigeonChannel = MethodChannel(
+        'dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi.initializeCore');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pigeonChannel, (methodCall) async {
       return [
@@ -72,7 +74,9 @@ void main() {
   });
 
   group('Phase 2: Isolate Crashes & UX Blindspots Fixes', () {
-    test('AppErrorHandler.handle() triggers local notification when context is null (background)', () async {
+    test(
+        'AppErrorHandler.handle() triggers local notification when context is null (background)',
+        () async {
       // Ensure context is null
       expect(NavigationService.navigatorKey.currentContext, isNull);
 
@@ -87,18 +91,19 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 200));
 
       verify(() => mockNotificationsPlugin.show(
-        any(),
-        any(that: contains('SMS Processing Error')),
-        any(),
-        any(),
-        payload: any(named: 'payload'),
-      )).called(1);
-
+            any(),
+            any(that: contains('SMS Processing Error')),
+            any(),
+            any(),
+            payload: any(named: 'payload'),
+          )).called(1);
     });
 
-    testWidgets('AppErrorHandler.handle() does NOT trigger notification when context is present (foreground)', (WidgetTester tester) async {
+    testWidgets(
+        'AppErrorHandler.handle() does NOT trigger notification when context is present (foreground)',
+        (WidgetTester tester) async {
       final botToastBuilder = BotToastInit();
-      
+
       // Setup the navigator key with a MaterialApp
       await tester.pumpWidget(
         MaterialApp(
@@ -127,11 +132,11 @@ void main() {
 
       // Verify notification was NOT called
       verifyNever(() => mockNotificationsPlugin.show(
-        any(),
-        any(),
-        any(),
-        any(),
-      ));
+            any(),
+            any(),
+            any(),
+            any(),
+          ));
 
       // Cleanup timers from BotToast
       await tester.pumpAndSettle(const Duration(seconds: 5));

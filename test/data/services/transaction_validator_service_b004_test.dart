@@ -11,7 +11,8 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 // A subclass to allow injecting a fake firestore
 class TestTransactionValidatorService extends TransactionValidatorService {
-  TestTransactionValidatorService(FirebaseFirestore fakeFirestore) : super(firestore: fakeFirestore);
+  TestTransactionValidatorService(FirebaseFirestore fakeFirestore)
+      : super(firestore: fakeFirestore);
 }
 
 void main() {
@@ -28,9 +29,13 @@ void main() {
     storeId = 'test_store';
   });
 
-  test('Bug B-004: validateAndSave should throw ValidationException for inactive wallet', () async {
+  test(
+      'Bug B-004: validateAndSave should throw ValidationException for inactive wallet',
+      () async {
     // 1. Setup: Create an INACTIVE wallet in fake firestore
-    final walletRef = fakeFirestore.collection(FirebaseConstants.walletsCollection).doc(walletId);
+    final walletRef = fakeFirestore
+        .collection(FirebaseConstants.walletsCollection)
+        .doc(walletId);
     await walletRef.set({
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.phoneNumber: '01012345678',

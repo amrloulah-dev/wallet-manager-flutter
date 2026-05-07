@@ -6,7 +6,9 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockUserCredential extends Mock implements UserCredential {}
+
 class MockUser extends Mock implements User {}
 
 void main() {
@@ -20,11 +22,11 @@ void main() {
     mockAuth = MockFirebaseAuth();
     mockUserCredential = MockUserCredential();
     mockUser = MockUser();
-    
+
     when(() => mockUser.uid).thenReturn('test-uid');
     when(() => mockUser.email).thenReturn('emp_123456789_store123@store.com');
     when(() => mockUserCredential.user).thenReturn(mockUser);
-    
+
     IdentityService.authOverride = mockAuth;
   });
 

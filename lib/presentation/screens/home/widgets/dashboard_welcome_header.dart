@@ -24,9 +24,8 @@ class DashboardWelcomeHeader extends StatelessWidget {
     return Selector<AuthProvider, String?>(
       selector: (context, provider) => provider.currentUser?.fullName,
       builder: (context, fullName, child) {
-        final avatarLetter = fullName?.isNotEmpty == true
-            ? fullName![0].toUpperCase()
-            : 'U';
+        final avatarLetter =
+            fullName?.isNotEmpty == true ? fullName![0].toUpperCase() : 'U';
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface(context),

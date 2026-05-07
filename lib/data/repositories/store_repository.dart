@@ -34,7 +34,8 @@ class StoreRepository {
   /// **NOTE:** This method now enforces a "Trial Mode" for all new stores.
   /// It overwrites any license information passed in the [store] object with
   /// a generated trial license.
-  Future<void> createStore(StoreModel store, {bool isEligibleForTrial = true, WriteBatch? batch}) async {
+  Future<void> createStore(StoreModel store,
+      {bool isEligibleForTrial = true, WriteBatch? batch}) async {
     try {
       final activeBatch = batch ?? _firestore.batch();
 
@@ -87,7 +88,7 @@ class StoreRepository {
       final initialStats = StatsSummaryModel.empty();
       final statsData = initialStats.toMap();
       statsData['lastUpdated'] = FieldValue.serverTimestamp();
-      
+
       activeBatch.set(statsRef, statsData);
 
       // Commit all changes atomically only if we created the batch
@@ -95,10 +96,12 @@ class StoreRepository {
         await activeBatch.commit();
       }
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.createStore');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.createStore');
       throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.createStore');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.createStore');
       throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل: $e');
     }
   }
@@ -116,11 +119,13 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
@@ -138,11 +143,13 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
       throw ServerException('فشل في البحث عن المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
@@ -160,11 +167,13 @@ class StoreRepository {
       }
       return null;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
       throw ServerException('فشل في البحث عن المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
@@ -175,7 +184,8 @@ class StoreRepository {
       final doc = await _storesCollection.doc(storeId).get();
       return doc.exists;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.storeExists');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.storeExists');
       return false;
     }
   }
@@ -193,11 +203,13 @@ class StoreRepository {
       };
       await _storesCollection.doc(storeId).update(updateData);
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStore');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.updateStore');
       throw ServerException('فشل تحديث بيانات المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStore');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.updateStore');
       throw ServerException('حدث خطأ غير متوقع أثناء التحديث: $e');
     }
   }
@@ -234,28 +246,34 @@ class StoreRepository {
         '${FirebaseConstants.stats}.lastUpdated': FieldValue.serverTimestamp(),
       };
       if (incrementTotalWallets != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalWallets}'] =
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalWallets}'] =
             FieldValue.increment(incrementTotalWallets);
       }
       if (incrementActiveWallets != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.activeWallets}'] =
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.activeWallets}'] =
             FieldValue.increment(incrementActiveWallets);
       }
       if (incrementTotalTransactionsToday != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}'] =
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}'] =
             FieldValue.increment(incrementTotalTransactionsToday);
       }
       if (incrementTotalCommissionToday != null) {
-        statsData['${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}'] =
+        statsData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}'] =
             FieldValue.increment(incrementTotalCommissionToday);
       }
       await _storesCollection.doc(storeId).update(statsData);
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
       throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
@@ -297,24 +315,30 @@ class StoreRepository {
       return store.subscription.status == SubscriptionStatus.active &&
           !store.subscription.isExpiredAt(TimeService.now());
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.isSubscriptionValid');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.isSubscriptionValid');
       return false;
     }
   }
 
   /// Updates the status of a store's subscription.
-  Future<void> updateSubscriptionStatus(String storeId, SubscriptionStatus status) async {
+  Future<void> updateSubscriptionStatus(
+      String storeId, SubscriptionStatus status) async {
     try {
       await _storesCollection.doc(storeId).update({
         'subscription.status': status.name,
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateSubscriptionStatus');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRepository.updateSubscriptionStatus');
       throw ServerException('فشل تحديث حالة الاشتراك: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.updateSubscriptionStatus');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRepository.updateSubscriptionStatus');
       throw ServerException('حدث خطأ غير متوقع: $e');
     }
   }
@@ -346,7 +370,8 @@ class StoreRepository {
           .map((doc) => StoreModel.fromFirestore(doc))
           .toList();
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');
       throw ServerException('فشل البحث عن المحل: $e');
     }
   }

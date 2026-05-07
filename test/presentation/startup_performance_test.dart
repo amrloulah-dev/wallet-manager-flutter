@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Startup Performance (Failing Test)', () {
-    test('runApp should be called BEFORE background services complete', () async {
+    test('runApp should be called BEFORE background services complete',
+        () async {
       bool isRunAppCalled = false;
       bool isBackgroundInitStarted = false;
       Completer backgroundInitCompleter = Completer();
@@ -18,7 +19,7 @@ void main() {
       Future<void> startup() async {
         // Optimized logic:
         unawaited(initializeBackground()); // This does NOT block!
-        
+
         // Final action:
         isRunAppCalled = true;
       }
@@ -28,12 +29,13 @@ void main() {
 
       // We expect that background init has started...
       expect(isBackgroundInitStarted, isTrue);
-      
+
       // ...but in the OPTIMIZED version, runApp should already be called
       // even if background init isn't finished.
       // In the CURRENT version, this will fail.
-      expect(isRunAppCalled, isTrue, reason: 'runApp should NOT be blocked by background initialization');
-      
+      expect(isRunAppCalled, isTrue,
+          reason: 'runApp should NOT be blocked by background initialization');
+
       // Cleanup
       backgroundInitCompleter.complete();
     });

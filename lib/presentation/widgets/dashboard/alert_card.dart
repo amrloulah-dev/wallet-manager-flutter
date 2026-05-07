@@ -100,26 +100,26 @@ class AlertCard extends StatelessWidget {
   Color _getBackgroundColor(AlertType type) {
     switch (type) {
       case AlertType.info:
-        return AppColors.info.withAlpha((0.1 * 255).round());
+        return AppColors.info.withAlpha(26);
       case AlertType.warning:
-        return AppColors.warning.withAlpha((0.1 * 255).round());
+        return AppColors.warning.withAlpha(26);
       case AlertType.error:
-        return AppColors.error.withAlpha((0.1 * 255).round());
+        return AppColors.error.withAlpha(26);
       case AlertType.success:
-        return AppColors.success.withAlpha((0.1 * 255).round());
+        return AppColors.success.withAlpha(26);
     }
   }
 
   Color _getBorderColor(AlertType type) {
     switch (type) {
       case AlertType.info:
-        return AppColors.info.withAlpha((0.3 * 255).round());
+        return AppColors.info.withAlpha(77);
       case AlertType.warning:
-        return AppColors.warning.withAlpha((0.3 * 255).round());
+        return AppColors.warning.withAlpha(77);
       case AlertType.error:
-        return AppColors.error.withAlpha((0.3 * 255).round());
+        return AppColors.error.withAlpha(77);
       case AlertType.success:
-        return AppColors.success.withAlpha((0.3 * 255).round());
+        return AppColors.success.withAlpha(77);
     }
   }
 

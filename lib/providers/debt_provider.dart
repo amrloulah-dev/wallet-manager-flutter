@@ -86,11 +86,15 @@ class DebtProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'debt_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'debt_operation']) {
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = DebtProviderStatus.error;
-    
+
     super.setError(
       errorCode,
       error,
@@ -98,7 +102,7 @@ class DebtProvider extends BaseProvider {
       showToast,
       operation,
     );
-    
+
     safeNotify();
   }
 
@@ -146,7 +150,7 @@ class DebtProvider extends BaseProvider {
       _debts = result.items;
       _lastDocument = result.lastDocument;
       _hasMore = result.items.length >= 20;
-      
+
       _rebuildDebtMap();
       await _fetchSummary();
       _updateStatus(DebtProviderStatus.loaded);
@@ -158,7 +162,11 @@ class DebtProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreDebts() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
     }
 
@@ -201,8 +209,8 @@ class DebtProvider extends BaseProvider {
       _summary = {
         'openDebtsCount': stats['openCount'],
         'paidDebtsCount': stats['paidCount'],
-        'totalDebtsCount':
-            NumberParser.toInt(stats['openCount']) + NumberParser.toInt(stats['paidCount']),
+        'totalDebtsCount': NumberParser.toInt(stats['openCount']) +
+            NumberParser.toInt(stats['paidCount']),
         'totalOpenAmount': stats['openTotal'],
         'totalPaidAmount': stats['paidTotal'],
       };

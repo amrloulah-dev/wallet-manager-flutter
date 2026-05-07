@@ -122,7 +122,7 @@ class _OverlayContentState extends State<_OverlayContent> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha((0.15 * 255).round()),
+                  color: Colors.black.withAlpha(38),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -145,7 +145,8 @@ class _OverlayContentState extends State<_OverlayContent> {
                     // Listen for errors
                     const _ErrorListener(),
                     Selector<OverlayProvider, bool>(
-                      selector: (_, p) => p.isLoading && p.availableWallets.isEmpty,
+                      selector: (_, p) =>
+                          p.isLoading && p.availableWallets.isEmpty,
                       builder: (context, isLoadingInitial, _) {
                         if (isLoadingInitial) {
                           return const Center(
@@ -157,18 +158,22 @@ class _OverlayContentState extends State<_OverlayContent> {
 
                         return Column(
                           children: [
-                            Selector<OverlayProvider, ({double amount, String type})>(
-                              selector: (_, p) => (amount: p.amount, type: p.type),
+                            Selector<OverlayProvider,
+                                ({double amount, String type})>(
+                              selector: (_, p) =>
+                                  (amount: p.amount, type: p.type),
                               builder: (context, data, _) => _HeroAmountWidget(
                                 txtAmount: l10n.amount,
-                                amount: NumberFormatter.formatAmount(data.amount),
+                                amount:
+                                    NumberFormatter.formatAmount(data.amount),
                                 type: data.type,
                               ),
                             ),
                             const SizedBox(height: 16),
                             Selector<OverlayProvider, String>(
                               selector: (_, p) => p.sender,
-                              builder: (context, sender, _) => _SenderDisplayWidget(
+                              builder: (context, sender, _) =>
+                                  _SenderDisplayWidget(
                                 txtSender: l10n.send,
                                 sender: sender,
                               ),
@@ -185,7 +190,9 @@ class _OverlayContentState extends State<_OverlayContent> {
                               builder: (context, isLoading, _) => CustomButton(
                                 text: l10n.confirmPayment,
                                 isLoading: isLoading,
-                                onPressed: () => context.read<OverlayProvider>().submitTransaction(),
+                                onPressed: () => context
+                                    .read<OverlayProvider>()
+                                    .submitTransaction(),
                                 fullWidth: true,
                               ),
                             ),
@@ -214,7 +221,7 @@ class _ErrorListener extends StatelessWidget {
         if (provider.errorMessage != null) {
           final l10n = AppLocalizations.of(context)!;
           final theme = Theme.of(context);
-          
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             String displayError = provider.errorMessage!;
             // 1. Check for raw keys from OverlayProvider
@@ -222,20 +229,23 @@ class _ErrorListener extends StatelessWidget {
               displayError = l10n.pleaseSelectWallet;
             } else if (displayError == 'authErrorRelogin') {
               displayError = l10n.authErrorRelogin;
-            } 
+            }
             // 2. Check for legacy hardcoded Arabic from repository/models
-            else if (displayError == "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
-               displayError = l10n.transactionExceedsLimitWarning;
+            else if (displayError ==
+                "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
+              displayError = l10n.transactionExceedsLimitWarning;
             } else if (displayError == 'Please select a wallet') {
-               displayError = l10n.pleaseSelectWallet;
-            } else if (displayError == 'Session invalid. Please login again inside the app.') {
-               displayError = l10n.authErrorRelogin;
+              displayError = l10n.pleaseSelectWallet;
+            } else if (displayError ==
+                'Session invalid. Please login again inside the app.') {
+              displayError = l10n.authErrorRelogin;
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(displayError,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onError)),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.onError)),
                 backgroundColor: theme.colorScheme.error,
               ),
             );
@@ -313,8 +323,7 @@ class _HeroAmountWidget extends StatelessWidget {
         Text(
           '$amount EGP',
           textAlign: TextAlign.center,
-          textDirection:
-              TextDirection.ltr,
+          textDirection: TextDirection.ltr,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
@@ -346,8 +355,7 @@ class _SenderDisplayWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.person_outline,
-              color: Colors.black54),
+          const Icon(Icons.person_outline, color: Colors.black54),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -370,17 +378,18 @@ class _WalletDropdownWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Selector<OverlayProvider, ({String? selectedId, List<Map<String, dynamic>> wallets})>(
-      selector: (_, p) => (selectedId: p.selectedWalletId, wallets: p.availableWallets),
+    return Selector<OverlayProvider,
+        ({String? selectedId, List<Map<String, dynamic>> wallets})>(
+      selector: (_, p) =>
+          (selectedId: p.selectedWalletId, wallets: p.availableWallets),
       builder: (context, data, _) => CustomDropdown<String>(
         value: data.selectedId,
         labelText: l10n.selectWallet,
         prefixIcon: const Icon(
           Icons.account_balance_wallet,
         ),
-        itemsList: data.wallets
-            .map((wallet) => wallet['id'].toString())
-            .toList(),
+        itemsList:
+            data.wallets.map((wallet) => wallet['id'].toString()).toList(),
         itemLabelBuilder: (String id) {
           final wallet = data.wallets.firstWhere(
             (w) => w['id'] == id,
@@ -388,7 +397,8 @@ class _WalletDropdownWidget extends StatelessWidget {
           );
           return wallet['name'] ?? l10n.unknown;
         },
-        onChanged: (val) => context.read<OverlayProvider>().setSelectedWallet(val),
+        onChanged: (val) =>
+            context.read<OverlayProvider>().setSelectedWallet(val),
       ),
     );
   }
@@ -408,8 +418,7 @@ class _CommissionFieldWidget extends StatelessWidget {
       focusNode: focusNode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       labelText: l10n.commission,
-      prefixIcon: const Icon(Icons
-          .attach_money),
+      prefixIcon: const Icon(Icons.attach_money),
       onChanged: (val) => context.read<OverlayProvider>().setCommission(val),
     );
   }

@@ -22,7 +22,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       // Verify it uses the correct key
       expect(prefs.containsKey('pending_overlay_data'), isTrue);
-      
+
       final readData = storage.readFromVault();
       expect(readData?['amount'], 100.0);
     });
@@ -35,11 +35,12 @@ void main() {
       expect(storage.readFromVault(), isNull);
     });
 
-    test('should migrate languageCode to app_locale on initialization', () async {
+    test('should migrate languageCode to app_locale on initialization',
+        () async {
       LocalStorageService.reset();
       // Pre-populate with old key
       SharedPreferences.setMockInitialValues({'languageCode': 'en'});
-      
+
       storage = LocalStorageService.instance;
       await storage.initialize();
 
@@ -52,7 +53,7 @@ void main() {
     test('should clean up pending_overlay_tx on initialization', () async {
       LocalStorageService.reset();
       SharedPreferences.setMockInitialValues({'pending_overlay_tx': 'stale'});
-      
+
       storage = LocalStorageService.instance;
       await storage.initialize();
 

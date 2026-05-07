@@ -8,7 +8,9 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockDebtRepository extends Mock implements DebtRepository {}
+
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockDocumentSnapshot extends Mock implements DocumentSnapshot {}
 
 void main() {
@@ -21,7 +23,7 @@ void main() {
   setUp(() {
     mockDebtRepo = MockDebtRepository();
     mockAuth = MockAuthProvider();
-    
+
     provider = DebtProvider(
       authProvider: mockAuth,
       debtRepository: mockDebtRepo,
@@ -43,11 +45,11 @@ void main() {
             any(),
             lastDocument: null,
           )).thenAnswer((_) async => result);
-      
+
       when(() => mockDebtRepo.fetchDebtStatistics(
-        storeId: any(named: 'storeId'),
-        type: any(named: 'type'),
-      )).thenAnswer((_) async => {});
+            storeId: any(named: 'storeId'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => {});
 
       // ACT
       provider.setStoreId(storeId);
@@ -89,11 +91,11 @@ void main() {
             any(),
             lastDocument: mockDoc1,
           )).thenAnswer((_) async => result2);
-      
+
       when(() => mockDebtRepo.fetchDebtStatistics(
-        storeId: any(named: 'storeId'),
-        type: any(named: 'type'),
-      )).thenAnswer((_) async => {});
+            storeId: any(named: 'storeId'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => {});
 
       // ACT
       provider.setStoreId(storeId);

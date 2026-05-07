@@ -174,7 +174,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               icon: Icons.label_outline,
               label: AppLocalizations.of(context)!.walletStatus,
               value: wallet.walletStatusDisplayName,
-              valueColor: wallet.walletStatus == WalletStatus.suspended // ENUM refactor (placeholder check)
+              valueColor: wallet.walletStatus ==
+                      WalletStatus
+                          .suspended // ENUM refactor (placeholder check)
                   ? AppColors.error
                   : AppColors.primary,
             ),
@@ -183,7 +185,8 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               context: context,
               icon: Icons.calendar_today_outlined,
               label: AppLocalizations.of(context)!.addedDate,
-              value: DateHelper.formatDateTime(wallet.createdAt ?? DateTime.now()),
+              value:
+                  DateHelper.formatDateTime(wallet.createdAt ?? DateTime.now()),
             ),
             if (wallet.notes != null && wallet.notes!.isNotEmpty) ...[
               const Divider(height: 24),
@@ -330,7 +333,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withAlpha((0.1 * 255).round()),
+        color: AppColors.error.withAlpha(26),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

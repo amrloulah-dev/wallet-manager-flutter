@@ -4,10 +4,16 @@ import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
+
 class MockAggregateQuery extends Mock implements AggregateQuery {}
-class MockAggregateQuerySnapshot extends Mock implements AggregateQuerySnapshot {}
+
+class MockAggregateQuerySnapshot extends Mock
+    implements AggregateQuerySnapshot {}
 
 void main() {
   late MockFirebaseFirestore mockFirestore;
@@ -27,9 +33,11 @@ void main() {
     mockAggregateSnapshot = MockAggregateQuerySnapshot();
 
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
-    when(() => mockCollection.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
-    when(() => mockQuery.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
-    
+    when(() => mockCollection.where(any(), isEqualTo: any(named: 'isEqualTo')))
+        .thenReturn(mockQuery);
+    when(() => mockQuery.where(any(), isEqualTo: any(named: 'isEqualTo')))
+        .thenReturn(mockQuery);
+
     repository = EmployeeRepository(firestore: mockFirestore);
   });
 
@@ -37,7 +45,8 @@ void main() {
     test('getEmployeesCount should use .count() aggregation', () async {
       // ARRANGE
       when(() => mockQuery.count()).thenReturn(mockAggregateQuery);
-      when(() => mockAggregateQuery.get()).thenAnswer((_) async => mockAggregateSnapshot);
+      when(() => mockAggregateQuery.get())
+          .thenAnswer((_) async => mockAggregateSnapshot);
       when(() => mockAggregateSnapshot.count).thenReturn(5);
 
       // ACT

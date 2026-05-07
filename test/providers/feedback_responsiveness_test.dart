@@ -20,14 +20,21 @@ import 'package:walletmanager/data/models/user_model.dart';
 import 'dart:async';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 class MockDebtRepository extends Mock implements DebtRepository {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockWalletCacheManager extends Mock implements WalletCacheManager {}
+
 class MockWalletUseCase extends Mock implements WalletUseCase {}
 
 class DebtModelFake extends Fake implements DebtModel {}
+
 class WalletModelFake extends Fake implements WalletModel {}
 
 void main() {
@@ -71,14 +78,21 @@ void main() {
   });
 
   group('Provider Responsiveness', () {
-    test('DebtProvider.createDebt should reset error and set isCreating immediately', () async {
-      final provider = DebtProvider(authProvider: mockAuth, debtRepository: mockDebtRepo, storeId: 'store1');
+    test(
+        'DebtProvider.createDebt should reset error and set isCreating immediately',
+        () async {
+      final provider = DebtProvider(
+          authProvider: mockAuth,
+          debtRepository: mockDebtRepo,
+          storeId: 'store1');
       provider.setError('old error');
-      
+
       final completer = Completer<void>();
-      when(() => mockDebtRepo.getDebtByCustomerPhone(any(), any())).thenAnswer((_) async => null);
+      when(() => mockDebtRepo.getDebtByCustomerPhone(any(), any()))
+          .thenAnswer((_) async => null);
       when(() => mockDebtRepo.generateId()).thenReturn('new-debt');
-      when(() => mockDebtRepo.createDebt(any())).thenAnswer((_) => completer.future);
+      when(() => mockDebtRepo.createDebt(any()))
+          .thenAnswer((_) => completer.future);
 
       final future = provider.createDebt(
         customerName: 'Test',
@@ -96,23 +110,27 @@ void main() {
       expect(provider.isCreating, isFalse);
     });
 
-    test('WalletProvider.createWallet should reset error and set isCreating immediately', () async {
+    test(
+        'WalletProvider.createWallet should reset error and set isCreating immediately',
+        () async {
       final provider = WalletProvider(
-        authProvider: mockAuth, 
-        subscriptionProvider: mockSub,
-        walletRepository: mockWalletRepo, 
-        transactionRepository: mockTransactionRepo,
-        cacheManager: mockCacheManager,
-        walletUseCase: mockUseCase,
-        storeId: 'store1'
-      );
+          authProvider: mockAuth,
+          subscriptionProvider: mockSub,
+          walletRepository: mockWalletRepo,
+          transactionRepository: mockTransactionRepo,
+          cacheManager: mockCacheManager,
+          walletUseCase: mockUseCase,
+          storeId: 'store1');
       provider.setError('old error');
-      
+
       final completer = Completer<void>();
-      when(() => mockWalletRepo.getWalletsCount(any())).thenAnswer((_) async => 0);
+      when(() => mockWalletRepo.getWalletsCount(any()))
+          .thenAnswer((_) async => 0);
       when(() => mockWalletRepo.generateId()).thenReturn('new-wallet');
-      when(() => mockWalletRepo.createWallet(any())).thenAnswer((_) => completer.future);
-      when(() => mockUseCase.validatePermission(any())).thenAnswer((_) async => mockAuth.currentUser!);
+      when(() => mockWalletRepo.createWallet(any()))
+          .thenAnswer((_) => completer.future);
+      when(() => mockUseCase.validatePermission(any()))
+          .thenAnswer((_) async => mockAuth.currentUser!);
 
       final future = provider.createWallet(
         phoneNumber: '01234567890',

@@ -115,7 +115,9 @@ class WalletStats {
       'totalReceivedAmount': totalReceivedAmount,
       'totalCommission': totalCommission,
       'totalServiceFee': totalServiceFee,
-      'lastTransactionDate': lastTransactionDate != null ? Timestamp.fromDate(lastTransactionDate!) : null,
+      'lastTransactionDate': lastTransactionDate != null
+          ? Timestamp.fromDate(lastTransactionDate!)
+          : null,
     };
   }
 
@@ -204,36 +206,46 @@ class WalletModel {
   }
 
   factory WalletModel.fromMap(Map<String, dynamic> data, String docId) {
-    final createdAt = (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate();
-    final lastDailyReset = (data[FirebaseConstants.lastDailyReset] as Timestamp?)?.toDate();
-    final lastMonthlyReset = (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
+    final createdAt =
+        (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate();
+    final lastDailyReset =
+        (data[FirebaseConstants.lastDailyReset] as Timestamp?)?.toDate();
+    final lastMonthlyReset =
+        (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
 
-    if (createdAt == null || lastDailyReset == null || lastMonthlyReset == null) {
+    if (createdAt == null ||
+        lastDailyReset == null ||
+        lastMonthlyReset == null) {
       throw NotFoundException(
-        'Wallet document $docId missing required reset timestamps (createdAt, lastDailyReset, or lastMonthlyReset)'
-      );
+          'Wallet document $docId missing required reset timestamps (createdAt, lastDailyReset, or lastMonthlyReset)');
     }
 
     final balance = NumberParser.toDouble(data['balance']);
     // Phase 3: Boundary Guard
     AmountValidator.ensurePositiveOrZero(balance);
 
-    final sendLimitsMap = data[FirebaseConstants.sendLimits] as Map<String, dynamic>?;
+    final sendLimitsMap =
+        data[FirebaseConstants.sendLimits] as Map<String, dynamic>?;
     if (sendLimitsMap == null || sendLimitsMap.isEmpty) {
-      throw DomainException('Wallet $docId: sendLimits must be provided and non-empty');
+      throw DomainException(
+          'Wallet $docId: sendLimits must be provided and non-empty');
     }
 
-    final receiveLimitsMap = data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
+    final receiveLimitsMap =
+        data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
     if (receiveLimitsMap == null || receiveLimitsMap.isEmpty) {
-      throw DomainException('Wallet $docId: receiveLimits must be provided and non-empty');
+      throw DomainException(
+          'Wallet $docId: receiveLimits must be provided and non-empty');
     }
 
     return WalletModel(
       walletId: docId,
       storeId: data[FirebaseConstants.storeId] as String? ?? '',
       phoneNumber: data[FirebaseConstants.phoneNumber] as String? ?? '',
-      walletType: WalletType.fromString(data[FirebaseConstants.walletType] as String? ?? ''),
-      walletStatus: WalletStatus.fromString(data[FirebaseConstants.walletStatus] as String? ?? 'active'),
+      walletType: WalletType.fromString(
+          data[FirebaseConstants.walletType] as String? ?? ''),
+      walletStatus: WalletStatus.fromString(
+          data[FirebaseConstants.walletStatus] as String? ?? 'active'),
       balance: balance,
       notes: data[FirebaseConstants.notes] as String?,
       isActive: data[FirebaseConstants.isActive] as bool? ?? true,
@@ -244,7 +256,8 @@ class WalletModel {
       receiveLimits: WalletLimits.fromMap(receiveLimitsMap),
       lastDailyReset: lastDailyReset,
       lastMonthlyReset: lastMonthlyReset,
-      stats: WalletStats.fromMap(data[FirebaseConstants.stats] as Map<String, dynamic>? ?? {}),
+      stats: WalletStats.fromMap(
+          data[FirebaseConstants.stats] as Map<String, dynamic>? ?? {}),
     );
   }
 
@@ -257,13 +270,18 @@ class WalletModel {
       'balance': balance,
       FirebaseConstants.notes: notes,
       FirebaseConstants.isActive: isActive,
-      FirebaseConstants.createdAt: createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      FirebaseConstants.createdAt:
+          createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.updatedAt: updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      FirebaseConstants.updatedAt:
+          updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       FirebaseConstants.sendLimits: sendLimits.toMap(),
       FirebaseConstants.receiveLimits: receiveLimits.toMap(),
-      FirebaseConstants.lastDailyReset: lastDailyReset != null ? Timestamp.fromDate(lastDailyReset!) : null,
-      FirebaseConstants.lastMonthlyReset: lastMonthlyReset != null ? Timestamp.fromDate(lastMonthlyReset!) : null,
+      FirebaseConstants.lastDailyReset:
+          lastDailyReset != null ? Timestamp.fromDate(lastDailyReset!) : null,
+      FirebaseConstants.lastMonthlyReset: lastMonthlyReset != null
+          ? Timestamp.fromDate(lastMonthlyReset!)
+          : null,
       FirebaseConstants.stats: stats.toMap(),
     };
   }
@@ -319,7 +337,7 @@ class WalletModel {
     final now = DateTime.now();
     final typeEnum = WalletType.fromString(walletType);
     final statusEnum = WalletStatus.fromString(walletStatus);
-    
+
     final isNew = walletStatus == 'new';
     final isInstapay = typeEnum == WalletType.instaPay;
 

@@ -16,8 +16,8 @@ class DebtModel {
 
   // Debt Details
   final DebtType debtType; // ENUM refactor
-  final double amountDue; 
-  final double totalAmount; 
+  final double amountDue;
+  final double totalAmount;
   final String? notes;
 
   // Status
@@ -25,12 +25,12 @@ class DebtModel {
 
   // Dates
   final DateTime? debtDate; // Made nullable
-  final DateTime? paidDate; 
+  final DateTime? paidDate;
 
   // Tracking
-  final String createdBy; 
+  final String createdBy;
   final DateTime? createdAt; // Made nullable
-  final String? markedPaidBy; 
+  final String? markedPaidBy;
   final DateTime? updatedAt;
   final String? lastUpdatedBy;
 
@@ -63,7 +63,7 @@ class DebtModel {
 
     final statusStr = data['debtStatus'] as String? ?? 'open';
     final debtStatus = DebtStatus.fromString(statusStr);
-    
+
     final typeStr = data['debtType'] as String? ?? 'store_sale';
     final debtType = DebtType.fromString(typeStr);
 
@@ -117,7 +117,8 @@ class DebtModel {
       'debtDate': debtDate != null ? Timestamp.fromDate(debtDate!) : null,
       'paidDate': paidDate != null ? Timestamp.fromDate(paidDate!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.createdAt: createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      FirebaseConstants.createdAt:
+          createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'markedPaidBy': markedPaidBy,
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'lastUpdatedBy': lastUpdatedBy,

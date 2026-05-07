@@ -61,14 +61,19 @@ class TransactionRepository {
     );
     return createTransaction(transaction);
   }
+
   Future<void> createTransaction(TransactionModel transaction) async {
     AmountValidator.ensurePositive(transaction.amount);
     try {
-      if (kDebugMode) debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+      if (kDebugMode)
+        debugPrint(
+            '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'RECEIVED | txId=${transaction.transactionId}, '
             'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
             'amount=${transaction.amount}, commission=${transaction.commission}');
-      if (kDebugMode) debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+      if (kDebugMode)
+        debugPrint(
+            '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'Delegating to TransactionValidatorService.validateAndSave ...');
 
       // Delegate entirely to the unified validator which handles
@@ -87,7 +92,8 @@ class TransactionRepository {
         },
       );
       if (kDebugMode) {
-        debugPrint('🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
+        debugPrint(
+            '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
       }
 
@@ -113,7 +119,8 @@ class TransactionRepository {
     int limit = 20,
   }) {
     try {
-      final startTimestamp = Timestamp.fromDate(DateHelper.getStartOfDay(startDate));
+      final startTimestamp =
+          Timestamp.fromDate(DateHelper.getStartOfDay(startDate));
       final endTimestamp = Timestamp.fromDate(DateHelper.getEndOfDay(endDate));
 
       Query query = _transactionsCollection
@@ -134,9 +141,8 @@ class TransactionRepository {
             items.add(TransactionModel.fromFirestore(doc));
           } catch (e) {
             AppErrorHandler.logSilentError(
-              'Malformed tx doc in stream: ${doc.id} | error: $e',
-              'transaction_stream_corruption'
-            );
+                'Malformed tx doc in stream: ${doc.id} | error: $e',
+                'transaction_stream_corruption');
           }
         }
         return items;
@@ -170,9 +176,11 @@ class TransactionRepository {
   /// Fetches transactions within a date range with explicit pagination.
   /// Phase 4: Made stateless by requiring [lastDocument] parameter.
   Future<PaginatedResult<TransactionModel>> getTransactionsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate, {DocumentSnapshot? lastDocument}) async {
+      String storeId, DateTime startDate, DateTime endDate,
+      {DocumentSnapshot? lastDocument}) async {
     try {
-      final startTimestamp = Timestamp.fromDate(DateHelper.getStartOfDay(startDate));
+      final startTimestamp =
+          Timestamp.fromDate(DateHelper.getStartOfDay(startDate));
       final endTimestamp = Timestamp.fromDate(DateHelper.getEndOfDay(endDate));
 
       Query query = _transactionsCollection
@@ -193,12 +201,11 @@ class TransactionRepository {
           items.add(TransactionModel.fromFirestore(doc));
         } catch (e) {
           AppErrorHandler.logSilentError(
-            'Malformed tx doc in date range list: ${doc.id} | error: $e',
-            'transaction_date_list_corruption'
-          );
+              'Malformed tx doc in date range list: ${doc.id} | error: $e',
+              'transaction_date_list_corruption');
         }
       }
-      
+
       return PaginatedResult(
         items: items,
         lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
@@ -254,7 +261,8 @@ class TransactionRepository {
 
   /// Fetches all transactions for a store with explicit pagination.
   /// Phase 4: Made stateless by requiring [lastDocument] parameter.
-  Future<PaginatedResult<TransactionModel>> getAllTransactions(String storeId, {DocumentSnapshot? lastDocument}) async {
+  Future<PaginatedResult<TransactionModel>> getAllTransactions(String storeId,
+      {DocumentSnapshot? lastDocument}) async {
     try {
       Query query = _transactionsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -271,9 +279,8 @@ class TransactionRepository {
           items.add(TransactionModel.fromFirestore(doc));
         } catch (e) {
           AppErrorHandler.logSilentError(
-            'Malformed tx doc in all list: ${doc.id} | error: $e',
-            'transaction_all_list_corruption'
-          );
+              'Malformed tx doc in all list: ${doc.id} | error: $e',
+              'transaction_all_list_corruption');
         }
       }
 

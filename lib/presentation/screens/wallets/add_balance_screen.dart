@@ -120,7 +120,9 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
           return Text(AppLocalizations.of(context)!.noWalletsAvailable);
         }
         return CustomDropdown<WalletModel>(
-          value: _selectedWalletId != null ? walletProvider.walletMap[_selectedWalletId!] : null,
+          value: _selectedWalletId != null
+              ? walletProvider.walletMap[_selectedWalletId!]
+              : null,
           labelText:
               AppLocalizations.of(context)!.selectWallet, // حافظنا على الترجمة
           prefixIcon: const Icon(
@@ -128,7 +130,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
             color: AppColors.primary,
           ), // حافظنا على الأيقونة
           hint: AppLocalizations.of(context)!.selectWalletToAddBalance,
-          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+          fillColor: AppColors.primary.withAlpha(13),
 
           // 1. تمرير قائمة المحافظ مباشرة
           itemsList: walletProvider.wallets,
@@ -155,14 +157,15 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
 
   Widget _buildWalletInfoCard() {
     if (_selectedWalletId == null) return const SizedBox.shrink();
-    
+
     return Selector<WalletProvider, WalletModel?>(
       selector: (context, provider) => provider.walletMap[_selectedWalletId!],
       builder: (context, wallet, child) {
         if (wallet == null) return const SizedBox.shrink();
         return Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

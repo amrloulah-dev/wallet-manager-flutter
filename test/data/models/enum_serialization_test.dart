@@ -14,7 +14,8 @@ import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -99,11 +100,26 @@ void main() {
         'isActive': true,
         'createdAt': Timestamp.fromDate(now),
         'createdBy': 'user1',
-        'sendLimits': {'dailyLimit': 60000.0, 'dailyUsed': 0.0, 'monthlyLimit': 200000.0, 'monthlyUsed': 0.0},
-        'receiveLimits': {'dailyLimit': 60000.0, 'dailyUsed': 0.0, 'monthlyLimit': 200000.0, 'monthlyUsed': 0.0},
+        'sendLimits': {
+          'dailyLimit': 60000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 200000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 60000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 200000.0,
+          'monthlyUsed': 0.0
+        },
         'lastDailyReset': Timestamp.fromDate(now),
         'lastMonthlyReset': Timestamp.fromDate(now),
-        'stats': {'totalTransactions': 0, 'totalSentAmount': 0.0, 'totalReceivedAmount': 0.0, 'totalCommission': 0.0},
+        'stats': {
+          'totalTransactions': 0,
+          'totalSentAmount': 0.0,
+          'totalReceivedAmount': 0.0,
+          'totalCommission': 0.0
+        },
       });
 
       final fromFirestore = WalletModel.fromFirestore(mockSnapshot);
@@ -225,12 +241,19 @@ void main() {
           'smsEnabled': true,
         },
         'settings': {'currency': 'EGP', 'timezone': 'Africa/Cairo'},
-        'stats': {'totalWallets': 0, 'activeWallets': 0, 'totalTransactionsToday': 0, 'totalCommissionToday': 0.0, 'lastUpdated': Timestamp.fromDate(now)},
+        'stats': {
+          'totalWallets': 0,
+          'activeWallets': 0,
+          'totalTransactionsToday': 0,
+          'totalCommissionToday': 0.0,
+          'lastUpdated': Timestamp.fromDate(now)
+        },
       });
 
       final fromFirestore = StoreModel.fromFirestore(mockSnapshot);
       expect(fromFirestore.subscription.planId, equals(SubscriptionPlan.trial));
-      expect(fromFirestore.subscription.status, equals(SubscriptionStatus.active));
+      expect(
+          fromFirestore.subscription.status, equals(SubscriptionStatus.active));
     });
   });
 
@@ -257,4 +280,3 @@ void main() {
     });
   });
 }
-

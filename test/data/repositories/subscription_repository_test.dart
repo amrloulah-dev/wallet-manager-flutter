@@ -6,6 +6,7 @@ import 'package:walletmanager/data/repositories/subscription_repository.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockUser extends Mock implements User {}
 
 void main() {
@@ -29,9 +30,11 @@ void main() {
   });
 
   group('SubscriptionRepository', () {
-    test('verifyDevice should use device_registrations subcollection and include ownerUid', () async {
+    test(
+        'verifyDevice should use device_registrations subcollection and include ownerUid',
+        () async {
       const storeId = 'test_store';
-      
+
       await repository.verifyDevice(storeId);
 
       // DeviceTrackingService.getDeviceId() returns 'unsupported_device_type' in this environment
@@ -40,17 +43,22 @@ void main() {
           .doc(storeId)
           .collection(FirebaseConstants.deviceRegistrationsCollection)
           .get();
-      
+
       expect(registrations.docs.length, 1);
       expect(registrations.docs.first.data()['ownerUid'], 'test_uid');
     });
 
-    test('hasDeviceConsumedTrial should use device_registrations root collection', () async {
+    test(
+        'hasDeviceConsumedTrial should use device_registrations root collection',
+        () async {
       // Setup data in root collection
       // DeviceTrackingService.getDeviceId() returns 'unsupported_device_type'
       const deviceId = 'unsupported_device_type';
-      
-      await fakeFirestore.collection(FirebaseConstants.deviceRegistrationsCollection).doc(deviceId).set({
+
+      await fakeFirestore
+          .collection(FirebaseConstants.deviceRegistrationsCollection)
+          .doc(deviceId)
+          .set({
         'trialCount': 1,
       });
 

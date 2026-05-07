@@ -8,11 +8,19 @@ import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/paginated_result.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockFirestore extends Mock implements FirebaseFirestore {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
-class MockQueryDocumentSnapshot extends Mock implements QueryDocumentSnapshot<Map<String, dynamic>> {}
+
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {}
+
+class MockQueryDocumentSnapshot extends Mock
+    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   late DebtRepository debtRepository;
@@ -31,17 +39,25 @@ void main() {
   });
 
   group('DebtRepository Stateless Pagination (TDD - Phase 3)', () {
-    test('getDebtsByDateRange should be stateless and return PaginatedResult', () async {
+    test('getDebtsByDateRange should be stateless and return PaginatedResult',
+        () async {
       final mockCollection = MockCollectionReference();
       final mockQuery = MockQuery();
       final mockSnapshot = MockQuerySnapshot();
       final mockDoc = MockQueryDocumentSnapshot();
 
       when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
-      when(() => mockCollection.where(any(), isEqualTo: any(named: 'isEqualTo'))).thenReturn(mockQuery);
-      when(() => mockQuery.where(any(), isGreaterThanOrEqualTo: any(named: 'isGreaterThanOrEqualTo'))).thenReturn(mockQuery);
-      when(() => mockQuery.where(any(), isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo'))).thenReturn(mockQuery);
-      when(() => mockQuery.orderBy(any(), descending: any(named: 'descending'))).thenReturn(mockQuery);
+      when(() =>
+              mockCollection.where(any(), isEqualTo: any(named: 'isEqualTo')))
+          .thenReturn(mockQuery);
+      when(() => mockQuery.where(any(),
+              isGreaterThanOrEqualTo: any(named: 'isGreaterThanOrEqualTo')))
+          .thenReturn(mockQuery);
+      when(() => mockQuery.where(any(),
+              isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo')))
+          .thenReturn(mockQuery);
+      when(() => mockQuery.orderBy(any(), descending: any(named: 'descending')))
+          .thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.docs).thenReturn([mockDoc]);

@@ -80,11 +80,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     if (mounted) {
       if (success) {
-        ToastUtils.showSuccess(AppLocalizations.of(context)!.employeeAddedSuccess);
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.employeeAddedSuccess);
         Navigator.pop(context, true);
       } else {
-        ToastUtils.showError(
-            employeeProvider.errorMessage ?? AppLocalizations.of(context)!.unexpectedError);
+        ToastUtils.showError(employeeProvider.errorMessage ??
+            AppLocalizations.of(context)!.unexpectedError);
       }
     }
 
@@ -137,8 +138,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           color: isAtLimit
-              ? AppColors.error.withAlpha((0.1 * 255).round())
-              : AppColors.primary.withAlpha((0.1 * 255).round()),
+              ? AppColors.error.withAlpha(26)
+              : AppColors.primary.withAlpha(26),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -148,7 +149,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                AppLocalizations.of(context)!.currentEmployeesCount(currentCount, maxEmployees),
+                AppLocalizations.of(context)!
+                    .currentEmployeesCount(currentCount, maxEmployees),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: isAtLimit ? AppColors.error : AppColors.primary,
                 ),
@@ -180,7 +182,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.info.withAlpha((0.1 * 255).round()),
+        color: AppColors.info.withAlpha(26),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -229,7 +231,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               FocusScope.of(context).requestFocus(_pinFocus),
         ),
         const SizedBox(height: 24),
-        Text(AppLocalizations.of(context)!.employeePinTitle, style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.employeePinTitle,
+            style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _pinController,
@@ -292,7 +295,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, provider, _) {
 // ... existing code ...
         final isAtLimit = provider.employeesCount >=
-            (context.read<AuthProvider>().currentStore?.subscription.maxEmployees ??
+            (context
+                    .read<AuthProvider>()
+                    .currentStore
+                    ?.subscription
+                    .maxEmployees ??
                 5);
 
         return CustomButton(

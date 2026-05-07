@@ -14,6 +14,7 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockCacheManager extends Mock implements CacheManager {}
 
 void main() {
@@ -29,43 +30,53 @@ void main() {
     mockFirebaseService = MockFirebaseService();
     mockCacheManager = MockCacheManager();
     statsRepository = StatsRepository(firestore: fakeFirestore);
-    
+
     sl.allowReassignment = true;
     sl.registerSingleton<CacheManager>(mockCacheManager);
-    
+
     when(() => mockFirebaseService.firestore).thenReturn(fakeFirestore);
   });
 
   group('Financial Fortification Guards', () {
-    test('DebtRepository.processPayment should throw DomainException for negative amount', () async {
+    test(
+        'DebtRepository.processPayment should throw DomainException for negative amount',
+        () async {
       final repository = DebtRepository(firebaseService: mockFirebaseService);
       expect(() => repository.processPayment('debt1', -50.0, 'user1'),
           throwsA(isA<DomainException>()));
     });
 
-    test('DebtRepository.addPartialDebt should throw DomainException for negative amount', () async {
+    test(
+        'DebtRepository.addPartialDebt should throw DomainException for negative amount',
+        () async {
       final repository = DebtRepository(firebaseService: mockFirebaseService);
       expect(() => repository.addPartialDebt('debt1', -50.0, 'user1'),
           throwsA(isA<DomainException>()));
     });
 
-    test('TransactionRepository.createDeposit should throw DomainException for negative amount', () async {
+    test(
+        'TransactionRepository.createDeposit should throw DomainException for negative amount',
+        () async {
       final repository = TransactionRepository(
         firebaseService: mockFirebaseService,
         statsRepository: statsRepository,
       );
-      expect(() => repository.createDeposit(
-        transactionId: 'tx1',
-        storeId: 'store1',
-        walletId: 'wallet1',
-        amount: -100.0,
-        createdBy: 'user1',
-      ), throwsA(isA<DomainException>()));
+      expect(
+          () => repository.createDeposit(
+                transactionId: 'tx1',
+                storeId: 'store1',
+                walletId: 'wallet1',
+                amount: -100.0,
+                createdBy: 'user1',
+              ),
+          throwsA(isA<DomainException>()));
     });
 
-    test('DebtRepository.processPayment should throw InvalidAmountException for overpayment', () async {
+    test(
+        'DebtRepository.processPayment should throw InvalidAmountException for overpayment',
+        () async {
       final repository = DebtRepository(firebaseService: mockFirebaseService);
-      
+
       // Setup: Create a debt with amountDue = 100
       final debtId = 'debt100';
       await fakeFirestore.collection('debts').doc(debtId).set({

@@ -2,7 +2,6 @@ import 'package:intl/intl.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DateHelper {
-
   // ===========================
   // Format DateTime to String
   // ===========================
@@ -84,8 +83,6 @@ class DateHelper {
         date.day == now.day;
   }
 
-
-
   // ===========================
   // Get Relative Time (Localized)
   // ===========================
@@ -98,7 +95,7 @@ class DateHelper {
     // Fallback if l10n is not provided (e.g. background tasks, though context is usually available in UI)
     // If l10n is null, we might use a default or just return a simple formatted date.
     if (l10n == null) {
-       return DateFormat('dd/MM/yyyy HH:mm').format(date);
+      return DateFormat('dd/MM/yyyy HH:mm').format(date);
     }
 
     final isAr = l10n.localeName == 'ar';
@@ -176,8 +173,6 @@ class DateHelper {
   static bool isSameMonth(DateTime date1, DateTime date2) {
     return date1.year == date2.year && date1.month == date2.month;
   }
-
-
 
   // ===========================
   // Get Current Date String (yyyy-MM-dd)

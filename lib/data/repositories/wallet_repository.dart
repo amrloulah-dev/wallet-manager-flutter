@@ -35,9 +35,9 @@ class WalletRepository {
     try {
       await _firestore.runTransaction((transaction) async {
         final walletRef = _walletsCollection.doc(wallet.walletId);
-        
+
         transaction.set(walletRef, wallet.toFirestore());
-        
+
         await _statsRepository.updateStatsOnWalletChange(
           wallet.storeId,
           countChange: 1,
@@ -46,7 +46,7 @@ class WalletRepository {
           firestoreTransaction: transaction,
         );
       });
-      
+
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     } catch (e) {
       throw ServerException('فشل إنشاء المحفظة: $e');
@@ -64,17 +64,19 @@ class WalletRepository {
     try {
       Query query = _walletsCollection.where(FirebaseConstants.storeId,
           isEqualTo: storeId);
-      
+
       if (activeOnly) {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
       }
-      
+
       if (walletType != null) {
-        query = query.where(FirebaseConstants.walletType, isEqualTo: walletType.name);
+        query = query.where(FirebaseConstants.walletType,
+            isEqualTo: walletType.name);
       }
-      
+
       if (walletStatus != null) {
-        query = query.where(FirebaseConstants.walletStatus, isEqualTo: walletStatus.name);
+        query = query.where(FirebaseConstants.walletStatus,
+            isEqualTo: walletStatus.name);
       }
 
       // Always order by createdAt to ensure consistent stream results
@@ -87,9 +89,8 @@ class WalletRepository {
             wallets.add(WalletModel.fromFirestore(doc));
           } catch (e) {
             AppErrorHandler.logSilentError(
-              'Malformed wallet doc: ${doc.id} | error: $e',
-              'wallet_stream_corruption'
-            );
+                'Malformed wallet doc: ${doc.id} | error: $e',
+                'wallet_stream_corruption');
           }
         }
         return wallets;
@@ -119,7 +120,8 @@ class WalletRepository {
     }
   }
 
-  Future<PaginatedResult<WalletModel>> getAllWallets(String storeId, {DocumentSnapshot? lastDocument}) async {
+  Future<PaginatedResult<WalletModel>> getAllWallets(String storeId,
+      {DocumentSnapshot? lastDocument}) async {
     try {
       Query query = _walletsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -136,9 +138,8 @@ class WalletRepository {
           items.add(WalletModel.fromFirestore(doc));
         } catch (e) {
           AppErrorHandler.logSilentError(
-            'Malformed wallet doc in list: ${doc.id} | error: $e',
-            'wallet_list_corruption'
-          );
+              'Malformed wallet doc in list: ${doc.id} | error: $e',
+              'wallet_list_corruption');
         }
       }
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
@@ -317,9 +318,10 @@ class WalletRepository {
   // 6️⃣ RESET Methods
   Future<void> resetLimitsForWallets(List<WalletModel> wallets) async {
     const int chunkSize = 450;
-    
+
     for (var i = 0; i < wallets.length; i += chunkSize) {
-      final chunk = wallets.sublist(i, i + chunkSize > wallets.length ? wallets.length : i + chunkSize);
+      final chunk = wallets.sublist(
+          i, i + chunkSize > wallets.length ? wallets.length : i + chunkSize);
       final batch = _firestore.batch();
       var walletsToResetInBatch = 0;
 

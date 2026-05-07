@@ -158,7 +158,9 @@ class _WalletsListScreenState extends State<WalletsListScreen>
           return CustomErrorWidget(
             message: errorMessage ??
                 AppLocalizations.of(context)!.somethingWentWrong,
-            onRetry: () => context.read<WalletProvider>().fetchInitialWallets(forceRefresh: true),
+            onRetry: () => context
+                .read<WalletProvider>()
+                .fetchInitialWallets(forceRefresh: true),
           );
         }
 
@@ -203,7 +205,8 @@ class _WalletsListScreenState extends State<WalletsListScreen>
                         }
                         final wallet = filteredWallets[index];
                         return WalletCard(
-                          key: ValueKey('${wallet.walletId}_${wallet.balance}_${context.read<WalletProvider>().isWalletFrozenSync(wallet.walletId)}'),
+                          key: ValueKey(
+                              '${wallet.walletId}_${wallet.balance}_${context.read<WalletProvider>().isWalletFrozenSync(wallet.walletId)}'),
                           wallet: wallet,
                           onTap: () =>
                               _navigateToWalletDetails(wallet.walletId),
@@ -308,7 +311,7 @@ class _SummaryCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha((0.1 * 255).round()),
+        color: AppColors.primary.withAlpha(26),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

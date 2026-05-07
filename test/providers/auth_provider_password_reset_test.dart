@@ -18,14 +18,24 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockStoreRepository extends Mock implements StoreRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockDeviceRepository extends Mock implements DeviceRepository {}
+
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
-class MockSubscriptionRepository extends Mock implements SubscriptionRepository {}
+
+class MockSubscriptionRepository extends Mock
+    implements SubscriptionRepository {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 void main() {
@@ -51,9 +61,9 @@ void main() {
     mockSubRepo = MockSubscriptionRepository();
     final mockFirebaseService = MockFirebaseService();
     final mockFirestore = MockFirebaseFirestore();
-    
+
     final mockAuth = MockFirebaseAuth();
-    
+
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
@@ -95,7 +105,8 @@ void main() {
 
       await authProvider.sendPasswordReset('test@example.com');
 
-      verify(() => mockAuthRepo.sendPasswordResetEmail('test@example.com')).called(1);
+      verify(() => mockAuthRepo.sendPasswordResetEmail('test@example.com'))
+          .called(1);
       expect(authProvider.errorMessage, isNull);
     });
 

@@ -15,7 +15,14 @@ import 'auth_provider.dart';
 import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
 
-enum TransactionProviderStatus { idle, loading, loadingMore, loaded, creating, error }
+enum TransactionProviderStatus {
+  idle,
+  loading,
+  loadingMore,
+  loaded,
+  creating,
+  error
+}
 
 class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
@@ -132,7 +139,8 @@ class TransactionProvider extends BaseProvider {
     fetchInitialTransactions();
   }
 
-  void setFilterType(TransactionType? type) { // ENUM refactor
+  void setFilterType(TransactionType? type) {
+    // ENUM refactor
     _filterType = type;
     fetchInitialTransactions();
   }
@@ -149,18 +157,22 @@ class TransactionProvider extends BaseProvider {
   }
 
   @override
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'transaction_operation']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'transaction_operation']) {
     if (kDebugMode) {
       if (kDebugMode) debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
       if (stack != null) {
         if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       }
     }
-    
+
     if (isDisposed) return;
     _errorMessage = errorCode;
     _status = TransactionProviderStatus.error;
-    
+
     super.setError(
       errorCode,
       error,
@@ -168,7 +180,7 @@ class TransactionProvider extends BaseProvider {
       showToast,
       operation,
     );
-    
+
     safeNotify();
   }
 
@@ -180,13 +192,18 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
-    if (kDebugMode) debugPrint('🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
+    if (kDebugMode)
+      debugPrint(
+          '🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
     if (_currentStoreId == null) {
-      if (kDebugMode) debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
+      if (kDebugMode)
+        debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode) debugPrint('🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
+      if (kDebugMode)
+        debugPrint(
+            '🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
       return;
     }
 
@@ -195,14 +212,18 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      if (kDebugMode) debugPrint('⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
+      if (kDebugMode)
+        debugPrint(
+            '⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
       final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
         lastDocument: null,
       );
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
+      if (kDebugMode)
+        debugPrint(
+            '✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
 
       _transactions = result.items;
       _lastDocument = result.lastDocument;
@@ -212,7 +233,8 @@ class TransactionProvider extends BaseProvider {
       _recomputeTodayTransactions();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
-      if (kDebugMode) debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
+      if (kDebugMode)
+        debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('transaction_error_fetch_failed', e, stack);
     } finally {
@@ -221,7 +243,11 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null || _lastDocument == null) {
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
     }
 
@@ -302,7 +328,7 @@ class TransactionProvider extends BaseProvider {
 
       await _transactionRepository.createTransaction(newTransaction);
       AnalyticsService.logTransactionCreated(transactionType.name);
-      
+
       _activateFetchShield();
       _updateStatus(TransactionProviderStatus.loaded);
       return true;
@@ -323,7 +349,8 @@ class TransactionProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('auth_operation_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('auth_operation_failed');
+      if (!AppErrorHandler.isTestMode)
+        ToastUtils.showError('auth_operation_failed');
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {
@@ -336,7 +363,7 @@ class TransactionProvider extends BaseProvider {
 
   void insertTransactionLocally(TransactionModel transaction) {
     if (isDisposed) return;
-    
+
     // Check if it already exists
     if (_transactionMap.containsKey(transaction.transactionId)) return;
 
@@ -344,8 +371,9 @@ class TransactionProvider extends BaseProvider {
     // Sort by transactionDate descending to maintain consistency with Firestore stream
     // Safe comparison for nullable transactionDate
     final now = DateTime.now();
-    _transactions.sort((a, b) => (b.transactionDate ?? now).compareTo(a.transactionDate ?? now));
-    
+    _transactions.sort((a, b) =>
+        (b.transactionDate ?? now).compareTo(a.transactionDate ?? now));
+
     _rebuildTransactionMap();
     _recomputeTodayTransactions();
     _activateFetchShield();

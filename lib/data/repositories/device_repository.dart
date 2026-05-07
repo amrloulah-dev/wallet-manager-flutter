@@ -62,10 +62,12 @@ class DeviceRepository {
 
       return deviceId;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.getDeviceId');
-      
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DeviceRepository.getDeviceId');
+
       // Last resort fallback
-      final fallbackId = _localStorageService.persistentDeviceId ?? const Uuid().v4();
+      final fallbackId =
+          _localStorageService.persistentDeviceId ?? const Uuid().v4();
       if (_localStorageService.persistentDeviceId == null) {
         await _localStorageService.savePersistentDeviceId(fallbackId);
       }
@@ -93,7 +95,9 @@ class DeviceRepository {
       final trialCount = NumberParser.toInt(data['trialCount']);
       return trialCount < 2;
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.checkDeviceEligibility');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'DeviceRepository.checkDeviceEligibility');
       return true;
     }
   }
@@ -115,7 +119,8 @@ class DeviceRepository {
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'DeviceRepository.registerDeviceUsage');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DeviceRepository.registerDeviceUsage');
       rethrow;
     }
   }

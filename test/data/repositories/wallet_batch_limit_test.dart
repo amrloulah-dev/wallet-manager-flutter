@@ -7,10 +7,16 @@ import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockWriteBatch extends Mock implements WriteBatch {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
   late MockFirebaseFirestore mockFirestore;
@@ -32,7 +38,7 @@ void main() {
     when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
     when(() => mockCollection.doc(any())).thenReturn(mockDocRef);
     when(() => mockBatch.commit()).thenAnswer((_) async {});
-    
+
     final statsRepository = StatsRepository(firestore: mockFirestore);
     repository = WalletRepository(
       firebaseService: mockFirebaseService,
@@ -41,7 +47,9 @@ void main() {
   });
 
   group('Batch Limit (TDD)', () {
-    test('resetLimitsForWallets should use multiple batches if count exceeds 450', () async {
+    test(
+        'resetLimitsForWallets should use multiple batches if count exceeds 450',
+        () async {
       // ARRANGE: Create 500 wallets that need reset
       final wallets = <WalletModel>[];
       final oldDate = DateTime.now().subtract(const Duration(days: 2));

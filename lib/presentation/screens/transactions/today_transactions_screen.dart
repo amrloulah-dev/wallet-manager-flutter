@@ -70,7 +70,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
         actions: [
           Consumer<TransactionProvider>(
             builder: (context, provider, _) {
-              return PopupMenuButton<TransactionType?>( // ENUM refactor
+              return PopupMenuButton<TransactionType?>(
+                // ENUM refactor
                 icon: const Icon(Icons.filter_list),
                 onSelected: (TransactionType? value) {
                   provider.setFilterType(value);
@@ -82,14 +83,19 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 elevation: 4,
                 itemBuilder: (BuildContext context) =>
                     <PopupMenuEntry<TransactionType?>>[
-                  _buildFilterMenuItem(null, AppLocalizations.of(context)!.all, provider.filterType,
+                  _buildFilterMenuItem(null, AppLocalizations.of(context)!.all,
+                      provider.filterType,
                       icon: Icons.clear_all),
                   const PopupMenuDivider(),
-                  _buildFilterMenuItem(TransactionType.debit, AppLocalizations.of(context)!.send, provider.filterType,
+                  _buildFilterMenuItem(TransactionType.debit,
+                      AppLocalizations.of(context)!.send, provider.filterType,
                       icon: Icons.arrow_upward, color: AppColors.send),
                   _buildFilterMenuItem(
-                      TransactionType.credit, AppLocalizations.of(context)!.receive, provider.filterType,
-                      icon: Icons.arrow_downward, color: AppColors.receive),
+                      TransactionType.credit,
+                      AppLocalizations.of(context)!.receive,
+                      provider.filterType,
+                      icon: Icons.arrow_downward,
+                      color: AppColors.receive),
                 ],
               );
             },
@@ -159,7 +165,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
   }
 
   Widget _buildContent() {
-    return Selector<TransactionProvider, (TransactionProviderStatus, String?, TransactionType?, bool)>(
+    return Selector<TransactionProvider,
+        (TransactionProviderStatus, String?, TransactionType?, bool)>(
       selector: (context, provider) => (
         provider.status,
         provider.errorMessage,
@@ -180,8 +187,10 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
 
         if (hasError) {
           return CustomErrorWidget(
-            message: errorMessage ?? AppLocalizations.of(context)!.errorLoadingTransactionsGeneric,
-            onRetry: context.read<TransactionProvider>().fetchInitialTransactions,
+            message: errorMessage ??
+                AppLocalizations.of(context)!.errorLoadingTransactionsGeneric,
+            onRetry:
+                context.read<TransactionProvider>().fetchInitialTransactions,
           );
         }
 
@@ -193,7 +202,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 message: filterType == null
                     ? AppLocalizations.of(context)!.noTransactionsTodayEmpty
                     : AppLocalizations.of(context)!.noTransactionsWithFilter,
-                description: AppLocalizations.of(context)!.startAddingTransaction,
+                description:
+                    AppLocalizations.of(context)!.startAddingTransaction,
                 icon: Icons.receipt_long_outlined,
                 actionText: AppLocalizations.of(context)!.newTransaction,
                 onAction: () => _navigateToCreateTransaction(context),
@@ -201,7 +211,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
             }
 
             return RefreshIndicator(
-              onRefresh: context.read<TransactionProvider>().fetchInitialTransactions,
+              onRefresh:
+                  context.read<TransactionProvider>().fetchInitialTransactions,
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.only(bottom: 80), // For FAB
@@ -215,7 +226,8 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                   }
                   final transaction = transactions[index];
                   return TransactionCard(
-                    key: ValueKey('${transaction.transactionId}_${transaction.amount}_${transaction.paymentStatus}'),
+                    key: ValueKey(
+                        '${transaction.transactionId}_${transaction.amount}_${transaction.paymentStatus}'),
                     transaction: transaction,
                     onTap: () => _navigateToTransactionDetails(
                         context, transaction.transactionId),

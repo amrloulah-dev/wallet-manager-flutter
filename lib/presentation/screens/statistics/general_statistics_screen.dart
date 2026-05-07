@@ -109,14 +109,14 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
         if (isLoading) {
           return LoadingIndicator(message: l10n.loadingWalletData);
         }
-        
+
         return Selector<StatisticsProvider, String?>(
           selector: (context, provider) => provider.errorMessage,
           builder: (context, errorMessage, child) {
             if (errorMessage != null) {
               final l10n = AppLocalizations.of(context)!;
               String displayMessage;
-              
+
               // Resolve localization keys
               switch (errorMessage) {
                 case 'stats_error_summary_fetch':
@@ -134,7 +134,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
                 default:
                   displayMessage = errorMessage;
               }
-              
+
               return CustomErrorWidget(message: displayMessage);
             }
 
@@ -183,55 +183,55 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(_startDate == null
-                      ? l10n.startDate
-                      : DateHelper.formatDateTime(_startDate!)),
-                  onPressed: () => _selectDate(context, true),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(_endDate == null
-                      ? l10n.endDate
-                      : DateHelper.formatDateTime(_endDate!)),
-                  onPressed: () => _selectDate(context, false),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: l10n.applyFilter,
-                  onPressed: _startDate == null ? null : _applyFilter,
-                  size: ButtonSize.small,
-                ),
-              ),
-              if (mode == StatsMode.filtered) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomButton(
-                    text: l10n.clearFilter,
-                    onPressed: _clearFilter,
-                    type: ButtonType.outlined,
-                    size: ButtonSize.small,
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(_startDate == null
+                          ? l10n.startDate
+                          : DateHelper.formatDateTime(_startDate!)),
+                      onPressed: () => _selectDate(context, true),
+                    ),
                   ),
-                ),
-              ]
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(_endDate == null
+                          ? l10n.endDate
+                          : DateHelper.formatDateTime(_endDate!)),
+                      onPressed: () => _selectDate(context, false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: l10n.applyFilter,
+                      onPressed: _startDate == null ? null : _applyFilter,
+                      size: ButtonSize.small,
+                    ),
+                  ),
+                  if (mode == StatsMode.filtered) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomButton(
+                        text: l10n.clearFilter,
+                        onPressed: _clearFilter,
+                        type: ButtonType.outlined,
+                        size: ButtonSize.small,
+                      ),
+                    ),
+                  ]
+                ],
+              ),
             ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -245,9 +245,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
           Icon(Icons.bar_chart_outlined,
               size: 80, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
-          Text(isCustom
-              ? l10n.noDataInRange
-              : l10n.noStatsToShow),
+          Text(isCustom ? l10n.noDataInRange : l10n.noStatsToShow),
         ],
       ),
     );

@@ -44,7 +44,8 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         _fetchAndApplyData();
       }
     }, onError: (error) {
-      if (kDebugMode) debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
+      if (kDebugMode)
+        debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
     });
   }
 
@@ -70,23 +71,26 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       if (mounted) {
         context.read<StatisticsProvider>().addTransactionOptimistically(data);
 
-        final String nowStr = data['transactionDate']?.toString() ?? DateTime.now().toIso8601String();
+        final String nowStr = data['transactionDate']?.toString() ??
+            DateTime.now().toIso8601String();
         final tx = TransactionModel(
           transactionId: data['transactionId']?.toString() ?? '',
           storeId: data['storeId']?.toString() ?? '',
           walletId: data['walletId']?.toString() ?? '',
-          transactionType: TransactionType.fromString(data['type']?.toString() ?? 'debit'), // ENUM refactor
+          transactionType: TransactionType.fromString(
+              data['type']?.toString() ?? 'debit'), // ENUM refactor
           customerPhone: data['sender']?.toString(),
           customerName: data['customerName']?.toString(),
           amount: NumberParser.toDouble(data['amount']),
           commission: NumberParser.toDouble(data['commission']),
-          serviceFee: 0.0, 
-          paymentStatus: PaymentStatus.fromString(data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
+          serviceFee: 0.0,
+          paymentStatus: PaymentStatus.fromString(
+              data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
           transactionDate: DateTime.parse(nowStr),
           createdAt: DateTime.parse(nowStr),
           createdBy: 'SMS Auto',
         );
-        
+
         context.read<TransactionProvider>().insertTransactionLocally(tx);
 
         // ── Zero-cost local wallet mutation ──
@@ -95,20 +99,22 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         // Firestore cache lag would overwrite our correct optimistic balance.
         final walletId = data['walletId']?.toString();
         final amount = NumberParser.toDouble(data['amount']);
-        final type = data['type']?.toString(); // 'debit' = send, 'credit' = receive
+        final type =
+            data['type']?.toString(); // 'debit' = send, 'credit' = receive
         if (walletId != null && amount > 0 && type != null) {
           final isSend = type == 'debit';
           context.read<WalletProvider>().applyLocalDeduction(
-            walletId,
-            amount,
-            isSend,
-          );
+                walletId,
+                amount,
+                isSend,
+              );
         }
       }
 
       await _storage.clearVault();
     } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
+      if (kDebugMode)
+        debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
     }
   }
 

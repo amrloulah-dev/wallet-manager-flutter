@@ -26,10 +26,11 @@ void main() {
     debugPrint = originalDebugPrint; // restore default
   });
 
-  test('AppErrorHandler.logSilentError triggers debugPrint/log in debug mode', () {
+  test('AppErrorHandler.logSilentError triggers debugPrint/log in debug mode',
+      () {
     // This should fail to compile or throw if logSilentError is not implemented
     AppErrorHandler.logSilentError('test error', 'test reason');
-    
+
     // In test environment, kDebugMode is usually true
     // We expect some diagnostic output
     expect(printLogs.any((log) => log.contains('SILENT ERROR')), isTrue);
@@ -45,9 +46,10 @@ void main() {
         operation: 'test_low',
       );
     } catch (_) {}
-    
+
     expect(printLogs.isNotEmpty, isTrue);
-    expect(printLogs.first, contains('[ERROR] [low] [test_low] Exception: test error'));
+    expect(printLogs.first,
+        contains('[ERROR] [low] [test_low] Exception: test error'));
   });
 
   test('AppErrorHandler medium severity triggers debugPrint', () async {
@@ -60,7 +62,8 @@ void main() {
     } catch (_) {}
 
     expect(printLogs.isNotEmpty, isTrue);
-    expect(printLogs.first, contains('[ERROR] [medium] [test_medium] Exception: test error'));
+    expect(printLogs.first,
+        contains('[ERROR] [medium] [test_medium] Exception: test error'));
   });
 
   test('AppErrorHandler critical severity triggers debugPrint', () async {
@@ -73,6 +76,9 @@ void main() {
     } catch (_) {}
 
     expect(printLogs.isNotEmpty, isTrue);
-    expect(printLogs.first, contains('[ERROR] [critical] [test_critical] Exception: test critical error'));
+    expect(
+        printLogs.first,
+        contains(
+            '[ERROR] [critical] [test_critical] Exception: test critical error'));
   });
 }

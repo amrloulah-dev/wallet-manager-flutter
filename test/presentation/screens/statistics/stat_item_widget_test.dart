@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/presentation/screens/statistics/general_statistics_screen.dart';
 
 void main() {
-  testWidgets('StatItemWidget renders label, value and subtitle correctly', (WidgetTester tester) async {
+  testWidgets('StatItemWidget renders label, value and subtitle correctly',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(

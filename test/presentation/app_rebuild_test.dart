@@ -18,7 +18,8 @@ class MockLocalizationProvider extends ChangeNotifier {
 
 void main() {
   group('App Rebuild Behavior (Failing Test)', () {
-    testWidgets('MaterialApp should NOT rebuild when AuthProvider changes', (tester) async {
+    testWidgets('MaterialApp should NOT rebuild when AuthProvider changes',
+        (tester) async {
       int buildCount = 0;
 
       final authProvider = MockAuthProvider();
@@ -29,8 +30,10 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider<MockAuthProvider>.value(value: authProvider),
-            ChangeNotifierProvider<MockThemeProvider>.value(value: themeProvider),
-            ChangeNotifierProvider<MockLocalizationProvider>.value(value: localizationProvider),
+            ChangeNotifierProvider<MockThemeProvider>.value(
+                value: themeProvider),
+            ChangeNotifierProvider<MockLocalizationProvider>.value(
+                value: localizationProvider),
           ],
           child: Consumer2<MockThemeProvider, MockLocalizationProvider>(
             builder: (context, theme, loc, child) {
@@ -51,7 +54,8 @@ void main() {
 
       // In the CURRENT implementation, buildCount will be 2 (FAILURE)
       // We want it to be 1 after the fix.
-      expect(buildCount, 1, reason: 'MaterialApp should not rebuild on Auth change');
+      expect(buildCount, 1,
+          reason: 'MaterialApp should not rebuild on Auth change');
     });
   });
 }

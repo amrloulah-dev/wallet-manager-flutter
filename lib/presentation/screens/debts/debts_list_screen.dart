@@ -91,9 +91,11 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       if (!mounted) return;
 
       if (!success) {
-        ToastUtils.showError(debtProvider.errorMessage ?? AppLocalizations.of(context)!.debtSettlementFailed);
+        ToastUtils.showError(debtProvider.errorMessage ??
+            AppLocalizations.of(context)!.debtSettlementFailed);
       } else {
-        ToastUtils.showSuccess(AppLocalizations.of(context)!.debtSettledSuccess);
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.debtSettledSuccess);
       }
     }
   }
@@ -168,7 +170,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
             if (hasError) {
               final provider = context.read<DebtProvider>();
               return CustomErrorWidget(
-                message: provider.errorMessage ?? AppLocalizations.of(context)!.errorLoadingDebts,
+                message: provider.errorMessage ??
+                    AppLocalizations.of(context)!.errorLoadingDebts,
                 onRetry: provider.fetchInitialDebts,
               );
             }
@@ -179,7 +182,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 if (debts.isEmpty) {
                   return EmptyStateWidget(
                     message: AppLocalizations.of(context)!.noDebtsRecorded,
-                    description: AppLocalizations.of(context)!.debtsWillAppearHere,
+                    description:
+                        AppLocalizations.of(context)!.debtsWillAppearHere,
                     icon: Icons.credit_card_off_outlined,
                     actionText: AppLocalizations.of(context)!.addNewDebt,
                     onAction: () => _navigateToAddDebt(context),
@@ -204,7 +208,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                           }
                           final debt = debts[index];
                           return DebtCard(
-                            key: ValueKey('${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
+                            key: ValueKey(
+                                '${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
                             debt: debt,
                             onTap: PermissionHelper.canMarkDebtPaid(context)
                                 ? () => _showPartialPaymentSheet(context, debt)
@@ -240,27 +245,33 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 children: [
                   Expanded(
                     child: _FilterChip(
-                      label: AppLocalizations.of(context)!.allWithCount(summary['totalDebtsCount'] ?? 0),
+                      label: AppLocalizations.of(context)!
+                          .allWithCount(summary['totalDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'all',
-                      onTap: () => context.read<DebtProvider>().setFilter('all'),
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('all'),
                       color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _FilterChip(
-                      label: AppLocalizations.of(context)!.openWithCount(summary['openDebtsCount'] ?? 0),
+                      label: AppLocalizations.of(context)!
+                          .openWithCount(summary['openDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'open',
-                      onTap: () => context.read<DebtProvider>().setFilter('open'),
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('open'),
                       color: AppColors.error,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _FilterChip(
-                      label: AppLocalizations.of(context)!.paidWithCount(summary['paidDebtsCount'] ?? 0),
+                      label: AppLocalizations.of(context)!
+                          .paidWithCount(summary['paidDebtsCount'] ?? 0),
                       isSelected: currentFilter == 'paid',
-                      onTap: () => context.read<DebtProvider>().setFilter('paid'),
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('paid'),
                       color: AppColors.success,
                     ),
                   ),
@@ -274,7 +285,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   Widget _buildTypeSegmentControl() {
-    return Selector<DebtProvider, DebtType>( // ENUM refactor
+    return Selector<DebtProvider, DebtType>(
+      // ENUM refactor
       selector: (context, provider) => provider.currentDebtType,
       builder: (context, currentDebtType, child) {
         return Container(
@@ -291,7 +303,9 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 child: _TypeTab(
                   label: AppLocalizations.of(context)!.financialTransfers,
                   isSelected: currentDebtType == DebtType.transaction,
-                  onTap: () => context.read<DebtProvider>().setDebtType(DebtType.transaction),
+                  onTap: () => context
+                      .read<DebtProvider>()
+                      .setDebtType(DebtType.transaction),
                   icon: Icons.swap_horiz,
                 ),
               ),
@@ -299,7 +313,9 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 child: _TypeTab(
                   label: AppLocalizations.of(context)!.storeSales,
                   isSelected: currentDebtType == DebtType.storeSale,
-                  onTap: () => context.read<DebtProvider>().setDebtType(DebtType.storeSale),
+                  onTap: () => context
+                      .read<DebtProvider>()
+                      .setDebtType(DebtType.storeSale),
                   icon: Icons.storefront_outlined,
                 ),
               ),
@@ -383,9 +399,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withAlpha((0.1 * 255).round())
-              : Colors.transparent,
+          color: isSelected ? color.withAlpha(26) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

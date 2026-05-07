@@ -36,8 +36,8 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
       title: AppLocalizations.of(context)!.deactivateEmployeeAccount,
-      message:
-          AppLocalizations.of(context)!.deactivateEmployeeConfirmation(employee.fullName),
+      message: AppLocalizations.of(context)!
+          .deactivateEmployeeConfirmation(employee.fullName),
       confirmText: AppLocalizations.of(context)!.deactivate,
       type: DialogType.danger,
     );
@@ -46,9 +46,11 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       final success = await provider.deactivateEmployee(employee.userId);
       if (mounted) {
         if (success) {
-          ToastUtils.showSuccess(AppLocalizations.of(context)!.employeeDeactivated);
+          ToastUtils.showSuccess(
+              AppLocalizations.of(context)!.employeeDeactivated);
         } else {
-          ToastUtils.showError(provider.errorMessage ?? AppLocalizations.of(context)!.deactivationFailed);
+          ToastUtils.showError(provider.errorMessage ??
+              AppLocalizations.of(context)!.deactivationFailed);
         }
       }
     }
@@ -64,12 +66,14 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       body: Consumer<EmployeeProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.employees.isEmpty) {
-            return LoadingIndicator(message: AppLocalizations.of(context)!.loadingEmployees);
+            return LoadingIndicator(
+                message: AppLocalizations.of(context)!.loadingEmployees);
           }
 
           if (provider.hasError && provider.employees.isEmpty) {
             return CustomErrorWidget(
-              message: provider.errorMessage ?? AppLocalizations.of(context)!.errorLoadingEmployees,
+              message: provider.errorMessage ??
+                  AppLocalizations.of(context)!.errorLoadingEmployees,
               onRetry: () => provider.refresh(),
             );
           }

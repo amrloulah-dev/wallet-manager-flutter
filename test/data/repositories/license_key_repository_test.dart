@@ -14,20 +14,28 @@ void main() {
   });
 
   group('LicenseKeyRepository Expiry Logic', () {
-    test('activateLicenseKey should calculate expiry date precisely using months', () async {
+    test(
+        'activateLicenseKey should calculate expiry date precisely using months',
+        () async {
       final keyId = 'key1';
       final storeId = 'store1';
       final expiryMonths = 6;
 
       // Setup initial state
-      await fakeFirestore.collection(FirebaseConstants.licenseKeysCollection).doc(keyId).set({
+      await fakeFirestore
+          .collection(FirebaseConstants.licenseKeysCollection)
+          .doc(keyId)
+          .set({
         'keyId': keyId,
         'licenseKey': 'TEST-KEY',
         'isUsed': false,
         'expiryMonths': expiryMonths,
       });
 
-      await fakeFirestore.collection(FirebaseConstants.storesCollection).doc(storeId).set({
+      await fakeFirestore
+          .collection(FirebaseConstants.storesCollection)
+          .doc(storeId)
+          .set({
         'storeId': storeId,
         'subscription': {
           'status': 'trial',
@@ -39,8 +47,12 @@ void main() {
       await repository.activateLicenseKey(keyId: keyId, storeId: storeId);
 
       // Verify final state
-      final storeSnap = await fakeFirestore.collection(FirebaseConstants.storesCollection).doc(storeId).get();
-      final expiryDate = (storeSnap.data()?['subscription']['endDate'] as Timestamp).toDate();
+      final storeSnap = await fakeFirestore
+          .collection(FirebaseConstants.storesCollection)
+          .doc(storeId)
+          .get();
+      final expiryDate =
+          (storeSnap.data()?['subscription']['endDate'] as Timestamp).toDate();
 
       // Precise expectation
       final expectedExpiry = DateTime(

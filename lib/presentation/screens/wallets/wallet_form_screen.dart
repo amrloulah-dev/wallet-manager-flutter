@@ -225,7 +225,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletTypeDropdown() {
     final walletTypes = _getWalletTypeDisplayNames(context);
-    return CustomDropdown<WalletType>( // ENUM refactor
+    return CustomDropdown<WalletType>(
+      // ENUM refactor
       value: _selectedWalletType,
       labelText: AppLocalizations.of(context)!.walletType,
       prefixIcon: const Icon(
@@ -233,7 +234,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
         color: AppColors.primary,
       ),
       hint: AppLocalizations.of(context)!.selectWalletType,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+      fillColor: AppColors.primary.withAlpha(13),
 
       // 1. نمرر قائمة المفاتيح (Keys) كـ List
       itemsList: walletTypes.keys.toList(),
@@ -255,12 +256,14 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
-      WalletStatus.active: AppLocalizations.of(context)!.newStatus, // Mapping logically to enums
+      WalletStatus.active:
+          AppLocalizations.of(context)!.newStatus, // Mapping logically to enums
       WalletStatus.inactive: AppLocalizations.of(context)!.oldStatus,
       WalletStatus.suspended: AppLocalizations.of(context)!.registeredStore,
     };
 
-    return CustomDropdown<WalletStatus>( // ENUM refactor
+    return CustomDropdown<WalletStatus>(
+      // ENUM refactor
       value: _selectedWalletStatus,
       labelText: AppLocalizations.of(context)!.walletStatus,
       prefixIcon: const Icon(
@@ -268,7 +271,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
         color: AppColors.primary,
       ),
       hint: AppLocalizations.of(context)!.pleaseSelectWalletStatus,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+      fillColor: AppColors.primary.withAlpha(13),
 
       // 1. تمرير قائمة المفاتيح (حالات المحفظة) كـ List
       itemsList: statusDisplayNames.keys.toList(),
@@ -296,12 +299,11 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     final monthlyLimit = _getMonthlyLimit();
 
     return Card(
-      color: AppColors.primary.withAlpha((0.05 * 255).round()),
+      color: AppColors.primary.withAlpha(13),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side:
-            BorderSide(color: AppColors.primary.withAlpha((0.2 * 255).round())),
+        side: BorderSide(color: AppColors.primary.withAlpha(51)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -331,10 +333,12 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   double _getDailyLimit() {
-    if (_selectedWalletType == WalletType.instaPay) { // ENUM refactor
+    if (_selectedWalletType == WalletType.instaPay) {
+      // ENUM refactor
       return AppConstants.instapayTransactionLimit;
     }
-    if (_selectedWalletStatus == WalletStatus.suspended) { // Mapping registered_store to suspended for now as placeholder
+    if (_selectedWalletStatus == WalletStatus.suspended) {
+      // Mapping registered_store to suspended for now as placeholder
       return AppConstants.registeredStoreTransactionLimit;
     }
     return _selectedWalletStatus == WalletStatus.active // Mapping new to active
@@ -343,7 +347,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   double _getMonthlyLimit() {
-    if (_selectedWalletType == WalletType.instaPay) { // ENUM refactor
+    if (_selectedWalletType == WalletType.instaPay) {
+      // ENUM refactor
       return AppConstants.instapayMonthlyLimit;
     }
     if (_selectedWalletStatus == WalletStatus.suspended) {
@@ -399,7 +404,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
           return Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.error.withAlpha((0.1 * 255).round()),
+              color: AppColors.error.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(

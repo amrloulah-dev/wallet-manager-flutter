@@ -8,20 +8,23 @@ void main() {
   }
 
   bool foundUnguarded = false;
-  final dartFiles = libDir.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'));
+  final dartFiles = libDir
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((f) => f.path.endsWith('.dart'));
 
   for (final file in dartFiles) {
     final lines = file.readAsLinesSync();
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       // Check if line contains debugPrint and is NOT a comment
       if (line.contains('debugPrint') && !line.startsWith('//')) {
         // If the line itself contains if (kDebugMode), it's guarded
         if (line.contains('if (kDebugMode)')) {
           continue;
         }
-        
+
         // Check if previous line contains if (kDebugMode)
         bool guarded = false;
         if (i > 0) {
@@ -30,7 +33,7 @@ void main() {
             guarded = true;
           }
         }
-        
+
         if (!guarded) {
           print('Unguarded debugPrint in ${file.path}:${i + 1}');
           print('  ${lines[i]}');

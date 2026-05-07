@@ -13,9 +13,15 @@ void main() {
       balance: 100.0,
       isActive: true,
       createdBy: 'u1',
-      sendLimits: WalletLimits(dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
-      receiveLimits: WalletLimits(dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
-      stats: WalletStats(totalTransactions: 0, totalCommission: 0, totalSentAmount: 0, totalReceivedAmount: 0),
+      sendLimits: WalletLimits(
+          dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+      receiveLimits: WalletLimits(
+          dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+      stats: WalletStats(
+          totalTransactions: 0,
+          totalCommission: 0,
+          totalSentAmount: 0,
+          totalReceivedAmount: 0),
     );
 
     test('equality should consider all relevant fields (including limits)', () {

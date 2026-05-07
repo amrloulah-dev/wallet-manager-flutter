@@ -55,8 +55,7 @@ class TransactionCard extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: transaction.transactionTypeColor
-            .withAlpha((0.1 * 255).round()),
+        color: transaction.transactionTypeColor.withAlpha(26),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -150,7 +149,7 @@ class TransactionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.warning.withAlpha((0.1 * 255).round()),
+        color: AppColors.warning.withAlpha(26),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

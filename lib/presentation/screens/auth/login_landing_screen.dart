@@ -166,7 +166,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 child: TabBar(
                   controller: _tabController,
                   indicator: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.1 * 255).round()),
+                    color: AppColors.primary.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary),
                   ),
@@ -251,7 +251,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               selector: (_, p) => p.isLoading,
               builder: (context, isLoading, child) {
                 return CustomButton(
-                  text: l10n.logout, // Using logout as placeholder for login if no explicit key
+                  text: l10n
+                      .logout, // Using logout as placeholder for login if no explicit key
                   onPressed: isLoading ? null : _handleOwnerLoginWithEmail,
                   isLoading: isLoading,
                 );
@@ -356,7 +357,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   void _showForgotPasswordBottomSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final emailController = TextEditingController(text: _ownerEmailController.text);
+    final emailController =
+        TextEditingController(text: _ownerEmailController.text);
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -384,7 +386,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               const SizedBox(height: 8),
               Text(
                 l10n.forgotPasswordMessage,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary(context)),
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textSecondary(context)),
               ),
               const SizedBox(height: 24),
               CustomTextField(
@@ -401,11 +404,14 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 builder: (context, isLoading, child) {
                   return CustomButton(
                     text: l10n.sendLink,
-                    onPressed: isLoading ? null : () async {
-                      if (formKey.currentState!.validate()) {
-                        await _handleForgotPassword(context, emailController.text.trim());
-                      }
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            if (formKey.currentState!.validate()) {
+                              await _handleForgotPassword(
+                                  context, emailController.text.trim());
+                            }
+                          },
                     isLoading: isLoading,
                   );
                 },
@@ -426,7 +432,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (!context.mounted) return;
 
     if (authProvider.errorMessage != null) {
-      ToastUtils.showError(ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
+      ToastUtils.showError(
+          ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
     } else {
       Navigator.pop(context);
       ToastUtils.showSuccess(l10n.passwordResetEmailSent);

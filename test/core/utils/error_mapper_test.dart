@@ -13,7 +13,8 @@ void main() {
           home: Builder(
             builder: (context) {
               expect(
-                ErrorMapper.getLocalizedString(context, 'auth_error_account_not_found'),
+                ErrorMapper.getLocalizedString(
+                    context, 'auth_error_account_not_found'),
                 isNotNull,
               );
               return Container();
@@ -24,7 +25,7 @@ void main() {
     });
 
     testWidgets('returns original string if no mapping exists', (tester) async {
-       await tester.pumpWidget(
+      await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

@@ -27,7 +27,7 @@ void main() {
     AnalyticsService.isTestMode = true;
     mockRepository = MockEmployeeRepository();
     employeeProvider = EmployeeProvider(employeeRepository: mockRepository);
-    
+
     mockEmployee = UserModel(
       userId: 'emp-123',
       storeId: 'store-123',
@@ -48,9 +48,10 @@ void main() {
     );
 
     registerFallbackValue(mockEmployee);
-    
+
     // Seed the internal list of employees
-    when(() => mockRepository.watchEmployees(any())).thenAnswer((_) => Stream.value([mockEmployee]));
+    when(() => mockRepository.watchEmployees(any()))
+        .thenAnswer((_) => Stream.value([mockEmployee]));
     employeeProvider.setStoreId('store-123');
   });
 
@@ -64,7 +65,8 @@ void main() {
             permissions: any(named: 'permissions'),
           )).thenAnswer((_) async => mockEmployee);
 
-      when(() => mockRepository.provisionIdentity(any())).thenAnswer((_) async {});
+      when(() => mockRepository.provisionIdentity(any()))
+          .thenAnswer((_) async {});
 
       await employeeProvider.addEmployee(
         fullName: 'Test Employee',
@@ -76,7 +78,8 @@ void main() {
       verify(() => mockRepository.provisionIdentity(mockEmployee)).called(1);
     });
 
-    test('addEmployee propagates gracefully if provisionIdentity throws', () async {
+    test('addEmployee propagates gracefully if provisionIdentity throws',
+        () async {
       when(() => mockRepository.addEmployee(
             storeId: 'store-123',
             fullName: any(named: 'fullName'),
@@ -85,7 +88,8 @@ void main() {
             permissions: any(named: 'permissions'),
           )).thenAnswer((_) async => mockEmployee);
 
-      when(() => mockRepository.provisionIdentity(any())).thenThrow(Exception('Provisioning failed'));
+      when(() => mockRepository.provisionIdentity(any()))
+          .thenThrow(Exception('Provisioning failed'));
 
       // Should not throw
       await employeeProvider.addEmployee(
@@ -101,28 +105,33 @@ void main() {
 
     test('resetEmployeePIN calls syncCredential after success', () async {
       await Future.delayed(Duration.zero); // wait for stream
-      when(() => mockRepository.resetEmployeePIN(userId: any(named: 'userId'), newPin: any(named: 'newPin')))
-          .thenAnswer((_) async => true);
+      when(() => mockRepository.resetEmployeePIN(
+          userId: any(named: 'userId'),
+          newPin: any(named: 'newPin'))).thenAnswer((_) async => true);
       when(() => mockRepository.syncCredential(any(), any()))
           .thenAnswer((_) async {});
 
-      await employeeProvider.resetEmployeePIN(userId: mockEmployee.userId, newPin: '4321');
+      await employeeProvider.resetEmployeePIN(
+          userId: mockEmployee.userId, newPin: '4321');
 
-      verify(() => mockRepository.resetEmployeePIN(userId: mockEmployee.userId, newPin: any(named: 'newPin'))).called(1);
-      verify(() => mockRepository.syncCredential(mockEmployee, '4321')).called(1);
+      verify(() => mockRepository.resetEmployeePIN(
+          userId: mockEmployee.userId, newPin: any(named: 'newPin'))).called(1);
+      verify(() => mockRepository.syncCredential(mockEmployee, '4321'))
+          .called(1);
     });
 
     test('deactivateEmployee calls cleanupIdentity after success', () async {
-       await Future.delayed(Duration.zero); // wait for stream
-       when(() => mockRepository.deactivateEmployee(any()))
+      await Future.delayed(Duration.zero); // wait for stream
+      when(() => mockRepository.deactivateEmployee(any()))
           .thenAnswer((_) async {});
-       when(() => mockRepository.cleanupIdentity(any()))
+      when(() => mockRepository.cleanupIdentity(any()))
           .thenAnswer((_) async {});
 
-       await employeeProvider.deactivateEmployee(mockEmployee.userId);
+      await employeeProvider.deactivateEmployee(mockEmployee.userId);
 
-       verify(() => mockRepository.deactivateEmployee(mockEmployee.userId)).called(1);
-       verify(() => mockRepository.cleanupIdentity(mockEmployee)).called(1);
+      verify(() => mockRepository.deactivateEmployee(mockEmployee.userId))
+          .called(1);
+      verify(() => mockRepository.cleanupIdentity(mockEmployee)).called(1);
     });
   });
 }

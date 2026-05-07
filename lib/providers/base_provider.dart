@@ -5,9 +5,13 @@ import '../core/errors/error_severity.dart';
 /// Base class for all providers to centralize common functionality.
 abstract class BaseProvider extends SafeChangeNotifier {
   /// Centralized error handling for providers.
-  /// 
+  ///
   /// Logs the error and surfaces it to UI via [showToast].
-  void setError(String errorCode, [Object? error, StackTrace? stack, bool showToast = false, String operation = 'unspecified']) {
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'unspecified']) {
     if (error != null) {
       AppErrorHandler.handle(
         error,

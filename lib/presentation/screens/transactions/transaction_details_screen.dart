@@ -14,7 +14,6 @@ import '../../../l10n/arb/app_localizations.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../core/enums/wallet_enums.dart';
 
-
 class TransactionDetailsScreen extends StatefulWidget {
   const TransactionDetailsScreen({super.key});
 
@@ -164,7 +163,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildTransactionTypeCard(BuildContext context, TransactionModel transaction) {
+  Widget _buildTransactionTypeCard(
+      BuildContext context, TransactionModel transaction) {
     final l10n = AppLocalizations.of(context)!;
     return _buildBaseCard(
       child: Row(
@@ -173,8 +173,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: transaction.transactionTypeColor
-                  .withAlpha((0.1 * 255).round()),
+              color: transaction.transactionTypeColor.withAlpha(26),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -301,7 +300,11 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   context: context,
                   icon: wallet.walletTypeIcon,
                   label: l10n.walletType,
-                  value: wallet.walletType == WalletType.vodafoneCash ? l10n.vodafoneCash : (wallet.walletType == WalletType.instaPay ? l10n.instapay : wallet.walletType.name), // ENUM refactor
+                  value: wallet.walletType == WalletType.vodafoneCash
+                      ? l10n.vodafoneCash
+                      : (wallet.walletType == WalletType.instaPay
+                          ? l10n.instapay
+                          : wallet.walletType.name), // ENUM refactor
                 ),
               ]
             ],
@@ -345,13 +348,14 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     );
   }
 
-  Widget _buildPaymentStatusCard(BuildContext context, TransactionModel transaction) {
+  Widget _buildPaymentStatusCard(
+      BuildContext context, TransactionModel transaction) {
     final l10n = AppLocalizations.of(context)!;
     return _buildBaseCard(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.warning.withAlpha((0.1 * 255).round()),
+          color: AppColors.warning.withAlpha(26),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

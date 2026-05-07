@@ -21,7 +21,9 @@ void main() {
   });
 
   group('UserRepository Atomic Stats Verification', () {
-    test('updateEmployeeStats should update stats atomically without pre-fetching user', () async {
+    test(
+        'updateEmployeeStats should update stats atomically without pre-fetching user',
+        () async {
       final userId = 'u1';
       final userPath = FirebaseConstants.usersCollection + '/$userId';
 

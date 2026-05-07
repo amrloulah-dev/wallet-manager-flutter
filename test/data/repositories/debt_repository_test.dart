@@ -10,6 +10,7 @@ import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockCacheManager extends Mock implements CacheManager {}
 
 void main() {
@@ -32,7 +33,8 @@ void main() {
   });
 
   group('DebtRepository Atomic Decrement Verification', () {
-    test('createDebt should increment stats atomically using WriteBatch', () async {
+    test('createDebt should increment stats atomically using WriteBatch',
+        () async {
       final storeId = 's1';
       final debtId = 'd0';
       final statsPath = FirebaseConstants.statsSummaryPath(storeId);
@@ -61,7 +63,10 @@ void main() {
       await repository.createDebt(debt);
 
       // Verify
-      final debtSnap = await fakeFirestore.collection(FirebaseConstants.debts).doc(debtId).get();
+      final debtSnap = await fakeFirestore
+          .collection(FirebaseConstants.debts)
+          .doc(debtId)
+          .get();
       expect(debtSnap.exists, true);
 
       final statsSnap = await fakeFirestore.doc(statsPath).get();
@@ -69,7 +74,9 @@ void main() {
       expect(statsSnap.data()?['totalOpenAmount'], 200.0);
     });
 
-    test('processPayment should decrement openDebtsCount atomically on full payment', () async {
+    test(
+        'processPayment should decrement openDebtsCount atomically on full payment',
+        () async {
       final storeId = 's1';
       final debtId = 'd1';
       final userId = 'u1';
@@ -101,7 +108,8 @@ void main() {
       expect(statsSnap.data()?['openDebtsCount'], 4);
     });
 
-    test('deleteDebt should decrement openDebtsCount atomically for open debt', () async {
+    test('deleteDebt should decrement openDebtsCount atomically for open debt',
+        () async {
       final storeId = 's1';
       final debtId = 'd2';
       final statsPath = FirebaseConstants.statsSummaryPath(storeId);

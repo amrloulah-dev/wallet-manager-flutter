@@ -41,7 +41,8 @@ class EmployeeRepository {
           .get();
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'EmployeeRepository');
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'EmployeeRepository');
       throw ServerException('Failed to get employees: $e');
     }
   }
@@ -128,8 +129,7 @@ class EmployeeRepository {
           : 0;
 
       if (currentEmployees >= maxEmployees && maxEmployees != -1) {
-        throw ServerException(
-            'تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
+        throw ServerException('تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
       }
 
       // 3. Write employee doc
@@ -325,7 +325,8 @@ class EmployeeRepository {
     }
   }
 
-  Stream<List<UserModel>> watchEmployees(String storeId, {String? searchQuery, bool activeOnly = true}) {
+  Stream<List<UserModel>> watchEmployees(String storeId,
+      {String? searchQuery, bool activeOnly = true}) {
     Query query = _usersCollection
         .where(FirebaseConstants.storeId, isEqualTo: storeId)
         .where(FirebaseConstants.role,
@@ -337,12 +338,14 @@ class EmployeeRepository {
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
       // Basic prefix search: query >= search && query <= search + \uf8ff
-      // Note: This is case-sensitive in Firestore. 
+      // Note: This is case-sensitive in Firestore.
       // For better search, a separate lowercase field or Algolia is needed,
       // but this is a standard Firestore optimization step.
       query = query
-          .where(FirebaseConstants.fullName, isGreaterThanOrEqualTo: searchQuery)
-          .where(FirebaseConstants.fullName, isLessThanOrEqualTo: '$searchQuery\uf8ff');
+          .where(FirebaseConstants.fullName,
+              isGreaterThanOrEqualTo: searchQuery)
+          .where(FirebaseConstants.fullName,
+              isLessThanOrEqualTo: '$searchQuery\uf8ff');
     }
 
     return query
@@ -352,7 +355,8 @@ class EmployeeRepository {
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
         .handleError((error) {
-      AppErrorHandler.handle(error, operation: 'EmployeeRepository.watchEmployees');
+      AppErrorHandler.handle(error,
+          operation: 'EmployeeRepository.watchEmployees');
       throw error;
     });
   }
@@ -360,7 +364,7 @@ class EmployeeRepository {
   Future<void> provisionIdentity(UserModel employee) async {
     try {
       if (employee.phone == null || employee.pin == null) return;
-      
+
       final uid = await IdentityService.provisionIdentity(
         phone: employee.phone!,
         // ignore: unnecessary_cast
@@ -388,13 +392,14 @@ class EmployeeRepository {
   Future<void> syncCredential(UserModel employee, String newPin) async {
     try {
       if (employee.phone == null) return;
-      
-      final hashedPin = newPin.length == 4 ? PasswordHasher.hashPassword(newPin) : newPin;
-      
+
+      final hashedPin =
+          newPin.length == 4 ? PasswordHasher.hashPassword(newPin) : newPin;
+
       await IdentityService.updateCredential(
         phone: employee.phone!,
         storeId: employee.storeId,
-        newPin: hashedPin, 
+        newPin: hashedPin,
       );
 
       await _usersCollection.doc(employee.userId).update({

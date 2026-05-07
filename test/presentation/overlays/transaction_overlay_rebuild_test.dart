@@ -12,20 +12,22 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:get_it/get_it.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
   setUpAll(() {
     final sl = GetIt.instance;
     sl.registerSingleton<OverlayUseCase>(MockOverlayUseCase());
-    // LocalStorageService is created with new in OverlayProvider if not passed, 
+    // LocalStorageService is created with new in OverlayProvider if not passed,
     // but it also uses sl<LocalStorageService> in some places? No, it uses static instance.
   });
 
-  testWidgets('TransactionOverlayScreen builds correctly with Selectors', (WidgetTester tester) async {
+  testWidgets('TransactionOverlayScreen builds correctly with Selectors',
+      (WidgetTester tester) async {
     final mockUseCase = MockOverlayUseCase();
     final mockStorage = MockLocalStorageService();
-    
+
     // We need to ensure LocalStorageService.instance is available or mocked
     // Since it's a singleton pattern in the code, this might be tricky.
 

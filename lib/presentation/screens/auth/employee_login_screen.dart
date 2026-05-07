@@ -66,7 +66,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   Future<void> _handleLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (_selectedEmployee == null) {
       ToastUtils.showError(l10n.pleaseSelectEmployee);
       return;
@@ -159,12 +159,10 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.primary
-                                  .withAlpha((0.1 * 255).round()),
+                              color: AppColors.primary.withAlpha(26),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: AppColors.primary
-                                      .withAlpha((0.3 * 255).round())),
+                                  color: AppColors.primary.withAlpha(77)),
                             ),
                             child: Column(
                               children: [
@@ -212,8 +210,14 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                           const SizedBox(height: 20),
 
                           // 2. Select Employee
-                          Selector<EmployeeProvider,
-                              ({List<UserModel> employees, bool isLoading, bool hasError, String? errorMessage})>(
+                          Selector<
+                              EmployeeProvider,
+                              ({
+                                List<UserModel> employees,
+                                bool isLoading,
+                                bool hasError,
+                                String? errorMessage
+                              })>(
                             selector: (_, p) => (
                               employees: p.activeEmployees,
                               isLoading: p.isLoading,
@@ -227,16 +231,15 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               } else if (data.hasError) {
                                 return Center(
                                     child: Text(data.errorMessage ?? l10n.error,
-                                        style:
-                                            const TextStyle(color: Colors.red)));
+                                        style: const TextStyle(
+                                            color: Colors.red)));
                               } else {
                                 return CustomDropdown<UserModel>(
                                   labelText: l10n.selectEmployee,
                                   hint: l10n.selectEmployeeHint,
                                   value: _selectedEmployee,
                                   prefixIcon: const Icon(Icons.person_outline),
-                                  fillColor: AppColors.primary
-                                      .withAlpha((0.05 * 255).round()),
+                                  fillColor: AppColors.primary.withAlpha(13),
                                   itemsList: data.employees,
                                   itemLabelBuilder: (UserModel employee) =>
                                       employee.fullName,

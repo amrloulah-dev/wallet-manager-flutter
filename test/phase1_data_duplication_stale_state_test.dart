@@ -10,7 +10,9 @@ import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockTelephony extends Mock implements Telephony {}
 
 void main() {
@@ -24,7 +26,7 @@ void main() {
     mockOverlayUseCase = MockOverlayUseCase();
     mockLocalStorageService = MockLocalStorageService();
     mockTelephony = MockTelephony();
-    
+
     // Mock the method channel for flutter_overlay_window
     const channel = MethodChannel('x-slayer/overlay_channel');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -36,7 +38,8 @@ void main() {
     });
 
     // Mock telephony permissions
-    when(() => mockTelephony.requestPhoneAndSmsPermissions).thenAnswer((_) async => true);
+    when(() => mockTelephony.requestPhoneAndSmsPermissions)
+        .thenAnswer((_) async => true);
 
     // Mock permission_handler
     const MethodChannel('flutter.baseflow.com/permissions/methods')
@@ -68,7 +71,8 @@ void main() {
       verify(() => mockLocalStorageService.clearVault()).called(1);
     });
 
-    test('SmsService.init() does NOT register listener (should fail initially)', () async {
+    test('SmsService.init() does NOT register listener (should fail initially)',
+        () async {
       // This test will fail to compile initially because SmsService doesn't support DI.
       // After refactoring, it will fail because SmsService CURRENTLY registers a listener.
       final smsService = SmsService(telephony: mockTelephony);
@@ -77,10 +81,10 @@ void main() {
 
       // We expect listenIncomingSms NOT to be called
       verifyNever(() => mockTelephony.listenIncomingSms(
-        onNewMessage: any(named: 'onNewMessage'),
-        onBackgroundMessage: any(named: 'onBackgroundMessage'),
-        listenInBackground: any(named: 'listenInBackground'),
-      ));
+            onNewMessage: any(named: 'onNewMessage'),
+            onBackgroundMessage: any(named: 'onBackgroundMessage'),
+            listenInBackground: any(named: 'listenInBackground'),
+          ));
     });
   });
 }

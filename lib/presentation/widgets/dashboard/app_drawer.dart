@@ -43,7 +43,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<AuthProvider, ({UserModel? user, StoreModel? store, bool isOwner})>(
+    return Selector<AuthProvider,
+        ({UserModel? user, StoreModel? store, bool isOwner})>(
       selector: (_, provider) => (
         user: provider.currentUser,
         store: provider.currentStore,
@@ -72,12 +73,11 @@ class AppDrawer extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 32,
-                        backgroundColor:
-                            AppColors.primary.withAlpha((0.1 * 255).round()),
+                        backgroundColor: AppColors.primary.withAlpha(26),
                         child: Text(
                           avatarLetter,
-                          style:
-                              AppTextStyles.h1.copyWith(color: AppColors.primary),
+                          style: AppTextStyles.h1
+                              .copyWith(color: AppColors.primary),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -90,7 +90,8 @@ class AppDrawer extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        store?.storeName ?? AppLocalizations.of(context)!.storeName,
+                        store?.storeName ??
+                            AppLocalizations.of(context)!.storeName,
                         style: AppTextStyles.bodyMedium
                             .copyWith(color: AppColors.textSecondary(context)),
                         overflow: TextOverflow.ellipsis,
@@ -123,7 +124,8 @@ class AppDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                                 context, RouteConstants.walletsList);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.noPermissionWallets);
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionWallets);
                           }
                         },
                       ),
@@ -134,11 +136,13 @@ class AppDrawer extends StatelessWidget {
                           Navigator.pop(context);
                           final user = context.read<AuthProvider>().currentUser;
                           if (user != null &&
-                              user.hasPermission((p) => p.viewAllTransactions)) {
+                              user.hasPermission(
+                                  (p) => p.viewAllTransactions)) {
                             Navigator.pushNamed(
                                 context, RouteConstants.todayTransactions);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.noPermissionTransactions);
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionTransactions);
                           }
                         },
                       ),
@@ -150,9 +154,11 @@ class AppDrawer extends StatelessWidget {
                           final user = context.read<AuthProvider>().currentUser;
                           if (user != null &&
                               user.hasPermission((p) => p.viewDebts)) {
-                            Navigator.pushNamed(context, RouteConstants.debtsList);
+                            Navigator.pushNamed(
+                                context, RouteConstants.debtsList);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.noPermissionDebts);
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionDebts);
                           }
                         },
                       ),
@@ -167,7 +173,8 @@ class AppDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                                 context, RouteConstants.generalStatistics);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.noPermissionStats);
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionStats);
                           }
                         },
                       ),
@@ -180,7 +187,8 @@ class AppDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                                 context, RouteConstants.manageEmployees);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.ownerOnlyFeature);
+                            ToastUtils.showError(
+                                AppLocalizations.of(context)!.ownerOnlyFeature);
                           }
                         },
                       ),
@@ -193,7 +201,8 @@ class AppDrawer extends StatelessWidget {
                             Navigator.pushNamed(
                                 context, RouteConstants.subscriptionDetails);
                           } else {
-                            ToastUtils.showError(AppLocalizations.of(context)!.ownerOnlyFeature);
+                            ToastUtils.showError(
+                                AppLocalizations.of(context)!.ownerOnlyFeature);
                           }
                         },
                       ),
@@ -274,9 +283,9 @@ class _DrawerMenuTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       selected: isSelected,
-      selectedTileColor: AppColors.primary.withAlpha((0.1 * 255).round()),
-      hoverColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-      splashColor: AppColors.primary.withAlpha((0.1 * 255).round()),
+      selectedTileColor: AppColors.primary.withAlpha(26),
+      hoverColor: AppColors.primary.withAlpha(13),
+      splashColor: AppColors.primary.withAlpha(26),
     );
   }
 }

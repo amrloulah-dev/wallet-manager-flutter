@@ -15,7 +15,9 @@ void main() {
   });
 
   group('EmployeeRepository Atomic Stats Verification', () {
-    test('deactivateEmployee should decrement totalEmployees atomically in store and stats summary', () async {
+    test(
+        'deactivateEmployee should decrement totalEmployees atomically in store and stats summary',
+        () async {
       final storeId = 's1';
       final userId = 'u1';
       final statsPath = FirebaseConstants.statsSummaryPath(storeId);
@@ -31,7 +33,10 @@ void main() {
         'totalEmployees': 10,
       });
 
-      await fakeFirestore.collection(FirebaseConstants.usersCollection).doc(userId).set({
+      await fakeFirestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(userId)
+          .set({
         'userId': userId,
         'storeId': storeId,
         'isActive': true,

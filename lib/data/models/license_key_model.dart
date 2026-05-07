@@ -29,8 +29,9 @@ class LicenseKeyModel {
       isUsed: data['isUsed'] ?? false,
       usedBy: data['usedBy'],
       usedAt: (data['usedAt'] as Timestamp?)?.toDate(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? 
-        (throw NotFoundException('LicenseKey document missing required field: createdAt')),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'LicenseKey document missing required field: createdAt')),
       expiryMonths: NumberParser.toInt(data['expiryMonths'], 12),
     );
   }

@@ -16,7 +16,7 @@ extension TransactionModelUI on TransactionModel {
   IconData get transactionTypeIcon => isSend
       ? Icons.arrow_upward
       : (isReceive ? Icons.arrow_downward : Icons.add_card_outlined);
-      
+
   Color get transactionTypeColor => isSend
       ? AppColors.send
       : (isReceive ? AppColors.receive : AppColors.primary);
@@ -26,24 +26,28 @@ extension TransactionModelUI on TransactionModel {
   }
 
   String getRelativeTime(AppLocalizations l10n) =>
-      DateHelper.getRelativeTime(transactionDate ?? DateTime.now(), l10n: l10n); // Safe access
+      DateHelper.getRelativeTime(transactionDate ?? DateTime.now(),
+          l10n: l10n); // Safe access
 
   bool get canBeModified {
     // Can be modified within 5 minutes of creation
-    return DateTime.now().difference(createdAt ?? DateTime.now()).inMinutes < 5; // Safe access
+    return DateTime.now().difference(createdAt ?? DateTime.now()).inMinutes <
+        5; // Safe access
   }
 
   String get formattedDate =>
-      DateHelper.formatDateTime(transactionDate ?? DateTime.now(), format: 'dd/MM/yyyy'); // Safe access
+      DateHelper.formatDateTime(transactionDate ?? DateTime.now(),
+          format: 'dd/MM/yyyy'); // Safe access
   String get formattedTime =>
-      DateHelper.formatDateTime(transactionDate ?? DateTime.now(), format: 'hh:mm a'); // Safe access
+      DateHelper.formatDateTime(transactionDate ?? DateTime.now(),
+          format: 'hh:mm a'); // Safe access
 }
 
 extension DebtModelUI on DebtModel {
   String getDebtTypeDisplay(AppLocalizations l10n) =>
       isTransactionDebt ? l10n.walletTransaction : l10n.storeSale;
-  
-  String getDebtStatusDisplay(AppLocalizations l10n) => 
+
+  String getDebtStatusDisplay(AppLocalizations l10n) =>
       isOpen ? l10n.openDebt : l10n.paidDebt;
 
   IconData get debtTypeIcon =>
@@ -51,14 +55,17 @@ extension DebtModelUI on DebtModel {
 
   Color get statusColor => isOpen ? AppColors.error : AppColors.success;
 
-  String getRelativeDebtDate(AppLocalizations l10n) => 
-      DateHelper.getRelativeTime(debtDate ?? DateTime.now(), l10n: l10n); // Safe access
+  String getRelativeDebtDate(AppLocalizations l10n) =>
+      DateHelper.getRelativeTime(debtDate ?? DateTime.now(),
+          l10n: l10n); // Safe access
 
-  int get daysSinceCreated =>
-      DateTime.now().difference(debtDate ?? DateTime.now()).inDays; // Safe access
-  
-  String get formattedDebtDate => DateHelper.formatDateTime(debtDate ?? DateTime.now()); // Safe access
-  
+  int get daysSinceCreated => DateTime.now()
+      .difference(debtDate ?? DateTime.now())
+      .inDays; // Safe access
+
+  String get formattedDebtDate =>
+      DateHelper.formatDateTime(debtDate ?? DateTime.now()); // Safe access
+
   String get formattedPaidDate =>
       paidDate != null ? DateHelper.formatDateTime(paidDate!) : '';
 }

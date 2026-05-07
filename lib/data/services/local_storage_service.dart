@@ -212,7 +212,8 @@ class LocalStorageService {
   /// Persists the current timestamp as the last subscription sync time.
   Future<void> saveSubLastSyncMs() async {
     _ensureInitialized();
-    await _prefs!.setInt(_kSubLastSyncMs, DateTime.now().millisecondsSinceEpoch);
+    await _prefs!
+        .setInt(_kSubLastSyncMs, DateTime.now().millisecondsSinceEpoch);
   }
 
   /// Returns the last subscription sync timestamp in milliseconds, or null.
@@ -235,15 +236,16 @@ class LocalStorageService {
     await _prefs!.setBool(_kHasSeenSuccessModal, seen);
   }
 
-  bool get hasSeenSuccessModal => _prefs?.getBool(_kHasSeenSuccessModal) ?? false;
+  bool get hasSeenSuccessModal =>
+      _prefs?.getBool(_kHasSeenSuccessModal) ?? false;
 
   Future<void> setHasDismissedRejection(bool dismissed) async {
     _ensureInitialized();
     await _prefs!.setBool(_kHasDismissedRejection, dismissed);
   }
 
-  bool get hasDismissedRejection => _prefs?.getBool(_kHasDismissedRejection) ?? false;
-
+  bool get hasDismissedRejection =>
+      _prefs?.getBool(_kHasDismissedRejection) ?? false;
 
   /// Sets whether SMS automation is enabled.
   Future<void> setSmsAutomationEnabled(bool enabled) async {

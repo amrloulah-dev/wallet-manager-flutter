@@ -24,7 +24,6 @@ class SmsParserEngine {
   /// 3. Select strategy.
   /// 4. Delegate parsing.
   ParsedSmsDto? parse(String sender, String body) {
-
     // 1. Normalize the body using TextNormalizer
     final normalizedBody = TextNormalizer.normalize(body);
 

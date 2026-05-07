@@ -27,7 +27,9 @@ void main() {
   });
 
   group('Wallet Aggregation Optimization (TDD)', () {
-    test('getTotalBalance should read from stats/summary and fail if it still uses unbounded reads', () async {
+    test(
+        'getTotalBalance should read from stats/summary and fail if it still uses unbounded reads',
+        () async {
       // ARRANGE: Setup some wallets
       await fakeFirestore.collection('wallets').add({
         'storeId': storeId,
@@ -54,10 +56,13 @@ void main() {
       final totalBalance = await repository.getTotalBalance(storeId);
 
       // ASSERT: Currently it should fail because it reads from the collection and gets 300.0
-      expect(totalBalance, 500.0, reason: 'Should read from stats/summary document');
+      expect(totalBalance, 500.0,
+          reason: 'Should read from stats/summary document');
     });
 
-    test('getWalletsCount should read from stats/summary and fail if it still uses unbounded reads', () async {
+    test(
+        'getWalletsCount should read from stats/summary and fail if it still uses unbounded reads',
+        () async {
       // ARRANGE: Setup some wallets
       await fakeFirestore.collection('wallets').add({
         'storeId': storeId,
