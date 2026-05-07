@@ -14,12 +14,12 @@
 - [x] Task: Global Audit - Replace `shrinkWrap: true` instances globally with Slivers. 7f98022
 - [x] Task: Global Audit - Replace `Opacity` widgets with `Color.withAlpha()` / `Color.withOpacity()` in `wallet_card.dart`, `employee_card.dart`, and globally. 7f98022
 - [x] Task: Hoist `context.read<EmployeeProvider>()` outside the `itemBuilder` in `manage_employees_screen.dart`. 7f98022
-- [~] Task: Conductor - User Manual Verification 'Rendering & Layout Efficiency' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Rendering & Layout Efficiency' (Protocol in workflow.md)
 
 ## Phase 3: State Management & UI Thread Optimization
-- [ ] Task: Write tests for provider initialization logic in `main_dashboard_screen.dart` to verify re-fetches are avoided on rebuilds.
-- [ ] Task: Move provider initializations (`setStoreId`) from `didChangeDependencies` to `initState` using `Future.microtask` and an initialization flag in `main_dashboard_screen.dart`.
-- [ ] Task: Write tests for `OverlayProvider.notifyListeners()` ensuring `_errorMessage` is propagated correctly.
+- [x] Task: Write tests for provider initialization logic in `main_dashboard_screen.dart` to verify re-fetches are avoided on rebuilds. 158c71d
+- [x] Task: Move provider initializations (`setStoreId`) from `didChangeDependencies` to `initState` using `Future.microtask` and an initialization flag in `main_dashboard_screen.dart`. 158c71d
+- [~] Task: Write tests for `OverlayProvider.notifyListeners()` ensuring `_errorMessage` is propagated correctly.
 - [ ] Task: Fix `OverlayProvider.notifyListeners()` to ensure that errors (`_errorMessage`) are NOT silently dropped by the `_blockAutoFetch` shield.
 - [ ] Task: Write widget tests for `transaction_overlay_screen.dart` to verify isolated rebuilds via `Selector`.
 - [ ] Task: Replace `context.watch<OverlayProvider>()` with granular `Selector`s in `transaction_overlay_screen.dart`.
