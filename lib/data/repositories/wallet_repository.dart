@@ -48,8 +48,10 @@ class WalletRepository {
       });
 
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
-    } catch (e) {
-      throw ServerException('فشل إنشاء المحفظة: $e');
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.createWallet',
+          stackTrace: stack);
+      throw ServerException('wallet_error_create_failed');
     }
   }
 
@@ -95,8 +97,9 @@ class WalletRepository {
         }
         return wallets;
       });
-    } catch (e) {
-      return Stream.error(ServerException('فشل الحصول على تيار المحافظ: $e'));
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getWalletsStream', stackTrace: stack);
+      return Stream.error(ServerException('wallet_error_fetch_failed'));
     }
   }
 
@@ -114,9 +117,10 @@ class WalletRepository {
       _cacheManager.set(cacheKey, wallet,
           duration: const Duration(minutes: 10));
       return wallet;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getWalletById', stackTrace: stack);
       if (e is AppException) rethrow;
-      throw ServerException('فشل العثور على المحفظة: $e');
+      throw ServerException('wallet_error_fetch_failed');
     }
   }
 
@@ -145,8 +149,9 @@ class WalletRepository {
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
 
       return PaginatedResult(items: items, lastDocument: lastDoc);
-    } catch (e) {
-      throw ServerException('فشل استرجاع كل المحافظ: $e');
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getAllWallets', stackTrace: stack);
+      throw ServerException('wallet_error_fetch_failed');
     }
   }
 
@@ -191,7 +196,7 @@ class WalletRepository {
         operation: 'WalletRepository.updateWallet',
       );
       if (e is AppException) rethrow;
-      throw ServerException('فشل تحديث المحفظة: $e');
+      throw ServerException('wallet_error_update_failed');
     }
   }
 
@@ -226,7 +231,7 @@ class WalletRepository {
         operation: 'WalletRepository.creditWallet',
       );
       if (e is AppException) rethrow;
-      throw ServerException('فشل شحن رصيد المحفظة: $e');
+      throw ServerException('wallet_error_balance_topup_failed');
     }
   }
 
@@ -242,7 +247,7 @@ class WalletRepository {
         final data = walletSnap.data() as Map<String, dynamic>?;
         final currentBalance = NumberParser.toDouble(data?['balance']);
         if ((currentBalance + 0.01) < amount) {
-          throw DomainException('رصيد المحفظة غير كافٍ.');
+          throw DomainException('wallet_error_insufficient_balance');
         }
 
         await _statsRepository.updateStatsOnWalletChange(
@@ -259,9 +264,10 @@ class WalletRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.debitWallet', stackTrace: stack);
       if (e is AppException) rethrow;
-      throw ServerException('فشل خصم رصيد من المحفظة: $e');
+      throw ServerException('wallet_error_debit_failed');
     }
   }
 
@@ -311,6 +317,8 @@ class WalletRepository {
         .snapshots()
         .map((doc) => doc.exists ? WalletModel.fromFirestore(doc) : null)
         .handleError((e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.watchWallet',
+          stackTrace: stack);
       throw ServerException('Failed to watch wallet: $e');
     });
   }

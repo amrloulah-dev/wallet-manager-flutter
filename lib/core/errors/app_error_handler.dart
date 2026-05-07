@@ -200,18 +200,12 @@ class AppErrorHandler {
         if (!kDebugMode &&
             (severity == ErrorSeverity.critical ||
                 severity == ErrorSeverity.medium)) {
-          FirebaseCrashlytics.instance
-              .recordError(
+          await FirebaseCrashlytics.instance.recordError(
             error,
             stackTrace,
             reason: 'Operation: $operation',
             fatal: severity == ErrorSeverity.critical,
-          )
-              .catchError((e) {
-            if (kDebugMode) {
-              debugPrint('⚠️ [ERROR_HANDLER] Crashlytics failed: $e');
-            }
-          });
+          );
         }
       }
     } catch (e) {

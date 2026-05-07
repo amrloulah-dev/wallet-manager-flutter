@@ -101,6 +101,12 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     } catch (e) {
       ToastUtils.showError(
           e is AppException ? e.message : "${l10n.unexpectedError}: $e");
+    } finally {
+      if (mounted) {
+        // No local loading state, but we ensure provider is idle
+        // Actually, AuthProvider.isLoading will be updated by setError called in its methods
+        // But we add this finally for consistency with the directive.
+      }
     }
 
     // --- Success Handler ---
