@@ -53,11 +53,11 @@ class SubscriptionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
-      throw ServerException('فشل التحقق من الجهاز: ${e.message}', code: e.code);
+      throw ServerException('subscription_error_verify_device_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
-      throw ServerException('حدث خطأ غير متوقع أثناء التحقق من الجهاز.');
+      throw ServerException('subscription_error_unexpected');
     }
   }
 
@@ -79,12 +79,12 @@ class SubscriptionRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
-      throw ServerException('فشل جلب طلب الاشتراك: ${e.message}', code: e.code);
+      throw ServerException('subscription_error_fetch_request_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
-      throw ServerException('حدث خطأ غير متوقع أثناء جلب طلب الاشتراك.');
+      throw ServerException('subscription_error_unexpected');
     }
   }
 
@@ -137,13 +137,13 @@ class SubscriptionRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.submitSubscriptionRequest');
-      throw ServerException('فشل تقديم طلب الاشتراك: ${e.message}',
+      throw ServerException('subscription_error_submit_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.submitSubscriptionRequest');
-      throw ServerException('حدث خطأ غير متوقع أثناء تقديم طلب الاشتراك.');
+      throw ServerException('subscription_error_unexpected');
     }
   }
 

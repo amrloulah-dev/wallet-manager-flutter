@@ -34,10 +34,12 @@ class UserRepository {
       } else {
         await _usersCollection.doc(user.userId).set(user.toFirestore());
       }
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المستخدم: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المستخدم.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createUser', stackTrace: stack);
+      throw ServerException('user_error_create_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createUser', stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -55,11 +57,11 @@ class UserRepository {
       return null;
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -77,11 +79,11 @@ class UserRepository {
       return null;
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -99,12 +101,14 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to find user by email: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserByEmailAndStoreId', stackTrace: stack);
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserByEmailAndStoreId', stackTrace: stack);
       throw ServerException(
-          'An unexpected error occurred while finding user by email.');
+          'user_error_unexpected');
     }
   }
 
@@ -122,11 +126,11 @@ class UserRepository {
           .toList();
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -147,11 +151,11 @@ class UserRepository {
           .toList();
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -169,11 +173,11 @@ class UserRepository {
       return null;
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -211,11 +215,11 @@ class UserRepository {
       await _usersCollection.doc(userId).update(updateData);
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -227,11 +231,11 @@ class UserRepository {
           .update({FirebaseConstants.lastLogin: FieldValue.serverTimestamp()});
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -266,7 +270,7 @@ class UserRepository {
     try {
       final user = await getUserById(userId);
       if (user == null) {
-        throw NotFoundException('المستخدم');
+        throw NotFoundException('user');
       }
       if (!user.isEmployee) {
         throw PermissionDeniedException();
@@ -295,7 +299,7 @@ class UserRepository {
       String userId, UserPermissions permissions) async {
     final user = await getUserById(userId);
     if (user == null || !user.isEmployee) {
-      throw NotFoundException('الموظف');
+      throw NotFoundException('employee');
     }
     await updateUser(
         userId, {FirebaseConstants.permissions: permissions.toMap()});
@@ -351,11 +355,11 @@ class UserRepository {
       await _usersCollection.doc(userId).update(statsData);
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
+      throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('حدث خطأ غير متوقع.');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -372,10 +376,12 @@ class UserRepository {
   Future<void> hardDeleteUser(String userId) async {
     try {
       await _usersCollection.doc(userId).delete();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل حذف المستخدم: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء الحذف.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.hardDeleteUser', stackTrace: stack);
+      throw ServerException('user_error_delete_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.hardDeleteUser', stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -427,11 +433,13 @@ class UserRepository {
         batch.set(docRef, user.toFirestore());
       }
       await batch.commit();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المستخدمين دفعة واحدة: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createMultipleUsers', stackTrace: stack);
+      throw ServerException('user_error_create_failed',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createMultipleUsers', stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 }

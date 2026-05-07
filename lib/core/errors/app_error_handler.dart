@@ -75,6 +75,9 @@ class AppErrorHandler {
     };
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      if (!kDebugMode) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      }
       handle(
         error,
         stackTrace: stack,

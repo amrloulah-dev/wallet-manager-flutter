@@ -43,7 +43,7 @@ class EmployeeRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'EmployeeRepository');
-      throw ServerException('Failed to get employees: $e');
+      throw ServerException('employee_error_fetch_failed');
     }
   }
 
@@ -66,8 +66,10 @@ class EmployeeRepository {
         return UserModel.fromFirestore(snapshot.docs.first);
       }
       return null;
-    } catch (e) {
-      throw ServerException('حدث خطأ أثناء التحقق من الرقم السري');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'EmployeeRepository.isPinAvailable');
+      throw ServerException('employee_error_pin_check_failed');
     }
   }
 
@@ -107,7 +109,7 @@ class EmployeeRepository {
       // 1. Atomic PIN uniqueness check
       final pinLockSnap = await transaction.get(pinLockRef);
       if (pinLockSnap.exists) {
-        throw ServerException('الرقم السري مستخدم بالفعل');
+        throw ServerException('employee_error_pin_already_used');
       }
 
       // 2. Employee capacity check
@@ -117,7 +119,7 @@ class EmployeeRepository {
       final storeSnap = await transaction.get(storeRef);
 
       if (!storeSnap.exists) {
-        throw ServerException('المتجر غير موجود.');
+        throw ServerException('store_error_not_found');
       }
 
       final storeData = storeSnap.data()!;
@@ -129,7 +131,7 @@ class EmployeeRepository {
           : 0;
 
       if (currentEmployees >= maxEmployees && maxEmployees != -1) {
-        throw ServerException('تم الوصول للحد الأقصى للموظفين ($maxEmployees)');
+        throw ServerException('employee_error_max_limit_reached');
       }
 
       // 3. Write employee doc
@@ -174,8 +176,9 @@ class EmployeeRepository {
           .count()
           .get();
       return snapshot.count ?? 0;
-    } catch (e) {
-      throw ServerException('Failed to get employee count: $e');
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'EmployeeRepository.getEmployeesCount', stackTrace: stack);
+      throw ServerException('employee_error_fetch_failed');
     }
   }
 
@@ -256,7 +259,7 @@ class EmployeeRepository {
         final oldHashedPin = userData[FirebaseConstants.pin] as String?;
 
         if (storeId == null || storeId.isEmpty) {
-          throw ServerException('لا يمكن تحديد المتجر الخاص بهذا الموظف.');
+          throw ServerException('employee_error_store_unresolved');
         }
 
         // 2. Atomic uniqueness check via pin-lock document
@@ -268,7 +271,7 @@ class EmployeeRepository {
         // Allow if the lock belongs to this employee (same userId) — idempotent reset
         if (newPinLockSnap.exists &&
             newPinLockSnap.data()?['userId'] != userId) {
-          throw ValidationException('الرقم السري الجديد مستخدم بالفعل');
+          throw ValidationException('employee_error_pin_already_used');
         }
 
         // 3. Release old pin lock (only if PIN is actually changing)
@@ -302,7 +305,7 @@ class EmployeeRepository {
         operation: 'EmployeeRepository.resetEmployeePIN',
       );
       if (e is AppException) rethrow;
-      throw ServerException('Failed to reset PIN: $e');
+      throw ServerException('employee_error_reset_pin_failed');
     }
   }
 
@@ -321,7 +324,7 @@ class EmployeeRepository {
         stackTrace: stack,
         operation: 'EmployeeRepository.updateEmployeePermissions',
       );
-      throw ServerException('Failed to update permissions: $e');
+      throw ServerException('employee_error_update_permissions_failed');
     }
   }
 

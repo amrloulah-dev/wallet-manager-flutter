@@ -38,7 +38,7 @@ class LicenseKeyRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'LicenseKeyRepository.verifyLicenseKey');
-      throw ServerException('حدث خطأ أثناء التحقق من المفتاح: $e');
+      throw ServerException('license_error_unexpected');
     }
   }
 
@@ -56,14 +56,14 @@ class LicenseKeyRepository {
         // 1. Fetch Key Data inside transaction
         final keySnapshot = await transaction.get(keyRef);
         if (!keySnapshot.exists) {
-          throw ServerException('مفتاح الترخيص غير موجود');
+          throw ServerException('license_error_not_found');
         }
 
         final keyData = keySnapshot.data() as Map<String, dynamic>;
 
         // Double check usage status
         if (keyData['isUsed'] == true) {
-          throw ServerException('هذا المفتاح مستخدم بالفعل');
+          throw ServerException('license_error_already_used');
         }
 
         final expiryMonths = keyData['expiryMonths'] ?? 12; // Default to 1 year
@@ -101,7 +101,7 @@ class LicenseKeyRepository {
           stackTrace: stack,
           operation: 'LicenseKeyRepository.activateLicenseKey');
       if (e is ServerException) rethrow; // Pass up our custom exceptions
-      throw ServerException('فشل في تفعيل الاشتراك: $e');
+      throw ServerException('license_error_unexpected');
     }
   }
 
@@ -135,7 +135,7 @@ class LicenseKeyRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'LicenseKeyRepository.generateAndSaveBatch');
-      throw ServerException('Failed to generate license keys: $e');
+      throw ServerException('license_error_unexpected');
     }
   }
 

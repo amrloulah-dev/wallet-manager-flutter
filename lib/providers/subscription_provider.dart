@@ -3,6 +3,7 @@ import '../data/services/local_storage_service.dart';
 import 'package:walletmanager/services/time_service.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
+import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import '../data/repositories/subscription_repository.dart';
@@ -124,7 +125,7 @@ class SubscriptionProvider extends BaseProvider {
     required String receiptNumber,
   }) async {
     final storeId = _authProvider.currentStoreId;
-    if (storeId == null) throw Exception('Store ID not found');
+    if (storeId == null) throw AuthException('auth_error_store_not_found');
 
     // Store previous states for rollback
     final previousRequest = _latestRequest;

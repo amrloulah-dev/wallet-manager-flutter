@@ -98,11 +98,11 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.createStore');
-      throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
+      throw ServerException('store_error_create_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.createStore');
-      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل: $e');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -121,12 +121,12 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
-      throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
+      throw ServerException('store_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
-      throw ServerException('حدث خطأ غير متوقع: $e');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -145,12 +145,12 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
-      throw ServerException('فشل في البحث عن المحل: ${e.message}',
+      throw ServerException('store_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
-      throw ServerException('حدث خطأ غير متوقع: $e');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -168,13 +168,13 @@ class StoreRepository {
       return null;
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
-      throw ServerException('فشل في البحث عن المحل: ${e.message}',
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.getStoreByEmail');
-      throw ServerException('حدث خطأ غير متوقع: $e');
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -204,13 +204,13 @@ class StoreRepository {
       await _storesCollection.doc(storeId).update(updateData);
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.updateStore');
-      throw ServerException('فشل تحديث بيانات المحل: ${e.message}',
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_update_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.updateStore');
-      throw ServerException('حدث خطأ غير متوقع أثناء التحديث: $e');
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -269,12 +269,12 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
-      throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}',
+      throw ServerException('store_error_update_stats_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
-      throw ServerException('حدث خطأ غير متوقع: $e');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -287,7 +287,7 @@ class StoreRepository {
     try {
       final store = await getStoreById(storeId);
       if (store == null) {
-        throw NotFoundException('المحل');
+        throw NotFoundException('store');
       }
       return PasswordHasher.verifyPassword(password, store.storePassword);
     } catch (e) {
@@ -333,13 +333,13 @@ class StoreRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRepository.updateSubscriptionStatus');
-      throw ServerException('فشل تحديث حالة الاشتراك: ${e.message}',
+      throw ServerException('store_error_update_subscription_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRepository.updateSubscriptionStatus');
-      throw ServerException('حدث خطأ غير متوقع: $e');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -372,7 +372,7 @@ class StoreRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');
-      throw ServerException('فشل البحث عن المحل: $e');
+      throw ServerException('store_error_fetch_failed');
     }
   }
 }

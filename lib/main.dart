@@ -14,99 +14,108 @@ import 'core/errors/app_error_handler.dart';
 import 'core/errors/error_severity.dart';
 
 void main() async {
-  // Ensure all bindings are initialized before async operations.
-  WidgetsFlutterBinding.ensureInitialized();
-  if (kDebugMode)
-    debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
+  runZonedGuarded(() async {
+    // Ensure all bindings are initialized before async operations.
+    WidgetsFlutterBinding.ensureInitialized();
+    if (kDebugMode)
+      debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
 
-  // Initialize Error Handler early
-  AppErrorHandler.init();
+    // Initialize Error Handler early
+    AppErrorHandler.init();
 
-  try {
-    // Step 1: Initialize Firebase.
-    if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing Firebase...');
-    await FirebaseService().initialize();
-    if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
+    try {
+      // Step 1: Initialize Firebase.
+      if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing Firebase...');
+      await FirebaseService().initialize();
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
 
-    // Step 2: Setup Dependency Injection.
-    if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
-    await setupServiceLocator();
-    if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
+      // Step 2: Setup Dependency Injection.
+      if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
+      await setupServiceLocator();
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
 
-    // Step 3: Check and initialize SMS automation if enabled
-    if (sl<LocalStorageService>().isSmsAutomationEnabled) {
-      if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
-      unawaited(SmsService().init());
-    }
-
-    // Step 4: Run the application IMMEDIATELY (Do not wait for heavy background services)
-    if (kDebugMode) debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
-    runApp(const MyApp());
-
-    // Step 5: Configure the Guardian Isolate (background service).
-    // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
-    Future.delayed(const Duration(seconds: 3), () async {
-      try {
-        if (kDebugMode)
-          debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
-        await initializeBackgroundService();
-        if (kDebugMode)
-          debugPrint(
-              '✅ [BACKGROUND] Service is now active and monitoring SMS.');
-      } catch (e, stack) {
-        if (kDebugMode)
-          debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
-        AppErrorHandler.handle(e,
-            severity: ErrorSeverity.medium,
-            operation: 'background_service_init',
-            stackTrace: stack);
+      // Step 3: Check and initialize SMS automation if enabled
+      if (sl<LocalStorageService>().isSmsAutomationEnabled) {
+        if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
+        unawaited(SmsService().init());
       }
-    });
-  } catch (e, stackTrace) {
-    if (kDebugMode) debugPrint('❌ [INIT FATAL] App initialization failed: $e');
-    if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
 
-    AppErrorHandler.handle(e,
-        severity: ErrorSeverity.critical,
-        operation: 'app_initialization',
-        stackTrace: stackTrace);
+      // Step 4: Run the application IMMEDIATELY (Do not wait for heavy background services)
+      if (kDebugMode) debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
+      runApp(const MyApp());
 
-    if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
-    if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
+      // Step 5: Configure the Guardian Isolate (background service).
+      // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
+      Future.delayed(const Duration(seconds: 3), () async {
+        try {
+          if (kDebugMode)
+            debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+          await initializeBackgroundService();
+          if (kDebugMode)
+            debugPrint(
+                '✅ [BACKGROUND] Service is now active and monitoring SMS.');
+        } catch (e, stack) {
+          if (kDebugMode)
+            debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+          AppErrorHandler.handle(e,
+              severity: ErrorSeverity.medium,
+              operation: 'background_service_init',
+              stackTrace: stack);
+        }
+      });
+    } catch (e, stackTrace) {
+      if (kDebugMode) debugPrint('❌ [INIT FATAL] App initialization failed: $e');
+      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
 
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('🚨 Initialization Error',
-                      style: TextStyle(
-                          fontSize: 22,
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  const Text('Error:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(e.toString(),
-                      style:
-                          const TextStyle(fontSize: 14, color: Colors.black)),
-                  const SizedBox(height: 16),
-                  const Text('Stack Trace:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(stackTrace.toString(),
-                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                ],
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.critical,
+          operation: 'app_initialization',
+          stackTrace: stackTrace);
+
+      if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
+      if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
+
+      runApp(
+        MaterialApp(
+          home: Scaffold(
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('🚨 Initialization Error',
+                        style: TextStyle(
+                            fontSize: 22,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    const Text('Error:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(e.toString(),
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black)),
+                    const SizedBox(height: 16),
+                    const Text('Stack Trace:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(stackTrace.toString(),
+                        style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+      );
+    }
+  }, (error, stack) async {
+    await AppErrorHandler.handle(
+      error,
+      stackTrace: stack,
+      severity: ErrorSeverity.critical,
+      operation: 'main_zoned_guarded',
     );
-  }
+  });
 }
 
 // ==========================================
