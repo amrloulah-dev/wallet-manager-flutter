@@ -125,6 +125,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
           severity: ErrorSeverity.critical,
           operation: 'EmployeeLogin._handleLogin',
         );
+        ToastUtils.showError(l10n.unexpectedError);
       }
     } finally {
       _setLoading(false);

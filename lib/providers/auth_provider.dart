@@ -183,6 +183,10 @@ class AuthProvider extends BaseProvider {
       setError('auth_error_registration_failed', e, stack);
       await logout();
       throw e is AppException ? e : ServerException('auth_error_unexpected');
+    } finally {
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle);
+      }
     }
   }
 
@@ -211,6 +215,10 @@ class AuthProvider extends BaseProvider {
         rethrow;
       }
       throw e is AppException ? e : ServerException('auth_error_unexpected');
+    } finally {
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle);
+      }
     }
   }
 
@@ -225,6 +233,10 @@ class AuthProvider extends BaseProvider {
       setError('auth_error_login_failed', e, stack);
       await logout();
       rethrow;
+    } finally {
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle);
+      }
     }
   }
 
@@ -255,7 +267,6 @@ class AuthProvider extends BaseProvider {
     try {
       final store = await _storeRepository.getStoreByEmail(email);
       if (store == null) throw AuthException('auth_error_store_not_found');
-      _setStatus(AuthStatus.idle);
       return store;
     } catch (e, stack) {
       setError(
@@ -263,6 +274,10 @@ class AuthProvider extends BaseProvider {
           e,
           stack);
       return null;
+    } finally {
+      if (_status == AuthStatus.loading) {
+        _setStatus(AuthStatus.idle);
+      }
     }
   }
 

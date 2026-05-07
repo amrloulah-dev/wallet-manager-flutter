@@ -310,8 +310,8 @@ class WalletRepository {
         .doc(walletId)
         .snapshots()
         .map((doc) => doc.exists ? WalletModel.fromFirestore(doc) : null)
-        .handleError((e) {
-      return Stream.error(ServerException('Failed to watch wallet: $e'));
+        .handleError((e, stack) {
+      throw ServerException('Failed to watch wallet: $e');
     });
   }
 

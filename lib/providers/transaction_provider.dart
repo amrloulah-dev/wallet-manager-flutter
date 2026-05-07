@@ -381,12 +381,18 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> selectTransaction(String transactionId) async {
+    _selectedTransaction = null;
+    _errorMessage = null;
+    safeNotify();
+
     try {
       final tx = await _transactionRepository.getTransactionById(transactionId);
       _selectedTransaction = tx;
-      safeNotify();
+      _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       setError('transaction_error_details_fetch', e, stack);
+    } finally {
+      safeNotify();
     }
   }
 }

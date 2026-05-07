@@ -63,7 +63,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
           if (_isLoading) {
             return LoadingIndicator(message: l10n.loadingDetails);
           }
-          if (provider.selectedTransaction == null) {
+          if (provider.hasError || provider.selectedTransaction == null) {
             return CustomErrorWidget(
               message: provider.errorMessage ?? l10n.transactionNotFound,
               onRetry: () {

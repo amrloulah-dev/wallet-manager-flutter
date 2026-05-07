@@ -109,8 +109,12 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           builder: (_) => EmployeeLoginScreen(store: store),
         ),
       );
-    } else if (mounted && authProvider.errorMessage != null) {
-      ToastUtils.showError(authProvider.errorMessage!);
+    } else if (mounted) {
+      if (authProvider.errorMessage != null) {
+        ToastUtils.showError(authProvider.errorMessage!);
+      } else {
+        ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+      }
     }
   }
 

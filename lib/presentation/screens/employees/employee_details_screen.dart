@@ -261,8 +261,11 @@ class _EditPermissionsSheetState extends State<_EditPermissionsSheet> {
                   text: AppLocalizations.of(context)!.saveChanges,
                   onPressed: () async {
                     setState(() => _isLoading = true);
-                    await widget.onSave(_currentPermissions);
-                    if (mounted) setState(() => _isLoading = false);
+                    try {
+                      await widget.onSave(_currentPermissions);
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
+                    }
                   },
                   isLoading: _isLoading,
                 );
