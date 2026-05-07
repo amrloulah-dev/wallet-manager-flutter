@@ -6,7 +6,7 @@
     - [ ] Update 9 methods in `auth_provider.dart` to use `catch (e, stack)` and forward to `setError(code, e, stack)`
     - [ ] Ensure no `rethrow` is used in these methods
     - [ ] Add `try/catch` block to `AuthProvider.updateEmployeeStats` to handle errors properly
-- [ ] Task: Provider Fallbacks and Stream Signatures
+- [x] Task: Provider Fallbacks and Stream Signatures [ac5eaf5]
     - [ ] Write failing test for `EmployeeProvider` error propagation
     - [ ] Add generic `catch (e, stack)` fallback to `deactivateEmployee` and `resetEmployeePIN` in `employee_provider.dart`
     - [ ] Update `_listenToEmployees` stream `onError: (error)` to `onError: (error, stack)` and forward both
