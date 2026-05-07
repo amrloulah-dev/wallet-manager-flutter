@@ -287,7 +287,6 @@ class WalletProvider extends BaseProvider {
       if (kDebugMode) debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('wallet_error_fetch_failed', e, stack);
-      ToastUtils.showError('wallet_error_fetch_failed');
     } finally {
       safeNotify();
     }
@@ -364,12 +363,6 @@ class WalletProvider extends BaseProvider {
         createdBy: createdBy,
       );
 
-      // Optimistic update removed because the stream will push the new wallet
-      // as soon as it's written to Firestore. However, for a better UX,
-      // we can keep it if we want immediate feedback before Firestore sync.
-      // But the instructions say "rely on stream listeners". 
-      // Let's keep it for now as it doesn't hurt and prevents "flicker".
-
       try {
         await _walletRepository.createWallet(newWallet);
         _updateStatus(WalletProviderStatus.loaded);
@@ -393,8 +386,8 @@ class WalletProvider extends BaseProvider {
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('auth_operation_failed', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('auth_operation_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -422,22 +415,22 @@ class WalletProvider extends BaseProvider {
       return true;
     } on DomainException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع أثناء تحديث المحفظة.', e, stack);
-      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('wallet_error_update_failed', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_update_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -473,22 +466,22 @@ class WalletProvider extends BaseProvider {
       return true;
     } on DomainException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع أثناء شحن الرصيد.', e, stack);
-      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('wallet_error_balance_topup_failed', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_balance_topup_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -517,22 +510,22 @@ class WalletProvider extends BaseProvider {
       }
     } on DomainException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      ToastUtils.showError(e.message);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع أثناء حذف المحفظة.', e, stack);
-      ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('wallet_error_delete_failed', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('wallet_error_delete_failed');
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -543,7 +536,6 @@ class WalletProvider extends BaseProvider {
     }
   }
 
-  // Note: Filters will now require re-fetching data.
   void setSearchQuery(String query) {
     _searchQuery = query;
     fetchInitialWallets();
@@ -605,7 +597,6 @@ class WalletProvider extends BaseProvider {
   }
 
   void updateWalletOptimistically(Map<String, dynamic> data) {
-    // Expected data: {'walletId': String, 'amount': double, 'type': String ('credit' or 'debit')}
     if (data['walletId'] == null ||
         data['amount'] == null ||
         data['type'] == null) {
@@ -614,8 +605,7 @@ class WalletProvider extends BaseProvider {
 
     final walletId = data['walletId'] as String;
     final amount = NumberParser.toDouble(data['amount']);
-    final type = data['type']
-        as String; // SMS type: 'credit' (Receive) or 'debit' (Send)
+    final type = data['type'] as String;
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) return;
@@ -623,16 +613,12 @@ class WalletProvider extends BaseProvider {
     final wallet = _wallets[index];
     double newBalance = wallet.balance;
 
-    // Map SMS Type to action
-    // credit = money received -> increase balance
-    // debit = money sent -> decrease balance
     if (type == 'credit') {
       newBalance += amount;
     } else if (type == 'debit') {
       newBalance -= amount;
     }
 
-    // In-place update for performance (Phase 3)
     _wallets[index] = wallet.copyWith(balance: newBalance);
     _rebuildWalletMap();
     _activateFetchShield();
@@ -667,7 +653,6 @@ class WalletProvider extends BaseProvider {
     }
   }
 
-  // Synchronous check for UI bindings based on local RAM loaded items
   bool isWalletFrozenSync(String walletId) {
     return _frozenWalletIds.contains(walletId);
   }

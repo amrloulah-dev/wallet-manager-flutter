@@ -97,7 +97,7 @@ class EmployeeProvider extends BaseProvider {
         safeNotify();
       },
       onError: (error) {
-        setError('فشل جلب الموظفين.', error);
+        setError('employee_error_fetch_failed', error);
         safeNotify();
       },
     );
@@ -114,15 +114,14 @@ class EmployeeProvider extends BaseProvider {
     safeNotify();
 
     if (_currentStoreId == null) {
-      setError('لم يتم تعيين المتجر');
+      setError('employee_error_no_store');
       safeNotify();
       return false;
     }
 
     if (_subscriptionProvider != null &&
         !_subscriptionProvider!.canAddEmployee(employeesCount)) {
-      setError(
-          'تم الوصول للحد الأقصى للموظفين (${_subscriptionProvider!.maxEmployees})');
+      setError('employee_error_limit_reached');
       safeNotify();
       return false;
     }
@@ -150,7 +149,7 @@ class EmployeeProvider extends BaseProvider {
       setError(e.message);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ أثناء إضافة الموظف', e, stack);
+      setError('employee_error_create_failed', e, stack);
       return false;
     } finally {
       if (_status == EmployeeProviderStatus.loading) {
@@ -165,7 +164,7 @@ class EmployeeProvider extends BaseProvider {
     required String pin,
   }) async {
     if (pin.length != 4 || !_isNumeric(pin)) {
-      setError('الرقم السري يجب أن يكون 4 أرقام');
+      setError('employee_error_invalid_pin');
       safeNotify();
       return null;
     }
@@ -177,13 +176,13 @@ class EmployeeProvider extends BaseProvider {
       );
 
       if (employee == null) {
-        setError('الرقم السري غير صحيح');
+        setError('employee_error_wrong_pin');
         safeNotify();
         return null;
       }
 
       if (isEmployeeFrozen(employee)) {
-        setError('هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك');
+        setError('employee_error_account_frozen');
         safeNotify();
         return null;
       }
@@ -193,7 +192,7 @@ class EmployeeProvider extends BaseProvider {
       if (e is ServerException) {
         setError(e.message);
       } else {
-        setError('حدث خطأ أثناء التحقق من الرقم السري', e, stack);
+        setError('employee_error_pin_check_failed', e, stack);
       }
       safeNotify();
       return null;
@@ -254,7 +253,7 @@ class EmployeeProvider extends BaseProvider {
     required String newPin,
   }) async {
     if (newPin.length != 4 || !_isNumeric(newPin)) {
-      setError('الرقم السري يجب أن يكون 4 أرقام');
+      setError('employee_error_invalid_pin');
       safeNotify();
       return false;
     }
@@ -296,7 +295,7 @@ class EmployeeProvider extends BaseProvider {
       _updateStatus(EmployeeProviderStatus.loaded);
       return true;
     } catch (e, stack) {
-      setError('فشل تحديث الصلاحيات.', e, stack);
+      setError('employee_error_update_perms_failed', e, stack);
       return false;
     } finally {
       if (_status == EmployeeProviderStatus.loading) {

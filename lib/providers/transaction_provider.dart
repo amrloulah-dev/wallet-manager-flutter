@@ -172,6 +172,13 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
   }
 
+  @override
+  void safeNotify() {
+    if (!isDisposed && hasListeners) {
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
     if (kDebugMode) debugPrint('🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
     if (_currentStoreId == null) {
@@ -207,7 +214,7 @@ class TransactionProvider extends BaseProvider {
     } catch (e, stack) {
       if (kDebugMode) debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
-      setError('فشل في جلب المعاملات.', e, stack);
+      setError('transaction_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
     }
@@ -241,7 +248,7 @@ class TransactionProvider extends BaseProvider {
       _recomputeTodayTransactions();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
-      setError('فشل في جلب المزيد من المعاملات.', e, stack);
+      setError('transaction_error_fetch_more_failed', e, stack);
     } finally {
       safeNotify();
     }
@@ -315,8 +322,8 @@ class TransactionProvider extends BaseProvider {
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.', e, stack);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');
+      setError('auth_operation_failed', e, stack);
+      if (!AppErrorHandler.isTestMode) ToastUtils.showError('auth_operation_failed');
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {
@@ -351,7 +358,7 @@ class TransactionProvider extends BaseProvider {
       _selectedTransaction = tx;
       safeNotify();
     } catch (e, stack) {
-      setError('فشل في جلب تفاصيل المعاملة.', e, stack);
+      setError('transaction_error_details_fetch', e, stack);
     }
   }
 }

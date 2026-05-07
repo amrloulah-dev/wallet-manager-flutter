@@ -1723,6 +1723,91 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_error_unexpected => 'An unexpected error occurred.';
 
   @override
+  String get auth_error_store_not_active => 'No active store found.';
+
+  @override
+  String get auth_error_invalid_key => 'Invalid key.';
+
+  @override
+  String get auth_error_key_already_used => 'Key has already been used.';
+
+  @override
+  String get auth_error_logout_failed => 'Error occurred during logout.';
+
+  @override
+  String get auth_error_update_failed => 'Failed to update data.';
+
+  @override
+  String get auth_error_invalid_store_password =>
+      'Store password is incorrect.';
+
+  @override
+  String get debt_error_fetch_failed => 'Failed to fetch debts.';
+
+  @override
+  String get debt_error_fetch_more_failed => 'Failed to fetch more debts.';
+
+  @override
+  String get debt_error_create_failed => 'Failed to create debt.';
+
+  @override
+  String get debt_error_add_amount_failed => 'Failed to add amount to debt.';
+
+  @override
+  String get debt_error_update_failed => 'Failed to update debt.';
+
+  @override
+  String get debt_error_settle_failed => 'Failed to settle debt.';
+
+  @override
+  String get debt_error_delete_failed => 'Failed to delete debt.';
+
+  @override
+  String get debt_error_auth_required => 'Please login first.';
+
+  @override
+  String get employee_error_fetch_failed => 'Failed to fetch employees.';
+
+  @override
+  String get employee_error_no_store => 'Store not set.';
+
+  @override
+  String get employee_error_limit_reached => 'Employee limit reached.';
+
+  @override
+  String get employee_error_create_failed =>
+      'Error occurred while adding employee.';
+
+  @override
+  String get employee_error_invalid_pin => 'PIN must be 4 digits.';
+
+  @override
+  String get employee_error_wrong_pin => 'Incorrect PIN.';
+
+  @override
+  String get employee_error_account_frozen =>
+      'This account is frozen due to plan limits.';
+
+  @override
+  String get employee_error_pin_check_failed =>
+      'Error occurred during PIN verification.';
+
+  @override
+  String get employee_error_update_perms_failed =>
+      'Failed to update permissions.';
+
+  @override
+  String get transaction_error_fetch_failed => 'Failed to fetch transactions.';
+
+  @override
+  String get transaction_error_fetch_more_failed =>
+      'Failed to fetch more transactions.';
+
+  @override
+  String get transaction_error_details_fetch =>
+      'Failed to fetch transaction details.';
+
+  @override
   String get auth_operation_failed => 'Operation failed.';
 
   @override
@@ -1755,6 +1840,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallet_error_balance_update_failed => 'Failed to update balance.';
+
+  @override
+  String get wallet_error_balance_topup_failed =>
+      'An unexpected error occurred during top-up.';
 
   @override
   String get wallet_error_limit_reached => 'Wallet limit reached.';

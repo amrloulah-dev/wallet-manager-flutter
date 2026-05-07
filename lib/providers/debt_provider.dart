@@ -136,7 +136,6 @@ class DebtProvider extends BaseProvider {
     safeNotify();
 
     try {
-      // Use getDebtsByDateRange for pagination, passing far-past/future dates for "all"
       final result = await _debtRepository.getDebtsByDateRange(
         _currentStoreId!,
         DateTime(2020),
@@ -152,7 +151,7 @@ class DebtProvider extends BaseProvider {
       await _fetchSummary();
       _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
-      setError('فشل في جلب الديون.', e, stack);
+      setError('debt_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
     }
@@ -185,7 +184,7 @@ class DebtProvider extends BaseProvider {
       _rebuildDebtMap();
       _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
-      setError('فشل في جلب المزيد من الديون.', e, stack);
+      setError('debt_error_fetch_more_failed', e, stack);
     } finally {
       safeNotify();
     }
@@ -281,7 +280,7 @@ class DebtProvider extends BaseProvider {
       setError(e.message);
       rethrow;
     } catch (e, stack) {
-      setError('فشل في إنشاء الدين.', e, stack);
+      setError('debt_error_create_failed', e, stack);
       rethrow;
     } finally {
       if (_status == DebtProviderStatus.creating) {
@@ -309,7 +308,7 @@ class DebtProvider extends BaseProvider {
       setError(e.message);
       rethrow;
     } catch (e, stack) {
-      setError('فشل في إضافة المبلغ إلى الدين.', e, stack);
+      setError('debt_error_add_amount_failed', e, stack);
       rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
@@ -336,7 +335,7 @@ class DebtProvider extends BaseProvider {
       setError(e.message);
       rethrow;
     } catch (e, stack) {
-      setError('فشل في تحديث الدين.', e, stack);
+      setError('debt_error_update_failed', e, stack);
       rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
@@ -364,7 +363,7 @@ class DebtProvider extends BaseProvider {
       setError(e.message);
       rethrow;
     } catch (e, stack) {
-      setError('فشل في تسديد الدين.', e, stack);
+      setError('debt_error_settle_failed', e, stack);
       rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
@@ -391,7 +390,7 @@ class DebtProvider extends BaseProvider {
       setError(e.message);
       rethrow;
     } catch (e, stack) {
-      setError('فشل في حذف الدين.', e, stack);
+      setError('debt_error_delete_failed', e, stack);
       rethrow;
     } finally {
       if (_status == DebtProviderStatus.updating) {
@@ -404,7 +403,7 @@ class DebtProvider extends BaseProvider {
   Future<UserModel> _validateUserAndPermission(
       bool Function(UserPermissions) permissionCheck) async {
     final user = _authProvider.currentUser;
-    if (user == null) throw AuthException('يجب تسجيل الدخول أولاً.');
+    if (user == null) throw AuthException('debt_error_auth_required');
 
     // Owners have all permissions
     if (user.isOwner) return user;

@@ -174,7 +174,7 @@ class AuthProvider extends BaseProvider {
       return result.store.storeId;
     } catch (e) {
       await logout();
-      throw e is AppException ? e : ServerException('حدث خطأ غير متوقع: $e');
+      throw e is AppException ? e : ServerException('auth_error_unexpected');
     }
   }
 
@@ -201,7 +201,7 @@ class AuthProvider extends BaseProvider {
       if (e is EmailAlreadyInUseException || e is WeakPasswordException) {
         rethrow;
       }
-      throw e is AppException ? e : ServerException('حدث خطأ غير متوقع: $e');
+      throw e is AppException ? e : ServerException('auth_error_unexpected');
     }
   }
 
@@ -254,7 +254,7 @@ class AuthProvider extends BaseProvider {
     try {
       final result = await _databaseSyncService.loginWithGoogleOrNull();
       if (result == null) {
-        setError('لا يوجد حساب مرتبط بهذا البريد الإلكتروني.');
+        setError('auth_error_account_not_found');
         return false;
       } else {
         _applySessionResult(result);
@@ -278,7 +278,7 @@ class AuthProvider extends BaseProvider {
         throw InvalidCredentialsException();
       }
     } catch (e) {
-      setError(e is AppException ? e.message : 'كلمة سر المتجر غير صحيحة.');
+      setError(e is AppException ? e.message : 'auth_error_invalid_store_password');
       return null;
     }
   }
@@ -297,10 +297,10 @@ class AuthProvider extends BaseProvider {
   Future<void> activateNewLicense(String newKey) async {
     _setStatus(AuthStatus.loading);
     try {
-      if (_currentStore == null) throw AuthException('لا يوجد متجر نشط');
+      if (_currentStore == null) throw AuthException('auth_error_store_not_active');
       final keyData = await _licenseKeyRepository.verifyLicenseKey(newKey);
-      if (keyData == null) throw AuthException('المفتاح غير صحيح');
-      if (keyData.isUsed) throw AuthException('المفتاح مستخدم من قبل');
+      if (keyData == null) throw AuthException('auth_error_invalid_key');
+      if (keyData.isUsed) throw AuthException('auth_error_key_already_used');
 
       await _licenseKeyRepository.activateLicenseKey(
         keyId: keyData.keyId,
@@ -312,7 +312,7 @@ class AuthProvider extends BaseProvider {
       _setStatus(AuthStatus.idle);
     } catch (e) {
       _setStatus(AuthStatus.idle);
-      setError(e is AppException ? e.message : 'فشل تفعيل المفتاح: $e');
+      setError(e is AppException ? e.message : 'auth_operation_failed');
       rethrow;
     }
   }
@@ -324,7 +324,7 @@ class AuthProvider extends BaseProvider {
       _clearState();
       _setStatus(AuthStatus.unauthenticated);
     } catch (e, stack) {
-      setError('حدث خطأ أثناء تسجيل الخروج', e, stack);
+      setError('auth_error_logout_failed', e, stack);
     }
   }
 
@@ -341,7 +341,7 @@ class AuthProvider extends BaseProvider {
         _currentUser = await _userRepository.getUserById(_currentUser!.userId);
         _currentStore = await _storeRepository.getStoreById(_currentStore!.storeId);
       } catch (e) {
-        setError('فشل تحديث البيانات.');
+        setError('auth_error_update_failed');
       } finally {
         safeNotify();
       }

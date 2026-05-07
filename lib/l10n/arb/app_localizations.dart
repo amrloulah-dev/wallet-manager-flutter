@@ -3368,6 +3368,162 @@ abstract class AppLocalizations {
   /// **'حدث خطأ غير متوقع.'**
   String get auth_error_unexpected;
 
+  /// No description provided for @auth_error_store_not_active.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد متجر نشط'**
+  String get auth_error_store_not_active;
+
+  /// No description provided for @auth_error_invalid_key.
+  ///
+  /// In ar, this message translates to:
+  /// **'المفتاح غير صحيح'**
+  String get auth_error_invalid_key;
+
+  /// No description provided for @auth_error_key_already_used.
+  ///
+  /// In ar, this message translates to:
+  /// **'المفتاح مستخدم من قبل'**
+  String get auth_error_key_already_used;
+
+  /// No description provided for @auth_error_logout_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تسجيل الخروج'**
+  String get auth_error_logout_failed;
+
+  /// No description provided for @auth_error_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحديث البيانات.'**
+  String get auth_error_update_failed;
+
+  /// No description provided for @auth_error_invalid_store_password.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة سر المتجر غير صحيحة.'**
+  String get auth_error_invalid_store_password;
+
+  /// No description provided for @debt_error_fetch_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في جلب الديون.'**
+  String get debt_error_fetch_failed;
+
+  /// No description provided for @debt_error_fetch_more_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في جلب المزيد من الديون.'**
+  String get debt_error_fetch_more_failed;
+
+  /// No description provided for @debt_error_create_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في إنشاء الدين.'**
+  String get debt_error_create_failed;
+
+  /// No description provided for @debt_error_add_amount_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في إضافة المبلغ إلى الدين.'**
+  String get debt_error_add_amount_failed;
+
+  /// No description provided for @debt_error_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في تحديث الدين.'**
+  String get debt_error_update_failed;
+
+  /// No description provided for @debt_error_settle_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في تسديد الدين.'**
+  String get debt_error_settle_failed;
+
+  /// No description provided for @debt_error_delete_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في حذف الدين.'**
+  String get debt_error_delete_failed;
+
+  /// No description provided for @debt_error_auth_required.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب تسجيل الدخول أولاً.'**
+  String get debt_error_auth_required;
+
+  /// No description provided for @employee_error_fetch_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل جلب الموظفين.'**
+  String get employee_error_fetch_failed;
+
+  /// No description provided for @employee_error_no_store.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم تعيين المتجر'**
+  String get employee_error_no_store;
+
+  /// No description provided for @employee_error_limit_reached.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الوصول للحد الأقصى للموظفين'**
+  String get employee_error_limit_reached;
+
+  /// No description provided for @employee_error_create_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء إضافة الموظف'**
+  String get employee_error_create_failed;
+
+  /// No description provided for @employee_error_invalid_pin.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقم السري يجب أن يكون 4 أرقام'**
+  String get employee_error_invalid_pin;
+
+  /// No description provided for @employee_error_wrong_pin.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرقم السري غير صحيح'**
+  String get employee_error_wrong_pin;
+
+  /// No description provided for @employee_error_account_frozen.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك'**
+  String get employee_error_account_frozen;
+
+  /// No description provided for @employee_error_pin_check_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء التحقق من الرقم السري'**
+  String get employee_error_pin_check_failed;
+
+  /// No description provided for @employee_error_update_perms_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحديث الصلاحيات.'**
+  String get employee_error_update_perms_failed;
+
+  /// No description provided for @transaction_error_fetch_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في جلب المعاملات.'**
+  String get transaction_error_fetch_failed;
+
+  /// No description provided for @transaction_error_fetch_more_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في جلب المزيد من المعاملات.'**
+  String get transaction_error_fetch_more_failed;
+
+  /// No description provided for @transaction_error_details_fetch.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في جلب تفاصيل المعاملة.'**
+  String get transaction_error_details_fetch;
+
   /// No description provided for @auth_operation_failed.
   ///
   /// In ar, this message translates to:
@@ -3433,6 +3589,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فشل في تحديث الرصيد.'**
   String get wallet_error_balance_update_failed;
+
+  /// No description provided for @wallet_error_balance_topup_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع أثناء شحن الرصيد.'**
+  String get wallet_error_balance_topup_failed;
 
   /// No description provided for @wallet_error_limit_reached.
   ///

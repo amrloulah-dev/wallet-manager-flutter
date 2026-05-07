@@ -1714,6 +1714,87 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_error_unexpected => 'حدث خطأ غير متوقع.';
 
   @override
+  String get auth_error_store_not_active => 'لا يوجد متجر نشط';
+
+  @override
+  String get auth_error_invalid_key => 'المفتاح غير صحيح';
+
+  @override
+  String get auth_error_key_already_used => 'المفتاح مستخدم من قبل';
+
+  @override
+  String get auth_error_logout_failed => 'حدث خطأ أثناء تسجيل الخروج';
+
+  @override
+  String get auth_error_update_failed => 'فشل تحديث البيانات.';
+
+  @override
+  String get auth_error_invalid_store_password => 'كلمة سر المتجر غير صحيحة.';
+
+  @override
+  String get debt_error_fetch_failed => 'فشل في جلب الديون.';
+
+  @override
+  String get debt_error_fetch_more_failed => 'فشل في جلب المزيد من الديون.';
+
+  @override
+  String get debt_error_create_failed => 'فشل في إنشاء الدين.';
+
+  @override
+  String get debt_error_add_amount_failed => 'فشل في إضافة المبلغ إلى الدين.';
+
+  @override
+  String get debt_error_update_failed => 'فشل في تحديث الدين.';
+
+  @override
+  String get debt_error_settle_failed => 'فشل في تسديد الدين.';
+
+  @override
+  String get debt_error_delete_failed => 'فشل في حذف الدين.';
+
+  @override
+  String get debt_error_auth_required => 'يجب تسجيل الدخول أولاً.';
+
+  @override
+  String get employee_error_fetch_failed => 'فشل جلب الموظفين.';
+
+  @override
+  String get employee_error_no_store => 'لم يتم تعيين المتجر';
+
+  @override
+  String get employee_error_limit_reached => 'تم الوصول للحد الأقصى للموظفين';
+
+  @override
+  String get employee_error_create_failed => 'حدث خطأ أثناء إضافة الموظف';
+
+  @override
+  String get employee_error_invalid_pin => 'الرقم السري يجب أن يكون 4 أرقام';
+
+  @override
+  String get employee_error_wrong_pin => 'الرقم السري غير صحيح';
+
+  @override
+  String get employee_error_account_frozen =>
+      'هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك';
+
+  @override
+  String get employee_error_pin_check_failed =>
+      'حدث خطأ أثناء التحقق من الرقم السري';
+
+  @override
+  String get employee_error_update_perms_failed => 'فشل تحديث الصلاحيات.';
+
+  @override
+  String get transaction_error_fetch_failed => 'فشل في جلب المعاملات.';
+
+  @override
+  String get transaction_error_fetch_more_failed =>
+      'فشل في جلب المزيد من المعاملات.';
+
+  @override
+  String get transaction_error_details_fetch => 'فشل في جلب تفاصيل المعاملة.';
+
+  @override
   String get auth_operation_failed => 'فشلت العملية.';
 
   @override
@@ -1746,6 +1827,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wallet_error_balance_update_failed => 'فشل في تحديث الرصيد.';
+
+  @override
+  String get wallet_error_balance_topup_failed =>
+      'حدث خطأ غير متوقع أثناء شحن الرصيد.';
 
   @override
   String get wallet_error_limit_reached => 'تم الوصول للحد الأقصى للمحافظ.';
