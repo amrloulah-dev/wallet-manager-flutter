@@ -97,8 +97,8 @@ class EmployeeProvider extends BaseProvider {
         _updateStatus(EmployeeProviderStatus.loaded);
         safeNotify();
       },
-      onError: (error) {
-        setError('employee_error_fetch_failed', error);
+      onError: (error, stack) {
+        setError('employee_error_fetch_failed', error, stack);
         safeNotify();
       },
     );
@@ -143,11 +143,11 @@ class EmployeeProvider extends BaseProvider {
       _errorMessage = null;
       _updateStatus(EmployeeProviderStatus.loaded);
       return true;
-    } on ValidationException catch (e) {
-      setError(e.message);
+    } on ValidationException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
-    } on ServerException catch (e) {
-      setError(e.message);
+    } on ServerException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
       setError('employee_error_create_failed', e, stack);
@@ -191,7 +191,7 @@ class EmployeeProvider extends BaseProvider {
       return employee;
     } catch (e, stack) {
       if (e is ServerException) {
-        setError(e.message);
+        setError(e.message, e, stack);
       } else {
         setError('employee_error_pin_check_failed', e, stack);
       }
@@ -239,8 +239,11 @@ class EmployeeProvider extends BaseProvider {
       // No longer need to fire event, stream will update automatically
       _updateStatus(EmployeeProviderStatus.loaded);
       return true;
-    } on ServerException catch (e) {
-      setError(e.message);
+    } on ServerException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('employee_error_deactivate_failed', e, stack);
       return false;
     } finally {
       if (_status == EmployeeProviderStatus.loading) {
@@ -270,11 +273,14 @@ class EmployeeProvider extends BaseProvider {
         _employeeRepository.syncCredential(employee, newPin);
       }
       return success;
-    } on ValidationException catch (e) {
-      setError(e.message);
+    } on ValidationException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
-    } on ServerException catch (e) {
-      setError(e.message);
+    } on ServerException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('employee_error_reset_pin_failed', e, stack);
       return false;
     } finally {
       if (_status == EmployeeProviderStatus.loading) {
