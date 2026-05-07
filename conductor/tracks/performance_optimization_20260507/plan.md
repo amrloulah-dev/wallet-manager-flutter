@@ -38,5 +38,8 @@
 - [x] Task: Cache `ThemeData.light()` as a `static final` constant in `transaction_overlay_screen.dart`. 1cfae30
 - [x] Task: Conductor - User Manual Verification 'Tech Debt & L10n' (Protocol in workflow.md)
 
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 9c46a2f
+
 ---
-**Track Complete** 1700d8d
+**Track Complete** 9c46a2f
