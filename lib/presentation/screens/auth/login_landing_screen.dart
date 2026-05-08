@@ -83,20 +83,34 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     } on UserNotFoundException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: UserNotFoundException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(
+            ErrorMapper.getLocalizedString(context, 'auth_error_user_not_found'));
+      }
     } on WrongPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: WrongPasswordException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(
+            ErrorMapper.getLocalizedString(context, 'auth_error_invalid_credentials'));
+      }
     } on AuthException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: AuthException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(e.code != null
+            ? ErrorMapper.getLocalizedString(context, e.code!)
+            : ErrorMapper.getLocalizedString(context, 'auth_error_login_failed'));
+      }
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: unexpected');
       if (mounted) {
         ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+      }
+    } finally {
+      if (mounted) {
+        // AuthProvider handles its own loading state, but we ensure consistency
       }
     }
   }
@@ -107,22 +121,29 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     final authProvider = context.read<AuthProvider>();
     if (authProvider.isLoading) return;
 
-    final store = await authProvider.findStoreByEmail(
-      _storeEmailController.text.trim(),
-    );
-
-    if (store != null && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => EmployeeLoginScreen(store: store),
-        ),
+    try {
+      final store = await authProvider.findStoreByEmail(
+        _storeEmailController.text.trim(),
       );
-    } else if (mounted) {
-      if (authProvider.errorMessage != null) {
-        ToastUtils.showError(authProvider.errorMessage!);
-      } else {
-        ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+
+      if (store != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EmployeeLoginScreen(store: store),
+          ),
+        );
+      } else if (mounted) {
+        if (authProvider.errorMessage != null) {
+          ToastUtils.showError(
+              ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
+        } else {
+          ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+        }
+      }
+    } finally {
+      if (mounted) {
+        // Consistency
       }
     }
   }
@@ -147,7 +168,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     } else if (userRole == 'employee') {
       Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
     } else {
-      ToastUtils.showError('Role unknown');
+      ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
     }
   }
 

@@ -161,7 +161,7 @@ class TransactionRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.getTransactionsStream');
-      return Stream.error(ServerException('فشل الحصول على تيار المعاملات: $e'));
+      return Stream.error(ServerException('transaction_error_stream_failed'));
     }
   }
 

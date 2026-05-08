@@ -5,13 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/services/time_service.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
-import '../core/errors/app_error_handler.dart';
-import 'package:walletmanager/core/utils/toast_utils.dart';
-import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
@@ -280,16 +278,6 @@ class TransactionProvider extends BaseProvider {
     }
   }
 
-  void _initializeEmptySummary() {
-    _summary = {
-      'totalTransactions': 0,
-      'totalCommission': 0.0,
-      'totalAmount': 0.0,
-      'sendCount': 0,
-      'receiveCount': 0,
-    };
-  }
-
   Future<bool> createTransaction({
     required String walletId,
     required TransactionType transactionType, // ENUM refactor
@@ -334,24 +322,18 @@ class TransactionProvider extends BaseProvider {
       return true;
     } on DomainException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } on ValidationException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('transaction_error_create_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) {
-        ToastUtils.showError('transaction_error_create_failed');
-      }
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {

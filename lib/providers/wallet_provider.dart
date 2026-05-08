@@ -1,8 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
+import 'package:walletmanager/routes/navigation_service.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -16,7 +17,6 @@ import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
-import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
 import '../core/enums/wallet_enums.dart';
 
@@ -88,14 +88,6 @@ class WalletProvider extends BaseProvider {
         _cacheManager = cacheManager ?? sl<WalletCacheManager>(),
         _walletUseCase = walletUseCase ?? sl<WalletUseCase>(),
         _currentStoreId = storeId {
-    // ── Streams-Driven Sync (Phase 1) ──
-    // Manual AppEvents listener removed. Data sync is now handled by _walletsSubscription
-    // established in fetchInitialWallets().
-
-    // Listen for overlay "refresh_wallets" pings (on-demand, no Firestore stream).
-    // FlutterOverlayWindow.overlayListener is a SINGLE-subscription stream.
-    // Cancel any prior subscription before re-listening to prevent
-    // "Bad state: Stream has already been listened to" crashes.
     _overlayDataSubscription?.cancel();
     _overlayDataSubscription = null;
     try {
@@ -107,8 +99,6 @@ class WalletProvider extends BaseProvider {
         }
 
         if (event is Map && event['action'] == 'local_deduct') {
-          // ── Zero-cost local state mutation ──
-          // The overlay already wrote to Firestore; we just need to update RAM.
           final walletId = event['walletId']?.toString();
           final deduction = NumberParser.toDouble(event['amount']);
           final isSend = event['isSend'] == true;
@@ -122,16 +112,9 @@ class WalletProvider extends BaseProvider {
                 ? oldWallet.balance - deduction
                 : oldWallet.balance + deduction;
 
-            // In-place update for performance (Phase 3)
             _wallets[index] = oldWallet.copyWith(balance: newBalance);
             _rebuildWalletMap();
             safeNotify();
-            if (kDebugMode) {
-              debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-                  'local_deduct applied! walletId=$walletId, '
-                  'oldBalance=${oldWallet.balance}, newBalance=$newBalance, '
-                  'isSend=$isSend. No Firebase read needed!');
-            }
           }
         }
       }, onError: (error) {
@@ -144,31 +127,20 @@ class WalletProvider extends BaseProvider {
     }
   }
 
-  // ── Public API for optimistic local balance mutation ──
-  // Called by GlobalOverlayListener (IsolateNameServer path) and
-  // overlayListener (FlutterOverlayWindow path) to avoid any Firestore reads.
   void applyLocalDeduction(String walletId, double deduction, bool isSend) {
     if (isDisposed) return;
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
-    if (index == -1) {
-      if (kDebugMode) {
-        debugPrint(
-            '🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
-      }
-      return;
-    }
+    if (index == -1) return;
 
     final oldWallet = _wallets[index];
     final newBalance =
         isSend ? oldWallet.balance - deduction : oldWallet.balance + deduction;
 
-    // VALIDATION: Ensure balance won't go negative for send transactions
     if (newBalance < 0 && isSend) {
       throw DomainException('Insufficient balance for local deduction');
     }
 
-    // Create new list to avoid in-place mutation (immutable approach using List.of)
     _wallets = [
       for (int i = 0; i < _wallets.length; i++)
         if (i == index)
@@ -179,11 +151,6 @@ class WalletProvider extends BaseProvider {
 
     _rebuildWalletMap();
     safeNotify();
-    if (kDebugMode) {
-      debugPrint('🔥 [TX_FLOW] LOCAL MUTATION APPLIED! '
-          'walletId=$walletId | oldBalance=${oldWallet.balance} → New Balance: $newBalance | '
-          'isSend=$isSend | No Firestore read.');
-    }
   }
 
   @override
@@ -200,11 +167,10 @@ class WalletProvider extends BaseProvider {
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   String get searchQuery => _searchQuery;
-  WalletType? get filterByType => _filterByType; // ENUM refactor
-  WalletStatus? get filterByStatus => _filterByStatus; // ENUM refactor
+  WalletType? get filterByType => _filterByType;
+  WalletStatus? get filterByStatus => _filterByStatus;
   bool get hasMore => _hasMore;
 
-  // Helper Getters
   bool get isLoading => _status == WalletProviderStatus.loading;
   bool get isLoadingMore => _status == WalletProviderStatus.loadingMore;
   bool get isCreating => _status == WalletProviderStatus.creating;
@@ -212,10 +178,7 @@ class WalletProvider extends BaseProvider {
   bool get isDeleting => _status == WalletProviderStatus.deleting;
   bool get hasError => _status == WalletProviderStatus.error;
 
-  // Methods
-
   void updateAuthState(AuthProvider auth) {
-    // _authProvider is final, we don't reassign it.
     if (_currentStoreId != auth.currentStoreId) {
       setStoreId(auth.currentStoreId ?? '');
     }
@@ -225,14 +188,10 @@ class WalletProvider extends BaseProvider {
     _subscriptionProvider = subscriptionProvider;
   }
 
-  /// Robust permission check that ensures user is loaded
   Future<UserModel> _validateUserAndPermission(
       bool Function(UserPermissions) selector) async {
     return _walletUseCase.validatePermission(selector);
   }
-
-  // Helper Check - Deprecated in favor of _validateUserAndPermission but kept for non-async if needed
-  // void _checkPermission(bool Function(UserPermissions) selector) { ... }
 
   void setStoreId(String storeId) {
     if (_currentStoreId != storeId) {
@@ -246,71 +205,35 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    if (kDebugMode) {
-      debugPrint(
-          '🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
-    }
-    if (_currentStoreId == null) {
-      if (kDebugMode) {
-        debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
-      }
-      return;
-    }
-    if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode) {
-        debugPrint(
-            '🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
-      }
-      return;
-    }
+    if (_currentStoreId == null) return;
+    if (!forceRefresh && _fetchShieldActive) return;
 
     _updateStatus(WalletProviderStatus.loading);
     _errorMessage = null;
     safeNotify();
 
     try {
-      if (kDebugMode) {
-        debugPrint(
-            '⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
-      }
-
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
-      final result = await _walletRepository.getAllWallets(
-        storeId,
-      );
-      if (kDebugMode) {
-        debugPrint(
-            '✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
-      }
+      final result = await _walletRepository.getAllWallets(storeId);
 
       _wallets = result.items;
       _lastDocument = result.lastDocument;
       _hasMore = result.items.length >= 20;
 
-      // Check which of the fetched wallets need a reset
       final walletsNeedingReset = _wallets
           .where((w) => w.needsDailyReset || w.needsMonthlyReset)
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
-        if (kDebugMode) {
-          debugPrint(
-              '🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
-        }
-        // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
 
       _rebuildWalletMap();
       _updateStatus(WalletProviderStatus.loaded);
-
-      // Cache the wallets locally for SMS Automation
       _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
-      if (kDebugMode) debugPrint('❌ [INIT FATAL] WalletProvider Error: $e');
-      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('wallet_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
@@ -357,8 +280,8 @@ class WalletProvider extends BaseProvider {
 
   Future<bool> createWallet({
     required String phoneNumber,
-    required WalletType walletType, // ENUM refactor
-    required WalletStatus walletStatus, // ENUM refactor
+    required WalletType walletType,
+    required WalletStatus walletStatus,
     required double balance,
     String? notes,
     required String createdBy,
@@ -372,7 +295,6 @@ class WalletProvider extends BaseProvider {
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
-      // Bug B-002: Fail-closed if subscription provider is missing
       if (_subscriptionProvider == null) {
         throw ValidationException('wallet_error_subscription_unresolved');
       }
@@ -393,33 +315,17 @@ class WalletProvider extends BaseProvider {
         createdBy: createdBy,
       );
 
-      try {
-        await _walletRepository.createWallet(newWallet);
-        _updateStatus(WalletProviderStatus.loaded);
-        return true;
-      } catch (e) {
-        rethrow;
-      }
-    } on DomainException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
-    } on ValidationException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
+      await _walletRepository.createWallet(newWallet);
+      _updateStatus(WalletProviderStatus.loaded);
+      return true;
     } on AppException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('auth_operation_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) {
-        ToastUtils.showError('auth_operation_failed');
-      }
+      setError('wallet_error_create_failed', e, stack);
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -437,7 +343,6 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
-      // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
         throw ValidationException('wallet_error_frozen');
       }
@@ -445,26 +350,14 @@ class WalletProvider extends BaseProvider {
       await _walletRepository.updateWallet(walletId, data);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on DomainException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
-    } on ValidationException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_update_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) {
-        ToastUtils.showError('wallet_error_update_failed');
-      }
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -485,7 +378,6 @@ class WalletProvider extends BaseProvider {
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID not found.'));
 
-      // Check FIFO freeze
       if (await _isWalletFrozen(walletId)) {
         throw ValidationException('wallet_error_frozen');
       }
@@ -499,26 +391,14 @@ class WalletProvider extends BaseProvider {
       );
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on DomainException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
-    } on ValidationException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
     } on AppException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_balance_topup_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) {
-        ToastUtils.showError('wallet_error_balance_topup_failed');
-      }
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -533,38 +413,17 @@ class WalletProvider extends BaseProvider {
     _updateStatus(WalletProviderStatus.deleting);
     try {
       await _validateUserAndPermission((p) => p.editWallet);
-
-      try {
-        await _walletRepository.deleteWallet(walletId);
-        _updateStatus(WalletProviderStatus.loaded);
-        return true;
-      } catch (e, stack) {
-        AppErrorHandler.handle(e,
-            severity: ErrorSeverity.medium,
-            operation: 'delete_wallet',
-            stackTrace: stack);
-        rethrow;
-      }
-    } on DomainException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
-    } on ValidationException catch (e) {
-      setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
-      _updateStatus(WalletProviderStatus.error);
-      return false;
+      await _walletRepository.deleteWallet(walletId);
+      _updateStatus(WalletProviderStatus.loaded);
+      return true;
     } on AppException catch (e) {
       setError(e.message, e);
-      if (!AppErrorHandler.isTestMode) ToastUtils.showError(e.message);
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);
-      if (!AppErrorHandler.isTestMode) {
-        ToastUtils.showError('wallet_error_delete_failed');
-      }
+      _handleUIFeedback();
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -575,19 +434,25 @@ class WalletProvider extends BaseProvider {
     }
   }
 
+  void _handleUIFeedback() {
+    if (AppErrorHandler.isTestMode) return;
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null) {
+      ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+    }
+  }
+
   void setSearchQuery(String query) {
     _searchQuery = query;
     fetchInitialWallets();
   }
 
   void setTypeFilter(WalletType? type) {
-    // ENUM refactor
     _filterByType = type;
     fetchInitialWallets();
   }
 
   void setStatusFilter(WalletStatus? status) {
-    // ENUM refactor
     _filterByStatus = status;
     fetchInitialWallets();
   }
@@ -599,11 +464,9 @@ class WalletProvider extends BaseProvider {
     fetchInitialWallets();
   }
 
-  // Helper Methods
   void _updateStatus(WalletProviderStatus status) {
     if (isDisposed) return;
     _status = status;
-    // Reset error when starting a new operation
     if (status == WalletProviderStatus.loading ||
         status == WalletProviderStatus.creating ||
         status == WalletProviderStatus.updating ||
@@ -623,14 +486,7 @@ class WalletProvider extends BaseProvider {
     _errorMessage = errorCode;
     _status = WalletProviderStatus.error;
 
-    super.setError(
-      errorCode,
-      error,
-      stack,
-      showToast,
-      operation,
-    );
-
+    super.setError(errorCode, error, stack, showToast, operation);
     safeNotify();
   }
 
@@ -638,35 +494,6 @@ class WalletProvider extends BaseProvider {
     if (isDisposed) return;
     _errorMessage = null;
     _status = WalletProviderStatus.idle;
-    safeNotify();
-  }
-
-  void updateWalletOptimistically(Map<String, dynamic> data) {
-    if (data['walletId'] == null ||
-        data['amount'] == null ||
-        data['type'] == null) {
-      return;
-    }
-
-    final walletId = data['walletId'] as String;
-    final amount = NumberParser.toDouble(data['amount']);
-    final type = data['type'] as String;
-
-    final index = _wallets.indexWhere((w) => w.walletId == walletId);
-    if (index == -1) return;
-
-    final wallet = _wallets[index];
-    double newBalance = wallet.balance;
-
-    if (type == 'credit') {
-      newBalance += amount;
-    } else if (type == 'debit') {
-      newBalance -= amount;
-    }
-
-    _wallets[index] = wallet.copyWith(balance: newBalance);
-    _rebuildWalletMap();
-    _activateFetchShield();
     safeNotify();
   }
 
@@ -689,13 +516,6 @@ class WalletProvider extends BaseProvider {
 
   Future<bool> _isWalletFrozen(String walletId) async {
     return _frozenWalletIds.contains(walletId);
-  }
-
-  @override
-  void safeNotify() {
-    if (!isDisposed && hasListeners) {
-      notifyListeners();
-    }
   }
 
   bool isWalletFrozenSync(String walletId) {

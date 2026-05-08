@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 import '../../data/models/user_permissions.dart';
 import '../../providers/auth_provider.dart';
@@ -23,7 +24,7 @@ class PermissionHelper {
       }
     }
     if (showMessage) {
-      ToastUtils.showError('ليس لديك الصلاحية للقيام بهذا الإجراء');
+      ToastUtils.showError(AppLocalizations.of(context)!.accessDenied);
     }
     return false;
   }

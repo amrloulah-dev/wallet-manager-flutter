@@ -8,6 +8,7 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
 
+import 'package:walletmanager/core/utils/error_mapper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
@@ -73,7 +74,9 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
         final success = await authProvider.loginWithGoogleOrNull();
 
         if (!success) {
-          ToastUtils.showError(l10n.googleLoginError);
+          if (mounted) {
+            ToastUtils.showError(l10n.googleLoginError);
+          }
           return;
         }
 
@@ -95,31 +98,41 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRegistration: EmailAlreadyInUseException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(
+            ErrorMapper.getLocalizedString(context, 'auth_error_account_not_found'));
+      }
     } on WeakPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRegistration: WeakPasswordException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(
+            ErrorMapper.getLocalizedString(context, 'auth_error_invalid_credentials'));
+      }
     } on NetworkException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRegistration: NetworkException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(l10n.unexpectedError);
+      }
     } on StoreInactiveException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRegistration: StoreInactiveException');
-      ToastUtils.showError(e.message);
+      if (mounted) {
+        ToastUtils.showError(
+            ErrorMapper.getLocalizedString(context, 'auth_error_store_not_active'));
+      }
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRegistration: unexpected');
-      ToastUtils.showError(
-          e is AppException ? e.message : "${l10n.unexpectedError}: $e");
+      if (mounted) {
+        ToastUtils.showError(l10n.unexpectedError);
+      }
     } finally {
       if (mounted) {
-        // No local loading state, but we ensure provider is idle
-        // Actually, AuthProvider.isLoading will be updated by setError called in its methods
-        // But we add this finally for consistency with the directive.
+        // AuthProvider handles its own loading state
       }
     }
 

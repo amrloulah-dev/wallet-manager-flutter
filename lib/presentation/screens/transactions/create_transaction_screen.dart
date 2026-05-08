@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:walletmanager/core/utils/error_mapper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -162,8 +163,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             AppLocalizations.of(context)!.transactionCreatedSuccess);
         Navigator.pop(context, true);
       } else if (mounted) {
-        _showErrorDialog(transactionProvider.errorMessage ??
-            AppLocalizations.of(context)!.transactionCreateFailed);
+        final error = transactionProvider.errorMessage != null
+            ? ErrorMapper.getLocalizedString(context, transactionProvider.errorMessage!)
+            : AppLocalizations.of(context)!.transactionCreateFailed;
+        _showErrorDialog(error);
       }
     } catch (e, stack) {
       AppErrorHandler.handle(
@@ -172,7 +175,14 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         operation: 'create_transaction',
       );
       if (mounted) {
-        _showErrorDialog(transactionProvider.errorMessage ?? e.toString());
+        final error = transactionProvider.errorMessage != null
+            ? ErrorMapper.getLocalizedString(context, transactionProvider.errorMessage!)
+            : AppLocalizations.of(context)!.unexpectedError;
+        _showErrorDialog(error);
+      }
+    } finally {
+      if (mounted) {
+        // Provider handles loading state
       }
     }
   }

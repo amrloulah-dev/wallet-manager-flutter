@@ -81,50 +81,70 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
           operation: 'toggle_sms_automation',
         );
         if (mounted) {
-          ToastUtils.showError('Required permissions missing: $e');
+          ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+          // Revert switch if failed
+          setState(() {
+            _isEnabled = false;
+          });
         }
-        // Revert switch if failed
-        setState(() {
-          _isEnabled = false;
-        });
+      } finally {
+        if (mounted) {
+          // Cleanup or consistency checks
+        }
       }
     } else {
       // Disable
-      await _storage.setSmsAutomationEnabled(false);
-      setState(() {
-        _isEnabled = false;
-      });
+      try {
+        await _storage.setSmsAutomationEnabled(false);
+        if (mounted) {
+          setState(() {
+            _isEnabled = false;
+          });
+        }
+      } finally {
+        if (mounted) {
+          // Consistency
+        }
+      }
     }
   }
 
   Future<void> _updateMapping(int simSlot, String? walletId) async {
     if (walletId == null) return;
 
-    // Find selected wallet details
-    final wallet = _availableWallets.firstWhere((w) => w['id'] == walletId,
-        orElse: () => {});
-    if (wallet.isEmpty) return;
+    try {
+      // Find selected wallet details
+      final wallet = _availableWallets.firstWhere((w) => w['id'] == walletId,
+          orElse: () => {});
+      if (wallet.isEmpty) return;
 
-    final newConfig = SimWalletConfig(
-      simSlotIndex: simSlot,
-      walletId: walletId,
-      walletName: wallet['name'] ?? 'Unknown',
-      serviceProvider: wallet['type'] ?? 'Unknown',
-      subscriptionId:
-          null, // Depending on device capability, might update later
-    );
+      final newConfig = SimWalletConfig(
+        simSlotIndex: simSlot,
+        walletId: walletId,
+        walletName: wallet['name'] ?? 'Unknown',
+        serviceProvider: wallet['type'] ?? 'Unknown',
+        subscriptionId:
+            null, // Depending on device capability, might update later
+      );
 
-    // Update list
-    final mappings = _storage.getSimMappings();
-    mappings.removeWhere((m) => m.simSlotIndex == simSlot);
-    mappings.add(newConfig);
+      // Update list
+      final mappings = _storage.getSimMappings();
+      mappings.removeWhere((m) => m.simSlotIndex == simSlot);
+      mappings.add(newConfig);
 
-    await _storage.saveSimMappings(mappings);
+      await _storage.saveSimMappings(mappings);
 
-    setState(() {
-      if (simSlot == 0) _sim1Config = newConfig;
-      if (simSlot == 1) _sim2Config = newConfig;
-    });
+      if (mounted) {
+        setState(() {
+          if (simSlot == 0) _sim1Config = newConfig;
+          if (simSlot == 1) _sim2Config = newConfig;
+        });
+      }
+    } finally {
+      if (mounted) {
+        // Consistency
+      }
+    }
   }
 
   @override

@@ -94,7 +94,7 @@ class DebtRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtsStream');
-      return Stream.error(ServerException('فشل الحصول على تيار الديون: $e'));
+      return Stream.error(ServerException('debt_error_stream_failed'));
     }
   }
 
@@ -193,7 +193,7 @@ class DebtRepository {
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
         if (amountToPay > oldDebt.amountDue) {
-          throw InvalidAmountException('المبلغ المدفوع يتجاوز الدين المتبقي.');
+          throw InvalidAmountException('debt_error_amount_exceeded');
         }
 
         final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
@@ -206,11 +206,7 @@ class DebtRepository {
         final statsRef =
             _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
-        final statsSnap = await transaction.get(statsRef);
-        int currentOpenDebts = 0;
-        if (statsSnap.exists) {
-          currentOpenDebts = (statsSnap.data()?['openDebtsCount'] as int?) ?? 0;
-        }
+        await transaction.get(statsRef);
 
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
@@ -282,12 +278,7 @@ class DebtRepository {
         final statsRef =
             _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
 
-        final statsSnap = await transaction.get(statsRef);
-        int currentPaidDebts = 0;
-        if (statsSnap.exists) {
-          final data = statsSnap.data() as Map<String, dynamic>;
-          currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
-        }
+        await transaction.get(statsRef);
 
         final Map<String, dynamic> statsUpdates = {
           'lastUpdated': FieldValue.serverTimestamp(),
@@ -452,14 +443,7 @@ class DebtRepository {
             .collection(FirebaseConstants.statsCollection)
             .doc(FirebaseConstants.summaryDoc);
 
-        final statsSnap = await transaction.get(statsRef);
-        int currentOpenDebts = 0;
-        int currentPaidDebts = 0;
-        if (statsSnap.exists) {
-          final data = statsSnap.data() as Map<String, dynamic>;
-          currentOpenDebts = (data['openDebtsCount'] as int?) ?? 0;
-          currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
-        }
+        await transaction.get(statsRef);
 
         // Prepare Stats Updates
         final Map<String, dynamic> updates = {
@@ -502,8 +486,9 @@ class DebtRepository {
         throw NotFoundException('Debt');
       }
       return DebtModel.fromFirestore(doc);
-    }).handleError((error) {
-      AppErrorHandler.handle(error, operation: 'DebtRepository.watchDebt');
+    }).handleError((error, stack) {
+      AppErrorHandler.handle(error,
+          stackTrace: stack, operation: 'DebtRepository.watchDebt');
       throw error;
     });
   }
