@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
+import 'package:walletmanager/services/time_service.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
@@ -62,7 +63,7 @@ class TransactionProvider extends BaseProvider {
   }
 
   void _initializeDateRange() {
-    final now = DateTime.now();
+    final now = TimeService.now();
     _dateRange = DateTimeRange(
       start: DateHelper.getStartOfDay(now),
       end: DateHelper.getEndOfDay(now),
@@ -82,7 +83,7 @@ class TransactionProvider extends BaseProvider {
   }
 
   void _recomputeTodayTransactions() {
-    final now = DateTime.now();
+    final now = TimeService.now();
     _todayTransactions = _transactions.where((tx) {
       // Safe access for nullable transactionDate
       return DateHelper.isSameDay(tx.transactionDate ?? now, now);
@@ -163,9 +164,9 @@ class TransactionProvider extends BaseProvider {
       bool showToast = false,
       String operation = 'transaction_operation']) {
     if (kDebugMode) {
-      if (kDebugMode) debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
+      debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
       if (stack != null) {
-        if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
+        debugPrint('🔍 [STACK TRACE]: $stack');
       }
     }
 
@@ -182,13 +183,6 @@ class TransactionProvider extends BaseProvider {
     );
 
     safeNotify();
-  }
-
-  @override
-  void safeNotify() {
-    if (!isDisposed && hasListeners) {
-      notifyListeners();
-    }
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
@@ -308,7 +302,7 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final now = DateTime.now();
+      final now = TimeService.now();
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.generateId(),
         storeId: _currentStoreId!,
@@ -348,9 +342,9 @@ class TransactionProvider extends BaseProvider {
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } catch (e, stack) {
-      setError('auth_operation_failed', e, stack);
+      setError('transaction_error_create_failed', e, stack);
       if (!AppErrorHandler.isTestMode)
-        ToastUtils.showError('auth_operation_failed');
+        ToastUtils.showError('transaction_error_create_failed');
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {
@@ -370,7 +364,7 @@ class TransactionProvider extends BaseProvider {
     _transactions.add(transaction);
     // Sort by transactionDate descending to maintain consistency with Firestore stream
     // Safe comparison for nullable transactionDate
-    final now = DateTime.now();
+    final now = TimeService.now();
     _transactions.sort((a, b) =>
         (b.transactionDate ?? now).compareTo(a.transactionDate ?? now));
 

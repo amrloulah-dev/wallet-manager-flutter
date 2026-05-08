@@ -355,8 +355,15 @@ class WalletRepository {
         }
       }
 
-      if (walletsToResetInBatch > 0) {
-        await batch.commit();
+      try {
+        if (walletsToResetInBatch > 0) {
+          await batch.commit();
+        }
+      } catch (e, stack) {
+        AppErrorHandler.handle(e,
+            stackTrace: stack,
+            operation: 'WalletRepository.resetLimitsForWallets');
+        throw ServerException('wallet_error_update_failed');
       }
     }
 
