@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/errors/app_error_handler.dart';
+import '../../core/errors/error_severity.dart';
 import '../models/sim_wallet_config.dart';
 import '../models/wallet_model.dart';
 
@@ -284,7 +286,12 @@ class LocalStorageService {
       return mappings.firstWhere(
         (config) => config.simSlotIndex == simSlotIndex,
       );
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+        'Failed to find wallet for SIM slot $simSlotIndex: $e',
+        'LocalStorageService.getWalletForSim',
+        stackTrace: stack,
+      );
       return null;
     }
   }
@@ -319,7 +326,13 @@ class LocalStorageService {
     try {
       final List<dynamic> decoded = json.decode(jsonString);
       return decoded.cast<Map<String, dynamic>>();
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'LocalStorageService.getCachedWalletLiteList',
+      );
       return [];
     }
   }

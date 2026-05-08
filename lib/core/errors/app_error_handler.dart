@@ -74,13 +74,15 @@ class AppErrorHandler {
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
       if (!kDebugMode) {
+        // Trigger recording before returning false to ensure it starts before crash.
+        // We cannot explicitly 'await' here because this callback must be synchronous.
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       }
       handle(
         error,
         stackTrace: stack,
         severity: ErrorSeverity.critical,
-        operation: 'platform_dispatcher_error',
+        operation: 'platform_dispatcher',
       );
       return false;
     };
@@ -180,7 +182,8 @@ class AppErrorHandler {
         );
       } catch (e, stack) {
         if (kDebugMode) {
-          debugPrint('⚠️ [ERROR_HANDLER] Failed to show notification: $e\n$stack');
+          debugPrint(
+              '⚠️ [ERROR_HANDLER] Failed to show notification: $e\n$stack');
         }
       }
     }
@@ -212,7 +215,8 @@ class AppErrorHandler {
       }
     } catch (e, stack) {
       if (kDebugMode) {
-        debugPrint('⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e\n$stack');
+        debugPrint(
+            '⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e\n$stack');
       }
     }
   }

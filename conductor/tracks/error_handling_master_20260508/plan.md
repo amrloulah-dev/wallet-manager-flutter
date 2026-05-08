@@ -49,6 +49,10 @@
     - Standardize error keys in `WalletRepository`
     - Fix `overlayMain` error reporting
     - Clean up unused stack traces in `LocalStorageService`
+- [x] Task: Final Cleanup & Hardening
+    - Fix `LocalStorageService` silent swallows by adding logging to remaining catch blocks
+    - Standardize `PlatformDispatcher` trigger logic in `AppErrorHandler`
+    - Ensure all `lib/` files pass analysis with zero new violations
 
 ## Phase: Completion
 - [~] Task: Conductor - User Manual Verification 'Global Audit - Clean Architecture & UI Feedback' (Protocol in workflow.md)
