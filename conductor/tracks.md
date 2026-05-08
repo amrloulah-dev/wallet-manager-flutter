@@ -2,5 +2,5 @@
 
 ---
 
-- [x] **Track: Error Handling Master Blueprint**
-*Link: [./tracks/error_handling_master_20260508/](./tracks/error_handling_master_20260508/)*
+- [~] **Track: State Management Remediation**
+*Link: [./tracks/state_management_remediation_20260426/](./tracks/state_management_remediation_20260426/)*
