@@ -17,8 +17,9 @@ void main() async {
   runZonedGuarded(() async {
     // Ensure all bindings are initialized before async operations.
     WidgetsFlutterBinding.ensureInitialized();
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('🚀 [APP START] WidgetsFlutterBinding initialized.');
+    }
 
     // Initialize Error Handler early
     AppErrorHandler.init();
@@ -48,15 +49,18 @@ void main() async {
       // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
       Future.delayed(const Duration(seconds: 3), () async {
         try {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+          }
           await initializeBackgroundService();
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint(
                 '✅ [BACKGROUND] Service is now active and monitoring SMS.');
+          }
         } catch (e, stack) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('❌ [BACKGROUND] Failed to start Background Service: $e');
+          }
           AppErrorHandler.handle(e,
               severity: ErrorSeverity.medium,
               operation: 'background_service_init',

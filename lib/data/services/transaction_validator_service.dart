@@ -202,12 +202,14 @@ class TransactionValidatorService {
                 '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
             FieldValue.serverTimestamp();
 
-        if (needsDailyReset)
+        if (needsDailyReset) {
           walletUpdateData[FirebaseConstants.lastDailyReset] =
               FieldValue.serverTimestamp();
-        if (needsMonthlyReset)
+        }
+        if (needsMonthlyReset) {
           walletUpdateData[FirebaseConstants.lastMonthlyReset] =
               FieldValue.serverTimestamp();
+        }
 
         if (transaction.isSend) {
           walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] =
@@ -219,12 +221,14 @@ class TransactionValidatorService {
                   ? transaction.amount
                   : FieldValue.increment(transaction.amount);
 
-          if (needsDailyReset)
+          if (needsDailyReset) {
             walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] =
                 0.0;
-          if (needsMonthlyReset)
+          }
+          if (needsMonthlyReset) {
             walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] =
                 0.0;
+          }
         } else if (transaction.isReceive) {
           walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] =
               needsDailyReset
@@ -235,11 +239,13 @@ class TransactionValidatorService {
                   ? transaction.amount
                   : FieldValue.increment(transaction.amount);
 
-          if (needsDailyReset)
+          if (needsDailyReset) {
             walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
-          if (needsMonthlyReset)
+          }
+          if (needsMonthlyReset) {
             walletUpdateData['${FirebaseConstants.sendLimits}.monthlyUsed'] =
                 0.0;
+          }
         }
 
         if (transaction.isSend || transaction.isReceive) {

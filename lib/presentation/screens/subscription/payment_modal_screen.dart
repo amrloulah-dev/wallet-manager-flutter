@@ -4,6 +4,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/errors/app_error_handler.dart';
 import '../../../core/enums/subscription_enums.dart';
 
 class PaymentModalScreen extends StatefulWidget {
@@ -61,7 +62,12 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(loc.subscriptionRequestSent)),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'submit_subscription_request',
+      );
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(

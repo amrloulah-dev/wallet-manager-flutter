@@ -290,7 +290,9 @@ class StoreRepository {
         throw NotFoundException('store');
       }
       return PasswordHasher.verifyPassword(password, store.storePassword);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.verifyStorePassword');
       rethrow; // Rethrow the original exception (e.g., NotFoundException)
     }
   }
@@ -353,8 +355,9 @@ class StoreRepository {
         return StoreModel.fromFirestore(snapshot);
       }
       return null;
-    }).handleError((error) {
-      AppErrorHandler.handle(error, operation: 'StoreRepository.watchStore');
+    }).handleError((error, stack) {
+      AppErrorHandler.handle(error,
+          stackTrace: stack, operation: 'StoreRepository.watchStore');
       throw error;
     });
   }

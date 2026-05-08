@@ -12,6 +12,7 @@ import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/errors/app_error_handler.dart';
 import 'employee_login_screen.dart';
 import '../../../l10n/arb/app_localizations.dart';
 
@@ -79,13 +80,21 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       if (mounted) {
         _navigateBasedOnRole(authProvider);
       }
-    } on UserNotFoundException catch (e) {
+    } on UserNotFoundException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: UserNotFoundException');
       ToastUtils.showError(e.message);
-    } on WrongPasswordException catch (e) {
+    } on WrongPasswordException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: WrongPasswordException');
       ToastUtils.showError(e.message);
-    } on AuthException catch (e) {
+    } on AuthException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: AuthException');
       ToastUtils.showError(e.message);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: unexpected');
       if (mounted) {
         ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
       }

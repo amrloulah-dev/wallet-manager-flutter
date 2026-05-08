@@ -3,6 +3,7 @@ import '../../../../core/services/sms_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/toast_utils.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../../../data/models/sim_wallet_config.dart';
 import '../../../../data/services/local_storage_service.dart';
 import '../../../../l10n/arb/app_localizations.dart';
@@ -73,7 +74,12 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
         setState(() {
           _isEnabled = true;
         });
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          operation: 'toggle_sms_automation',
+        );
         if (mounted) {
           ToastUtils.showError('Required permissions missing: $e');
         }

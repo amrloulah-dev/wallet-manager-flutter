@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../domain/entities/auth_user.dart';
 import '../data/repositories/auth_repository.dart';

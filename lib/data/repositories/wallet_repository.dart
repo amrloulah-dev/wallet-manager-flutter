@@ -89,10 +89,11 @@ class WalletRepository {
         for (final doc in snapshot.docs) {
           try {
             wallets.add(WalletModel.fromFirestore(doc));
-          } catch (e) {
+          } catch (e, stack) {
             AppErrorHandler.logSilentError(
                 'Malformed wallet doc: ${doc.id} | error: $e',
-                'wallet_stream_corruption');
+                'wallet_stream_corruption',
+                stackTrace: stack);
           }
         }
         return wallets;
@@ -140,10 +141,11 @@ class WalletRepository {
       for (final doc in snapshot.docs) {
         try {
           items.add(WalletModel.fromFirestore(doc));
-        } catch (e) {
+        } catch (e, stack) {
           AppErrorHandler.logSilentError(
               'Malformed wallet doc in list: ${doc.id} | error: $e',
-              'wallet_list_corruption');
+              'wallet_list_corruption',
+              stackTrace: stack);
         }
       }
       final lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
@@ -159,7 +161,9 @@ class WalletRepository {
     try {
       final summary = await _statsRepository.getStatsSummary(storeId);
       return summary.totalBalance;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'WalletRepository.getTotalBalance');
       throw ServerException('Failed to get total balance: $e');
     }
   }
@@ -168,7 +172,9 @@ class WalletRepository {
     try {
       final summary = await _statsRepository.getStatsSummary(storeId);
       return summary.activeWallets;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'WalletRepository.getWalletsCount');
       throw ServerException('Failed to get wallets count: $e');
     }
   }
@@ -304,7 +310,9 @@ class WalletRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'WalletRepository.setWalletActiveStatus');
       if (e is AppException) rethrow;
       throw ServerException('Failed to update wallet active status: $e');
     }

@@ -93,11 +93,12 @@ class AppErrorHandler {
   static void logSilentError(String error, String reason,
       {StackTrace? stackTrace}) {
     if (kDebugMode || isTestMode) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
           '🤫 [SILENT ERROR] [$reason] $error\n'
           '  Stack: ${stackTrace ?? StackTrace.current}',
         );
+      }
       developer.log(
         error,
         name: 'SILENT_ERROR',
@@ -227,12 +228,13 @@ class AppErrorHandler {
     if (kDebugMode) {
       final timestamp = DateTime.now().toUtc().toIso8601String();
       final stack = stackTrace?.toString() ?? 'No stack trace available';
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
           '[ERROR] [${severity.name}] [$operation] $message\n'
           '  Stack: $stack\n'
           '  Timestamp: $timestamp',
         );
+      }
     }
   }
 }

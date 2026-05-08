@@ -74,9 +74,10 @@ Future<void> onStart(ServiceInstance service) async {
 
   // ── 4. Guard: Only listen if SMS automation is enabled ────
   if (!storage.isSmsAutomationEnabled) {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
           '🛑 [BACKGROUND] SMS automation is disabled. Stopping service.');
+    }
     service.stopSelf();
     return;
   }
@@ -111,10 +112,12 @@ void backgroundSmsCallback(SmsMessage message) async {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();
     }
-  } catch (e) {
+  } catch (e, stack) {
     // If Firebase itself fails, we can only debugPrint — no Crashlytics available
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('[CRITICAL] [backgroundSmsCallback] Firebase init failed: $e');
+    }
+    AppErrorHandler.logSilentError(e.toString(), 'backgroundSmsCallback_firebase_init', stackTrace: stack);
   }
 
   try {
@@ -122,9 +125,10 @@ void backgroundSmsCallback(SmsMessage message) async {
     await storage.initialize();
 
     if (!storage.isSmsAutomationEnabled) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             'ℹ️ [BACKGROUND] SMS callback ignored: Automation disabled.');
+      }
       return;
     }
 

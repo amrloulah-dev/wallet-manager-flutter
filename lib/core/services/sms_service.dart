@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 
@@ -92,8 +93,9 @@ class SmsService {
           'Background reliability may be reduced without battery optimization exemption.',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) debugPrint('Error requesting additional permissions: $e');
+      AppErrorHandler.logSilentError(e.toString(), 'SmsService.init_permissions', stackTrace: stack);
     }
 
     return true;
@@ -107,7 +109,8 @@ class SmsService {
       final bool? result =
           await Telephony.instance.requestPhoneAndSmsPermissions;
       return result ?? false;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'SmsService.requestSmsPermission', stackTrace: stack);
       return false;
     }
   }

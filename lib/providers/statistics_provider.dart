@@ -6,6 +6,7 @@ import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../core/utils/number_parser.dart';
+import '../core/errors/app_error_handler.dart';
 import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
@@ -86,19 +87,22 @@ class StatisticsProvider extends BaseProvider {
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
           '🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
+    }
     if (_storeId == null) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
+      }
       return;
     }
 
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
+      }
       return; // Abort the fetch
     }
 
@@ -108,9 +112,10 @@ class StatisticsProvider extends BaseProvider {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
+        }
         _dashboardSummary = _cachedSummary;
         safeNotify();
       }
@@ -126,48 +131,55 @@ class StatisticsProvider extends BaseProvider {
 
     _activateFetchShield();
 
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
           '⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
+    }
 
     // Phase 4: Ensure stats are initialized before watching
     try {
       await _statsRepository.getStatsSummary(_storeId!);
-    } catch (e) {
-      if (kDebugMode)
+    } catch (e, stack) {
+      if (kDebugMode) {
         debugPrint(
             '⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
+      }
+      AppErrorHandler.logSilentError(e.toString(), 'StatisticsProvider.fetchDashboardStats', stackTrace: stack);
     }
 
     // 1. Establish Summary Stream
     _summarySubscription =
         _statsRepository.watchStatsSummary(_storeId!).listen((summary) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
+      }
       _dashboardSummary = summary;
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
+      }
       setError('stats_error_summary_fetch', e, stack);
     });
 
     // 2. Establish Today Stats Stream
     _todayStatsSubscription =
         _statsRepository.watchTodayStats(_storeId!).listen((today) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
+      }
       _todayStats = today;
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
+      }
       setError('stats_error_today_fetch', e, stack);
     });
   }

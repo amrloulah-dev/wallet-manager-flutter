@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
 
@@ -90,15 +91,28 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           storePassword: _storePasswordController.text,
         );
       }
-    } on EmailAlreadyInUseException catch (e) {
+    } on EmailAlreadyInUseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRegistration: EmailAlreadyInUseException');
       ToastUtils.showError(e.message);
-    } on WeakPasswordException catch (e) {
+    } on WeakPasswordException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRegistration: WeakPasswordException');
       ToastUtils.showError(e.message);
-    } on NetworkException catch (e) {
+    } on NetworkException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRegistration: NetworkException');
       ToastUtils.showError(e.message);
-    } on StoreInactiveException catch (e) {
+    } on StoreInactiveException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRegistration: StoreInactiveException');
       ToastUtils.showError(e.message);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRegistration: unexpected');
       ToastUtils.showError(
           e is AppException ? e.message : "${l10n.unexpectedError}: $e");
     } finally {

@@ -9,6 +9,7 @@ import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/store_model.dart';
+import '../../../core/errors/app_error_handler.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -31,7 +32,12 @@ class AppDrawer extends StatelessWidget {
             RouteConstants.loginLanding,
             (route) => false,
           );
-        } catch (e) {
+        } catch (e, stack) {
+          AppErrorHandler.handle(
+            e,
+            stackTrace: stack,
+            operation: 'logout',
+          );
           if (currentContext.mounted) {
             ToastUtils.showError(
                 '${AppLocalizations.of(currentContext)!.logoutFailed}: $e');

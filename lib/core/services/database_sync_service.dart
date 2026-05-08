@@ -140,7 +140,8 @@ class DatabaseSyncService {
           await _authRepository.signInWithEmail(email, password);
       final user = userCredential.user!;
       return await _finalizeOwnerLogin(user.uid);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService.loginOwnerWithEmail', stackTrace: stack);
       await _authRepository.signOut();
       rethrow;
     }
@@ -208,7 +209,8 @@ class DatabaseSyncService {
         await _userRepository
             .updateUser(employee.userId, {'firebaseUid': newUid});
         employee = employee.copyWith(firebaseUid: newUid);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService.loginAsEmployee', stackTrace: stack);
         await _authRepository.signOut();
         rethrow;
       }
@@ -473,14 +475,16 @@ class DatabaseSyncService {
           phone: phone, storeId: storeId, pin: pin);
       if (uid != null) return uid;
       throw Exception('Initial provisioning returned null');
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService._lazyProvision_initial', stackTrace: stack);
       await Future.delayed(const Duration(seconds: 1));
       try {
         final uid = await IdentityService.provisionIdentity(
             phone: phone, storeId: storeId, pin: pin);
         if (uid != null) return uid;
         throw Exception('Retry provisioning returned null');
-      } catch (retryError) {
+      } catch (retryError, retryStack) {
+        AppErrorHandler.logSilentError(retryError.toString(), 'DatabaseSyncService._lazyProvision_retry', stackTrace: retryStack);
         throw Exception('Failed to provision employee identity.');
       }
     }

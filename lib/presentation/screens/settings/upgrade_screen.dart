@@ -10,6 +10,7 @@ import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class UpgradeScreen extends StatefulWidget {
   final bool isTrial;
@@ -127,7 +128,12 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                                 l10n.subscriptionActivatedSuccessfully);
                             Navigator.pop(context);
                           }
-                        } catch (e) {
+                        } catch (e, stack) {
+                          AppErrorHandler.handle(
+                            e,
+                            stackTrace: stack,
+                            operation: 'activate_new_license',
+                          );
                           ToastUtils.showError(
                               auth.errorMessage ?? l10n.activationFailed);
                         }
@@ -261,7 +267,12 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     final uri = Uri.parse(url);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'launch_whatsapp',
+      );
       if (context.mounted) {
         ToastUtils.showError(l10n.failedOpenWhatsApp);
       }
@@ -281,7 +292,12 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     );
     try {
       await launchUrl(emailLaunchUri);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'launch_email',
+      );
       if (context.mounted) {
         ToastUtils.showError(l10n.failedOpenEmail);
       }

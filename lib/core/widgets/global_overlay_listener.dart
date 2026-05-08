@@ -8,6 +8,7 @@ import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
@@ -44,8 +45,9 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         _fetchAndApplyData();
       }
     }, onError: (error) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('❌ [PORT] GlobalOverlayListener port error: $error');
+      }
     });
   }
 
@@ -112,9 +114,11 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       }
 
       await _storage.clearVault();
-    } catch (e) {
-      if (kDebugMode)
+    } catch (e, stack) {
+      if (kDebugMode) {
         debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
+      }
+      AppErrorHandler.logSilentError(e.toString(), 'GlobalOverlayListener._fetchAndApplyData', stackTrace: stack);
     }
   }
 

@@ -65,16 +65,18 @@ class TransactionRepository {
   Future<void> createTransaction(TransactionModel transaction) async {
     AmountValidator.ensurePositive(transaction.amount);
     try {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'RECEIVED | txId=${transaction.transactionId}, '
             'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
             'amount=${transaction.amount}, commission=${transaction.commission}');
-      if (kDebugMode)
+      }
+      if (kDebugMode) {
         debugPrint(
             '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'Delegating to TransactionValidatorService.validateAndSave ...');
+      }
 
       // Delegate entirely to the unified validator which handles
       // balance, stats, and daily_stats atomically inside runTransaction.
@@ -100,10 +102,14 @@ class TransactionRepository {
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_${transaction.walletId}');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.createTransaction');
       throw ServerException('Failed to create transaction: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.createTransaction');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while creating the transaction.');
@@ -139,15 +145,22 @@ class TransactionRepository {
         for (final doc in snapshot.docs) {
           try {
             items.add(TransactionModel.fromFirestore(doc));
-          } catch (e) {
+          } catch (e, stack) {
             AppErrorHandler.logSilentError(
                 'Malformed tx doc in stream: ${doc.id} | error: $e',
-                'transaction_stream_corruption');
+                'transaction_stream_corruption',
+                stackTrace: stack);
           }
         }
         return items;
+      }).handleError((error, stack) {
+        AppErrorHandler.handle(error,
+            stackTrace: stack, operation: 'TransactionRepository.getTransactionsStream');
+        throw error;
       });
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getTransactionsStream');
       return Stream.error(ServerException('فشل الحصول على تيار المعاملات: $e'));
     }
   }
@@ -163,10 +176,14 @@ class TransactionRepository {
       final tx = TransactionModel.fromFirestore(doc);
       _cacheManager.set(cacheKey, tx, duration: const Duration(minutes: 10));
       return tx;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getTransactionById');
       throw ServerException('Failed to get transaction: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getTransactionById');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while fetching the transaction.');
@@ -199,10 +216,11 @@ class TransactionRepository {
       for (final doc in snapshot.docs) {
         try {
           items.add(TransactionModel.fromFirestore(doc));
-        } catch (e) {
+        } catch (e, stack) {
           AppErrorHandler.logSilentError(
               'Malformed tx doc in date range list: ${doc.id} | error: $e',
-              'transaction_date_list_corruption');
+              'transaction_date_list_corruption',
+              stackTrace: stack);
         }
       }
 
@@ -210,11 +228,15 @@ class TransactionRepository {
         items: items,
         lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
       );
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
       throw ServerException(
           'Failed to get transactions by date range: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
       throw ServerException(
           'An unexpected error occurred while fetching transactions.');
     }
@@ -231,10 +253,14 @@ class TransactionRepository {
       await _transactionsCollection.doc(transactionId).update(updateData);
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clear('transaction_details_$transactionId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
       throw ServerException('Failed to update transaction: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
       throw ServerException(
           'An unexpected error occurred while updating the transaction.');
     }
@@ -250,10 +276,14 @@ class TransactionRepository {
       });
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clear('transaction_details_$transactionId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
       throw ServerException('Failed to delete transaction: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
       throw ServerException(
           'An unexpected error occurred while deleting the transaction.');
     }
@@ -277,10 +307,11 @@ class TransactionRepository {
       for (final doc in snapshot.docs) {
         try {
           items.add(TransactionModel.fromFirestore(doc));
-        } catch (e) {
+        } catch (e, stack) {
           AppErrorHandler.logSilentError(
               'Malformed tx doc in all list: ${doc.id} | error: $e',
-              'transaction_all_list_corruption');
+              'transaction_all_list_corruption',
+              stackTrace: stack);
         }
       }
 
@@ -288,10 +319,14 @@ class TransactionRepository {
         items: items,
         lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
       );
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
       throw ServerException('Failed to get all transactions: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
       throw ServerException(
           'An unexpected error occurred while fetching all transactions.');
     }

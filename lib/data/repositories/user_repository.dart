@@ -186,7 +186,9 @@ class UserRepository {
     try {
       final doc = await _usersCollection.doc(userId).get();
       return doc.exists;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'UserRepository.userExists');
       return false;
     }
   }
@@ -196,7 +198,9 @@ class UserRepository {
     try {
       final user = await getUserByFirebaseUid(firebaseUid);
       return user != null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'UserRepository.userExistsByFirebaseUid');
       return false;
     }
   }
@@ -279,7 +283,9 @@ class UserRepository {
         return false; // No PIN set
       }
       return PasswordHasher.verifyPassword(pin, user.pin!);
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'UserRepository.verifyEmployeePin');
       rethrow;
     }
   }

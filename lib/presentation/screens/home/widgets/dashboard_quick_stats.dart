@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
+import 'package:walletmanager/core/utils/number_formatter.dart';
+import 'package:walletmanager/presentation/widgets/dashboard/stats_card.dart';
 import '../../../../data/models/stats_summary_model.dart';
 import '../../../../data/models/daily_stats_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../../../core/constants/route_constants.dart';
-import '../../../../core/utils/toast_utils.dart';
-import '../../../../providers/statistics_provider.dart';
-import '../../../../providers/auth_provider.dart';
-import 'package:walletmanager/core/utils/number_formatter.dart';
-import 'package:walletmanager/l10n/arb/app_localizations.dart';
-import '../../../widgets/common/skeleton_card.dart';
-import '../../../widgets/dashboard/stats_card.dart';
-import '../../../../core/enums/user_enums.dart';
 
 class DashboardQuickStats extends StatelessWidget {
   const DashboardQuickStats({super.key});
@@ -216,7 +216,10 @@ class DashboardQuickStats extends StatelessWidget {
               ),
             ]),
           );
-        } catch (e) {
+        } catch (e, stack) {
+          AppErrorHandler.logSilentError(e.toString(),
+              'DashboardQuickStats: UI render failure',
+              stackTrace: stack);
           return SliverToBoxAdapter(
             child: Center(
               child: Text(

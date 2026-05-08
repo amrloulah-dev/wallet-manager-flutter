@@ -1,7 +1,6 @@
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
@@ -9,6 +8,7 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/state/safe_change_notifier.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService;
@@ -161,7 +161,10 @@ class OverlayProvider extends SafeChangeNotifier {
       } else {
         _selectedWalletId = null;
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(),
+          'OverlayProvider: Failed to ingest event',
+          stackTrace: stack);
       _errorMessage = 'Failed to load data: $e';
     } finally {
       _isLoading = false;
@@ -286,7 +289,9 @@ class OverlayProvider extends SafeChangeNotifier {
             'closing overlay window ...');
       }
       await FlutterOverlayWindow.closeOverlay();
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack,
+          operation: 'OverlayProvider: Failed to submit transaction');
       _errorMessage = e.toString();
       if (kDebugMode) {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '

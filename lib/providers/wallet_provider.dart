@@ -152,9 +152,10 @@ class WalletProvider extends BaseProvider {
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '🔥 [TX_FLOW] LOCAL MUTATION: walletId=$walletId not in RAM — skipping.');
+      }
       return;
     }
 
@@ -245,18 +246,21 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
           '🚀 [INIT START] WalletProvider: fetchInitialWallets(forceRefresh: $forceRefresh)');
+    }
     if (_currentStoreId == null) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('⚠️ [INIT ABORT] WalletProvider: No currentStoreId');
+      }
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '🛡️ [INIT SHIELD] WalletProvider: Fetch shield active, skipping.');
+      }
       return;
     }
 
@@ -265,9 +269,10 @@ class WalletProvider extends BaseProvider {
     safeNotify();
 
     try {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '⏳ [INIT DATA] WalletProvider: Requesting wallets from repository...');
+      }
 
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID missing'));
@@ -275,9 +280,10 @@ class WalletProvider extends BaseProvider {
       final result = await _walletRepository.getAllWallets(
         storeId,
       );
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '✅ [INIT SUCCESS] WalletProvider: Fetched ${result.items.length} wallets.');
+      }
 
       _wallets = result.items;
       _lastDocument = result.lastDocument;
@@ -289,9 +295,10 @@ class WalletProvider extends BaseProvider {
           .toList();
 
       if (walletsNeedingReset.isNotEmpty) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '🔄 [INIT DATA] WalletProvider: Resetting limits for ${walletsNeedingReset.length} wallets.');
+        }
         // Trigger the backend update asynchronously
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
@@ -410,8 +417,9 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('auth_operation_failed', e, stack);
-      if (!AppErrorHandler.isTestMode)
+      if (!AppErrorHandler.isTestMode) {
         ToastUtils.showError('auth_operation_failed');
+      }
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -454,8 +462,9 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_update_failed', e, stack);
-      if (!AppErrorHandler.isTestMode)
+      if (!AppErrorHandler.isTestMode) {
         ToastUtils.showError('wallet_error_update_failed');
+      }
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -507,8 +516,9 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_balance_topup_failed', e, stack);
-      if (!AppErrorHandler.isTestMode)
+      if (!AppErrorHandler.isTestMode) {
         ToastUtils.showError('wallet_error_balance_topup_failed');
+      }
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
@@ -552,8 +562,9 @@ class WalletProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);
-      if (!AppErrorHandler.isTestMode)
+      if (!AppErrorHandler.isTestMode) {
         ToastUtils.showError('wallet_error_delete_failed');
+      }
       _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {

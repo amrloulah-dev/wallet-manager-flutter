@@ -186,18 +186,21 @@ class TransactionProvider extends BaseProvider {
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
           '🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
+    }
     if (_currentStoreId == null) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
+      }
       return;
     }
     if (!forceRefresh && _fetchShieldActive) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
+      }
       return;
     }
 
@@ -206,18 +209,20 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
+      }
       final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
         lastDocument: null,
       );
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
+      }
 
       _transactions = result.items;
       _lastDocument = result.lastDocument;
@@ -227,8 +232,9 @@ class TransactionProvider extends BaseProvider {
       _recomputeTodayTransactions();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
+      }
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
       setError('transaction_error_fetch_failed', e, stack);
     } finally {
@@ -343,8 +349,9 @@ class TransactionProvider extends BaseProvider {
       return false;
     } catch (e, stack) {
       setError('transaction_error_create_failed', e, stack);
-      if (!AppErrorHandler.isTestMode)
+      if (!AppErrorHandler.isTestMode) {
         ToastUtils.showError('transaction_error_create_failed');
+      }
       _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {

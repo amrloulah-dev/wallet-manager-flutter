@@ -307,7 +307,9 @@ class DebtProvider extends BaseProvider {
 
       try {
         await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.addPartialDebt');
         rethrow;
       }
 
@@ -334,7 +336,9 @@ class DebtProvider extends BaseProvider {
 
       try {
         await _debtRepository.updateDebt(debtId, data);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.updateDebt');
         rethrow;
       }
 
@@ -362,7 +366,9 @@ class DebtProvider extends BaseProvider {
 
       try {
         await _debtRepository.processPayment(debtId, amountToPay, userId);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.payPartialDebt');
         rethrow;
       }
 
@@ -389,7 +395,9 @@ class DebtProvider extends BaseProvider {
 
       try {
         await _debtRepository.deleteDebt(debtId);
-      } catch (e) {
+      } catch (e, stack) {
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.deleteDebt');
         rethrow;
       }
 

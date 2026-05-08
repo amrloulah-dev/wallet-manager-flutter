@@ -15,6 +15,8 @@ import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../domain/usecases/transaction_fee_calculator.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/errors/app_error_handler.dart';
+import '../../../core/errors/error_severity.dart';
 import '../../../core/di/service_locator.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
@@ -100,7 +102,13 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         _serviceFee = result.serviceFee;
         _totalAmount = result.totalAmount;
       });
-    } on DomainException catch (e) {
+    } on DomainException catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'calculate_total',
+        severity: ErrorSeverity.low,
+      );
       // Surface domain errors (like negative amount) via toast or similar
       if (kDebugMode) {
         debugPrint(
@@ -111,7 +119,12 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         _serviceFee = 0.0;
         _totalAmount = 0.0;
       });
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'calculate_total',
+      );
       if (kDebugMode) {
         debugPrint('❌ [TX_CALC] Unexpected error during calculation: $e');
       }
@@ -152,7 +165,12 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         _showErrorDialog(transactionProvider.errorMessage ??
             AppLocalizations.of(context)!.transactionCreateFailed);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'create_transaction',
+      );
       if (mounted) {
         _showErrorDialog(transactionProvider.errorMessage ?? e.toString());
       }

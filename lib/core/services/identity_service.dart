@@ -15,20 +15,21 @@ class IdentityService {
     if (authOverride != null) return;
     if (_secondaryApp != null) return;
     try {
-      _secondaryApp = Firebase.app('employeeAuth');
-    } catch (e) {
-      try {
+      if (Firebase.apps.any((app) => app.name == 'employeeAuth')) {
+        _secondaryApp = Firebase.app('employeeAuth');
+      } else {
         _secondaryApp = await Firebase.initializeApp(
           name: 'employeeAuth',
           options: Firebase.app().options,
         );
-      } catch (initError) {
-        AppErrorHandler.handle(
-          Exception('Failed to initialize secondary Firebase app: \$initError'),
-          severity: ErrorSeverity.low,
-          operation: 'IdentityService._ensureInitialized',
-        );
       }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        severity: ErrorSeverity.low,
+        operation: 'IdentityService._ensureInitialized',
+        stackTrace: stack,
+      );
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../services/firebase_service.dart';
 import '../services/google_sign_in_service.dart';
@@ -36,7 +37,9 @@ class AuthRepository {
       }
 
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithGoogle');
       switch (e.code) {
         case 'account-exists-with-different-credential':
           throw AuthException(
@@ -53,7 +56,9 @@ class AuthRepository {
           throw AuthException(
               'حدث خطأ غير معروف أثناء تسجيل الدخول: ${e.message}');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithGoogle');
       throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.toString()}');
     }
   }
@@ -62,7 +67,9 @@ class AuthRepository {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'sendPasswordResetEmail');
       switch (e.code) {
         case 'user-not-found':
           throw UserNotFoundException();
@@ -71,7 +78,9 @@ class AuthRepository {
         default:
           throw AuthException('auth_error_reset_failed');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'sendPasswordResetEmail');
       throw AuthException('auth_error_unexpected');
     }
   }
@@ -89,11 +98,14 @@ class AuthRepository {
           await googleSignIn.signOut();
           await googleSignIn.disconnect(); // اختياري حسب الحاجة
         }
-      } catch (e) {
+      } catch (e, stack) {
         // لو الجهاز هواوي أو مفيهوش خدمات جوجل، هنتجاهل الخطأ ده
+        AppErrorHandler.logSilentError(e.toString(), 'google_sign_out_failed',
+            stackTrace: stack);
       }
-    } catch (e) {
+    } catch (e, stack) {
       // لو الخروج من فايربيس نفسه فشل، دي مشكلة حقيقية
+      await AppErrorHandler.handle(e, stackTrace: stack, operation: 'signOut');
       throw AuthException('فشل تسجيل الخروج: $e');
     }
   }
@@ -109,7 +121,9 @@ class AuthRepository {
         password: password,
       );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithEmail');
       switch (e.code) {
         case 'user-not-found':
         case 'wrong-password':
@@ -122,7 +136,9 @@ class AuthRepository {
         default:
           throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.message}');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithEmail');
       throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
     }
   }
@@ -136,7 +152,9 @@ class AuthRepository {
         password: password,
       );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'createUserWithEmail');
       switch (e.code) {
         case 'email-already-in-use':
           throw AuthException('البريد الإلكتروني مستخدم بالفعل.');
@@ -149,7 +167,9 @@ class AuthRepository {
         default:
           throw AuthException('حدث خطأ أثناء إنشاء الحساب: ${e.message}');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'createUserWithEmail');
       throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
     }
   }
@@ -210,7 +230,9 @@ class AuthRepository {
   Future<void> reloadUser() async {
     try {
       await _auth.currentUser?.reload();
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'reloadUser');
       throw AuthException('فشل في تحديث بيانات المستخدم: ${e.toString()}');
     }
   }

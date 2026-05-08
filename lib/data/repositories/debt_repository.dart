@@ -91,7 +91,9 @@ class DebtRepository {
         }
         return debts;
       });
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsStream');
       return Stream.error(ServerException('فشل الحصول على تيار الديون: $e'));
     }
   }
@@ -110,9 +112,13 @@ class DebtRepository {
       final debt = DebtModel.fromFirestore(doc);
       _cacheManager.set(cacheKey, debt, duration: const Duration(minutes: 10));
       return debt;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtById');
       throw ServerException('Failed to get debt: ${e.message}', code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtById');
       throw ServerException(
           'An unexpected error occurred while fetching the debt.');
     }
@@ -131,10 +137,14 @@ class DebtRepository {
         return DebtModel.fromFirestore(snapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
       throw ServerException('Failed to get debt by customer name: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
       throw ServerException(
           'An unexpected error occurred while fetching debt by customer name.');
     }
@@ -152,11 +162,15 @@ class DebtRepository {
         return DebtModel.fromFirestore(snapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
       throw ServerException(
           'Failed to get debt by customer phone: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
       throw ServerException(
           'An unexpected error occurred while fetching debt by customer phone.');
     }
@@ -227,10 +241,14 @@ class DebtRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.processPayment');
       throw ServerException('Failed to process payment: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.processPayment');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while processing the payment: $e');
@@ -291,10 +309,14 @@ class DebtRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
       throw ServerException('Failed to add partial debt: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
       if (e is AppException) rethrow;
       throw ServerException(
           'An unexpected error occurred while adding partial debt: $e');
@@ -306,10 +328,14 @@ class DebtRepository {
       await _debtsCollection.doc(debtId).update(data);
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.updateDebt');
       throw ServerException('Failed to update debt: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.updateDebt');
       throw ServerException(
           'An unexpected error occurred while updating the debt.');
     }
@@ -347,10 +373,14 @@ class DebtRepository {
         items: items,
         lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
       );
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
       throw ServerException('Failed to get debts by date range: ${e.message}',
           code: e.code);
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
       throw ServerException(
           'An unexpected error occurred while fetching debts by date range.');
     }
@@ -371,7 +401,9 @@ class DebtRepository {
       final countQuery = query.count();
       final snapshot = await countQuery.get();
       return snapshot.count ?? 0;
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsCount');
       return 0;
     }
   }

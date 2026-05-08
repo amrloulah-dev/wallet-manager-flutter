@@ -4,6 +4,7 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../../../../core/utils/toast_utils.dart';
+import '../../../../core/errors/app_error_handler.dart';
 import '../../../../l10n/arb/app_localizations.dart';
 import '../../../../providers/auth_provider.dart';
 
@@ -48,7 +49,12 @@ class LogoutButton extends StatelessWidget {
             RouteConstants.loginLanding,
             (route) => false,
           );
-        } catch (e) {
+        } catch (e, stack) {
+          AppErrorHandler.handle(
+            e,
+            stackTrace: stack,
+            operation: 'logout_dialog',
+          );
           if (currentContext.mounted) {
             ToastUtils.showError(
                 '${AppLocalizations.of(currentContext)!.logoutFailed}: $e');
