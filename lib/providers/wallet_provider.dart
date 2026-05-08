@@ -318,15 +318,13 @@ class WalletProvider extends BaseProvider {
       await _walletRepository.createWallet(newWallet);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      setError(e.message, e);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_create_failed', e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
       if (_status == WalletProviderStatus.creating) {
@@ -350,15 +348,13 @@ class WalletProvider extends BaseProvider {
       await _walletRepository.updateWallet(walletId, data);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      setError(e.message, e);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_update_failed', e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
       if (_status == WalletProviderStatus.updating) {
@@ -391,15 +387,13 @@ class WalletProvider extends BaseProvider {
       );
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      setError(e.message, e);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_balance_topup_failed', e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
       if (_status == WalletProviderStatus.updating) {
@@ -416,15 +410,13 @@ class WalletProvider extends BaseProvider {
       await _walletRepository.deleteWallet(walletId);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      setError(e.message, e);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } catch (e, stack) {
       setError('wallet_error_delete_failed', e, stack);
       _handleUIFeedback();
-      _updateStatus(WalletProviderStatus.error);
       return false;
     } finally {
       if (_status == WalletProviderStatus.deleting) {

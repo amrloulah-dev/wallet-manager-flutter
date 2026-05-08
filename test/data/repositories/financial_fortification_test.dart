@@ -3,7 +3,6 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:mocktail/mocktail.dart';

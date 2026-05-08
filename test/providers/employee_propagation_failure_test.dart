@@ -3,7 +3,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
-import 'package:walletmanager/data/models/user_model.dart';
 
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
 

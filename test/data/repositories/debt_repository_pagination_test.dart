@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
-import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:mocktail/mocktail.dart';

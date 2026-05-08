@@ -20,26 +20,35 @@
     - [ ] Update `PlatformDispatcher.instance.onError` to explicitly await `Crashlytics.recordError(error, stack, fatal: true)` before returning `false`
     - [ ] Replace silent swallow `// Swallow` in `handleIncomingSms` with `AppErrorHandler.logSilentError(e.toString(), 'SMS_Pipeline', stackTrace: stack, fatal: false)`
     - [ ] Wrap `_showWakeUpNotification` in its own isolated `try/catch` and log `PlatformException` silently without aborting
-- [ ] Task: Conductor - User Manual Verification 'Surgical Fixes - Error Propagation & Architecture' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Surgical Fixes - Error Propagation & Architecture' (Protocol in workflow.md) [0803fac]
 
 ## Phase 2: Surgical Fixes - Tech Debt & Configs
-- [ ] Task: Fix Tech Debt in Providers and Repositories
+- [x] Task: Fix Tech Debt in Providers and Repositories [e48e9e2]
     - [ ] Fix incorrect error code `'auth_operation_failed'` in `transaction_provider.dart`
     - [ ] Delete overridden `safeNotify()` method in `transaction_provider.dart`
     - [ ] Replace `DateTime.now()` with `TimeService.now()` in `TransactionProvider._initializeDateRange`
     - [ ] Wrap batch commits in `WalletRepository.resetLimitsForWallets` in `try/catch` block and throw a typed `AppException`
     - [ ] Fix `SubscriptionProvider.submitSubscriptionRequest` by replacing bare `throw Exception(...)` with typed `throw AppException(...)`
-- [ ] Task: Conductor - User Manual Verification 'Surgical Fixes - Tech Debt & Configs' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Surgical Fixes - Tech Debt & Configs' (Protocol in workflow.md) [e48e9e2]
 
 ## Phase 3: Global Audit - Error Handling & StackTraces
-- [ ] Task: Global Audit for `catch (e)` and unhandled catches
+- [x] Task: Global Audit for `catch (e)` and unhandled catches [188a1b4]
     - [ ] Scan entire `lib/` directory for `catch (e) {` (missing stack parameter) and convert to `catch (e, stack)`
     - [ ] Scan EVERY `catch` block across `lib/` to guarantee that either `AppErrorHandler.handle()` or `AppErrorHandler.logSilentError()` is called. Fix any block that only returns a value without reporting.
-- [ ] Task: Conductor - User Manual Verification 'Global Audit - Error Handling & StackTraces' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Global Audit - Error Handling & StackTraces' (Protocol in workflow.md) [188a1b4]
 
 ## Phase 4: Global Audit - Clean Architecture & UI Feedback
-- [ ] Task: Global Audit for Architecture Boundaries
+- [x] Task: Global Audit for Architecture Boundaries [b692638]
     - [ ] Scan `lib/data/repositories/` and remove ALL hardcoded Arabic strings, replacing them with `AppException('localization_key')` or `ServerException('internal_code')`
     - [ ] Scan for `ToastUtils.showError` containing raw `$e` or `e.toString()` and replace with `l10n.unexpectedError`
     - [ ] Scan async UI flows that mutate `isLoading` to ensure a corresponding `finally` block exists
-- [ ] Task: Conductor - User Manual Verification 'Global Audit - Clean Architecture & UI Feedback' (Protocol in workflow.md)
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions
+    - Convert remaining `catch (e)` to `catch (e, stack)`
+    - Remove `rethrow` from `AuthProvider`
+    - Standardize error keys in `WalletRepository`
+    - Fix `overlayMain` error reporting
+    - Clean up unused stack traces in `LocalStorageService`
+
+## Phase: Completion
+- [~] Task: Conductor - User Manual Verification 'Global Audit - Clean Architecture & UI Feedback' (Protocol in workflow.md)

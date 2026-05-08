@@ -133,10 +133,16 @@ void overlayMain() async {
     await Firebase.initializeApp();
     await setupServiceLocator();
     runApp(const TransactionOverlayApp());
-  } catch (e) {
+  } catch (e, stack) {
     if (kDebugMode) {
       debugPrint("❌ Overlay init error: $e");
     }
+    AppErrorHandler.handle(
+      e,
+      stackTrace: stack,
+      severity: ErrorSeverity.critical,
+      operation: 'overlay_init',
+    );
     runApp(const OverlayErrorApp());
   }
 }

@@ -269,7 +269,7 @@ class DebtProvider extends BaseProvider {
               severity: ErrorSeverity.medium,
               operation: 'debt_create',
               stackTrace: stack);
-          rethrow;
+          return false;
         }
         AnalyticsService.logDebtAdded();
       }
@@ -284,12 +284,12 @@ class DebtProvider extends BaseProvider {
 
       _updateStatus(DebtProviderStatus.loaded); // Reset status
       return true;
-    } on AppException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
     } catch (e, stack) {
       setError('debt_error_create_failed', e, stack);
-      rethrow;
+      return false;
     } finally {
       if (_status == DebtProviderStatus.creating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -310,16 +310,16 @@ class DebtProvider extends BaseProvider {
       } catch (e, stack) {
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.addPartialDebt');
-        rethrow;
+        return false;
       }
 
       return true;
-    } on AppException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
     } catch (e, stack) {
       setError('debt_error_add_amount_failed', e, stack);
-      rethrow;
+      return false;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -339,16 +339,16 @@ class DebtProvider extends BaseProvider {
       } catch (e, stack) {
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.updateDebt');
-        rethrow;
+        return false;
       }
 
       return true;
-    } on ServerException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on ServerException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
     } catch (e, stack) {
       setError('debt_error_update_failed', e, stack);
-      rethrow;
+      return false;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -369,16 +369,16 @@ class DebtProvider extends BaseProvider {
       } catch (e, stack) {
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.payPartialDebt');
-        rethrow;
+        return false;
       }
 
       return true;
-    } on AppException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
     } catch (e, stack) {
       setError('debt_error_settle_failed', e, stack);
-      rethrow;
+      return false;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);
@@ -398,16 +398,16 @@ class DebtProvider extends BaseProvider {
       } catch (e, stack) {
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.deleteDebt');
-        rethrow;
+        return false;
       }
 
       return true;
-    } on ServerException catch (e) {
-      setError(e.message);
-      rethrow;
+    } on ServerException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
     } catch (e, stack) {
       setError('debt_error_delete_failed', e, stack);
-      rethrow;
+      return false;
     } finally {
       if (_status == DebtProviderStatus.updating) {
         _updateStatus(DebtProviderStatus.loaded);

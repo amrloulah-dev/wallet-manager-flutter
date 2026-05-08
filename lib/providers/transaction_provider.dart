@@ -320,21 +320,17 @@ class TransactionProvider extends BaseProvider {
       _activateFetchShield();
       _updateStatus(TransactionProviderStatus.loaded);
       return true;
-    } on DomainException catch (e) {
-      setError(e.message, e);
-      _updateStatus(TransactionProviderStatus.error);
+    } on DomainException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
-    } on ValidationException catch (e) {
-      setError(e.message, e);
-      _updateStatus(TransactionProviderStatus.error);
+    } on ValidationException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
-    } on AppException catch (e) {
-      setError(e.message, e);
-      _updateStatus(TransactionProviderStatus.error);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
       setError('transaction_error_create_failed', e, stack);
-      _updateStatus(TransactionProviderStatus.error);
       return false;
     } finally {
       if (_status == TransactionProviderStatus.creating) {

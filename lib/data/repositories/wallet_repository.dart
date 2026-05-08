@@ -164,7 +164,7 @@ class WalletRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'WalletRepository.getTotalBalance');
-      throw ServerException('Failed to get total balance: $e');
+      throw ServerException('wallet_error_fetch_failed');
     }
   }
 
@@ -175,7 +175,7 @@ class WalletRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'WalletRepository.getWalletsCount');
-      throw ServerException('Failed to get wallets count: $e');
+      throw ServerException('wallet_error_fetch_failed');
     }
   }
 
@@ -327,7 +327,7 @@ class WalletRepository {
         .handleError((e, stack) {
       AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.watchWallet',
           stackTrace: stack);
-      throw ServerException('Failed to watch wallet: $e');
+      throw ServerException('wallet_error_watch_failed');
     });
   }
 

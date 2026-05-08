@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
@@ -21,7 +20,7 @@ void main() {
       final storeId = 's1';
       final userId = 'u1';
       final statsPath = FirebaseConstants.statsSummaryPath(storeId);
-      final storePath = FirebaseConstants.storesCollection + '/$storeId';
+      final storePath = '${FirebaseConstants.storesCollection}/$storeId';
 
       // Setup initial state
       await fakeFirestore.doc(storePath).set({

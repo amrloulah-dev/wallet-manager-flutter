@@ -156,7 +156,7 @@ void main() {
       final mockDoc = MockDocumentReference();
       when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
       when(() => mockCollection.doc(any())).thenReturn(mockDoc);
-      when(() => mockDoc.update(any())).thenAnswer((_) async => null);
+      when(() => mockDoc.update(any())).thenAnswer((_) async {});
 
       await transactionRepository.updateTransaction('t1', {'amount': 200});
 
@@ -173,7 +173,7 @@ void main() {
       when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
       when(() => mockCollection.doc(any())).thenReturn(mockDoc);
       when(() => mockDoc.get()).thenAnswer((_) async => FakeDocumentSnapshot());
-      when(() => mockDoc.update(any())).thenAnswer((_) async => null);
+      when(() => mockDoc.update(any())).thenAnswer((_) async {});
 
       await debtRepository.updateDebt('d1', {'amount': 500});
 
@@ -190,7 +190,7 @@ void main() {
 
       when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
       when(() => mockCollection.doc(any())).thenReturn(mockDoc);
-      when(() => mockDoc.set(any())).thenAnswer((_) async => null);
+      when(() => mockDoc.set(any())).thenAnswer((_) async {});
 
       when(() => mockStatsRepository.updateStatsOnWalletChange(
             any(),

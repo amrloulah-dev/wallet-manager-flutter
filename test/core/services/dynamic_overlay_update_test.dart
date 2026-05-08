@@ -71,8 +71,9 @@ void main() {
         if (methodCall.method == 'checkPermission') return true;
         if (methodCall.method == 'isPermissionGranted') return true;
         if (methodCall.method == 'isActive' ||
-            methodCall.method == 'isOverlayActive')
+            methodCall.method == 'isOverlayActive') {
           return true; // ALREADY ACTIVE
+        }
         if (methodCall.method == 'showOverlay') {
           showOverlayCount++;
           return true;
@@ -121,7 +122,9 @@ void main() {
         if (methodCall.method == 'checkPermission') return true;
         if (methodCall.method == 'isPermissionGranted') return true;
         if (methodCall.method == 'isActive' ||
-            methodCall.method == 'isOverlayActive') return false; // NOT ACTIVE
+            methodCall.method == 'isOverlayActive') {
+          return false; // NOT ACTIVE
+        }
         if (methodCall.method == 'showOverlay') {
           showOverlayCount++;
           return true;

@@ -1,7 +1,6 @@
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';

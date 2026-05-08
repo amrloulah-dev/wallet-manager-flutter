@@ -4,7 +4,6 @@ import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter/material.dart';
 

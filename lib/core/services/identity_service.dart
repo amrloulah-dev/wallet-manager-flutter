@@ -55,7 +55,7 @@ class IdentityService {
           password: pin,
         );
         return credential.user?.uid;
-      } on FirebaseAuthException catch (e) {
+      } on FirebaseAuthException catch (e, stack) {
         if (e.code == 'email-already-in-use') {
           // If already in use, logic dictates we attempt to sign in to get the UID
           final credential = await auth.signInWithEmailAndPassword(
@@ -64,6 +64,12 @@ class IdentityService {
           );
           return credential.user?.uid;
         }
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          severity: ErrorSeverity.low,
+          operation: 'IdentityService.provisionIdentity',
+        );
         rethrow;
       }
     } catch (e, stack) {

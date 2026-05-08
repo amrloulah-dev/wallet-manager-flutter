@@ -25,7 +25,7 @@ void main() {
         'updateEmployeeStats should update stats atomically without pre-fetching user',
         () async {
       final userId = 'u1';
-      final userPath = FirebaseConstants.usersCollection + '/$userId';
+      final userPath = '${FirebaseConstants.usersCollection}/$userId';
 
       // Setup initial state
       await fakeFirestore.doc(userPath).set({

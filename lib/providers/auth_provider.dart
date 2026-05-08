@@ -181,7 +181,7 @@ class AuthProvider extends BaseProvider {
     } catch (e, stack) {
       setError('auth_error_registration_failed', e, stack);
       await logout();
-      throw e is AppException ? e : ServerException('auth_error_unexpected');
+      return null;
     } finally {
       if (_status == AuthStatus.loading) {
         _setStatus(AuthStatus.idle);
@@ -210,10 +210,7 @@ class AuthProvider extends BaseProvider {
     } catch (e, stack) {
       setError('auth_error_registration_failed', e, stack);
       await logout();
-      if (e is EmailAlreadyInUseException || e is WeakPasswordException) {
-        rethrow;
-      }
-      throw e is AppException ? e : ServerException('auth_error_unexpected');
+      return null;
     } finally {
       if (_status == AuthStatus.loading) {
         _setStatus(AuthStatus.idle);
@@ -231,7 +228,7 @@ class AuthProvider extends BaseProvider {
     } catch (e, stack) {
       setError('auth_error_login_failed', e, stack);
       await logout();
-      rethrow;
+      return false;
     } finally {
       if (_status == AuthStatus.loading) {
         _setStatus(AuthStatus.idle);
@@ -358,7 +355,6 @@ class AuthProvider extends BaseProvider {
       _setStatus(AuthStatus.idle);
       setError(e is AppException ? e.message : 'auth_operation_failed', e,
           stack);
-      rethrow;
     }
   }
 

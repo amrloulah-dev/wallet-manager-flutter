@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.dart';
-import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
-import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:get_it/get_it.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}

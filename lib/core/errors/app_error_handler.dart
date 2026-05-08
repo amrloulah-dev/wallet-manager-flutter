@@ -40,8 +40,6 @@ class AppErrorHandler {
       initSettings,
       onDidReceiveNotificationResponse:
           (fln.NotificationResponse response) async {
-        // Tapping the notification should bring the app to foreground.
-        // We also close any active overlays to ensure the user sees the main app.
         try {
           if (await FlutterOverlayWindow.isActive()) {
             await FlutterOverlayWindow.closeOverlay();
@@ -51,10 +49,10 @@ class AppErrorHandler {
           if (response.payload == 'error_notification') {
             await _launchMainApp();
           }
-        } catch (e) {
+        } catch (e, stack) {
           if (kDebugMode) {
             debugPrint(
-                '⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e');
+                '⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e\n$stack');
           }
         }
       },
@@ -124,9 +122,9 @@ class AppErrorHandler {
       if (kDebugMode) {
         debugPrint('🚀 [ERROR_HANDLER] Launched main app: $result');
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) {
-        debugPrint('⚠️ [ERROR_HANDLER] Failed to launch main app: $e');
+        debugPrint('⚠️ [ERROR_HANDLER] Failed to launch main app: $e\n$stack');
       }
     }
   }
@@ -151,9 +149,9 @@ class AppErrorHandler {
       if (showToast) {
         try {
           ToastUtils.showError(message);
-        } catch (e) {
+        } catch (e, stack) {
           if (kDebugMode) {
-            debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e');
+            debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e\n$stack');
           }
         }
       }
@@ -180,9 +178,9 @@ class AppErrorHandler {
           details,
           payload: 'error_notification',
         );
-      } catch (e) {
+      } catch (e, stack) {
         if (kDebugMode) {
-          debugPrint('⚠️ [ERROR_HANDLER] Failed to show notification: $e');
+          debugPrint('⚠️ [ERROR_HANDLER] Failed to show notification: $e\n$stack');
         }
       }
     }
@@ -212,9 +210,9 @@ class AppErrorHandler {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
       if (kDebugMode) {
-        debugPrint('⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e');
+        debugPrint('⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e\n$stack');
       }
     }
   }

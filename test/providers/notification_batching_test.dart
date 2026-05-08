@@ -83,7 +83,9 @@ void main() {
 
       test('safeNotify (via tryAutoLogin) fires if not disposed', () async {
         final mockSync = sl<DatabaseSyncService>();
-        when(() => mockSync.tryAutoLogin()).thenAnswer((_) async {});
+        when(() => mockSync.tryAutoLogin()).thenAnswer((_) async {
+          return null;
+        });
 
         final authProvider = AuthProvider();
 
