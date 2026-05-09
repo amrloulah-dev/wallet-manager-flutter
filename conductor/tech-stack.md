@@ -35,7 +35,13 @@
 
 ## Tools & Utilities
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
-- **Security:** `crypto` for PIN hashing and `uuid` for unique identifiers. Includes global `kDebugMode` guards for all `debugPrint` calls to prevent sensitive data leakage in release builds.
+- **Security:** `crypto` for PIN hashing, **HMAC subscription cache integrity**, and `uuid` for unique identifiers. Includes:
+    - **Global Role Enums:** Strict `UserRole` Enum (`owner`, `employee`, `unknown`) replacing all string-based role comparisons.
+    - **Post-Fetch Repository Guards:** Mandatory `expectedStoreId` verification for all document fetches to prevent cross-tenant data leakage.
+    - **RouteGuard Middleware:** Centralized authorization interceptor in `AppRouter` blocking unauthorized screen access based on granular permissions.
+    - **Fail-Closed Enum Parsing:** Robust error handling in Enum conversion defaulting to zero-permission `unknown` states.
+    - **Firestore Rule Fortification:** Role-based write restrictions and multi-layer read-access denials for sensitive collections like `license_keys`.
+    - **Leaked Data Prevention:** Global `kDebugMode` guards for all `debugPrint` calls to prevent sensitive data leakage in release builds.
 - **Data Integrity:** Centralized `NumberParser` utility for safe numeric parsing and null-safety from dynamic sources.
 - **Background State TTL:** Strict 24-hour Time-to-Live (TTL) enforcement for subscription and critical metadata in the background isolate, triggering user re-validation via actionable notifications if data becomes stale.
 - **Financial Integrity:** Epsilon-aware balance sufficiency checks (0.01 EGP tolerance), atomic Firestore transactions and FieldValue.increment() for all wallet, balance, and stat counter updates, and $O(1)$ aggregate synchronization. Includes a "Zero-Unbounded-Read" guarantee by utilizing Firestore Aggregate Queries and cursor-based pagination for all list operations.
