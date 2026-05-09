@@ -54,15 +54,26 @@ class IdentityService {
           email: email,
           password: pin,
         );
-        return credential.user?.uid;
+        final user = credential.user;
+        if (user != null) {
+          // Enforce Report 1: M-2 - Mandate valid token
+          final token = await user.getIdToken();
+          if (token != null) return user.uid;
+        }
+        return null;
       } on FirebaseAuthException catch (e, stack) {
         if (e.code == 'email-already-in-use') {
-          // If already in use, logic dictates we attempt to sign in to get the UID
+          // If already in use, attempt to sign in to get the UID and verify token
           final credential = await auth.signInWithEmailAndPassword(
             email: email,
             password: pin,
           );
-          return credential.user?.uid;
+          final user = credential.user;
+          if (user != null) {
+            final token = await user.getIdToken();
+            if (token != null) return user.uid;
+          }
+          return null;
         }
         AppErrorHandler.handle(
           e,
@@ -176,7 +187,17 @@ class IdentityService {
         email: email,
         password: pin,
       );
-      return credential.user?.uid;
+
+      final user = credential.user;
+      if (user != null) {
+        // Enforce Report 1: M-2 - Mandate a valid token before returning UID
+        // This ensures local employee sessions are NEVER created without a valid Firebase Token.
+        final token = await user.getIdToken();
+        if (token != null) {
+          return user.uid;
+        }
+      }
+      return null;
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

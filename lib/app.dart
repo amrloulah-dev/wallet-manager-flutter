@@ -69,6 +69,7 @@ class MyApp extends StatelessWidget {
               EmployeeProvider(employeeRepository: sl<EmployeeRepository>()),
           update: (_, auth, subscription, previous) => (previous ??
               EmployeeProvider(employeeRepository: sl<EmployeeRepository>()))
+            ..updateAuthProvider(auth)
             ..updateSubscriptionProvider(subscription)
             ..setStoreId(auth.currentStoreId),
         ),

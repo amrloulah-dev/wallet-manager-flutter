@@ -5,6 +5,7 @@ import '../core/errors/app_exceptions.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/errors/error_severity.dart';
 import '../data/models/user_permissions.dart';
+import 'auth_provider.dart';
 import 'subscription_provider.dart';
 import 'base_provider.dart';
 import '../core/enums/user_enums.dart';
@@ -13,6 +14,7 @@ enum EmployeeProviderStatus { initial, loading, loaded, error }
 
 class EmployeeProvider extends BaseProvider {
   final EmployeeRepository _employeeRepository;
+  AuthProvider? _authProvider;
   SubscriptionProvider? _subscriptionProvider;
 
   List<UserModel> _employees = [];
@@ -46,6 +48,10 @@ class EmployeeProvider extends BaseProvider {
 
   EmployeeProvider({required EmployeeRepository employeeRepository})
       : _employeeRepository = employeeRepository;
+
+  void updateAuthProvider(AuthProvider authProvider) {
+    _authProvider = authProvider;
+  }
 
   void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
     _subscriptionProvider = subscriptionProvider;
@@ -113,6 +119,11 @@ class EmployeeProvider extends BaseProvider {
     _status = EmployeeProviderStatus.loading;
     _errorMessage = null;
     safeNotify();
+
+    // Security Guard: Only Owners can add employees (Axis 2/Phase 6)
+    if (_authProvider == null || !_authProvider!.isOwner) {
+      throw PermissionDeniedException();
+    }
 
     if (_currentStoreId == null) {
       setError('employee_error_no_store');
@@ -228,6 +239,12 @@ class EmployeeProvider extends BaseProvider {
     _status = EmployeeProviderStatus.loading;
     _errorMessage = null;
     safeNotify();
+
+    // Security Guard: Only Owners can deactivate employees (Axis 2/Phase 6)
+    if (_authProvider == null || !_authProvider!.isOwner) {
+      throw PermissionDeniedException();
+    }
+
     try {
       final employee = getEmployeeById(userId);
       await _employeeRepository.deactivateEmployee(userId);
@@ -262,6 +279,12 @@ class EmployeeProvider extends BaseProvider {
       safeNotify();
       return false;
     }
+
+    // Security Guard: Only Owners can reset PINs (Axis 2/Phase 6)
+    if (_authProvider == null || !_authProvider!.isOwner) {
+      throw PermissionDeniedException();
+    }
+
     _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
     try {
@@ -294,6 +317,12 @@ class EmployeeProvider extends BaseProvider {
       String userId, UserPermissions permissions) async {
     _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
+
+    // Security Guard: Only Owners can update permissions (Axis 2/Phase 6)
+    if (_authProvider == null || !_authProvider!.isOwner) {
+      throw PermissionDeniedException();
+    }
+
     try {
       await _employeeRepository.updateEmployeePermissions(
         userId: userId,

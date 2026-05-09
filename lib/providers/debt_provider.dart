@@ -362,7 +362,7 @@ class DebtProvider extends BaseProvider {
     _updateStatus(DebtProviderStatus.updating);
     safeNotify();
     try {
-      await _validateUserAndPermission((p) => p.createDebt);
+      await _validateUserAndPermission((p) => p.collectDebt);
 
       try {
         await _debtRepository.processPayment(debtId, amountToPay, userId);

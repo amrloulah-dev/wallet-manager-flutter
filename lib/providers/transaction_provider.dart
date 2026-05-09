@@ -9,6 +9,7 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
+import '../data/models/user_permissions.dart';
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
@@ -122,6 +123,24 @@ class TransactionProvider extends BaseProvider {
       setStoreId(auth.currentStoreId);
     }
     _currentUser = auth.currentUser;
+  }
+
+  /// Internal security guard for sensitive mutations.
+  /// Validates both existence of user and specific granular permission (for employees).
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) permissionCheck) async {
+    final user = _currentUser;
+    if (user == null || _currentStoreId == null) {
+      throw AuthException('auth_error_required');
+    }
+
+    // Owners bypass granular permission checks
+    if (user.isOwner) return user;
+
+    if (user.permissions == null || !permissionCheck(user.permissions!)) {
+      throw PermissionDeniedException();
+    }
+    return user;
   }
 
   void setStoreId(String? storeId) {
@@ -289,13 +308,13 @@ class TransactionProvider extends BaseProvider {
     String? customerName,
     String? notes,
   }) async {
-    if (_currentStoreId == null) return false;
-
-    _status = TransactionProviderStatus.creating;
-    _errorMessage = null;
-    safeNotify();
-
     try {
+      final user = await _validateUserAndPermission((p) => p.createTransaction);
+
+      _status = TransactionProviderStatus.creating;
+      _errorMessage = null;
+      safeNotify();
+
       final now = TimeService.now();
       final newTransaction = TransactionModel(
         transactionId: _transactionRepository.generateId(),
@@ -311,7 +330,7 @@ class TransactionProvider extends BaseProvider {
         notes: notes,
         transactionDate: now,
         createdAt: now,
-        createdBy: _currentUser?.userId ?? 'unknown',
+        createdBy: user.userId,
       );
 
       await _transactionRepository.createTransaction(newTransaction);

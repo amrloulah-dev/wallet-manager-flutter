@@ -26,6 +26,7 @@ class SubscriptionProvider extends BaseProvider {
     _previousSubscription = _authProvider.currentStore?.subscription;
     _authProvider.addListener(_onAuthChanged);
     Future.microtask(() {
+      _checkIntegrityAndFreshness();
       _syncToStorage();
       _fetchLatestRequest();
     });
@@ -36,9 +37,23 @@ class SubscriptionProvider extends BaseProvider {
     _authProvider = newAuth;
     _previousSubscription = _authProvider.currentStore?.subscription;
     _authProvider.addListener(_onAuthChanged);
+    _checkIntegrityAndFreshness();
     _syncToStorage();
     _fetchLatestRequest();
     safeNotify();
+  }
+
+  /// Verifies the local cache integrity and triggers a Firestore refresh if stale or tampered.
+  Future<void> _checkIntegrityAndFreshness() async {
+    final storage = LocalStorageService.instance;
+    
+    // If tampered with or stale (>24h), trigger a hard refresh of user data
+    if (!storage.isSubIntegrityValid || !storage.isSubscriptionSyncFresh) {
+      if (kDebugMode) {
+        debugPrint('🛡️ [SECURITY] Subscription cache invalid or stale. Triggering Firestore re-validation.');
+      }
+      await _authProvider.refreshUserData();
+    }
   }
 
   StoreSubscription? get _subscription =>

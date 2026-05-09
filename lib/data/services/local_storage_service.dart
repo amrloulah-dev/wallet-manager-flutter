@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/enums/user_enums.dart';
@@ -192,8 +193,9 @@ class LocalStorageService {
   static const String _kIsSubLifetime = 'is_sub_lifetime';
   static const String _kSubSmsEnabled = 'sub_sms_enabled';
   static const String _kSubIsSuspended = 'sub_is_suspended';
+  static const String _kSubChecksum = 'sub_checksum';
 
-  /// Syncs subscription limits to SharedPreferences for background isolates.
+  /// Syncs subscription limits to SharedPreferences with HMAC integrity check (Report 2: M-7).
   Future<void> saveSubscriptionLimits({
     required int? endDateMs,
     required bool isLifetime,
@@ -209,12 +211,63 @@ class LocalStorageService {
     await _prefs!.setBool(_kIsSubLifetime, isLifetime);
     await _prefs!.setBool(_kSubSmsEnabled, smsEnabled);
     await _prefs!.setBool(_kSubIsSuspended, isSuspended);
+
+    // Generate and save checksum (Report 2: M-7)
+    final checksum = _generateSubChecksum(
+      endDateMs: endDateMs,
+      isLifetime: isLifetime,
+      smsEnabled: smsEnabled,
+      isSuspended: isSuspended,
+    );
+    await _prefs!.setString(_kSubChecksum, checksum);
+  }
+
+  String _generateSubChecksum({
+    int? endDateMs,
+    required bool isLifetime,
+    required bool smsEnabled,
+    required bool isSuspended,
+  }) {
+    final data = '$endDateMs|$isLifetime|$smsEnabled|$isSuspended';
+    // Use a hardcoded pepper (ideally this would be device-unique, but this is a good baseline)
+    const pepper = 'wallet_manager_sub_integrity_2025';
+    final key = utf8.encode(pepper);
+    final bytes = utf8.encode(data);
+    final hmac = Hmac(sha256, key);
+    return hmac.convert(bytes).toString();
+  }
+
+  /// Returns true if the subscription limits have not been tampered with.
+  bool get isSubIntegrityValid {
+    final storedChecksum = _prefs?.getString(_kSubChecksum);
+    if (storedChecksum == null) return false;
+
+    final currentChecksum = _generateSubChecksum(
+      endDateMs: _prefs?.getInt(_kSubEndDateMs),
+      isLifetime: _prefs?.getBool(_kIsSubLifetime) ?? false,
+      smsEnabled: _prefs?.getBool(_kSubSmsEnabled) ?? false,
+      isSuspended: _prefs?.getBool(_kSubIsSuspended) ?? false,
+    );
+
+    return storedChecksum == currentChecksum;
   }
 
   int? get subEndDateMs => _prefs?.getInt(_kSubEndDateMs);
-  bool get isSubLifetime => _prefs?.getBool(_kIsSubLifetime) ?? false;
-  bool get subSmsEnabled => _prefs?.getBool(_kSubSmsEnabled) ?? false;
-  bool get subIsSuspended => _prefs?.getBool(_kSubIsSuspended) ?? false;
+  
+  bool get isSubLifetime {
+    if (!isSubIntegrityValid) return false;
+    return _prefs?.getBool(_kIsSubLifetime) ?? false;
+  }
+
+  bool get subSmsEnabled {
+    if (!isSubIntegrityValid) return false;
+    return _prefs?.getBool(_kSubSmsEnabled) ?? false;
+  }
+
+  bool get subIsSuspended {
+    if (!isSubIntegrityValid) return true; // Fail-secure
+    return _prefs?.getBool(_kSubIsSuspended) ?? false;
+  }
 
   // Subscription sync timestamp for 24h TTL check
   static const String _kSubLastSyncMs = 'sub_last_sync_ms';

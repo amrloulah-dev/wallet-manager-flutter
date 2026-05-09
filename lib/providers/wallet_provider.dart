@@ -406,7 +406,11 @@ class WalletProvider extends BaseProvider {
   Future<bool> deleteWallet(String walletId) async {
     _updateStatus(WalletProviderStatus.deleting);
     try {
-      await _validateUserAndPermission((p) => p.editWallet);
+      // Security Guard: Only Owners can delete wallets (Axis 2/Phase 6)
+      if (!_authProvider.isOwner) {
+        throw PermissionDeniedException();
+      }
+
       await _walletRepository.deleteWallet(walletId);
       _updateStatus(WalletProviderStatus.loaded);
       return true;
