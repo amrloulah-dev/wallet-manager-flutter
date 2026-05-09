@@ -166,12 +166,14 @@ class AppRouter {
         // Enforce Security Guard at the UI level (Axis 2/Phase 6)
         if (!PermissionHelper.canAccessScreen(context, settings.name ?? '')) {
           // If denied, redirect to Dashboard on next frame and show message
+          final msg = AppLocalizations.of(context)!.accessDenied;
           Future.microtask(() {
+            if (!context.mounted) return;
             Navigator.of(context).pushNamedAndRemoveUntil(
               RouteConstants.ownerDashboard,
               (route) => false,
             );
-            ToastUtils.showInfo(AppLocalizations.of(context)!.accessDenied);
+            ToastUtils.showInfo(msg);
           });
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));

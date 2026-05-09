@@ -13,6 +13,7 @@ import '../../widgets/common/error_widget.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../core/enums/wallet_enums.dart';
+import '../../../core/enums/user_enums.dart';
 
 class TransactionDetailsScreen extends StatefulWidget {
   const TransactionDetailsScreen({super.key});

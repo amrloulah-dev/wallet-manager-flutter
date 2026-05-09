@@ -11,6 +11,7 @@ import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
+import '../../../core/enums/user_enums.dart';
 import '../../../core/errors/app_exceptions.dart';
 import '../../../core/errors/app_error_handler.dart';
 import 'employee_login_screen.dart';

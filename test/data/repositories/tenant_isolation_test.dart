@@ -12,6 +12,32 @@ import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
+Map<String, dynamic> _createValidWalletData(String storeId) {
+  final now = Timestamp.now();
+  return {
+    'storeId': storeId,
+    'phoneNumber': '0123456789',
+    'walletType': 'vodafone_cash',
+    'balance': 100.0,
+    'isActive': true,
+    'createdAt': now,
+    'lastDailyReset': now,
+    'lastMonthlyReset': now,
+    'sendLimits': {
+      'dailyLimit': 1000.0,
+      'dailyUsed': 0.0,
+      'monthlyLimit': 5000.0,
+      'monthlyUsed': 0.0,
+    },
+    'receiveLimits': {
+      'dailyLimit': 1000.0,
+      'dailyUsed': 0.0,
+      'monthlyLimit': 5000.0,
+      'monthlyUsed': 0.0,
+    },
+  };
+}
+
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
   late WalletRepository walletRepo;
@@ -42,32 +68,6 @@ void main() {
     debtRepo = DebtRepository(firestore: fakeFirestore);
     userRepo = UserRepository(firebaseService: mockFirebaseService);
   });
-
-  Map<String, dynamic> _createValidWalletData(String storeId) {
-    final now = Timestamp.now();
-    return {
-      'storeId': storeId,
-      'phoneNumber': '0123456789',
-      'walletType': 'vodafone_cash',
-      'balance': 100.0,
-      'isActive': true,
-      'createdAt': now,
-      'lastDailyReset': now,
-      'lastMonthlyReset': now,
-      'sendLimits': {
-        'dailyLimit': 1000.0,
-        'dailyUsed': 0.0,
-        'monthlyLimit': 5000.0,
-        'monthlyUsed': 0.0,
-      },
-      'receiveLimits': {
-        'dailyLimit': 1000.0,
-        'dailyUsed': 0.0,
-        'monthlyLimit': 5000.0,
-        'monthlyUsed': 0.0,
-      },
-    };
-  }
 
   group('Tenant Isolation Tests', () {
     test('WalletRepository.getWalletById should throw PermissionDeniedException if storeId mismatches', () async {
