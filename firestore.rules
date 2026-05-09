@@ -29,6 +29,13 @@ service cloud.firestore {
       return isStoreOwner(storeId) || isStoreEmployee(storeId);
     }
 
+    // هل يمتلك المستخدم الصلاحية المحددة؟ (للموظفين)
+    function hasPermission(permissionName) {
+      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return user.role == 'owner' || 
+             (user.role == 'employee' && user.get('permissions', {}).get(permissionName, false) == true);
+    }
+
     // ==========================================
     // 2. القواعد الأساسية (The Rules)
     // ==========================================
@@ -55,8 +62,11 @@ service cloud.firestore {
 
     // --- المستخدمين والموظفين ---
     match /users/{userId} {
-      // المستخدم يقدر يشوف ويعدل بياناته هو شخصياً
-      allow get, update: if isAuthenticated() && request.auth.uid == userId;
+      // المستخدم يقدر يشوف بياناته
+      allow get: if isAuthenticated() && request.auth.uid == userId;
+      // السماح للمستخدم بتعديل بياناته الشخصية بشرط عدم المساس بالصلاحيات أو المتجر
+      allow update: if isAuthenticated() && request.auth.uid == userId 
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'storeId', 'isActive']);
       
       // صاحب المتجر يقدر يقرأ، يضيف، أو يحذف الموظفين اللي تبع متجره
       // نستخدم request.resource للإنشاء والتعديل، و resource للقراءة والحذف
@@ -81,10 +91,13 @@ service cloud.firestore {
 
       // الإحصائيات الفرعية
       match /stats/summary {
-        allow read, write: if canAccessStore(storeId);
+        allow read: if canAccessStore(storeId) && hasPermission('viewDashboardStats');
+        // السماح بالكتابة فقط إذا كان يمتلك صلاحية إضافة أو تعديل المعاملات
+        allow write: if canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'));
       }
       match /daily_stats/{day} {
-        allow read, write: if canAccessStore(storeId);
+        allow read: if canAccessStore(storeId) && hasPermission('viewDashboardStats');
+        allow write: if canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'));
       }
     }
 
@@ -95,28 +108,31 @@ service cloud.firestore {
     
     match /wallets/{walletId} {
       allow read: if canAccessStore(resource.data.storeId);
-      allow create: if canAccessStore(request.resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createWallet');
       // نمنع نقل المحفظة من متجر لمتجر آخر أثناء التحديث
       allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId;
+                       request.resource.data.storeId == resource.data.storeId &&
+                       (hasPermission('editWallet') || hasPermission('addBalance'));
       // Change: Restrict delete to Owner (Axis 2/Phase 6)
       allow delete: if isStoreOwner(resource.data.storeId);
     }
 
     match /transactions/{transactionId} {
       allow read: if canAccessStore(resource.data.storeId);
-      allow create: if canAccessStore(request.resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createTransaction');
       allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId;
+                       request.resource.data.storeId == resource.data.storeId &&
+                       hasPermission('createTransaction');
       // الحذف ممنوع نهائياً لضمان سلامة السجلات المالية
       allow delete: if false; 
     }
 
     match /debts/{debtId} {
       allow read: if canAccessStore(resource.data.storeId);
-      allow create: if canAccessStore(request.resource.data.storeId);
+      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createDebt');
       allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId;
+                       request.resource.data.storeId == resource.data.storeId &&
+                       (hasPermission('createDebt') || hasPermission('collectDebt'));
       // Change: Restrict delete to Owner (Axis 2/Phase 6)
       allow delete: if isStoreOwner(resource.data.storeId);
     }

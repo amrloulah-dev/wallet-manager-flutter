@@ -394,4 +394,49 @@ class TransactionProvider extends BaseProvider {
       safeNotify();
     }
   }
+
+  Future<bool> updateTransaction(String transactionId, Map<String, dynamic> data) async {
+    try {
+      await _validateUserAndPermission((p) => p.editTransaction);
+
+      _updateStatus(TransactionProviderStatus.creating); // Using creating for mutating state
+      _errorMessage = null;
+      safeNotify();
+
+      await _transactionRepository.updateTransaction(transactionId, data);
+
+      await fetchInitialTransactions(forceRefresh: true);
+      return true;
+    } on DomainException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } on ValidationException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('transaction_error_update_failed', e, stack);
+      return false;
+    } finally {
+      if (_status == TransactionProviderStatus.creating) {
+        _updateStatus(TransactionProviderStatus.loaded);
+      }
+      safeNotify();
+    }
+  }
+
+  Future<bool> deleteTransaction(String transactionId) async {
+    try {
+      // Completely disable deletion according to strict financial integrity business logic
+      throw PermissionDeniedException();
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('transaction_error_delete_failed', e, stack);
+      return false;
+    }
+  }
 }

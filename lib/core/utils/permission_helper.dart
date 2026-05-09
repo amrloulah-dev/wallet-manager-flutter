@@ -101,7 +101,7 @@ class PermissionHelper {
           return true; // Auth routes always allowed
 
         default:
-          return true; // Default to allow for unknown routes to avoid lockouts
+          return false; // Fail-closed for security on unknown routes
       }
     }, showMessage: showMessage);
   }

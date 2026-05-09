@@ -1,6 +1,7 @@
 class UserPermissions {
   // Transactions
   final bool createTransaction;
+  final bool editTransaction;
   final bool viewAllTransactions;
 
   // Debts
@@ -21,6 +22,7 @@ class UserPermissions {
 
   UserPermissions({
     this.createTransaction = false,
+    this.editTransaction = false,
     this.viewAllTransactions = false,
     this.viewDebts = false,
     this.createDebt = false,
@@ -37,6 +39,7 @@ class UserPermissions {
   factory UserPermissions.defaultPermissions() {
     return UserPermissions(
       createTransaction: false,
+      editTransaction: false,
       viewAllTransactions: false,
       viewDebts: false,
       createDebt: false,
@@ -80,6 +83,7 @@ class UserPermissions {
 
       return UserPermissions(
         createTransaction: oldCreateTx,
+        editTransaction: false, // Safer default
         viewAllTransactions: oldViewAllTx,
 
         viewDebts:
@@ -102,6 +106,7 @@ class UserPermissions {
 
     return UserPermissions(
       createTransaction: map['createTransaction'] ?? false,
+      editTransaction: map['editTransaction'] ?? false,
       viewAllTransactions: map['viewAllTransactions'] ?? false,
       viewDebts: map['viewDebts'] ?? false,
       createDebt: map['createDebt'] ?? false,
@@ -119,6 +124,7 @@ class UserPermissions {
   Map<String, dynamic> toMap() {
     return {
       'createTransaction': createTransaction,
+      'editTransaction': editTransaction,
       'viewAllTransactions': viewAllTransactions,
       'viewDebts': viewDebts,
       'createDebt': createDebt,
@@ -135,6 +141,7 @@ class UserPermissions {
 
   UserPermissions copyWith({
     bool? createTransaction,
+    bool? editTransaction,
     bool? viewAllTransactions,
     bool? viewDebts,
     bool? createDebt,
@@ -149,6 +156,7 @@ class UserPermissions {
   }) {
     return UserPermissions(
       createTransaction: createTransaction ?? this.createTransaction,
+      editTransaction: editTransaction ?? this.editTransaction,
       viewAllTransactions: viewAllTransactions ?? this.viewAllTransactions,
       viewDebts: viewDebts ?? this.viewDebts,
       createDebt: createDebt ?? this.createDebt,
