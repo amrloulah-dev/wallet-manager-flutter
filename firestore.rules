@@ -57,8 +57,12 @@ service cloud.firestore {
     match /users/{userId} {
       // المستخدم يقدر يشوف ويعدل بياناته هو شخصياً
       allow get, update: if isAuthenticated() && request.auth.uid == userId;
+      
       // صاحب المتجر يقدر يقرأ، يضيف، أو يحذف الموظفين اللي تبع متجره
-      allow read, write: if isAuthenticated() && isStoreOwner(resource.data.storeId);
+      // نستخدم request.resource للإنشاء والتعديل، و resource للقراءة والحذف
+      allow read, delete: if isAuthenticated() && isStoreOwner(resource.data.storeId);
+      allow create, update: if isAuthenticated() && isStoreOwner(request.resource.data.storeId);
+
       // السماح بإنشاء حساب لنفسك
       allow create: if isAuthenticated() && request.auth.uid == userId;
     }
