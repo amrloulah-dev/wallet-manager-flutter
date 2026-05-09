@@ -21,15 +21,19 @@ class TransactionRepository {
   final CacheManager _cacheManager;
   final StatsRepository _statsRepository;
 
+  final FirebaseFirestore? _customFirestore;
+
   TransactionRepository({
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
     StatsRepository? statsRepository,
+    FirebaseFirestore? firestore,
   })  : _firebaseService = firebaseService ?? sl<FirebaseService>(),
         _cacheManager = cacheManager ?? sl<CacheManager>(),
-        _statsRepository = statsRepository ?? sl<StatsRepository>();
+        _statsRepository = statsRepository ?? sl<StatsRepository>(),
+        _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _firebaseService.firestore;
+  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _transactionsCollection =>
       _firestore.collection(FirebaseConstants.transactions);
 
@@ -154,37 +158,50 @@ class TransactionRepository {
         }
         return items;
       }).handleError((error, stack) {
-        AppErrorHandler.handle(error,
-            stackTrace: stack, operation: 'TransactionRepository.getTransactionsStream');
+        AppErrorHandler.logSilentError(error.toString(), 'TransactionRepository.getTransactionsStream',
+            stackTrace: stack);
         throw error;
       });
     } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getTransactionsStream');
+      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionsStream',
+          stackTrace: stack);
       return Stream.error(ServerException('transaction_error_stream_failed'));
     }
   }
 
-  Future<TransactionModel?> getTransactionById(String transactionId) async {
+  Future<TransactionModel?> getTransactionById(String transactionId,
+      {String? expectedStoreId}) async {
     final cacheKey = 'transaction_details_$transactionId';
     final cachedTx = _cacheManager.get<TransactionModel>(cacheKey);
-    if (cachedTx != null) return cachedTx;
+
+    if (cachedTx != null) {
+      if (expectedStoreId != null && cachedTx.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+      return cachedTx;
+    }
 
     try {
       final doc = await _transactionsCollection.doc(transactionId).get();
       if (!doc.exists) return null;
       final tx = TransactionModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && tx.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
       _cacheManager.set(cacheKey, tx, duration: const Duration(minutes: 10));
       return tx;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getTransactionById');
+      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
+          stackTrace: stack);
       throw ServerException('Failed to get transaction: ${e.message}',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getTransactionById');
       if (e is AppException) rethrow;
+      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
+          stackTrace: stack);
       throw ServerException(
           'An unexpected error occurred while fetching the transaction.');
     }
@@ -245,6 +262,10 @@ class TransactionRepository {
   // 3️⃣ UPDATE
   Future<void> updateTransaction(
       String transactionId, Map<String, dynamic> data) async {
+    // Domain Integrity Guard (Report 2: M-6)
+    assert(!data.containsKey(FirebaseConstants.storeId),
+        'storeId mutation is strictly forbidden for security reasons.');
+
     try {
       final updateData = {
         ...data,

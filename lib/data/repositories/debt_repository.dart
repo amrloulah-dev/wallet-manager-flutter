@@ -14,13 +14,17 @@ class DebtRepository {
   final FirebaseService _firebaseService;
   final CacheManager _cacheManager;
 
+  final FirebaseFirestore? _customFirestore;
+
   DebtRepository({
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
+    FirebaseFirestore? firestore,
   })  : _firebaseService = firebaseService ?? FirebaseService(),
-        _cacheManager = cacheManager ?? CacheManager();
+        _cacheManager = cacheManager ?? CacheManager(),
+        _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _firebaseService.firestore;
+  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _debtsCollection =>
       _firestore.collection(FirebaseConstants.debts);
 
@@ -92,16 +96,20 @@ class DebtRepository {
         return debts;
       });
     } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'DebtRepository.getDebtsStream');
+      AppErrorHandler.logSilentError(e.toString(), 'DebtRepository.getDebtsStream',
+          stackTrace: stack);
       return Stream.error(ServerException('debt_error_stream_failed'));
     }
   }
 
-  Future<DebtModel?> getDebtById(String debtId) async {
+  Future<DebtModel?> getDebtById(String debtId, {String? expectedStoreId}) async {
     final cacheKey = 'debt_details_$debtId';
     final cachedDebt = _cacheManager.get<DebtModel>(cacheKey);
+
     if (cachedDebt != null) {
+      if (expectedStoreId != null && cachedDebt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
       return cachedDebt;
     }
 
@@ -110,6 +118,12 @@ class DebtRepository {
       if (!doc.exists) return null;
 
       final debt = DebtModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && debt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
       _cacheManager.set(cacheKey, debt, duration: const Duration(minutes: 10));
       return debt;
     } on FirebaseException catch (e, stack) {
@@ -117,6 +131,7 @@ class DebtRepository {
           stackTrace: stack, operation: 'DebtRepository.getDebtById');
       throw ServerException('Failed to get debt: ${e.message}', code: e.code);
     } catch (e, stack) {
+      if (e is AppException) rethrow;
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtById');
       throw ServerException(
@@ -315,6 +330,10 @@ class DebtRepository {
   }
 
   Future<void> updateDebt(String debtId, Map<String, dynamic> data) async {
+    // Domain Integrity Guard (Report 2: M-6)
+    assert(!data.containsKey(FirebaseConstants.storeId),
+        'storeId mutation is strictly forbidden for security reasons.');
+
     try {
       await _debtsCollection.doc(debtId).update(data);
       _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
@@ -480,15 +499,23 @@ class DebtRepository {
   }
 
   // 5️⃣ STREAM
-  Stream<DebtModel> watchDebt(String debtId) {
+  Stream<DebtModel> watchDebt(String debtId, {String? expectedStoreId}) {
     return _debtsCollection.doc(debtId).snapshots().map((doc) {
       if (!doc.exists) {
         throw NotFoundException('Debt');
       }
-      return DebtModel.fromFirestore(doc);
+      final debt = DebtModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && debt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
+      return debt;
     }).handleError((error, stack) {
-      AppErrorHandler.handle(error,
-          stackTrace: stack, operation: 'DebtRepository.watchDebt');
+      AppErrorHandler.logSilentError(error.toString(), 'DebtRepository.watchDebt',
+          stackTrace: stack);
+      if (error is AppException) throw error;
       throw error;
     });
   }

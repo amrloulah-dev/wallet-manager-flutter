@@ -365,7 +365,8 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
 
     try {
-      final tx = await _transactionRepository.getTransactionById(transactionId);
+      final tx = await _transactionRepository.getTransactionById(transactionId,
+          expectedStoreId: _currentStoreId);
       _selectedTransaction = tx;
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {

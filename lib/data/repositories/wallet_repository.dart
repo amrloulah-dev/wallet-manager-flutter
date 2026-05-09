@@ -16,15 +16,19 @@ class WalletRepository {
   final CacheManager _cacheManager;
   final StatsRepository _statsRepository;
 
+  final FirebaseFirestore? _customFirestore;
+
   WalletRepository({
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
     StatsRepository? statsRepository,
+    FirebaseFirestore? firestore,
   })  : _firebaseService = firebaseService ?? FirebaseService(),
         _cacheManager = cacheManager ?? CacheManager(),
-        _statsRepository = statsRepository ?? StatsRepository();
+        _statsRepository = statsRepository ?? StatsRepository(),
+        _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _firebaseService.firestore;
+  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _walletsCollection =>
       _firestore.collection(FirebaseConstants.walletsCollection);
 
@@ -104,10 +108,15 @@ class WalletRepository {
     }
   }
 
-  Future<WalletModel?> getWalletById(String walletId) async {
+  Future<WalletModel?> getWalletById(String walletId,
+      {String? expectedStoreId}) async {
     final cacheKey = 'wallet_details_$walletId';
     final cachedWallet = _cacheManager.get<WalletModel>(cacheKey);
+
     if (cachedWallet != null) {
+      if (expectedStoreId != null && cachedWallet.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
       return cachedWallet;
     }
 
@@ -115,11 +124,18 @@ class WalletRepository {
       final doc = await _walletsCollection.doc(walletId).get();
       if (!doc.exists) return null;
       final wallet = WalletModel.fromFirestore(doc);
-      _cacheManager.set(cacheKey, wallet,
-          duration: const Duration(minutes: 10));
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && wallet.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
+      _cacheManager.set(cacheKey, wallet, duration: const Duration(minutes: 10));
       return wallet;
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getWalletById', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.getWalletById',
+          stackTrace: stack);
       if (e is AppException) rethrow;
       throw ServerException('wallet_error_fetch_failed');
     }
@@ -181,6 +197,10 @@ class WalletRepository {
 
   // 3️⃣ UPDATE Methods
   Future<void> updateWallet(String walletId, Map<String, dynamic> data) async {
+    // Domain Integrity Guard (Report 2: M-6)
+    assert(!data.containsKey(FirebaseConstants.storeId),
+        'storeId mutation is strictly forbidden for security reasons.');
+
     try {
       await _firestore.runTransaction((transaction) async {
         final docRef = _walletsCollection.doc(walletId);
@@ -319,14 +339,21 @@ class WalletRepository {
   }
 
   // 5️⃣ STREAM Methods
-  Stream<WalletModel?> watchWallet(String walletId) {
-    return _walletsCollection
-        .doc(walletId)
-        .snapshots()
-        .map((doc) => doc.exists ? WalletModel.fromFirestore(doc) : null)
-        .handleError((e, stack) {
+  Stream<WalletModel?> watchWallet(String walletId, {String? expectedStoreId}) {
+    return _walletsCollection.doc(walletId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      final wallet = WalletModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && wallet.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
+      return wallet;
+    }).handleError((e, stack) {
       AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.watchWallet',
           stackTrace: stack);
+      if (e is AppException) throw e;
       throw ServerException('wallet_error_watch_failed');
     });
   }

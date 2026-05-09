@@ -48,19 +48,26 @@ class UserRepository {
   // ===========================
 
   /// Fetches a single user by their document ID.
-  Future<UserModel?> getUserById(String userId) async {
+  Future<UserModel?> getUserById(String userId, {String? expectedStoreId}) async {
     try {
       final doc = await _usersCollection.doc(userId).get();
-      if (doc.exists) {
-        return UserModel.fromFirestore(doc);
+      if (!doc.exists) return null;
+      
+      final user = UserModel.fromFirestore(doc);
+      
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && user.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
       }
-      return null;
+      
+      return user;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById', stackTrace: stack);
       throw ServerException('user_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      if (e is AppException) rethrow;
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById', stackTrace: stack);
       throw ServerException('user_error_unexpected');
     }
   }
@@ -379,13 +386,20 @@ class UserRepository {
   }
 
   /// Permanently deletes a user document from Firestore.
-  Future<void> hardDeleteUser(String userId) async {
+  Future<void> hardDeleteUser(String userId, {required String callerUserId}) async {
     try {
+      // Security Guard (Report 2: M-9)
+      final caller = await getUserById(callerUserId);
+      if (caller == null || !caller.isOwner) {
+        throw PermissionDeniedException();
+      }
+
       await _usersCollection.doc(userId).delete();
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.logSilentError(e.toString(), 'UserRepository.hardDeleteUser', stackTrace: stack);
       throw ServerException('user_error_delete_failed', code: e.code);
     } catch (e, stack) {
+      if (e is AppException) rethrow;
       AppErrorHandler.logSilentError(e.toString(), 'UserRepository.hardDeleteUser', stackTrace: stack);
       throw ServerException('user_error_unexpected');
     }
