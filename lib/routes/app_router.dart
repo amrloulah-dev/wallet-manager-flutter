@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/core/utils/permission_helper.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../core/constants/route_constants.dart';
@@ -160,7 +162,22 @@ class AppRouter {
   static Route<dynamic> _buildRoute(Widget page, RouteSettings settings) {
     return PageRouteBuilder(
       settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
+      pageBuilder: (context, animation, secondaryAnimation) {
+        // Enforce Security Guard at the UI level (Axis 2/Phase 6)
+        if (!PermissionHelper.canAccessScreen(context, settings.name ?? '')) {
+          // If denied, redirect to Dashboard on next frame and show message
+          Future.microtask(() {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              RouteConstants.ownerDashboard,
+              (route) => false,
+            );
+            ToastUtils.showInfo(AppLocalizations.of(context)!.accessDenied);
+          });
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+        return page;
+      },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;

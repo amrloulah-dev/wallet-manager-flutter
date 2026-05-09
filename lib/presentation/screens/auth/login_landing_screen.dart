@@ -162,10 +162,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     }
 
     // 2. Check role and navigate accordingly
-    final userRole = authProvider.currentUser?.role ?? '';
-    if (userRole == 'owner') {
-      Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
-    } else if (userRole == 'employee') {
+    final role = authProvider.currentUser?.role;
+    if (role == UserRole.owner || role == UserRole.employee) {
       Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
     } else {
       ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);

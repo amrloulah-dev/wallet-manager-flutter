@@ -413,11 +413,12 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     IconData creatorIcon = Icons.person_outline;
     Color? roleColor;
 
-    if (transaction.creatorRole == 'owner') {
+    final role = UserRole.fromString(transaction.creatorRole ?? '');
+    if (role == UserRole.owner) {
       roleDisplay = l10n.ownerRoleSuffix;
       creatorIcon = Icons.admin_panel_settings_outlined;
       roleColor = AppColors.primary;
-    } else if (transaction.creatorRole == 'employee') {
+    } else if (role == UserRole.employee) {
       roleDisplay = l10n.employeeRoleSuffix;
       creatorIcon = Icons.person_outline;
     }

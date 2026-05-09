@@ -5,6 +5,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 import '../../data/models/user_permissions.dart';
 import '../../providers/auth_provider.dart';
+import '../constants/route_constants.dart';
 
 class PermissionHelper {
   // Private constructor to prevent instantiation
@@ -52,24 +53,55 @@ class PermissionHelper {
         showMessage: showMessage);
   }
 
-  static bool canAccessScreen(BuildContext context, String screenName,
+  static bool canAccessScreen(BuildContext context, String routeName,
       {bool showMessage = false}) {
     return _checkPermission(context, (p) {
-      switch (screenName) {
-        case 'DashboardScreen':
+      switch (routeName) {
+        case RouteConstants.ownerDashboard:
+          return true; // Basic dashboard usually accessible if logged in
+
+        case RouteConstants.generalStatistics:
           return p.viewDashboardStats;
-        case 'CreateTransactionScreen':
+
+        case RouteConstants.createTransaction:
           return p.createTransaction;
-        case 'TodayTransactionsScreen':
-          // Usually allowed if you can create transactions, or maybe distinct?
-          // Using createTransaction for now as it makes sense for a cashier.
+
+        case RouteConstants.todayTransactions:
+        case RouteConstants.transactionDetails:
           return p.createTransaction || p.viewAllTransactions;
-        case 'AddDebtScreen':
+
+        case RouteConstants.addDebt:
           return p.createDebt;
-        case 'DebtsListScreen':
+
+        case RouteConstants.debtsList:
           return p.viewDebts;
-        default:
+
+        case RouteConstants.walletsList:
+        case RouteConstants.walletDetails:
+          return p.viewWallets;
+
+        case RouteConstants.walletForm:
+          return p.createWallet || p.editWallet;
+
+        case RouteConstants.addBalance:
+          return p.addBalance;
+
+        case RouteConstants.settings:
+        case RouteConstants.subscriptionDetails:
+          return true; // Basic settings usually allowed
+
+        case RouteConstants.addEmployee:
+        case RouteConstants.manageEmployees:
+          // Employees cannot manage other employees
           return false;
+
+        case RouteConstants.loginLanding:
+        case RouteConstants.storeRegistration:
+        case RouteConstants.employeeLogin:
+          return true; // Auth routes always allowed
+
+        default:
+          return true; // Default to allow for unknown routes to avoid lockouts
       }
     }, showMessage: showMessage);
   }
