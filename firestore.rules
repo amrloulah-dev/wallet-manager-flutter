@@ -46,9 +46,11 @@ service cloud.firestore {
 
     // --- مفاتيح الترخيص القديمة ---
     match /license_keys/{keyId} {
-      // مسموح قراءة أو تحديث مفتاح محدد فقط (لمنع سحب كل المفاتيح)
-      allow get, update: if isAuthenticated(); 
-      allow create, delete, list: if false;
+      // Secure license_keys: Deny read access to all authenticated users (Report 2: C-7, M-10).
+      // Verification should be handled via Admin SDK/Cloud Functions.
+      allow read: if false;
+      allow update: if isAuthenticated() && !resource.data.isUsed; 
+      allow create, delete: if false;
     }
 
     // --- المستخدمين والموظفين ---
@@ -93,7 +95,8 @@ service cloud.firestore {
       // نمنع نقل المحفظة من متجر لمتجر آخر أثناء التحديث
       allow update: if canAccessStore(resource.data.storeId) && 
                        request.resource.data.storeId == resource.data.storeId;
-      allow delete: if canAccessStore(resource.data.storeId);
+      // Change: Restrict delete to Owner (Axis 2/Phase 6)
+      allow delete: if isStoreOwner(resource.data.storeId);
     }
 
     match /transactions/{transactionId} {
@@ -110,7 +113,8 @@ service cloud.firestore {
       allow create: if canAccessStore(request.resource.data.storeId);
       allow update: if canAccessStore(resource.data.storeId) && 
                        request.resource.data.storeId == resource.data.storeId;
-      allow delete: if canAccessStore(resource.data.storeId);
+      // Change: Restrict delete to Owner (Axis 2/Phase 6)
+      allow delete: if isStoreOwner(resource.data.storeId);
     }
 
     // Subscription upgrade requests — authenticated users can create, only owners can read/delete

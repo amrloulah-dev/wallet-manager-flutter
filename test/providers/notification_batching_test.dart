@@ -8,6 +8,7 @@ import 'package:walletmanager/data/repositories/store_repository.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/device_repository.dart';
 import 'package:walletmanager/data/repositories/license_key_repository.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
@@ -51,7 +52,7 @@ void main() {
     final mockStorage = sl<LocalStorageService>();
     when(() => mockStorage.userId).thenReturn(null);
     when(() => mockStorage.storeId).thenReturn(null);
-    when(() => mockStorage.userRole).thenReturn(null);
+    when(() => mockStorage.userRole).thenReturn(UserRole.unknown);
 
     final mockAuth = sl<AuthRepository>();
     when(() => mockAuth.getCurrentUser()).thenReturn(null);

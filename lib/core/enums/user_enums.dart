@@ -1,6 +1,7 @@
 enum UserRole {
   owner,
-  employee;
+  employee,
+  unknown;
 
   String get nameAr {
     switch (this) {
@@ -8,6 +9,8 @@ enum UserRole {
         return 'صاحب العمل';
       case UserRole.employee:
         return 'موظف';
+      case UserRole.unknown:
+        return 'غير معروف';
     }
   }
 
@@ -18,7 +21,8 @@ enum UserRole {
       case 'employee':
         return UserRole.employee;
       default:
-        return UserRole.employee;
+        // Fail-Closed: Default to unknown instead of employee
+        return UserRole.unknown;
     }
   }
 

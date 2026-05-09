@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/enums/user_enums.dart';
 import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/error_severity.dart';
 import '../models/sim_wallet_config.dart';
@@ -88,14 +89,14 @@ class LocalStorageService {
   Future<void> saveSession({
     required String userId,
     required String storeId,
-    required String userRole,
+    required UserRole userRole,
     required String userName,
     required String storeName,
   }) async {
     _ensureInitialized();
     await _prefs!.setString(_keyUserId, userId);
     await _prefs!.setString(_keyStoreId, storeId);
-    await _prefs!.setString(_keyUserRole, userRole);
+    await _prefs!.setString(_keyUserRole, userRole.name);
     await _prefs!.setString(_keyUserName, userName);
     await _prefs!.setString(_keyStoreName, storeName);
   }
@@ -105,7 +106,14 @@ class LocalStorageService {
   // ===========================
   String? get userId => _prefs?.getString(_keyUserId);
   String? get storeId => _prefs?.getString(_keyStoreId);
-  String? get userRole => _prefs?.getString(_keyUserRole);
+  
+  /// Returns the user role as an Enum. Fail-closed to unknown if not set or invalid.
+  UserRole get userRole {
+    final String? roleStr = _prefs?.getString(_keyUserRole);
+    if (roleStr == null) return UserRole.unknown;
+    return UserRole.fromString(roleStr);
+  }
+  
   String? get userName => _prefs?.getString(_keyUserName);
   String? get storeName => _prefs?.getString(_keyStoreName);
 

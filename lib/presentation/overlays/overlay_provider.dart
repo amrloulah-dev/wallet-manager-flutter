@@ -9,6 +9,7 @@ import 'package:walletmanager/core/utils/number_parser.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/state/safe_change_notifier.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService;
@@ -39,7 +40,7 @@ class OverlayProvider extends SafeChangeNotifier {
   String? _cachedUserId;
   String? _cachedStoreId;
   String? _cachedUserName;
-  String? _cachedUserRole;
+  UserRole? _cachedUserRole;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -243,7 +244,7 @@ class OverlayProvider extends SafeChangeNotifier {
         storeId: _cachedStoreId!,
         userId: _cachedUserId!,
         userName: _cachedUserName ?? 'Unknown',
-        userRole: _cachedUserRole ?? 'employee',
+        userRole: _cachedUserRole?.name ?? UserRole.employee.name,
         selectedWalletId: _selectedWalletId!,
         type: _type,
         amount: _amount,

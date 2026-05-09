@@ -67,14 +67,14 @@ class DatabaseSyncService {
     final savedStoreId = _localStorage.storeId;
     final savedUserRole = _localStorage.userRole;
 
-    if (savedUserId != null && savedStoreId != null && savedUserRole != null) {
-      if (savedUserRole == UserRole.owner.name) {
+    if (savedUserId != null && savedStoreId != null) {
+      if (savedUserRole == UserRole.owner) {
         // ENUM refactor
         final firebaseUser = _authRepository.getCurrentUser();
         if (firebaseUser != null) {
           return await _finalizeOwnerLogin(firebaseUser.uid);
         }
-      } else if (savedUserRole == UserRole.employee.name) {
+      } else if (savedUserRole == UserRole.employee) {
         // ENUM refactor
         final user = await _userRepository.getUserById(savedUserId);
         final store = await _storeRepository.getStoreById(savedStoreId);
@@ -123,7 +123,7 @@ class DatabaseSyncService {
       await _localStorage.saveSession(
         userId: userModel.userId,
         storeId: store.storeId,
-        userRole: userModel.role.name, // ENUM refactor
+        userRole: userModel.role, // ENUM refactor
         userName: userModel.fullName,
         storeName: store.storeName,
       );
@@ -174,7 +174,7 @@ class DatabaseSyncService {
       await _localStorage.saveSession(
         userId: user.userId,
         storeId: store.storeId,
-        userRole: user.role.name, // ENUM refactor
+        userRole: user.role, // ENUM refactor
         userName: user.fullName,
         storeName: store.storeName,
       );
@@ -227,7 +227,7 @@ class DatabaseSyncService {
       await _localStorage.saveSession(
         userId: employee.userId,
         storeId: store.storeId,
-        userRole: UserRole.employee.name, // ENUM refactor
+        userRole: UserRole.employee, // ENUM refactor
         userName: employee.fullName,
         storeName: store.storeName,
       );
@@ -265,7 +265,7 @@ class DatabaseSyncService {
       await _localStorage.saveSession(
         userId: updatedEmployee.userId,
         storeId: store.storeId,
-        userRole: updatedEmployee.role.name, // ENUM refactor
+        userRole: updatedEmployee.role, // ENUM refactor
         userName: updatedEmployee.fullName,
         storeName: store.storeName,
       );
@@ -445,7 +445,7 @@ class DatabaseSyncService {
     await _localStorage.saveSession(
       userId: userId,
       storeId: storeId,
-      userRole: UserRole.owner.name, // ENUM refactor
+      userRole: UserRole.owner, // ENUM refactor
       userName: newOwner.fullName,
       storeName: resolvedStore.storeName,
     );
