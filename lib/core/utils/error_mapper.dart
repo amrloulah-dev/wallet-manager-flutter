@@ -45,7 +45,7 @@ class ErrorMapper {
       case 'auth_error_key_already_used':
         return l10n.auth_error_key_already_used;
       case 'weak_password':
-        return l10n.weakPasswordException ?? errorCode;
+        return l10n.weakPasswordException;
 
       // License Errors
       case 'license_expired':
@@ -53,7 +53,7 @@ class ErrorMapper {
 
       // Network Errors
       case 'network_error_fetch_failed':
-        return l10n.somethingWentWrong; // Generic fallback if no specific network error in l10n
+        return l10n.somethingWentWrong; // Generic fallback
 
       // Wallet Errors
       case 'wallet_error_fetch_failed':
@@ -77,11 +77,11 @@ class ErrorMapper {
 
       // Permission Errors
       case 'permission_denied':
-        return l10n.ownerOnlyFeature; // Or add specific permission_denied key
+        return l10n.ownerOnlyFeature;
 
       // Device Errors
       case 'device_limit_exceeded':
-        return l10n.somethingWentWrong; // Fallback
+        return l10n.somethingWentWrong;
 
       // Overlay Errors
       case 'overlay_error_amount_limit_instapay':

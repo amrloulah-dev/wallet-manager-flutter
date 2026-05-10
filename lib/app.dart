@@ -118,7 +118,7 @@ class MyApp extends StatelessWidget {
             return MaterialApp(
               navigatorKey:
                   NavigationService.navigatorKey, // Set the navigatorKey
-              title: 'Wallet Manager',
+              onGenerateTitle: (context) => AppLocalizations.of(context)!.walletManager,
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,

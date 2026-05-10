@@ -635,6 +635,7 @@
   "auth_error_session_expired": "Authentication failed, please login again.",
   "auth_error_store_not_found": "Store not found.",
   "auth_error_user_not_found": "User not found or not an owner.",
+  "auth_error_email_already_in_use": "Email already in use.",
   "auth_error_login_failed": "Login failed.",
   "auth_error_employee_login_failed": "Employee login failed.",
   "auth_error_store_lookup_failed": "Error occurred during store lookup.",

@@ -284,7 +284,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unexpectedError => 'An unexpected error occurred';
 
   @override
-  String get loggingIn => 'جاري تسجيل الدخول...';
+  String get loggingIn => 'Logging in...';
 
   @override
   String get employeeLoginSubtitle => 'تسجيل دخول الموظفين';
@@ -584,9 +584,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vodafoneCash => 'Vodafone Cash';
-
-  @override
-  String get instapay => 'InstaPay';
 
   @override
   String get orangeCash => 'Orange Cash';
@@ -1338,7 +1335,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proYearlyTitle => 'Pro Yearly Plan';
 
   @override
-  String get proYearlyPrice => '999 EGP / year';
+  String get proYearlyPrice => '999 / year';
 
   @override
   String get proFeature1 => 'Auto-sync transactions';
@@ -1356,7 +1353,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lifetimeTitle => 'Lifetime Plan';
 
   @override
-  String get lifetimePrice => '2999 EGP one-time only';
+  String get lifetimePrice => '2999 one-time only';
 
   @override
   String get lifetimeFeature1 => 'Unlimited wallets';
@@ -1706,6 +1703,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_error_user_not_found => 'User not found or not an owner.';
 
   @override
+  String get auth_error_email_already_in_use => 'Email already in use.';
+
+  @override
   String get auth_error_login_failed => 'Login failed.';
 
   @override
@@ -1870,4 +1870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get passwordResetEmailSent =>
       'Reset link has been sent to your email.';
+
+  @override
+  String get weakPasswordException => 'The password is too weak.';
 }

@@ -585,9 +585,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get vodafoneCash => 'فودافون كاش';
 
   @override
-  String get instapay => 'إنستاباي';
-
-  @override
   String get orangeCash => 'أورانج كاش';
 
   @override
@@ -747,7 +744,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loadingDetails => 'جاري تحميل التفاصيل...';
 
   @override
-  String get transactionNotFound => 'لم يتم العثور على المعاملة';
+  String get transactionNotFound => 'لم يتم العور على المعاملة';
 
   @override
   String get retry => 'إعادة المحاولة';
@@ -1335,7 +1332,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get proYearlyTitle => 'باقة برو السنوية';
 
   @override
-  String get proYearlyPrice => '999 جنيه / سنة';
+  String get proYearlyPrice => '999 / سنة';
 
   @override
   String get proFeature1 => 'مزامنة المعاملات تلقائيا';
@@ -1353,7 +1350,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lifetimeTitle => 'باقة مدى الحياة';
 
   @override
-  String get lifetimePrice => '2999 جنيه فقط مره واحده';
+  String get lifetimePrice => '2999 فقط مره واحده';
 
   @override
   String get lifetimeFeature1 => 'عدد لا نهائي من المحافظ';
@@ -1698,6 +1695,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_error_user_not_found => 'المستخدم غير موجود أو ليس مالكاً.';
 
   @override
+  String get auth_error_email_already_in_use =>
+      'البريد الإلكتروني مستخدم بالفعل.';
+
+  @override
   String get auth_error_login_failed => 'فشل تسجيل الدخول.';
 
   @override
@@ -1857,4 +1858,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get passwordResetEmailSent =>
       'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.';
+
+  @override
+  String get weakPasswordException => 'كلمة المرور ضعيفة جداً.';
 }

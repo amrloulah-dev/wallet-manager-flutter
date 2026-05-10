@@ -1220,12 +1220,6 @@ abstract class AppLocalizations {
   /// **'فودافون كاش'**
   String get vodafoneCash;
 
-  /// No description provided for @instapay.
-  ///
-  /// In ar, this message translates to:
-  /// **'إنستاباي'**
-  String get instapay;
-
   /// No description provided for @orangeCash.
   ///
   /// In ar, this message translates to:
@@ -1535,7 +1529,7 @@ abstract class AppLocalizations {
   /// No description provided for @transactionNotFound.
   ///
   /// In ar, this message translates to:
-  /// **'لم يتم العثور على المعاملة'**
+  /// **'لم يتم العور على المعاملة'**
   String get transactionNotFound;
 
   /// No description provided for @retry.
@@ -2669,7 +2663,7 @@ abstract class AppLocalizations {
   /// No description provided for @proYearlyPrice.
   ///
   /// In ar, this message translates to:
-  /// **'999 جنيه / سنة'**
+  /// **'999 / سنة'**
   String get proYearlyPrice;
 
   /// No description provided for @proFeature1.
@@ -2705,7 +2699,7 @@ abstract class AppLocalizations {
   /// No description provided for @lifetimePrice.
   ///
   /// In ar, this message translates to:
-  /// **'2999 جنيه فقط مره واحده'**
+  /// **'2999 فقط مره واحده'**
   String get lifetimePrice;
 
   /// No description provided for @lifetimeFeature1.
@@ -3338,6 +3332,12 @@ abstract class AppLocalizations {
   /// **'المستخدم غير موجود أو ليس مالكاً.'**
   String get auth_error_user_not_found;
 
+  /// No description provided for @auth_error_email_already_in_use.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني مستخدم بالفعل.'**
+  String get auth_error_email_already_in_use;
+
   /// No description provided for @auth_error_login_failed.
   ///
   /// In ar, this message translates to:
@@ -3637,6 +3637,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.'**
   String get passwordResetEmailSent;
+
+  /// No description provided for @weakPasswordException.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور ضعيفة جداً.'**
+  String get weakPasswordException;
 }
 
 class _AppLocalizationsDelegate

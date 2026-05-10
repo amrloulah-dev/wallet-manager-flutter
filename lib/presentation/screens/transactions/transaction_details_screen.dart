@@ -304,7 +304,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   value: wallet.walletType == WalletType.vodafoneCash
                       ? l10n.vodafoneCash
                       : (wallet.walletType == WalletType.instaPay
-                          ? l10n.instapay
+                          ? l10n.instaPay
                           : wallet.walletType.name), // ENUM refactor
                 ),
               ]

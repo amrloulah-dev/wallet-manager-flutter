@@ -177,8 +177,14 @@ class EmployeeCard extends StatelessWidget {
           children: [
             cardContent,
             if (isFrozen)
-              const Positioned(
-                child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+              const PositionedDirectional(
+                top: 0,
+                bottom: 0,
+                start: 0,
+                end: 0,
+                child: Center(
+                  child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+                ),
               ),
           ],
         );

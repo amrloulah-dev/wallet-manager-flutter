@@ -40,7 +40,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   Map<WalletType, String> _getWalletTypeDisplayNames(BuildContext context) {
     return {
       WalletType.vodafoneCash: AppLocalizations.of(context)!.vodafoneCash,
-      WalletType.instaPay: AppLocalizations.of(context)!.instapay,
+      WalletType.instaPay: AppLocalizations.of(context)!.instaPay,
       WalletType.orangeCash: AppLocalizations.of(context)!.orangeCash,
       WalletType.etisalatCash: AppLocalizations.of(context)!.etisalatCash,
       WalletType.wePay: AppLocalizations.of(context)!.wePay,

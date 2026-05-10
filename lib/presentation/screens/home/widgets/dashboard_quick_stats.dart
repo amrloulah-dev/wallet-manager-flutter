@@ -58,7 +58,9 @@ class DashboardQuickStats extends StatelessWidget {
 
           final lastUpdated = stats.lastUpdated;
           final formattedTime = lastUpdated != null
-              ? DateFormat.yMMMd().add_jm().format(lastUpdated)
+              ? DateFormat.yMMMd(Localizations.localeOf(context).languageCode)
+                  .add_jm()
+                  .format(lastUpdated)
               : 'N/A';
 
           return SliverList(

@@ -640,6 +640,7 @@
   "auth_error_session_expired": "فشلت عملية المصادقة، يرجى تسجيل الدخول مجدداً.",
   "auth_error_store_not_found": "المتجر غير موجود.",
   "auth_error_user_not_found": "المستخدم غير موجود أو ليس مالكاً.",
+  "auth_error_email_already_in_use": "البريد الإلكتروني مستخدم بالفعل.",
   "auth_error_login_failed": "فشل تسجيل الدخول.",
   "auth_error_employee_login_failed": "فشل تسجيل دخول الموظف.",
   "auth_error_store_lookup_failed": "حدث خطأ أثناء البحث عن المتجر.",

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
+import 'package:walletmanager/core/utils/error_mapper.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
@@ -206,7 +207,6 @@ class _ErrorListener extends StatelessWidget {
     return Consumer<OverlayProvider>(
       builder: (context, provider, child) {
         if (provider.errorMessage != null) {
-          final l10n = AppLocalizations.of(context)!;
           final theme = Theme.of(context);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
