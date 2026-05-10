@@ -39,3 +39,4 @@
 
 ## Phase: Review Fixes
 - [x] Task: Apply review suggestions ce4ef0c
+- [x] Task: Finalize i18n/RTL implementation (centralized errors, logical fixes) 5e5118c
