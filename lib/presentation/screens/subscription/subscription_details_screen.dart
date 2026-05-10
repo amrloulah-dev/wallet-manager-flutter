@@ -5,6 +5,7 @@ import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
 import '../../../data/models/store_model.dart';
 import '../../../providers/employee_provider.dart';
+import '../../../core/utils/date_helper.dart';
 import '../../../core/enums/subscription_enums.dart';
 
 class SubscriptionDetailsScreen extends StatelessWidget {
@@ -150,8 +151,9 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                 const Icon(Icons.event, size: 20, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(
-                  loc.expiryDateValue(
-                      '${subscription.endDate!.year}-${subscription.endDate!.month.toString().padLeft(2, '0')}-${subscription.endDate!.day.toString().padLeft(2, '0')}'),
+                  loc.expiryDateValue(DateHelper.formatDateTime(
+                      subscription.endDate!,
+                      locale: Localizations.localeOf(context).languageCode)),
                   style: const TextStyle(fontSize: 16),
                 ),
               ],

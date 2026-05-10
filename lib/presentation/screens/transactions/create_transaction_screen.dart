@@ -464,7 +464,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 style: AppTextStyles.bodyMedium,
               ),
               Text(
-                '${NumberFormatter.formatAmount(_serviceFee)} EGP',
+                NumberFormatter.formatAmount(_serviceFee, showCurrency: true),
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: AppColors.error,
                   fontWeight: FontWeight.bold,
@@ -482,7 +482,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                     .copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                '${NumberFormatter.formatAmount(totalDeduction)} EGP',
+                NumberFormatter.formatAmount(totalDeduction, showCurrency: true),
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],

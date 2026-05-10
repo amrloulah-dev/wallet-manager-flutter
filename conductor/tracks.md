@@ -7,5 +7,5 @@
 
 ---
 
-- [~] **Track: i18n & RTL/LTR Master Blueprint**
+- [x] **Track: i18n & RTL/LTR Master Blueprint**
 *Link: [./tracks/i18n_rtl_ltr_master_blueprint_20260510/](./tracks/i18n_rtl_ltr_master_blueprint_20260510/)*

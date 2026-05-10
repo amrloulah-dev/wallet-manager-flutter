@@ -3,6 +3,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
@@ -148,7 +149,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
           _buildInfoRow(
             Icons.calendar_today,
             AppLocalizations.of(context)!.dateAdded,
-            _employee.createdAt.toString().split(' ')[0],
+            DateHelper.formatDateTime(_employee.createdAt ?? DateTime.now(),
+                locale: Localizations.localeOf(context).languageCode),
           ),
         ],
       ),

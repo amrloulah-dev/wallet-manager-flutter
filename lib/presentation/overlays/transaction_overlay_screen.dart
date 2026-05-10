@@ -152,8 +152,7 @@ class _OverlayContentState extends State<_OverlayContent> {
                                   (amount: p.amount, type: p.type),
                               builder: (context, data, _) => _HeroAmountWidget(
                                 txtAmount: l10n.amount,
-                                amount:
-                                    NumberFormatter.formatAmount(data.amount),
+                                amount: data.amount,
                                 type: data.type,
                               ),
                             ),
@@ -284,7 +283,7 @@ class _HeaderWidget extends StatelessWidget {
 
 class _HeroAmountWidget extends StatelessWidget {
   final String txtAmount;
-  final String amount;
+  final double amount;
   final String type;
 
   const _HeroAmountWidget({
@@ -309,7 +308,7 @@ class _HeroAmountWidget extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '$amount EGP',
+          NumberFormatter.formatAmount(amount, showCurrency: true),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 28,

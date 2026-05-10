@@ -5,10 +5,14 @@ class DateHelper {
   // ===========================
   // Format DateTime to String
   // ===========================
-  /// Formats a DateTime object into a string.
+  /// Formats a DateTime object into a localized string.
+  /// If [format] is not provided, it defaults to [DateFormat.yMd] for the given [locale].
   static String formatDateTime(DateTime dateTime,
-      {String format = 'dd/MM/yyyy'}) {
-    return DateFormat(format).format(dateTime);
+      {String? format, String? locale}) {
+    if (format != null) {
+      return DateFormat(format, locale).format(dateTime);
+    }
+    return DateFormat.yMd(locale).format(dateTime);
   }
 
   // ===========================

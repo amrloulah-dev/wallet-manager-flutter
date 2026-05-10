@@ -184,7 +184,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             children: [
               const SizedBox(height: 48),
               // Header
-              Text('Wallet Manager',
+              Text(l10n.walletManager,
                   style: AppTextStyles.h1.copyWith(color: AppColors.primary)),
               const SizedBox(height: 32),
 
