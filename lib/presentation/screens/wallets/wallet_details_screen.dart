@@ -243,7 +243,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
+      padding: const EdgeInsetsDirectional.only(bottom: 8.0, end: 8.0),
       child: Text(title, style: AppTextStyles.h3),
     );
   }

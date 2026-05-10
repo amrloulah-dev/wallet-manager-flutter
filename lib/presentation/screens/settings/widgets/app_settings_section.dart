@@ -32,7 +32,11 @@ class AppSettingsSection extends StatelessWidget {
                 subtitle: Text(
                     _getThemeModeName(context, themeProvider.themeMode),
                     style: AppTextStyles.bodyMedium),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                trailing: Icon(
+                    IconData(Icons.arrow_forward_ios.codePoint,
+                        fontFamily: Icons.arrow_forward_ios.fontFamily,
+                        matchTextDirection: true),
+                    size: 16),
                 onTap: () => _showThemeDialog(context),
               ),
             );
@@ -55,7 +59,11 @@ class AppSettingsSection extends StatelessWidget {
                         ? AppLocalizations.of(context)!.arabic
                         : AppLocalizations.of(context)!.english,
                     style: AppTextStyles.bodyMedium),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                trailing: Icon(
+                    IconData(Icons.arrow_forward_ios.codePoint,
+                        fontFamily: Icons.arrow_forward_ios.fontFamily,
+                        matchTextDirection: true),
+                    size: 16),
                 onTap: () => _showLanguageDialog(context),
               ),
             );

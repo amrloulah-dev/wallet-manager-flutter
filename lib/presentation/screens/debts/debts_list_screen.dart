@@ -290,7 +290,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       selector: (context, provider) => provider.currentDebtType,
       builder: (context, currentDebtType, child) {
         return Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          margin: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 0),
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: AppColors.surface(context),

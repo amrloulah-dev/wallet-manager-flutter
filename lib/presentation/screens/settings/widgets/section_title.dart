@@ -9,7 +9,7 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 8),
       child: Text(
         title,
         style: AppTextStyles.h3.copyWith(color: AppColors.primary),

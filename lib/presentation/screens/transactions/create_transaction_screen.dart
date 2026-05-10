@@ -331,7 +331,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ),
         if (!_isTypeValidated)
           Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 12),
+            padding: const EdgeInsetsDirectional.only(top: 8.0, end: 12),
             child: Text(
               l10n.pleaseSelectTransactionType,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),

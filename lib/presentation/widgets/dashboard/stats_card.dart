@@ -94,7 +94,9 @@ class StatsCard extends StatelessWidget {
                 trailing!
               else if (onTap != null)
                 Icon(
-                  Icons.arrow_forward_ios,
+                  IconData(Icons.arrow_forward_ios.codePoint,
+                      fontFamily: Icons.arrow_forward_ios.fontFamily,
+                      matchTextDirection: true),
                   size: 16,
                   color: AppColors.textSecondary(context),
                 ),

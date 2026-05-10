@@ -158,16 +158,16 @@ class PaywallScreen extends StatelessWidget {
         child: Stack(
           children: [
             if (isPopular)
-              Positioned(
+              PositionedDirectional(
                 top: 0,
-                right: 0,
+                end: 0,
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: const BoxDecoration(
                     color: Colors.amber,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(16),
+                    borderRadius: BorderRadiusDirectional.only(
+                      bottomStart: Radius.circular(16),
                     ),
                   ),
                   child: Text(
@@ -181,9 +181,9 @@ class PaywallScreen extends StatelessWidget {
                 ),
               ),
             if (scarcityText != null)
-              Positioned(
+              PositionedDirectional(
                 top: 0,
-                left: 0,
+                start: 0,
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -191,8 +191,8 @@ class PaywallScreen extends StatelessWidget {
                     color: isDisabled
                         ? Colors.red.shade100
                         : Colors.orange.shade100,
-                    borderRadius: const BorderRadius.only(
-                      bottomRight: Radius.circular(16),
+                    borderRadius: const BorderRadiusDirectional.only(
+                      bottomEnd: Radius.circular(16),
                     ),
                   ),
                   child: Text(

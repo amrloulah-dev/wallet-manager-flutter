@@ -157,7 +157,9 @@ class EmployeeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        Icons.arrow_forward_ios_rounded,
+                        IconData(Icons.arrow_forward_ios_rounded.codePoint,
+                            fontFamily: Icons.arrow_forward_ios_rounded.fontFamily,
+                            matchTextDirection: true),
                         size: 16,
                         color: AppColors.primary
                             .withAlpha((128 * alphaScale).round()),

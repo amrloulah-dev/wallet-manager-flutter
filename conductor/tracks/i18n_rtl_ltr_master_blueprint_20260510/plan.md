@@ -1,6 +1,6 @@
 # Implementation Plan: i18n & RTL/LTR Master Blueprint
 
-## Phase 1: Directionality & Forced RTL/LTR (Axis 1)
+## Phase 1: Directionality & Forced RTL/LTR (Axis 1) [checkpoint: 0f78b01]
 - [x] Task: Refactor `transaction_overlay_screen.dart`
     - [x] Remove hardcoded `TextDirection.ltr`.
     - [x] Replace manual language checks with `Directionality.of(context)` or `Localizations.localeOf(context)`.
@@ -9,16 +9,16 @@
 - [x] Task: Global Audit for Forced Directionality
     - [x] Search for `TextDirection.rtl` and `TextDirection.ltr` across `lib/presentation/`.
     - [x] Remove forced directionality unless strictly required for specific bidirectional text spans.
-- [ ] Task: Conductor - User Manual Verification 'Directionality & Forced RTL/LTR (Axis 1)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Directionality & Forced RTL/LTR (Axis 1)' (Protocol in workflow.md)
 
 ## Phase 2: Physical to Logical Layout Migration (Axis 2)
-- [ ] Task: Convert `EdgeInsets` to `EdgeInsetsDirectional`
-    - [ ] Convert all `EdgeInsets.fromLTRB` to `EdgeInsetsDirectional.fromSTEB` across the project.
-    - [ ] Convert all `EdgeInsets.only(right: X, left: Y)` to `EdgeInsetsDirectional.only(end: X, start: Y)` across the project.
-- [ ] Task: Convert `Positioned` to `PositionedDirectional`
-    - [ ] Convert `Positioned(...)` widgets using `left`/`right` properties to `PositionedDirectional(...)` using `start`/`end`.
-- [ ] Task: Update Icon Directionality
-    - [ ] Add `matchTextDirection: true` to all `Icons.arrow_forward_ios` and `Icons.arrow_forward_ios_rounded` icons.
+- [x] Task: Convert `EdgeInsets` to `EdgeInsetsDirectional`
+    - [x] Convert all `EdgeInsets.fromLTRB` to `EdgeInsetsDirectional.fromSTEB` across the project.
+    - [x] Convert all `EdgeInsets.only(right: X, left: Y)` to `EdgeInsetsDirectional.only(end: X, start: Y)` across the project.
+- [x] Task: Convert `Positioned` to `PositionedDirectional`
+    - [x] Convert `Positioned(...)` widgets using `left`/`right` properties to `PositionedDirectional(...)` using `start`/`end`.
+- [x] Task: Update Icon Directionality
+    - [x] Add `matchTextDirection: true` to all `Icons.arrow_forward_ios` and `Icons.arrow_forward_ios_rounded` icons.
 - [ ] Task: Conductor - User Manual Verification 'Physical to Logical Layout Migration (Axis 2)' (Protocol in workflow.md)
 
 ## Phase 3: Formatting, Dates, and L10n Cleanups (Axis 3)
