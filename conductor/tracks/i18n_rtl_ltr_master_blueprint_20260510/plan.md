@@ -36,3 +36,6 @@
     - [x] Extract error strings in `transaction_overlay_screen.dart` to `.arb` files.
     - [x] Extract SnackBar error messages in `payment_modal_screen.dart` and map to `.arb` localized strings.
 - [x] Task: Conductor - User Manual Verification 'Formatting, Dates, and L10n Cleanups (Axis 3)' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions ce4ef0c
