@@ -20,9 +20,8 @@ class TransactionOverlayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine language from local storage (defaulting to Arabic if not English)
+    // Determine language from local storage
     final languageCode = LocalStorageService.instance.languageCode ?? 'ar';
-    final isAr = languageCode != 'en';
 
     return ChangeNotifierProvider(
       create: (_) => OverlayProvider(),
@@ -40,15 +39,6 @@ class TransactionOverlayScreen extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          builder: (context, child) {
-            return Directionality(
-              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-              child: Theme(
-                data: _cachedLightTheme,
-                child: child!,
-              ),
-            );
-          },
           home: const _OverlayContent(),
         ),
       ),
@@ -106,8 +96,6 @@ class _OverlayContentState extends State<_OverlayContent> {
   @override
   Widget build(BuildContext context) {
     final theme = TransactionOverlayScreen._cachedLightTheme;
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Theme(
@@ -323,7 +311,6 @@ class _HeroAmountWidget extends StatelessWidget {
         Text(
           '$amount EGP',
           textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,

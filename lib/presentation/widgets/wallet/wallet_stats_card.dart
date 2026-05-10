@@ -106,7 +106,6 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     // Adjust width to account for padding and spacing in the Wrap
     final itemWidth = (screenWidth - (16 * 2) - 8) / 2.1;
@@ -143,9 +142,6 @@ class _StatItem extends StatelessWidget {
             style: AppTextStyles.h3.copyWith(color: color),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textDirection: label == l10n.lastTransaction
-                ? TextDirection.rtl
-                : TextDirection.ltr,
           ),
         ],
       ),

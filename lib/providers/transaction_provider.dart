@@ -33,7 +33,7 @@ class TransactionProvider extends BaseProvider {
   List<TransactionModel> _transactions = [];
   Map<String, TransactionModel> _transactionMap = {};
   List<TransactionModel> _todayTransactions = [];
-  Map<String, dynamic> _summary = {};
+  final Map<String, dynamic> _summary = {};
 
   bool _hasMore = true;
   DocumentSnapshot? _lastDocument;

@@ -1,14 +1,14 @@
 # Implementation Plan: i18n & RTL/LTR Master Blueprint
 
 ## Phase 1: Directionality & Forced RTL/LTR (Axis 1)
-- [ ] Task: Refactor `transaction_overlay_screen.dart`
-    - [ ] Remove hardcoded `TextDirection.ltr`.
-    - [ ] Replace manual language checks with `Directionality.of(context)` or `Localizations.localeOf(context)`.
-- [ ] Task: Strip hardcoded RTL text direction globally
-    - [ ] Remove `textDirection: TextDirection.rtl` from `paywall_screen.dart`, `subscription_details_screen.dart`, `payment_success_modal.dart`, `payment_modal_screen.dart`, `admin_block_screen.dart`, `subscription_banner.dart`, `custom_text_field.dart`, `wallet_stats_card.dart`, and `wallet_limit_bar.dart`.
-- [ ] Task: Global Audit for Forced Directionality
-    - [ ] Search for `TextDirection.rtl` and `TextDirection.ltr` across `lib/presentation/`.
-    - [ ] Remove forced directionality unless strictly required for specific bidirectional text spans.
+- [x] Task: Refactor `transaction_overlay_screen.dart`
+    - [x] Remove hardcoded `TextDirection.ltr`.
+    - [x] Replace manual language checks with `Directionality.of(context)` or `Localizations.localeOf(context)`.
+- [x] Task: Strip hardcoded RTL text direction globally
+    - [x] Remove `textDirection: TextDirection.rtl` from `paywall_screen.dart`, `subscription_details_screen.dart`, `payment_success_modal.dart`, `payment_modal_screen.dart`, `admin_block_screen.dart`, `subscription_banner.dart`, `custom_text_field.dart`, `wallet_stats_card.dart`, and `wallet_limit_bar.dart`.
+- [x] Task: Global Audit for Forced Directionality
+    - [x] Search for `TextDirection.rtl` and `TextDirection.ltr` across `lib/presentation/`.
+    - [x] Remove forced directionality unless strictly required for specific bidirectional text spans.
 - [ ] Task: Conductor - User Manual Verification 'Directionality & Forced RTL/LTR (Axis 1)' (Protocol in workflow.md)
 
 ## Phase 2: Physical to Logical Layout Migration (Axis 2)

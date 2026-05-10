@@ -78,7 +78,6 @@ class WalletLimitBar extends StatelessWidget {
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary(context),
           ),
-          textDirection: TextDirection.ltr,
         ),
       ],
     );

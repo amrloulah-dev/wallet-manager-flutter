@@ -33,70 +33,67 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     if (isLifetime) planName = loc.lifetimeVipPlan;
     if (isTrial) planName = loc.trialPlan;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(loc.subscriptionDetails),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildStatusCard(
-                  context, loc, planName, subscription, isLifetime),
-              const SizedBox(height: 24),
-              Text(
-                loc.currentUsage,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildLimitItem(
-                context,
-                title: loc.activeWallets,
-                current: stats?.totalWallets ?? 0,
-                max: subscription.maxWallets,
-                icon: Icons.account_balance_wallet,
-              ),
-              const SizedBox(height: 12),
-              _buildLimitItem(
-                context,
-                title: loc.employeeAccounts,
-                current: context.select<EmployeeProvider, int>(
-                    (p) => p.employeesCount), // dynamic employee count
-                max: subscription.maxEmployees,
-                icon: Icons.people,
-              ),
-              const SizedBox(height: 32),
-              if (!isLifetime) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const PaywallScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.upgrade),
-                    label: Text(loc.upgradeSubscription),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.amber.shade700,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(loc.subscriptionDetails),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildStatusCard(
+                context, loc, planName, subscription, isLifetime),
+            const SizedBox(height: 24),
+            Text(
+              loc.currentUsage,
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildLimitItem(
+              context,
+              title: loc.activeWallets,
+              current: stats?.totalWallets ?? 0,
+              max: subscription.maxWallets,
+              icon: Icons.account_balance_wallet,
+            ),
+            const SizedBox(height: 12),
+            _buildLimitItem(
+              context,
+              title: loc.employeeAccounts,
+              current: context.select<EmployeeProvider, int>(
+                  (p) => p.employeesCount), // dynamic employee count
+              max: subscription.maxEmployees,
+              icon: Icons.people,
+            ),
+            const SizedBox(height: 32),
+            if (!isLifetime) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PaywallScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.upgrade),
+                  label: Text(loc.upgradeSubscription),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.amber.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );

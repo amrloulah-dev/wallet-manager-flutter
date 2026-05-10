@@ -138,7 +138,6 @@ class _CustomTextFieldState extends State<CustomTextField>
         inputFormatters: widget.inputFormatters,
         textCapitalization: widget.textCapitalization,
         style: AppTextStyles.bodyMedium,
-        textDirection: TextDirection.rtl,
         decoration: InputDecoration(
           labelText: widget.labelText,
           hintText: widget.hintText,
