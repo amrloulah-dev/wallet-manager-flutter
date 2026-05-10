@@ -35,6 +35,8 @@
 
 ## Tools & Utilities
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
+    - **Logical Layout Migration:** Global transition from physical (`EdgeInsets`, `left`/`right`) to logical (`EdgeInsetsDirectional`, `start`/`end`) constraints for seamless RTL/LTR mirroring.
+    - **Ambient Locale Propagation:** Removal of hardcoded directionality logic in favor of ambient locale propagation via `MaterialApp` and `Localizations`.
 - **Security:** `crypto` for PIN hashing, **HMAC subscription cache integrity**, and `uuid` for unique identifiers. Includes:
     - **Global Role Enums:** Strict `UserRole` Enum (`owner`, `employee`, `unknown`) replacing all string-based role comparisons.
     - **Post-Fetch Repository Guards:** Mandatory `expectedStoreId` verification for all document fetches to prevent cross-tenant data leakage.

@@ -13,4 +13,4 @@
 ## Prose and Communication
 - **Tone:** Professional yet approachable, focusing on helpfulness and reliability.
 - **Clarity:** Use plain language for technical terms to ensure accessibility for all users, including non-technical store employees.
-- **Bilingual Support:** All UI text and messages must be fully localized in both English and Arabic.
+- **Bilingual Support:** All UI text, messages, and layouts must be fully localized and mirrorable in both English and Arabic using logical constraints.

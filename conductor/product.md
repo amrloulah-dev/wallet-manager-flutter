@@ -9,6 +9,7 @@ Wallet Manager is a Flutter-based application designed to help store owners and 
 ## Value Proposition
 - **Unified Financial Tracking:** Centralizes tracking of multiple e-wallets, transactions, and debts to avoid manual math errors.
 - **Automated Compliance:** Automatically enforces provider transaction limits and calculates commissions accurately.
+- **Full RTL/LTR Support:** Seamlessly supports both Arabic and English interfaces with logical layout mirroring for the Egyptian market.
 - **Secure Employee Management:** Provides granular role-based permissions and audits for employee actions.
 - **Reliable Trial Enforcement:** Prevents abuse via persistent device identification.
 
