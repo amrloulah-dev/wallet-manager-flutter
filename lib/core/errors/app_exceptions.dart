@@ -26,23 +26,26 @@ class AuthException extends AppException {
 
 /// Thrown when login credentials (e.g., password) are incorrect.
 class InvalidCredentialsException extends AuthException {
-  InvalidCredentialsException() : super('بيانات الدخول غير صحيحة');
+  InvalidCredentialsException()
+      : super('Invalid credentials', code: 'auth_error_invalid_credentials');
 }
 
 /// Thrown when a user tries to log in to an inactive store.
 class StoreInactiveException extends AuthException {
   StoreInactiveException()
-      : super('هذا الحساب غير نشط، يرجى التواصل مع الإدارة.');
+      : super('Store inactive', code: 'auth_error_store_not_active');
 }
 
 /// Thrown when trying to access a user that does not exist.
 class UserNotFoundException extends AuthException {
-  UserNotFoundException() : super('المستخدم غير موجود');
+  UserNotFoundException()
+      : super('User not found', code: 'auth_error_user_not_found');
 }
 
 /// Thrown during registration if the email is already in use.
 class EmailAlreadyInUseException extends AuthException {
-  EmailAlreadyInUseException() : super('البريد الإلكتروني مستخدم بالفعل');
+  EmailAlreadyInUseException()
+      : super('Email already in use', code: 'auth_error_email_already_in_use');
 }
 
 // ===========================
@@ -55,17 +58,20 @@ class LicenseException extends AppException {
 
 /// Thrown when the provided license key is invalid or doesn't exist.
 class InvalidLicenseException extends LicenseException {
-  InvalidLicenseException() : super('مفتاح الترخيص غير صحيح');
+  InvalidLicenseException()
+      : super('Invalid license key', code: 'auth_error_invalid_key');
 }
 
 /// Thrown when a license key has already been activated by another store.
 class LicenseAlreadyUsedException extends LicenseException {
-  LicenseAlreadyUsedException() : super('مفتاح الترخيص مستخدم بالفعل');
+  LicenseAlreadyUsedException()
+      : super('License already used', code: 'auth_error_key_already_used');
 }
 
 /// Thrown when the license has expired.
 class LicenseExpiredException extends LicenseException {
-  LicenseExpiredException() : super('مفتاح الترخيص منتهي الصلاحية');
+  LicenseExpiredException()
+      : super('License expired', code: 'license_expired');
 }
 
 // ===========================
@@ -73,7 +79,8 @@ class LicenseExpiredException extends LicenseException {
 // ===========================
 /// Thrown when there is a network connectivity issue.
 class NetworkException extends AppException {
-  NetworkException() : super('خطأ في الاتصال بالإنترنت، يرجى التحقق من اتصالك');
+  NetworkException()
+      : super('Network error', code: 'network_error_fetch_failed');
 }
 
 // ===========================
@@ -98,7 +105,7 @@ class ValidationException extends AppException {
 // ===========================
 /// Thrown when a specific entity (e.g., a document, a wallet) is not found.
 class NotFoundException extends AppException {
-  NotFoundException(String entity) : super('$entity غير موجود');
+  NotFoundException(String entity) : super('$entity not found');
 }
 
 // ===========================
@@ -106,7 +113,8 @@ class NotFoundException extends AppException {
 // ===========================
 /// Thrown when a user attempts an action they do not have permission for.
 class PermissionDeniedException extends AppException {
-  PermissionDeniedException() : super('ليس لديك صلاحية للقيام بهذا الإجراء');
+  PermissionDeniedException()
+      : super('Permission denied', code: 'permission_denied');
 }
 
 class PermissionException extends PermissionDeniedException {
@@ -116,17 +124,18 @@ class PermissionException extends PermissionDeniedException {
 /// Thrown when the user has exceeded the maximum number of trials on a device.
 class DeviceLimitExceededException extends AppException {
   DeviceLimitExceededException()
-      : super('لقد تجاوزت الحد المسموح للفترات التجريبية على هذا الجهاز.');
+      : super('Device limit exceeded', code: 'device_limit_exceeded');
 }
 
 /// Thrown when the password provided is too weak.
 class WeakPasswordException extends AuthException {
-  WeakPasswordException() : super('كلمة المرور ضعيفة جداً.');
+  WeakPasswordException() : super('Weak password', code: 'weak_password');
 }
 
 /// Thrown when the password provided is incorrect.
 class WrongPasswordException extends AuthException {
-  WrongPasswordException() : super('كلمة المرور غير صحيحة');
+  WrongPasswordException()
+      : super('Incorrect password', code: 'auth_error_invalid_credentials');
 }
 
 // ===========================
@@ -139,5 +148,5 @@ class DomainException extends AppException {
 
 /// Thrown when a monetary amount is invalid (e.g., negative or exceeds limit).
 class InvalidAmountException extends DomainException {
-  InvalidAmountException([super.message = 'المبلغ غير صالح']);
+  InvalidAmountException([super.message = 'Invalid amount']);
 }

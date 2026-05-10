@@ -210,23 +210,7 @@ class _ErrorListener extends StatelessWidget {
           final theme = Theme.of(context);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            String displayError = provider.errorMessage!;
-            // 1. Check for raw keys from OverlayProvider
-            if (displayError == 'pleaseSelectWallet') {
-              displayError = l10n.pleaseSelectWallet;
-            } else if (displayError == 'authErrorRelogin') {
-              displayError = l10n.authErrorRelogin;
-            }
-            // 2. Check for legacy hardcoded Arabic from repository/models
-            else if (displayError ==
-                "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة") {
-              displayError = l10n.transactionExceedsLimitWarning;
-            } else if (displayError == 'Please select a wallet') {
-              displayError = l10n.pleaseSelectWallet;
-            } else if (displayError ==
-                'Session invalid. Please login again inside the app.') {
-              displayError = l10n.authErrorRelogin;
-            }
+            final displayError = ErrorMapper.getLocalizedString(context, provider.errorMessage!);
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

@@ -684,5 +684,6 @@
   "overlay_error_amount_limit_instapay": "Amount exceeds the maximum limit for a single transaction (70,000)",
   "overlay_error_amount_limit_telecom": "Amount exceeds the maximum limit for a single transaction (60,000)",
   "sendLink": "Send Link",
-  "passwordResetEmailSent": "Reset link has been sent to your email."
+  "passwordResetEmailSent": "Reset link has been sent to your email.",
+  "weakPasswordException": "The password is too weak."
 }

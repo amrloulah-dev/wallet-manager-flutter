@@ -689,5 +689,6 @@
   "overlay_error_amount_limit_instapay": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)",
   "overlay_error_amount_limit_telecom": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)",
   "sendLink": "إرسال الرابط",
-  "passwordResetEmailSent": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني."
+  "passwordResetEmailSent": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.",
+  "weakPasswordException": "كلمة المرور ضعيفة جداً."
 }

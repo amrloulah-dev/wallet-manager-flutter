@@ -36,6 +36,24 @@ class ErrorMapper {
         return l10n.auth_error_unexpected;
       case 'auth_operation_failed':
         return l10n.auth_operation_failed;
+      case 'auth_error_store_not_active':
+        return l10n.auth_error_store_not_active;
+      case 'auth_error_email_already_in_use':
+        return l10n.auth_error_email_already_in_use;
+      case 'auth_error_invalid_key':
+        return l10n.auth_error_invalid_key;
+      case 'auth_error_key_already_used':
+        return l10n.auth_error_key_already_used;
+      case 'weak_password':
+        return l10n.weakPasswordException ?? errorCode;
+
+      // License Errors
+      case 'license_expired':
+        return l10n.licenseExpired;
+
+      // Network Errors
+      case 'network_error_fetch_failed':
+        return l10n.somethingWentWrong; // Generic fallback if no specific network error in l10n
 
       // Wallet Errors
       case 'wallet_error_fetch_failed':
@@ -57,11 +75,25 @@ class ErrorMapper {
       case 'wallet_error_subscription_unresolved':
         return l10n.wallet_error_subscription_unresolved;
 
+      // Permission Errors
+      case 'permission_denied':
+        return l10n.ownerOnlyFeature; // Or add specific permission_denied key
+
+      // Device Errors
+      case 'device_limit_exceeded':
+        return l10n.somethingWentWrong; // Fallback
+
       // Overlay Errors
       case 'overlay_error_amount_limit_instapay':
         return l10n.overlay_error_amount_limit_instapay;
       case 'overlay_error_amount_limit_telecom':
         return l10n.overlay_error_amount_limit_telecom;
+
+      // Logic Keys (from OverlayProvider)
+      case 'pleaseSelectWallet':
+        return l10n.pleaseSelectWallet;
+      case 'authErrorRelogin':
+        return l10n.authErrorRelogin;
 
       default:
         return errorCode;
