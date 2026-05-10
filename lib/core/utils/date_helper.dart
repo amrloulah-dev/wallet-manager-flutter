@@ -2,6 +2,16 @@ import 'package:intl/intl.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DateHelper {
+  /// The active locale for date formatting.
+  /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
+  static String _locale = 'en_US';
+
+  /// Configures the locale used by date formatting methods.
+  /// Should be called once during app initialization.
+  static void setLocale(String locale) {
+    _locale = locale;
+  }
+
   // ===========================
   // Format DateTime to String
   // ===========================
@@ -9,10 +19,11 @@ class DateHelper {
   /// If [format] is not provided, it defaults to [DateFormat.yMd] for the given [locale].
   static String formatDateTime(DateTime dateTime,
       {String? format, String? locale}) {
+    final effectiveLocale = locale ?? _locale;
     if (format != null) {
-      return DateFormat(format, locale).format(dateTime);
+      return DateFormat(format, effectiveLocale).format(dateTime);
     }
-    return DateFormat.yMd(locale).format(dateTime);
+    return DateFormat.yMd(effectiveLocale).format(dateTime);
   }
 
   // ===========================
@@ -91,72 +102,33 @@ class DateHelper {
   // Get Relative Time (Localized)
   // ===========================
   /// Returns a user-friendly relative time string.
-  /// Needs AppLocalizations to support multi-language.
+  /// Uses AppLocalizations ICU plural keys for proper multi-language support.
   static String getRelativeTime(DateTime date, {AppLocalizations? l10n}) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
-    // Fallback if l10n is not provided (e.g. background tasks, though context is usually available in UI)
-    // If l10n is null, we might use a default or just return a simple formatted date.
+    // Fallback if l10n is not provided (e.g. background tasks)
     if (l10n == null) {
-      return DateFormat('dd/MM/yyyy HH:mm').format(date);
+      return DateFormat.yMd(_locale).add_Hm().format(date);
     }
 
-    final isAr = l10n.localeName == 'ar';
-
     if (difference.inSeconds < 60) {
-      return isAr ? 'الآن' : 'Just now';
+      return l10n.relativeJustNow;
     } else if (difference.inMinutes < 60) {
-      final minutes = difference.inMinutes;
-      if (isAr) {
-        if (minutes == 1) return 'منذ دقيقة';
-        if (minutes == 2) return 'منذ دقيقتين';
-        if (minutes <= 10) return 'منذ $minutes دقائق';
-        return 'منذ $minutes دقيقة';
-      }
-      return '$minutes minute${minutes == 1 ? '' : 's'} ago';
+      return l10n.relativeMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      final hours = difference.inHours;
-      if (isAr) {
-        if (hours == 1) return 'منذ ساعة';
-        if (hours == 2) return 'منذ ساعتين';
-        if (hours <= 10) return 'منذ $hours ساعات';
-        return 'منذ $hours ساعة';
-      }
-      return '$hours hour${hours == 1 ? '' : 's'} ago';
+      return l10n.relativeHoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      final days = difference.inDays;
-      if (isAr) {
-        if (days == 1) return 'أمس';
-        if (days == 2) return 'منذ يومين';
-        return 'منذ $days أيام';
-      }
-      if (days == 1) return 'Yesterday';
-      return '$days days ago';
+      return l10n.relativeDaysAgo(difference.inDays);
     } else if (difference.inDays < 30) {
       final weeks = (difference.inDays / 7).floor();
-      if (isAr) {
-        if (weeks == 1) return 'منذ أسبوع';
-        if (weeks == 2) return 'منذ أسبوعين';
-        return 'منذ $weeks أسابيع';
-      }
-      return '$weeks week${weeks == 1 ? '' : 's'} ago';
+      return l10n.relativeWeeksAgo(weeks);
     } else if (difference.inDays < 365) {
       final months = (difference.inDays / 30).floor();
-      if (isAr) {
-        if (months == 1) return 'منذ شهر';
-        if (months == 2) return 'منذ شهرين';
-        return 'منذ $months أشهر';
-      }
-      return '$months month${months == 1 ? '' : 's'} ago';
+      return l10n.relativeMonthsAgo(months);
     } else {
       final years = (difference.inDays / 365).floor();
-      if (isAr) {
-        if (years == 1) return 'منذ سنة';
-        if (years == 2) return 'منذ سنتين';
-        return 'منذ $years سنوات';
-      }
-      return '$years year${years == 1 ? '' : 's'} ago';
+      return l10n.relativeYearsAgo(years);
     }
   }
 

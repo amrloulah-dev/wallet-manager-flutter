@@ -3643,6 +3643,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'كلمة المرور ضعيفة جداً.'**
   String get weakPasswordException;
+
+  /// No description provided for @contactToRenewBtn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تواصل للتجديد'**
+  String get contactToRenewBtn;
+
+  /// No description provided for @enterCustomerName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل اسم العميل'**
+  String get enterCustomerName;
+
+  /// No description provided for @createTransaction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء معاملة'**
+  String get createTransaction;
+
+  /// No description provided for @continueBtn.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get continueBtn;
+
+  /// No description provided for @overlayConnectionError.
+  ///
+  /// In ar, this message translates to:
+  /// **'❌ خطأ في الاتصال'**
+  String get overlayConnectionError;
+
+  /// No description provided for @overlayCompleteFromApp.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إتمام المعاملة من التطبيق الأساسي.'**
+  String get overlayCompleteFromApp;
+
+  /// No description provided for @close.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق'**
+  String get close;
+
+  /// No description provided for @currencySymbol.
+  ///
+  /// In ar, this message translates to:
+  /// **'ج'**
+  String get currencySymbol;
+
+  /// No description provided for @relativeJustNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآن'**
+  String get relativeJustNow;
+
+  /// No description provided for @relativeMinutesAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{منذ دقيقة} =2{منذ دقيقتين} few{منذ {count} دقائق} other{منذ {count} دقيقة}}'**
+  String relativeMinutesAgo(int count);
+
+  /// No description provided for @relativeHoursAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{منذ ساعة} =2{منذ ساعتين} few{منذ {count} ساعات} other{منذ {count} ساعة}}'**
+  String relativeHoursAgo(int count);
+
+  /// No description provided for @relativeDaysAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{أمس} =2{منذ يومين} other{منذ {count} أيام}}'**
+  String relativeDaysAgo(int count);
+
+  /// No description provided for @relativeWeeksAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{منذ أسبوع} =2{منذ أسبوعين} other{منذ {count} أسابيع}}'**
+  String relativeWeeksAgo(int count);
+
+  /// No description provided for @relativeMonthsAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{منذ شهر} =2{منذ شهرين} other{منذ {count} أشهر}}'**
+  String relativeMonthsAgo(int count);
+
+  /// No description provided for @relativeYearsAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count, plural, =1{منذ سنة} =2{منذ سنتين} other{منذ {count} سنوات}}'**
+  String relativeYearsAgo(int count);
 }
 
 class _AppLocalizationsDelegate

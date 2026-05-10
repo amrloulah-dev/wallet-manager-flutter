@@ -686,5 +686,67 @@
   "overlay_error_amount_limit_telecom": "Amount exceeds the maximum limit for a single transaction (60,000)",
   "sendLink": "Send Link",
   "passwordResetEmailSent": "Reset link has been sent to your email.",
-  "weakPasswordException": "The password is too weak."
+  "weakPasswordException": "The password is too weak.",
+
+  "employeeLoginSubtitle": "Employee Login",
+  "enterStorePassword": "Enter store password",
+  "requiredField": "Required",
+  "selectEmployee": "Select Employee",
+  "selectEmployeeHint": "Tap to select",
+  "pleaseSelectEmployee": "Please select an employee",
+  "pinLabel": "PIN",
+  "pinMustBe4Digits": "Must be 4 digits",
+  "loginAction": "Login",
+  "createStoreSubtitle": "Create your new store and start your trial period",
+  "ownerData": "Owner Data",
+  "ownerNameLabel": "Owner Name",
+  "accountPassword": "Account Password",
+  "registerWithGoogle": "Register with Google",
+  "createAccountAction": "Create Account",
+  "authError": "Authentication Error",
+  "password": "Password",
+
+  "overlayConnectionError": "❌ Connection Error",
+  "overlayCompleteFromApp": "Please complete the transaction from the main app.",
+  "close": "Close",
+  "currencySymbol": "EGP",
+
+  "relativeJustNow": "Just now",
+  "relativeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeDaysAgo": "{count, plural, =1{Yesterday} other{{count} days ago}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
+  "@relativeWeeksAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }
+

@@ -12,6 +12,7 @@ import 'core/services/sms_service.dart';
 import 'core/services/background_service.dart';
 import 'core/errors/app_error_handler.dart';
 import 'core/errors/error_severity.dart';
+import 'l10n/arb/app_localizations.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -153,44 +154,67 @@ class OverlayErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Read cached locale from LocalStorage via locator
+    final storage = sl<LocalStorageService>();
+    final String lang = storage.languageCode;
+    final locale = Locale(lang);
+    final TextDirection direction =
+        lang == 'ar' ? TextDirection.rtl : TextDirection.ltr;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
-          child: Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 10)
-              ],
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      builder: (context, child) {
+        return Directionality(
+          textDirection: direction,
+          child: child!,
+        );
+      },
+      home: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context)!;
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 10)
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.overlayConnectionError,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.overlayCompleteFromApp,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => FlutterOverlayWindow.closeOverlay(),
+                      child: Text(l10n.close),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                const Text(
-                  '❌ خطأ في الاتصال',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'يرجى إتمام المعاملة من التطبيق الأساسي.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => FlutterOverlayWindow.closeOverlay(),
-                  child: const Text('إغلاق'),
-                ),
-              ],
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

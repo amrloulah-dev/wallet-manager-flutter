@@ -2,17 +2,26 @@ import 'package:intl/intl.dart';
 import 'currency_formatter.dart';
 
 class NumberFormatter {
+  /// The active locale for number formatting.
+  /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
+  static String _locale = 'en_US';
+
+  /// Configures the locale used by all formatting methods.
+  /// Should be called once during app initialization.
+  static void setLocale(String locale) {
+    _locale = locale;
+  }
+
   // ===========================
   // Format Number with Commas (1000 → 1,000)
   // ===========================
   /// Formats a number with thousand separators.
   /// Handles null by returning '0'.
-  /// Uses 'en_US' locale for standard comma separators.
   static String formatNumber(num? number) {
     if (number == null) {
       return '0';
     }
-    final formatter = NumberFormat('#,##0.##', 'en_US');
+    final formatter = NumberFormat('#,##0.##', _locale);
     return formatter.format(number);
   }
 
@@ -20,9 +29,8 @@ class NumberFormatter {
   // Format Amount with Currency (5000 → 5,000 ج)
   // ===========================
   /// Formats a number as a currency amount and optionally adds a currency symbol.
-  /// Defaults to 'ج' for the currency symbol.
   static String formatAmount(num? amount,
-      {bool showCurrency = true, String currencySymbol = 'ج'}) {
+      {bool showCurrency = true, String? currencySymbol}) {
     return CurrencyFormatter.formatAmount(amount,
         showCurrency: showCurrency, currencySymbol: currencySymbol);
   }

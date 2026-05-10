@@ -107,7 +107,7 @@ class CustomDropdown<T> extends StatelessWidget {
           selectedItemBuilder: (BuildContext context) {
             return itemsList.map((T item) {
               return Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: Text(
                   itemLabelBuilder(item),
                   style: AppTextStyles.bodyLarge.copyWith(

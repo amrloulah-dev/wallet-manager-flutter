@@ -36,11 +36,11 @@ extension TransactionModelUI on TransactionModel {
   }
 
   String get formattedDate =>
-      DateHelper.formatDateTime(transactionDate ?? DateTime.now(),
-          format: 'dd/MM/yyyy'); // Safe access
+      DateHelper.formatDateTime(
+          transactionDate ?? DateTime.now()); // Safe access — uses locale-aware yMd
   String get formattedTime =>
       DateHelper.formatDateTime(transactionDate ?? DateTime.now(),
-          format: 'hh:mm a'); // Safe access
+          format: 'jm'); // Safe access — locale-aware time pattern
 }
 
 extension DebtModelUI on DebtModel {

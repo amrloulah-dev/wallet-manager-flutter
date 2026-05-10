@@ -230,7 +230,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
       height: 250.0,
       width: 250.0,
       child: Stack(
-        alignment: Alignment.bottomLeft,
+        alignment: AlignmentDirectional.bottomStart,
         children: [
           ..._buildFabOptions(),
           FloatingActionButton(

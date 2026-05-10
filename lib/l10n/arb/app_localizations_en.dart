@@ -287,53 +287,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loggingIn => 'Logging in...';
 
   @override
-  String get employeeLoginSubtitle => 'تسجيل دخول الموظفين';
+  String get employeeLoginSubtitle => 'Employee Login';
 
   @override
-  String get enterStorePassword => 'أدخل كلمة مرور المتجر';
+  String get enterStorePassword => 'Enter store password';
 
   @override
-  String get requiredField => 'مطلوب';
+  String get requiredField => 'Required';
 
   @override
-  String get selectEmployee => 'اختر الموظف';
+  String get selectEmployee => 'Select Employee';
 
   @override
-  String get selectEmployeeHint => 'اضغط للاختيار';
+  String get selectEmployeeHint => 'Tap to select';
 
   @override
-  String get pleaseSelectEmployee => 'يرجى اختيار الموظف';
+  String get pleaseSelectEmployee => 'Please select an employee';
 
   @override
-  String get pinLabel => 'رقم التعريف الشخصي (PIN)';
+  String get pinLabel => 'PIN';
 
   @override
-  String get pinMustBe4Digits => 'يجب أن يكون 4 أرقام';
+  String get pinMustBe4Digits => 'Must be 4 digits';
 
   @override
-  String get loginAction => 'تسجيل الدخول';
+  String get loginAction => 'Login';
 
   @override
   String get createStoreSubtitle =>
-      'قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية';
+      'Create your new store and start your trial period';
 
   @override
-  String get ownerData => 'بيانات المالك';
+  String get ownerData => 'Owner Data';
 
   @override
-  String get ownerNameLabel => 'اسم المالك';
+  String get ownerNameLabel => 'Owner Name';
 
   @override
-  String get accountPassword => 'كلمة مرور الحساب';
+  String get accountPassword => 'Account Password';
 
   @override
-  String get registerWithGoogle => 'تسجيل باستخدام Google';
+  String get registerWithGoogle => 'Register with Google';
 
   @override
-  String get createAccountAction => 'إنشاء الحساب';
+  String get createAccountAction => 'Create Account';
 
   @override
-  String get authError => 'خطأ في المصادقة';
+  String get authError => 'Authentication Error';
 
   @override
   String get pleaseSelectTransactionType => 'Please select a transaction type';
@@ -1531,7 +1531,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectWalletHint => 'Select wallet for this transaction';
 
   @override
-  String get password => 'كلمة المرور';
+  String get password => 'Password';
 
   @override
   String get smsPermissionRequired => 'SMS Permission Required';
@@ -1873,4 +1873,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weakPasswordException => 'The password is too weak.';
+
+  @override
+  String get contactToRenewBtn => 'Contact to Renew';
+
+  @override
+  String get enterCustomerName => 'Enter customer name';
+
+  @override
+  String get createTransaction => 'Create Transaction';
+
+  @override
+  String get continueBtn => 'Continue';
+
+  @override
+  String get overlayConnectionError => '❌ Connection Error';
+
+  @override
+  String get overlayCompleteFromApp =>
+      'Please complete the transaction from the main app.';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get currencySymbol => 'EGP';
+
+  @override
+  String get relativeJustNow => 'Just now';
+
+  @override
+  String relativeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: 'Yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks ago',
+      one: '1 week ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months ago',
+      one: '1 month ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeYearsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
+  }
 }

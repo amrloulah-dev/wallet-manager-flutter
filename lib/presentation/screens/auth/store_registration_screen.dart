@@ -155,7 +155,12 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary(context)),
+            icon: Icon(
+              Directionality.of(context) == TextDirection.rtl
+                  ? Icons.arrow_forward
+                  : Icons.arrow_back,
+              color: AppColors.textPrimary(context),
+            ),
             onPressed: () {
               Navigator.pop(context);
             },

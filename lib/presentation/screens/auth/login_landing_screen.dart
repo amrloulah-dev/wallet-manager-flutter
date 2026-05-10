@@ -269,7 +269,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               ),
             ),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: TextButton(
                 onPressed: () => _showForgotPasswordBottomSheet(context),
                 child: Text(

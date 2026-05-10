@@ -691,5 +691,54 @@
   "overlay_error_amount_limit_telecom": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)",
   "sendLink": "إرسال الرابط",
   "passwordResetEmailSent": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.",
-  "weakPasswordException": "كلمة المرور ضعيفة جداً."
+  "weakPasswordException": "كلمة المرور ضعيفة جداً.",
+
+  "contactToRenewBtn": "تواصل للتجديد",
+  "enterCustomerName": "أدخل اسم العميل",
+  "createTransaction": "إنشاء معاملة",
+  "continueBtn": "متابعة",
+
+  "overlayConnectionError": "❌ خطأ في الاتصال",
+  "overlayCompleteFromApp": "يرجى إتمام المعاملة من التطبيق الأساسي.",
+  "close": "إغلاق",
+  "currencySymbol": "ج",
+
+  "relativeJustNow": "الآن",
+  "relativeMinutesAgo": "{count, plural, =1{منذ دقيقة} =2{منذ دقيقتين} few{منذ {count} دقائق} other{منذ {count} دقيقة}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeHoursAgo": "{count, plural, =1{منذ ساعة} =2{منذ ساعتين} few{منذ {count} ساعات} other{منذ {count} ساعة}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeDaysAgo": "{count, plural, =1{أمس} =2{منذ يومين} other{منذ {count} أيام}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeWeeksAgo": "{count, plural, =1{منذ أسبوع} =2{منذ أسبوعين} other{منذ {count} أسابيع}}",
+  "@relativeWeeksAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeMonthsAgo": "{count, plural, =1{منذ شهر} =2{منذ شهرين} other{منذ {count} أشهر}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "relativeYearsAgo": "{count, plural, =1{منذ سنة} =2{منذ سنتين} other{منذ {count} سنوات}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }
+

@@ -1861,4 +1861,106 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get weakPasswordException => 'كلمة المرور ضعيفة جداً.';
+
+  @override
+  String get contactToRenewBtn => 'تواصل للتجديد';
+
+  @override
+  String get enterCustomerName => 'أدخل اسم العميل';
+
+  @override
+  String get createTransaction => 'إنشاء معاملة';
+
+  @override
+  String get continueBtn => 'متابعة';
+
+  @override
+  String get overlayConnectionError => '❌ خطأ في الاتصال';
+
+  @override
+  String get overlayCompleteFromApp =>
+      'يرجى إتمام المعاملة من التطبيق الأساسي.';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String get currencySymbol => 'ج';
+
+  @override
+  String get relativeJustNow => 'الآن';
+
+  @override
+  String relativeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count دقيقة',
+      few: 'منذ $count دقائق',
+      two: 'منذ دقيقتين',
+      one: 'منذ دقيقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count ساعة',
+      few: 'منذ $count ساعات',
+      two: 'منذ ساعتين',
+      one: 'منذ ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count أيام',
+      two: 'منذ يومين',
+      one: 'أمس',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count أسابيع',
+      two: 'منذ أسبوعين',
+      one: 'منذ أسبوع',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count أشهر',
+      two: 'منذ شهرين',
+      one: 'منذ شهر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String relativeYearsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count سنوات',
+      two: 'منذ سنتين',
+      one: 'منذ سنة',
+    );
+    return '$_temp0';
+  }
 }

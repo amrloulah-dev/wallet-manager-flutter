@@ -205,7 +205,7 @@ class DashboardQuickStats extends StatelessWidget {
                         ),
                       ),
                       Align(
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerEnd,
                         child: Text(
                           '${AppLocalizations.of(context)!.lastUpdated} $formattedTime',
                           style: AppTextStyles.bodySmall.copyWith(
