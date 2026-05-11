@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
-class ErrorMapper {
+class ErrorTranslator {
   /// Maps a semantic error code to a localized user-facing string.
   /// If the code is not recognized, it returns the code itself.
   static String getLocalizedString(BuildContext context, String errorCode) {
@@ -46,6 +46,10 @@ class ErrorMapper {
         return l10n.auth_error_key_already_used;
       case 'weak_password':
         return l10n.weakPasswordException;
+      case 'auth_error_google_sign_in':
+        return l10n.auth_error_google_sign_in;
+      case 'auth_error_sign_out_failed':
+        return l10n.auth_error_sign_out_failed;
 
       // License Errors
       case 'license_expired':
@@ -74,6 +78,30 @@ class ErrorMapper {
         return l10n.wallet_error_frozen;
       case 'wallet_error_subscription_unresolved':
         return l10n.wallet_error_subscription_unresolved;
+      
+      // Transaction Validator Errors
+      case 'wallet_error_not_found':
+        return l10n.wallet_error_not_found;
+      case 'wallet_error_inactive':
+        return l10n.wallet_error_inactive;
+      case 'wallet_error_instapay_limit':
+        return l10n.wallet_error_instapay_limit;
+      case 'wallet_error_telecom_limit':
+        return l10n.wallet_error_telecom_limit;
+      case 'wallet_error_insufficient_balance':
+        return l10n.wallet_error_insufficient_balance;
+      case 'wallet_error_instapay_daily_limit':
+        return l10n.wallet_error_instapay_daily_limit;
+      case 'wallet_error_daily_send_limit':
+        return l10n.wallet_error_daily_send_limit;
+      case 'wallet_error_monthly_send_limit':
+        return l10n.wallet_error_monthly_send_limit;
+      case 'wallet_error_daily_receive_limit':
+        return l10n.wallet_error_daily_receive_limit;
+      case 'wallet_error_monthly_receive_limit':
+        return l10n.wallet_error_monthly_receive_limit;
+      case 'wallet_error_transaction_failed':
+        return l10n.wallet_error_transaction_failed;
 
       // Permission Errors
       case 'permission_denied':
@@ -94,6 +122,12 @@ class ErrorMapper {
         return l10n.pleaseSelectWallet;
       case 'authErrorRelogin':
         return l10n.authErrorRelogin;
+
+      // Migration Errors
+      case 'migration_error_recalculate_failed':
+        return l10n.migration_error_recalculate_failed;
+      case 'migration_error_unexpected':
+        return l10n.migration_error_unexpected;
 
       default:
         return errorCode;

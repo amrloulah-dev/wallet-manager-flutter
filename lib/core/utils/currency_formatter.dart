@@ -6,15 +6,10 @@ class CurrencyFormatter {
   /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
   static String _locale = 'en_US';
 
-  /// The active currency symbol.
-  /// Initialized to 'ج' as a safe default; call [setLocale] to configure.
-  static String _currencySymbol = 'ج';
-
-  /// Configures the locale and currency symbol used by all formatting methods.
+  /// Configures the locale used by all formatting methods.
   /// Should be called once during app initialization.
-  static void setLocale(String locale, {required String currencySymbol}) {
+  static void setLocale(String locale) {
     _locale = locale;
-    _currencySymbol = currencySymbol;
   }
 
   /// Formats a number as a currency amount with thousand separators.
@@ -23,14 +18,19 @@ class CurrencyFormatter {
     if (amount == null) {
       return '0.00';
     }
-    final formatter = NumberFormat('#,##0.00', _locale);
-    final formatted = formatter.format(amount);
-
+    
     if (showCurrency) {
-      final symbol = currencySymbol ?? _currencySymbol;
-      return '$formatted $symbol';
+      final formatter = NumberFormat.currency(
+        locale: _locale,
+        name: 'EGP',
+        symbol: currencySymbol,
+        decimalDigits: 2,
+      );
+      return formatter.format(amount);
+    } else {
+      final formatter = NumberFormat('#,##0.00', _locale);
+      return formatter.format(amount);
     }
-    return formatted;
   }
 
   /// Parses a string containing a formatted amount into a double.
@@ -39,8 +39,16 @@ class CurrencyFormatter {
     if (text == null || text.trim().isEmpty) {
       return 0.0;
     }
-    // Remove common currency symbols (ج, EGP, $, etc.), commas, and whitespace.
-    final cleanedText = text.replaceAll(RegExp(r'[ج,EGP\$\s]'), '');
+    // Remove common currency symbols (ج.م., EGP, $, etc.), commas, and whitespace.
+    // Replace anything that is not a digit or a dot with an empty string.
+    var cleanedText = text.replaceAll(RegExp(r'[^\d.]'), '');
+    
+    // If there are multiple dots (e.g. from "ج.م."), keep only the first one or the one before the decimal part
+    // Actually, it's safer to remove trailing dots.
+    while (cleanedText.endsWith('.')) {
+      cleanedText = cleanedText.substring(0, cleanedText.length - 1);
+    }
+    
     return double.tryParse(cleanedText) ?? 0.0;
   }
 }

@@ -8,7 +8,7 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
 
-import 'package:walletmanager/core/utils/error_mapper.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
@@ -100,7 +100,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           operation: 'StoreRegistration: EmailAlreadyInUseException');
       if (mounted) {
         ToastUtils.showError(
-            ErrorMapper.getLocalizedString(context, 'auth_error_account_not_found'));
+            ErrorTranslator.getLocalizedString(context, 'auth_error_account_not_found'));
       }
     } on WeakPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -108,7 +108,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           operation: 'StoreRegistration: WeakPasswordException');
       if (mounted) {
         ToastUtils.showError(
-            ErrorMapper.getLocalizedString(context, 'auth_error_invalid_credentials'));
+            ErrorTranslator.getLocalizedString(context, 'auth_error_invalid_credentials'));
       }
     } on NetworkException catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -122,7 +122,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           operation: 'StoreRegistration: StoreInactiveException');
       if (mounted) {
         ToastUtils.showError(
-            ErrorMapper.getLocalizedString(context, 'auth_error_store_not_active'));
+            ErrorTranslator.getLocalizedString(context, 'auth_error_store_not_active'));
       }
     } catch (e, stack) {
       AppErrorHandler.handle(e,

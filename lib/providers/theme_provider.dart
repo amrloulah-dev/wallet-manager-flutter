@@ -30,14 +30,14 @@ class ThemeProvider extends BaseProvider {
     }
   }
 
-  String get themeModeDisplay {
+  String get themeModeKey {
     switch (_themeMode) {
       case ThemeMode.light:
-        return 'فاتح';
+        return 'theme_light';
       case ThemeMode.dark:
-        return 'غامق';
+        return 'theme_dark';
       case ThemeMode.system:
-        return 'حسب النظام';
+        return 'theme_system';
     }
   }
 

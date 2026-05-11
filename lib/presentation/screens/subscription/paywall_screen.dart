@@ -143,8 +143,8 @@ class PaywallScreen extends StatelessWidget {
           ),
         ],
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
           colors: [
             Theme.of(context).cardColor,
             isDisabled

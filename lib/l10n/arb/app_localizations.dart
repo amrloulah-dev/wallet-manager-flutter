@@ -1094,6 +1094,12 @@ abstract class AppLocalizations {
   /// **'01xxxxxxxxx'**
   String get phonePlaceholder;
 
+  /// No description provided for @amountPlaceholder.
+  ///
+  /// In ar, this message translates to:
+  /// **'0.00'**
+  String get amountPlaceholder;
+
   /// No description provided for @initialBalance.
   ///
   /// In ar, this message translates to:
@@ -3733,6 +3739,150 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count, plural, =1{منذ سنة} =2{منذ سنتين} other{منذ {count} سنوات}}'**
   String relativeYearsAgo(int count);
+
+  /// No description provided for @wallet_error_not_found.
+  ///
+  /// In ar, this message translates to:
+  /// **'المحفظة غير موجودة.'**
+  String get wallet_error_not_found;
+
+  /// No description provided for @wallet_error_inactive.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها.'**
+  String get wallet_error_inactive;
+
+  /// No description provided for @wallet_error_instapay_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.'**
+  String get wallet_error_instapay_limit;
+
+  /// No description provided for @wallet_error_telecom_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.'**
+  String get wallet_error_telecom_limit;
+
+  /// No description provided for @wallet_error_insufficient_balance.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.'**
+  String get wallet_error_insufficient_balance;
+
+  /// No description provided for @wallet_error_instapay_daily_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).'**
+  String get wallet_error_instapay_daily_limit;
+
+  /// No description provided for @wallet_error_daily_send_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجاوز الحد اليومي للإرسال لهذه المحفظة.'**
+  String get wallet_error_daily_send_limit;
+
+  /// No description provided for @wallet_error_monthly_send_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجاوز الحد الشهري للإرسال لهذه المحفظة.'**
+  String get wallet_error_monthly_send_limit;
+
+  /// No description provided for @wallet_error_daily_receive_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.'**
+  String get wallet_error_daily_receive_limit;
+
+  /// No description provided for @wallet_error_monthly_receive_limit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تجاوز الحد الشهري للاستقبال لهذه المحفظة.'**
+  String get wallet_error_monthly_receive_limit;
+
+  /// No description provided for @wallet_error_transaction_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع أثناء حفظ المعاملة.'**
+  String get wallet_error_transaction_failed;
+
+  /// No description provided for @auth_error_google_sign_in.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسجيل الدخول باستخدام جوجل.'**
+  String get auth_error_google_sign_in;
+
+  /// No description provided for @auth_error_sign_out_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسجيل الخروج.'**
+  String get auth_error_sign_out_failed;
+
+  /// No description provided for @migration_error_recalculate_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل إعادة حساب الإحصائيات.'**
+  String get migration_error_recalculate_failed;
+
+  /// No description provided for @migration_error_unexpected.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع أثناء إعادة حساب الإحصائيات.'**
+  String get migration_error_unexpected;
+
+  /// No description provided for @wallet_type_vodafone_cash.
+  ///
+  /// In ar, this message translates to:
+  /// **'فودافون كاش'**
+  String get wallet_type_vodafone_cash;
+
+  /// No description provided for @wallet_type_insta_pay.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنستاباي'**
+  String get wallet_type_insta_pay;
+
+  /// No description provided for @wallet_type_orange_cash.
+  ///
+  /// In ar, this message translates to:
+  /// **'أورانج كاش'**
+  String get wallet_type_orange_cash;
+
+  /// No description provided for @wallet_type_etisalat_cash.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتصالات كاش'**
+  String get wallet_type_etisalat_cash;
+
+  /// No description provided for @wallet_type_we_pay.
+  ///
+  /// In ar, this message translates to:
+  /// **'وي باي'**
+  String get wallet_type_we_pay;
+
+  /// No description provided for @wallet_type_other.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخرى'**
+  String get wallet_type_other;
+
+  /// No description provided for @wallet_status_active.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشطة'**
+  String get wallet_status_active;
+
+  /// No description provided for @wallet_status_inactive.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير نشطة'**
+  String get wallet_status_inactive;
+
+  /// No description provided for @wallet_status_suspended.
+  ///
+  /// In ar, this message translates to:
+  /// **'معلقة'**
+  String get wallet_status_suspended;
 }
 
 class _AppLocalizationsDelegate

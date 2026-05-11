@@ -107,7 +107,7 @@ class WalletCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                wallet.walletTypeDisplayName,
+                l10n.getWalletTypeName(wallet.walletType),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary(context)
                       .withAlpha(isFrozen ? 128 : 255),
@@ -151,7 +151,7 @@ class WalletCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              wallet.walletStatusDisplayName,
+              l10n.getWalletStatusName(wallet.walletStatus),
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.bold,
                 color: wallet.walletStatus == WalletStatus.suspended

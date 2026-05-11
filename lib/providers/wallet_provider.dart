@@ -114,6 +114,7 @@ class WalletProvider extends BaseProvider {
 
             _wallets[index] = oldWallet.copyWith(balance: newBalance);
             _rebuildWalletMap();
+            _activateFetchShield(); // Block stale Firestore read for 5 s
             safeNotify();
           }
         }

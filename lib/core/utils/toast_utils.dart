@@ -120,9 +120,9 @@ class ToastUtils {
               width: 5,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
+                borderRadius: const BorderRadiusDirectional.only(
+                  topEnd: Radius.circular(12),
+                  bottomEnd: Radius.circular(12),
                 ),
               ),
             ),

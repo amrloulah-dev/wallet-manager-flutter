@@ -522,6 +522,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get phonePlaceholder => '01xxxxxxxxx';
 
   @override
+  String get amountPlaceholder => '0.00';
+
+  @override
   String get initialBalance => 'الرصيد المبدئي';
 
   @override
@@ -1963,4 +1966,87 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wallet_error_not_found => 'المحفظة غير موجودة.';
+
+  @override
+  String get wallet_error_inactive =>
+      'لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها.';
+
+  @override
+  String get wallet_error_instapay_limit =>
+      'الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.';
+
+  @override
+  String get wallet_error_telecom_limit =>
+      'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.';
+
+  @override
+  String get wallet_error_insufficient_balance =>
+      'المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.';
+
+  @override
+  String get wallet_error_instapay_daily_limit =>
+      'تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).';
+
+  @override
+  String get wallet_error_daily_send_limit =>
+      'تم تجاوز الحد اليومي للإرسال لهذه المحفظة.';
+
+  @override
+  String get wallet_error_monthly_send_limit =>
+      'تم تجاوز الحد الشهري للإرسال لهذه المحفظة.';
+
+  @override
+  String get wallet_error_daily_receive_limit =>
+      'تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.';
+
+  @override
+  String get wallet_error_monthly_receive_limit =>
+      'تم تجاوز الحد الشهري للاستقبال لهذه المحفظة.';
+
+  @override
+  String get wallet_error_transaction_failed =>
+      'حدث خطأ غير متوقع أثناء حفظ المعاملة.';
+
+  @override
+  String get auth_error_google_sign_in => 'فشل تسجيل الدخول باستخدام جوجل.';
+
+  @override
+  String get auth_error_sign_out_failed => 'فشل تسجيل الخروج.';
+
+  @override
+  String get migration_error_recalculate_failed => 'فشل إعادة حساب الإحصائيات.';
+
+  @override
+  String get migration_error_unexpected =>
+      'حدث خطأ غير متوقع أثناء إعادة حساب الإحصائيات.';
+
+  @override
+  String get wallet_type_vodafone_cash => 'فودافون كاش';
+
+  @override
+  String get wallet_type_insta_pay => 'إنستاباي';
+
+  @override
+  String get wallet_type_orange_cash => 'أورانج كاش';
+
+  @override
+  String get wallet_type_etisalat_cash => 'اتصالات كاش';
+
+  @override
+  String get wallet_type_we_pay => 'وي باي';
+
+  @override
+  String get wallet_type_other => 'أخرى';
+
+  @override
+  String get wallet_status_active => 'نشطة';
+
+  @override
+  String get wallet_status_inactive => 'غير نشطة';
+
+  @override
+  String get wallet_status_suspended => 'معلقة';
 }

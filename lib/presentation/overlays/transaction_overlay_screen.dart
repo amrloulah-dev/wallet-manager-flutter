@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
-import 'package:walletmanager/core/utils/error_mapper.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
@@ -210,7 +210,7 @@ class _ErrorListener extends StatelessWidget {
           final theme = Theme.of(context);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final displayError = ErrorMapper.getLocalizedString(context, provider.errorMessage!);
+            final displayError = ErrorTranslator.getLocalizedString(context, provider.errorMessage!);
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

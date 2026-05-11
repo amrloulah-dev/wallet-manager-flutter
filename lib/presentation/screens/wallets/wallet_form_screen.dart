@@ -211,7 +211,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return CustomTextField(
       controller: _balanceController,
       labelText: AppLocalizations.of(context)!.initialBalance,
-      hintText: '0.00',
+      hintText: AppLocalizations.of(context)!.amountPlaceholder,
       enabled: !_isEditMode,
       readOnly: _isEditMode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),

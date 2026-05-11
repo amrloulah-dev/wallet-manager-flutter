@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:walletmanager/core/utils/error_mapper.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -164,7 +164,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         Navigator.pop(context, true);
       } else if (mounted) {
         final error = transactionProvider.errorMessage != null
-            ? ErrorMapper.getLocalizedString(context, transactionProvider.errorMessage!)
+            ? ErrorTranslator.getLocalizedString(context, transactionProvider.errorMessage!)
             : AppLocalizations.of(context)!.transactionCreateFailed;
         _showErrorDialog(error);
       }
@@ -176,7 +176,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       );
       if (mounted) {
         final error = transactionProvider.errorMessage != null
-            ? ErrorMapper.getLocalizedString(context, transactionProvider.errorMessage!)
+            ? ErrorTranslator.getLocalizedString(context, transactionProvider.errorMessage!)
             : AppLocalizations.of(context)!.unexpectedError;
         _showErrorDialog(error);
       }
@@ -277,7 +277,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
           // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
           itemLabelBuilder: (WalletModel wallet) {
-            return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            return '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
           },
 
           onChanged: (wallet) {
@@ -350,7 +350,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         CustomTextField(
           controller: _customerPhoneController,
           labelText: l10n.clientPhoneNumber,
-          hintText: '01xxxxxxxxx',
+          hintText: l10n.phonePlaceholder,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 11,
@@ -382,7 +382,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               child: CustomTextField(
                 controller: _amountController,
                 labelText: l10n.amountLabel,
-                hintText: '0.00',
+                hintText: l10n.amountPlaceholder,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) =>
@@ -396,7 +396,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               child: CustomTextField(
                 controller: _commissionController,
                 labelText: l10n.commissionLabel,
-                hintText: '0.00',
+                hintText: l10n.amountPlaceholder,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) {

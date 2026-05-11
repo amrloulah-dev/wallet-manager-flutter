@@ -523,6 +523,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phonePlaceholder => '01xxxxxxxxx';
 
   @override
+  String get amountPlaceholder => '0.00';
+
+  @override
   String get initialBalance => 'Initial Balance';
 
   @override
@@ -1967,4 +1970,88 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wallet_error_not_found => 'Wallet not found.';
+
+  @override
+  String get wallet_error_inactive =>
+      'Cannot perform transaction: Wallet is inactive or deleted.';
+
+  @override
+  String get wallet_error_instapay_limit =>
+      'Maximum limit per InstaPay transaction is 70,000 EGP.';
+
+  @override
+  String get wallet_error_telecom_limit =>
+      'Maximum limit per mobile wallet transaction is 60,000 EGP.';
+
+  @override
+  String get wallet_error_insufficient_balance =>
+      'Amount to send (with commission) exceeds available balance.';
+
+  @override
+  String get wallet_error_instapay_daily_limit =>
+      'Daily limit for InstaPay wallet exceeded (120,000 EGP).';
+
+  @override
+  String get wallet_error_daily_send_limit =>
+      'Daily sending limit exceeded for this wallet.';
+
+  @override
+  String get wallet_error_monthly_send_limit =>
+      'Monthly sending limit exceeded for this wallet.';
+
+  @override
+  String get wallet_error_daily_receive_limit =>
+      'Daily receiving limit exceeded for this wallet.';
+
+  @override
+  String get wallet_error_monthly_receive_limit =>
+      'Monthly receiving limit exceeded for this wallet.';
+
+  @override
+  String get wallet_error_transaction_failed =>
+      'An unexpected error occurred while saving the transaction.';
+
+  @override
+  String get auth_error_google_sign_in => 'Failed to sign in with Google.';
+
+  @override
+  String get auth_error_sign_out_failed => 'Failed to sign out.';
+
+  @override
+  String get migration_error_recalculate_failed =>
+      'Failed to recalculate statistics.';
+
+  @override
+  String get migration_error_unexpected =>
+      'An unexpected error occurred while recalculating statistics.';
+
+  @override
+  String get wallet_type_vodafone_cash => 'Vodafone Cash';
+
+  @override
+  String get wallet_type_insta_pay => 'InstaPay';
+
+  @override
+  String get wallet_type_orange_cash => 'Orange Cash';
+
+  @override
+  String get wallet_type_etisalat_cash => 'Etisalat Cash';
+
+  @override
+  String get wallet_type_we_pay => 'WE Pay';
+
+  @override
+  String get wallet_type_other => 'Other';
+
+  @override
+  String get wallet_status_active => 'Active';
+
+  @override
+  String get wallet_status_inactive => 'Inactive';
+
+  @override
+  String get wallet_status_suspended => 'Suspended';
 }

@@ -107,10 +107,10 @@ class _PartialPaymentBottomSheetState extends State<PartialPaymentBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
+      padding: EdgeInsetsDirectional.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
+        start: 16,
+        end: 16,
         top: 16,
       ),
       child: Form(

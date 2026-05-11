@@ -36,14 +36,12 @@ class LocalizationProvider extends BaseProvider {
   }
 
   /// Configures all static formatters to use the given language code.
-  /// Maps the language code to the appropriate ICU locale identifier
-  /// and locale-specific currency symbol.
+  /// Maps the language code to the appropriate ICU locale identifier.
   static void _configureFormatters(String languageCode) {
     final icuLocale = languageCode == 'ar' ? 'ar_EG' : 'en_US';
-    final currencySymbol = languageCode == 'ar' ? 'ج' : 'EGP';
 
     NumberFormatter.setLocale(icuLocale);
-    CurrencyFormatter.setLocale(icuLocale, currencySymbol: currencySymbol);
+    CurrencyFormatter.setLocale(icuLocale);
     DateHelper.setLocale(icuLocale);
   }
 

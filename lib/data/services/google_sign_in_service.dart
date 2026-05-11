@@ -59,7 +59,7 @@ class GoogleSignInService {
         stackTrace: stack,
         operation: 'GoogleSignInService.signInWithGoogle',
       );
-      throw AuthException('فشل تسجيل الدخول باستخدام جوجل: ${e.message}',
+      throw AuthException('auth_error_google_sign_in',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
@@ -68,7 +68,7 @@ class GoogleSignInService {
         operation: 'GoogleSignInService.signInWithGoogle',
       );
       if (e is AppException) rethrow;
-      throw AuthException('حدث خطأ غير متوقع أثناء تسجيل الدخول.');
+      throw AuthException('auth_error_unexpected');
     }
   }
 
@@ -86,14 +86,14 @@ class GoogleSignInService {
         stackTrace: stack,
         operation: 'GoogleSignInService.signOut',
       );
-      throw AuthException('فشل تسجيل الخروج: ${e.message}', code: e.code);
+      throw AuthException('auth_error_sign_out_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,
         stackTrace: stack,
         operation: 'GoogleSignInService.signOut',
       );
-      throw AuthException('حدث خطأ غير متوقع أثناء تسجيل الخروج.');
+      throw AuthException('auth_error_unexpected');
     }
   }
 

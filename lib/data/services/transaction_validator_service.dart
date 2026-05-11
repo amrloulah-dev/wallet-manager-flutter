@@ -54,14 +54,14 @@ class TransactionValidatorService {
             .collection(FirebaseConstants.walletsCollection)
             .doc(transaction.walletId);
         final walletSnap = await tx.get(walletRef);
-        if (!walletSnap.exists) throw NotFoundException('المحفظة غير موجودة.');
+        if (!walletSnap.exists) throw NotFoundException('wallet_error_not_found');
 
         var wallet = WalletModel.fromFirestore(walletSnap);
 
         // Bug B-004: Prevent transactions on logically deleted/inactive wallets
         if (!wallet.isActive) {
           throw ValidationException(
-              'لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها');
+              'wallet_error_inactive');
         }
 
         final now = DateTime.now();
@@ -112,11 +112,11 @@ class TransactionValidatorService {
 
         if (isInstaPay && transaction.amount > 70000) {
           throw ValidationException(
-              'الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.');
+              'wallet_error_instapay_limit');
         }
         if (isTelecom && transaction.amount > 60000) {
           throw ValidationException(
-              'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.');
+              'wallet_error_telecom_limit');
         }
 
         // ------------------------------------------------------------------
@@ -134,7 +134,7 @@ class TransactionValidatorService {
 
           if ((validationWallet.balance + _epsilonEGP) < totalDeduction) {
             throw ValidationException(
-                'المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.');
+                'wallet_error_insufficient_balance');
           }
         }
 
@@ -148,7 +148,7 @@ class TransactionValidatorService {
 
           if (usedAmount + transaction.amount > 120000) {
             throw ValidationException(
-                'تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).');
+                'wallet_error_instapay_daily_limit');
           }
         }
 
@@ -156,23 +156,23 @@ class TransactionValidatorService {
           if (validationWallet.sendLimits.dailyUsed + transaction.amount >
               validationWallet.getLimits().dailyLimit) {
             throw ValidationException(
-                'تم تجاوز الحد اليومي للإرسال لهذه المحفظة.');
+                'wallet_error_daily_send_limit');
           }
           if (validationWallet.sendLimits.monthlyUsed + transaction.amount >
               validationWallet.getLimits().monthlyLimit) {
             throw ValidationException(
-                'تم تجاوز الحد الشهري للإرسال لهذه المحفظة.');
+                'wallet_error_monthly_send_limit');
           }
         } else if (transaction.isReceive) {
           if (validationWallet.receiveLimits.dailyUsed + transaction.amount >
               validationWallet.getReceiveLimits().dailyLimit) {
             throw ValidationException(
-                'تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.');
+                'wallet_error_daily_receive_limit');
           }
           if (validationWallet.receiveLimits.monthlyUsed + transaction.amount >
               validationWallet.getReceiveLimits().monthlyLimit) {
             throw ValidationException(
-                'تم تجاوز الحد الشهري للاستقبال لهذه المحفظة.');
+                'wallet_error_monthly_receive_limit');
           }
         }
 
@@ -333,7 +333,7 @@ class TransactionValidatorService {
         stackTrace: stack,
         operation: 'TransactionValidatorService.validateAndSave',
       );
-      throw ServerException('فشل حفظ المعاملة: ${e.message}', code: e.code);
+      throw ServerException('wallet_error_transaction_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,
@@ -341,7 +341,7 @@ class TransactionValidatorService {
         operation: 'TransactionValidatorService.validateAndSave',
       );
       if (e is AppException) rethrow;
-      throw ServerException('حدث خطأ غير متوقع أثناء حفظ المعاملة.');
+      throw ServerException('wallet_error_transaction_failed');
     }
   }
 }

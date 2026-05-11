@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
-import 'package:walletmanager/core/utils/error_mapper.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
@@ -86,22 +86,22 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           stackTrace: stack, operation: 'LoginLanding: UserNotFoundException');
       if (mounted) {
         ToastUtils.showError(
-            ErrorMapper.getLocalizedString(context, 'auth_error_user_not_found'));
+            ErrorTranslator.getLocalizedString(context, 'auth_error_user_not_found'));
       }
     } on WrongPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: WrongPasswordException');
       if (mounted) {
         ToastUtils.showError(
-            ErrorMapper.getLocalizedString(context, 'auth_error_invalid_credentials'));
+            ErrorTranslator.getLocalizedString(context, 'auth_error_invalid_credentials'));
       }
     } on AuthException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: AuthException');
       if (mounted) {
         ToastUtils.showError(e.code != null
-            ? ErrorMapper.getLocalizedString(context, e.code!)
-            : ErrorMapper.getLocalizedString(context, 'auth_error_login_failed'));
+            ? ErrorTranslator.getLocalizedString(context, e.code!)
+            : ErrorTranslator.getLocalizedString(context, 'auth_error_login_failed'));
       }
     } catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -137,7 +137,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       } else if (mounted) {
         if (authProvider.errorMessage != null) {
           ToastUtils.showError(
-              ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
+              ErrorTranslator.getLocalizedString(context, authProvider.errorMessage!));
         } else {
           ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
         }
@@ -399,10 +399,10 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: EdgeInsets.only(
+        padding: EdgeInsetsDirectional.only(
           bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          left: 24,
-          right: 24,
+          start: 24,
+          end: 24,
           top: 24,
         ),
         decoration: BoxDecoration(
@@ -466,7 +466,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
     if (authProvider.errorMessage != null) {
       ToastUtils.showError(
-          ErrorMapper.getLocalizedString(context, authProvider.errorMessage!));
+          ErrorTranslator.getLocalizedString(context, authProvider.errorMessage!));
     } else {
       Navigator.pop(context);
       ToastUtils.showSuccess(l10n.passwordResetEmailSent);

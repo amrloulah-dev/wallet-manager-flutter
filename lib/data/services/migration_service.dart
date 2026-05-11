@@ -114,7 +114,7 @@ class MigrationService {
         stackTrace: stack,
         operation: 'MigrationService.recalculateStoreStats',
       );
-      throw ServerException('فشل إعادة حساب الإحصائيات: ${e.message}',
+      throw ServerException('migration_error_recalculate_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
@@ -122,7 +122,7 @@ class MigrationService {
         stackTrace: stack,
         operation: 'MigrationService.recalculateStoreStats',
       );
-      throw ServerException('حدث خطأ غير متوقع أثناء إعادة حساب الإحصائيات.');
+      throw ServerException('migration_error_unexpected');
     }
   }
 }

@@ -169,6 +169,7 @@
   "addNewWallet": "Add New Wallet",
   "phoneNumber": "Phone Number",
   "phonePlaceholder": "01xxxxxxxxx",
+  "amountPlaceholder": "0.00",
   "initialBalance": "Initial Balance",
   "walletType": "Wallet Type",
   "selectWalletType": "Select Wallet Type",
@@ -561,7 +562,6 @@
     }
   },
   "unavailable": "Unavailable",
-  "instaPay": "InstaPay",
   "logoutButton": "Logout",
   "continueButton": "Continue",
   "pressBackAgainToExit": "Press back again to exit",
@@ -687,7 +687,6 @@
   "sendLink": "Send Link",
   "passwordResetEmailSent": "Reset link has been sent to your email.",
   "weakPasswordException": "The password is too weak.",
-
   "employeeLoginSubtitle": "Employee Login",
   "enterStorePassword": "Enter store password",
   "requiredField": "Required",
@@ -705,48 +704,81 @@
   "createAccountAction": "Create Account",
   "authError": "Authentication Error",
   "password": "Password",
-
   "overlayConnectionError": "❌ Connection Error",
   "overlayCompleteFromApp": "Please complete the transaction from the main app.",
   "close": "Close",
   "currencySymbol": "EGP",
-
   "relativeJustNow": "Just now",
   "relativeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
   "@relativeMinutesAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "relativeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
   "@relativeHoursAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "relativeDaysAgo": "{count, plural, =1{Yesterday} other{{count} days ago}}",
   "@relativeDaysAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "relativeWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
   "@relativeWeeksAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "relativeMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
   "@relativeMonthsAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "relativeYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
   "@relativeYearsAgo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "wallet_error_not_found": "Wallet not found.",
+  "wallet_error_inactive": "Cannot perform transaction: Wallet is inactive or deleted.",
+  "wallet_error_instapay_limit": "Maximum limit per InstaPay transaction is 70,000 EGP.",
+  "wallet_error_telecom_limit": "Maximum limit per mobile wallet transaction is 60,000 EGP.",
+  "wallet_error_insufficient_balance": "Amount to send (with commission) exceeds available balance.",
+  "wallet_error_instapay_daily_limit": "Daily limit for InstaPay wallet exceeded (120,000 EGP).",
+  "wallet_error_daily_send_limit": "Daily sending limit exceeded for this wallet.",
+  "wallet_error_monthly_send_limit": "Monthly sending limit exceeded for this wallet.",
+  "wallet_error_daily_receive_limit": "Daily receiving limit exceeded for this wallet.",
+  "wallet_error_monthly_receive_limit": "Monthly receiving limit exceeded for this wallet.",
+  "wallet_error_transaction_failed": "An unexpected error occurred while saving the transaction.",
+  "auth_error_google_sign_in": "Failed to sign in with Google.",
+  "auth_error_sign_out_failed": "Failed to sign out.",
+  "migration_error_recalculate_failed": "Failed to recalculate statistics.",
+  "migration_error_unexpected": "An unexpected error occurred while recalculating statistics.",
+  "wallet_type_vodafone_cash": "Vodafone Cash",
+  "wallet_type_insta_pay": "InstaPay",
+  "wallet_type_orange_cash": "Orange Cash",
+  "wallet_type_etisalat_cash": "Etisalat Cash",
+  "wallet_type_we_pay": "WE Pay",
+  "wallet_type_other": "Other",
+  "wallet_status_active": "Active",
+  "wallet_status_inactive": "Inactive",
+  "wallet_status_suspended": "Suspended"
 }
-

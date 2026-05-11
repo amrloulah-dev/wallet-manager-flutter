@@ -137,7 +137,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
 
           // 2. استخراج النص (نفس الفورمات الخاص بك بالضبط)
           itemLabelBuilder: (WalletModel wallet) {
-            return '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            return '${AppLocalizations.of(context)!.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
           },
 
           onChanged: (wallet) {
@@ -200,7 +200,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     return CustomTextField(
       controller: _amountController,
       labelText: AppLocalizations.of(context)!.amountToAdd,
-      hintText: '0.00',
+      hintText: AppLocalizations.of(context)!.amountPlaceholder,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))

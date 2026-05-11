@@ -111,9 +111,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface(bottomSheetContext),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
             ),
           ),
           child: PartialPaymentBottomSheet(debt: debt),
