@@ -78,13 +78,13 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     try {
       // 1. Verify Store Password
       final enteredStorePassHash =
-          PasswordHasher.hashPassword(_storePasswordController.text);
+          await PasswordHasher.hashPassword(_storePasswordController.text);
       if (enteredStorePassHash != widget.store.storePassword) {
         throw AuthException(l10n.storePasswordInvalid);
       }
 
       // 2. Verify Employee PIN
-      final enteredPinHash = PasswordHasher.hashPassword(_pinController.text);
+      final enteredPinHash = await PasswordHasher.hashPassword(_pinController.text);
 
       if (enteredPinHash != _selectedEmployee!.pin) {
         // Double check if legacy plain text match works (optional safety)

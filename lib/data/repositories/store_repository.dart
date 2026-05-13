@@ -289,7 +289,7 @@ class StoreRepository {
       if (store == null) {
         throw NotFoundException('store');
       }
-      return PasswordHasher.verifyPassword(password, store.storePassword);
+      return await PasswordHasher.verifyPassword(password, store.storePassword);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.verifyStorePassword');
@@ -299,7 +299,7 @@ class StoreRepository {
 
   /// Updates the store's password.
   Future<void> updateStorePassword(String storeId, String newPassword) async {
-    final hashedPassword = PasswordHasher.hashPassword(newPassword);
+    final hashedPassword = await PasswordHasher.hashPassword(newPassword);
     await updateStore(
         storeId, {FirebaseConstants.storePassword: hashedPassword});
   }
@@ -364,7 +364,7 @@ class StoreRepository {
 
   Future<List<StoreModel>> getStoresByPassword(String password) async {
     try {
-      final hashedPassword = PasswordHasher.hashPassword(password);
+      final hashedPassword = await PasswordHasher.hashPassword(password);
       final querySnapshot = await _storesCollection
           .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
           .limit(1)

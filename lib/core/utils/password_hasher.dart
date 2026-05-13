@@ -1,46 +1,74 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'dart:math';
+import 'dart:typed_data';
+import 'package:cryptography/cryptography.dart';
+import 'package:convert/convert.dart';
 
 class PasswordHasher {
+  static const int _kIterations = 1000;
+  static const int _kKeyLength = 32; // 256 bits
+
   // ===========================
   // Hash Password
   // ===========================
-  /// Hashes a password using the SHA-256 algorithm.
-  ///
-  /// Steps:
-  /// 1. Convert the password string to a list of bytes using UTF-8 encoding.
-  /// 2. Generate a SHA-256 hash from the byte list.
-  /// 3. Convert the hash digest to a hexadecimal string representation.
-  ///
-  /// Returns:
-  ///   A 64-character hexadecimal string representing the hashed password.
-  static String hashPassword(String password) {
-    // 1. Convert the password to bytes.
-    final bytes = utf8.encode(password);
+  /// Hashes a password using PBKDF2 with a random salt.
+  /// Returns a string in format "salt:hash" (hex encoded).
+  static Future<String> hashPassword(String password) async {
+    final salt = _generateSalt();
+    final hash = await _deriveKey(password, salt);
+    
+    return '${hex.encode(salt)}:${hex.encode(hash)}';
+  }
 
-    // 2. Generate a SHA-256 hash.
-    final digest = sha256.convert(bytes);
+  static Uint8List _generateSalt() {
+    final random = Random.secure();
+    final salt = Uint8List(16);
+    for (int i = 0; i < salt.length; i++) {
+      salt[i] = random.nextInt(256);
+    }
+    return salt;
+  }
 
-    // 3. Convert the hash to a hexadecimal string and return it.
-    return digest.toString();
+  static Future<Uint8List> _deriveKey(String password, Uint8List salt) async {
+    final pbkdf2 = Pbkdf2(
+      macAlgorithm: Hmac.sha256(),
+      iterations: _kIterations,
+      bits: _kKeyLength * 8,
+    );
+    
+    final secretKey = SecretKey(utf8.encode(password));
+    final secretKeyData = await pbkdf2.deriveKey(
+      secretKey: secretKey,
+      nonce: salt,
+    );
+    
+    return Uint8List.fromList(await secretKeyData.extractBytes());
   }
 
   // ===========================
   // Verify Password
   // ===========================
-  /// Verifies an input password against a stored hashed password.
-  ///
-  /// Steps:
-  /// 1. Hash the `inputPassword` using the same `hashPassword` method.
-  /// 2. Compare the newly generated hash with the `hashedPassword`.
-  ///
-  /// Returns:
-  ///   `true` if the passwords match, `false` otherwise.
-  static bool verifyPassword(String inputPassword, String hashedPassword) {
-    // 1. Hash the inputPassword.
-    final hashedInput = hashPassword(inputPassword);
-
-    // 2. Compare the result with the stored hashedPassword.
-    return hashedInput == hashedPassword;
+  /// Verifies an input password against a stored "salt:hash" string.
+  static Future<bool> verifyPassword(String inputPassword, String storedHash) async {
+    try {
+      final parts = storedHash.split(':');
+      if (parts.length != 2) {
+        // Fallback for legacy unsalted hashes if needed, but spec says remove them.
+        // For now, let's strictly enforce the new format.
+        return false;
+      }
+      
+      final salt = hex.decode(parts[0]);
+      final expectedHash = parts[1];
+      
+      final hash = await _deriveKey(inputPassword, Uint8List.fromList(salt));
+      final actualHash = hex.encode(hash);
+      
+      return actualHash == expectedHash;
+    } catch (_) {
+      return false;
+    }
   }
 }
+
+

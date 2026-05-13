@@ -289,7 +289,7 @@ class UserRepository {
       if (user.pin == null) {
         return false; // No PIN set
       }
-      return PasswordHasher.verifyPassword(pin, user.pin!);
+      return await PasswordHasher.verifyPassword(pin, user.pin!);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'UserRepository.verifyEmployeePin');
@@ -299,7 +299,7 @@ class UserRepository {
 
   /// Updates an employee's PIN.
   Future<void> updateEmployeePin(String userId, String newPin) async {
-    final hashedPassword = PasswordHasher.hashPassword(newPin);
+    final hashedPassword = await PasswordHasher.hashPassword(newPin);
     await updateUser(userId, {FirebaseConstants.pin: hashedPassword});
   }
 

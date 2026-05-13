@@ -61,7 +61,7 @@ void main() {
         'storeId': storeId,
         'isActive': true,
         'role': 'employee',
-        'pin': PasswordHasher.hashPassword('1234'),
+        'pin': await PasswordHasher.hashPassword('1234'),
       });
 
       // Act: Deactivate employee

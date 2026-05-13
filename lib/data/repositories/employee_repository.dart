@@ -52,7 +52,7 @@ class EmployeeRepository {
     required String pin,
   }) async {
     try {
-      final hashedPin = PasswordHasher.hashPassword(pin);
+      final hashedPin = await PasswordHasher.hashPassword(pin);
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
@@ -81,7 +81,7 @@ class EmployeeRepository {
     required UserPermissions permissions,
   }) async {
     final newUserId = _usersCollection.doc().id;
-    final hashedPin = PasswordHasher.hashPassword(pin);
+    final hashedPin = await PasswordHasher.hashPassword(pin);
 
     final newUser = UserModel(
       userId: newUserId,
@@ -246,7 +246,7 @@ class EmployeeRepository {
     }
 
     try {
-      final newHashedPin = PasswordHasher.hashPassword(newPin);
+      final newHashedPin = await PasswordHasher.hashPassword(newPin);
 
       await _firestore.runTransaction((transaction) async {
         // 1. Read employee doc inside the transaction
@@ -397,7 +397,7 @@ class EmployeeRepository {
       if (employee.phone == null) return;
 
       final hashedPin =
-          newPin.length == 4 ? PasswordHasher.hashPassword(newPin) : newPin;
+          newPin.length == 4 ? await PasswordHasher.hashPassword(newPin) : newPin;
 
       await IdentityService.updateCredential(
         phone: employee.phone!,

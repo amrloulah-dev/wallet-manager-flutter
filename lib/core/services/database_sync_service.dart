@@ -401,10 +401,12 @@ class DatabaseSyncService {
       smsEnabled: true,
     );
 
+    final hashedStorePassword = await PasswordHasher.hashPassword(storePassword);
+
     final newStore = StoreModel(
       storeId: storeId,
       storeName: storeName,
-      storePassword: PasswordHasher.hashPassword(storePassword),
+      storePassword: hashedStorePassword,
       ownerId: userId,
       ownerName: name,
       ownerEmail: email,
