@@ -22,7 +22,7 @@
     - Provides a unified `FirebaseService` for managed access to Firestore and Auth instances.
 
 ## Local Storage
-- **Unified Vault Architecture:** Centralized `LocalStorageService` acting as the single source of truth for all disk I/O, abstracting `SharedPreferences` and providing safe data persistence for both UI and background isolates.
+- **Unified Vault Architecture:** Centralized `LocalStorageService` acting as the single source of truth for all disk I/O, abstracting `SharedPreferences` (non-sensitive) and `flutter_secure_storage` (sensitive data) and providing safe data persistence for both UI and background isolates.
 
 ## Background Architecture & OS Resilience
 - **Single-Isolate Guardian:** Persistent background service (`flutter_background_service`) acting as the single source of truth for SMS automation to prevent data duplication.
@@ -37,7 +37,9 @@
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
     - **Logical Layout Migration:** Global transition from physical (`EdgeInsets`, `left`/`right`) to logical (`EdgeInsetsDirectional`, `start`/`end`) constraints for seamless RTL/LTR mirroring.
     - **Ambient Locale Propagation:** Removal of hardcoded directionality logic in favor of ambient locale propagation via `MaterialApp` and `Localizations`.
-- **Security:** `crypto` for PIN hashing, **HMAC subscription cache integrity**, and `uuid` for unique identifiers. Includes:
+- **Security:** `cryptography` for PBKDF2 with unique salts, `crypto` for HMAC subscription cache integrity, and `uuid` for unique identifiers. Includes:
+    - **PII Sanitization:** Automated masking of phone numbers and financial data in logs and error reports via `AppErrorHandler`.
+    - **Secure Storage:** Mandatory use of `flutter_secure_storage` for sensitive session identifiers (`userId`, `storeId`, `userRole`).
     - **Global Role Enums:** Strict `UserRole` Enum (`owner`, `employee`, `unknown`) replacing all string-based role comparisons.
     - **Post-Fetch Repository Guards:** Mandatory `expectedStoreId` verification for all document fetches to prevent cross-tenant data leakage.
     - **RouteGuard Middleware:** Centralized authorization interceptor in `AppRouter` blocking unauthorized screen access based on granular permissions.
