@@ -1,20 +1,20 @@
 # Implementation Plan: General Security & Data Protection Blueprint (Phase 11)
 
-## Phase 1: Local Storage Migration & Ephemeral SMS
-- [ ] Task: Integrate `flutter_secure_storage`
-    - [ ] Add `flutter_secure_storage` dependency if not present.
-    - [ ] Update DI setup (`service_locator.dart`) if needed.
-- [ ] Task: Migrate `local_storage_service.dart`
-    - [ ] Write Failing Tests for secure storage logic.
-    - [ ] Implement to Pass Tests: Migrate `userRole`, `storeId`, and `userId` to use secure storage.
-    - [ ] Implement to Pass Tests: Remove hardcoded pepper string `wallet_manager_sub_integrity_2025`.
-- [ ] Task: Ephemeral SMS Storage in `local_storage_service.dart` and `sms_processing_pipeline.dart`
-    - [ ] Write Failing Tests for immediate SMS data cleanup.
-    - [ ] Implement to Pass Tests: Add logic to remove SMS queue keys immediately after parsing.
-- [ ] Task: Update `auth_provider.dart`
-    - [ ] Write Failing Tests for updated auth flow storage.
-    - [ ] Implement to Pass Tests: Use secure storage methods where applicable.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Local Storage Migration & Ephemeral SMS' (Protocol in workflow.md)
+## Phase 1: Local Storage Migration & Ephemeral SMS [checkpoint: 0306a8e]
+- [x] Task: Integrate `flutter_secure_storage` [0306a8e]
+    - [x] Add `flutter_secure_storage` dependency if not present.
+    - [x] Update DI setup (`service_locator.dart`) if needed.
+- [x] Task: Migrate `local_storage_service.dart` [0306a8e]
+    - [x] Write Failing Tests for secure storage logic.
+    - [x] Implement to Pass Tests: Migrate `userRole`, `storeId`, and `userId` to use secure storage.
+    - [x] Implement to Pass Tests: Remove hardcoded pepper string `wallet_manager_sub_integrity_2025`.
+- [x] Task: Ephemeral SMS Storage in `local_storage_service.dart` and `sms_processing_pipeline.dart` [0306a8e]
+    - [x] Write Failing Tests for immediate SMS data cleanup.
+    - [x] Implement to Pass Tests: Add logic to remove SMS queue keys immediately after parsing.
+- [x] Task: Update `auth_provider.dart` [0306a8e]
+    - [x] Write Failing Tests for updated auth flow storage.
+    - [x] Implement to Pass Tests: Use secure storage methods where applicable.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Local Storage Migration & Ephemeral SMS' (Protocol in workflow.md) [0306a8e]
 
 ## Phase 2: Cryptographic Upgrade
 - [ ] Task: PBKDF2 Setup
