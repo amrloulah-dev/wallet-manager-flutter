@@ -16,14 +16,14 @@
     - [x] Implement to Pass Tests: Use secure storage methods where applicable.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Local Storage Migration & Ephemeral SMS' (Protocol in workflow.md) [0306a8e]
 
-## Phase 2: Cryptographic Upgrade
-- [ ] Task: PBKDF2 Setup
-    - [ ] Add `cryptography` or `pointycastle` dependency.
-- [ ] Task: Refactor `password_hasher.dart`
-    - [ ] Write Failing Tests for PBKDF2 hashing and verification (including salt).
-    - [ ] Implement to Pass Tests: Remove unsalted SHA-256. Implement PBKDF2 with unique, randomly generated cryptographic salt.
-    - [ ] Implement to Pass Tests: Update hash verification logic to use the stored salt.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Cryptographic Upgrade' (Protocol in workflow.md)
+## Phase 2: Cryptographic Upgrade [checkpoint: 37fdaa3]
+- [x] Task: PBKDF2 Setup [37fdaa3]
+    - [x] Add `cryptography` or `pointycastle` dependency.
+- [x] Task: Refactor `password_hasher.dart` [37fdaa3]
+    - [x] Write Failing Tests for PBKDF2 hashing and verification (including salt).
+    - [x] Implement to Pass Tests: Remove unsalted SHA-256. Implement PBKDF2 with unique, randomly generated cryptographic salt.
+    - [x] Implement to Pass Tests: Update hash verification logic to use the stored salt.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Cryptographic Upgrade' (Protocol in workflow.md) [37fdaa3]
 
 ## Phase 3: PII & Exception Sanitization
 - [ ] Task: Sanitize `AppErrorHandler`
