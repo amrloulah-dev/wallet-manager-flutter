@@ -202,7 +202,7 @@ class TransactionModel {
 
   @override
   String toString() {
-    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: $amount, serviceFee: $serviceFee, status: $paymentStatus)';
+    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: [SENSITIVE], serviceFee: [SENSITIVE], status: $paymentStatus)';
   }
 
   @override

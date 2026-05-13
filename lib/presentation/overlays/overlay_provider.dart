@@ -88,7 +88,7 @@ class OverlayProvider extends SafeChangeNotifier {
 
     if (kDebugMode) {
       debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
-          'raw data=$data | parsed amount=$_amount, sender=$_sender, type=$_type');
+          'raw data=[SENSITIVE] | parsed amount=[SENSITIVE], sender=[SENSITIVE], type=$_type');
     }
 
     _isLoading = true;

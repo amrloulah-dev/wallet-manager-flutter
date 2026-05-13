@@ -92,22 +92,23 @@ class AppErrorHandler {
   /// In debug mode, logs to console. In release mode, reports to Crashlytics.
   static void logSilentError(String error, String reason,
       {StackTrace? stackTrace}) {
+    final sanitizedError = sanitizeMessage(error);
     if (kDebugMode || isTestMode) {
       if (kDebugMode) {
         debugPrint(
-          '🤫 [SILENT ERROR] [$reason] $error\n'
+          '🤫 [SILENT ERROR] [$reason] $sanitizedError\n'
           '  Stack: ${stackTrace ?? StackTrace.current}',
         );
       }
       developer.log(
-        error,
+        sanitizedError,
         name: 'SILENT_ERROR',
-        error: error,
+        error: sanitizedError,
         stackTrace: stackTrace,
       );
     } else {
       FirebaseCrashlytics.instance.recordError(
-        error,
+        sanitizedError,
         stackTrace,
         reason: reason,
         printDetails: false,
@@ -140,7 +141,8 @@ class AppErrorHandler {
   }) async {
     if (isTestMode) return;
 
-    final message = error is AppException ? error.message : error.toString();
+    final rawMessage = error is AppException ? error.message : error.toString();
+    final message = sanitizeMessage(rawMessage);
     _logDiagnostic(severity, operation, message, stackTrace);
 
     final context = NavigationService.navigatorKey.currentContext;
@@ -205,8 +207,10 @@ class AppErrorHandler {
         if (!kDebugMode &&
             (severity == ErrorSeverity.critical ||
                 severity == ErrorSeverity.medium)) {
+          // Send sanitized error string to Crashlytics instead of raw object
+          // to prevent leaking sensitive fields in internal state.
           await FirebaseCrashlytics.instance.recordError(
-            error,
+            message,
             stackTrace,
             reason: 'Operation: $operation',
             fatal: severity == ErrorSeverity.critical,
@@ -219,6 +223,28 @@ class AppErrorHandler {
             '⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e\n$stack');
       }
     }
+  }
+
+  /// Strips PII (Phone numbers, amounts, balances) from error messages.
+  @visibleForTesting
+  static String sanitizeMessage(String message) {
+    var sanitized = message;
+
+    // 1. Mask Egyptian Phone Numbers (01x xxxx xxxx)
+    final phoneRegex = RegExp(r'01[0125][0-9]{8}');
+    sanitized = sanitized.replaceAll(phoneRegex, '[PHONE]');
+
+    // 2. Mask values that look like balances/amounts (Report 2: M-6)
+    // Matches patterns like "balance: 123.45" or "amount: 1000"
+    final balanceRegex = RegExp(
+      r'(balance|amount|total|commission|fee)[:\s]+[0-9]+(\.[0-9]+)?',
+      caseSensitive: false,
+    );
+    sanitized = sanitized.replaceAllMapped(balanceRegex, (match) {
+      return '${match.group(1)}: [SENSITIVE]';
+    });
+
+    return sanitized;
   }
 
   static void _logDiagnostic(

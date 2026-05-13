@@ -74,7 +74,7 @@ class TransactionRepository {
             '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'RECEIVED | txId=${transaction.transactionId}, '
             'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
-            'amount=${transaction.amount}, commission=${transaction.commission}');
+            'amount=[SENSITIVE], commission=[SENSITIVE]');
       }
       if (kDebugMode) {
         debugPrint(

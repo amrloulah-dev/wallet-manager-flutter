@@ -172,5 +172,5 @@ class DebtModel {
 
   @override
   String toString() =>
-      'DebtModel(id: $debtId, customer: $customerName, amountDue: $amountDue, totalAmount: $totalAmount)';
+      'DebtModel(id: $debtId, customer: [SENSITIVE], amountDue: [SENSITIVE], totalAmount: [SENSITIVE])';
 }
