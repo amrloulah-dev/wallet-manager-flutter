@@ -25,12 +25,12 @@
     - [x] Implement to Pass Tests: Update hash verification logic to use the stored salt.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Cryptographic Upgrade' (Protocol in workflow.md) [37fdaa3]
 
-## Phase 3: PII & Exception Sanitization
-- [ ] Task: Sanitize `AppErrorHandler`
-    - [ ] Write Failing Tests for error sanitization before logging.
-    - [ ] Implement to Pass Tests: Strip raw exception payloads before sending to Crashlytics or showing BotToasts.
-- [ ] Task: Clean `debugPrint` Statements
-    - [ ] Inspect and update `transaction_repository.dart` to remove PII and replace with structural logs.
-    - [ ] Inspect and update `overlay_provider.dart` to remove PII and replace with structural logs.
-    - [ ] Inspect and update `sms_processing_pipeline.dart` and `debt_model.dart` to ensure no PII logging.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: PII & Exception Sanitization' (Protocol in workflow.md)
+## Phase 3: PII & Exception Sanitization [checkpoint: ae45588]
+- [x] Task: Sanitize `AppErrorHandler` [ae45588]
+    - [x] Write Failing Tests for error sanitization before logging.
+    - [x] Implement to Pass Tests: Strip raw exception payloads before sending to Crashlytics or showing BotToasts.
+- [x] Task: Clean `debugPrint` Statements [ae45588]
+    - [x] Inspect and update `transaction_repository.dart` to remove PII and replace with structural logs.
+    - [x] Inspect and update `overlay_provider.dart` to remove PII and replace with structural logs.
+    - [x] Inspect and update `sms_processing_pipeline.dart` and `debt_model.dart` to ensure no PII logging.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: PII & Exception Sanitization' (Protocol in workflow.md) [ae45588]
