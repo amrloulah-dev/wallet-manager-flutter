@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/enums/user_enums.dart';
 import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/error_severity.dart';
@@ -20,23 +22,36 @@ class LocalStorageService {
   static LocalStorageService get instance => _instance;
 
   SharedPreferences? _prefs;
+  FlutterSecureStorage? _secureStorage;
+
+  // In-memory cache for sensitive data (to maintain sync access)
+  String? _cachedUserId;
+  String? _cachedStoreId;
+  UserRole _cachedUserRole = UserRole.unknown;
+  String? _cachedPepper;
 
   /// Resets the internal state for testing.
   @visibleForTesting
   static void reset() {
     _instance._prefs = null;
+    _instance._secureStorage = null;
+    _instance._cachedUserId = null;
+    _instance._cachedStoreId = null;
+    _instance._cachedUserRole = UserRole.unknown;
+    _instance._cachedPepper = null;
   }
 
   // ===========================
   // Initialize
   // ===========================
-  /// Initializes the SharedPreferences instance.
+  /// Initializes the SharedPreferences and SecureStorage instances.
   /// Must be called once at app startup.
-  Future<void> initialize() async {
-    if (_prefs != null) {
+  Future<void> initialize({FlutterSecureStorage? secureStorage}) async {
+    if (_prefs != null && _secureStorage != null) {
       return;
     }
-    _prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    _secureStorage ??= secureStorage ?? const FlutterSecureStorage();
 
     // ── Clean up orphans & Migrate (Phase 8.1 Unification) ──────────
     // 1. Remove the legacy 'pending_overlay_tx' key used by OverlayRepository
@@ -56,11 +71,41 @@ class LocalStorageService {
       }
       await _prefs!.remove(oldLangKey);
     }
+
+    // ── SECURITY REMEDIATION (Phase 11) ──────────────────────────────
+    // 1. Lazy migration of sensitive data to Secure Storage
+    final List<String> sensitiveKeys = [_keyUserId, _keyStoreId, _keyUserRole];
+    for (final key in sensitiveKeys) {
+      if (_prefs!.containsKey(key)) {
+        final String? value = _prefs!.getString(key);
+        if (value != null) {
+          await _secureStorage!.write(key: key, value: value);
+        }
+        await _prefs!.remove(key);
+      }
+    }
+
+    // 2. Load into memory cache for sync access
+    await _loadSecureCache();
+  }
+
+  /// Loads sensitive data from secure storage into memory cache.
+  Future<void> _loadSecureCache() async {
+    _cachedUserId = await _secureStorage!.read(key: _keyUserId);
+    _cachedStoreId = await _secureStorage!.read(key: _keyStoreId);
+    final roleStr = await _secureStorage!.read(key: _keyUserRole);
+    _cachedUserRole =
+        roleStr != null ? UserRole.fromString(roleStr) : UserRole.unknown;
+    _cachedPepper = await _secureStorage!.read(key: _kSubPepper);
+    if (_cachedPepper == null) {
+      _cachedPepper = Uuid().v4();
+      await _secureStorage!.write(key: _kSubPepper, value: _cachedPepper!);
+    }
   }
 
   /// Throws an exception if the service is not initialized.
   void _ensureInitialized() {
-    if (_prefs == null) {
+    if (_prefs == null || _secureStorage == null) {
       throw Exception(
           'Local Storage not initialized. Call initialize() first.');
     }
@@ -71,6 +116,7 @@ class LocalStorageService {
   Future<void> reloadDisk() async {
     _ensureInitialized();
     await _prefs!.reload();
+    await _loadSecureCache();
   }
 
   // ===========================
@@ -82,6 +128,7 @@ class LocalStorageService {
   static const String _keyUserName = 'userName';
   static const String _keyStoreName = 'storeName';
   static const String _keyThemeMode = 'themeMode';
+  static const String _kSubPepper = 'sub_integrity_pepper';
 
   // ===========================
   // Save Session
@@ -95,9 +142,18 @@ class LocalStorageService {
     required String storeName,
   }) async {
     _ensureInitialized();
-    await _prefs!.setString(_keyUserId, userId);
-    await _prefs!.setString(_keyStoreId, storeId);
-    await _prefs!.setString(_keyUserRole, userRole.name);
+
+    // Sensitive data to Secure Storage
+    await _secureStorage!.write(key: _keyUserId, value: userId);
+    await _secureStorage!.write(key: _keyStoreId, value: storeId);
+    await _secureStorage!.write(key: _keyUserRole, value: userRole.name);
+
+    // Update Cache
+    _cachedUserId = userId;
+    _cachedStoreId = storeId;
+    _cachedUserRole = userRole;
+
+    // Non-sensitive to SharedPreferences
     await _prefs!.setString(_keyUserName, userName);
     await _prefs!.setString(_keyStoreName, storeName);
   }
@@ -105,16 +161,12 @@ class LocalStorageService {
   // ===========================
   // Get Session Data
   // ===========================
-  String? get userId => _prefs?.getString(_keyUserId);
-  String? get storeId => _prefs?.getString(_keyStoreId);
-  
+  String? get userId => _cachedUserId;
+  String? get storeId => _cachedStoreId;
+
   /// Returns the user role as an Enum. Fail-closed to unknown if not set or invalid.
-  UserRole get userRole {
-    final String? roleStr = _prefs?.getString(_keyUserRole);
-    if (roleStr == null) return UserRole.unknown;
-    return UserRole.fromString(roleStr);
-  }
-  
+  UserRole get userRole => _cachedUserRole;
+
   String? get userName => _prefs?.getString(_keyUserName);
   String? get storeName => _prefs?.getString(_keyStoreName);
 
@@ -130,9 +182,17 @@ class LocalStorageService {
   /// Clears all user session-related data from local storage.
   Future<void> clearSession() async {
     _ensureInitialized();
-    await _prefs!.remove(_keyUserId);
-    await _prefs!.remove(_keyStoreId);
-    await _prefs!.remove(_keyUserRole);
+    // Secure Storage
+    await _secureStorage!.delete(key: _keyUserId);
+    await _secureStorage!.delete(key: _keyStoreId);
+    await _secureStorage!.delete(key: _keyUserRole);
+
+    // Cache
+    _cachedUserId = null;
+    _cachedStoreId = null;
+    _cachedUserRole = UserRole.unknown;
+
+    // SharedPreferences
     await _prefs!.remove(_keyUserName);
     await _prefs!.remove(_keyStoreName);
   }
@@ -229,9 +289,8 @@ class LocalStorageService {
     required bool isSuspended,
   }) {
     final data = '$endDateMs|$isLifetime|$smsEnabled|$isSuspended';
-    // Use a hardcoded pepper (ideally this would be device-unique, but this is a good baseline)
-    const pepper = 'wallet_manager_sub_integrity_2025';
-    final key = utf8.encode(pepper);
+    // Use dynamic pepper from Secure Storage (Phase 11 Remediation)
+    final key = utf8.encode(_cachedPepper ?? '');
     final bytes = utf8.encode(data);
     final hmac = Hmac(sha256, key);
     return hmac.convert(bytes).toString();

@@ -3,14 +3,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+
 void main() {
   group('LocalStorageService RBAC Tests', () {
     late LocalStorageService storage;
+    late MockFlutterSecureStorage mockSecureStorage;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      mockSecureStorage = MockFlutterSecureStorage();
+      
+      when(() => mockSecureStorage.read(key: any(named: 'key')))
+          .thenAnswer((_) async => null);
+      when(() => mockSecureStorage.write(
+            key: any(named: 'key'),
+            value: any(named: 'value'),
+          )).thenAnswer((_) async => {});
+
       storage = LocalStorageService.instance;
-      await storage.initialize();
+      await storage.initialize(secureStorage: mockSecureStorage);
     });
 
     tearDown(() {

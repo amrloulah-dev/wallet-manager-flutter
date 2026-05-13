@@ -7,5 +7,5 @@
 
 ---
 
-- [ ] **Track: General Security & Data Protection Blueprint (Phase 11)**
+- [~] **Track: General Security & Data Protection Blueprint (Phase 11)**
 *Link: [./tracks/security_blueprint_20260513/](./tracks/security_blueprint_20260513/)*
