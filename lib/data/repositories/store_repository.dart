@@ -364,14 +364,20 @@ class StoreRepository {
 
   Future<List<StoreModel>> getStoresByPassword(String password) async {
     try {
-      final hashedPassword = await PasswordHasher.hashPassword(password);
+      // WARNING: This is inefficient and only works for small store counts.
+      // Salted hashes cannot be queried directly in Firestore.
       final querySnapshot = await _storesCollection
-          .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
-          .limit(1)
+          .limit(100) // Limit to prevent OOM
           .get();
-      return querySnapshot.docs
-          .map((doc) => StoreModel.fromFirestore(doc))
-          .toList();
+
+      final List<StoreModel> matchingStores = [];
+      for (final doc in querySnapshot.docs) {
+        final store = StoreModel.fromFirestore(doc);
+        if (await PasswordHasher.verifyPassword(password, store.storePassword)) {
+          matchingStores.add(store);
+        }
+      }
+      return matchingStores;
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');

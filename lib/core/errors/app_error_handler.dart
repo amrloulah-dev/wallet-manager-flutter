@@ -73,11 +73,6 @@ class AppErrorHandler {
     };
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-      if (!kDebugMode) {
-        // Trigger recording before returning false to ensure it starts before crash.
-        // We cannot explicitly 'await' here because this callback must be synchronous.
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      }
       handle(
         error,
         stackTrace: stack,

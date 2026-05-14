@@ -52,24 +52,29 @@ class EmployeeRepository {
     required String pin,
   }) async {
     try {
-      final hashedPin = await PasswordHasher.hashPassword(pin);
+      // 1. Fetch all active employees for this store
       final snapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where(FirebaseConstants.role,
-              isEqualTo: UserRole.employee.name) // ENUM refactor
-          .where(FirebaseConstants.pin, isEqualTo: hashedPin)
+          .where(FirebaseConstants.role, isEqualTo: UserRole.employee.name)
           .where(FirebaseConstants.isActive, isEqualTo: true)
-          .limit(1)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        return UserModel.fromFirestore(snapshot.docs.first);
+      // 2. Verify PIN manually for each
+      for (final doc in snapshot.docs) {
+        final user = UserModel.fromFirestore(doc);
+        if (user.pin != null) {
+          if (await PasswordHasher.verifyPassword(pin, user.pin!)) {
+            return user;
+          }
+          // Legacy check if needed
+          if (user.pin == pin) return user;
+        }
       }
       return null;
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'EmployeeRepository.isPinAvailable');
-      throw ServerException('employee_error_pin_check_failed');
+          stackTrace: stack, operation: 'EmployeeRepository.getEmployeeByPIN');
+      throw ServerException('employee_error_fetch_failed');
     }
   }
 
