@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/data/repositories/user_repository.dart';
 import 'package:walletmanager/data/repositories/store_repository.dart';
@@ -65,6 +66,10 @@ void main() {
     final mockAuth = MockFirebaseAuth();
 
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+    when(() => mockStorage.userId).thenReturn(null);
+    when(() => mockStorage.storeId).thenReturn(null);
+    when(() => mockStorage.userRole).thenReturn(UserRole.unknown);
+
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
     sl.registerSingleton<FirebaseAuth>(mockAuth);

@@ -72,8 +72,7 @@ void main() {
       // Assert
       expect(result, isFalse);
       expect(provider.hasError, isTrue);
-      // 'صلاحية' is Arabic for permission
-      expect(provider.errorMessage, contains('صلاحية')); 
+      expect(provider.errorMessage, equals('permission_denied')); 
     });
 
     test('EmployeeProvider.addEmployee should throw PermissionDeniedException if user is not owner', () async {

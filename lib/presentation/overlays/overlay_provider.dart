@@ -121,8 +121,7 @@ class OverlayProvider extends SafeChangeNotifier {
         return;
       }
 
-      _availableWallets =
-          LocalStorageService.instance.getCachedWalletLiteList();
+      _availableWallets = _localStorageService.getCachedWalletLiteList();
 
       String? passedId = data['walletId']?.toString();
       if (passedId != null && passedId.trim().isEmpty) passedId = null;

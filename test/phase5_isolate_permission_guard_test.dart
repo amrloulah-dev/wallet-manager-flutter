@@ -45,6 +45,12 @@ void main() {
         return null;
       });
 
+      // Mock flutter_secure_storage
+      const MethodChannel('plugins.it_nomads.com/flutter_secure_storage')
+          .setMockMethodCallHandler((methodCall) async {
+        return null;
+      });
+
       final smsService = SmsService(telephony: mockTelephony);
       await smsService.init();
 

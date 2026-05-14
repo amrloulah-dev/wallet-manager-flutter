@@ -85,7 +85,7 @@ void main() {
       await service.validateAndSave(transaction);
       fail('Should have thrown ValidationException for inactive wallet');
     } on ValidationException catch (e) {
-      expect(e.message, contains('المحفظة غير مفعلة أو تم حذفها'));
+      expect(e.message, equals('wallet_error_inactive'));
     } catch (e) {
       fail('Expected ValidationException but got $e');
     }

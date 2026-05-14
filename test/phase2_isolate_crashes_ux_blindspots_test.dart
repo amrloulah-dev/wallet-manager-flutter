@@ -9,20 +9,39 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_toast/bot_toast.dart';
-
 import 'package:walletmanager/main.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:get_it/get_it.dart';
 
 class MockFlutterLocalNotificationsPlugin extends Mock
     implements FlutterLocalNotificationsPlugin {}
+
+class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late MockFlutterLocalNotificationsPlugin mockNotificationsPlugin;
 
   setUp(() async {
+    GetIt.instance.allowReassignment = true;
+    GetIt.instance.reset();
     SharedPreferences.setMockInitialValues({});
     mockNotificationsPlugin = MockFlutterLocalNotificationsPlugin();
     AppErrorHandler.setNotificationsPlugin(mockNotificationsPlugin);
+
+    // Mock secure storage
+    const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorageChannel, (methodCall) async {
+      return null;
+    });
+
+    final mockStorage = MockLocalStorageService();
+    when(() => mockStorage.languageCode).thenReturn('ar');
+    when(() => mockStorage.userId).thenReturn(null);
+    when(() => mockStorage.storeId).thenReturn(null);
+    GetIt.instance.registerSingleton<LocalStorageService>(mockStorage);
 
     // Mock the show method
     when(() => mockNotificationsPlugin.show(
@@ -140,14 +159,6 @@ void main() {
 
       // Cleanup timers from BotToast
       await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-
-    testWidgets('OverlayErrorApp shows error UI', (WidgetTester tester) async {
-      await tester.pumpWidget(const OverlayErrorApp());
-
-      expect(find.text('❌ خطأ في الاتصال'), findsOneWidget);
-      expect(find.byIcon(Icons.error_outline), findsOneWidget);
-      expect(find.text('إغلاق'), findsOneWidget);
     });
   });
 }

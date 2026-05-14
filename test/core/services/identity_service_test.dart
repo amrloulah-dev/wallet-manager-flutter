@@ -25,6 +25,7 @@ void main() {
 
     when(() => mockUser.uid).thenReturn('test-uid');
     when(() => mockUser.email).thenReturn('emp_123456789_store123@store.com');
+    when(() => mockUser.getIdToken()).thenAnswer((_) async => 'mock-token');
     when(() => mockUserCredential.user).thenReturn(mockUser);
 
     IdentityService.authOverride = mockAuth;

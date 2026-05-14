@@ -16,6 +16,7 @@ import 'package:walletmanager/domain/entities/auth_user.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
 
@@ -31,6 +32,9 @@ class MockSubscriptionRepository extends Mock
     implements SubscriptionRepository {}
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(UserRole.unknown);
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
   late FakeFirebaseFirestore fakeFirestore;
   late MockFirebaseService mockFirebaseService;

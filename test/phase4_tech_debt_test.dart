@@ -44,6 +44,15 @@ void main() {
       }
       return null;
     });
+
+    // Mock overlay channel
+    const MethodChannel('x-slayer/overlay_channel')
+        .setMockMethodCallHandler((methodCall) async {
+      if (methodCall.method == 'checkPermission') {
+        return true;
+      }
+      return null;
+    });
   });
 
   group('Phase 4: Tech Debt & Hot Path Optimization', () {
@@ -53,8 +62,10 @@ void main() {
       when(() => mockStorage.subIsSuspended).thenReturn(false);
       when(() => mockStorage.subSmsEnabled).thenReturn(true);
       when(() => mockStorage.isSubLifetime).thenReturn(true);
+      when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(true);
       when(() => mockStorage.getSimMappings()).thenReturn([]);
       when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
+      when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
 
       // This is a sanity check test for the pipeline
       final message = SmsMessage.fromMap({

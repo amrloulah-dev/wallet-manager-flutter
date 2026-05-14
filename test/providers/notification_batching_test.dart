@@ -53,12 +53,16 @@ void main() {
     when(() => mockStorage.userId).thenReturn(null);
     when(() => mockStorage.storeId).thenReturn(null);
     when(() => mockStorage.userRole).thenReturn(UserRole.unknown);
+    when(() => mockStorage.clearSession()).thenAnswer((_) async {});
 
     final mockAuth = sl<AuthRepository>();
     when(() => mockAuth.getCurrentUser()).thenReturn(null);
     when(() => mockAuth.authStateChanges())
         .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.signOut()).thenAnswer((_) async {});
+
+    final mockSync = sl<DatabaseSyncService>();
+    when(() => mockSync.tryAutoLogin()).thenAnswer((_) async => null);
   });
 
   group('T053-T054 Notification Batching', () {

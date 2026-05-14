@@ -7,14 +7,18 @@ import 'package:walletmanager/providers/employee_provider.dart';
 
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
+
+class MockAuthProvider extends Mock implements AuthProvider {}
 
 class FakeUserPermissions extends Fake implements UserPermissions {}
 
 void main() {
   late MockEmployeeRepository mockRepository;
+  late MockAuthProvider mockAuth;
   late EmployeeProvider employeeProvider;
   late UserModel mockEmployee;
 
@@ -26,7 +30,11 @@ void main() {
     AppErrorHandler.isTestMode = true;
     AnalyticsService.isTestMode = true;
     mockRepository = MockEmployeeRepository();
+    mockAuth = MockAuthProvider();
+    when(() => mockAuth.isOwner).thenReturn(true);
+
     employeeProvider = EmployeeProvider(employeeRepository: mockRepository);
+    employeeProvider.updateAuthProvider(mockAuth);
 
     mockEmployee = UserModel(
       userId: 'emp-123',

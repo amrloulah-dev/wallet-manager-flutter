@@ -114,7 +114,7 @@ class NotFoundException extends AppException {
 /// Thrown when a user attempts an action they do not have permission for.
 class PermissionDeniedException extends AppException {
   PermissionDeniedException()
-      : super('Permission denied', code: 'permission_denied');
+      : super('permission_denied', code: 'permission_denied');
 }
 
 class PermissionException extends PermissionDeniedException {

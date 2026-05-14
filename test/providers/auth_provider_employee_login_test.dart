@@ -49,6 +49,9 @@ class MockFirebaseService extends Mock implements FirebaseService {}
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(UserRole.unknown);
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
   late MockUserRepository mockUserRepo;
   late MockStoreRepository mockStoreRepo;
@@ -87,6 +90,17 @@ void main() {
     sl.registerSingleton<SubscriptionRepository>(mockSubRepo);
 
     when(() => mockAuthRepo.getCurrentUser()).thenReturn(null);
+    when(() => mockStorage.userId).thenReturn(null);
+    when(() => mockStorage.storeId).thenReturn(null);
+    when(() => mockStorage.userRole).thenReturn(UserRole.unknown);
+    when(() => mockStorage.clearSession()).thenAnswer((_) async {});
+    when(() => mockStorage.saveSession(
+          userId: any(named: 'userId'),
+          storeId: any(named: 'storeId'),
+          userRole: any(named: 'userRole'),
+          userName: any(named: 'userName'),
+          storeName: any(named: 'storeName'),
+        )).thenAnswer((_) async {});
 
     final databaseSyncService = DatabaseSyncService(
       authRepository: mockAuthRepo,
@@ -104,11 +118,15 @@ void main() {
       storeRepository: mockStoreRepo,
       localStorage: mockStorage,
     );
+
     mockUserCredential = MockUserCredential();
     mockUser = MockUser();
 
     when(() => mockUser.uid).thenReturn('test-uid');
+    when(() => mockUser.getIdToken()).thenAnswer((_) async => 'valid_token');
     when(() => mockUserCredential.user).thenReturn(mockUser);
+
+    when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
 
     IdentityService.authOverride = mockAuth;
 
@@ -153,13 +171,6 @@ void main() {
     );
 
     when(() => mockUserRepo.updateLastLogin(any())).thenAnswer((_) async {});
-    when(() => mockStorage.saveSession(
-          userId: any(named: 'userId'),
-          storeId: any(named: 'storeId'),
-          userRole: any(named: 'userRole'),
-          userName: any(named: 'userName'),
-          storeName: any(named: 'storeName'),
-        )).thenAnswer((_) async {});
   });
 
   group('AuthProvider Employee Login', () {

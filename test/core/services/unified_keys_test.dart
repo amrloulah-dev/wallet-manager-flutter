@@ -2,17 +2,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('LocalStorageService Key Unification Tests', () {
     late LocalStorageService storage;
+    late MockFlutterSecureStorage mockSecureStorage;
 
     setUp(() async {
       LocalStorageService.reset();
       SharedPreferences.setMockInitialValues({});
+      
+      mockSecureStorage = MockFlutterSecureStorage();
+      when(() => mockSecureStorage.read(key: any(named: 'key')))
+          .thenAnswer((_) async => null);
+      when(() => mockSecureStorage.write(
+            key: any(named: 'key'),
+            value: any(named: 'value'),
+          )).thenAnswer((_) async => {});
+
       storage = LocalStorageService.instance;
-      await storage.initialize();
+      await storage.initialize(secureStorage: mockSecureStorage);
     });
 
     test('should save and read from unified vault key', () async {
@@ -42,7 +57,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'languageCode': 'en'});
 
       storage = LocalStorageService.instance;
-      await storage.initialize();
+      await storage.initialize(secureStorage: mockSecureStorage);
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('languageCode'), isFalse);
@@ -55,7 +70,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'pending_overlay_tx': 'stale'});
 
       storage = LocalStorageService.instance;
-      await storage.initialize();
+      await storage.initialize(secureStorage: mockSecureStorage);
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('pending_overlay_tx'), isFalse);

@@ -41,6 +41,13 @@ void main() {
     when(() => mockTelephony.requestPhoneAndSmsPermissions)
         .thenAnswer((_) async => true);
 
+    // Mock secure storage
+    const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorageChannel, (methodCall) async {
+      return null;
+    });
+
     // Mock permission_handler
     const MethodChannel('flutter.baseflow.com/permissions/methods')
         .setMockMethodCallHandler((methodCall) async {

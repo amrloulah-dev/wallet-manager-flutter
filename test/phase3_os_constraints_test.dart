@@ -5,6 +5,7 @@ import 'package:walletmanager/core/services/sms_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 class MockServiceInstance extends Mock implements ServiceInstance {}
 
@@ -22,6 +23,13 @@ void main() {
     // Mock ServiceInstance methods
     when(() => mockService.on(any())).thenAnswer((_) => const Stream.empty());
     when(() => mockService.stopSelf()).thenAnswer((_) async {});
+
+    // Mock secure storage
+    const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureStorageChannel, (methodCall) async {
+      return null;
+    });
   });
 
   group('Phase 3: OS Constraints & Hybrid Kill-Switch Fixes', () {

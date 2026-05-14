@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
@@ -29,10 +30,13 @@ void main() {
     // We can't directly set _blockAutoFetch, so we simulate the flow in ingestNewEvent
 
     when(() => mockStorage.initialize()).thenAnswer((_) async {});
+    when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
+    when(() => mockStorage.userRole).thenReturn(UserRole.owner);
+    when(() => mockStorage.clearSession()).thenAnswer((_) async {});
     // ingestNewEvent sets _blockAutoFetch = true
 
     final data = {
-      'amount': 100000, // Trigger limit error
+      'amount': -100.0, // Trigger validation error (negative amount)
       'type': 'credit',
       'sender': '0123456789',
       'walletId': 'w1'
