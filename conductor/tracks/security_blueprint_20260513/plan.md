@@ -34,3 +34,6 @@
     - [x] Inspect and update `overlay_provider.dart` to remove PII and replace with structural logs.
     - [x] Inspect and update `sms_processing_pipeline.dart` and `debt_model.dart` to ensure no PII logging.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: PII & Exception Sanitization' (Protocol in workflow.md) [ae45588]
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [65100ea]
