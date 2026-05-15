@@ -362,6 +362,7 @@ class StoreRepository {
     });
   }
 
+  @Deprecated('Use getStoreByEmail for O(1) lookup. This method is insecure and will be removed.')
   Future<List<StoreModel>> getStoresByPassword(String password) async {
     try {
       // WARNING: This is inefficient and only works for small store counts.

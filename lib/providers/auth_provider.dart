@@ -12,6 +12,7 @@ import '../core/errors/app_exceptions.dart';
 import '../core/services/database_sync_service.dart';
 import '../core/services/analytics_service.dart';
 import '../services/time_service.dart';
+import '../core/utils/password_hasher.dart';
 import 'base_provider.dart';
 import '../core/enums/subscription_enums.dart';
 
@@ -296,16 +297,18 @@ class AuthProvider extends BaseProvider {
     }
   }
 
-  Future<String?> verifyStorePassword(String password) async {
+  Future<String?> verifyStorePassword(String email, String password) async {
     _setStatus(AuthStatus.loading);
     try {
-      final stores = await _storeRepository.getStoresByPassword(password);
-      if (stores.isNotEmpty) {
-        _setStatus(AuthStatus.idle);
-        return stores.first.storeId;
-      } else {
-        throw InvalidCredentialsException();
+      final store = await _storeRepository.getStoreByEmail(email);
+      if (store != null) {
+        final isValid = await PasswordHasher.verifyPassword(password, store.storePassword);
+        if (isValid) {
+          _setStatus(AuthStatus.idle);
+          return store.storeId;
+        }
       }
+      throw InvalidCredentialsException();
     } catch (e, stack) {
       setError(
           e is AppException ? e.message : 'auth_error_invalid_store_password',

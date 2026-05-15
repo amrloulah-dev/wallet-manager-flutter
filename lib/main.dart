@@ -84,28 +84,31 @@ void main() async {
         MaterialApp(
           home: Scaffold(
             body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('🚨 Initialization Error',
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          color: Colors.red, size: 64),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'App initialization failed',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 22,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    const Text('Error:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(e.toString(),
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.black)),
-                    const SizedBox(height: 16),
-                    const Text('Stack Trace:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(stackTrace.toString(),
-                        style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                  ],
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Please check your connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
