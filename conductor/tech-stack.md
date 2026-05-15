@@ -1,10 +1,10 @@
 # Wallet Manager Tech Stack
 
 ## Framework
-- **Flutter (Dart):** For cross-platform mobile application development.
+- **Flutter (Dart):** For cross-platform mobile application development, utilizing `compute()` for background isolate processing of intensive operations.
 
 ## Backend
-- **Firebase:** Comprehensive backend suite.
+- **Firebase:** Comprehensive backend suite, using O(1) Firestore lookups for authentication.
     - **Authentication:** Managing owner (Google/Email) and employee (PIN) logins.
     - **Cloud Firestore:** Scalable NoSQL database. Optimized for $O(1)$ aggregate queries via a centralized `stats/summary` architecture to minimize billing and latency.
     - **Analytics & Performance:** Monitoring user behavior and app health.
@@ -37,7 +37,7 @@
 - **Internationalization:** `flutter_localizations` and `intl` for bilingual support.
     - **Logical Layout Migration:** Global transition from physical (`EdgeInsets`, `left`/`right`) to logical (`EdgeInsetsDirectional`, `start`/`end`) constraints for seamless RTL/LTR mirroring.
     - **Ambient Locale Propagation:** Removal of hardcoded directionality logic in favor of ambient locale propagation via `MaterialApp` and `Localizations`.
-- **Security:** `cryptography` for PBKDF2 with unique salts, `crypto` for HMAC subscription cache integrity, and `uuid` for unique identifiers. Includes:
+- **Security:** `cryptography` for hardened PBKDF2 (600,000 iterations) with unique salts and constant-time comparison, `crypto` for HMAC subscription cache integrity, and `uuid` for unique identifiers. Includes:
     - **PII Sanitization:** Automated masking of phone numbers and financial data in logs and error reports via `AppErrorHandler`.
     - **Secure Storage:** Mandatory use of `flutter_secure_storage` for sensitive session identifiers (`userId`, `storeId`, `userRole`).
     - **Global Role Enums:** Strict `UserRole` Enum (`owner`, `employee`, `unknown`) replacing all string-based role comparisons.
