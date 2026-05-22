@@ -109,14 +109,13 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.createTransaction');
-      throw ServerException('Failed to create transaction: ${e.message}',
+      throw ServerException('transaction_error_create_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.createTransaction');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while creating the transaction.');
+      throw ServerException('transaction_error_create_failed');
     }
   }
 
@@ -196,14 +195,13 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
           stackTrace: stack);
-      throw ServerException('Failed to get transaction: ${e.message}',
+      throw ServerException('transaction_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       if (e is AppException) rethrow;
       AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
           stackTrace: stack);
-      throw ServerException(
-          'An unexpected error occurred while fetching the transaction.');
+      throw ServerException('transaction_error_fetch_failed');
     }
   }
 
@@ -248,14 +246,12 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
-      throw ServerException(
-          'Failed to get transactions by date range: ${e.message}',
+      throw ServerException('transaction_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
-      throw ServerException(
-          'An unexpected error occurred while fetching transactions.');
+      throw ServerException('transaction_error_fetch_failed');
     }
   }
 
@@ -277,13 +273,12 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
-      throw ServerException('Failed to update transaction: ${e.message}',
+      throw ServerException('transaction_error_update_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
-      throw ServerException(
-          'An unexpected error occurred while updating the transaction.');
+      throw ServerException('transaction_error_update_failed');
     }
   }
 
@@ -300,13 +295,12 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
-      throw ServerException('Failed to delete transaction: ${e.message}',
+      throw ServerException('transaction_error_delete_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
-      throw ServerException(
-          'An unexpected error occurred while deleting the transaction.');
+      throw ServerException('transaction_error_delete_failed');
     }
   }
 
@@ -343,13 +337,12 @@ class TransactionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
-      throw ServerException('Failed to get all transactions: ${e.message}',
+      throw ServerException('transaction_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
-      throw ServerException(
-          'An unexpected error occurred while fetching all transactions.');
+      throw ServerException('transaction_error_fetch_failed');
     }
   }
 }

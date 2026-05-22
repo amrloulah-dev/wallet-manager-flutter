@@ -334,7 +334,7 @@ class WalletRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'WalletRepository.setWalletActiveStatus');
       if (e is AppException) rethrow;
-      throw ServerException('Failed to update wallet active status: $e');
+      throw ServerException('wallet_error_status_update_failed');
     }
   }
 

@@ -240,22 +240,19 @@ class DatabaseSyncService {
   Future<AuthSessionResult> finalizeEmployeeSession(UserModel employee) async {
     final firebaseUser = _authRepository.getCurrentUser();
     if (firebaseUser == null) {
-      throw AuthException(
-          "No authenticated Google user found. Please sign in first.");
+      throw AuthException('auth_error_must_login_first');
     }
 
     await _ensureEmployeePermissions(employee);
 
     final updatedEmployee = await _userRepository.getUserById(employee.userId);
     if (updatedEmployee == null) {
-      throw ServerException(
-          'Could not re-fetch employee details after permission check.');
+      throw ServerException('auth_error_employee_fetch_failed');
     }
 
     final store = await _storeRepository.getStoreById(updatedEmployee.storeId);
     if (store == null) {
-      throw ServerException(
-          'The store associated with this employee could not be found.');
+      throw ServerException('auth_error_store_not_found');
     }
 
     if (!store.isActive) throw StoreInactiveException();
@@ -282,7 +279,7 @@ class DatabaseSyncService {
   }) async {
     final googleUser = _authRepository.getCurrentUser();
     if (googleUser == null) {
-      throw AuthException('يجب تسجيل الدخول أولاً.');
+      throw AuthException('auth_error_must_login_first');
     }
 
     final deviceId = await _deviceRepository.getDeviceId();
@@ -300,7 +297,7 @@ class DatabaseSyncService {
     final existingStore =
         await _storeRepository.getStoreByOwnerId(googleUser.uid);
     if (existingStore != null) {
-      throw AuthException('هذا الحساب يمتلك متجرًا بالفعل.');
+      throw AuthException('auth_error_store_already_exists');
     }
 
     final result = await _createStoreAndUser(

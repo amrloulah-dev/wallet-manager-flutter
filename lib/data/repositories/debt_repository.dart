@@ -56,7 +56,7 @@ class DebtRepository {
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.createDebt');
-      throw ServerException('Failed to create debt: $e');
+      throw ServerException('debt_error_create_failed');
     }
   }
 
@@ -129,13 +129,12 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtById');
-      throw ServerException('Failed to get debt: ${e.message}', code: e.code);
+      throw ServerException('debt_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       if (e is AppException) rethrow;
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtById');
-      throw ServerException(
-          'An unexpected error occurred while fetching the debt.');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -155,13 +154,12 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
-      throw ServerException('Failed to get debt by customer name: ${e.message}',
+      throw ServerException('debt_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
-      throw ServerException(
-          'An unexpected error occurred while fetching debt by customer name.');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -180,14 +178,12 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
-      throw ServerException(
-          'Failed to get debt by customer phone: ${e.message}',
+      throw ServerException('debt_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
-      throw ServerException(
-          'An unexpected error occurred while fetching debt by customer phone.');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -255,14 +251,13 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.processPayment');
-      throw ServerException('Failed to process payment: ${e.message}',
+      throw ServerException('debt_error_payment_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.processPayment');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while processing the payment: $e');
+      throw ServerException('debt_error_payment_failed');
     }
   }
 
@@ -318,14 +313,13 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
-      throw ServerException('Failed to add partial debt: ${e.message}',
+      throw ServerException('debt_error_partial_add_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while adding partial debt: $e');
+      throw ServerException('debt_error_partial_add_failed');
     }
   }
 
@@ -341,13 +335,12 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.updateDebt');
-      throw ServerException('Failed to update debt: ${e.message}',
+      throw ServerException('debt_error_update_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.updateDebt');
-      throw ServerException(
-          'An unexpected error occurred while updating the debt.');
+      throw ServerException('debt_error_update_failed');
     }
   }
 
@@ -386,13 +379,12 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
-      throw ServerException('Failed to get debts by date range: ${e.message}',
+      throw ServerException('debt_error_fetch_failed',
           code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
-      throw ServerException(
-          'An unexpected error occurred while fetching debts by date range.');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -487,14 +479,13 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.deleteDebt');
-      throw ServerException('Failed to delete debt: ${e.message}',
+      throw ServerException('debt_error_delete_failed',
           code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while deleting the debt: $e');
+      throw ServerException('debt_error_delete_failed');
     }
   }
 

@@ -165,7 +165,7 @@ class OverlayProvider extends SafeChangeNotifier {
       AppErrorHandler.logSilentError(e.toString(),
           'OverlayProvider: Failed to ingest event',
           stackTrace: stack);
-      _errorMessage = 'Failed to load data: $e';
+      _errorMessage = 'overlay_error_load_failed';
     } finally {
       _isLoading = false;
       _blockAutoFetch = false;
@@ -292,7 +292,7 @@ class OverlayProvider extends SafeChangeNotifier {
     } catch (e, stack) {
       AppErrorHandler.handle(e, stackTrace: stack,
           operation: 'OverlayProvider: Failed to submit transaction');
-      _errorMessage = e.toString();
+      _errorMessage = 'overlay_error_submit_failed';
       if (kDebugMode) {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
             'CATCH → $e');

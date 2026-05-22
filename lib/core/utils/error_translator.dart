@@ -129,6 +129,52 @@ class ErrorTranslator {
       case 'migration_error_unexpected':
         return l10n.migration_error_unexpected;
 
+      // Overlay Errors (C-1)
+      case 'overlay_error_load_failed':
+        return l10n.overlay_error_load_failed;
+      case 'overlay_error_submit_failed':
+        return l10n.overlay_error_submit_failed;
+
+      // Debt Errors (C-2)
+      case 'debt_error_create_failed':
+        return l10n.debt_error_create_failed;
+      case 'debt_error_fetch_failed':
+        return l10n.debt_error_fetch_failed;
+      case 'debt_error_payment_failed':
+        return l10n.debt_error_payment_failed;
+      case 'debt_error_partial_add_failed':
+        return l10n.debt_error_partial_add_failed;
+      case 'debt_error_update_failed':
+        return l10n.debt_error_update_failed;
+      case 'debt_error_delete_failed':
+        return l10n.debt_error_delete_failed;
+
+      // Transaction Errors (C-2)
+      case 'transaction_error_create_failed':
+        return l10n.transaction_error_create_failed;
+      case 'transaction_error_fetch_failed':
+        return l10n.transaction_error_fetch_failed;
+      case 'transaction_error_update_failed':
+        return l10n.transaction_error_update_failed;
+      case 'transaction_error_delete_failed':
+        return l10n.transaction_error_delete_failed;
+
+      // Wallet Errors (C-2)
+      case 'wallet_error_status_update_failed':
+        return l10n.wallet_error_status_update_failed;
+
+      // Auth Errors (H-2/H-3)
+      case 'auth_error_must_login_first':
+        return l10n.auth_error_must_login_first;
+      case 'auth_error_store_already_exists':
+        return l10n.auth_error_store_already_exists;
+      case 'auth_error_employee_fetch_failed':
+        return l10n.auth_error_employee_fetch_failed;
+
+      // Generic fallback (H-4)
+      case 'error_unexpected':
+        return l10n.error_unexpected;
+
       default:
         return errorCode;
     }

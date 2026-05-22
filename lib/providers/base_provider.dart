@@ -12,6 +12,11 @@ abstract class BaseProvider extends SafeChangeNotifier {
       StackTrace? stack,
       bool showToast = false,
       String operation = 'unspecified']) {
+    // Defense-in-depth: If the errorCode contains spaces or colons, it's likely
+    // a raw message, not a localization key. Fall back to a generic key.
+    final safeCode = errorCode.contains(RegExp(r'[\s:]')) && !errorCode.startsWith('auth_')
+        ? 'error_unexpected'
+        : errorCode;
     if (error != null) {
       AppErrorHandler.handle(
         error,
@@ -22,7 +27,7 @@ abstract class BaseProvider extends SafeChangeNotifier {
       );
     } else {
       AppErrorHandler.logSilentError(
-        errorCode,
+        safeCode,
         operation,
         stackTrace: stack,
       );

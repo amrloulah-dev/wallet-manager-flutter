@@ -182,7 +182,10 @@ class StoreModel {
 
   @override
   String toString() {
-    return 'StoreModel(storeId: $storeId, storeName: $storeName, owner: $ownerName, planId: ${subscription.planId})';
+    if (kDebugMode) {
+      return 'StoreModel(storeId: $storeId, storeName: $storeName, owner: $ownerName, planId: ${subscription.planId})';
+    }
+    return 'StoreModel(id: ${storeId.length > 4 ? storeId.substring(0, 4) : storeId}...)';
   }
 }
 

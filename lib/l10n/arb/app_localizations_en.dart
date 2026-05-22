@@ -1700,7 +1700,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Authentication failed, please login again.';
 
   @override
-  String get auth_error_store_not_found => 'Store not found.';
+  String get auth_error_store_not_found =>
+      'The store associated with this employee could not be found';
 
   @override
   String get auth_error_user_not_found => 'User not found or not an owner.';
@@ -1745,25 +1746,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Store password is incorrect.';
 
   @override
-  String get debt_error_fetch_failed => 'Failed to fetch debts.';
+  String get debt_error_fetch_failed =>
+      'An error occurred while fetching debt data';
 
   @override
   String get debt_error_fetch_more_failed => 'Failed to fetch more debts.';
 
   @override
-  String get debt_error_create_failed => 'Failed to create debt.';
+  String get debt_error_create_failed =>
+      'An error occurred while creating the debt';
 
   @override
   String get debt_error_add_amount_failed => 'Failed to add amount to debt.';
 
   @override
-  String get debt_error_update_failed => 'Failed to update debt.';
+  String get debt_error_update_failed =>
+      'An error occurred while updating the debt';
 
   @override
   String get debt_error_settle_failed => 'Failed to settle debt.';
 
   @override
-  String get debt_error_delete_failed => 'Failed to delete debt.';
+  String get debt_error_delete_failed =>
+      'An error occurred while deleting the debt';
 
   @override
   String get debt_error_auth_required => 'Please login first.';
@@ -1800,7 +1805,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to update permissions.';
 
   @override
-  String get transaction_error_fetch_failed => 'Failed to fetch transactions.';
+  String get transaction_error_fetch_failed =>
+      'An error occurred while fetching transaction data';
 
   @override
   String get transaction_error_fetch_more_failed =>
@@ -2054,4 +2060,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallet_status_suspended => 'Suspended';
+
+  @override
+  String get overlay_error_load_failed =>
+      'An error occurred while loading data';
+
+  @override
+  String get overlay_error_submit_failed =>
+      'An error occurred while processing the transaction';
+
+  @override
+  String get debt_error_payment_failed =>
+      'An error occurred while processing the payment';
+
+  @override
+  String get debt_error_partial_add_failed =>
+      'An error occurred while adding partial debt';
+
+  @override
+  String get transaction_error_create_failed =>
+      'An error occurred while creating the transaction';
+
+  @override
+  String get transaction_error_update_failed =>
+      'An error occurred while updating the transaction';
+
+  @override
+  String get transaction_error_delete_failed =>
+      'An error occurred while deleting the transaction';
+
+  @override
+  String get wallet_error_status_update_failed =>
+      'An error occurred while updating wallet status';
+
+  @override
+  String get auth_error_must_login_first => 'You must sign in first';
+
+  @override
+  String get auth_error_store_already_exists =>
+      'This account already has a store';
+
+  @override
+  String get auth_error_employee_fetch_failed =>
+      'An error occurred while fetching employee data';
+
+  @override
+  String get error_unexpected => 'An unexpected error occurred';
 }

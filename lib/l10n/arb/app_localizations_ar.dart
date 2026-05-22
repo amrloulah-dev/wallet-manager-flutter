@@ -1692,7 +1692,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشلت عملية المصادقة، يرجى تسجيل الدخول مجدداً.';
 
   @override
-  String get auth_error_store_not_found => 'المتجر غير موجود.';
+  String get auth_error_store_not_found =>
+      'لم يتم العثور على المتجر المرتبط بهذا الموظف';
 
   @override
   String get auth_error_user_not_found => 'المستخدم غير موجود أو ليس مالكاً.';
@@ -1736,25 +1737,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_error_invalid_store_password => 'كلمة سر المتجر غير صحيحة.';
 
   @override
-  String get debt_error_fetch_failed => 'فشل في جلب الديون.';
+  String get debt_error_fetch_failed => 'حدث خطأ أثناء جلب بيانات الدين';
 
   @override
   String get debt_error_fetch_more_failed => 'فشل في جلب المزيد من الديون.';
 
   @override
-  String get debt_error_create_failed => 'فشل في إنشاء الدين.';
+  String get debt_error_create_failed => 'حدث خطأ أثناء إنشاء الدين';
 
   @override
   String get debt_error_add_amount_failed => 'فشل في إضافة المبلغ إلى الدين.';
 
   @override
-  String get debt_error_update_failed => 'فشل في تحديث الدين.';
+  String get debt_error_update_failed => 'حدث خطأ أثناء تحديث الدين';
 
   @override
   String get debt_error_settle_failed => 'فشل في تسديد الدين.';
 
   @override
-  String get debt_error_delete_failed => 'فشل في حذف الدين.';
+  String get debt_error_delete_failed => 'حدث خطأ أثناء حذف الدين';
 
   @override
   String get debt_error_auth_required => 'يجب تسجيل الدخول أولاً.';
@@ -1789,7 +1790,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employee_error_update_perms_failed => 'فشل تحديث الصلاحيات.';
 
   @override
-  String get transaction_error_fetch_failed => 'فشل في جلب المعاملات.';
+  String get transaction_error_fetch_failed =>
+      'حدث خطأ أثناء جلب بيانات المعاملة';
 
   @override
   String get transaction_error_fetch_more_failed =>
@@ -2049,4 +2051,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wallet_status_suspended => 'معلقة';
+
+  @override
+  String get overlay_error_load_failed => 'حدث خطأ أثناء تحميل البيانات';
+
+  @override
+  String get overlay_error_submit_failed => 'حدث خطأ أثناء تنفيذ المعاملة';
+
+  @override
+  String get debt_error_payment_failed => 'حدث خطأ أثناء معالجة الدفعة';
+
+  @override
+  String get debt_error_partial_add_failed => 'حدث خطأ أثناء إضافة دين جزئي';
+
+  @override
+  String get transaction_error_create_failed => 'حدث خطأ أثناء إنشاء المعاملة';
+
+  @override
+  String get transaction_error_update_failed => 'حدث خطأ أثناء تحديث المعاملة';
+
+  @override
+  String get transaction_error_delete_failed => 'حدث خطأ أثناء حذف المعاملة';
+
+  @override
+  String get wallet_error_status_update_failed =>
+      'حدث خطأ أثناء تحديث حالة المحفظة';
+
+  @override
+  String get auth_error_must_login_first => 'يجب تسجيل الدخول أولاً';
+
+  @override
+  String get auth_error_store_already_exists =>
+      'هذا الحساب يمتلك متجرًا بالفعل';
+
+  @override
+  String get auth_error_employee_fetch_failed =>
+      'حدث خطأ أثناء جلب بيانات الموظف';
+
+  @override
+  String get error_unexpected => 'حدث خطأ غير متوقع';
 }

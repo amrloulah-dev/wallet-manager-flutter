@@ -3329,7 +3329,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_error_store_not_found.
   ///
   /// In ar, this message translates to:
-  /// **'المتجر غير موجود.'**
+  /// **'لم يتم العثور على المتجر المرتبط بهذا الموظف'**
   String get auth_error_store_not_found;
 
   /// No description provided for @auth_error_user_not_found.
@@ -3413,7 +3413,7 @@ abstract class AppLocalizations {
   /// No description provided for @debt_error_fetch_failed.
   ///
   /// In ar, this message translates to:
-  /// **'فشل في جلب الديون.'**
+  /// **'حدث خطأ أثناء جلب بيانات الدين'**
   String get debt_error_fetch_failed;
 
   /// No description provided for @debt_error_fetch_more_failed.
@@ -3425,7 +3425,7 @@ abstract class AppLocalizations {
   /// No description provided for @debt_error_create_failed.
   ///
   /// In ar, this message translates to:
-  /// **'فشل في إنشاء الدين.'**
+  /// **'حدث خطأ أثناء إنشاء الدين'**
   String get debt_error_create_failed;
 
   /// No description provided for @debt_error_add_amount_failed.
@@ -3437,7 +3437,7 @@ abstract class AppLocalizations {
   /// No description provided for @debt_error_update_failed.
   ///
   /// In ar, this message translates to:
-  /// **'فشل في تحديث الدين.'**
+  /// **'حدث خطأ أثناء تحديث الدين'**
   String get debt_error_update_failed;
 
   /// No description provided for @debt_error_settle_failed.
@@ -3449,7 +3449,7 @@ abstract class AppLocalizations {
   /// No description provided for @debt_error_delete_failed.
   ///
   /// In ar, this message translates to:
-  /// **'فشل في حذف الدين.'**
+  /// **'حدث خطأ أثناء حذف الدين'**
   String get debt_error_delete_failed;
 
   /// No description provided for @debt_error_auth_required.
@@ -3515,7 +3515,7 @@ abstract class AppLocalizations {
   /// No description provided for @transaction_error_fetch_failed.
   ///
   /// In ar, this message translates to:
-  /// **'فشل في جلب المعاملات.'**
+  /// **'حدث خطأ أثناء جلب بيانات المعاملة'**
   String get transaction_error_fetch_failed;
 
   /// No description provided for @transaction_error_fetch_more_failed.
@@ -3883,6 +3883,78 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معلقة'**
   String get wallet_status_suspended;
+
+  /// No description provided for @overlay_error_load_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحميل البيانات'**
+  String get overlay_error_load_failed;
+
+  /// No description provided for @overlay_error_submit_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تنفيذ المعاملة'**
+  String get overlay_error_submit_failed;
+
+  /// No description provided for @debt_error_payment_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء معالجة الدفعة'**
+  String get debt_error_payment_failed;
+
+  /// No description provided for @debt_error_partial_add_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء إضافة دين جزئي'**
+  String get debt_error_partial_add_failed;
+
+  /// No description provided for @transaction_error_create_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء إنشاء المعاملة'**
+  String get transaction_error_create_failed;
+
+  /// No description provided for @transaction_error_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحديث المعاملة'**
+  String get transaction_error_update_failed;
+
+  /// No description provided for @transaction_error_delete_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء حذف المعاملة'**
+  String get transaction_error_delete_failed;
+
+  /// No description provided for @wallet_error_status_update_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تحديث حالة المحفظة'**
+  String get wallet_error_status_update_failed;
+
+  /// No description provided for @auth_error_must_login_first.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب تسجيل الدخول أولاً'**
+  String get auth_error_must_login_first;
+
+  /// No description provided for @auth_error_store_already_exists.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الحساب يمتلك متجرًا بالفعل'**
+  String get auth_error_store_already_exists;
+
+  /// No description provided for @auth_error_employee_fetch_failed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء جلب بيانات الموظف'**
+  String get auth_error_employee_fetch_failed;
+
+  /// No description provided for @error_unexpected.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع'**
+  String get error_unexpected;
 }
 
 class _AppLocalizationsDelegate
