@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
+import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/sms_processing_pipeline.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
@@ -63,7 +64,18 @@ Future<void> onStart(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
 
-  // ── 2. Initialize Local Storage (SharedPreferences) ───────
+  // ── 2. Initialize Firebase (this isolate has its own memory space) ──
+  // Firebase MUST be initialized before setupServiceLocator(), because
+  // repository constructors (e.g. StatsRepository, SubscriptionRepository)
+  // call FirebaseService().firestore eagerly at construction time.
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp();
+  }
+
+  // ── 3. Initialize GetIt AFTER Firebase is ready ──────────
+  await setupServiceLocator();
+
+  // ── 4. Initialize Local Storage (SharedPreferences) ───────
   final storage = LocalStorageService();
   await storage.initialize();
 
@@ -112,6 +124,9 @@ void backgroundSmsCallback(SmsMessage message) async {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();
     }
+
+    // ── Initialize GetIt for this cold-start isolate ────────
+    await setupServiceLocator();
   } catch (e, stack) {
     // If Firebase itself fails, we can only debugPrint — no Crashlytics available
     if (kDebugMode) {

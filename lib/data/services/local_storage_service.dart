@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -51,7 +52,10 @@ class LocalStorageService {
       return;
     }
     _prefs ??= await SharedPreferences.getInstance();
-    _secureStorage ??= secureStorage ?? const FlutterSecureStorage();
+    _secureStorage ??= secureStorage ??
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        );
 
     // ── Clean up orphans & Migrate (Phase 8.1 Unification) ──────────
     // 1. Remove the legacy 'pending_overlay_tx' key used by OverlayRepository
@@ -90,7 +94,36 @@ class LocalStorageService {
   }
 
   /// Loads sensitive data from secure storage into memory cache.
+  ///
+  /// Applies the standard Android Keystore auto-recovery pattern:
+  /// if the underlying cipher is corrupt (NullPointerException surfaced as a
+  /// [PlatformException]), we wipe all broken keys with [deleteAll] and retry
+  /// once so the app can boot cleanly. The user's session will be cleared,
+  /// which is the accepted trade-off for this class of hardware failure.
   Future<void> _loadSecureCache() async {
+    try {
+      await _doLoadSecureCache();
+    } on PlatformException catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ [SecureStorage] Keystore corrupted — wiping and retrying. '
+            'Error: $e');
+      }
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.medium,
+        operation: 'LocalStorageService._loadSecureCache.recovery',
+      );
+      // Wipe all broken entries so the cipher can be reconstructed cleanly.
+      await _secureStorage!.deleteAll();
+      // Retry with a clean keystore — values will be null (no session).
+      await _doLoadSecureCache();
+    }
+  }
+
+  /// Inner implementation — performs the actual secure-storage reads.
+  Future<void> _doLoadSecureCache() async {
     _cachedUserId = await _secureStorage!.read(key: _keyUserId);
     _cachedStoreId = await _secureStorage!.read(key: _keyStoreId);
     final roleStr = await _secureStorage!.read(key: _keyUserRole);

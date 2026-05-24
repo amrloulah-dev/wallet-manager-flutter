@@ -29,7 +29,7 @@ import '../../core/utils/cache_manager.dart';
 final GetIt sl = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
-  // External Services
+  // ── 1. External Services ──────────────────────────────────
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerFactoryParam<FirebaseAuth, FirebaseApp?, void>(
     (app, _) => app != null
@@ -39,7 +39,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<FirebaseService>(() => FirebaseService());
   sl.registerLazySingleton<CacheManager>(() => CacheManager());
 
-  // Services
+  // ── 2. Local Services ─────────────────────────────────────
   final localStorage = LocalStorageService();
   await localStorage.initialize();
   sl.registerSingleton<LocalStorageService>(localStorage);
@@ -47,24 +47,7 @@ Future<void> setupServiceLocator() async {
       () => WalletCacheManager(storage: localStorage));
   sl.registerLazySingleton<AppEvents>(() => AppEvents());
 
-  sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
-        authRepository: sl<AuthRepository>(),
-        storeRepository: sl<StoreRepository>(),
-        userRepository: sl<UserRepository>(),
-        deviceRepository: sl<DeviceRepository>(),
-        localStorage: sl<LocalStorageService>(),
-        firestore: sl<FirebaseFirestore>(),
-        subscriptionRepository: sl<SubscriptionRepository>(),
-      ));
-
-  // UseCases
-  sl.registerLazySingleton<TransactionFeeCalculator>(
-      () => TransactionFeeCalculator());
-  sl.registerLazySingleton<WalletUseCase>(() => WalletUseCase(
-        authProvider: sl<AuthProvider>(),
-      ));
-
-  // Repositories — Lazy Singletons
+  // ── 3. Repositories ───────────────────────────────────────
   sl.registerLazySingleton<AuthRepository>(() => AuthRepository());
   sl.registerLazySingleton<WalletRepository>(() => WalletRepository());
   sl.registerLazySingleton<TransactionRepository>(
@@ -81,7 +64,26 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<LicenseKeyRepository>(() => LicenseKeyRepository());
   sl.registerLazySingleton<UserRepository>(() => UserRepository());
 
-  // UseCases
+  // ── 4. Composite Services (depend on repositories) ────────
+  sl.registerLazySingleton<DatabaseSyncService>(() => DatabaseSyncService(
+        authRepository: sl<AuthRepository>(),
+        storeRepository: sl<StoreRepository>(),
+        userRepository: sl<UserRepository>(),
+        deviceRepository: sl<DeviceRepository>(),
+        localStorage: sl<LocalStorageService>(),
+        firestore: sl<FirebaseFirestore>(),
+        subscriptionRepository: sl<SubscriptionRepository>(),
+      ));
+
+  // ── 5. Providers (depend on repositories & composite services) ──
+  sl.registerLazySingleton<AuthProvider>(() => AuthProvider());
+
+  // ── 6. UseCases (depend on providers & repositories) ─────
+  sl.registerLazySingleton<TransactionFeeCalculator>(
+      () => TransactionFeeCalculator());
+  sl.registerLazySingleton<WalletUseCase>(() => WalletUseCase(
+        authProvider: sl<AuthProvider>(),
+      ));
   sl.registerLazySingleton<OverlayUseCase>(() => OverlayUseCase(
         transactionRepository: sl<TransactionRepository>(),
         localStorage: sl<LocalStorageService>(),
