@@ -17,14 +17,14 @@
 
 ## Phase 2: Refactor WalletRepository.createWallet
 
-- [~] Task: Write failing tests for `createWallet` with `WriteBatch`
-    - [ ] Test case: Verify `createWallet` uses `WriteBatch` (not `runTransaction`)
-    - [ ] Test case: Verify wallet document is created in Firestore
-    - [ ] Test case: Verify `updateStatsOnWalletChange` is called with `batch` parameter
-    - [ ] Test case: Verify `_cacheManager.clearWhere` is called after batch commit
-    - [ ] Run tests — confirm they fail (Red Phase)
+- [x] Task: Write failing tests for `createWallet` with `WriteBatch` [bd42113]
+    - [x] Test case: Verify `createWallet` uses `WriteBatch` (not `runTransaction`)
+    - [x] Test case: Verify wallet document is created in Firestore
+    - [x] Test case: Verify `updateStatsOnWalletChange` is called with `batch` parameter
+    - [x] Test case: Verify `_cacheManager.clearWhere` is called after batch commit
+    - [x] Run tests — confirm they fail (Red Phase)
 
-- [ ] Task: Migrate `createWallet` from `runTransaction` to `WriteBatch`
+- [~] Task: Migrate `createWallet` from `runTransaction` to `WriteBatch`
     - [ ] Replace `_firestore.runTransaction(...)` with `_firestore.batch()`
     - [ ] Use `batch.set(walletRef, wallet.toFirestore())`
     - [ ] Call `updateStatsOnWalletChange` with `batch: batch`
