@@ -1,6 +1,6 @@
 # Tracks Registry
 
-- [ ] **Track: Fix UI Overflow in StatItemWidget (BUG-05)**
+- [x] **Track: Fix UI Overflow in StatItemWidget (BUG-05)**
 *Link: [./tracks/ui_overflow_fix_20260526/](./tracks/ui_overflow_fix_20260526/)*
 
 ---
