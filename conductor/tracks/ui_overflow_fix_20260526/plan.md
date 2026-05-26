@@ -15,4 +15,4 @@
     - [ ] Add `const SizedBox(width: 12)` between `Flexible` column and value `Text`
     - [ ] Run tests — confirm they pass (Green Phase)
 
-- [~] Task: Conductor - User Manual Verification 'Phase 1: Implement Fix' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Implement Fix' (Protocol in workflow.md)
