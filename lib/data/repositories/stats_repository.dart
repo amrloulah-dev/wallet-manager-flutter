@@ -177,45 +177,53 @@ class StatsRepository {
       {int countChange = 0,
       int activeCountChange = 0,
       double balanceChange = 0.0,
-      Transaction? firestoreTransaction}) async {
+      Transaction? firestoreTransaction,
+      WriteBatch? batch}) async {
+    assert(batch == null || firestoreTransaction == null,
+        'Cannot provide both batch and firestoreTransaction');
+
     if (countChange == 0 && activeCountChange == 0 && balanceChange == 0.0) {
       return;
     }
 
-    Future<void> updateLogic(Transaction transaction) async {
-      final summaryRef = _getSummaryDocRef(storeId);
-      final summarySnap = await transaction.get(summaryRef);
+    final Map<String, dynamic> summaryUpdates = {
+      'lastUpdated': FieldValue.serverTimestamp(),
+    };
 
-      final Map<String, dynamic> summaryUpdates = {
-        'lastUpdated': FieldValue.serverTimestamp(),
-      };
-
-      if (countChange != 0) {
-        summaryUpdates['totalWallets'] = FieldValue.increment(countChange);
-      }
-
-      if (activeCountChange != 0) {
-        summaryUpdates['activeWallets'] =
-            FieldValue.increment(activeCountChange);
-      }
-
-      if (balanceChange != 0.0) {
-        summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
-      }
-
-      if (summarySnap.exists) {
-        transaction.update(summaryRef, summaryUpdates);
-      } else {
-        transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
-      }
+    if (countChange != 0) {
+      summaryUpdates['totalWallets'] = FieldValue.increment(countChange);
     }
 
-    if (firestoreTransaction != null) {
-      await updateLogic(firestoreTransaction);
+    if (activeCountChange != 0) {
+      summaryUpdates['activeWallets'] =
+          FieldValue.increment(activeCountChange);
+    }
+
+    if (balanceChange != 0.0) {
+      summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
+    }
+
+    final summaryRef = _getSummaryDocRef(storeId);
+
+    if (batch != null) {
+      batch.set(summaryRef, summaryUpdates, SetOptions(merge: true));
     } else {
-      await _firestore.runTransaction((transaction) async {
-        await updateLogic(transaction);
-      });
+      Future<void> updateLogic(Transaction transaction) async {
+        final summarySnap = await transaction.get(summaryRef);
+        if (summarySnap.exists) {
+          transaction.update(summaryRef, summaryUpdates);
+        } else {
+          transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
+        }
+      }
+
+      if (firestoreTransaction != null) {
+        await updateLogic(firestoreTransaction);
+      } else {
+        await _firestore.runTransaction((transaction) async {
+          await updateLogic(transaction);
+        });
+      }
     }
   }
 }
