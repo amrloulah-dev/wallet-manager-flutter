@@ -28,9 +28,9 @@
     - [ ] Run Firebase MCP `firebase_validate_security_rules` tool against the modified `firestore.rules`
     - [ ] Fix any validation errors
 
-- [~] Task: Cross-reference unchanged rules
+- [x] Task: Cross-reference unchanged rules [7b1bc2f]
     - [ ] Verify `create`, `update`, `delete` rules for all 5 collections remain unmodified
     - [ ] Verify helper functions (`isStoreOwner`, `isStoreEmployee`, `canAccessStore`, `hasPermission`) are untouched
     - [ ] Verify safe collections (`stores`, `daily_stats`, `pin_locks`, `device_registrations`, `license_keys`) are untouched
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Validate and Deploy' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 2: Validate and Deploy' (Protocol in workflow.md)
