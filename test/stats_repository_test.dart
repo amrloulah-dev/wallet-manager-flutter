@@ -22,11 +22,7 @@ class MockTransaction extends Mock implements Transaction {
   }
 }
 
-class MockWriteBatch extends Mock implements WriteBatch {
-  @override
-  void set<T>(DocumentReference<T> documentReference, T data,
-      [SetOptions? options]) {}
-}
+class MockWriteBatch extends Mock implements WriteBatch {}
 
 class MockDocumentSnapshot<T> extends Mock implements DocumentSnapshot<T> {
   @override
@@ -144,7 +140,7 @@ void main() {
         countChange: 1,
         batch: mockBatch,
       );
-      verify(() => mockBatch.set(any(), any(), any())).called(1);
+      verify(() => mockBatch.set<Object?>(any(), any(), any())).called(1);
     });
   });
 }

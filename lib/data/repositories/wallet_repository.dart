@@ -37,19 +37,20 @@ class WalletRepository {
   // 1️⃣ CREATE Methods
   Future<void> createWallet(WalletModel wallet) async {
     try {
-      await _firestore.runTransaction((transaction) async {
-        final walletRef = _walletsCollection.doc(wallet.walletId);
+      final batch = _firestore.batch();
+      final walletRef = _walletsCollection.doc(wallet.walletId);
 
-        transaction.set(walletRef, wallet.toFirestore());
+      batch.set(walletRef, wallet.toFirestore());
 
-        await _statsRepository.updateStatsOnWalletChange(
-          wallet.storeId,
-          countChange: 1,
-          activeCountChange: wallet.isActive ? 1 : 0,
-          balanceChange: wallet.balance,
-          firestoreTransaction: transaction,
-        );
-      });
+      await _statsRepository.updateStatsOnWalletChange(
+        wallet.storeId,
+        countChange: 1,
+        activeCountChange: wallet.isActive ? 1 : 0,
+        balanceChange: wallet.balance,
+        batch: batch,
+      );
+
+      await batch.commit();
 
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     } catch (e, stack) {

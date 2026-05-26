@@ -33,6 +33,8 @@ class MockQuerySnapshot extends Mock
 
 class MockTransaction extends Mock implements Transaction {}
 
+class MockWriteBatch extends Mock implements WriteBatch {}
+
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
 class FakeDocumentSnapshot extends Mock
@@ -100,6 +102,7 @@ void main() {
     registerFallbackValue(MockDocumentReference());
     registerFallbackValue(<String, dynamic>{});
     registerFallbackValue(MockTransaction());
+    registerFallbackValue(MockWriteBatch());
 
     // Global stubs to prevent common errors
     when(() => mockFirestore.runTransaction<void>(any()))
@@ -124,6 +127,12 @@ void main() {
     when(() => mockStatsRepository.getStatsSummary(any()))
         .thenAnswer((_) async => StatsSummaryModel.empty());
 
+    final mockBatch = MockWriteBatch();
+    when(() => mockFirestore.batch()).thenReturn(mockBatch);
+    when(() => mockBatch.commit()).thenAnswer((_) async {});
+    when(() => mockBatch.set<Object?>(any(), any())).thenReturn(null);
+    when(() => mockBatch.set<Object?>(any(), any(), any())).thenReturn(null);
+
     // Add global stub for updateStatsOnWalletChange
     when(() => mockStatsRepository.updateStatsOnWalletChange(
           any(),
@@ -131,6 +140,7 @@ void main() {
           activeCountChange: any(named: 'activeCountChange'),
           balanceChange: any(named: 'balanceChange'),
           firestoreTransaction: any(named: 'firestoreTransaction'),
+          batch: any(named: 'batch'),
         )).thenAnswer((_) async {});
 
     // Support where() minimally
