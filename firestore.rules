@@ -107,7 +107,8 @@ service cloud.firestore {
     // هنا يجب التأكد أن المستند نفسه يحتوي على storeId وأن المستخدم ينتمي لهذا المتجر
     
     match /wallets/{walletId} {
-      allow read: if canAccessStore(resource.data.storeId);
+      allow get: if canAccessStore(resource.data.storeId);
+      allow list: if isAuthenticated();
       allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createWallet');
       // نمنع نقل المحفظة من متجر لمتجر آخر أثناء التحديث
       allow update: if canAccessStore(resource.data.storeId) && 
