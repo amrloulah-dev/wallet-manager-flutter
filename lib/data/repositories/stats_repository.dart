@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:walletmanager/core/enums/debt_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -278,6 +279,48 @@ class StatsRepository {
           await updateLogic(transaction);
         });
       }
+    }
+  }
+
+  /// Queries daily_stats collection where document ID is between start and end date
+  /// and aggregates all flow numeric metrics (excluding point-in-time metrics).
+  Future<Map<String, dynamic>> getStatsByDateRange(
+      String storeId, DateTime start, DateTime end) async {
+    try {
+      final startStr = DateFormat('yyyy-MM-dd').format(start);
+      final endStr = DateFormat('yyyy-MM-dd').format(end);
+
+      final snapshot = await _firestore
+          .collection(FirebaseConstants.dailyStatsSubcollection(storeId))
+          .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
+          .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
+          .get();
+
+      final Map<String, dynamic> aggregation = {};
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        data.forEach((key, value) {
+          // Exclude point-in-time fields and non-numeric fields
+          if (key == 'totalBalance' || key == 'totalWallets' || key == 'date') {
+            return;
+          }
+          if (value is num) {
+            final num current = aggregation[key] ?? 0;
+            aggregation[key] = current + value;
+          }
+        });
+      }
+
+      return aggregation;
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.getStatsByDateRange',
+      );
+      return {};
     }
   }
 }

@@ -216,9 +216,33 @@ class StatisticsProvider extends BaseProvider {
           'totalPaidAmount': s.totalPaidAmount,
           'totalDebtsCount': s.openDebtsCount + s.paidDebtsCount,
         };
-      } else if (_dashboardSummary != null) {
-        // Fallback to global summary for other ranges (Phase 3 constraint)
-        _filteredStats = _dashboardSummary?.toMap();
+      } else {
+        // Query daily stats rollup for non-today range
+        final aggregated = await _statsRepository.getStatsByDateRange(
+            _storeId!, dateRange.start, dateRange.end);
+
+        // Include current total balance and total wallets as point-in-time metrics
+        final totalBalance = _dashboardSummary?.totalBalance ?? 0.0;
+        final totalWallets = _dashboardSummary?.totalWallets ?? 0;
+
+        final openDebts = NumberParser.toInt(aggregated['openDebtsCount']);
+        final paidDebts = NumberParser.toInt(aggregated['paidDebtsCount']);
+
+        _filteredStats = {
+          'totalBalance': totalBalance,
+          'totalWallets': totalWallets,
+          'totalTransactions': NumberParser.toInt(aggregated['transactionCount']),
+          'totalCommission': NumberParser.toDouble(aggregated['totalCommission']),
+          'sendCount': NumberParser.toInt(aggregated['sendCount']),
+          'totalSentAmount': NumberParser.toDouble(aggregated['totalSentAmount']),
+          'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
+          'totalReceivedAmount': NumberParser.toDouble(aggregated['totalReceivedAmount']),
+          'openDebtsCount': openDebts,
+          'totalOpenAmount': NumberParser.toDouble(aggregated['totalOpenAmount']),
+          'paidDebtsCount': paidDebts,
+          'totalPaidAmount': NumberParser.toDouble(aggregated['totalPaidAmount']),
+          'totalDebtsCount': openDebts + paidDebts,
+        };
       }
     } catch (e, stack) {
       setError("stats_error_filtered_fetch", e, stack);
