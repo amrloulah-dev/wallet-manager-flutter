@@ -8,7 +8,7 @@
     - [ ] Test case: Assert that `batch` and `firestoreTransaction` cannot be provided simultaneously
     - [ ] Run tests — confirm they fail (Red Phase)
 
-- [~] Task: Implement `WriteBatch` logic in `StatsRepository.updateStatsOnWalletChange`
+- [x] Task: Implement `WriteBatch` logic in `StatsRepository.updateStatsOnWalletChange` [8b5ece7]
     - [ ] Add `WriteBatch? batch` optional parameter to method signature
     - [ ] Add assertion: `assert(batch == null || firestoreTransaction == null)`
     - [ ] Implement conditional logic: if `batch != null`, use `batch.set(summaryRef, data, SetOptions(merge: true))`
@@ -17,7 +17,7 @@
 
 ## Phase 2: Refactor WalletRepository.createWallet
 
-- [ ] Task: Write failing tests for `createWallet` with `WriteBatch`
+- [~] Task: Write failing tests for `createWallet` with `WriteBatch`
     - [ ] Test case: Verify `createWallet` uses `WriteBatch` (not `runTransaction`)
     - [ ] Test case: Verify wallet document is created in Firestore
     - [ ] Test case: Verify `updateStatsOnWalletChange` is called with `batch` parameter
