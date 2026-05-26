@@ -1,6 +1,6 @@
 # Plan: Implement Time-Series Rollup Architecture (BUG-03 & BUG-04)
 
-## Phase 1: Expand Schema and Update Increments
+## Phase 1: Expand Schema and Update Increments [checkpoint: 6dc6672]
 
 - [x] Task: Update `DailyStatsModel` schema [7997284]
     - [x] Add `sendCount`, `receiveCount`, `totalSentAmount`, `totalReceivedAmount`, `openDebtsCount`, `totalOpenAmount`, `paidDebtsCount`, `totalPaidAmount`.
