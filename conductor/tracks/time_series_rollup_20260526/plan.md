@@ -22,7 +22,7 @@
     - [ ] Query `daily_stats` where document ID is between `start` and `end` formatted as strings (`yyyy-MM-dd`).
     - [ ] Aggregate all numeric fields.
     - [ ] Exclude `totalBalance` and `totalWallets`.
-- [ ] Task: Update `StatisticsProvider.fetchFilteredStats`
+- [~] Task: Update `StatisticsProvider.fetchFilteredStats`
     - [ ] Replace unbounded transaction fetch with `_statsRepository.getStatsByDateRange`.
     - [ ] Update `_filteredStats` with the aggregated result.
 
