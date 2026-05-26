@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:another_telephony/telephony.dart';
@@ -5,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
@@ -26,6 +28,25 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 /// Call this once from `main()` to configure the background service.
 /// It does NOT start the service — `autoStart: true` handles that.
 Future<void> initializeBackgroundService() async {
+  // Request battery optimization exemption on Android to ensure reliable background execution
+  if (!kIsWeb && Platform.isAndroid) {
+    try {
+      final status = await Permission.ignoreBatteryOptimizations.status;
+      if (!status.isGranted) {
+        await Permission.ignoreBatteryOptimizations.request();
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to request battery optimization exemption: $e');
+      }
+      AppErrorHandler.logSilentError(
+        e.toString(),
+        'background_service_battery_optimization_request',
+        stackTrace: stack,
+      );
+    }
+  }
+
   final service = FlutterBackgroundService();
 
   await service.configure(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -134,8 +133,12 @@ void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp();
+    // Encapsulate and initialize through the explicit FirebaseService pipeline
+    await FirebaseService().initialize();
+
+    // Now dependency injection container can safely resolve repositories needing Firestore
     await setupServiceLocator();
+
     runApp(const TransactionOverlayApp());
   } catch (e, stack) {
     if (kDebugMode) {
