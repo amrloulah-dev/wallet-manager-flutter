@@ -18,13 +18,13 @@
     - [ ] Change `allow read, delete:` to `allow get, delete:` (same condition)
     - [ ] Add new `allow list: if isAuthenticated();`
 
-- [~] Task: Split `allow read, delete` into `get, delete`/`list` for `subscription_requests/{requestId}` (Lines 143-144)
+- [x] Task: Split `allow read, delete` into `get, delete`/`list` for `subscription_requests/{requestId}` (Lines 143-144) [350543e]
     - [ ] Change `allow read, delete:` to `allow get, delete:` (same condition)
     - [ ] Add new `allow list: if isAuthenticated();`
 
 ## Phase 2: Validate and Deploy
 
-- [ ] Task: Validate rules syntax
+- [~] Task: Validate rules syntax
     - [ ] Run Firebase MCP `firebase_validate_security_rules` tool against the modified `firestore.rules`
     - [ ] Fix any validation errors
 
