@@ -25,4 +25,24 @@ void main() {
     final textWidget = tester.widget<Text>(find.text('100.00'));
     expect(textWidget.style?.color, Colors.green);
   });
+
+  testWidgets('StatItemWidget does not overflow with long label in constrained width',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 200,
+            child: StatItemWidget(
+              label: 'This is an extremely long label that will definitely cause an overflow if not wrapped in Flexible',
+              value: '1,000,000.00 EGP',
+              subtitle: 'This is also an extremely long subtitle that would overflow',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
 }
