@@ -24,11 +24,11 @@
 
 ## Phase 2: Validate and Deploy
 
-- [~] Task: Validate rules syntax
+- [x] Task: Validate rules syntax [d495df9]
     - [ ] Run Firebase MCP `firebase_validate_security_rules` tool against the modified `firestore.rules`
     - [ ] Fix any validation errors
 
-- [ ] Task: Cross-reference unchanged rules
+- [~] Task: Cross-reference unchanged rules
     - [ ] Verify `create`, `update`, `delete` rules for all 5 collections remain unmodified
     - [ ] Verify helper functions (`isStoreOwner`, `isStoreEmployee`, `canAccessStore`, `hasPermission`) are untouched
     - [ ] Verify safe collections (`stores`, `daily_stats`, `pin_locks`, `device_registrations`, `license_keys`) are untouched
