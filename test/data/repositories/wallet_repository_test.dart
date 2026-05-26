@@ -9,11 +9,30 @@ import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
+import 'package:walletmanager/data/models/wallet_model.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
+
 class MockFirebaseService extends Mock implements FirebaseService {}
 
 class MockCacheManager extends Mock implements CacheManager {}
 
+class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
+class MockWriteBatch extends Mock implements WriteBatch {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockStatsRepository extends Mock implements StatsRepository {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(MockDocumentReference());
+  });
+
   late WalletRepository repository;
   late FakeFirebaseFirestore fakeFirestore;
   late MockFirebaseService mockFirebaseService;
@@ -138,6 +157,86 @@ void main() {
 
       final statsSnap = await fakeFirestore.doc(statsPath).get();
       expect(statsSnap.data()?['totalBalance'], 120.0);
+    });
+  });
+
+  group('WalletRepository.createWallet with mock WriteBatch', () {
+    late MockFirebaseFirestore mockFirestore;
+    late MockStatsRepository mockStatsRepo;
+    late MockCollectionReference mockCollectionRef;
+    late MockDocumentReference mockDocRef;
+    late MockWriteBatch mockBatch;
+    late WalletRepository mockRepository;
+
+    setUp(() {
+      mockFirestore = MockFirebaseFirestore();
+      mockStatsRepo = MockStatsRepository();
+      mockCollectionRef = MockCollectionReference();
+      mockDocRef = MockDocumentReference();
+      mockBatch = MockWriteBatch();
+
+      when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+      when(() => mockFirestore.collection(any())).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any())).thenReturn(mockDocRef);
+      when(() => mockFirestore.batch()).thenReturn(mockBatch);
+      
+      when(() => mockBatch.commit()).thenAnswer((_) async {});
+      when(() => mockBatch.set<Object?>(any(), any(), any())).thenReturn(null);
+      when(() => mockBatch.set<Object?>(any(), any())).thenReturn(null);
+
+      when(() => mockStatsRepo.updateStatsOnWalletChange(
+            any(),
+            countChange: any(named: 'countChange'),
+            activeCountChange: any(named: 'activeCountChange'),
+            balanceChange: any(named: 'balanceChange'),
+            batch: any(named: 'batch'),
+            firestoreTransaction: any(named: 'firestoreTransaction'),
+          )).thenAnswer((_) async {});
+
+      mockRepository = WalletRepository(
+        firebaseService: mockFirebaseService,
+        cacheManager: mockCacheManager,
+        statsRepository: mockStatsRepo,
+      );
+    });
+
+    test('should use WriteBatch to create wallet and update stats', () async {
+      final wallet = WalletModel(
+        walletId: walletId,
+        storeId: storeId,
+        phoneNumber: '123',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        balance: 150.0,
+        isActive: true,
+        createdBy: 'user1',
+        sendLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        stats: WalletStats(
+            totalTransactions: 0,
+            totalCommission: 0,
+            totalSentAmount: 0,
+            totalReceivedAmount: 0),
+        createdAt: DateTime.now(),
+        lastDailyReset: DateTime.now(),
+        lastMonthlyReset: DateTime.now(),
+      );
+
+      await mockRepository.createWallet(wallet);
+
+      verify(() => mockFirestore.batch()).called(1);
+      verify(() => mockBatch.set<Object?>(mockDocRef, wallet.toFirestore())).called(1);
+      verify(() => mockStatsRepo.updateStatsOnWalletChange(
+            storeId,
+            countChange: 1,
+            activeCountChange: 1,
+            balanceChange: 150.0,
+            batch: mockBatch,
+          )).called(1);
+      verify(() => mockBatch.commit()).called(1);
+      verify(() => mockCacheManager.clearWhere(any())).called(1);
     });
   });
 }
