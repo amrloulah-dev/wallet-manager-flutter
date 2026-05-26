@@ -24,17 +24,17 @@
     - [x] Test case: Verify `_cacheManager.clearWhere` is called after batch commit
     - [x] Run tests — confirm they fail (Red Phase)
 
-- [~] Task: Migrate `createWallet` from `runTransaction` to `WriteBatch`
-    - [ ] Replace `_firestore.runTransaction(...)` with `_firestore.batch()`
-    - [ ] Use `batch.set(walletRef, wallet.toFirestore())`
-    - [ ] Call `updateStatsOnWalletChange` with `batch: batch`
-    - [ ] Call `await batch.commit()`
-    - [ ] Preserve `_cacheManager.clearWhere(...)` after commit
-    - [ ] Preserve error handling (`catch`, `AppErrorHandler`, `ServerException`)
-    - [ ] Run tests — confirm they pass (Green Phase)
+- [x] Task: Migrate `createWallet` from `runTransaction` to `WriteBatch` [f5e960b]
+    - [x] Replace `_firestore.runTransaction(...)` with `_firestore.batch()`
+    - [x] Use `batch.set(walletRef, wallet.toFirestore())`
+    - [x] Call `updateStatsOnWalletChange` with `batch: batch`
+    - [x] Call `await batch.commit()`
+    - [x] Preserve `_cacheManager.clearWhere(...)` after commit
+    - [x] Preserve error handling (`catch`, `AppErrorHandler`, `ServerException`)
+    - [x] Run tests — confirm they pass (Green Phase)
 
-- [ ] Task: Verify existing callers are unaffected
-    - [ ] Run existing tests for `creditWallet`, `debitWallet`, `setWalletActiveStatus`
-    - [ ] Confirm no test failures
+- [x] Task: Verify existing callers are unaffected [f5e960b]
+    - [x] Run existing tests for `creditWallet`, `debitWallet`, `setWalletActiveStatus`
+    - [x] Confirm no test failures
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Refactor WalletRepository.createWallet' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Refactor WalletRepository.createWallet' (Protocol in workflow.md)
