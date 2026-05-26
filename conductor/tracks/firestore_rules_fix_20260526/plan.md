@@ -14,11 +14,11 @@
     - [ ] Change `allow read: if canAccessStore(resource.data.storeId);` to `allow get: if canAccessStore(resource.data.storeId);` + `allow list: if isAuthenticated();`
     - [ ] Verify no syntax errors in the modified rule block
 
-- [~] Task: Split `allow read, delete` into `get, delete`/`list` for `users/{userId}` (Line 73)
+- [x] Task: Split `allow read, delete` into `get, delete`/`list` for `users/{userId}` (Line 73) [575ecdd]
     - [ ] Change `allow read, delete:` to `allow get, delete:` (same condition)
     - [ ] Add new `allow list: if isAuthenticated();`
 
-- [ ] Task: Split `allow read, delete` into `get, delete`/`list` for `subscription_requests/{requestId}` (Lines 143-144)
+- [~] Task: Split `allow read, delete` into `get, delete`/`list` for `subscription_requests/{requestId}` (Lines 143-144)
     - [ ] Change `allow read, delete:` to `allow get, delete:` (same condition)
     - [ ] Add new `allow list: if isAuthenticated();`
 
