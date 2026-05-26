@@ -70,7 +70,8 @@ service cloud.firestore {
       
       // صاحب المتجر يقدر يقرأ، يضيف، أو يحذف الموظفين اللي تبع متجره
       // نستخدم request.resource للإنشاء والتعديل، و resource للقراءة والحذف
-      allow read, delete: if isAuthenticated() && isStoreOwner(resource.data.storeId);
+      allow get, delete: if isAuthenticated() && isStoreOwner(resource.data.storeId);
+      allow list: if isAuthenticated();
       allow create, update: if isAuthenticated() && isStoreOwner(request.resource.data.storeId);
 
       // السماح بإنشاء حساب لنفسك
