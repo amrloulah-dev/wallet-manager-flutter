@@ -11,10 +11,10 @@
 
 ## Phase 2: Fix BUG-03 (TransactionProvider Today Summary)
 
-- [~] Task: Implement `fetchTodaySummary` in `TransactionProvider`
-    - [ ] Add a method to fetch today's `daily_stats` via `StatsRepository`.
-    - [ ] Map the fetched `DailyStatsModel` properties to the `_summary` map.
-    - [ ] Remove local filtering logic for summary calculation.
+- [x] Task: Implement `fetchTodaySummary` in `TransactionProvider` [7e67bd7]
+    - [x] Add a method to fetch today's `daily_stats` via `StatsRepository`.
+    - [x] Map the fetched `DailyStatsModel` properties to the `_summary` map.
+    - [x] Remove local filtering logic for summary calculation.
 
 ## Phase 3: Fix BUG-04 (Stats Date Filter)
 
