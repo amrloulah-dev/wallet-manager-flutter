@@ -5,13 +5,13 @@
 - [x] Task: Update `DailyStatsModel` schema [7997284]
     - [x] Add `sendCount`, `receiveCount`, `totalSentAmount`, `totalReceivedAmount`, `openDebtsCount`, `totalOpenAmount`, `paidDebtsCount`, `totalPaidAmount`.
     - [x] Update `fromMap`, `toMap`, `empty`, and `copyWith` methods.
-- [~] Task: Update `StatsRepository` increments
-    - [ ] Modify `updateStatsOnTransaction` to increment `sendCount`/`receiveCount` and `totalSentAmount`/`totalReceivedAmount` based on `transactionType`.
-    - [ ] Modify `incrementOpenDebtStats` and `decrementOpenDebtStats` to write to the `daily_stats` document for the current day.
+- [x] Task: Update `StatsRepository` increments [cbd9b7a]
+    - [x] Modify `updateStatsOnTransaction` to increment `sendCount`/`receiveCount` and `totalSentAmount`/`totalReceivedAmount` based on `transactionType`.
+    - [x] Modify `incrementOpenDebtStats` and `decrementOpenDebtStats` to write to the `daily_stats` document for the current day.
 
 ## Phase 2: Fix BUG-03 (TransactionProvider Today Summary)
 
-- [ ] Task: Implement `fetchTodaySummary` in `TransactionProvider`
+- [~] Task: Implement `fetchTodaySummary` in `TransactionProvider`
     - [ ] Add a method to fetch today's `daily_stats` via `StatsRepository`.
     - [ ] Map the fetched `DailyStatsModel` properties to the `_summary` map.
     - [ ] Remove local filtering logic for summary calculation.
