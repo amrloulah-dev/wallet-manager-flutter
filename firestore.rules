@@ -130,7 +130,8 @@ service cloud.firestore {
     }
 
     match /debts/{debtId} {
-      allow read: if canAccessStore(resource.data.storeId);
+      allow get: if canAccessStore(resource.data.storeId);
+      allow list: if isAuthenticated();
       allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createDebt');
       allow update: if canAccessStore(resource.data.storeId) && 
                        request.resource.data.storeId == resource.data.storeId &&
