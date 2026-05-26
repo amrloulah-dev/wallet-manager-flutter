@@ -22,6 +22,12 @@ class MockTransaction extends Mock implements Transaction {
   }
 }
 
+class MockWriteBatch extends Mock implements WriteBatch {
+  @override
+  void set<T>(DocumentReference<T> documentReference, T data,
+      [SetOptions? options]) {}
+}
+
 class MockDocumentSnapshot<T> extends Mock implements DocumentSnapshot<T> {
   @override
   bool get exists => false;
@@ -110,6 +116,35 @@ void main() {
 
       // ASSERT
       expect(true, true); // Verified by no crash + manual check
+    });
+  });
+
+  group('updateStatsOnWalletChange', () {
+    late MockWriteBatch mockBatch;
+
+    setUp(() {
+      mockBatch = MockWriteBatch();
+    });
+
+    test('should throw AssertionError if both transaction and batch are provided', () async {
+      expect(
+        () => statsRepository.updateStatsOnWalletChange(
+          storeId,
+          countChange: 1,
+          firestoreTransaction: mockTransaction,
+          batch: mockBatch,
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    test('should queue set operation on batch when batch is provided', () async {
+      await statsRepository.updateStatsOnWalletChange(
+        storeId,
+        countChange: 1,
+        batch: mockBatch,
+      );
+      verify(() => mockBatch.set(any(), any(), any())).called(1);
     });
   });
 }
