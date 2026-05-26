@@ -18,13 +18,13 @@
 
 ## Phase 3: Fix BUG-04 (Stats Date Filter)
 
-- [~] Task: Implement `getStatsByDateRange` in `StatsRepository`
-    - [ ] Query `daily_stats` where document ID is between `start` and `end` formatted as strings (`yyyy-MM-dd`).
-    - [ ] Aggregate all numeric fields.
-    - [ ] Exclude `totalBalance` and `totalWallets`.
-- [~] Task: Update `StatisticsProvider.fetchFilteredStats`
-    - [ ] Replace unbounded transaction fetch with `_statsRepository.getStatsByDateRange`.
-    - [ ] Update `_filteredStats` with the aggregated result.
+- [x] Task: Implement `getStatsByDateRange` in `StatsRepository` [3b59523]
+    - [x] Query `daily_stats` where document ID is between `start` and `end` formatted as strings (`yyyy-MM-dd`).
+    - [x] Aggregate all numeric fields.
+    - [x] Exclude `totalBalance` and `totalWallets`.
+- [x] Task: Update `StatisticsProvider.fetchFilteredStats` [3b59523]
+    - [x] Replace unbounded transaction fetch with `_statsRepository.getStatsByDateRange`.
+    - [x] Update `_filteredStats` with the aggregated result.
 
 ## Phase 4: Verification
 
