@@ -2,13 +2,13 @@
 
 ## Phase 1: Refactor StatsRepository
 
-- [ ] Task: Write failing tests for `updateStatsOnWalletChange` with `WriteBatch`
+- [x] Task: Write failing tests for `updateStatsOnWalletChange` with `WriteBatch` [4efb0f5]
     - [ ] Create/update test file for `StatsRepository`
     - [ ] Test case: Call with `WriteBatch` parameter — verify batch operations are queued correctly
     - [ ] Test case: Assert that `batch` and `firestoreTransaction` cannot be provided simultaneously
     - [ ] Run tests — confirm they fail (Red Phase)
 
-- [ ] Task: Implement `WriteBatch` logic in `StatsRepository.updateStatsOnWalletChange`
+- [~] Task: Implement `WriteBatch` logic in `StatsRepository.updateStatsOnWalletChange`
     - [ ] Add `WriteBatch? batch` optional parameter to method signature
     - [ ] Add assertion: `assert(batch == null || firestoreTransaction == null)`
     - [ ] Implement conditional logic: if `batch != null`, use `batch.set(summaryRef, data, SetOptions(merge: true))`
