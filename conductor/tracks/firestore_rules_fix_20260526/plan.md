@@ -2,11 +2,11 @@
 
 ## Phase 1: Implement Rule Splits
 
-- [ ] Task: Split `allow read` into `get`/`list` for `wallets/{walletId}` (Line 110)
+- [x] Task: Split `allow read` into `get`/`list` for `wallets/{walletId}` (Line 110) [af9bfbd]
     - [ ] Change `allow read: if canAccessStore(resource.data.storeId);` to `allow get: if canAccessStore(resource.data.storeId);` + `allow list: if isAuthenticated();`
     - [ ] Verify no syntax errors in the modified rule block
 
-- [ ] Task: Split `allow read` into `get`/`list` for `transactions/{transactionId}` (Line 121)
+- [~] Task: Split `allow read` into `get`/`list` for `transactions/{transactionId}` (Line 121)
     - [ ] Change `allow read: if canAccessStore(resource.data.storeId);` to `allow get: if canAccessStore(resource.data.storeId);` + `allow list: if isAuthenticated();`
     - [ ] Verify no syntax errors in the modified rule block
 
