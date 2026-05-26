@@ -2,10 +2,10 @@
 
 ## Phase 1: Expand Schema and Update Increments
 
-- [ ] Task: Update `DailyStatsModel` schema
-    - [ ] Add `sendCount`, `receiveCount`, `totalSentAmount`, `totalReceivedAmount`, `openDebtsCount`, `totalOpenAmount`, `paidDebtsCount`, `totalPaidAmount`.
-    - [ ] Update `fromMap`, `toMap`, `empty`, and `copyWith` methods.
-- [ ] Task: Update `StatsRepository` increments
+- [x] Task: Update `DailyStatsModel` schema [7997284]
+    - [x] Add `sendCount`, `receiveCount`, `totalSentAmount`, `totalReceivedAmount`, `openDebtsCount`, `totalOpenAmount`, `paidDebtsCount`, `totalPaidAmount`.
+    - [x] Update `fromMap`, `toMap`, `empty`, and `copyWith` methods.
+- [~] Task: Update `StatsRepository` increments
     - [ ] Modify `updateStatsOnTransaction` to increment `sendCount`/`receiveCount` and `totalSentAmount`/`totalReceivedAmount` based on `transactionType`.
     - [ ] Modify `incrementOpenDebtStats` and `decrementOpenDebtStats` to write to the `daily_stats` document for the current day.
 
