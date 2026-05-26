@@ -15,7 +15,7 @@
     - [ ] Preserve existing `Transaction` code path unchanged
     - [ ] Run tests — confirm they pass (Green Phase)
 
-## Phase 2: Refactor WalletRepository.createWallet
+## Phase 2: Refactor WalletRepository.createWallet [checkpoint: 2cf5cb2]
 
 - [x] Task: Write failing tests for `createWallet` with `WriteBatch` [bd42113]
     - [x] Test case: Verify `createWallet` uses `WriteBatch` (not `runTransaction`)
