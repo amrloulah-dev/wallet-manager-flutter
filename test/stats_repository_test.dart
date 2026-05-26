@@ -9,6 +9,9 @@ import 'package:walletmanager/core/enums/debt_enums.dart';
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
 
 class MockTransaction extends Mock implements Transaction {
+  final List<MapEntry<DocumentReference, dynamic>> setCalls = [];
+  final List<MapEntry<DocumentReference, dynamic>> updateCalls = [];
+
   @override
   Future<DocumentSnapshot<T>> get<T>(
       DocumentReference<T> documentReference) async {
@@ -18,6 +21,13 @@ class MockTransaction extends Mock implements Transaction {
   @override
   Transaction set<T>(DocumentReference<T> documentReference, T data,
       [SetOptions? options]) {
+    setCalls.add(MapEntry(documentReference, data));
+    return this;
+  }
+
+  @override
+  Transaction update(DocumentReference documentReference, Map<String, dynamic> data) {
+    updateCalls.add(MapEntry(documentReference, data));
     return this;
   }
 }
@@ -33,7 +43,13 @@ class MockCollectionReference extends Mock
     implements CollectionReference<Map<String, dynamic>> {}
 
 class MockDocumentReference extends Mock
-    implements DocumentReference<Map<String, dynamic>> {}
+    implements DocumentReference<Map<String, dynamic>> {
+  final String _path;
+  MockDocumentReference([this._path = 'test_path']);
+
+  @override
+  String get path => _path;
+}
 
 class MockFieldValue extends Mock implements FieldValue {}
 
@@ -56,7 +72,8 @@ void main() {
   setUp(() {
     mockFirestore = MockFirebaseFirestore();
     mockTransaction = MockTransaction();
-    mockSummaryDocRef = MockDocumentReference();
+    mockSummaryDocRef = MockDocumentReference('stores/test_store/stats/summary');
+    final mockDailyStatsDocRef = MockDocumentReference('stores/test_store/daily_stats/2026-05-26');
     statsRepository = StatsRepository(firestore: mockFirestore);
 
     final mockStoresCollection = MockCollectionReference();
@@ -66,6 +83,8 @@ void main() {
     when(() => mockFirestore.collection('stores'))
         .thenReturn(mockStoresCollection);
     when(() => mockFirestore.doc(any())).thenReturn(mockSummaryDocRef);
+    when(() => mockFirestore.doc(any(that: contains('daily_stats'))))
+        .thenReturn(mockDailyStatsDocRef);
     when(() => mockStoresCollection.doc(any())).thenReturn(mockStoreDoc);
     when(() => mockStoreDoc.collection('stats'))
         .thenReturn(mockStatsCollection);
@@ -112,6 +131,55 @@ void main() {
 
       // ASSERT
       expect(true, true); // Verified by no crash + manual check
+    });
+
+    test('incrementOpenDebtStats should write to summary update and daily stats set', () async {
+      await statsRepository.incrementOpenDebtStats(
+        storeId,
+        150.0,
+        firestoreTransaction: mockTransaction,
+      );
+
+      // Verify summary was updated
+      expect(mockTransaction.updateCalls.any((call) => 
+        call.key == mockSummaryDocRef && 
+        call.value['openDebtsCount'] is FieldValue), isTrue);
+
+      // Verify daily stats was set
+      expect(mockTransaction.setCalls.any((call) => 
+        call.key.path.contains('daily_stats') && 
+        call.value['openDebtsCount'] is FieldValue), isTrue);
+    });
+
+    test('decrementOpenDebtStats should write to summary update and daily stats set', () async {
+      await statsRepository.decrementOpenDebtStats(
+        storeId,
+        150.0,
+        firestoreTransaction: mockTransaction,
+      );
+
+      expect(mockTransaction.updateCalls.any((call) => 
+        call.key == mockSummaryDocRef && 
+        call.value['openDebtsCount'] is FieldValue), isTrue);
+
+      expect(mockTransaction.setCalls.any((call) => 
+        call.key.path.contains('daily_stats') && 
+        call.value['openDebtsCount'] is FieldValue), isTrue);
+    });
+
+    test('updateStatsOnDebtUpdate should write to daily stats set', () async {
+      final newDebt = createTestDebt(id: 'debt1', amount: 100);
+
+      await statsRepository.updateStatsOnDebtUpdate(
+        firestoreTransaction: mockTransaction,
+        storeId: storeId,
+        oldDebt: null,
+        newDebt: newDebt,
+      );
+
+      expect(mockTransaction.setCalls.any((call) => 
+        call.key.path.contains('daily_stats') && 
+        call.value['openDebtsCount'] is FieldValue), isTrue);
     });
   });
 

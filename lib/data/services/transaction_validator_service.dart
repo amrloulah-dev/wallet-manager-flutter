@@ -301,15 +301,27 @@ class TransactionValidatorService {
         final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
             transaction.storeId, DateHelper.getCurrentDateString()));
 
+        final Map<String, dynamic> dailyStatsUpdates = {
+          'transactionCount': FieldValue.increment(1),
+          FirebaseConstants.totalCommission:
+              FieldValue.increment(transaction.commission),
+          'totalServiceFee': FieldValue.increment(transaction.serviceFee),
+          'totalAmount': FieldValue.increment(transaction.amount),
+        };
+
+        if (transaction.isSend) {
+          dailyStatsUpdates['sendCount'] = FieldValue.increment(1);
+          dailyStatsUpdates['totalSentAmount'] =
+              FieldValue.increment(transaction.amount);
+        } else if (transaction.isReceive) {
+          dailyStatsUpdates['receiveCount'] = FieldValue.increment(1);
+          dailyStatsUpdates['totalReceivedAmount'] =
+              FieldValue.increment(transaction.amount);
+        }
+
         tx.set(
           dailyStatsRef,
-          {
-            'transactionCount': FieldValue.increment(1),
-            FirebaseConstants.totalCommission:
-                FieldValue.increment(transaction.commission),
-            'totalServiceFee': FieldValue.increment(transaction.serviceFee),
-            'totalAmount': FieldValue.increment(transaction.amount),
-          },
+          dailyStatsUpdates,
           SetOptions(merge: true),
         );
 

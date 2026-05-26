@@ -99,10 +99,45 @@ class StatsRepository {
       'lastUpdated': FieldValue.serverTimestamp(),
     };
 
+    final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+        storeId, DateHelper.getCurrentDateString()));
+    final Map<String, dynamic> dailyUpdates = {
+      'openDebtsCount': FieldValue.increment(1),
+      'totalOpenAmount': FieldValue.increment(amount),
+    };
+
     if (firestoreTransaction != null) {
       firestoreTransaction.update(docRef, updates);
+      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     } else {
       await docRef.update(updates);
+      await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> decrementOpenDebtStats(String storeId, double amount,
+      {Transaction? firestoreTransaction}) async {
+    AmountValidator.ensurePositive(amount);
+    final docRef = _getSummaryDocRef(storeId);
+    final Map<String, dynamic> updates = {
+      'openDebtsCount': FieldValue.increment(-1),
+      'totalOpenAmount': FieldValue.increment(-amount),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    };
+
+    final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+        storeId, DateHelper.getCurrentDateString()));
+    final Map<String, dynamic> dailyUpdates = {
+      'openDebtsCount': FieldValue.increment(-1),
+      'totalOpenAmount': FieldValue.increment(-amount),
+    };
+
+    if (firestoreTransaction != null) {
+      firestoreTransaction.update(docRef, updates);
+      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+    } else {
+      await docRef.update(updates);
+      await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
     }
   }
 
@@ -130,10 +165,15 @@ class StatsRepository {
       'lastUpdated': FieldValue.serverTimestamp(),
     };
 
+    final Map<String, dynamic> dailyUpdates = {};
+
     if (oldDebt == null) {
       // --- Handle Creation ---
       updates['openDebtsCount'] = FieldValue.increment(1);
       updates['totalOpenAmount'] = FieldValue.increment(newDebt.amountDue);
+
+      dailyUpdates['openDebtsCount'] = FieldValue.increment(1);
+      dailyUpdates['totalOpenAmount'] = FieldValue.increment(newDebt.amountDue);
     } else {
       // --- Handle Update ---
       final wasPaid = oldDebt.debtStatus == DebtStatus.paid; // ENUM refactor
@@ -146,10 +186,12 @@ class StatsRepository {
       // --- Handle Amount Changes ---
       if (amountChange.abs() > 0.001) {
         updates['totalOpenAmount'] = FieldValue.increment(amountChange);
+        dailyUpdates['totalOpenAmount'] = FieldValue.increment(amountChange);
 
         if (amountChange < 0) {
           // Payment
           updates['totalPaidAmount'] = FieldValue.increment(-amountChange);
+          dailyUpdates['totalPaidAmount'] = FieldValue.increment(-amountChange);
         }
       }
 
@@ -159,17 +201,29 @@ class StatsRepository {
         updates['openDebtsCount'] =
             currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
         updates['paidDebtsCount'] = FieldValue.increment(1);
+
+        dailyUpdates['openDebtsCount'] = FieldValue.increment(-1);
+        dailyUpdates['paidDebtsCount'] = FieldValue.increment(1);
       } else if (wasPaid && isNowOpen) {
         // Paid -> Open (Re-opening a paid debt)
         updates['openDebtsCount'] = FieldValue.increment(1);
         updates['paidDebtsCount'] =
             currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
+
+        dailyUpdates['openDebtsCount'] = FieldValue.increment(1);
+        dailyUpdates['paidDebtsCount'] = FieldValue.increment(-1);
       }
     }
 
     if (updates.length > 1) {
       // more than just lastUpdated
       firestoreTransaction.set(summaryRef, updates, SetOptions(merge: true));
+    }
+
+    if (dailyUpdates.isNotEmpty) {
+      final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+          storeId, DateHelper.getCurrentDateString()));
+      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     }
   }
 

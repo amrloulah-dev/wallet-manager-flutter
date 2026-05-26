@@ -6,6 +6,7 @@ import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
 
 void main() {
   late TransactionValidatorService service;
@@ -145,6 +146,67 @@ void main() {
 
       // Expected: 1000.0 - 305.0 = 695.0
       expect(finalBalance, initialBalance - 305.0);
+    });
+
+    test('should increment send/receive counts and amounts in daily stats', () async {
+      final walletId = 'w3';
+      final storeId = 's1';
+      final initialBalance = 1000.0;
+
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
+        'walletId': walletId,
+        'storeId': storeId,
+        'balance': initialBalance,
+        'isActive': true,
+        'walletType': 'vodafoneCash',
+        'sendLimits': {
+          'dailyLimit': 2000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 10000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 2000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 10000.0,
+          'monthlyUsed': 0.0
+        },
+        'createdAt': Timestamp.now(),
+        'lastDailyReset': Timestamp.now(),
+        'lastMonthlyReset': Timestamp.now(),
+        'stats': {
+          'totalTransactions': 0,
+        }
+      });
+
+      final txModel = TransactionModel(
+        transactionId: 'tx3',
+        walletId: walletId,
+        transactionType: TransactionType.debit, // Send
+        amount: 300.0,
+        commission: 10.0,
+        serviceFee: 5.0,
+        storeId: storeId,
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        customerPhone: '012',
+        paymentStatus: PaymentStatus.paid,
+      );
+
+      await service.validateAndSave(txModel);
+
+      final todayDate = DateHelper.getCurrentDateString();
+      final dailyStatsSnap = await fakeFirestore
+          .doc(FirebaseConstants.dailyStatsPath(storeId, todayDate))
+          .get();
+
+      expect(dailyStatsSnap.exists, isTrue);
+      final data = dailyStatsSnap.data();
+      expect(data?['sendCount'], 1);
+      expect(data?['totalSentAmount'], 300.0);
     });
   });
 }
