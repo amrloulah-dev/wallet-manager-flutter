@@ -444,18 +444,30 @@ class StatItemWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.bodyLarge),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(subtitle!,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.bodyLarge,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
                     style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary(context))),
+                        .copyWith(color: AppColors.textSecondary(context)),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
+          const SizedBox(width: 12),
           Text(
             value,
             style: AppTextStyles.h3
