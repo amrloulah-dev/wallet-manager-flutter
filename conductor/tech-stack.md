@@ -4,7 +4,7 @@
 - **Flutter (Dart):** For cross-platform mobile application development, utilizing `compute()` for background isolate processing of intensive operations.
 
 ## Backend
-- **Firebase:** Comprehensive backend suite, using O(1) Firestore lookups for authentication.
+- **Firebase:** Comprehensive backend suite, using O(1) Firestore lookups for authentication. Uses WriteBatch for non-reading atomic operations (e.g., wallet creation) to bypass transaction ordering constraints.
     - **Authentication:** Managing owner (Google/Email) and employee (PIN) logins.
     - **Cloud Firestore:** Scalable NoSQL database. Optimized for $O(1)$ aggregate queries via a centralized `stats/summary` architecture to minimize billing and latency.
     - **Analytics & Performance:** Monitoring user behavior and app health.
