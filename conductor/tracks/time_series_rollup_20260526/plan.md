@@ -18,7 +18,7 @@
 
 ## Phase 3: Fix BUG-04 (Stats Date Filter)
 
-- [ ] Task: Implement `getStatsByDateRange` in `StatsRepository`
+- [~] Task: Implement `getStatsByDateRange` in `StatsRepository`
     - [ ] Query `daily_stats` where document ID is between `start` and `end` formatted as strings (`yyyy-MM-dd`).
     - [ ] Aggregate all numeric fields.
     - [ ] Exclude `totalBalance` and `totalWallets`.
