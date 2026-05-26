@@ -34,8 +34,8 @@ void main() {
           body: SizedBox(
             width: 200,
             child: StatItemWidget(
-              label: 'This is an extremely long label that will definitely cause an overflow if not wrapped in Flexible',
-              value: '1,000,000.00 EGP',
+              label: 'This is an extremely long label that will definitely cause an overflow if not wrapped in Expanded',
+              value: '100.00',
               subtitle: 'This is also an extremely long subtitle that would overflow',
             ),
           ),
