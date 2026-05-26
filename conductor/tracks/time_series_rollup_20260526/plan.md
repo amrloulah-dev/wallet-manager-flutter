@@ -9,14 +9,14 @@
     - [x] Modify `updateStatsOnTransaction` to increment `sendCount`/`receiveCount` and `totalSentAmount`/`totalReceivedAmount` based on `transactionType`.
     - [x] Modify `incrementOpenDebtStats` and `decrementOpenDebtStats` to write to the `daily_stats` document for the current day.
 
-## Phase 2: Fix BUG-03 (TransactionProvider Today Summary)
+## Phase 2: Fix BUG-03 (TransactionProvider Today Summary) [checkpoint: 7e67bd7]
 
 - [x] Task: Implement `fetchTodaySummary` in `TransactionProvider` [7e67bd7]
     - [x] Add a method to fetch today's `daily_stats` via `StatsRepository`.
     - [x] Map the fetched `DailyStatsModel` properties to the `_summary` map.
     - [x] Remove local filtering logic for summary calculation.
 
-## Phase 3: Fix BUG-04 (Stats Date Filter)
+## Phase 3: Fix BUG-04 (Stats Date Filter) [checkpoint: f7710ac]
 
 - [x] Task: Implement `getStatsByDateRange` in `StatsRepository` [3b59523]
     - [x] Query `daily_stats` where document ID is between `start` and `end` formatted as strings (`yyyy-MM-dd`).
