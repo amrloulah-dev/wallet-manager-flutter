@@ -1,0 +1,8 @@
+{
+  "track_id": "ui_overflow_fix_20260526",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-05-26T16:54:00+03:00",
+  "updated_at": "2026-05-26T16:54:00+03:00",
+  "description": "Fix RenderFlex overflow on Balance stat card in StatItemWidget by wrapping Column in Flexible and adding TextOverflow.ellipsis"
+}
