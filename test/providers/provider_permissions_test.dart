@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:get_it/get_it.dart';
+import 'package:walletmanager/data/repositories/stats_repository.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
@@ -17,6 +20,7 @@ import 'package:walletmanager/core/services/analytics_service.dart';
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
 class MockAuthProvider extends Mock implements AuthProvider {}
+class MockStatsRepository extends Mock implements StatsRepository {}
 class FakeTransactionModel extends Fake implements TransactionModel {}
 
 void main() {
@@ -36,6 +40,17 @@ void main() {
     mockTxRepo = MockTransactionRepository();
     mockEmployeeRepo = MockEmployeeRepository();
     mockAuth = MockAuthProvider();
+
+    final sl = GetIt.instance;
+    late MockStatsRepository mockStats;
+    if (!sl.isRegistered<StatsRepository>()) {
+      mockStats = MockStatsRepository();
+      sl.registerLazySingleton<StatsRepository>(() => mockStats);
+    } else {
+      mockStats = sl<StatsRepository>() as MockStatsRepository;
+    }
+    when(() => mockStats.fetchTodayStats(any()))
+        .thenAnswer((_) async => DailyStatsModel.empty('2026-05-26'));
 
     when(() => mockAuth.currentStoreId).thenReturn('s1');
   });

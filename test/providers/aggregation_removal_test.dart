@@ -4,6 +4,9 @@ import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
+import 'package:walletmanager/data/models/paginated_result.dart';
+import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter/material.dart';
 
@@ -27,6 +30,7 @@ void main() {
         StatisticsProvider(statsRepository: mockStatsRepository);
     transactionProvider = TransactionProvider(
       transactionRepository: mockTransactionRepository,
+      statsRepository: mockStatsRepository,
       storeId: storeId,
     );
   });
@@ -75,9 +79,42 @@ void main() {
 
     test('TransactionProvider should not perform manual for-loop aggregations',
         () async {
-      // This is a code-level verification task.
-      // We want to ensure _calculateSummary is removed or refactored to just read from summary data.
-      // Currently TransactionProviderStatus.loaded calls _calculateSummary() which has a for loop.
+      final dailyStats = DailyStatsModel(
+        date: '2026-05-26',
+        transactionCount: 5,
+        totalCommission: 50.0,
+        totalServiceFee: 10.0,
+        totalAmount: 1000.0,
+        sendCount: 2,
+        receiveCount: 3,
+        totalSentAmount: 400.0,
+        totalReceivedAmount: 600.0,
+      );
+
+      registerFallbackValue(DateTime.now());
+
+      when(() => mockStatsRepository.fetchTodayStats(storeId))
+          .thenAnswer((_) async => dailyStats);
+
+      when(() => mockTransactionRepository.getTransactionsByDateRange(
+            any(),
+            any(),
+            any(),
+            lastDocument: any(named: 'lastDocument'),
+          )).thenAnswer((_) async => PaginatedResult<TransactionModel>(items: [], lastDocument: null));
+
+      // Act
+      await transactionProvider.fetchInitialTransactions();
+
+      // Assert
+      expect(transactionProvider.summary['totalTransactions'], 5);
+      expect(transactionProvider.summary['sendCount'], 2);
+      expect(transactionProvider.summary['receiveCount'], 3);
+      expect(transactionProvider.summary['totalSendAmount'], 400.0);
+      expect(transactionProvider.summary['totalReceiveAmount'], 600.0);
+      expect(transactionProvider.summary['totalCommission'], 50.0);
+
+      verify(() => mockStatsRepository.fetchTodayStats(storeId)).called(1);
     });
   });
 }

@@ -7,6 +7,7 @@ import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../data/repositories/transaction_repository.dart';
+import '../data/repositories/stats_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../data/models/user_permissions.dart';
@@ -26,6 +27,7 @@ enum TransactionProviderStatus {
 
 class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
+  final StatsRepository _statsRepository;
 
   // State
   String? _currentStoreId;
@@ -54,9 +56,12 @@ class TransactionProvider extends BaseProvider {
   // Constructor
   TransactionProvider({
     TransactionRepository? transactionRepository,
+    StatsRepository? statsRepository,
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
+        _statsRepository =
+            statsRepository ?? sl<StatsRepository>(),
         _currentStoreId = storeId {
     _initializeDateRange();
   }
@@ -247,6 +252,7 @@ class TransactionProvider extends BaseProvider {
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
+      await fetchTodaySummary();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       if (kDebugMode) {
@@ -337,6 +343,7 @@ class TransactionProvider extends BaseProvider {
       AnalyticsService.logTransactionCreated(transactionType.name);
 
       _activateFetchShield();
+      await fetchTodaySummary();
       _updateStatus(TransactionProviderStatus.loaded);
       return true;
     } on DomainException catch (e, stack) {
@@ -375,7 +382,25 @@ class TransactionProvider extends BaseProvider {
     _rebuildTransactionMap();
     _recomputeTodayTransactions();
     _activateFetchShield();
+    fetchTodaySummary();
     safeNotify();
+  }
+
+  Future<void> fetchTodaySummary() async {
+    if (_currentStoreId == null) return;
+    try {
+      final stats = await _statsRepository.fetchTodayStats(_currentStoreId!);
+      if (isDisposed) return;
+      _summary['totalTransactions'] = stats.transactionCount;
+      _summary['sendCount'] = stats.sendCount;
+      _summary['receiveCount'] = stats.receiveCount;
+      _summary['totalSendAmount'] = stats.totalSentAmount;
+      _summary['totalReceiveAmount'] = stats.totalReceivedAmount;
+      _summary['totalCommission'] = stats.totalCommission;
+      safeNotify();
+    } catch (e, stack) {
+      setError('transaction_error_summary_fetch_failed', e, stack);
+    }
   }
 
   Future<void> selectTransaction(String transactionId) async {
