@@ -144,8 +144,9 @@ service cloud.firestore {
     // Subscription upgrade requests — authenticated users can create, only owners can read/delete
     match /subscription_requests/{requestId} {
       allow create: if request.auth != null;
-      allow read, delete: if request.auth != null &&
-                             isStoreOwner(resource.data.storeId);
+      allow get, delete: if request.auth != null &&
+                            isStoreOwner(resource.data.storeId);
+      allow list: if isAuthenticated();
       allow update: if false; // Immutable after creation; processed by backend
     }
 
