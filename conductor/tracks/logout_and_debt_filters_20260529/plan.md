@@ -5,10 +5,10 @@
 This phase resolves the infinite loading screen during logout by making `AuthCheckWrapper` the Single Source of Truth for authentication navigation and resetting the instance-level `_isNavigating` flag when the user becomes unauthenticated or in an error state. Redundant routing from logout buttons is removed to prevent race conditions.
 
 - [x] Task: Write failing unit/widget test for AuthCheckWrapper logout state reset [c76c878]
-- [~] Task: Update `AuthCheckWrapper` in `lib/app.dart` to reset `_isNavigating` when unauthenticated or in error status
-- [ ] Task: Remove imperative navigation from UI logout elements in `app_drawer.dart` and `logout_button.dart`
-- [ ] Task: Verify that all Auth tests pass successfully
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Fix Infinite Loading on Logout (BUG-01)' (Protocol in workflow.md)
+- [x] Task: Update `AuthCheckWrapper` in `lib/app.dart` to reset `_isNavigating` when unauthenticated or in error status [5a430f6]
+- [x] Task: Remove imperative navigation from UI logout elements in `app_drawer.dart` and `logout_button.dart` [5a430f6]
+- [x] Task: Verify that all Auth tests pass successfully [5a430f6]
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Fix Infinite Loading on Logout (BUG-01)' (Protocol in workflow.md)
 
 ## Phase 2: Fix Debt Tabs & Filters (BUG-02)
 
