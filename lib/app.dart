@@ -131,7 +131,12 @@ class MyApp extends StatelessWidget {
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
               ],
-              builder: BotToastInit(), //1. call BotToastInit
+              builder: (context, child) {
+                final botToastBuilder = BotToastInit();
+                return AuthRouteListener(
+                  child: botToastBuilder(context, child),
+                );
+              }, //1. call BotToastInit and listen to Auth route changes
               navigatorObservers: [
                 BotToastNavigatorObserver(),
                 AnalyticsService.observer,
@@ -171,6 +176,11 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, child) {
+        if (auth.status == AuthStatus.unauthenticated ||
+            auth.status == AuthStatus.error) {
+          _isNavigating = false;
+        }
+
         // 1. Guard against Admin Block
         if (auth.currentStore?.subscription.status ==
             SubscriptionStatus.suspended) {
@@ -217,3 +227,37 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
     );
   }
 }
+
+class AuthRouteListener extends StatefulWidget {
+  final Widget child;
+  const AuthRouteListener({super.key, required this.child});
+
+  @override
+  State<AuthRouteListener> createState() => _AuthRouteListenerState();
+}
+
+class _AuthRouteListenerState extends State<AuthRouteListener> {
+  AuthStatus? _previousStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, child) {
+        if (_previousStatus != null &&
+            _previousStatus != auth.status &&
+            (auth.status == AuthStatus.unauthenticated ||
+                auth.status == AuthStatus.error)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+              RouteConstants.loginLanding,
+              (route) => false,
+            );
+          });
+        }
+        _previousStatus = auth.status;
+        return widget.child;
+      },
+    );
+  }
+}
+

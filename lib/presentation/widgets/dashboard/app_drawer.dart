@@ -25,24 +25,7 @@ class AppDrawer extends StatelessWidget {
       confirmText: AppLocalizations.of(currentContext)!.exit,
       type: DialogType.danger,
       onConfirm: () async {
-        try {
-          await authProvider.logout();
-          if (!currentContext.mounted) return;
-          Navigator.of(currentContext).pushNamedAndRemoveUntil(
-            RouteConstants.loginLanding,
-            (route) => false,
-          );
-        } catch (e, stack) {
-          AppErrorHandler.handle(
-            e,
-            stackTrace: stack,
-            operation: 'logout',
-          );
-          if (currentContext.mounted) {
-            ToastUtils.showError(
-                '${AppLocalizations.of(currentContext)!.logoutFailed}: $e');
-          }
-        }
+        await authProvider.logout();
       },
     );
   }

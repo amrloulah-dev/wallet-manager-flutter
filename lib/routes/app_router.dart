@@ -4,6 +4,7 @@ import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../core/constants/route_constants.dart';
+import '../app.dart';
 import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
 import '../presentation/screens/auth/employee_login_screen.dart';
@@ -28,7 +29,7 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case RouteConstants.loginLanding:
-        return _buildRoute(const LoginLandingScreen(), settings);
+        return _buildRoute(const AuthCheckWrapper(), settings);
 
       case RouteConstants.storeRegistration:
         return _buildRoute(const StoreRegistrationScreen(), settings);

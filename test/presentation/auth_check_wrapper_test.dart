@@ -7,8 +7,29 @@ import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import 'package:walletmanager/routes/navigation_service.dart';
+import 'package:walletmanager/presentation/screens/auth/login_landing_screen.dart';
 
-class MockAuthProvider extends Mock implements AuthProvider {}
+class MockAuthProvider extends Mock implements AuthProvider {
+  final List<VoidCallback> _listeners = [];
+
+  @override
+  void addListener(VoidCallback listener) {
+    _listeners.add(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    _listeners.remove(listener);
+  }
+
+  void triggerNotify() {
+    for (final listener in List.from(_listeners)) {
+      listener();
+    }
+  }
+}
 
 void main() {
   late MockAuthProvider mockAuth;
@@ -19,10 +40,9 @@ void main() {
     when(() => mockAuth.status).thenReturn(AuthStatus.idle);
     when(() => mockAuth.isAuthenticated).thenReturn(false);
     when(() => mockAuth.isSubscriptionExpired).thenReturn(false);
+    when(() => mockAuth.isLoading).thenReturn(false);
     when(() => mockAuth.currentStore).thenReturn(null);
     when(() => mockAuth.currentUser).thenReturn(null);
-    when(() => mockAuth.addListener(any())).thenReturn(null);
-    when(() => mockAuth.removeListener(any())).thenReturn(null);
   });
 
   Widget createWidgetUnderTest() {
@@ -31,13 +51,17 @@ void main() {
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuth),
       ],
       child: MaterialApp(
+        navigatorKey: NavigationService.navigatorKey,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) {
+          return AuthRouteListener(child: child!);
+        },
         routes: {
           RouteConstants.ownerDashboard: (context) => const Scaffold(
                 body: Text('Dashboard Screen'),
               ),
-          RouteConstants.loginLanding: (context) => const Scaffold(
-                body: Text('Login Screen'),
-              ),
+          RouteConstants.loginLanding: (context) => const AuthCheckWrapper(),
         },
         home: const AuthCheckWrapper(),
       ),
@@ -55,7 +79,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Expect to see the login/landing screen (in our mockup home starts there)
+      // Expect to see the login/landing screen (rendered by AuthCheckWrapper)
       expect(find.byType(AuthCheckWrapper), findsOneWidget);
 
       // 2. User Logs In
@@ -70,7 +94,7 @@ void main() {
       when(() => mockAuth.currentUser).thenReturn(mockUser);
 
       // Trigger builder rebuild
-      await tester.pumpWidget(createWidgetUnderTest());
+      mockAuth.triggerNotify();
       await tester.pump(); // Allow post-frame callback to trigger navigation
       await tester.pumpAndSettle();
 
@@ -82,20 +106,24 @@ void main() {
       when(() => mockAuth.isAuthenticated).thenReturn(false);
       when(() => mockAuth.currentUser).thenReturn(null);
 
-      // Pump to trigger rebuild with the new state
-      await tester.pumpWidget(createWidgetUnderTest());
+      // Trigger builder rebuild
+      mockAuth.triggerNotify();
+      await tester.pump(); // Allow post-frame callback of AuthRouteListener
       await tester.pumpAndSettle();
+
+      // We should have routed back to AuthCheckWrapper which renders LoginLandingScreen
+      expect(find.byType(LoginLandingScreen), findsOneWidget);
 
       // 4. User Logs In Again
       when(() => mockAuth.status).thenReturn(AuthStatus.authenticated);
       when(() => mockAuth.isAuthenticated).thenReturn(true);
       when(() => mockAuth.currentUser).thenReturn(mockUser);
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      // Trigger builder rebuild
+      mockAuth.triggerNotify();
       await tester.pump(); // Allow post-frame callback
       await tester.pumpAndSettle();
 
-      // In the buggy implementation, it will NOT navigate to the dashboard again because _isNavigating is stuck at true.
       // We expect it to navigate successfully to 'Dashboard Screen'.
       expect(find.text('Dashboard Screen'), findsOneWidget);
     });
