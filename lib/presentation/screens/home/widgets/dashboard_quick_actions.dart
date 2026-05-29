@@ -40,7 +40,7 @@ class DashboardQuickActions extends StatelessWidget {
                   childAspectRatio = 0.8;
                 } else if (isMediumScreen) {
                   crossAxisCount = 3;
-                  childAspectRatio = .95;
+                  childAspectRatio = 0.95;
                 } else {
                   crossAxisCount = 6;
                   childAspectRatio = 1.0;

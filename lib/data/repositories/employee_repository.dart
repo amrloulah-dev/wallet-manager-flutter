@@ -128,9 +128,12 @@ class EmployeeRepository {
       }
 
       final storeData = storeSnap.data()!;
-      final maxEmployees = storeData['subscription'] != null
-          ? storeData['subscription']['maxEmployees'] ?? 0
+
+      // ✅ التعديل هنا: القراءة من settings بدلاً من subscription
+      final maxEmployees = storeData['settings'] != null
+          ? storeData['settings']['maxEmployees'] ?? 0
           : 0;
+
       final currentEmployees = storeData['stats'] != null
           ? storeData['stats']['totalEmployees'] ?? 0
           : 0;
@@ -159,6 +162,7 @@ class EmployeeRepository {
           .doc(storeId)
           .collection(FirebaseConstants.statsCollection)
           .doc(FirebaseConstants.summaryDoc);
+
       transaction.set(
           statsSummaryRef,
           {
@@ -182,7 +186,9 @@ class EmployeeRepository {
           .get();
       return snapshot.count ?? 0;
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'EmployeeRepository.getEmployeesCount', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'EmployeeRepository.getEmployeesCount',
+          stackTrace: stack);
       throw ServerException('employee_error_fetch_failed');
     }
   }
@@ -401,8 +407,9 @@ class EmployeeRepository {
     try {
       if (employee.phone == null) return;
 
-      final hashedPin =
-          newPin.length == 4 ? await PasswordHasher.hashPassword(newPin) : newPin;
+      final hashedPin = newPin.length == 4
+          ? await PasswordHasher.hashPassword(newPin)
+          : newPin;
 
       await IdentityService.updateCredential(
         phone: employee.phone!,

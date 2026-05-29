@@ -33,8 +33,8 @@ class QuickActionCard extends StatelessWidget {
             children: [
               // Icon Section
               Container(
-                width: 48,
-                height: 48,
+                width: 45,
+                height: 45,
                 decoration: BoxDecoration(
                   color: color.withAlpha(26),
                   shape: BoxShape.circle,
