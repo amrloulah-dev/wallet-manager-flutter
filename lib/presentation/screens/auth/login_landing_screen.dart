@@ -59,9 +59,9 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (authProvider.isLoading) return;
 
     final success = await authProvider.loginWithGoogleOrNull();
-    if (success && mounted) {
-      _navigateBasedOnRole(authProvider);
-    } else if (mounted && authProvider.errorMessage != null) {
+    // Do NOT navigate manually on success. 
+    // AuthCheckWrapper will rebuild and route automatically.
+    if (!success && mounted && authProvider.errorMessage != null) {
       ToastUtils.showError(authProvider.errorMessage!);
     }
   }

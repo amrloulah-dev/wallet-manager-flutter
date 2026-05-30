@@ -12,6 +12,7 @@ import '../data/repositories/store_repository.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/license_key_repository.dart';
 import '../data/services/local_storage_service.dart';
+import '../core/constants/route_constants.dart';
 import '../data/models/store_model.dart';
 import '../data/models/user_model.dart';
 import '../core/errors/app_exceptions.dart';
@@ -195,7 +196,7 @@ class AuthProvider extends BaseProvider {
       return result.store.storeId;
     } catch (e, stack) {
       setError('auth_error_registration_failed', e, stack);
-      await logout();
+      _clearState(); // Instead of logout()
       return null;
     } finally {
       if (_status == AuthStatus.loading) {
@@ -299,12 +300,15 @@ class AuthProvider extends BaseProvider {
         return false;
       } else {
         _applySessionResult(result);
+        _setStatus(AuthStatus.authenticated); // <-- ADD THIS
         return true;
       }
     } catch (e, stack) {
       setError('auth_error_google_login_failed', e, stack);
-      await logout();
-      _setStatus(AuthStatus.unauthenticated);
+      // DO NOT call await logout() here! It causes a navigation loop.
+      // Manually clean up any partial state safely.
+      _clearState();
+      _setStatus(AuthStatus.idle); // Return to idle so the UI spinner stops
       return false;
     }
   }
@@ -376,30 +380,37 @@ class AuthProvider extends BaseProvider {
 
   Future<void> logout([BuildContext? context]) async {
     try {
-      // 1. Force explicit teardown of ALL provider streams FIRST.
-      // This guarantees no Firestore listeners are active before the
-      // auth token is destroyed, preventing PERMISSION_DENIED errors.
-      if (context != null) {
+      // 1. Capture the NavigatorState BEFORE the context unmounts
+      final navigator = context != null ? Navigator.of(context) : null;
+
+      // 2. Synchronously cancel all streams while the context is STILL mounted and valid
+      if (context != null && context.mounted) {
         try {
           context.read<StatisticsProvider>().clearAndCancel();
           context.read<TransactionProvider>().clearAndCancel();
           context.read<DebtProvider>().clearAndCancel();
           context.read<WalletProvider>().clearAndCancel();
-        } catch (_) {
-          // Swallow: provider may not be in the tree (e.g. during error recovery)
-        }
+        } catch (_) {}
       }
 
-      // 2. Clear auth state
-      _clearState();
+      // 3. Prevent AuthCheckWrapper from bouncing the route back
       _setStatus(AuthStatus.unauthenticated);
 
-      // 3. Small delay to ensure streams fully close
+      // 4. Navigate away instantly! This safely unmounts the Dashboard UI.
+      if (navigator != null) {
+        navigator.pushNamedAndRemoveUntil(RouteConstants.loginLanding, (route) => false);
+      }
+
+      // 5. Allow a brief moment for the UI transition to complete
       await Future.delayed(const Duration(milliseconds: 200));
 
-      // 4. NOW it is safe to destroy the token and session
+      // 6. Now safely clear the internal state (currentUser = null)
+      _clearState();
+
+      // 7. Destroy the native token
       await _authRepository.signOut();
       await _localStorage.clearSession();
+
     } catch (e, stack) {
       setError('auth_error_logout_failed', e, stack);
     }

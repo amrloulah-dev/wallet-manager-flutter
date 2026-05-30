@@ -23,22 +23,8 @@ class AppDrawer extends StatelessWidget {
       confirmText: AppLocalizations.of(currentContext)!.exit,
       type: DialogType.danger,
       onConfirm: () async {
-        // 1. Capture the provider before any state changes
         final auth = currentContext.read<AuthProvider>();
-
-        // 2. Navigate immediately — unmounts the Dashboard and all its consumers
-        Navigator.of(currentContext).pushNamedAndRemoveUntil(
-          RouteConstants.loginLanding,
-          (route) => false,
-        );
-
-        // 3. Clear auth state AFTER the route animation starts.
-        // The 300ms delay ensures the widget tree has fully transitioned
-        // before Provider notifies listeners, preventing Provider panics
-        // and unauthenticated Firestore fetches on mounted widgets.
-        Future.delayed(const Duration(milliseconds: 300), () {
-          auth.logout(currentContext);
-        });
+        auth.logout(currentContext);
       },
     );
   }

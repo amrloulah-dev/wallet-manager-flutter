@@ -29,6 +29,7 @@
   "license": "License",
   "notAvailable": "Not Available",
   "logout": "Logout",
+  "login": "Login",
   "logoutConfirmation": "Are you sure you want to logout?",
   "exit": "Exit",
   "logoutFailed": "Logout failed",

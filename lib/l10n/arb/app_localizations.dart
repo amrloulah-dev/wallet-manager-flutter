@@ -272,6 +272,12 @@ abstract class AppLocalizations {
   /// **'تسجيل الخروج'**
   String get logout;
 
+  /// No description provided for @login.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول'**
+  String get login;
+
   /// No description provided for @logoutConfirmation.
   ///
   /// In ar, this message translates to:

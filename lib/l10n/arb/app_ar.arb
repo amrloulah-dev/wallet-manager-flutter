@@ -29,6 +29,7 @@
   "license": "الترخيص",
   "notAvailable": "غير متوفر",
   "logout": "تسجيل الخروج",
+  "login": "تسجيل الدخول",
   "logoutConfirmation": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
   "exit": "خروج",
   "logoutFailed": "فشل تسجيل الخروج",
