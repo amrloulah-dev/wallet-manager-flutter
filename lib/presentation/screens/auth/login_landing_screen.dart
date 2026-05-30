@@ -59,7 +59,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (authProvider.isLoading) return;
 
     final success = await authProvider.loginWithGoogleOrNull();
-    // Do NOT navigate manually on success. 
+    // Do NOT navigate manually on success.
     // AuthCheckWrapper will rebuild and route automatically.
     if (!success && mounted && authProvider.errorMessage != null) {
       ToastUtils.showError(authProvider.errorMessage!);
@@ -285,8 +285,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               selector: (_, p) => p.isLoading,
               builder: (context, isLoading, child) {
                 return CustomButton(
-                  text: l10n
-                      .logout, // Using logout as placeholder for login if no explicit key
+                  text: l10n.loginAction,
                   onPressed: isLoading ? null : _handleOwnerLoginWithEmail,
                   isLoading: isLoading,
                 );
