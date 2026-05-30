@@ -21,7 +21,7 @@ class _HashRequest {
 }
 
 class PasswordHasher {
-  static const int _kIterations = 600000;
+  static int get _kIterations => kDebugMode ? 10 : 600000;
   static const int _kKeyLength = 32; // 256 bits
 
   // ===========================
@@ -32,7 +32,7 @@ class PasswordHasher {
   static Future<String> hashPassword(String password) async {
     final salt = _generateSalt();
     final hash = await _deriveKeyInBackground(password, salt);
-    
+
     return '${hex.encode(salt)}:${hex.encode(hash)}';
   }
 
@@ -47,15 +47,13 @@ class PasswordHasher {
 
   /// Executes PBKDF2 in a background isolate to prevent UI thread blocking.
   static Future<Uint8List> _deriveKeyInBackground(
-    String password, 
-    Uint8List salt
-  ) async {
+      String password, Uint8List salt) async {
     return compute(
-      _deriveKeyStatic, 
+      _deriveKeyStatic,
       _HashRequest(
-        password: password, 
-        salt: salt, 
-        iterations: _kIterations, 
+        password: password,
+        salt: salt,
+        iterations: _kIterations,
         bits: _kKeyLength * 8,
       ),
     );
@@ -68,13 +66,13 @@ class PasswordHasher {
       iterations: request.iterations,
       bits: request.bits,
     );
-    
+
     final secretKey = SecretKey(utf8.encode(request.password));
     final secretKeyData = await pbkdf2.deriveKey(
       secretKey: secretKey,
       nonce: request.salt,
     );
-    
+
     return Uint8List.fromList(await secretKeyData.extractBytes());
   }
 
@@ -82,22 +80,23 @@ class PasswordHasher {
   // Verify Password
   // ===========================
   /// Verifies an input password against a stored "salt:hash" string.
-  static Future<bool> verifyPassword(String inputPassword, String storedHash) async {
+  static Future<bool> verifyPassword(
+      String inputPassword, String storedHash) async {
     try {
       final parts = storedHash.split(':');
       if (parts.length != 2) {
         return false;
       }
-      
+
       final salt = hex.decode(parts[0]);
       final expectedHashHex = parts[1];
-      
+
       final hash = await _deriveKeyInBackground(
-        inputPassword, 
+        inputPassword,
         Uint8List.fromList(salt),
       );
       final actualHashHex = hex.encode(hash);
-      
+
       return _fixedTimeEquals(actualHashHex, expectedHashHex);
     } catch (_) {
       return false;
@@ -107,7 +106,7 @@ class PasswordHasher {
   /// Constant-time comparison to prevent timing side-channel attacks.
   static bool _fixedTimeEquals(String a, String b) {
     if (a.length != b.length) return false;
-    
+
     int result = 0;
     for (int i = 0; i < a.length; i++) {
       result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
@@ -115,5 +114,3 @@ class PasswordHasher {
     return result == 0;
   }
 }
-
-

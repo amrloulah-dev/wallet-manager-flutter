@@ -345,7 +345,7 @@ class LocalStorageService {
   }
 
   int? get subEndDateMs => _prefs?.getInt(_kSubEndDateMs);
-  
+
   bool get isSubLifetime {
     if (!isSubIntegrityValid) return false;
     return _prefs?.getBool(_kIsSubLifetime) ?? false;
@@ -462,7 +462,7 @@ class LocalStorageService {
         'id': w.walletId,
         'name': w.phoneNumber,
         'phone': w.phoneNumber,
-        'type': w.walletType,
+        'type': w.walletType.name,
       };
     }).toList();
 

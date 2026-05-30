@@ -109,7 +109,8 @@ class StatsRepository {
 
     if (firestoreTransaction != null) {
       firestoreTransaction.update(docRef, updates);
-      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     } else {
       await docRef.update(updates);
       await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
@@ -135,7 +136,8 @@ class StatsRepository {
 
     if (firestoreTransaction != null) {
       firestoreTransaction.update(docRef, updates);
-      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     } else {
       await docRef.update(updates);
       await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
@@ -224,7 +226,8 @@ class StatsRepository {
     if (dailyUpdates.isNotEmpty) {
       final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
           storeId, DateHelper.getCurrentDateString()));
-      firestoreTransaction.set(dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     }
   }
 
@@ -250,8 +253,7 @@ class StatsRepository {
     }
 
     if (activeCountChange != 0) {
-      summaryUpdates['activeWallets'] =
-          FieldValue.increment(activeCountChange);
+      summaryUpdates['activeWallets'] = FieldValue.increment(activeCountChange);
     }
 
     if (balanceChange != 0.0) {

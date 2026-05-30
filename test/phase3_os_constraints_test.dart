@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:walletmanager/core/services/background_service.dart';
 import 'package:walletmanager/core/services/sms_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -17,6 +19,9 @@ void main() {
   late MockTelephony mockTelephony;
 
   setUp(() async {
+    setupFirebaseCoreMocks();
+    await Firebase.initializeApp();
+
     mockService = MockServiceInstance();
     mockTelephony = MockTelephony();
 
@@ -25,7 +30,8 @@ void main() {
     when(() => mockService.stopSelf()).thenAnswer((_) async {});
 
     // Mock secure storage
-    const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    const secureStorageChannel =
+        MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, (methodCall) async {
       return null;

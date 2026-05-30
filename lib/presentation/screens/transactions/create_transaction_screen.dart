@@ -164,7 +164,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         Navigator.pop(context, true);
       } else if (mounted) {
         final error = transactionProvider.errorMessage != null
-            ? ErrorTranslator.getLocalizedString(context, transactionProvider.errorMessage!)
+            ? ErrorTranslator.getLocalizedString(
+                context, transactionProvider.errorMessage!)
             : AppLocalizations.of(context)!.transactionCreateFailed;
         _showErrorDialog(error);
       }
@@ -176,7 +177,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       );
       if (mounted) {
         final error = transactionProvider.errorMessage != null
-            ? ErrorTranslator.getLocalizedString(context, transactionProvider.errorMessage!)
+            ? ErrorTranslator.getLocalizedString(
+                context, transactionProvider.errorMessage!)
             : AppLocalizations.of(context)!.unexpectedError;
         _showErrorDialog(error);
       }
@@ -482,7 +484,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                     .copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                NumberFormatter.formatAmount(totalDeduction, showCurrency: true),
+                NumberFormatter.formatAmount(totalDeduction,
+                    showCurrency: true),
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],

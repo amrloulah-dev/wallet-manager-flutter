@@ -42,7 +42,8 @@ void main() {
         .thenAnswer((_) async => true);
 
     // Mock secure storage
-    const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    const secureStorageChannel =
+        MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, (methodCall) async {
       return null;

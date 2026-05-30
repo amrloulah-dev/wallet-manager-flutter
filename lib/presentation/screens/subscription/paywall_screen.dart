@@ -89,8 +89,8 @@ class PaywallScreen extends StatelessWidget {
                     isPopular: false,
                     color: Colors.purple.shade700,
                     onTap: systemConfigs.remainingLifetimeSeats > 0
-                        ? () => PaymentModalScreen.show(context,
-                            SubscriptionPlan.lifetime) // ENUM refactor
+                        ? () => PaymentModalScreen.show(
+                            context, SubscriptionPlan.lifetime) // ENUM refactor
                         : null,
                   ),
                 if (systemConfigs.lifetimePlanEnabled)

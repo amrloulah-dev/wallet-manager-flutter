@@ -14,9 +14,10 @@ abstract class BaseProvider extends SafeChangeNotifier {
       String operation = 'unspecified']) {
     // Defense-in-depth: If the errorCode contains spaces or colons, it's likely
     // a raw message, not a localization key. Fall back to a generic key.
-    final safeCode = errorCode.contains(RegExp(r'[\s:]')) && !errorCode.startsWith('auth_')
-        ? 'error_unexpected'
-        : errorCode;
+    final safeCode =
+        errorCode.contains(RegExp(r'[\s:]')) && !errorCode.startsWith('auth_')
+            ? 'error_unexpected'
+            : errorCode;
     if (error != null) {
       AppErrorHandler.handle(
         error,

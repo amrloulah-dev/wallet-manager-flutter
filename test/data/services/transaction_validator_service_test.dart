@@ -148,7 +148,8 @@ void main() {
       expect(finalBalance, initialBalance - 305.0);
     });
 
-    test('should increment send/receive counts and amounts in daily stats', () async {
+    test('should increment send/receive counts and amounts in daily stats',
+        () async {
       final walletId = 'w3';
       final storeId = 's1';
       final initialBalance = 1000.0;

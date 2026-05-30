@@ -26,7 +26,8 @@ void main() {
     expect(textWidget.style?.color, Colors.green);
   });
 
-  testWidgets('StatItemWidget does not overflow with long label in constrained width',
+  testWidgets(
+      'StatItemWidget does not overflow with long label in constrained width',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
@@ -34,9 +35,11 @@ void main() {
           body: SizedBox(
             width: 200,
             child: StatItemWidget(
-              label: 'This is an extremely long label that will definitely cause an overflow if not wrapped in Expanded',
+              label:
+                  'This is an extremely long label that will definitely cause an overflow if not wrapped in Expanded',
               value: '100.00',
-              subtitle: 'This is also an extremely long subtitle that would overflow',
+              subtitle:
+                  'This is also an extremely long subtitle that would overflow',
             ),
           ),
         ),

@@ -118,7 +118,8 @@ class MyApp extends StatelessWidget {
             return MaterialApp(
               navigatorKey:
                   NavigationService.navigatorKey, // Set the navigatorKey
-              onGenerateTitle: (context) => AppLocalizations.of(context)!.walletManager,
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context)!.walletManager,
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
@@ -133,10 +134,8 @@ class MyApp extends StatelessWidget {
               ],
               builder: (context, child) {
                 final botToastBuilder = BotToastInit();
-                return AuthRouteListener(
-                  child: botToastBuilder(context, child),
-                );
-              }, //1. call BotToastInit and listen to Auth route changes
+                return botToastBuilder(context, child);
+              }, //1. call BotToastInit
               navigatorObservers: [
                 BotToastNavigatorObserver(),
                 AnalyticsService.observer,
@@ -159,7 +158,7 @@ class AuthCheckWrapper extends StatefulWidget {
 }
 
 class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
-  bool _isNavigating = false; // 🔴 هذا هو مفتاح الحل
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -194,70 +193,32 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           return const PaywallScreen();
         }
 
-        // 3. Check Authentication & Navigate Mapped
+        // 3. Check Authentication & Navigate
         if (auth.isAuthenticated && !_isNavigating) {
-          _isNavigating = true; // نمنع أي محاولة انتقال أخرى
-
+          _isNavigating = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
             if (role == UserRole.owner || role == UserRole.employee) {
-              // استخدمنا pushReplacementNamed كما كانت في كودك الأصلي
               Navigator.of(context)
                   .pushReplacementNamed(RouteConstants.ownerDashboard);
             } else {
-              auth.logout();
+              auth.logout(context);
             }
           });
-
-          // نرجع شاشة فاضية أو تحميل أثناء الانتقال
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
 
-        // 4. Loading State
+        // 4. Fallbacks
         if (auth.status == AuthStatus.loading ||
             auth.status == AuthStatus.idle) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
 
-        // 5. Default Fallback (Not Authenticated)
+        // 5. Unauthenticated / Default
         return const LoginLandingScreen();
       },
     );
   }
 }
-
-class AuthRouteListener extends StatefulWidget {
-  final Widget child;
-  const AuthRouteListener({super.key, required this.child});
-
-  @override
-  State<AuthRouteListener> createState() => _AuthRouteListenerState();
-}
-
-class _AuthRouteListenerState extends State<AuthRouteListener> {
-  AuthStatus? _previousStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, child) {
-        if (_previousStatus != null &&
-            _previousStatus != auth.status &&
-            (auth.status == AuthStatus.unauthenticated ||
-                auth.status == AuthStatus.error)) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-              RouteConstants.loginLanding,
-              (route) => false,
-            );
-          });
-        }
-        _previousStatus = auth.status;
-        return widget.child;
-      },
-    );
-  }
-}
-

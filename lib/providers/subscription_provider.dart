@@ -47,11 +47,12 @@ class SubscriptionProvider extends BaseProvider {
   /// Verifies the local cache integrity and triggers a Firestore refresh if stale or tampered.
   Future<void> _checkIntegrityAndFreshness() async {
     final storage = LocalStorageService.instance;
-    
+
     // If tampered with or stale (>24h), trigger a hard refresh of user data
     if (!storage.isSubIntegrityValid || !storage.isSubscriptionSyncFresh) {
       if (kDebugMode) {
-        debugPrint('🛡️ [SECURITY] Subscription cache invalid or stale. Triggering Firestore re-validation.');
+        debugPrint(
+            '🛡️ [SECURITY] Subscription cache invalid or stale. Triggering Firestore re-validation.');
       }
       await _authProvider.refreshUserData();
     }

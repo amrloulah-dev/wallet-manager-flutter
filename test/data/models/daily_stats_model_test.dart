@@ -10,7 +10,7 @@ void main() {
       expect(stats.totalCommission, 0.0);
       expect(stats.totalServiceFee, 0.0);
       expect(stats.totalAmount, 0.0);
-      
+
       // New fields
       expect(stats.sendCount, 0);
       expect(stats.receiveCount, 0);
@@ -91,7 +91,7 @@ void main() {
 
     test('copyWith should correctly clone and modify selected fields', () {
       final stats = DailyStatsModel.empty('2026-05-26');
-      
+
       final updated = stats.copyWith(
         transactionCount: 10,
         sendCount: 6,

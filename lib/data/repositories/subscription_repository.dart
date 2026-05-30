@@ -53,7 +53,8 @@ class SubscriptionRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
-      throw ServerException('subscription_error_verify_device_failed', code: e.code);
+      throw ServerException('subscription_error_verify_device_failed',
+          code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'SubscriptionRepository.verifyDevice');
@@ -79,7 +80,8 @@ class SubscriptionRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
-      throw ServerException('subscription_error_fetch_request_failed', code: e.code);
+      throw ServerException('subscription_error_fetch_request_failed',
+          code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
@@ -137,8 +139,7 @@ class SubscriptionRepository {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'SubscriptionRepository.submitSubscriptionRequest');
-      throw ServerException('subscription_error_submit_failed',
-          code: e.code);
+      throw ServerException('subscription_error_submit_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,

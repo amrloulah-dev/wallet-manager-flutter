@@ -20,7 +20,7 @@ void main() {
       fakeFirestore = FakeFirebaseFirestore();
       mockFirebaseService = MockFirebaseService();
       when(() => mockFirebaseService.firestore).thenReturn(fakeFirestore);
-      
+
       storeRepository = StoreRepository(firebaseService: mockFirebaseService);
     });
 
@@ -29,7 +29,10 @@ void main() {
       const password = 'password123';
       final hashedPassword = await PasswordHasher.hashPassword(password);
 
-      await fakeFirestore.collection(FirebaseConstants.storesCollection).doc('store_1').set({
+      await fakeFirestore
+          .collection(FirebaseConstants.storesCollection)
+          .doc('store_1')
+          .set({
         FirebaseConstants.storeId: 'store_1',
         FirebaseConstants.storePassword: hashedPassword,
         FirebaseConstants.ownerEmail: email,
@@ -45,7 +48,8 @@ void main() {
     });
 
     test('getStoreByEmail should return null if no store matches', () async {
-      final store = await storeRepository.getStoreByEmail('nonexistent@example.com');
+      final store =
+          await storeRepository.getStoreByEmail('nonexistent@example.com');
       expect(store, isNull);
     });
   });

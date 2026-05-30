@@ -99,16 +99,16 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           stackTrace: stack,
           operation: 'StoreRegistration: EmailAlreadyInUseException');
       if (mounted) {
-        ToastUtils.showError(
-            ErrorTranslator.getLocalizedString(context, 'auth_error_account_not_found'));
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_account_not_found'));
       }
     } on WeakPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'StoreRegistration: WeakPasswordException');
       if (mounted) {
-        ToastUtils.showError(
-            ErrorTranslator.getLocalizedString(context, 'auth_error_invalid_credentials'));
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_invalid_credentials'));
       }
     } on NetworkException catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -121,8 +121,8 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
           stackTrace: stack,
           operation: 'StoreRegistration: StoreInactiveException');
       if (mounted) {
-        ToastUtils.showError(
-            ErrorTranslator.getLocalizedString(context, 'auth_error_store_not_active'));
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_store_not_active'));
       }
     } catch (e, stack) {
       AppErrorHandler.handle(e,

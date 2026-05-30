@@ -9,14 +9,12 @@ import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/store_model.dart';
-import '../../../core/errors/app_error_handler.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  Future<void> _showLogoutDialog(BuildContext context) async {
+  void _showLogoutDialog(BuildContext context) {
     final currentContext = context;
-    final authProvider = currentContext.read<AuthProvider>();
 
     DialogUtils.showConfirmDialog(
       currentContext,
@@ -25,7 +23,22 @@ class AppDrawer extends StatelessWidget {
       confirmText: AppLocalizations.of(currentContext)!.exit,
       type: DialogType.danger,
       onConfirm: () async {
-        await authProvider.logout();
+        // 1. Capture the provider before any state changes
+        final auth = currentContext.read<AuthProvider>();
+
+        // 2. Navigate immediately — unmounts the Dashboard and all its consumers
+        Navigator.of(currentContext).pushNamedAndRemoveUntil(
+          RouteConstants.loginLanding,
+          (route) => false,
+        );
+
+        // 3. Clear auth state AFTER the route animation starts.
+        // The 300ms delay ensures the widget tree has fully transitioned
+        // before Provider notifies listeners, preventing Provider panics
+        // and unauthenticated Firestore fetches on mounted widgets.
+        Future.delayed(const Duration(milliseconds: 300), () {
+          auth.logout(currentContext);
+        });
       },
     );
   }

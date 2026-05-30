@@ -33,7 +33,8 @@ class TransactionRepository {
         _statsRepository = statsRepository ?? sl<StatsRepository>(),
         _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _transactionsCollection =>
       _firestore.collection(FirebaseConstants.transactions);
 
@@ -108,12 +109,13 @@ class TransactionRepository {
       _cacheManager.clear('wallet_details_${transaction.walletId}');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.createTransaction');
-      throw ServerException('transaction_error_create_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'TransactionRepository.createTransaction');
+      throw ServerException('transaction_error_create_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.createTransaction');
+          stackTrace: stack,
+          operation: 'TransactionRepository.createTransaction');
       if (e is AppException) rethrow;
       throw ServerException('transaction_error_create_failed');
     }
@@ -157,12 +159,14 @@ class TransactionRepository {
         }
         return items;
       }).handleError((error, stack) {
-        AppErrorHandler.logSilentError(error.toString(), 'TransactionRepository.getTransactionsStream',
+        AppErrorHandler.logSilentError(
+            error.toString(), 'TransactionRepository.getTransactionsStream',
             stackTrace: stack);
         throw error;
       });
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionsStream',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'TransactionRepository.getTransactionsStream',
           stackTrace: stack);
       return Stream.error(ServerException('transaction_error_stream_failed'));
     }
@@ -193,13 +197,14 @@ class TransactionRepository {
       _cacheManager.set(cacheKey, tx, duration: const Duration(minutes: 10));
       return tx;
     } on FirebaseException catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'TransactionRepository.getTransactionById',
           stackTrace: stack);
-      throw ServerException('transaction_error_fetch_failed',
-          code: e.code);
+      throw ServerException('transaction_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       if (e is AppException) rethrow;
-      AppErrorHandler.logSilentError(e.toString(), 'TransactionRepository.getTransactionById',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'TransactionRepository.getTransactionById',
           stackTrace: stack);
       throw ServerException('transaction_error_fetch_failed');
     }
@@ -245,12 +250,13 @@ class TransactionRepository {
       );
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
-      throw ServerException('transaction_error_fetch_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'TransactionRepository.getTransactionsByDateRange');
+      throw ServerException('transaction_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getTransactionsByDateRange');
+          stackTrace: stack,
+          operation: 'TransactionRepository.getTransactionsByDateRange');
       throw ServerException('transaction_error_fetch_failed');
     }
   }
@@ -272,12 +278,13 @@ class TransactionRepository {
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
-      throw ServerException('transaction_error_update_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'TransactionRepository.updateTransaction');
+      throw ServerException('transaction_error_update_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.updateTransaction');
+          stackTrace: stack,
+          operation: 'TransactionRepository.updateTransaction');
       throw ServerException('transaction_error_update_failed');
     }
   }
@@ -294,12 +301,13 @@ class TransactionRepository {
       _cacheManager.clear('transaction_details_$transactionId');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
-      throw ServerException('transaction_error_delete_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'TransactionRepository.deleteTransaction');
+      throw ServerException('transaction_error_delete_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.deleteTransaction');
+          stackTrace: stack,
+          operation: 'TransactionRepository.deleteTransaction');
       throw ServerException('transaction_error_delete_failed');
     }
   }
@@ -336,12 +344,13 @@ class TransactionRepository {
       );
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
-      throw ServerException('transaction_error_fetch_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'TransactionRepository.getAllTransactions');
+      throw ServerException('transaction_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'TransactionRepository.getAllTransactions');
+          stackTrace: stack,
+          operation: 'TransactionRepository.getAllTransactions');
       throw ServerException('transaction_error_fetch_failed');
     }
   }

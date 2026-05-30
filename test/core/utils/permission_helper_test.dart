@@ -28,17 +28,22 @@ void main() {
   }
 
   group('PermissionHelper Tests', () {
-    testWidgets('canAccessScreen should return true for owners on sensitive routes', (tester) async {
+    testWidgets(
+        'canAccessScreen should return true for owners on sensitive routes',
+        (tester) async {
       when(() => mockAuth.isOwner).thenReturn(true);
-      
+
       await tester.pumpWidget(createTestWidget(Builder(builder: (context) {
-        final canAccess = PermissionHelper.canAccessScreen(context, RouteConstants.manageEmployees);
+        final canAccess = PermissionHelper.canAccessScreen(
+            context, RouteConstants.manageEmployees);
         expect(canAccess, isTrue);
         return const SizedBox();
       })));
     });
 
-    testWidgets('canAccessScreen should return false for employees on employee management routes', (tester) async {
+    testWidgets(
+        'canAccessScreen should return false for employees on employee management routes',
+        (tester) async {
       final employee = UserModel(
         userId: 'u1',
         storeId: 's1',
@@ -48,33 +53,38 @@ void main() {
         createdAt: DateTime.now(),
         lastLogin: DateTime.now(),
       );
-      
+
       when(() => mockAuth.isOwner).thenReturn(false);
       when(() => mockAuth.currentUser).thenReturn(employee);
-      
+
       await tester.pumpWidget(createTestWidget(Builder(builder: (context) {
-        final canAccess = PermissionHelper.canAccessScreen(context, RouteConstants.manageEmployees);
+        final canAccess = PermissionHelper.canAccessScreen(
+            context, RouteConstants.manageEmployees);
         expect(canAccess, isFalse);
         return const SizedBox();
       })));
     });
 
-    testWidgets('canAccessScreen should return true for employees with specific permissions', (tester) async {
+    testWidgets(
+        'canAccessScreen should return true for employees with specific permissions',
+        (tester) async {
       final employee = UserModel(
         userId: 'u1',
         storeId: 's1',
         role: UserRole.employee,
         fullName: 'Employee',
-        permissions: UserPermissions.defaultPermissions().copyWith(viewWallets: true),
+        permissions:
+            UserPermissions.defaultPermissions().copyWith(viewWallets: true),
         createdAt: DateTime.now(),
         lastLogin: DateTime.now(),
       );
-      
+
       when(() => mockAuth.isOwner).thenReturn(false);
       when(() => mockAuth.currentUser).thenReturn(employee);
-      
+
       await tester.pumpWidget(createTestWidget(Builder(builder: (context) {
-        final canAccess = PermissionHelper.canAccessScreen(context, RouteConstants.walletsList);
+        final canAccess = PermissionHelper.canAccessScreen(
+            context, RouteConstants.walletsList);
         expect(canAccess, isTrue);
         return const SizedBox();
       })));

@@ -1,5 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/providers/transaction_provider.dart';
+import 'package:walletmanager/providers/debt_provider.dart';
+import 'package:walletmanager/providers/wallet_provider.dart';
 import '../domain/entities/auth_user.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/store_repository.dart';
@@ -59,6 +65,14 @@ class AuthProvider extends BaseProvider {
         _licenseKeyRepository =
             licenseKeyRepository ?? sl<LicenseKeyRepository>(),
         _localStorage = localStorage ?? sl<LocalStorageService>() {
+    _authRepository.authStateChanges().listen((user) {
+      if (user == null && _currentUser != null) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [AuthProvider] Native sign-out detected via authStateChanges.');
+        }
+        logout();
+      }
+    });
     Future.microtask(() => tryAutoLogin());
   }
 
@@ -266,10 +280,8 @@ class AuthProvider extends BaseProvider {
       if (store == null) throw AuthException('auth_error_store_not_found');
       return store;
     } catch (e, stack) {
-      setError(
-          e is AppException ? e.message : 'auth_error_store_lookup_failed',
-          e,
-          stack);
+      setError(e is AppException ? e.message : 'auth_error_store_lookup_failed',
+          e, stack);
       return null;
     } finally {
       if (_status == AuthStatus.loading) {
@@ -302,7 +314,8 @@ class AuthProvider extends BaseProvider {
     try {
       final store = await _storeRepository.getStoreByEmail(email);
       if (store != null) {
-        final isValid = await PasswordHasher.verifyPassword(password, store.storePassword);
+        final isValid =
+            await PasswordHasher.verifyPassword(password, store.storePassword);
         if (isValid) {
           _setStatus(AuthStatus.idle);
           return store.storeId;
@@ -356,17 +369,37 @@ class AuthProvider extends BaseProvider {
       _setStatus(AuthStatus.idle);
     } catch (e, stack) {
       _setStatus(AuthStatus.idle);
-      setError(e is AppException ? e.message : 'auth_operation_failed', e,
-          stack);
+      setError(
+          e is AppException ? e.message : 'auth_operation_failed', e, stack);
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout([BuildContext? context]) async {
     try {
-      await _authRepository.signOut();
-      await _localStorage.clearSession();
+      // 1. Force explicit teardown of ALL provider streams FIRST.
+      // This guarantees no Firestore listeners are active before the
+      // auth token is destroyed, preventing PERMISSION_DENIED errors.
+      if (context != null) {
+        try {
+          context.read<StatisticsProvider>().clearAndCancel();
+          context.read<TransactionProvider>().clearAndCancel();
+          context.read<DebtProvider>().clearAndCancel();
+          context.read<WalletProvider>().clearAndCancel();
+        } catch (_) {
+          // Swallow: provider may not be in the tree (e.g. during error recovery)
+        }
+      }
+
+      // 2. Clear auth state
       _clearState();
       _setStatus(AuthStatus.unauthenticated);
+
+      // 3. Small delay to ensure streams fully close
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // 4. NOW it is safe to destroy the token and session
+      await _authRepository.signOut();
+      await _localStorage.clearSession();
     } catch (e, stack) {
       setError('auth_error_logout_failed', e, stack);
     }

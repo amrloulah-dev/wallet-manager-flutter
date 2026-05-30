@@ -17,7 +17,7 @@ void main() {
     setUp(() async {
       LocalStorageService.reset();
       SharedPreferences.setMockInitialValues({});
-      
+
       mockSecureStorage = MockFlutterSecureStorage();
       when(() => mockSecureStorage.read(key: any(named: 'key')))
           .thenAnswer((_) async => null);

@@ -5,6 +5,6 @@
 
 ---
 
-- [ ] **Track: Fix Logout Navigation & Debt Filters**
+- [~] **Track: Fix Logout Navigation & Debt Filters**
 *Link: [./tracks/logout_and_debt_filters_20260529/](./tracks/logout_and_debt_filters_20260529/)*
 

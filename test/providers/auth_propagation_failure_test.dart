@@ -17,18 +17,29 @@ import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockStoreRepository extends Mock implements StoreRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockDatabaseSyncService extends Mock implements DatabaseSyncService {}
+
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class MockUserModel extends Mock implements UserModel {}
+
 class MockStoreModel extends Mock implements StoreModel {}
 
 class UserModelFake extends Fake implements UserModel {}
+
 class StoreModelFake extends Fake implements StoreModel {}
 
 class TestAuthProvider extends AuthProvider {
@@ -80,7 +91,7 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     mockDatabaseSyncService = MockDatabaseSyncService();
     mockLicenseRepo = MockLicenseKeyRepository();
-    
+
     final mockFirebaseService = MockFirebaseService();
     final mockFirestore = MockFirebaseFirestore();
     final mockAuth = MockFirebaseAuth();
@@ -88,9 +99,10 @@ void main() {
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
     when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
     when(() => mockStorage.clearSession()).thenAnswer((_) async {});
-    
+
     // Stub tryAutoLogin to avoid microtask crash in constructor
-    when(() => mockDatabaseSyncService.tryAutoLogin()).thenAnswer((_) async => null);
+    when(() => mockDatabaseSyncService.tryAutoLogin())
+        .thenAnswer((_) async => null);
 
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
@@ -119,23 +131,25 @@ void main() {
 
     test('loginWithGoogleOrNull propagates stack trace on error', () async {
       final exception = Exception('Google login failed');
-      when(() => mockDatabaseSyncService.loginWithGoogleOrNull()).thenThrow(exception);
+      when(() => mockDatabaseSyncService.loginWithGoogleOrNull())
+          .thenThrow(exception);
 
       await authProvider.loginWithGoogleOrNull();
 
       expect(authProvider.lastError, equals(exception));
       expect(authProvider.lastStack, isNotNull);
     });
-    
+
     test('registerStoreWithGoogle propagates stack trace on error', () async {
       final exception = Exception('Registration failed');
       when(() => mockDatabaseSyncService.registerStoreWithGoogle(
-        storeName: any(named: 'storeName'),
-        storePassword: any(named: 'storePassword'),
-      )).thenThrow(exception);
+            storeName: any(named: 'storeName'),
+            storePassword: any(named: 'storePassword'),
+          )).thenThrow(exception);
 
       try {
-        await authProvider.registerStoreWithGoogle(storeName: 'Test', storePassword: 'password');
+        await authProvider.registerStoreWithGoogle(
+            storeName: 'Test', storePassword: 'password');
       } catch (_) {}
 
       expect(authProvider.lastError, equals(exception));
@@ -146,7 +160,8 @@ void main() {
       final exception = Exception('Employee login failed');
       final mockEmployee = MockUserModel();
       final mockStore = MockStoreModel();
-      when(() => mockDatabaseSyncService.loginAsEmployee(any(), any())).thenThrow(exception);
+      when(() => mockDatabaseSyncService.loginAsEmployee(any(), any()))
+          .thenThrow(exception);
 
       await authProvider.loginAsEmployee(mockEmployee, mockStore);
 
@@ -157,11 +172,11 @@ void main() {
     test('updateEmployeeStats propagates stack trace on error', () async {
       final exception = Exception('Update stats failed');
       when(() => mockUserRepo.updateEmployeeStats(
-        userId: any(named: 'userId'),
-        incrementTransactions: any(named: 'incrementTransactions'),
-        incrementCommission: any(named: 'incrementCommission'),
-        incrementDebts: any(named: 'incrementDebts'),
-      )).thenThrow(exception);
+            userId: any(named: 'userId'),
+            incrementTransactions: any(named: 'incrementTransactions'),
+            incrementCommission: any(named: 'incrementCommission'),
+            incrementDebts: any(named: 'incrementDebts'),
+          )).thenThrow(exception);
 
       await authProvider.updateEmployeeStats(userId: 'user123');
 

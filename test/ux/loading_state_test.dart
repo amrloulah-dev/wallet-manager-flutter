@@ -15,13 +15,21 @@ import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockDatabaseSyncService extends Mock implements DatabaseSyncService {}
+
 class MockStoreRepository extends Mock implements StoreRepository {}
+
 class MockUserRepository extends Mock implements UserRepository {}
+
 class MockLicenseKeyRepository extends Mock implements LicenseKeyRepository {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 void main() {
@@ -51,7 +59,8 @@ void main() {
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
     when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
     when(() => mockStorage.clearSession()).thenAnswer((_) async {});
-    when(() => mockDatabaseSyncService.tryAutoLogin()).thenAnswer((_) async => null);
+    when(() => mockDatabaseSyncService.tryAutoLogin())
+        .thenAnswer((_) async => null);
 
     sl.allowReassignment = true;
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
@@ -87,15 +96,16 @@ void main() {
 
       expect(authProvider.isLoading, isFalse);
     });
-    
+
     test('registerStoreWithGoogle resets loading state on error', () async {
       when(() => mockDatabaseSyncService.registerStoreWithGoogle(
-        storeName: any(named: 'storeName'),
-        storePassword: any(named: 'storePassword'),
-      )).thenThrow(Exception('Reg failed'));
+            storeName: any(named: 'storeName'),
+            storePassword: any(named: 'storePassword'),
+          )).thenThrow(Exception('Reg failed'));
 
       try {
-        await authProvider.registerStoreWithGoogle(storeName: 'Test', storePassword: 'pass');
+        await authProvider.registerStoreWithGoogle(
+            storeName: 'Test', storePassword: 'pass');
       } catch (_) {}
 
       expect(authProvider.isLoading, isFalse);

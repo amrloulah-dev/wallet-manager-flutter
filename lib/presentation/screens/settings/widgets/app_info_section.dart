@@ -27,10 +27,10 @@ class AppInfoSection extends StatelessWidget {
                 title: Text(AppLocalizations.of(context)!.mySubscription,
                     style: AppTextStyles.bodyLarge),
                 trailing: Icon(
-                  IconData(Icons.arrow_forward_ios.codePoint,
-                      fontFamily: Icons.arrow_forward_ios.fontFamily,
-                      matchTextDirection: true),
-                  size: 16),
+                    IconData(Icons.arrow_forward_ios.codePoint,
+                        fontFamily: Icons.arrow_forward_ios.fontFamily,
+                        matchTextDirection: true),
+                    size: 16),
                 onTap: () {
                   Navigator.pushNamed(
                     context,

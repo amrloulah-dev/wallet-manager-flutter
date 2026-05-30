@@ -95,7 +95,9 @@ class SmsService {
       }
     } catch (e, stack) {
       if (kDebugMode) debugPrint('Error requesting additional permissions: $e');
-      AppErrorHandler.logSilentError(e.toString(), 'SmsService.init_permissions', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'SmsService.init_permissions',
+          stackTrace: stack);
     }
 
     return true;
@@ -110,7 +112,9 @@ class SmsService {
           await Telephony.instance.requestPhoneAndSmsPermissions;
       return result ?? false;
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'SmsService.requestSmsPermission', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'SmsService.requestSmsPermission',
+          stackTrace: stack);
       return false;
     }
   }

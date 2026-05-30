@@ -38,15 +38,18 @@ void main() {
     mockEmployeeRepo = MockEmployeeRepository();
     mockAuth = MockAuthProvider();
     when(() => mockAuth.isOwner).thenReturn(true);
-    
-    employeeProvider = TestEmployeeProvider(employeeRepository: mockEmployeeRepo);
+
+    employeeProvider =
+        TestEmployeeProvider(employeeRepository: mockEmployeeRepo);
     employeeProvider.updateAuthProvider(mockAuth);
   });
 
   group('EmployeeProvider Error Propagation', () {
-    test('deactivateEmployee propagates stack trace on generic error', () async {
+    test('deactivateEmployee propagates stack trace on generic error',
+        () async {
       final exception = Exception('Deactivate failed');
-      when(() => mockEmployeeRepo.deactivateEmployee(any())).thenThrow(exception);
+      when(() => mockEmployeeRepo.deactivateEmployee(any()))
+          .thenThrow(exception);
 
       // This should NOT crash but call setError with stack
       await employeeProvider.deactivateEmployee('user123');
@@ -58,11 +61,12 @@ void main() {
     test('resetEmployeePIN propagates stack trace on generic error', () async {
       final exception = Exception('Reset failed');
       when(() => mockEmployeeRepo.resetEmployeePIN(
-        userId: any(named: 'userId'),
-        newPin: any(named: 'newPin'),
-      )).thenThrow(exception);
+            userId: any(named: 'userId'),
+            newPin: any(named: 'newPin'),
+          )).thenThrow(exception);
 
-      await employeeProvider.resetEmployeePIN(userId: 'user123', newPin: '1234');
+      await employeeProvider.resetEmployeePIN(
+          userId: 'user123', newPin: '1234');
 
       expect(employeeProvider.lastError, equals(exception));
       expect(employeeProvider.lastStack, isNotNull);

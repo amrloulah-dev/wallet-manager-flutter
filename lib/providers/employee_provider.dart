@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
@@ -67,12 +68,13 @@ class EmployeeProvider extends BaseProvider {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
       _employeeStreamSubscription?.cancel();
+      _employeeStreamSubscription = null;
       _employees = [];
       _status = EmployeeProviderStatus.initial;
       _errorMessage = null;
       _searchQuery = '';
 
-      if (storeId != null) {
+      if (storeId != null && storeId.isNotEmpty) {
         _listenToEmployees(storeId);
       } else {
         safeNotify();
@@ -104,6 +106,10 @@ class EmployeeProvider extends BaseProvider {
         safeNotify();
       },
       onError: (error, stack) {
+        if (error is FirebaseException && error.code == 'permission-denied') {
+          // Silently ignore: this happens naturally during the logout flow
+          return;
+        }
         setError('employee_error_fetch_failed', error, stack);
         safeNotify();
       },

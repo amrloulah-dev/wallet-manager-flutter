@@ -97,11 +97,13 @@ void main() {
           .thenAnswer((_) async => dailyStats);
 
       when(() => mockTransactionRepository.getTransactionsByDateRange(
-            any(),
-            any(),
-            any(),
-            lastDocument: any(named: 'lastDocument'),
-          )).thenAnswer((_) async => PaginatedResult<TransactionModel>(items: [], lastDocument: null));
+                any(),
+                any(),
+                any(),
+                lastDocument: any(named: 'lastDocument'),
+              ))
+          .thenAnswer((_) async =>
+              PaginatedResult<TransactionModel>(items: [], lastDocument: null));
 
       // Act
       await transactionProvider.fetchInitialTransactions();

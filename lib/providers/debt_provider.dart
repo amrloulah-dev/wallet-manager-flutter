@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../core/utils/number_parser.dart';
 import '../data/repositories/debt_repository.dart';
@@ -109,7 +111,15 @@ class DebtProvider extends BaseProvider {
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      fetchInitialDebts();
+      if (storeId != null && storeId.isNotEmpty) {
+        fetchInitialDebts();
+      } else {
+        _debts = [];
+        _debtMap = {};
+        _summary = {};
+        _status = DebtProviderStatus.idle;
+        safeNotify();
+      }
     }
   }
 
@@ -121,6 +131,9 @@ class DebtProvider extends BaseProvider {
   void setDebtType(DebtType type) {
     if (_currentDebtType != type) {
       _currentDebtType = type;
+      _debts = [];
+      _lastDocument = null;
+      _hasMore = true;
       fetchInitialDebts();
     }
   }
@@ -128,6 +141,9 @@ class DebtProvider extends BaseProvider {
   void setFilter(String filter) {
     if (_currentFilter != filter) {
       _currentFilter = filter;
+      _debts = [];
+      _lastDocument = null;
+      _hasMore = true;
       fetchInitialDebts();
     }
   }
@@ -145,6 +161,8 @@ class DebtProvider extends BaseProvider {
         DateTime(2020),
         DateTime(2100),
         lastDocument: null,
+        debtType: _currentDebtType.name,
+        debtStatus: _currentFilter == 'all' ? null : _currentFilter,
       );
 
       _debts = result.items;
@@ -155,6 +173,10 @@ class DebtProvider extends BaseProvider {
       await _fetchSummary();
       _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) debugPrint('🤫 [SILENT ERROR] DebtProvider: permission-denied (likely native sign-out)');
+        return;
+      }
       setError('debt_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
@@ -179,6 +201,8 @@ class DebtProvider extends BaseProvider {
         DateTime(2020),
         DateTime(2100),
         lastDocument: _lastDocument,
+        debtType: _currentDebtType.name,
+        debtStatus: _currentFilter == 'all' ? null : _currentFilter,
       );
 
       if (result.items.isEmpty) {
@@ -414,6 +438,18 @@ class DebtProvider extends BaseProvider {
       }
       safeNotify();
     }
+  }
+
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _debts = [];
+    _debtMap = {};
+    _summary = {};
+    _hasMore = true;
+    _lastDocument = null;
+    _status = DebtProviderStatus.idle;
+    _errorMessage = null;
+    safeNotify();
   }
 
   Future<UserModel> _validateUserAndPermission(

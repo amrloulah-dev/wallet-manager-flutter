@@ -28,7 +28,8 @@ class WalletRepository {
         _statsRepository = statsRepository ?? StatsRepository(),
         _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _walletsCollection =>
       _firestore.collection(FirebaseConstants.walletsCollection);
 
@@ -54,7 +55,8 @@ class WalletRepository {
 
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.createWallet',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.createWallet',
           stackTrace: stack);
       throw ServerException('wallet_error_create_failed');
     }
@@ -104,7 +106,9 @@ class WalletRepository {
         return wallets;
       });
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getWalletsStream', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.getWalletsStream',
+          stackTrace: stack);
       return Stream.error(ServerException('wallet_error_fetch_failed'));
     }
   }
@@ -131,7 +135,8 @@ class WalletRepository {
         throw PermissionDeniedException();
       }
 
-      _cacheManager.set(cacheKey, wallet, duration: const Duration(minutes: 10));
+      _cacheManager.set(cacheKey, wallet,
+          duration: const Duration(minutes: 10));
       return wallet;
     } catch (e, stack) {
       AppErrorHandler.logSilentError(
@@ -169,7 +174,9 @@ class WalletRepository {
 
       return PaginatedResult(items: items, lastDocument: lastDoc);
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.getAllWallets', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.getAllWallets',
+          stackTrace: stack);
       throw ServerException('wallet_error_fetch_failed');
     }
   }
@@ -292,7 +299,9 @@ class WalletRepository {
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.debitWallet', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.debitWallet',
+          stackTrace: stack);
       if (e is AppException) rethrow;
       throw ServerException('wallet_error_debit_failed');
     }
@@ -333,7 +342,8 @@ class WalletRepository {
       _cacheManager.clear('wallet_details_$walletId');
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'WalletRepository.setWalletActiveStatus');
+          stackTrace: stack,
+          operation: 'WalletRepository.setWalletActiveStatus');
       if (e is AppException) rethrow;
       throw ServerException('wallet_error_status_update_failed');
     }
@@ -352,7 +362,8 @@ class WalletRepository {
 
       return wallet;
     }).handleError((e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'WalletRepository.watchWallet',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'WalletRepository.watchWallet',
           stackTrace: stack);
       if (e is AppException) throw e;
       throw ServerException('wallet_error_watch_failed');

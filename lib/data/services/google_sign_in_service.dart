@@ -59,8 +59,7 @@ class GoogleSignInService {
         stackTrace: stack,
         operation: 'GoogleSignInService.signInWithGoogle',
       );
-      throw AuthException('auth_error_google_sign_in',
-          code: e.code);
+      throw AuthException('auth_error_google_sign_in', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

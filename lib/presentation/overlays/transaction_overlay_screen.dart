@@ -210,7 +210,8 @@ class _ErrorListener extends StatelessWidget {
           final theme = Theme.of(context);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final displayError = ErrorTranslator.getLocalizedString(context, provider.errorMessage!);
+            final displayError = ErrorTranslator.getLocalizedString(
+                context, provider.errorMessage!);
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

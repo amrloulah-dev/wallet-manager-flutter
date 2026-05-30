@@ -13,7 +13,8 @@ void main() {
       expect(UserRole.fromString('EMPLOYEE'), UserRole.employee);
     });
 
-    test('fromString should return unknown for invalid strings (Fail-Closed)', () {
+    test('fromString should return unknown for invalid strings (Fail-Closed)',
+        () {
       // This is expected to fail currently as it defaults to employee
       expect(UserRole.fromString('hacker'), UserRole.unknown);
       expect(UserRole.fromString('admin'), UserRole.unknown);
@@ -31,11 +32,13 @@ void main() {
       expect(UserRole.employee.nameAr, 'موظف');
       expect(UserRole.unknown.nameAr, 'غير معروف');
     });
-   group('UserRole Parsing Failure Cases', () {
-    test('fromString should throw ArgumentError for unknown roles when configured to throw', () {
-       // Optional behavior based on spec: "throw ArgumentError OR default to unknown"
-       // We will test for "unknown" first as it's safer for lazy migration.
+    group('UserRole Parsing Failure Cases', () {
+      test(
+          'fromString should throw ArgumentError for unknown roles when configured to throw',
+          () {
+        // Optional behavior based on spec: "throw ArgumentError OR default to unknown"
+        // We will test for "unknown" first as it's safer for lazy migration.
+      });
     });
-  });
   });
 }

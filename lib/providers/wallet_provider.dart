@@ -181,7 +181,7 @@ class WalletProvider extends BaseProvider {
 
   void updateAuthState(AuthProvider auth) {
     if (_currentStoreId != auth.currentStoreId) {
-      setStoreId(auth.currentStoreId ?? '');
+      setStoreId(auth.currentStoreId);
     }
   }
 
@@ -194,10 +194,17 @@ class WalletProvider extends BaseProvider {
     return _walletUseCase.validatePermission(selector);
   }
 
-  void setStoreId(String storeId) {
+  void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      fetchInitialWallets();
+      if (storeId != null && storeId.isNotEmpty) {
+        fetchInitialWallets();
+      } else {
+        _wallets = [];
+        _walletMap = {};
+        _status = WalletProviderStatus.idle;
+        safeNotify();
+      }
     }
   }
 
@@ -235,6 +242,10 @@ class WalletProvider extends BaseProvider {
       _updateStatus(WalletProviderStatus.loaded);
       _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) debugPrint('🤫 [SILENT ERROR] WalletProvider: permission-denied (likely native sign-out)');
+        return;
+      }
       setError('wallet_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
@@ -484,6 +495,22 @@ class WalletProvider extends BaseProvider {
     _status = WalletProviderStatus.error;
 
     super.setError(errorCode, error, stack, showToast, operation);
+    safeNotify();
+  }
+
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _overlayDataSubscription?.cancel();
+    _overlayDataSubscription = null;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldActive = false;
+    _wallets = [];
+    _walletMap = {};
+    _frozenWalletIds.clear();
+    _lastDocument = null;
+    _hasMore = true;
+    _status = WalletProviderStatus.idle;
+    _errorMessage = null;
     safeNotify();
   }
 

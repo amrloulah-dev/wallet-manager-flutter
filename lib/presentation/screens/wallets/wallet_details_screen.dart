@@ -166,14 +166,16 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               context: context,
               icon: Icons.account_balance_wallet_outlined,
               label: AppLocalizations.of(context)!.walletType,
-              value: AppLocalizations.of(context)!.getWalletTypeName(wallet.walletType),
+              value: AppLocalizations.of(context)!
+                  .getWalletTypeName(wallet.walletType),
             ),
             const SizedBox(height: 16),
             _buildInfoRow(
               context: context,
               icon: Icons.label_outline,
               label: AppLocalizations.of(context)!.walletStatus,
-              value: AppLocalizations.of(context)!.getWalletStatusName(wallet.walletStatus),
+              value: AppLocalizations.of(context)!
+                  .getWalletStatusName(wallet.walletStatus),
               valueColor: wallet.walletStatus ==
                       WalletStatus
                           .suspended // ENUM refactor (placeholder check)

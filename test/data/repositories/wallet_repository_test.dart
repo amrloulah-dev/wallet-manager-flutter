@@ -179,7 +179,7 @@ void main() {
       when(() => mockFirestore.collection(any())).thenReturn(mockCollectionRef);
       when(() => mockCollectionRef.doc(any())).thenReturn(mockDocRef);
       when(() => mockFirestore.batch()).thenReturn(mockBatch);
-      
+
       when(() => mockBatch.commit()).thenAnswer((_) async {});
       when(() => mockBatch.set<Object?>(any(), any(), any())).thenReturn(null);
       when(() => mockBatch.set<Object?>(any(), any())).thenReturn(null);
@@ -227,7 +227,8 @@ void main() {
       await mockRepository.createWallet(wallet);
 
       verify(() => mockFirestore.batch()).called(1);
-      verify(() => mockBatch.set<Object?>(mockDocRef, wallet.toFirestore())).called(1);
+      verify(() => mockBatch.set<Object?>(mockDocRef, wallet.toFirestore()))
+          .called(1);
       verify(() => mockStatsRepo.updateStatsOnWalletChange(
             storeId,
             countChange: 1,

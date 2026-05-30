@@ -24,7 +24,8 @@ class DebtRepository {
         _cacheManager = cacheManager ?? CacheManager(),
         _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _customFirestore ?? _firebaseService.firestore;
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _debtsCollection =>
       _firestore.collection(FirebaseConstants.debts);
 
@@ -96,13 +97,15 @@ class DebtRepository {
         return debts;
       });
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'DebtRepository.getDebtsStream',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'DebtRepository.getDebtsStream',
           stackTrace: stack);
       return Stream.error(ServerException('debt_error_stream_failed'));
     }
   }
 
-  Future<DebtModel?> getDebtById(String debtId, {String? expectedStoreId}) async {
+  Future<DebtModel?> getDebtById(String debtId,
+      {String? expectedStoreId}) async {
     final cacheKey = 'debt_details_$debtId';
     final cachedDebt = _cacheManager.get<DebtModel>(cacheKey);
 
@@ -154,8 +157,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
-      throw ServerException('debt_error_fetch_failed',
-          code: e.code);
+      throw ServerException('debt_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
@@ -177,12 +179,13 @@ class DebtRepository {
       return null;
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
-      throw ServerException('debt_error_fetch_failed',
-          code: e.code);
+          stackTrace: stack,
+          operation: 'DebtRepository.getDebtByCustomerPhone');
+      throw ServerException('debt_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerPhone');
+          stackTrace: stack,
+          operation: 'DebtRepository.getDebtByCustomerPhone');
       throw ServerException('debt_error_fetch_failed');
     }
   }
@@ -251,8 +254,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.processPayment');
-      throw ServerException('debt_error_payment_failed',
-          code: e.code);
+      throw ServerException('debt_error_payment_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.processPayment');
@@ -313,8 +315,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
-      throw ServerException('debt_error_partial_add_failed',
-          code: e.code);
+      throw ServerException('debt_error_partial_add_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
@@ -335,8 +336,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.updateDebt');
-      throw ServerException('debt_error_update_failed',
-          code: e.code);
+      throw ServerException('debt_error_update_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.updateDebt');
@@ -346,10 +346,21 @@ class DebtRepository {
 
   Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
       String storeId, DateTime startDate, DateTime endDate,
-      {DocumentSnapshot? lastDocument}) async {
+      {DocumentSnapshot? lastDocument,
+      String? debtType,
+      String? debtStatus}) async {
     try {
-      Query query = _debtsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
+      Query query =
+          _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
+
+      if (debtType != null && debtType != 'all') {
+        query = query.where('debtType', isEqualTo: debtType);
+      }
+      if (debtStatus != null && debtStatus != 'all') {
+        query = query.where('debtStatus', isEqualTo: debtStatus);
+      }
+
+      query = query
           .where('createdAt', isGreaterThanOrEqualTo: startDate)
           .where('createdAt', isLessThanOrEqualTo: endDate)
           .orderBy('createdAt', descending: true);
@@ -379,8 +390,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
-      throw ServerException('debt_error_fetch_failed',
-          code: e.code);
+      throw ServerException('debt_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       await AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
@@ -479,8 +489,7 @@ class DebtRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.deleteDebt');
-      throw ServerException('debt_error_delete_failed',
-          code: e.code);
+      throw ServerException('debt_error_delete_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'DebtRepository.deleteDebt');
@@ -504,7 +513,8 @@ class DebtRepository {
 
       return debt;
     }).handleError((error, stack) {
-      AppErrorHandler.logSilentError(error.toString(), 'DebtRepository.watchDebt',
+      AppErrorHandler.logSilentError(
+          error.toString(), 'DebtRepository.watchDebt',
           stackTrace: stack);
       if (error is AppException) throw error;
       throw error;

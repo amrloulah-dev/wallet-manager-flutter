@@ -16,7 +16,7 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       mockSecureStorage = MockFlutterSecureStorage();
-      
+
       when(() => mockSecureStorage.read(key: any(named: 'key')))
           .thenAnswer((_) async => null);
       when(() => mockSecureStorage.write(
@@ -32,7 +32,9 @@ void main() {
       LocalStorageService.reset();
     });
 
-    test('saveSession should store role name and get userRole should return Enum', () async {
+    test(
+        'saveSession should store role name and get userRole should return Enum',
+        () async {
       await storage.saveSession(
         userId: 'u1',
         storeId: 's1',
@@ -44,7 +46,9 @@ void main() {
       expect(storage.userRole, UserRole.owner);
     });
 
-    test('userRole should return unknown for invalid legacy strings (Lazy Migration Support)', () async {
+    test(
+        'userRole should return unknown for invalid legacy strings (Lazy Migration Support)',
+        () async {
       // Simulate legacy data
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userRole', 'admin'); // Not a valid Enum value

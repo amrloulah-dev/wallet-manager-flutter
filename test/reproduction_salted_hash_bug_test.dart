@@ -24,7 +24,7 @@ void main() {
       fakeFirestore = FakeFirebaseFirestore();
       mockFirebaseService = MockFirebaseService();
       when(() => mockFirebaseService.firestore).thenReturn(fakeFirestore);
-      
+
       employeeRepository = EmployeeRepository(firestore: fakeFirestore);
       storeRepository = StoreRepository(firebaseService: mockFirebaseService);
       AppErrorHandler.isTestMode = true; // Disable toast and reporting in tests

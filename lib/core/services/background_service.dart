@@ -153,7 +153,9 @@ void backgroundSmsCallback(SmsMessage message) async {
     if (kDebugMode) {
       debugPrint('[CRITICAL] [backgroundSmsCallback] Firebase init failed: $e');
     }
-    AppErrorHandler.logSilentError(e.toString(), 'backgroundSmsCallback_firebase_init', stackTrace: stack);
+    AppErrorHandler.logSilentError(
+        e.toString(), 'backgroundSmsCallback_firebase_init',
+        stackTrace: stack);
   }
 
   try {

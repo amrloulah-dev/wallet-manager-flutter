@@ -60,8 +60,7 @@ class TransactionProvider extends BaseProvider {
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
-        _statsRepository =
-            statsRepository ?? sl<StatsRepository>(),
+        _statsRepository = statsRepository ?? sl<StatsRepository>(),
         _currentStoreId = storeId {
     _initializeDateRange();
   }
@@ -151,8 +150,13 @@ class TransactionProvider extends BaseProvider {
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      if (storeId != null) {
+      if (storeId != null && storeId.isNotEmpty) {
         fetchInitialTransactions();
+      } else {
+        _transactions = [];
+        _transactionMap = {};
+        _status = TransactionProviderStatus.idle;
+        safeNotify();
       }
     }
   }
@@ -255,6 +259,10 @@ class TransactionProvider extends BaseProvider {
       await fetchTodaySummary();
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) debugPrint('🤫 [SILENT ERROR] TransactionProvider: permission-denied (likely native sign-out)');
+        return;
+      }
       if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       }
@@ -420,11 +428,13 @@ class TransactionProvider extends BaseProvider {
     }
   }
 
-  Future<bool> updateTransaction(String transactionId, Map<String, dynamic> data) async {
+  Future<bool> updateTransaction(
+      String transactionId, Map<String, dynamic> data) async {
     try {
       await _validateUserAndPermission((p) => p.editTransaction);
 
-      _updateStatus(TransactionProviderStatus.creating); // Using creating for mutating state
+      _updateStatus(TransactionProviderStatus
+          .creating); // Using creating for mutating state
       _errorMessage = null;
       safeNotify();
 
@@ -463,5 +473,21 @@ class TransactionProvider extends BaseProvider {
       setError('transaction_error_delete_failed', e, stack);
       return false;
     }
+  }
+
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldActive = false;
+    _transactions = [];
+    _transactionMap = {};
+    _todayTransactions = [];
+    _summary.clear();
+    _hasMore = true;
+    _lastDocument = null;
+    _selectedTransaction = null;
+    _status = TransactionProviderStatus.idle;
+    _errorMessage = null;
+    safeNotify();
   }
 }

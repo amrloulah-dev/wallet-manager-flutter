@@ -54,14 +54,14 @@ class TransactionValidatorService {
             .collection(FirebaseConstants.walletsCollection)
             .doc(transaction.walletId);
         final walletSnap = await tx.get(walletRef);
-        if (!walletSnap.exists) throw NotFoundException('wallet_error_not_found');
+        if (!walletSnap.exists)
+          throw NotFoundException('wallet_error_not_found');
 
         var wallet = WalletModel.fromFirestore(walletSnap);
 
         // Bug B-004: Prevent transactions on logically deleted/inactive wallets
         if (!wallet.isActive) {
-          throw ValidationException(
-              'wallet_error_inactive');
+          throw ValidationException('wallet_error_inactive');
         }
 
         final now = DateTime.now();
@@ -111,12 +111,10 @@ class TransactionValidatorService {
         ].contains(wallet.walletType);
 
         if (isInstaPay && transaction.amount > 70000) {
-          throw ValidationException(
-              'wallet_error_instapay_limit');
+          throw ValidationException('wallet_error_instapay_limit');
         }
         if (isTelecom && transaction.amount > 60000) {
-          throw ValidationException(
-              'wallet_error_telecom_limit');
+          throw ValidationException('wallet_error_telecom_limit');
         }
 
         // ------------------------------------------------------------------
@@ -133,8 +131,7 @@ class TransactionValidatorService {
           }
 
           if ((validationWallet.balance + _epsilonEGP) < totalDeduction) {
-            throw ValidationException(
-                'wallet_error_insufficient_balance');
+            throw ValidationException('wallet_error_insufficient_balance');
           }
         }
 
@@ -147,32 +144,27 @@ class TransactionValidatorService {
               : validationWallet.receiveLimits.dailyUsed;
 
           if (usedAmount + transaction.amount > 120000) {
-            throw ValidationException(
-                'wallet_error_instapay_daily_limit');
+            throw ValidationException('wallet_error_instapay_daily_limit');
           }
         }
 
         if (transaction.isSend) {
           if (validationWallet.sendLimits.dailyUsed + transaction.amount >
               validationWallet.getLimits().dailyLimit) {
-            throw ValidationException(
-                'wallet_error_daily_send_limit');
+            throw ValidationException('wallet_error_daily_send_limit');
           }
           if (validationWallet.sendLimits.monthlyUsed + transaction.amount >
               validationWallet.getLimits().monthlyLimit) {
-            throw ValidationException(
-                'wallet_error_monthly_send_limit');
+            throw ValidationException('wallet_error_monthly_send_limit');
           }
         } else if (transaction.isReceive) {
           if (validationWallet.receiveLimits.dailyUsed + transaction.amount >
               validationWallet.getReceiveLimits().dailyLimit) {
-            throw ValidationException(
-                'wallet_error_daily_receive_limit');
+            throw ValidationException('wallet_error_daily_receive_limit');
           }
           if (validationWallet.receiveLimits.monthlyUsed + transaction.amount >
               validationWallet.getReceiveLimits().monthlyLimit) {
-            throw ValidationException(
-                'wallet_error_monthly_receive_limit');
+            throw ValidationException('wallet_error_monthly_receive_limit');
           }
         }
 

@@ -156,9 +156,8 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalCommission} ',
-                              value:
-                                  NumberFormatter.formatAmount(
-                                      data.today?.totalCommission),
+                              value: NumberFormatter.formatAmount(
+                                  data.today?.totalCommission),
                               icon: Icons.attach_money,
                               color: Colors.orange.shade800,
                               onTap: () {
@@ -220,8 +219,8 @@ class DashboardQuickStats extends StatelessWidget {
             ]),
           );
         } catch (e, stack) {
-          AppErrorHandler.logSilentError(e.toString(),
-              'DashboardQuickStats: UI render failure',
+          AppErrorHandler.logSilentError(
+              e.toString(), 'DashboardQuickStats: UI render failure',
               stackTrace: stack);
           return SliverToBoxAdapter(
             child: Center(

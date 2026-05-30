@@ -128,8 +128,8 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildMethodSelector('vodafone_cash', loc.vodafoneCash,
-                        Icons.phone_android),
+                    _buildMethodSelector(
+                        'vodafone_cash', loc.vodafoneCash, Icons.phone_android),
                     const SizedBox(width: 12),
                     _buildMethodSelector(
                         'instapay', loc.instaPay, Icons.account_balance),

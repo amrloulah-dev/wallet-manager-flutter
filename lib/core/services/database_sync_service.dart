@@ -141,7 +141,9 @@ class DatabaseSyncService {
       final user = userCredential.user!;
       return await _finalizeOwnerLogin(user.uid);
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService.loginOwnerWithEmail', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'DatabaseSyncService.loginOwnerWithEmail',
+          stackTrace: stack);
       await _authRepository.signOut();
       rethrow;
     }
@@ -210,7 +212,9 @@ class DatabaseSyncService {
             .updateUser(employee.userId, {'firebaseUid': newUid});
         employee = employee.copyWith(firebaseUid: newUid);
       } catch (e, stack) {
-        AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService.loginAsEmployee', stackTrace: stack);
+        AppErrorHandler.logSilentError(
+            e.toString(), 'DatabaseSyncService.loginAsEmployee',
+            stackTrace: stack);
         await _authRepository.signOut();
         rethrow;
       }
@@ -398,7 +402,8 @@ class DatabaseSyncService {
       smsEnabled: true,
     );
 
-    final hashedStorePassword = await PasswordHasher.hashPassword(storePassword);
+    final hashedStorePassword =
+        await PasswordHasher.hashPassword(storePassword);
 
     final newStore = StoreModel(
       storeId: storeId,
@@ -475,7 +480,9 @@ class DatabaseSyncService {
       if (uid != null) return uid;
       throw Exception('Initial provisioning returned null');
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(), 'DatabaseSyncService._lazyProvision_initial', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'DatabaseSyncService._lazyProvision_initial',
+          stackTrace: stack);
       await Future.delayed(const Duration(seconds: 1));
       try {
         final uid = await IdentityService.provisionIdentity(
@@ -483,7 +490,9 @@ class DatabaseSyncService {
         if (uid != null) return uid;
         throw Exception('Retry provisioning returned null');
       } catch (retryError, retryStack) {
-        AppErrorHandler.logSilentError(retryError.toString(), 'DatabaseSyncService._lazyProvision_retry', stackTrace: retryStack);
+        AppErrorHandler.logSilentError(
+            retryError.toString(), 'DatabaseSyncService._lazyProvision_retry',
+            stackTrace: retryStack);
         throw Exception('Failed to provision employee identity.');
       }
     }

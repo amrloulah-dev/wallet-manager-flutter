@@ -162,8 +162,8 @@ class OverlayProvider extends SafeChangeNotifier {
         _selectedWalletId = null;
       }
     } catch (e, stack) {
-      AppErrorHandler.logSilentError(e.toString(),
-          'OverlayProvider: Failed to ingest event',
+      AppErrorHandler.logSilentError(
+          e.toString(), 'OverlayProvider: Failed to ingest event',
           stackTrace: stack);
       _errorMessage = 'overlay_error_load_failed';
     } finally {
@@ -290,7 +290,8 @@ class OverlayProvider extends SafeChangeNotifier {
       }
       await FlutterOverlayWindow.closeOverlay();
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack,
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
           operation: 'OverlayProvider: Failed to submit transaction');
       _errorMessage = 'overlay_error_submit_failed';
       if (kDebugMode) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
@@ -72,15 +73,18 @@ class StatisticsProvider extends BaseProvider {
   void setStoreId(String? storeId) {
     if (_storeId != storeId) {
       _storeId = storeId;
-      if (storeId != null) {
+      if (storeId != null && storeId.isNotEmpty) {
         fetchDashboardStats();
       } else {
         _summarySubscription?.cancel();
+        _summarySubscription = null;
         _todayStatsSubscription?.cancel();
+        _todayStatsSubscription = null;
         _dashboardSummary = null;
         _todayStats = null;
         _cachedSummary = null;
         _cacheTimestamp = null;
+        _isLoading = false;
         safeNotify();
       }
     }
@@ -144,7 +148,9 @@ class StatisticsProvider extends BaseProvider {
         debugPrint(
             '⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
       }
-      AppErrorHandler.logSilentError(e.toString(), 'StatisticsProvider.fetchDashboardStats', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'StatisticsProvider.fetchDashboardStats',
+          stackTrace: stack);
     }
 
     // 1. Establish Summary Stream
@@ -160,6 +166,13 @@ class StatisticsProvider extends BaseProvider {
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
+      if (e is FirebaseException && e.code == 'permission-denied') {
+        // Silently ignore: this happens naturally during the logout flow
+        return;
+      }
+      // Guard: if storeId is already null we are logging out — swallow this
+      // orphaned stream error (fired after cancel()) to prevent spurious toasts.
+      if (_storeId == null) return;
       if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
       }
@@ -177,6 +190,13 @@ class StatisticsProvider extends BaseProvider {
       _isLoading = false;
       safeNotify();
     }, onError: (e, stack) {
+      if (e is FirebaseException && e.code == 'permission-denied') {
+        // Silently ignore: this happens naturally during the logout flow
+        return;
+      }
+      // Guard: if storeId is already null we are logging out — swallow this
+      // orphaned stream error to prevent spurious toasts.
+      if (_storeId == null) return;
       if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
       }
@@ -231,16 +251,22 @@ class StatisticsProvider extends BaseProvider {
         _filteredStats = {
           'totalBalance': totalBalance,
           'totalWallets': totalWallets,
-          'totalTransactions': NumberParser.toInt(aggregated['transactionCount']),
-          'totalCommission': NumberParser.toDouble(aggregated['totalCommission']),
+          'totalTransactions':
+              NumberParser.toInt(aggregated['transactionCount']),
+          'totalCommission':
+              NumberParser.toDouble(aggregated['totalCommission']),
           'sendCount': NumberParser.toInt(aggregated['sendCount']),
-          'totalSentAmount': NumberParser.toDouble(aggregated['totalSentAmount']),
+          'totalSentAmount':
+              NumberParser.toDouble(aggregated['totalSentAmount']),
           'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
-          'totalReceivedAmount': NumberParser.toDouble(aggregated['totalReceivedAmount']),
+          'totalReceivedAmount':
+              NumberParser.toDouble(aggregated['totalReceivedAmount']),
           'openDebtsCount': openDebts,
-          'totalOpenAmount': NumberParser.toDouble(aggregated['totalOpenAmount']),
+          'totalOpenAmount':
+              NumberParser.toDouble(aggregated['totalOpenAmount']),
           'paidDebtsCount': paidDebts,
-          'totalPaidAmount': NumberParser.toDouble(aggregated['totalPaidAmount']),
+          'totalPaidAmount':
+              NumberParser.toDouble(aggregated['totalPaidAmount']),
           'totalDebtsCount': openDebts + paidDebts,
         };
       }
@@ -344,6 +370,24 @@ class StatisticsProvider extends BaseProvider {
       operation,
     );
 
+    safeNotify();
+  }
+
+  void clearAndCancel() {
+    _storeId = null;
+    _summarySubscription?.cancel();
+    _summarySubscription = null;
+    _todayStatsSubscription?.cancel();
+    _todayStatsSubscription = null;
+    _fetchShieldTimer?.cancel();
+    _dashboardSummary = null;
+    _todayStats = null;
+    _cachedSummary = null;
+    _cacheTimestamp = null;
+    _isLoading = false;
+    _errorMessage = null;
+    _filteredStats = null;
+    _filteredDateRange = null;
     safeNotify();
   }
 }

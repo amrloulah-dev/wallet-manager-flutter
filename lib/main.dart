@@ -50,7 +50,8 @@ void main() async {
       Future.delayed(const Duration(seconds: 3), () async {
         try {
           if (kDebugMode) {
-            debugPrint('⏳ [BACKGROUND] Starting Background Service silently...');
+            debugPrint(
+                '⏳ [BACKGROUND] Starting Background Service silently...');
           }
           await initializeBackgroundService();
           if (kDebugMode) {
@@ -68,7 +69,8 @@ void main() async {
         }
       });
     } catch (e, stackTrace) {
-      if (kDebugMode) debugPrint('❌ [INIT FATAL] App initialization failed: $e');
+      if (kDebugMode)
+        debugPrint('❌ [INIT FATAL] App initialization failed: $e');
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
 
       AppErrorHandler.handle(e,

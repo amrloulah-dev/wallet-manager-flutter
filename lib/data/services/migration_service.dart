@@ -114,8 +114,7 @@ class MigrationService {
         stackTrace: stack,
         operation: 'MigrationService.recalculateStoreStats',
       );
-      throw ServerException('migration_error_recalculate_failed',
-          code: e.code);
+      throw ServerException('migration_error_recalculate_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

@@ -26,7 +26,8 @@ class MockTransaction extends Mock implements Transaction {
   }
 
   @override
-  Transaction update(DocumentReference documentReference, Map<String, dynamic> data) {
+  Transaction update(
+      DocumentReference documentReference, Map<String, dynamic> data) {
     updateCalls.add(MapEntry(documentReference, data));
     return this;
   }
@@ -72,8 +73,10 @@ void main() {
   setUp(() {
     mockFirestore = MockFirebaseFirestore();
     mockTransaction = MockTransaction();
-    mockSummaryDocRef = MockDocumentReference('stores/test_store/stats/summary');
-    final mockDailyStatsDocRef = MockDocumentReference('stores/test_store/daily_stats/2026-05-26');
+    mockSummaryDocRef =
+        MockDocumentReference('stores/test_store/stats/summary');
+    final mockDailyStatsDocRef =
+        MockDocumentReference('stores/test_store/daily_stats/2026-05-26');
     statsRepository = StatsRepository(firestore: mockFirestore);
 
     final mockStoresCollection = MockCollectionReference();
@@ -133,7 +136,9 @@ void main() {
       expect(true, true); // Verified by no crash + manual check
     });
 
-    test('incrementOpenDebtStats should write to summary update and daily stats set', () async {
+    test(
+        'incrementOpenDebtStats should write to summary update and daily stats set',
+        () async {
       await statsRepository.incrementOpenDebtStats(
         storeId,
         150.0,
@@ -141,30 +146,40 @@ void main() {
       );
 
       // Verify summary was updated
-      expect(mockTransaction.updateCalls.any((call) => 
-        call.key == mockSummaryDocRef && 
-        call.value['openDebtsCount'] is FieldValue), isTrue);
+      expect(
+          mockTransaction.updateCalls.any((call) =>
+              call.key == mockSummaryDocRef &&
+              call.value['openDebtsCount'] is FieldValue),
+          isTrue);
 
       // Verify daily stats was set
-      expect(mockTransaction.setCalls.any((call) => 
-        call.key.path.contains('daily_stats') && 
-        call.value['openDebtsCount'] is FieldValue), isTrue);
+      expect(
+          mockTransaction.setCalls.any((call) =>
+              call.key.path.contains('daily_stats') &&
+              call.value['openDebtsCount'] is FieldValue),
+          isTrue);
     });
 
-    test('decrementOpenDebtStats should write to summary update and daily stats set', () async {
+    test(
+        'decrementOpenDebtStats should write to summary update and daily stats set',
+        () async {
       await statsRepository.decrementOpenDebtStats(
         storeId,
         150.0,
         firestoreTransaction: mockTransaction,
       );
 
-      expect(mockTransaction.updateCalls.any((call) => 
-        call.key == mockSummaryDocRef && 
-        call.value['openDebtsCount'] is FieldValue), isTrue);
+      expect(
+          mockTransaction.updateCalls.any((call) =>
+              call.key == mockSummaryDocRef &&
+              call.value['openDebtsCount'] is FieldValue),
+          isTrue);
 
-      expect(mockTransaction.setCalls.any((call) => 
-        call.key.path.contains('daily_stats') && 
-        call.value['openDebtsCount'] is FieldValue), isTrue);
+      expect(
+          mockTransaction.setCalls.any((call) =>
+              call.key.path.contains('daily_stats') &&
+              call.value['openDebtsCount'] is FieldValue),
+          isTrue);
     });
 
     test('updateStatsOnDebtUpdate should write to daily stats set', () async {
@@ -177,9 +192,11 @@ void main() {
         newDebt: newDebt,
       );
 
-      expect(mockTransaction.setCalls.any((call) => 
-        call.key.path.contains('daily_stats') && 
-        call.value['openDebtsCount'] is FieldValue), isTrue);
+      expect(
+          mockTransaction.setCalls.any((call) =>
+              call.key.path.contains('daily_stats') &&
+              call.value['openDebtsCount'] is FieldValue),
+          isTrue);
     });
   });
 
@@ -190,7 +207,9 @@ void main() {
       mockBatch = MockWriteBatch();
     });
 
-    test('should throw AssertionError if both transaction and batch are provided', () async {
+    test(
+        'should throw AssertionError if both transaction and batch are provided',
+        () async {
       expect(
         () => statsRepository.updateStatsOnWalletChange(
           storeId,
@@ -202,7 +221,8 @@ void main() {
       );
     });
 
-    test('should queue set operation on batch when batch is provided', () async {
+    test('should queue set operation on batch when batch is provided',
+        () async {
       await statsRepository.updateStatsOnWalletChange(
         storeId,
         countChange: 1,

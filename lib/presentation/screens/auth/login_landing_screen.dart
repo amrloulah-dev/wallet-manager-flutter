@@ -85,15 +85,15 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: UserNotFoundException');
       if (mounted) {
-        ToastUtils.showError(
-            ErrorTranslator.getLocalizedString(context, 'auth_error_user_not_found'));
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_user_not_found'));
       }
     } on WrongPasswordException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'LoginLanding: WrongPasswordException');
       if (mounted) {
-        ToastUtils.showError(
-            ErrorTranslator.getLocalizedString(context, 'auth_error_invalid_credentials'));
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_invalid_credentials'));
       }
     } on AuthException catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -101,7 +101,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       if (mounted) {
         ToastUtils.showError(e.code != null
             ? ErrorTranslator.getLocalizedString(context, e.code!)
-            : ErrorTranslator.getLocalizedString(context, 'auth_error_login_failed'));
+            : ErrorTranslator.getLocalizedString(
+                context, 'auth_error_login_failed'));
       }
     } catch (e, stack) {
       AppErrorHandler.handle(e,
@@ -136,8 +137,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
         );
       } else if (mounted) {
         if (authProvider.errorMessage != null) {
-          ToastUtils.showError(
-              ErrorTranslator.getLocalizedString(context, authProvider.errorMessage!));
+          ToastUtils.showError(ErrorTranslator.getLocalizedString(
+              context, authProvider.errorMessage!));
         } else {
           ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
         }
@@ -465,8 +466,8 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (!context.mounted) return;
 
     if (authProvider.errorMessage != null) {
-      ToastUtils.showError(
-          ErrorTranslator.getLocalizedString(context, authProvider.errorMessage!));
+      ToastUtils.showError(ErrorTranslator.getLocalizedString(
+          context, authProvider.errorMessage!));
     } else {
       Navigator.pop(context);
       ToastUtils.showSuccess(l10n.passwordResetEmailSent);

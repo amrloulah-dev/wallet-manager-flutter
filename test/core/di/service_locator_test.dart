@@ -31,7 +31,7 @@ void main() {
     setUp(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
       SharedPreferences.setMockInitialValues({});
-      
+
       mockSecureStorage = MockFlutterSecureStorage();
       when(() => mockSecureStorage.read(key: any(named: 'key')))
           .thenAnswer((_) async => null);
@@ -42,7 +42,8 @@ void main() {
 
       await sl.reset();
       LocalStorageService.reset();
-      await LocalStorageService.instance.initialize(secureStorage: mockSecureStorage);
+      await LocalStorageService.instance
+          .initialize(secureStorage: mockSecureStorage);
       await setupServiceLocator();
     });
 

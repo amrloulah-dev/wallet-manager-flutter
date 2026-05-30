@@ -3,10 +3,12 @@ import 'package:walletmanager/core/utils/password_hasher.dart';
 
 void main() {
   group('PasswordHasher Hardening (Phase 11.5)', () {
-    test('verifyPassword should CORRECTLY verify against a known high-iteration hash', () async {
+    test(
+        'verifyPassword should CORRECTLY verify against a known high-iteration hash',
+        () async {
       final pin = '1234';
       final hashed = await PasswordHasher.hashPassword(pin);
-      
+
       expect(await PasswordHasher.verifyPassword(pin, hashed), isTrue);
     }, timeout: const Timeout(Duration(seconds: 60)));
 

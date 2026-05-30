@@ -5,7 +5,6 @@ import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../core/constants/route_constants.dart';
 import '../app.dart';
-import '../presentation/screens/auth/login_landing_screen.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
 import '../presentation/screens/auth/employee_login_screen.dart';
 import '../presentation/screens/home/main_dashboard_screen.dart';

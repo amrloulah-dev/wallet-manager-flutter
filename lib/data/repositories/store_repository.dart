@@ -121,8 +121,7 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
-      throw ServerException('store_error_fetch_failed',
-          code: e.code);
+      throw ServerException('store_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
@@ -145,8 +144,7 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
-      throw ServerException('store_error_fetch_failed',
-          code: e.code);
+      throw ServerException('store_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
@@ -169,8 +167,7 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
-      throw ServerException('store_error_fetch_failed',
-          code: e.code);
+      throw ServerException('store_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
@@ -205,8 +202,7 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
-      throw ServerException('store_error_update_failed',
-          code: e.code);
+      throw ServerException('store_error_update_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
@@ -269,8 +265,7 @@ class StoreRepository {
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
-      throw ServerException('store_error_update_stats_failed',
-          code: e.code);
+      throw ServerException('store_error_update_stats_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
@@ -362,7 +357,8 @@ class StoreRepository {
     });
   }
 
-  @Deprecated('Use getStoreByEmail for O(1) lookup. This method is insecure and will be removed.')
+  @Deprecated(
+      'Use getStoreByEmail for O(1) lookup. This method is insecure and will be removed.')
   Future<List<StoreModel>> getStoresByPassword(String password) async {
     try {
       // WARNING: This is inefficient and only works for small store counts.
@@ -374,7 +370,8 @@ class StoreRepository {
       final List<StoreModel> matchingStores = [];
       for (final doc in querySnapshot.docs) {
         final store = StoreModel.fromFirestore(doc);
-        if (await PasswordHasher.verifyPassword(password, store.storePassword)) {
+        if (await PasswordHasher.verifyPassword(
+            password, store.storePassword)) {
           matchingStores.add(store);
         }
       }

@@ -70,7 +70,9 @@ void main() {
       await expectation;
     });
 
-    test('getStatsByDateRange should aggregate all numeric daily stats except totalBalance and totalWallets', () async {
+    test(
+        'getStatsByDateRange should aggregate all numeric daily stats except totalBalance and totalWallets',
+        () async {
       // 1. Populate stats for multiple days
       final stats1 = {
         'transactionCount': 2,

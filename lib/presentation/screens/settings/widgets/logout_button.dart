@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/dialog_utils.dart';
-import '../../../../core/utils/toast_utils.dart';
-import '../../../../core/errors/app_error_handler.dart';
 import '../../../../l10n/arb/app_localizations.dart';
 import '../../../../providers/auth_provider.dart';
 
@@ -31,9 +29,8 @@ class LogoutButton extends StatelessWidget {
     );
   }
 
-  Future<void> _showLogoutDialog(BuildContext context) async {
+  void _showLogoutDialog(BuildContext context) {
     final currentContext = context;
-    final authProvider = currentContext.read<AuthProvider>();
 
     DialogUtils.showConfirmDialog(
       currentContext,
@@ -42,7 +39,22 @@ class LogoutButton extends StatelessWidget {
       confirmText: AppLocalizations.of(currentContext)!.exit,
       type: DialogType.danger,
       onConfirm: () async {
-        await authProvider.logout();
+        // 1. Capture the provider before any state changes
+        final auth = currentContext.read<AuthProvider>();
+
+        // 2. Navigate immediately — unmounts the Dashboard and all its consumers
+        Navigator.of(currentContext).pushNamedAndRemoveUntil(
+          RouteConstants.loginLanding,
+          (route) => false,
+        );
+
+        // 3. Clear auth state AFTER the route animation starts.
+        // The 300ms delay ensures the widget tree has fully transitioned
+        // before Provider notifies listeners, preventing Provider panics
+        // and unauthenticated Firestore fetches on mounted widgets.
+        Future.delayed(const Duration(milliseconds: 300), () {
+          auth.logout(currentContext);
+        });
       },
     );
   }

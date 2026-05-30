@@ -18,9 +18,13 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
+
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockStatsRepository extends Mock implements StatsRepository {}
+
 class FakeTransactionModel extends Fake implements TransactionModel {}
 
 void main() {
@@ -56,13 +60,16 @@ void main() {
   });
 
   group('Provider Permission Guards Tests', () {
-    test('TransactionProvider.createTransaction should return false and set error if user lacks createTransaction permission', () async {
+    test(
+        'TransactionProvider.createTransaction should return false and set error if user lacks createTransaction permission',
+        () async {
       final employee = UserModel(
         userId: 'u1',
         storeId: 's1',
         role: UserRole.employee,
         fullName: 'Employee',
-        permissions: UserPermissions.defaultPermissions().copyWith(createTransaction: false),
+        permissions: UserPermissions.defaultPermissions()
+            .copyWith(createTransaction: false),
         createdAt: DateTime.now(),
         lastLogin: DateTime.now(),
       );
@@ -78,20 +85,22 @@ void main() {
 
       // Act
       final result = await provider.createTransaction(
-          walletId: 'w1', 
-          amount: 100.0, 
-          commission: 5.0,
-          transactionType: TransactionType.deposit,
+        walletId: 'w1',
+        amount: 100.0,
+        commission: 5.0,
+        transactionType: TransactionType.deposit,
       );
 
       // Assert
       expect(result, isFalse);
       expect(provider.hasError, isTrue);
-      expect(provider.errorMessage, equals('permission_denied')); 
+      expect(provider.errorMessage, equals('permission_denied'));
     });
 
-    test('EmployeeProvider.addEmployee should throw PermissionDeniedException if user is not owner', () async {
-       final employee = UserModel(
+    test(
+        'EmployeeProvider.addEmployee should throw PermissionDeniedException if user is not owner',
+        () async {
+      final employee = UserModel(
         userId: 'u1',
         storeId: 's1',
         role: UserRole.employee,
@@ -110,46 +119,49 @@ void main() {
 
       expect(
         () => provider.addEmployee(
-          fullName: 'New', 
-          phone: '123', 
+          fullName: 'New',
+          phone: '123',
           pin: '1234',
           permissions: UserPermissions.defaultPermissions(),
         ),
         throwsA(isA<PermissionDeniedException>()),
       );
     });
-   group('Provider Permission Success Cases', () {
-    test('TransactionProvider.createTransaction should succeed if user is owner', () async {
-      final owner = UserModel(
-        userId: 'o1',
-        storeId: 's1',
-        role: UserRole.owner,
-        fullName: 'Owner',
-        createdAt: DateTime.now(),
-        lastLogin: DateTime.now(),
-      );
+    group('Provider Permission Success Cases', () {
+      test(
+          'TransactionProvider.createTransaction should succeed if user is owner',
+          () async {
+        final owner = UserModel(
+          userId: 'o1',
+          storeId: 's1',
+          role: UserRole.owner,
+          fullName: 'Owner',
+          createdAt: DateTime.now(),
+          lastLogin: DateTime.now(),
+        );
 
-      when(() => mockAuth.currentUser).thenReturn(owner);
-      when(() => mockAuth.isOwner).thenReturn(true);
-      when(() => mockTxRepo.generateId()).thenReturn('t1');
-      when(() => mockTxRepo.createTransaction(any())).thenAnswer((_) async {});
+        when(() => mockAuth.currentUser).thenReturn(owner);
+        when(() => mockAuth.isOwner).thenReturn(true);
+        when(() => mockTxRepo.generateId()).thenReturn('t1');
+        when(() => mockTxRepo.createTransaction(any()))
+            .thenAnswer((_) async {});
 
-      final provider = TransactionProvider(
-        transactionRepository: mockTxRepo,
-        storeId: 's1',
-      );
-      provider.updateAuthState(mockAuth);
+        final provider = TransactionProvider(
+          transactionRepository: mockTxRepo,
+          storeId: 's1',
+        );
+        provider.updateAuthState(mockAuth);
 
-      final result = await provider.createTransaction(
-          walletId: 'w1', 
-          amount: 100.0, 
+        final result = await provider.createTransaction(
+          walletId: 'w1',
+          amount: 100.0,
           commission: 5.0,
           transactionType: TransactionType.deposit,
-      );
+        );
 
-      expect(result, isTrue);
-      expect(provider.hasError, isFalse);
+        expect(result, isTrue);
+        expect(provider.hasError, isFalse);
+      });
     });
-  });
   });
 }

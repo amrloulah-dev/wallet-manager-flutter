@@ -7,6 +7,8 @@ import 'package:walletmanager/data/models/paginated_result.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:walletmanager/core/enums/debt_enums.dart';
+
 class MockDebtRepository extends Mock implements DebtRepository {}
 
 class MockAuthProvider extends Mock implements AuthProvider {}
@@ -39,11 +41,14 @@ void main() {
         lastDocument: mockDoc,
       );
 
+      registerFallbackValue(DateTime(2020));
       when(() => mockDebtRepo.getDebtsByDateRange(
             any(),
             any(),
             any(),
             lastDocument: null,
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
           )).thenAnswer((_) async => result);
 
       when(() => mockDebtRepo.fetchDebtStatistics(
@@ -61,6 +66,8 @@ void main() {
             any(),
             any(),
             lastDocument: null,
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
           )).called(2); // Once from setStoreId, once from fetchInitialDebts
     });
 
@@ -78,11 +85,14 @@ void main() {
         lastDocument: mockDoc2,
       );
 
+      registerFallbackValue(DateTime(2020));
       when(() => mockDebtRepo.getDebtsByDateRange(
             any(),
             any(),
             any(),
             lastDocument: null,
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
           )).thenAnswer((_) async => result1);
 
       when(() => mockDebtRepo.getDebtsByDateRange(
@@ -90,6 +100,8 @@ void main() {
             any(),
             any(),
             lastDocument: mockDoc1,
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
           )).thenAnswer((_) async => result2);
 
       when(() => mockDebtRepo.fetchDebtStatistics(
@@ -108,6 +120,109 @@ void main() {
             any(),
             any(),
             lastDocument: mockDoc1,
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
+          )).called(1);
+    });
+  });
+
+  group('DebtProvider - Filters & Tabs (BUG-02)', () {
+    test(
+        'setDebtType should clear debts, reset lastDocument, and call repository with correct debtType',
+        () async {
+      // ARRANGE
+      final mockDoc = MockDocumentSnapshot();
+      final result = PaginatedResult<DebtModel>(
+        items: [MockDebtModel()],
+        lastDocument: mockDoc,
+      );
+
+      registerFallbackValue(DateTime(2020));
+      when(() => mockDebtRepo.getDebtsByDateRange(
+            any(),
+            any(),
+            any(),
+            lastDocument: any(named: 'lastDocument'),
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
+          )).thenAnswer((_) async => result);
+
+      when(() => mockDebtRepo.fetchDebtStatistics(
+            storeId: any(named: 'storeId'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => {});
+
+      provider.setStoreId(storeId);
+      await provider.fetchInitialDebts();
+
+      // Ensure we have loaded some debts initially
+      expect(provider.debts.length, 1);
+
+      // ACT
+      provider.setDebtType(DebtType.storeSale);
+
+      // ASSERT
+      expect(provider.debts.isEmpty, true);
+      expect(provider.isLoading, true);
+
+      // Wait for fetchInitialDebts to complete
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockDebtRepo.getDebtsByDateRange(
+            storeId,
+            any(),
+            any(),
+            lastDocument: null,
+            debtType: 'storeSale',
+            debtStatus: null,
+          )).called(1);
+    });
+
+    test(
+        'setFilter should clear debts, reset lastDocument, and call repository with correct debtStatus',
+        () async {
+      // ARRANGE
+      final mockDoc = MockDocumentSnapshot();
+      final result = PaginatedResult<DebtModel>(
+        items: [MockDebtModel()],
+        lastDocument: mockDoc,
+      );
+
+      registerFallbackValue(DateTime(2020));
+      when(() => mockDebtRepo.getDebtsByDateRange(
+            any(),
+            any(),
+            any(),
+            lastDocument: any(named: 'lastDocument'),
+            debtType: any(named: 'debtType'),
+            debtStatus: any(named: 'debtStatus'),
+          )).thenAnswer((_) async => result);
+
+      when(() => mockDebtRepo.fetchDebtStatistics(
+            storeId: any(named: 'storeId'),
+            type: any(named: 'type'),
+          )).thenAnswer((_) async => {});
+
+      provider.setStoreId(storeId);
+      await provider.fetchInitialDebts();
+
+      // ACT
+      provider.setFilter('open');
+
+      // ASSERT
+      expect(provider.debts.isEmpty, true);
+      expect(provider.isLoading, true);
+
+      // Wait for fetchInitialDebts to complete
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockDebtRepo.getDebtsByDateRange(
+            storeId,
+            any(),
+            any(),
+            lastDocument: null,
+            debtType: 'transaction',
+            debtStatus: 'open',
           )).called(1);
     });
   });

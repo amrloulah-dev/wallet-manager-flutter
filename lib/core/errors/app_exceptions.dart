@@ -70,8 +70,7 @@ class LicenseAlreadyUsedException extends LicenseException {
 
 /// Thrown when the license has expired.
 class LicenseExpiredException extends LicenseException {
-  LicenseExpiredException()
-      : super('License expired', code: 'license_expired');
+  LicenseExpiredException() : super('License expired', code: 'license_expired');
 }
 
 // ===========================

@@ -78,7 +78,7 @@ class ErrorTranslator {
         return l10n.wallet_error_frozen;
       case 'wallet_error_subscription_unresolved':
         return l10n.wallet_error_subscription_unresolved;
-      
+
       // Transaction Validator Errors
       case 'wallet_error_not_found':
         return l10n.wallet_error_not_found;

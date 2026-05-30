@@ -35,9 +35,8 @@ extension TransactionModelUI on TransactionModel {
         5; // Safe access
   }
 
-  String get formattedDate =>
-      DateHelper.formatDateTime(
-          transactionDate ?? DateTime.now()); // Safe access — uses locale-aware yMd
+  String get formattedDate => DateHelper.formatDateTime(
+      transactionDate ?? DateTime.now()); // Safe access — uses locale-aware yMd
   String get formattedTime =>
       DateHelper.formatDateTime(transactionDate ?? DateTime.now(),
           format: 'jm'); // Safe access — locale-aware time pattern

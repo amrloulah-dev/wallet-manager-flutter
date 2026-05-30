@@ -52,15 +52,16 @@ void main() {
     AppErrorHandler.isTestMode = true;
     final sl = GetIt.instance;
     sl.reset();
-    
+
     fakeFirestore = FakeFirebaseFirestore();
-    
+
     // Mock FirebaseService to return our fake firestore
     final mockFirebaseService = FirebaseService();
     mockFirebaseService.initializeForTest(fakeFirestore);
     sl.registerSingleton<FirebaseService>(mockFirebaseService);
-    
-    sl.registerSingleton<StatsRepository>(StatsRepository(firestore: fakeFirestore));
+
+    sl.registerSingleton<StatsRepository>(
+        StatsRepository(firestore: fakeFirestore));
     sl.registerSingleton<CacheManager>(CacheManager());
 
     walletRepo = WalletRepository(firestore: fakeFirestore);
@@ -70,9 +71,14 @@ void main() {
   });
 
   group('Tenant Isolation Tests', () {
-    test('WalletRepository.getWalletById should throw PermissionDeniedException if storeId mismatches', () async {
+    test(
+        'WalletRepository.getWalletById should throw PermissionDeniedException if storeId mismatches',
+        () async {
       final walletId = 'w1';
-      await fakeFirestore.collection('wallets').doc(walletId).set(_createValidWalletData(otherStoreId));
+      await fakeFirestore
+          .collection('wallets')
+          .doc(walletId)
+          .set(_createValidWalletData(otherStoreId));
 
       expect(
         () => walletRepo.getWalletById(walletId, expectedStoreId: ownerStoreId),
@@ -80,7 +86,9 @@ void main() {
       );
     });
 
-    test('TransactionRepository.getTransactionById should throw PermissionDeniedException if storeId mismatches', () async {
+    test(
+        'TransactionRepository.getTransactionById should throw PermissionDeniedException if storeId mismatches',
+        () async {
       final txId = 't1';
       final now = Timestamp.now();
       await fakeFirestore.collection('transactions').doc(txId).set({
@@ -96,12 +104,15 @@ void main() {
       });
 
       expect(
-        () => transactionRepo.getTransactionById(txId, expectedStoreId: ownerStoreId),
+        () => transactionRepo.getTransactionById(txId,
+            expectedStoreId: ownerStoreId),
         throwsA(isA<PermissionDeniedException>()),
       );
     });
 
-    test('DebtRepository.getDebtById should throw PermissionDeniedException if storeId mismatches', () async {
+    test(
+        'DebtRepository.getDebtById should throw PermissionDeniedException if storeId mismatches',
+        () async {
       final debtId = 'd1';
       final now = Timestamp.now();
       await fakeFirestore.collection('debts').doc(debtId).set({
@@ -120,23 +131,33 @@ void main() {
       );
     });
 
-    test('WalletRepository.updateWallet should fail assertion if storeId is passed', () async {
+    test(
+        'WalletRepository.updateWallet should fail assertion if storeId is passed',
+        () async {
       expect(
         () => walletRepo.updateWallet('w1', {'storeId': 'new_store'}),
         throwsA(isA<AssertionError>()),
       );
     });
 
-    test('WalletRepository.watchWallet should emit PermissionDeniedException if storeId mismatches', () async {
+    test(
+        'WalletRepository.watchWallet should emit PermissionDeniedException if storeId mismatches',
+        () async {
       final walletId = 'w1';
-      await fakeFirestore.collection('wallets').doc(walletId).set(_createValidWalletData(otherStoreId));
+      await fakeFirestore
+          .collection('wallets')
+          .doc(walletId)
+          .set(_createValidWalletData(otherStoreId));
 
-      final stream = walletRepo.watchWallet(walletId, expectedStoreId: ownerStoreId);
-      
+      final stream =
+          walletRepo.watchWallet(walletId, expectedStoreId: ownerStoreId);
+
       expect(stream, emitsError(isA<PermissionDeniedException>()));
     });
 
-    test('UserRepository.getUserById should throw PermissionDeniedException if storeId mismatches', () async {
+    test(
+        'UserRepository.getUserById should throw PermissionDeniedException if storeId mismatches',
+        () async {
       final userId = 'u1';
       final now = Timestamp.now();
       await fakeFirestore.collection('users').doc(userId).set({
@@ -153,11 +174,13 @@ void main() {
       );
     });
 
-    test('UserRepository.hardDeleteUser should throw PermissionDeniedException if caller is not owner', () async {
+    test(
+        'UserRepository.hardDeleteUser should throw PermissionDeniedException if caller is not owner',
+        () async {
       final userId = 'u1';
       final callerId = 'c1';
       final now = Timestamp.now();
-      
+
       // Setup caller as employee
       await fakeFirestore.collection('users').doc(callerId).set({
         'storeId': ownerStoreId,

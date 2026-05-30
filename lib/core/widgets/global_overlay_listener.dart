@@ -118,7 +118,9 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       if (kDebugMode) {
         debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');
       }
-      AppErrorHandler.logSilentError(e.toString(), 'GlobalOverlayListener._fetchAndApplyData', stackTrace: stack);
+      AppErrorHandler.logSilentError(
+          e.toString(), 'GlobalOverlayListener._fetchAndApplyData',
+          stackTrace: stack);
     }
   }
 

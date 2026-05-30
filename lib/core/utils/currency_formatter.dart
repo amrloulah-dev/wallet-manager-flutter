@@ -18,7 +18,7 @@ class CurrencyFormatter {
     if (amount == null) {
       return '0.00';
     }
-    
+
     if (showCurrency) {
       final formatter = NumberFormat.currency(
         locale: _locale,
@@ -42,13 +42,13 @@ class CurrencyFormatter {
     // Remove common currency symbols (ج.م., EGP, $, etc.), commas, and whitespace.
     // Replace anything that is not a digit or a dot with an empty string.
     var cleanedText = text.replaceAll(RegExp(r'[^\d.]'), '');
-    
+
     // If there are multiple dots (e.g. from "ج.م."), keep only the first one or the one before the decimal part
     // Actually, it's safer to remove trailing dots.
     while (cleanedText.endsWith('.')) {
       cleanedText = cleanedText.substring(0, cleanedText.length - 1);
     }
-    
+
     return double.tryParse(cleanedText) ?? 0.0;
   }
 }

@@ -44,13 +44,11 @@ class SubscriptionDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildStatusCard(
-                context, loc, planName, subscription, isLifetime),
+            _buildStatusCard(context, loc, planName, subscription, isLifetime),
             const SizedBox(height: 24),
             Text(
               loc.currentUsage,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildLimitItem(
@@ -77,8 +75,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const PaywallScreen()),
+                      MaterialPageRoute(builder: (_) => const PaywallScreen()),
                     );
                   },
                   icon: const Icon(Icons.upgrade),

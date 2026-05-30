@@ -286,6 +286,27 @@ class WalletModel {
     };
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'walletId': walletId,
+      'storeId': storeId,
+      'phoneNumber': phoneNumber,
+      'walletType': walletType.name,
+      'walletStatus': walletStatus.name,
+      'balance': balance,
+      'notes': notes,
+      'isActive': isActive,
+      'createdAt': createdAt?.toIso8601String(),
+      'createdBy': createdBy,
+      'updatedAt': updatedAt?.toIso8601String(),
+      'sendLimits': sendLimits.toMap(),
+      'receiveLimits': receiveLimits.toMap(),
+      'lastDailyReset': lastDailyReset?.toIso8601String(),
+      'lastMonthlyReset': lastMonthlyReset?.toIso8601String(),
+      'stats': stats.toMap(),
+    };
+  }
+
   WalletModel copyWith({
     String? walletId,
     String? storeId,
