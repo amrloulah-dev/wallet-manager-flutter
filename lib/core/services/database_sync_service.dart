@@ -337,24 +337,20 @@ class DatabaseSyncService {
     required String storeName,
     required String storePassword,
   }) async {
-    final deviceId = await _deviceRepository.getDeviceId();
-    var isEligibleForTrial =
-        await _deviceRepository.checkDeviceEligibility(deviceId);
-
-    if (isEligibleForTrial) {
-      final hasConsumed =
-          await _subscriptionRepository.hasDeviceConsumedTrial();
-      if (hasConsumed) {
-        isEligibleForTrial = false;
-      }
-    }
-
-    UserCredential userCredential =
-        await _authRepository.createUserWithEmail(email, password);
+    // 1. CREATE AUTH FIRST (To satisfy Firestore Security Rules request.auth != null)
+    UserCredential userCredential = await _authRepository.createUserWithEmail(email, password);
     final user = userCredential.user!;
-
     await user.updateDisplayName(ownerName);
 
+    // 2. NOW it is safe to check device eligibility
+    final deviceId = await _deviceRepository.getDeviceId();
+    var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
+    if (isEligibleForTrial) {
+      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
+      if (hasConsumed) isEligibleForTrial = false;
+    }
+
+    // 3. Delegate to sequential creation (NO BATCH)
     final result = await _createStoreAndUser(
       uid: user.uid,
       email: email,
@@ -436,12 +432,15 @@ class DatabaseSyncService {
       lastLogin: DateTime.now(),
     );
 
-    // Phase 4: Atomic Batch Creation
-    final batch = _firestore.batch();
-    await _storeRepository.createStore(newStore,
-        isEligibleForTrial: isEligibleForTrial, batch: batch);
-    await _userRepository.createUser(newOwner, batch: batch);
-    await batch.commit();
+    // ABANDON BATCH: Sequential creation to satisfy Firestore Security Rules
+    // 1. Create User first and wait for it
+    await _userRepository.createUser(newOwner);
+    
+    // 2. Short delay to allow Firestore rules to recognize the new user document
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    // 3. Now safely create the store
+    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial);
 
     final freshStore = await _storeRepository.getStoreById(storeId);
     final resolvedStore = freshStore ?? newStore;

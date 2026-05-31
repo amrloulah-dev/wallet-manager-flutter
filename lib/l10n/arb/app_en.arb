@@ -26,7 +26,8 @@
   "contactToRenew": "Contact us to renew license",
   "appSettings": "App Settings",
   "theme": "Theme",
-  "license": "License",
+  "license": "Subscriptions",
+  "subscriptionPlans": "Subscription Plans",
   "notAvailable": "Not Available",
   "logout": "Logout",
   "login": "Login",
@@ -481,19 +482,19 @@
   "unlockStoreCapabilities": "Unlock your store's capabilities",
   "paywallSubtitle": "Stop entering data manually. Automate your cash flow securely with advanced features.",
   "proYearlyTitle": "Pro Yearly Plan",
-  "proYearlyPrice": "999 / year",
-  "proFeature1": "Auto-sync transactions",
-  "proFeature2": "Manage up to 50 wallets",
-  "proFeature3": "Create employee accounts",
-  "proFeature4": "Dedicated support",
-  "lifetimeTitle": "Lifetime Plan",
-  "lifetimePrice": "2999 one-time only",
+  "proYearlyPrice": "1500 / year",
+  "proFeature1": "Manage up to 5 wallets",
+  "proFeature2": "Up to 3 employees",
+  "proFeature3": "Unlimited transactions",
+  "proFeature4": "Basic reports",
+  "lifetimeTitle": "Lifetime VIP Plan",
+  "lifetimePrice": "3000 one-time only",
   "lifetimeFeature1": "Unlimited wallets",
   "lifetimeFeature2": "Unlimited employees",
-  "lifetimeFeature3": "SMS notifications for customers",
+  "lifetimeFeature3": "Auto SMS Reading",
   "lifetimeFeature4": "VIP priority support",
   "mostPopular": "Most Popular",
-  "remainingSeats": "Only {count} seats left!",
+  "remainingSeats": "{count} seats remaining",
   "@remainingSeats": {
     "placeholders": {
       "count": {
@@ -514,9 +515,9 @@
     }
   },
   "paymentMethod": "Payment Method",
-  "transferToNumber": "Please transfer the amount to number: 01000000000",
-  "transferToAccount": "Please transfer the amount to account: instapay@bank",
-  "receiptNumber": "Receipt / Transaction Number",
+  "transferToNumber": "Please transfer the amount to: 01091264053",
+  "transferToAccount": "Please transfer the amount to: 01091264053",
+  "receiptNumber": "The phone number you transferred from",
   "fieldRequired": "This field is required",
   "confirmPayment": "Confirm Payment",
   "subscriptionRequestSent": "Subscription request sent successfully. Please wait for review.",
@@ -799,5 +800,25 @@
   "auth_error_store_already_exists": "This account already has a store",
   "auth_error_employee_fetch_failed": "An error occurred while fetching employee data",
   "auth_error_store_not_found": "The store associated with this employee could not be found",
-  "error_unexpected": "An unexpected error occurred"
+  "error_unexpected": "An unexpected error occurred",
+  "subscriptionExpired": "Your subscription has expired!",
+  "subscriptionExpiresToday": "Your subscription expires today!",
+  "trialEndingSoonDays": "Only {days} days left on your trial. Upgrade now!",
+  "@trialEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proEndingSoonDays": "Your annual subscription expires in {days} days. Renew now!",
+  "@proEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeRequiredToEnableSms": "This feature requires a plan upgrade",
+  "requestUpgradeFromOwner": "Please request a plan upgrade from the store owner"
 }

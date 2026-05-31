@@ -257,8 +257,14 @@ abstract class AppLocalizations {
   /// No description provided for @license.
   ///
   /// In ar, this message translates to:
-  /// **'الترخيص'**
+  /// **'الاشتراكات'**
   String get license;
+
+  /// No description provided for @subscriptionPlans.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقات الاشتراك'**
+  String get subscriptionPlans;
 
   /// No description provided for @notAvailable.
   ///
@@ -2675,43 +2681,43 @@ abstract class AppLocalizations {
   /// No description provided for @proYearlyPrice.
   ///
   /// In ar, this message translates to:
-  /// **'999 / سنة'**
+  /// **'1500 / سنة'**
   String get proYearlyPrice;
 
   /// No description provided for @proFeature1.
   ///
   /// In ar, this message translates to:
-  /// **'مزامنة المعاملات تلقائيا'**
+  /// **'إدارة حتى 5 محافظ'**
   String get proFeature1;
 
   /// No description provided for @proFeature2.
   ///
   /// In ar, this message translates to:
-  /// **'إدارة حتى 50 محفظة'**
+  /// **'حتى 3 موظفين'**
   String get proFeature2;
 
   /// No description provided for @proFeature3.
   ///
   /// In ar, this message translates to:
-  /// **'إنشاء حسابات للموظفين'**
+  /// **'معاملات غير محدودة'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In ar, this message translates to:
-  /// **'دعم فني متخصص'**
+  /// **'تقارير أساسية'**
   String get proFeature4;
 
   /// No description provided for @lifetimeTitle.
   ///
   /// In ar, this message translates to:
-  /// **'باقة مدى الحياة'**
+  /// **'باقة مدى الحياة VIP'**
   String get lifetimeTitle;
 
   /// No description provided for @lifetimePrice.
   ///
   /// In ar, this message translates to:
-  /// **'2999 فقط مره واحده'**
+  /// **'3000 فقط مرة واحدة'**
   String get lifetimePrice;
 
   /// No description provided for @lifetimeFeature1.
@@ -2729,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @lifetimeFeature3.
   ///
   /// In ar, this message translates to:
-  /// **'إشعارات SMS للعملاء'**
+  /// **'القراءة التلقائية للرسائل (SMS)'**
   String get lifetimeFeature3;
 
   /// No description provided for @lifetimeFeature4.
@@ -2747,7 +2753,7 @@ abstract class AppLocalizations {
   /// No description provided for @remainingSeats.
   ///
   /// In ar, this message translates to:
-  /// **'متبقي {count} مقاعد فقط!'**
+  /// **'{count} مقاعد متبقية'**
   String remainingSeats(int count);
 
   /// No description provided for @soldOut.
@@ -2789,19 +2795,19 @@ abstract class AppLocalizations {
   /// No description provided for @transferToNumber.
   ///
   /// In ar, this message translates to:
-  /// **'يرجى تحويل المبلغ إلى الرقم: 01000000000'**
+  /// **'يرجى تحويل المبلغ إلى الرقم: 01091264053'**
   String get transferToNumber;
 
   /// No description provided for @transferToAccount.
   ///
   /// In ar, this message translates to:
-  /// **'يرجى تحويل المبلغ إلى الحساب: instapay@bank'**
+  /// **'يرجى تحويل المبلغ إلى الرقم: 01091264053'**
   String get transferToAccount;
 
   /// No description provided for @receiptNumber.
   ///
   /// In ar, this message translates to:
-  /// **'رقم الإيصال / رقم العملية'**
+  /// **'رقم الهاتف الذي تم التحويل منه'**
   String get receiptNumber;
 
   /// No description provided for @fieldRequired.
@@ -3961,6 +3967,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حدث خطأ غير متوقع'**
   String get error_unexpected;
+
+  /// No description provided for @subscriptionExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت صلاحية اشتراكك!'**
+  String get subscriptionExpired;
+
+  /// No description provided for @subscriptionExpiresToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينتهي اشتراكك اليوم!'**
+  String get subscriptionExpiresToday;
+
+  /// No description provided for @trialEndingSoonDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي {days} أيام على انتهاء الفترة التجريبية. قم بالترقية الآن!'**
+  String trialEndingSoonDays(int days);
+
+  /// No description provided for @proEndingSoonDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'اشتراكك السنوي ينتهي خلال {days} أيام. جدد الآن!'**
+  String proEndingSoonDays(int days);
+
+  /// No description provided for @upgradeRequiredToEnableSms.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الميزة تتطلب ترقية الحساب'**
+  String get upgradeRequiredToEnableSms;
+
+  /// No description provided for @requestUpgradeFromOwner.
+  ///
+  /// In ar, this message translates to:
+  /// **'برجاء طلب ترقية الباقة من مالك المتجر'**
+  String get requestUpgradeFromOwner;
 }
 
 class _AppLocalizationsDelegate

@@ -89,7 +89,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get theme => 'Theme';
 
   @override
-  String get license => 'License';
+  String get license => 'Subscriptions';
+
+  @override
+  String get subscriptionPlans => 'Subscription Plans';
 
   @override
   String get notAvailable => 'Not Available';
@@ -1341,25 +1344,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proYearlyTitle => 'Pro Yearly Plan';
 
   @override
-  String get proYearlyPrice => '999 / year';
+  String get proYearlyPrice => '1500 / year';
 
   @override
-  String get proFeature1 => 'Auto-sync transactions';
+  String get proFeature1 => 'Manage up to 5 wallets';
 
   @override
-  String get proFeature2 => 'Manage up to 50 wallets';
+  String get proFeature2 => 'Up to 3 employees';
 
   @override
-  String get proFeature3 => 'Create employee accounts';
+  String get proFeature3 => 'Unlimited transactions';
 
   @override
-  String get proFeature4 => 'Dedicated support';
+  String get proFeature4 => 'Basic reports';
 
   @override
-  String get lifetimeTitle => 'Lifetime Plan';
+  String get lifetimeTitle => 'Lifetime VIP Plan';
 
   @override
-  String get lifetimePrice => '2999 one-time only';
+  String get lifetimePrice => '3000 one-time only';
 
   @override
   String get lifetimeFeature1 => 'Unlimited wallets';
@@ -1368,7 +1371,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lifetimeFeature2 => 'Unlimited employees';
 
   @override
-  String get lifetimeFeature3 => 'SMS notifications for customers';
+  String get lifetimeFeature3 => 'Auto SMS Reading';
 
   @override
   String get lifetimeFeature4 => 'VIP priority support';
@@ -1378,7 +1381,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String remainingSeats(int count) {
-    return 'Only $count seats left!';
+    return '$count seats remaining';
   }
 
   @override
@@ -1403,15 +1406,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethod => 'Payment Method';
 
   @override
-  String get transferToNumber =>
-      'Please transfer the amount to number: 01000000000';
+  String get transferToNumber => 'Please transfer the amount to: 01091264053';
 
   @override
-  String get transferToAccount =>
-      'Please transfer the amount to account: instapay@bank';
+  String get transferToAccount => 'Please transfer the amount to: 01091264053';
 
   @override
-  String get receiptNumber => 'Receipt / Transaction Number';
+  String get receiptNumber => 'The phone number you transferred from';
 
   @override
   String get fieldRequired => 'This field is required';
@@ -2109,4 +2110,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_unexpected => 'An unexpected error occurred';
+
+  @override
+  String get subscriptionExpired => 'Your subscription has expired!';
+
+  @override
+  String get subscriptionExpiresToday => 'Your subscription expires today!';
+
+  @override
+  String trialEndingSoonDays(int days) {
+    return 'Only $days days left on your trial. Upgrade now!';
+  }
+
+  @override
+  String proEndingSoonDays(int days) {
+    return 'Your annual subscription expires in $days days. Renew now!';
+  }
+
+  @override
+  String get upgradeRequiredToEnableSms =>
+      'This feature requires a plan upgrade';
+
+  @override
+  String get requestUpgradeFromOwner =>
+      'Please request a plan upgrade from the store owner';
 }

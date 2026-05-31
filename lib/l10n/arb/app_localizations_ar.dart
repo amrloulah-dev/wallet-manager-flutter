@@ -89,7 +89,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get theme => 'المظهر';
 
   @override
-  String get license => 'الترخيص';
+  String get license => 'الاشتراكات';
+
+  @override
+  String get subscriptionPlans => 'باقات الاشتراك';
 
   @override
   String get notAvailable => 'غير متوفر';
@@ -1338,25 +1341,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get proYearlyTitle => 'باقة برو السنوية';
 
   @override
-  String get proYearlyPrice => '999 / سنة';
+  String get proYearlyPrice => '1500 / سنة';
 
   @override
-  String get proFeature1 => 'مزامنة المعاملات تلقائيا';
+  String get proFeature1 => 'إدارة حتى 5 محافظ';
 
   @override
-  String get proFeature2 => 'إدارة حتى 50 محفظة';
+  String get proFeature2 => 'حتى 3 موظفين';
 
   @override
-  String get proFeature3 => 'إنشاء حسابات للموظفين';
+  String get proFeature3 => 'معاملات غير محدودة';
 
   @override
-  String get proFeature4 => 'دعم فني متخصص';
+  String get proFeature4 => 'تقارير أساسية';
 
   @override
-  String get lifetimeTitle => 'باقة مدى الحياة';
+  String get lifetimeTitle => 'باقة مدى الحياة VIP';
 
   @override
-  String get lifetimePrice => '2999 فقط مره واحده';
+  String get lifetimePrice => '3000 فقط مرة واحدة';
 
   @override
   String get lifetimeFeature1 => 'عدد لا نهائي من المحافظ';
@@ -1365,7 +1368,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lifetimeFeature2 => 'عدد لا نهائي من الموظفين';
 
   @override
-  String get lifetimeFeature3 => 'إشعارات SMS للعملاء';
+  String get lifetimeFeature3 => 'القراءة التلقائية للرسائل (SMS)';
 
   @override
   String get lifetimeFeature4 => 'أولوية الدعم الفني VIP';
@@ -1375,7 +1378,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String remainingSeats(int count) {
-    return 'متبقي $count مقاعد فقط!';
+    return '$count مقاعد متبقية';
   }
 
   @override
@@ -1400,13 +1403,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paymentMethod => 'طريقة الدفع';
 
   @override
-  String get transferToNumber => 'يرجى تحويل المبلغ إلى الرقم: 01000000000';
+  String get transferToNumber => 'يرجى تحويل المبلغ إلى الرقم: 01091264053';
 
   @override
-  String get transferToAccount => 'يرجى تحويل المبلغ إلى الحساب: instapay@bank';
+  String get transferToAccount => 'يرجى تحويل المبلغ إلى الرقم: 01091264053';
 
   @override
-  String get receiptNumber => 'رقم الإيصال / رقم العملية';
+  String get receiptNumber => 'رقم الهاتف الذي تم التحويل منه';
 
   @override
   String get fieldRequired => 'هذا الحقل مطلوب';
@@ -2093,4 +2096,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get error_unexpected => 'حدث خطأ غير متوقع';
+
+  @override
+  String get subscriptionExpired => 'انتهت صلاحية اشتراكك!';
+
+  @override
+  String get subscriptionExpiresToday => 'ينتهي اشتراكك اليوم!';
+
+  @override
+  String trialEndingSoonDays(int days) {
+    return 'متبقي $days أيام على انتهاء الفترة التجريبية. قم بالترقية الآن!';
+  }
+
+  @override
+  String proEndingSoonDays(int days) {
+    return 'اشتراكك السنوي ينتهي خلال $days أيام. جدد الآن!';
+  }
+
+  @override
+  String get upgradeRequiredToEnableSms => 'هذه الميزة تتطلب ترقية الحساب';
+
+  @override
+  String get requestUpgradeFromOwner => 'برجاء طلب ترقية الباقة من مالك المتجر';
 }

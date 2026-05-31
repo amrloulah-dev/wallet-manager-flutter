@@ -67,6 +67,8 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
   @override
   bool get isOwner => true;
   @override
+  bool get isEmployee => false;
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -80,6 +82,8 @@ class DummySubscriptionProvider extends ChangeNotifier
   bool get isSuspended => false;
   @override
   bool get isExpired => false;
+  @override
+  int? get daysRemaining => 14;
   @override
   SubscriptionRequestModel? get latestRequest => null;
   @override

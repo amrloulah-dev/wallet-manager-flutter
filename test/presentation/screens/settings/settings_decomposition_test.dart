@@ -80,6 +80,8 @@ void main() {
     );
     when(() => mockAuthProvider.isTrial).thenReturn(true);
     when(() => mockAuthProvider.trialDaysRemaining).thenReturn(7);
+    when(() => mockAuthProvider.isOwner).thenReturn(true);
+    when(() => mockAuthProvider.isEmployee).thenReturn(false);
 
     when(() => mockSubProvider.isExpired).thenReturn(false);
     when(() => mockSubProvider.daysRemaining).thenReturn(7);

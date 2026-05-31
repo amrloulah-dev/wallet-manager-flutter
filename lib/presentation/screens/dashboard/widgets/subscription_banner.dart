@@ -3,28 +3,21 @@ import 'package:provider/provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
 import '../../../../l10n/arb/app_localizations.dart';
+import '../../../../core/enums/subscription_enums.dart';
 
 class SubscriptionBanner extends StatelessWidget {
   const SubscriptionBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final subscription = context.select<AuthProvider, dynamic>(
-      (p) => p.currentStore?.subscription,
-    );
-    final isTrial = context.select<AuthProvider, bool>((p) => p.isTrial);
-    final trialDaysRemaining = context.select<AuthProvider, int?>(
-      (p) => p.trialDaysRemaining,
-    );
-    final latestRequest = context.select<SubscriptionProvider, dynamic>(
-      (p) => p.latestRequest,
-    );
-    final isExpired = context.select<SubscriptionProvider, bool>(
-      (p) => p.isExpired,
-    );
-    final hasDismissedRejection = context.select<SubscriptionProvider, bool>(
-      (p) => p.hasDismissedRejection,
-    );
+    final authProvider = context.watch<AuthProvider>();
+    final subscriptionProvider = context.watch<SubscriptionProvider>();
+    final subscription = authProvider.currentStore?.subscription;
+    final latestRequest = subscriptionProvider.latestRequest;
+    final isExpired = subscriptionProvider.isExpired;
+    final hasDismissedRejection = subscriptionProvider.hasDismissedRejection;
+    final daysRemaining = subscriptionProvider.daysRemaining;
+    
     final l10n = AppLocalizations.of(context)!;
 
     if (subscription == null) return const SizedBox.shrink();
@@ -38,27 +31,16 @@ class SubscriptionBanner extends StatelessWidget {
           color: Colors.orange,
           message: l10n.pendingSubscriptionReview,
         );
-      } else if (latestRequest.status == 'approved' && !isExpired) {
-        // Technically if it's approved, the cloud function updates the subscription.
-        // But if we want to show a short banner, we can just optionally show it.
-        // It mostly matters for rejection.
-      } else if (latestRequest.status == 'rejected') {
-        // H009: Dismissible rejection banner
-        if (hasDismissedRejection) {
-          // User dismissed this rejection banner — don't show it
-        } else {
-          return _buildBanner(
-            context,
-            icon: Icons.error,
-            color: Colors.red,
-            message: l10n.rejectedSubscriptionRequest,
-            onDismiss: () =>
-                context.read<SubscriptionProvider>().dismissRejectionBanner(),
-          );
-        }
+      } else if (latestRequest.status == 'rejected' && !hasDismissedRejection) {
+        return _buildBanner(
+          context,
+          icon: Icons.error,
+          color: Colors.red,
+          message: l10n.rejectedSubscriptionRequest,
+          onDismiss: () => subscriptionProvider.dismissRejectionBanner(),
+        );
       }
     } else if (subscription.pendingRequestDate != null) {
-      // Fallback if latestRequest isn't available yet or something
       return _buildBanner(
         context,
         icon: Icons.access_time_filled,
@@ -67,30 +49,55 @@ class SubscriptionBanner extends StatelessWidget {
       );
     }
 
-    // Check if expired
-    if (isExpired) {
-      return _buildBanner(
-        context,
-        icon: Icons.warning_rounded,
-        color: Colors.redAccent,
-        message: l10n.subscriptionExpiredRenew,
-      );
-    }
-
-    // Check if trial with <= 3 days left
-    if (isTrial) {
-      final daysLeft = trialDaysRemaining ?? 0;
-      if (daysLeft <= 3 && daysLeft > 0) {
-        return _buildBanner(
-          context,
-          icon: Icons.info_outline,
-          color: Colors.blueAccent,
-          message: l10n.trialEndingSoon(daysLeft),
-        );
+    // Now evaluate plan and days
+    final plan = subscription.planId;
+    
+    bool shouldShowBanner = false;
+    if (plan == SubscriptionPlan.trial) {
+      shouldShowBanner = true;
+    } else if (plan == SubscriptionPlan.proYearly) {
+      if (daysRemaining != null && daysRemaining <= 14) {
+        shouldShowBanner = true;
       }
     }
 
-    return const SizedBox.shrink();
+    if (!shouldShowBanner) {
+      return const SizedBox.shrink();
+    }
+
+    // Format the message
+    String message = '';
+    Color color = Colors.orange;
+    IconData icon = Icons.info_outline;
+
+    if (daysRemaining == null) {
+      return const SizedBox.shrink();
+    }
+
+    if (daysRemaining < 0) { // negative days
+      message = l10n.subscriptionExpired;
+      color = Colors.redAccent;
+      icon = Icons.warning_rounded;
+    } else if (daysRemaining == 0) {
+      message = l10n.subscriptionExpiresToday;
+      color = Colors.redAccent;
+      icon = Icons.warning_rounded;
+    } else {
+      if (plan == SubscriptionPlan.trial) {
+        message = l10n.trialEndingSoonDays(daysRemaining);
+        color = Colors.blueAccent;
+      } else {
+        message = l10n.proEndingSoonDays(daysRemaining);
+        color = Colors.orange;
+      }
+    }
+
+    return _buildBanner(
+      context,
+      icon: icon,
+      color: color,
+      message: message,
+    );
   }
 
   Widget _buildBanner(BuildContext context,

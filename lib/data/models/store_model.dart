@@ -232,8 +232,9 @@ class StoreSubscription {
   /// T058: Days remaining computed from a pre-resolved server timestamp.
   int? daysRemainingAt(DateTime serverNow) {
     if (endDate == null) return null; // Lifetime — no end date
-    final remaining = endDate!.difference(serverNow);
-    return remaining.inDays >= 0 ? remaining.inDays + 1 : 0;
+    final endDateOnly = DateTime(endDate!.year, endDate!.month, endDate!.day);
+    final serverNowOnly = DateTime(serverNow.year, serverNow.month, serverNow.day);
+    return endDateOnly.difference(serverNowOnly).inDays;
   }
 
   factory StoreSubscription.migratedLifetime() {

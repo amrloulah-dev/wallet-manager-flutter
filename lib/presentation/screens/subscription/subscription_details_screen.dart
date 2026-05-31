@@ -5,6 +5,7 @@ import '../../../providers/auth_provider.dart';
 import 'paywall_screen.dart';
 import '../../../data/models/store_model.dart';
 import '../../../providers/employee_provider.dart';
+import '../../../providers/wallet_provider.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/enums/subscription_enums.dart';
 
@@ -17,9 +18,11 @@ class SubscriptionDetailsScreen extends StatelessWidget {
     final subscription = context.select<AuthProvider, StoreSubscription?>(
       (p) => p.currentStore?.subscription,
     );
-    final stats = context.select<AuthProvider, StoreStats?>(
-      (p) => p.currentStore?.stats,
-    );
+    final isWalletLoading = context.select<WalletProvider, bool>((p) => p.isLoading);
+    final walletCount = context.select<WalletProvider, int>((p) => p.wallets.length);
+
+    final isEmployeeLoading = context.select<EmployeeProvider, bool>((p) => p.isLoading);
+    final employeeCount = context.select<EmployeeProvider, int>((p) => p.employeesCount);
 
     if (subscription == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -54,18 +57,19 @@ class SubscriptionDetailsScreen extends StatelessWidget {
             _buildLimitItem(
               context,
               title: loc.activeWallets,
-              current: stats?.totalWallets ?? 0,
+              current: walletCount,
               max: subscription.maxWallets,
               icon: Icons.account_balance_wallet,
+              isLoading: isWalletLoading,
             ),
             const SizedBox(height: 12),
             _buildLimitItem(
               context,
               title: loc.employeeAccounts,
-              current: context.select<EmployeeProvider, int>(
-                  (p) => p.employeesCount), // dynamic employee count
+              current: employeeCount,
               max: subscription.maxEmployees,
               icon: Icons.people,
+              isLoading: isEmployeeLoading,
             ),
             const SizedBox(height: 32),
             if (!isLifetime) ...[
@@ -165,7 +169,8 @@ class SubscriptionDetailsScreen extends StatelessWidget {
       {required String title,
       required int current,
       required int max,
-      required IconData icon}) {
+      required IconData icon,
+      bool isLoading = false}) {
     final double percent = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final isMax = max == 999;
 
@@ -195,15 +200,22 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              Text(
-                isMax ? '$current / ∞' : '$current / $max',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Text(
+                  isMax ? '$current / ∞' : '$current / $max',
+                  style:
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
             ],
           ),
           const SizedBox(height: 12),
-          if (!isMax)
+          if (!isMax && !isLoading)
             LinearProgressIndicator(
               value: percent,
               backgroundColor: Colors.grey[200],

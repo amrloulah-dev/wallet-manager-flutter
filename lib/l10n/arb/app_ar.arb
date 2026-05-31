@@ -26,7 +26,8 @@
   "contactToRenew": "تواصل معنا لتجديد الترخيص",
   "appSettings": "إعدادات التطبيق",
   "theme": "المظهر",
-  "license": "الترخيص",
+  "license": "الاشتراكات",
+  "subscriptionPlans": "باقات الاشتراك",
   "notAvailable": "غير متوفر",
   "logout": "تسجيل الخروج",
   "login": "تسجيل الدخول",
@@ -495,19 +496,19 @@
   "unlockStoreCapabilities": "فتح إمكانيات متجرك",
   "paywallSubtitle": "توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.",
   "proYearlyTitle": "باقة برو السنوية",
-  "proYearlyPrice": "999 / سنة",
-  "proFeature1": "مزامنة المعاملات تلقائيا",
-  "proFeature2": "إدارة حتى 50 محفظة",
-  "proFeature3": "إنشاء حسابات للموظفين",
-  "proFeature4": "دعم فني متخصص",
-  "lifetimeTitle": "باقة مدى الحياة",
-  "lifetimePrice": "2999 فقط مره واحده",
+  "proYearlyPrice": "1500 / سنة",
+  "proFeature1": "إدارة حتى 5 محافظ",
+  "proFeature2": "حتى 3 موظفين",
+  "proFeature3": "معاملات غير محدودة",
+  "proFeature4": "تقارير أساسية",
+  "lifetimeTitle": "باقة مدى الحياة VIP",
+  "lifetimePrice": "3000 فقط مرة واحدة",
   "lifetimeFeature1": "عدد لا نهائي من المحافظ",
   "lifetimeFeature2": "عدد لا نهائي من الموظفين",
-  "lifetimeFeature3": "إشعارات SMS للعملاء",
+  "lifetimeFeature3": "القراءة التلقائية للرسائل (SMS)",
   "lifetimeFeature4": "أولوية الدعم الفني VIP",
   "mostPopular": "الأكثر طلباً",
-  "remainingSeats": "متبقي {count} مقاعد فقط!",
+  "remainingSeats": "{count} مقاعد متبقية",
   "@remainingSeats": {
     "placeholders": {
       "count": {
@@ -528,9 +529,9 @@
     }
   },
   "paymentMethod": "طريقة الدفع",
-  "transferToNumber": "يرجى تحويل المبلغ إلى الرقم: 01000000000",
-  "transferToAccount": "يرجى تحويل المبلغ إلى الحساب: instapay@bank",
-  "receiptNumber": "رقم الإيصال / رقم العملية",
+  "transferToNumber": "يرجى تحويل المبلغ إلى الرقم: 01091264053",
+  "transferToAccount": "يرجى تحويل المبلغ إلى الرقم: 01091264053",
+  "receiptNumber": "رقم الهاتف الذي تم التحويل منه",
   "fieldRequired": "هذا الحقل مطلوب",
   "subscriptionRequestSent": "تم إرسال طلب الاشتراك بنجاح. يرجى الانتظار للمراجعة.",
   "errorOccurred": "حدث خطأ:",
@@ -792,5 +793,25 @@
   "auth_error_store_already_exists": "هذا الحساب يمتلك متجرًا بالفعل",
   "auth_error_employee_fetch_failed": "حدث خطأ أثناء جلب بيانات الموظف",
   "auth_error_store_not_found": "لم يتم العثور على المتجر المرتبط بهذا الموظف",
-  "error_unexpected": "حدث خطأ غير متوقع"
+  "error_unexpected": "حدث خطأ غير متوقع",
+  "subscriptionExpired": "انتهت صلاحية اشتراكك!",
+  "subscriptionExpiresToday": "ينتهي اشتراكك اليوم!",
+  "trialEndingSoonDays": "متبقي {days} أيام على انتهاء الفترة التجريبية. قم بالترقية الآن!",
+  "@trialEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proEndingSoonDays": "اشتراكك السنوي ينتهي خلال {days} أيام. جدد الآن!",
+  "@proEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeRequiredToEnableSms": "هذه الميزة تتطلب ترقية الحساب",
+  "requestUpgradeFromOwner": "برجاء طلب ترقية الباقة من مالك المتجر"
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/services/sms_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -7,6 +8,9 @@ import '../../../../core/errors/app_error_handler.dart';
 import '../../../../data/models/sim_wallet_config.dart';
 import '../../../../data/services/local_storage_service.dart';
 import '../../../../l10n/arb/app_localizations.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../providers/subscription_provider.dart';
+import '../../../../core/constants/route_constants.dart';
 import 'section_title.dart';
 
 class SmsAutomationSection extends StatefulWidget {
@@ -149,6 +153,11 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final subProvider = context.watch<SubscriptionProvider>();
+    final isExpired = subProvider.isExpired;
+    final isOwner = authProvider.isOwner;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,18 +170,34 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Column(
             children: [
-              SwitchListTile(
-                title: Text(
-                  AppLocalizations.of(context)!.enableAutoSmsReading,
-                  style: AppTextStyles.bodyLarge,
+              GestureDetector(
+                onTap: isExpired
+                    ? () {
+                        final l10n = AppLocalizations.of(context)!;
+                        if (isOwner) {
+                          ToastUtils.showError(l10n.upgradeRequiredToEnableSms);
+                          Navigator.pushNamed(context, RouteConstants.upgradeScreen);
+                        } else {
+                          ToastUtils.showError(l10n.requestUpgradeFromOwner);
+                        }
+                      }
+                    : null,
+                child: AbsorbPointer(
+                  absorbing: isExpired,
+                  child: SwitchListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!.enableAutoSmsReading,
+                      style: AppTextStyles.bodyLarge,
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.autoDetectTransactions,
+                      style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
+                    ),
+                    value: _isEnabled,
+                    activeThumbColor: AppColors.primary,
+                    onChanged: isExpired ? null : _toggleSmsAutomation,
+                  ),
                 ),
-                subtitle: Text(
-                  AppLocalizations.of(context)!.autoDetectTransactions,
-                  style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
-                ),
-                value: _isEnabled,
-                activeThumbColor: AppColors.primary,
-                onChanged: _toggleSmsAutomation,
               ),
               if (_isEnabled) ...[
                 const Divider(),
@@ -207,8 +232,12 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
 
   Widget _buildSimDropdown(
       int slot, String label, SimWalletConfig? currentConfig) {
+    final String? currentId = currentConfig?.walletId;
+    final bool valueExists = currentId != null && _availableWallets.any((w) => w['id'] == currentId);
+    final String? safeValue = valueExists ? currentId : null;
+
     return DropdownButtonFormField<String>(
-      value: currentConfig?.walletId,
+      value: safeValue,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

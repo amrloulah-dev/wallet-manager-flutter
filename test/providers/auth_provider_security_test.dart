@@ -40,6 +40,7 @@ void main() {
       AnalyticsService.isTestMode = true;
       SharedPreferences.setMockInitialValues({});
       mockAuthRepository = MockAuthRepository();
+    when(() => mockAuthRepository.authStateChanges()).thenAnswer((_) => const Stream.empty());
       mockDatabaseSyncService = MockDatabaseSyncService();
       mockStoreRepository = MockStoreRepository();
       mockUserRepository = MockUserRepository();
@@ -91,3 +92,4 @@ void main() {
     });
   });
 }
+

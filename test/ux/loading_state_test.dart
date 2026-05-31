@@ -57,6 +57,7 @@ void main() {
     final mockAuth = MockFirebaseAuth();
 
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+    when(() => mockAuthRepo.authStateChanges()).thenAnswer((_) => const Stream.empty());
     when(() => mockAuthRepo.signOut()).thenAnswer((_) async {});
     when(() => mockStorage.clearSession()).thenAnswer((_) async {});
     when(() => mockDatabaseSyncService.tryAutoLogin())

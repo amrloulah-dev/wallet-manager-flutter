@@ -38,6 +38,24 @@ class AppInfoSection extends StatelessWidget {
                   );
                 },
               ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.star_outline,
+                    color: AppColors.primary),
+                title: Text(AppLocalizations.of(context)!.subscriptionPlans,
+                    style: AppTextStyles.bodyLarge),
+                trailing: Icon(
+                    IconData(Icons.arrow_forward_ios.codePoint,
+                        fontFamily: Icons.arrow_forward_ios.fontFamily,
+                        matchTextDirection: true),
+                    size: 16),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    RouteConstants.upgradeScreen,
+                  );
+                },
+              ),
             ],
           ),
         ),

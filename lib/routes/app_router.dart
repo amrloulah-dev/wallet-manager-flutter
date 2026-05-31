@@ -163,10 +163,16 @@ class AppRouter {
     return PageRouteBuilder(
       settings: settings,
       pageBuilder: (context, animation, secondaryAnimation) {
-        // Enforce Security Guard at the UI level (Axis 2/Phase 6)
-        if (!PermissionHelper.canAccessScreen(context, settings.name ?? '')) {
+        final routeName = settings.name ?? '';
+        
+        // 1. Define Public Routes that DO NOT require permissions
+        final isPublicRoute = routeName == RouteConstants.loginLanding || 
+                              routeName == RouteConstants.storeRegistration;
+
+        // 2. Enforce Security Guard ONLY for private routes
+        if (!isPublicRoute && !PermissionHelper.canAccessScreen(context, routeName)) {
           // If denied, redirect to Dashboard on next frame and show message
-          final msg = AppLocalizations.of(context)!.accessDenied;
+          final msg = AppLocalizations.of(context)?.accessDenied ?? 'Access Denied';
           Future.microtask(() {
             if (!context.mounted) return;
             Navigator.of(context).pushNamedAndRemoveUntil(
@@ -178,6 +184,7 @@ class AppRouter {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
+        
         return page;
       },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
