@@ -2681,31 +2681,31 @@ abstract class AppLocalizations {
   /// No description provided for @proYearlyPrice.
   ///
   /// In ar, this message translates to:
-  /// **'1500 / سنة'**
+  /// **'1200 جنيه / سنة'**
   String get proYearlyPrice;
 
   /// No description provided for @proFeature1.
   ///
   /// In ar, this message translates to:
-  /// **'إدارة حتى 5 محافظ'**
+  /// **'قراءة المعاملات تلقائياً'**
   String get proFeature1;
 
   /// No description provided for @proFeature2.
   ///
   /// In ar, this message translates to:
-  /// **'حتى 3 موظفين'**
+  /// **'إدارة مرنة حتى 50 محفظة'**
   String get proFeature2;
 
   /// No description provided for @proFeature3.
   ///
   /// In ar, this message translates to:
-  /// **'معاملات غير محدودة'**
+  /// **'بناء فريق عمل حتى 20 موظف'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In ar, this message translates to:
-  /// **'تقارير أساسية'**
+  /// **'دعم فني مخصص'**
   String get proFeature4;
 
   /// No description provided for @lifetimeTitle.
@@ -2717,25 +2717,25 @@ abstract class AppLocalizations {
   /// No description provided for @lifetimePrice.
   ///
   /// In ar, this message translates to:
-  /// **'3000 فقط مرة واحدة'**
+  /// **'2500 جنيه فقط مرة واحدة'**
   String get lifetimePrice;
 
   /// No description provided for @lifetimeFeature1.
   ///
   /// In ar, this message translates to:
-  /// **'عدد لا نهائي من المحافظ'**
+  /// **'قراءة المعاملات تلقائياً'**
   String get lifetimeFeature1;
 
   /// No description provided for @lifetimeFeature2.
   ///
   /// In ar, this message translates to:
-  /// **'عدد لا نهائي من الموظفين'**
+  /// **'عدد لا نهائي من المحافظ'**
   String get lifetimeFeature2;
 
   /// No description provided for @lifetimeFeature3.
   ///
   /// In ar, this message translates to:
-  /// **'القراءة التلقائية للرسائل (SMS)'**
+  /// **'عدد لا نهائي من الموظفين'**
   String get lifetimeFeature3;
 
   /// No description provided for @lifetimeFeature4.

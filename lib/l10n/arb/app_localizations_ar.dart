@@ -1341,34 +1341,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get proYearlyTitle => 'باقة برو السنوية';
 
   @override
-  String get proYearlyPrice => '1500 / سنة';
+  String get proYearlyPrice => '1200 جنيه / سنة';
 
   @override
-  String get proFeature1 => 'إدارة حتى 5 محافظ';
+  String get proFeature1 => 'قراءة المعاملات تلقائياً';
 
   @override
-  String get proFeature2 => 'حتى 3 موظفين';
+  String get proFeature2 => 'إدارة مرنة حتى 50 محفظة';
 
   @override
-  String get proFeature3 => 'معاملات غير محدودة';
+  String get proFeature3 => 'بناء فريق عمل حتى 20 موظف';
 
   @override
-  String get proFeature4 => 'تقارير أساسية';
+  String get proFeature4 => 'دعم فني مخصص';
 
   @override
   String get lifetimeTitle => 'باقة مدى الحياة VIP';
 
   @override
-  String get lifetimePrice => '3000 فقط مرة واحدة';
+  String get lifetimePrice => '2500 جنيه فقط مرة واحدة';
 
   @override
-  String get lifetimeFeature1 => 'عدد لا نهائي من المحافظ';
+  String get lifetimeFeature1 => 'قراءة المعاملات تلقائياً';
 
   @override
-  String get lifetimeFeature2 => 'عدد لا نهائي من الموظفين';
+  String get lifetimeFeature2 => 'عدد لا نهائي من المحافظ';
 
   @override
-  String get lifetimeFeature3 => 'القراءة التلقائية للرسائل (SMS)';
+  String get lifetimeFeature3 => 'عدد لا نهائي من الموظفين';
 
   @override
   String get lifetimeFeature4 => 'أولوية الدعم الفني VIP';

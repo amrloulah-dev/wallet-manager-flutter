@@ -1344,34 +1344,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proYearlyTitle => 'Pro Yearly Plan';
 
   @override
-  String get proYearlyPrice => '1500 / year';
+  String get proYearlyPrice => '1200 EGP / year';
 
   @override
-  String get proFeature1 => 'Manage up to 5 wallets';
+  String get proFeature1 => 'Auto-sync transactions';
 
   @override
-  String get proFeature2 => 'Up to 3 employees';
+  String get proFeature2 => 'Flexible management of up to 50 wallets';
 
   @override
-  String get proFeature3 => 'Unlimited transactions';
+  String get proFeature3 => 'Build a team of up to 20 employees';
 
   @override
-  String get proFeature4 => 'Basic reports';
+  String get proFeature4 => 'Dedicated technical support';
 
   @override
   String get lifetimeTitle => 'Lifetime VIP Plan';
 
   @override
-  String get lifetimePrice => '3000 one-time only';
+  String get lifetimePrice => '2500 EGP one-time only';
 
   @override
-  String get lifetimeFeature1 => 'Unlimited wallets';
+  String get lifetimeFeature1 => 'Auto-sync transactions';
 
   @override
-  String get lifetimeFeature2 => 'Unlimited employees';
+  String get lifetimeFeature2 => 'Unlimited wallets';
 
   @override
-  String get lifetimeFeature3 => 'Auto SMS Reading';
+  String get lifetimeFeature3 => 'Unlimited employees';
 
   @override
   String get lifetimeFeature4 => 'VIP priority support';

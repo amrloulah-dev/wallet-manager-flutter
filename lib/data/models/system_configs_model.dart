@@ -15,7 +15,7 @@ class SystemConfigsModel {
     this.vfCashNumber = '',
     this.instaPayHandle = '',
     this.lifetimePlanEnabled = true,
-    this.remainingLifetimeSeats = 100,
+    this.remainingLifetimeSeats = 50,
   });
 
   factory SystemConfigsModel.fromFirestore(DocumentSnapshot doc) {
@@ -28,7 +28,7 @@ class SystemConfigsModel {
       instaPayHandle: data['instaPayHandle'] ?? '',
       lifetimePlanEnabled: data['lifetimePlanEnabled'] ?? true,
       remainingLifetimeSeats:
-          NumberParser.toInt(data['remainingLifetimeSeats'], 100),
+          NumberParser.toInt(data['remainingLifetimeSeats'], 50),
     );
   }
 }
