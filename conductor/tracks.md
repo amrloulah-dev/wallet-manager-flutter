@@ -7,8 +7,3 @@
 
 - [~] **Track: Fix Logout Navigation & Debt Filters**
 *Link: [./tracks/logout_and_debt_filters_20260529/](./tracks/logout_and_debt_filters_20260529/)*
-
----
-
-- [ ] **Track: Subscription & Monetization Refactor**
-*Link: [./tracks/subscription_refactor_20260531/](./tracks/subscription_refactor_20260531/)*
