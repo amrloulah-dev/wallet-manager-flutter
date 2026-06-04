@@ -1448,6 +1448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueButton => 'Continue';
 
   @override
+  String get continueWithFreePlan => 'Continue with Free Plan';
+
+  @override
   String get subscriptionUnderReview =>
       'Your subscription request is being reviewed.';
 
@@ -2134,4 +2137,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestUpgradeFromOwner =>
       'Please request a plan upgrade from the store owner';
+
+  @override
+  String get employeeLoginBlockedSubscriptionExpired =>
+      'Cannot login as employee because the store\'s subscription has expired.';
+
+  @override
+  String get walletsLimitExceededFree =>
+      'You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more.';
 }

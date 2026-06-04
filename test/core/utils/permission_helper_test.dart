@@ -16,6 +16,7 @@ void main() {
 
   setUp(() {
     mockAuth = MockAuthProvider();
+    when(() => mockAuth.isAuthenticated).thenReturn(true);
   });
 
   Widget createTestWidget(Widget child) {

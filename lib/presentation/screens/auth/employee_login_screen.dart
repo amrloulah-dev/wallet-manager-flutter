@@ -76,6 +76,13 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     final authProvider = context.read<AuthProvider>();
 
     try {
+      // Check if store subscription is expired before attempting login
+      // We must abort login and show toast according to Phase 5 spec
+      if (widget.store.subscription.isExpiredAt(DateTime.now())) {
+        ToastUtils.showError(l10n.subscriptionExpired);
+        return;
+      }
+
       // 1. Verify Store Password
       if (!await PasswordHasher.verifyPassword(
           _storePasswordController.text, widget.store.storePassword)) {
@@ -107,7 +114,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
           return;
         }
 
-        Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
+        Navigator.pushReplacementNamed(context, RouteConstants.mainDashboard);
         ToastUtils.showSuccess(
             '${l10n.welcome} ${_selectedEmployee!.fullName}');
       } else {

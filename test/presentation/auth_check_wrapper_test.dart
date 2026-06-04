@@ -57,7 +57,7 @@ void main() {
           return child!;
         },
         routes: {
-          RouteConstants.ownerDashboard: (context) => const Scaffold(
+          RouteConstants.mainDashboard: (context) => const Scaffold(
                 body: Text('Dashboard Screen'),
               ),
           RouteConstants.loginLanding: (context) => const AuthCheckWrapper(),

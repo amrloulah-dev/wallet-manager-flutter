@@ -11,8 +11,8 @@ class RouteConstants {
   // ===========================
   // Home
   // ===========================
-  static const String ownerDashboard =
-      '/owner-dashboard'; // Main dashboard for store owners
+  static const String mainDashboard =
+      '/main-dashboard'; // Main dashboard for store owners and employees
 
   // ===========================
   // Wallets

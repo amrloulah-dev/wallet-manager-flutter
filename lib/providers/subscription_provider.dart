@@ -199,8 +199,17 @@ class SubscriptionProvider extends BaseProvider {
   /// All expiration checks MUST go through this method.
   DateTime _serverNow() => TimeService.now();
 
-  int get maxWallets => _subscription?.maxWallets ?? 3;
-  int get maxEmployees => _subscription?.maxEmployees ?? 1;
+  int get maxWallets {
+    // T053: Fallback to Free tier caps when explicitly expired with no pending request
+    if (_subscription != null && isExpired && !hasPendingRequest) return 2;
+    return _subscription?.maxWallets ?? 2;
+  }
+
+  int get maxEmployees {
+    // T053: Fallback to Free tier caps when explicitly expired with no pending request
+    if (_subscription != null && isExpired && !hasPendingRequest) return 0;
+    return _subscription?.maxEmployees ?? 0;
+  }
   bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
 
   bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;

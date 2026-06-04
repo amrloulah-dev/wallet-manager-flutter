@@ -2870,6 +2870,12 @@ abstract class AppLocalizations {
   /// **'متابعة'**
   String get continueButton;
 
+  /// No description provided for @continueWithFreePlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة بالخطة المجانية'**
+  String get continueWithFreePlan;
+
   /// No description provided for @subscriptionUnderReview.
   ///
   /// In ar, this message translates to:
@@ -4003,6 +4009,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'برجاء طلب ترقية الباقة من مالك المتجر'**
   String get requestUpgradeFromOwner;
+
+  /// No description provided for @employeeLoginBlockedSubscriptionExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.'**
+  String get employeeLoginBlockedSubscriptionExpired;
+
+  /// No description provided for @walletsLimitExceededFree.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.'**
+  String get walletsLimitExceededFree;
 }
 
 class _AppLocalizationsDelegate

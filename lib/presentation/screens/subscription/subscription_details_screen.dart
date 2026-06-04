@@ -9,8 +9,24 @@ import '../../../providers/wallet_provider.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../core/enums/subscription_enums.dart';
 
-class SubscriptionDetailsScreen extends StatelessWidget {
+class SubscriptionDetailsScreen extends StatefulWidget {
   const SubscriptionDetailsScreen({super.key});
+
+  @override
+  State<SubscriptionDetailsScreen> createState() => _SubscriptionDetailsScreenState();
+}
+
+class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<WalletProvider>().refresh();
+        context.read<EmployeeProvider>().refresh();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -6,6 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -84,6 +85,10 @@ class _WalletsListScreenState extends State<WalletsListScreen>
   }
 
   void _navigateToEditWallet(WalletModel wallet) {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     Navigator.pushNamed(context, RouteConstants.walletForm, arguments: wallet);
   }
 
@@ -93,6 +98,10 @@ class _WalletsListScreenState extends State<WalletsListScreen>
   }
 
   void _showDeleteDialog(WalletModel wallet) async {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     final walletProvider = context.read<WalletProvider>();
     final confirmed = await DialogUtils.showConfirmDialog(
       context,

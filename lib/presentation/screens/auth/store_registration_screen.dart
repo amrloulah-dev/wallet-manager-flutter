@@ -139,7 +139,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
     // --- Success / Error Handler ---
     if (storeId != null && mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteConstants.ownerDashboard, (route) => false);
+          RouteConstants.mainDashboard, (route) => false);
       ToastUtils.showSuccess(AppLocalizations.of(context)!.loginSuccess);
     } else if (mounted && authProvider.errorMessage != null) {
       // Show the error that caused storeId to be null

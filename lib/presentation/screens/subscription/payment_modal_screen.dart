@@ -28,12 +28,12 @@ class PaymentModalScreen extends StatefulWidget {
 class _PaymentModalScreenState extends State<PaymentModalScreen> {
   final _formKey = GlobalKey<FormState>();
   String _selectedMethod = 'vodafone_cash';
-  final _receiptController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _receiptController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -47,7 +47,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
       await subProvider.submitSubscriptionRequest(
         planId: widget.planId,
         paymentMethod: _selectedMethod,
-        receiptNumber: _receiptController.text.trim(),
+        receiptNumber: _phoneController.text.trim(),
       );
 
       if (!mounted) return;
@@ -157,11 +157,12 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
-                controller: _receiptController,
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: loc.receiptNumber,
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.receipt),
+                  prefixIcon: const Icon(Icons.phone),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

@@ -37,7 +37,7 @@ class AppRouter {
         final store = settings.arguments as StoreModel;
         return _buildRoute(EmployeeLoginScreen(store: store), settings);
 
-      case RouteConstants.ownerDashboard:
+      case RouteConstants.mainDashboard:
         return _buildRoute(const MainDashboardScreen(), settings);
 
       case RouteConstants.walletsList:
@@ -176,7 +176,7 @@ class AppRouter {
           Future.microtask(() {
             if (!context.mounted) return;
             Navigator.of(context).pushNamedAndRemoveUntil(
-              RouteConstants.ownerDashboard,
+              RouteConstants.mainDashboard,
               (route) => false,
             );
             ToastUtils.showInfo(msg);

@@ -5,6 +5,7 @@ import '../../../data/models/system_configs_model.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
 import '../../../core/enums/subscription_enums.dart';
+import '../../../core/constants/route_constants.dart';
 
 class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
@@ -101,10 +102,26 @@ class PaywallScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 80),
               ],
             ),
           ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              // Safely dismiss the Paywall to reveal the Dashboard underneath
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacementNamed(
+                    context, RouteConstants.mainDashboard);
+              }
+            },
+            label: Text(
+              loc.continueWithFreePlan,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         );
       },
     );

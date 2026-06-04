@@ -55,9 +55,22 @@ class PermissionHelper {
 
   static bool canAccessScreen(BuildContext context, String routeName,
       {bool showMessage = false}) {
+    final authProvider = context.read<AuthProvider>();
+    
+    // Core routes must not block authenticated owners and employees due to expired subscription/trial
+    if (authProvider.isAuthenticated) {
+      if (routeName == RouteConstants.mainDashboard ||
+          routeName == RouteConstants.settings ||
+          routeName == RouteConstants.upgradeScreen ||
+          routeName == RouteConstants.licenseExpired ||
+          routeName == RouteConstants.subscriptionDetails) {
+        return true;
+      }
+    }
+
     return _checkPermission(context, (p) {
       switch (routeName) {
-        case RouteConstants.ownerDashboard:
+        case RouteConstants.mainDashboard:
           return true; // Basic dashboard usually accessible if logged in
 
         case RouteConstants.generalStatistics:

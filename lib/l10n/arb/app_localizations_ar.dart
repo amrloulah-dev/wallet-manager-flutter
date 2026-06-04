@@ -1445,6 +1445,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get continueButton => 'متابعة';
 
   @override
+  String get continueWithFreePlan => 'المتابعة بالخطة المجانية';
+
+  @override
   String get subscriptionUnderReview =>
       'يتم الآن مراجعة طلب الاشتراك الخاص بك.';
 
@@ -2118,4 +2121,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get requestUpgradeFromOwner => 'برجاء طلب ترقية الباقة من مالك المتجر';
+
+  @override
+  String get employeeLoginBlockedSubscriptionExpired =>
+      'لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.';
+
+  @override
+  String get walletsLimitExceededFree =>
+      'لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.';
 }

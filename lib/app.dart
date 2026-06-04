@@ -186,21 +186,22 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
           return const AdminBlockScreen();
         }
 
-        // 2. Guard against Expired License
-        if (auth.isSubscriptionExpired &&
-            auth.currentStore?.subscription.planId !=
-                SubscriptionPlan.lifetime) {
-          return const PaywallScreen();
-        }
-
         // 3. Check Authentication & Navigate
         if (auth.isAuthenticated && !_isNavigating) {
           _isNavigating = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final role = auth.currentUser?.role;
             if (role == UserRole.owner || role == UserRole.employee) {
+              // Push Dashboard as the base route
               Navigator.of(context)
-                  .pushReplacementNamed(RouteConstants.ownerDashboard);
+                  .pushReplacementNamed(RouteConstants.mainDashboard);
+              
+              // IF EXPIRED, push Paywall ON TOP of the Dashboard
+              if (auth.isSubscriptionExpired && 
+                  auth.currentStore?.subscription.planId != SubscriptionPlan.lifetime) {
+                // Ensure you use your exact route constant for Paywall
+                Navigator.of(context).pushNamed(RouteConstants.upgradeScreen); 
+              }
             } else {
               auth.logout(context);
             }

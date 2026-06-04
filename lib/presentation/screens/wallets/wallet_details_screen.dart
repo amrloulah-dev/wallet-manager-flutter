@@ -7,6 +7,7 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
@@ -355,10 +356,18 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   void _navigateToEditWallet(BuildContext context, WalletModel wallet) {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     Navigator.pushNamed(context, RouteConstants.walletForm, arguments: wallet);
   }
 
   void _showDeleteDialog(WalletModel wallet) async {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
       title: AppLocalizations.of(context)!.confirmDeletion,

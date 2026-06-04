@@ -108,7 +108,8 @@ class AuthProvider extends BaseProvider {
   bool _isSubExpired(StoreSubscription sub) =>
       sub.isExpiredAt(TimeService.now());
 
-  bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isAuthenticated =>
+      _status == AuthStatus.authenticated || _status == AuthStatus.expired;
   bool get isSubscriptionExpired =>
       _status == AuthStatus.expired ||
       (_currentStore != null && _isSubExpired(_currentStore!.subscription));

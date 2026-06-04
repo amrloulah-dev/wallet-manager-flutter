@@ -566,6 +566,7 @@
   "unavailable": "Unavailable",
   "logoutButton": "Logout",
   "continueButton": "Continue",
+  "continueWithFreePlan": "Continue with Free Plan",
   "pressBackAgainToExit": "Press back again to exit",
   "noPermissionCreateTransaction": "No permission to create transaction",
   "noPermissionCreateWallet": "No permission to create wallet",
@@ -820,5 +821,7 @@
     }
   },
   "upgradeRequiredToEnableSms": "This feature requires a plan upgrade",
-  "requestUpgradeFromOwner": "Please request a plan upgrade from the store owner"
+  "requestUpgradeFromOwner": "Please request a plan upgrade from the store owner",
+  "employeeLoginBlockedSubscriptionExpired": "Cannot login as employee because the store's subscription has expired.",
+  "walletsLimitExceededFree": "You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more."
 }

@@ -542,6 +542,7 @@
   "contactSupport": "تواصل مع الدعم الفني",
   "subscriptionActivatedMessage": "لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الاستمتاع بكافة الميزات الاحترافية.",
   "continueButton": "متابعة",
+  "continueWithFreePlan": "المتابعة بالخطة المجانية",
   "subscriptionUnderReview": "يتم الآن مراجعة طلب الاشتراك الخاص بك.",
   "subscriptionRejected": "تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم.",
   "subscriptionExpiredMessage": "انتهت صلاحية اشتراكك. قم بالترقية للاستمرار.",
@@ -813,5 +814,7 @@
     }
   },
   "upgradeRequiredToEnableSms": "هذه الميزة تتطلب ترقية الحساب",
-  "requestUpgradeFromOwner": "برجاء طلب ترقية الباقة من مالك المتجر"
+  "requestUpgradeFromOwner": "برجاء طلب ترقية الباقة من مالك المتجر",
+  "employeeLoginBlockedSubscriptionExpired": "لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.",
+  "walletsLimitExceededFree": "لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد."
 }

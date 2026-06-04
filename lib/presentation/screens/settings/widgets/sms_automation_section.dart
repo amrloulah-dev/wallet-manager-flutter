@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/sms_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -173,6 +174,7 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
               GestureDetector(
                 onTap: isExpired
                     ? () {
+                        HapticFeedback.heavyImpact();
                         final l10n = AppLocalizations.of(context)!;
                         if (isOwner) {
                           ToastUtils.showError(l10n.upgradeRequiredToEnableSms);
