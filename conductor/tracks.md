@@ -13,8 +13,5 @@
 - [ ] **Track: Refactor monetization constraints, settings navigation, dashboard banners, anti-cycling locks, and employee login guards**
 *Link: [./tracks/freesub_refactor_20260604/](./tracks/freesub_refactor_20260604/)*
 
----
 
-- [~] **Track: Optimistic UI Refresh Refactor — Stream eradication, client-side UUIDs, WriteBatch atomicity, strict rollback, and smart pull-to-refresh merge**
-*Link: [./tracks/refresh_refactor_20260605/](./tracks/refresh_refactor_20260605/)*
 
