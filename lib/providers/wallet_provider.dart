@@ -187,6 +187,10 @@ class WalletProvider extends BaseProvider {
 
   void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
     _subscriptionProvider = subscriptionProvider;
+    if (_wallets.isNotEmpty) {
+      _rebuildWalletMap();
+      safeNotify();
+    }
   }
 
   Future<UserModel> _validateUserAndPermission(
@@ -522,9 +526,6 @@ class WalletProvider extends BaseProvider {
   }
 
   void _rebuildWalletMap() {
-    _walletMap = {
-      for (final wallet in _wallets) wallet.walletId: wallet,
-    };
     _recalculateFrozenWallets();
   }
 
@@ -536,6 +537,15 @@ class WalletProvider extends BaseProvider {
       storeId: _currentStoreId,
     );
     _frozenWalletIds.addAll(frozen);
+
+    // Update the in-memory wallet models to reflect the correct frozen state
+    _wallets = _wallets.map((w) {
+      return w.copyWith(isFrozen: _frozenWalletIds.contains(w.walletId));
+    }).toList();
+
+    _walletMap = {
+      for (final wallet in _wallets) wallet.walletId: wallet,
+    };
   }
 
   Future<bool> _isWalletFrozen(String walletId) async {

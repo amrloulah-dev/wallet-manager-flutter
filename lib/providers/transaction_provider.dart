@@ -8,11 +8,13 @@ import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../data/repositories/transaction_repository.dart';
 import '../data/repositories/stats_repository.dart';
+import '../data/repositories/wallet_repository.dart';
 import '../data/models/transaction_model.dart';
 import '../data/models/user_model.dart';
 import '../data/models/user_permissions.dart';
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
+import 'wallet_provider.dart';
 import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
 
@@ -28,6 +30,7 @@ enum TransactionProviderStatus {
 class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
   final StatsRepository _statsRepository;
+  final WalletRepository _walletRepository;
 
   // State
   String? _currentStoreId;
@@ -53,14 +56,22 @@ class TransactionProvider extends BaseProvider {
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
 
+  WalletProvider? _walletProvider;
+
+  void updateWalletProvider(WalletProvider walletProvider) {
+    _walletProvider = walletProvider;
+  }
+
   // Constructor
   TransactionProvider({
     TransactionRepository? transactionRepository,
     StatsRepository? statsRepository,
+    WalletRepository? walletRepository,
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
         _statsRepository = statsRepository ?? sl<StatsRepository>(),
+        _walletRepository = walletRepository ?? sl<WalletRepository>(),
         _currentStoreId = storeId {
     _initializeDateRange();
   }
@@ -325,6 +336,18 @@ class TransactionProvider extends BaseProvider {
     try {
       final user = await _validateUserAndPermission((p) => p.createTransaction);
 
+      // Validate wallet is not frozen
+      final wallet = await _walletRepository.getWalletById(walletId,
+          expectedStoreId: _currentStoreId);
+      if (wallet == null) {
+        throw ValidationException('wallet_not_found');
+      }
+      final isWalletFrozen = wallet.isFrozen ||
+          (_walletProvider?.isWalletFrozenSync(walletId) ?? false);
+      if (isWalletFrozen) {
+        throw ValidationException('wallet_is_frozen');
+      }
+
       _status = TransactionProviderStatus.creating;
       _errorMessage = null;
       safeNotify();
@@ -432,6 +455,29 @@ class TransactionProvider extends BaseProvider {
       String transactionId, Map<String, dynamic> data) async {
     try {
       await _validateUserAndPermission((p) => p.editTransaction);
+
+      // We need to fetch the transaction first to get the walletId to validate if it's frozen.
+      final currentTx = await _transactionRepository.getTransactionById(
+          transactionId,
+          expectedStoreId: _currentStoreId);
+      
+      if (currentTx == null) {
+        throw ValidationException('transaction_not_found');
+      }
+          
+      // Ensure the wallet is not frozen. We use the updated walletId if provided, otherwise the current one.
+      final targetWalletId = data['walletId'] as String? ?? currentTx.walletId;
+      final wallet = await _walletRepository.getWalletById(targetWalletId,
+          expectedStoreId: _currentStoreId);
+          
+      if (wallet == null) {
+        throw ValidationException('wallet_not_found');
+      }
+      final isWalletFrozen = wallet.isFrozen ||
+          (_walletProvider?.isWalletFrozenSync(targetWalletId) ?? false);
+      if (isWalletFrozen) {
+        throw ValidationException('wallet_is_frozen');
+      }
 
       _updateStatus(TransactionProviderStatus
           .creating); // Using creating for mutating state

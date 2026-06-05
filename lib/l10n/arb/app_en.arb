@@ -823,5 +823,7 @@
   "upgradeRequiredToEnableSms": "This feature requires a plan upgrade",
   "requestUpgradeFromOwner": "Please request a plan upgrade from the store owner",
   "employeeLoginBlockedSubscriptionExpired": "Cannot login as employee because the store's subscription has expired.",
-  "walletsLimitExceededFree": "You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more."
+  "walletsLimitExceededFree": "You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more.",
+  "walletIsFrozen": "This wallet is frozen. Please upgrade your plan to use it.",
+  "walletIsFrozenShort": "(Frozen)"
 }

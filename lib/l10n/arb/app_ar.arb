@@ -816,5 +816,7 @@
   "upgradeRequiredToEnableSms": "هذه الميزة تتطلب ترقية الحساب",
   "requestUpgradeFromOwner": "برجاء طلب ترقية الباقة من مالك المتجر",
   "employeeLoginBlockedSubscriptionExpired": "لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.",
-  "walletsLimitExceededFree": "لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد."
+  "walletsLimitExceededFree": "لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.",
+  "walletIsFrozen": "هذه المحفظة مجمدة. يرجى ترقية الباقة لاستخدامها.",
+  "walletIsFrozenShort": "(مجمدة)"
 }

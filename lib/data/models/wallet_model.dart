@@ -172,6 +172,7 @@ class WalletModel {
   final double balance;
   final String? notes;
   final bool isActive;
+  final bool isFrozen;
   final DateTime? createdAt; // Made nullable
   final String createdBy;
   final DateTime? updatedAt;
@@ -190,6 +191,7 @@ class WalletModel {
     this.balance = 0.0,
     this.notes,
     this.isActive = true,
+    this.isFrozen = false,
     this.createdAt,
     required this.createdBy,
     this.updatedAt,
@@ -249,6 +251,7 @@ class WalletModel {
       balance: balance,
       notes: data[FirebaseConstants.notes] as String?,
       isActive: data[FirebaseConstants.isActive] as bool? ?? true,
+      isFrozen: false,
       createdAt: createdAt,
       createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
       updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
@@ -316,6 +319,7 @@ class WalletModel {
     double? balance,
     String? notes,
     bool? isActive,
+    bool? isFrozen,
     DateTime? createdAt,
     String? createdBy,
     DateTime? updatedAt,
@@ -334,6 +338,7 @@ class WalletModel {
       balance: balance ?? this.balance,
       notes: notes ?? this.notes,
       isActive: isActive ?? this.isActive,
+      isFrozen: isFrozen ?? this.isFrozen,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -387,6 +392,7 @@ class WalletModel {
       balance: balance,
       notes: notes,
       isActive: true,
+      isFrozen: false,
       createdAt: now,
       createdBy: createdBy,
       lastDailyReset: now,
@@ -475,6 +481,7 @@ class WalletModel {
         other.walletStatus == walletStatus &&
         other.balance == balance &&
         other.isActive == isActive &&
+        other.isFrozen == isFrozen &&
         other.sendLimits == sendLimits &&
         other.receiveLimits == receiveLimits &&
         other.stats == stats;
@@ -489,6 +496,7 @@ class WalletModel {
       walletStatus.hashCode ^
       balance.hashCode ^
       isActive.hashCode ^
+      isFrozen.hashCode ^
       sendLimits.hashCode ^
       receiveLimits.hashCode ^
       stats.hashCode;

@@ -366,10 +366,34 @@ class _WalletDropdownWidget extends StatelessWidget {
             (w) => w['id'] == id,
             orElse: () => {'name': l10n.unknown},
           );
-          return wallet['name'] ?? l10n.unknown;
+          String label = wallet['name'] ?? l10n.unknown;
+          if (wallet['isFrozen'] == true) {
+            label += ' ${l10n.walletIsFrozenShort}';
+          }
+          return label;
         },
-        onChanged: (val) =>
-            context.read<OverlayProvider>().setSelectedWallet(val),
+        onChanged: (val) {
+          if (val != null) {
+            final wallet = data.wallets.firstWhere(
+              (w) => w['id'] == val,
+              orElse: () => {'isFrozen': false},
+            );
+            if (wallet['isFrozen'] == true) {
+              final theme = Theme.of(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.walletIsFrozen,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onError)),
+                  backgroundColor: theme.colorScheme.error,
+                ),
+              );
+              context.read<OverlayProvider>().setSelectedWallet(null);
+              return;
+            }
+          }
+          context.read<OverlayProvider>().setSelectedWallet(val);
+        },
       ),
     );
   }

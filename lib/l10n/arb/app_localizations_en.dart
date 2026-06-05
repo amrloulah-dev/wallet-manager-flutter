@@ -2145,4 +2145,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletsLimitExceededFree =>
       'You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more.';
+
+  @override
+  String get walletIsFrozen =>
+      'This wallet is frozen. Please upgrade your plan to use it.';
+
+  @override
+  String get walletIsFrozenShort => '(Frozen)';
 }

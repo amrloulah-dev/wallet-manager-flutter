@@ -2129,4 +2129,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get walletsLimitExceededFree =>
       'لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.';
+
+  @override
+  String get walletIsFrozen =>
+      'هذه المحفظة مجمدة. يرجى ترقية الباقة لاستخدامها.';
+
+  @override
+  String get walletIsFrozenShort => '(مجمدة)';
 }

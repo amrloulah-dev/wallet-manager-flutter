@@ -279,16 +279,32 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
           // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
           itemLabelBuilder: (WalletModel wallet) {
-            return '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            String label = '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            if (wallet.isFrozen) {
+              label += ' ${l10n.walletIsFrozenShort}'; 
+            }
+            return label;
           },
 
           onChanged: (wallet) {
+            if (wallet != null && wallet.isFrozen) {
+              ToastUtils.showError(l10n.walletIsFrozen);
+              setState(() {
+                _selectedWalletId = null;
+                _updateTotal();
+              });
+              return;
+            }
             setState(() {
               _selectedWalletId = wallet?.walletId;
               _updateTotal(); // Recalculate fees when wallet changes
             });
           },
-          validator: (value) => value == null ? l10n.pleaseSelectWallet : null,
+          validator: (value) {
+            if (value == null) return l10n.pleaseSelectWallet;
+            if (value.isFrozen) return l10n.walletIsFrozen;
+            return null;
+          },
         );
       },
     );

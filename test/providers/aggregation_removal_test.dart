@@ -3,6 +3,7 @@ import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/providers/transaction_provider.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
+import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/paginated_result.dart';
@@ -14,23 +15,28 @@ class MockStatsRepository extends Mock implements StatsRepository {}
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 
+class MockWalletRepository extends Mock implements WalletRepository {}
+
 void main() {
   late StatisticsProvider statisticsProvider;
   late TransactionProvider transactionProvider;
   late MockStatsRepository mockStatsRepository;
   late MockTransactionRepository mockTransactionRepository;
+  late MockWalletRepository mockWalletRepository;
 
   const storeId = 'test_store';
 
   setUp(() {
     mockStatsRepository = MockStatsRepository();
     mockTransactionRepository = MockTransactionRepository();
+    mockWalletRepository = MockWalletRepository();
 
     statisticsProvider =
         StatisticsProvider(statsRepository: mockStatsRepository);
     transactionProvider = TransactionProvider(
       transactionRepository: mockTransactionRepository,
       statsRepository: mockStatsRepository,
+      walletRepository: mockWalletRepository,
       storeId: storeId,
     );
   });

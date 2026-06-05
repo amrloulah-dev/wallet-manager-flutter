@@ -8,10 +8,13 @@ import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
+import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
@@ -25,11 +28,14 @@ class MockAuthProvider extends Mock implements AuthProvider {}
 
 class MockStatsRepository extends Mock implements StatsRepository {}
 
+class MockWalletRepository extends Mock implements WalletRepository {}
+
 class FakeTransactionModel extends Fake implements TransactionModel {}
 
 void main() {
   late MockTransactionRepository mockTxRepo;
   late MockEmployeeRepository mockEmployeeRepo;
+  late MockWalletRepository mockWalletRepo;
   late MockAuthProvider mockAuth;
 
   setUpAll(() {
@@ -43,6 +49,7 @@ void main() {
     AnalyticsService.isTestMode = true;
     mockTxRepo = MockTransactionRepository();
     mockEmployeeRepo = MockEmployeeRepository();
+    mockWalletRepo = MockWalletRepository();
     mockAuth = MockAuthProvider();
 
     final sl = GetIt.instance;
@@ -79,6 +86,7 @@ void main() {
 
       final provider = TransactionProvider(
         transactionRepository: mockTxRepo,
+        walletRepository: mockWalletRepo,
         storeId: 's1',
       );
       provider.updateAuthState(mockAuth);
@@ -139,15 +147,28 @@ void main() {
           createdAt: DateTime.now(),
           lastLogin: DateTime.now(),
         );
+        
+        final mockWallet = WalletModel.fromWalletStatus(
+          walletId: 'w1',
+          storeId: 's1',
+          phoneNumber: '01000000000',
+          walletType: WalletType.vodafoneCash.name,
+          walletStatus: WalletStatus.active.name,
+          balance: 1000.0,
+          createdBy: 'owner1',
+        );
 
         when(() => mockAuth.currentUser).thenReturn(owner);
         when(() => mockAuth.isOwner).thenReturn(true);
         when(() => mockTxRepo.generateId()).thenReturn('t1');
         when(() => mockTxRepo.createTransaction(any()))
             .thenAnswer((_) async {});
+        when(() => mockWalletRepo.getWalletById('w1', expectedStoreId: 's1'))
+            .thenAnswer((_) async => mockWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
+          walletRepository: mockWalletRepo,
           storeId: 's1',
         );
         provider.updateAuthState(mockAuth);

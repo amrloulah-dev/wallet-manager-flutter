@@ -53,6 +53,9 @@ class OverlayUseCase {
           (w) => w?['id'] == selectedWalletId,
           orElse: () => null,
         );
+    if (match != null && match['isFrozen'] == true) {
+      throw Exception('wallet_is_frozen');
+    }
     final walletType = match?['walletType']?.toString() ?? 'vodafone_cash';
 
     final calculatedServiceFee = FeeCalculator.calculateTransactionFee(

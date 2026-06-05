@@ -4021,6 +4021,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.'**
   String get walletsLimitExceededFree;
+
+  /// No description provided for @walletIsFrozen.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه المحفظة مجمدة. يرجى ترقية الباقة لاستخدامها.'**
+  String get walletIsFrozen;
+
+  /// No description provided for @walletIsFrozenShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'(مجمدة)'**
+  String get walletIsFrozenShort;
 }
 
 class _AppLocalizationsDelegate

@@ -463,6 +463,7 @@ class LocalStorageService {
         'name': w.phoneNumber,
         'phone': w.phoneNumber,
         'type': w.walletType.name,
+        'isFrozen': w.isFrozen,
       };
     }).toList();
 
