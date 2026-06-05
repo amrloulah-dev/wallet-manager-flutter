@@ -15,6 +15,6 @@
 
 ---
 
-- [ ] **Track: Optimistic UI Refresh Refactor — Stream eradication, client-side UUIDs, WriteBatch atomicity, strict rollback, and smart pull-to-refresh merge**
+- [~] **Track: Optimistic UI Refresh Refactor — Stream eradication, client-side UUIDs, WriteBatch atomicity, strict rollback, and smart pull-to-refresh merge**
 *Link: [./tracks/refresh_refactor_20260605/](./tracks/refresh_refactor_20260605/)*
 
