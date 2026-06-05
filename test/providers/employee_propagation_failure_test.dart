@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
-import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/providers/employee_provider.dart';

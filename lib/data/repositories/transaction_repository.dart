@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/transaction_validator_service.dart';
 
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_error_handler.dart';
@@ -12,6 +11,7 @@ import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/date_helper.dart';
 import '../models/paginated_result.dart';
 import '../models/transaction_model.dart';
+import '../models/wallet_model.dart';
 import '../services/firebase_service.dart';
 
 import 'package:walletmanager/core/di/service_locator.dart';
@@ -74,35 +74,183 @@ class TransactionRepository {
         debugPrint(
             '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
             'RECEIVED | txId=${transaction.transactionId}, '
-            'walletId=${transaction.walletId}, type=${transaction.transactionType}, '
-            'amount=[SENSITIVE], commission=[SENSITIVE]');
-      }
-      if (kDebugMode) {
-        debugPrint(
-            '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
-            'Delegating to TransactionValidatorService.validateAndSave ...');
+            'walletId=${transaction.walletId}, type=${transaction.transactionType}');
       }
 
-      // Delegate entirely to the unified validator which handles
-      // balance, stats, and daily_stats atomically inside runTransaction.
-      await TransactionValidatorService().validateAndSave(
-        transaction,
-        extraWrites: (tx) async {
-          // Handle debt stats inside the SAME transaction
-          if (transaction.isDebt) {
-            await _statsRepository.incrementOpenDebtStats(
-              transaction.storeId,
-              transaction.amount,
-              firestoreTransaction: tx,
-            );
-          }
-        },
-      );
-      if (kDebugMode) {
-        debugPrint(
-            '🔥 [TX_FLOW] [transaction_repository] -> createTransaction: '
-            'validateAndSave returned SUCCESS for txId=${transaction.transactionId}');
+      final walletRef = _firestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(transaction.walletId);
+      final walletSnap = await walletRef.get();
+      if (!walletSnap.exists) {
+        throw NotFoundException('wallet_error_not_found');
       }
+
+      final wallet = WalletModel.fromFirestore(walletSnap);
+      if (!wallet.isActive) {
+        throw ValidationException('wallet_error_inactive');
+      }
+
+      final needsDailyReset = wallet.needsDailyReset;
+      final needsMonthlyReset = wallet.needsMonthlyReset;
+
+      final balanceChange = transaction.isSend
+          ? -(transaction.amount + transaction.serviceFee)
+          : (transaction.isReceive
+              ? transaction.amount
+              : (transaction.amount + transaction.commission));
+
+      final batch = _firestore.batch();
+
+      // 1. Save Transaction Document
+      final txRef = _transactionsCollection.doc(transaction.transactionId);
+      final txData = transaction.toFirestore();
+      txData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+      txData['transactionDate'] = FieldValue.serverTimestamp();
+      batch.set(txRef, txData);
+
+      // 2. Prepare Wallet Updates
+      final Map<String, dynamic> walletUpdateData = {};
+      walletUpdateData['balance'] = FieldValue.increment(balanceChange);
+      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
+          FieldValue.increment(1);
+      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
+          FieldValue.serverTimestamp();
+
+      if (needsDailyReset) {
+        walletUpdateData[FirebaseConstants.lastDailyReset] =
+            FieldValue.serverTimestamp();
+      }
+      if (needsMonthlyReset) {
+        walletUpdateData[FirebaseConstants.lastMonthlyReset] =
+            FieldValue.serverTimestamp();
+      }
+
+      if (transaction.isSend) {
+        walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] =
+            needsDailyReset
+                ? transaction.amount
+                : FieldValue.increment(transaction.amount);
+        walletUpdateData['${FirebaseConstants.sendLimits}.monthlyUsed'] =
+            needsMonthlyReset
+                ? transaction.amount
+                : FieldValue.increment(transaction.amount);
+
+        if (needsDailyReset) {
+          walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
+        }
+        if (needsMonthlyReset) {
+          walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
+        }
+      } else if (transaction.isReceive) {
+        walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] =
+            needsDailyReset
+                ? transaction.amount
+                : FieldValue.increment(transaction.amount);
+        walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] =
+            needsMonthlyReset
+                ? transaction.amount
+                : FieldValue.increment(transaction.amount);
+
+        if (needsDailyReset) {
+          walletUpdateData['${FirebaseConstants.sendLimits}.dailyUsed'] = 0.0;
+        }
+        if (needsMonthlyReset) {
+          walletUpdateData['${FirebaseConstants.sendLimits}.monthlyUsed'] = 0.0;
+        }
+      }
+
+      if (transaction.isSend || transaction.isReceive) {
+        walletUpdateData[
+                '${FirebaseConstants.stats}.${transaction.isSend ? FirebaseConstants.totalSentAmount : FirebaseConstants.totalReceivedAmount}'] =
+            FieldValue.increment(transaction.amount);
+        walletUpdateData[
+                '${FirebaseConstants.stats}.${FirebaseConstants.totalCommission}'] =
+            FieldValue.increment(transaction.commission);
+        walletUpdateData['${FirebaseConstants.stats}.totalServiceFee'] =
+            FieldValue.increment(transaction.serviceFee);
+      }
+
+      batch.update(walletRef, walletUpdateData);
+
+      // 3. Update Store Stats Summary Document
+      final statsSummaryRef = _firestore
+          .doc(FirebaseConstants.statsSummaryPath(transaction.storeId));
+
+      final Map<String, dynamic> summaryUpdates = {
+        FirebaseConstants.totalTransactions: FieldValue.increment(1),
+        FirebaseConstants.totalTransactionsToday: FieldValue.increment(1),
+        FirebaseConstants.totalCommission:
+            FieldValue.increment(transaction.commission),
+        FirebaseConstants.totalCommissionToday:
+            FieldValue.increment(transaction.commission),
+        FirebaseConstants.totalServiceFee:
+            FieldValue.increment(transaction.serviceFee),
+        FirebaseConstants.totalServiceFeeToday:
+            FieldValue.increment(transaction.serviceFee),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+
+      if (transaction.isSend) {
+        summaryUpdates['sendCount'] = FieldValue.increment(1);
+        summaryUpdates[FirebaseConstants.totalSentAmount] =
+            FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalSentAmountToday] =
+            FieldValue.increment(transaction.amount);
+      } else if (transaction.isReceive) {
+        summaryUpdates['receiveCount'] = FieldValue.increment(1);
+        summaryUpdates[FirebaseConstants.totalReceivedAmount] =
+            FieldValue.increment(transaction.amount);
+        summaryUpdates[FirebaseConstants.totalReceivedAmountToday] =
+            FieldValue.increment(transaction.amount);
+      }
+
+      batch.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
+
+      // 4. Update Daily Stats Document
+      final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+          transaction.storeId, DateHelper.getCurrentDateString()));
+
+      final Map<String, dynamic> dailyStatsUpdates = {
+        'transactionCount': FieldValue.increment(1),
+        FirebaseConstants.totalCommission:
+            FieldValue.increment(transaction.commission),
+        'totalServiceFee': FieldValue.increment(transaction.serviceFee),
+        'totalAmount': FieldValue.increment(transaction.amount),
+      };
+
+      if (transaction.isSend) {
+        dailyStatsUpdates['sendCount'] = FieldValue.increment(1);
+        dailyStatsUpdates['totalSentAmount'] =
+            FieldValue.increment(transaction.amount);
+      } else if (transaction.isReceive) {
+        dailyStatsUpdates['receiveCount'] = FieldValue.increment(1);
+        dailyStatsUpdates['totalReceivedAmount'] =
+            FieldValue.increment(transaction.amount);
+      }
+
+      batch.set(
+        dailyStatsRef,
+        dailyStatsUpdates,
+        SetOptions(merge: true),
+      );
+
+      // 5. Extra Writes (Debt increment)
+      if (transaction.isDebt) {
+        final Map<String, dynamic> debtSummaryUpdates = {
+          'openDebtsCount': FieldValue.increment(1),
+          'totalOpenAmount': FieldValue.increment(transaction.amount),
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
+        batch.set(statsSummaryRef, debtSummaryUpdates, SetOptions(merge: true));
+
+        final Map<String, dynamic> debtDailyUpdates = {
+          'openDebtsCount': FieldValue.increment(1),
+          'totalOpenAmount': FieldValue.increment(transaction.amount),
+        };
+        batch.set(dailyStatsRef, debtDailyUpdates, SetOptions(merge: true));
+      }
+
+      await batch.commit();
 
       _cacheManager.clearWhere((key) => key.startsWith('transactions_page_'));
       _cacheManager.clearWhere((key) => key.startsWith('wallets_page_'));

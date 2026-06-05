@@ -58,10 +58,6 @@ class EmployeeProvider extends BaseProvider {
     _subscriptionProvider = subscriptionProvider;
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {

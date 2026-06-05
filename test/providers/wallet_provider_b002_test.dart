@@ -60,6 +60,11 @@ void main() {
     );
     when(() => mockUseCase.validatePermission(any()))
         .thenAnswer((_) async => mockUser);
+    when(() => mockUseCase.calculateFrozenWallets(
+          wallets: any(named: 'wallets'),
+          subscriptionProvider: any(named: 'subscriptionProvider'),
+          storeId: any(named: 'storeId'),
+        )).thenReturn(<String>{});
 
     walletProvider = WalletProvider(
       authProvider: mockAuth,

@@ -17,6 +17,8 @@ import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
 import 'dart:async';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
@@ -33,6 +35,8 @@ class MockWalletCacheManager extends Mock implements WalletCacheManager {}
 
 class MockWalletUseCase extends Mock implements WalletUseCase {}
 
+class MockStatisticsProvider extends Mock implements StatisticsProvider {}
+
 class DebtModelFake extends Fake implements DebtModel {}
 
 class WalletModelFake extends Fake implements WalletModel {}
@@ -45,13 +49,15 @@ void main() {
   late MockTransactionRepository mockTransactionRepo;
   late MockWalletCacheManager mockCacheManager;
   late MockWalletUseCase mockUseCase;
+  late MockStatisticsProvider mockStatsProvider;
 
   setUpAll(() {
     registerFallbackValue(DebtModelFake());
     registerFallbackValue(WalletModelFake());
   });
 
-  setUp(() {
+  setUp(() async {
+    await sl.reset();
     AppErrorHandler.isTestMode = true;
     AnalyticsService.isTestMode = true;
     mockAuth = MockAuthProvider();
@@ -61,6 +67,7 @@ void main() {
     mockTransactionRepo = MockTransactionRepository();
     mockCacheManager = MockWalletCacheManager();
     mockUseCase = MockWalletUseCase();
+    mockStatsProvider = MockStatisticsProvider();
 
     when(() => mockAuth.currentStoreId).thenReturn('store1');
     when(() => mockAuth.currentUserId).thenReturn('user1');
@@ -75,6 +82,17 @@ void main() {
 
     when(() => mockCacheManager.cacheWallets(any())).thenAnswer((_) async {});
     when(() => mockSub.canAddWallet(any())).thenReturn(true);
+    when(() => mockUseCase.calculateFrozenWallets(
+          wallets: any(named: 'wallets'),
+          subscriptionProvider: any(named: 'subscriptionProvider'),
+          storeId: any(named: 'storeId'),
+        )).thenReturn(<String>{});
+
+    when(() => mockStatsProvider.dashboardSummary).thenReturn(null);
+    when(() => mockStatsProvider.todayStats).thenReturn(null);
+    when(() => mockStatsProvider.addDebtOptimistically(amount: any(named: 'amount'))).thenAnswer((_) {});
+
+    sl.registerSingleton<StatisticsProvider>(mockStatsProvider);
   });
 
   group('Provider Responsiveness', () {

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
@@ -10,11 +11,15 @@ import '../data/repositories/transaction_repository.dart';
 import '../data/repositories/stats_repository.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/transaction_model.dart';
+import '../data/models/stats_summary_model.dart';
+import '../data/models/daily_stats_model.dart';
 import '../data/models/user_model.dart';
 import '../data/models/user_permissions.dart';
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 import 'wallet_provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
 import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
 
@@ -39,6 +44,7 @@ class TransactionProvider extends BaseProvider {
   Map<String, TransactionModel> _transactionMap = {};
   List<TransactionModel> _todayTransactions = [];
   final Map<String, dynamic> _summary = {};
+  final Set<String> _pendingTxIds = {};
 
   bool _hasMore = true;
   DocumentSnapshot? _lastDocument;
@@ -261,7 +267,34 @@ class TransactionProvider extends BaseProvider {
             '✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
       }
 
-      _transactions = result.items;
+      // Smart Merge: match incoming documents by UUID, preserving locally pending modifications/items
+      final Map<String, TransactionModel> merged = {};
+      final incomingIds = result.items.map((tx) => tx.transactionId).toSet();
+      for (final tx in result.items) {
+        merged[tx.transactionId] = tx;
+      }
+      for (final tx in _transactions) {
+        if (_pendingTxIds.contains(tx.transactionId)) {
+          merged[tx.transactionId] = tx;
+        }
+      }
+
+      final List<TransactionModel> mergedList = [];
+      for (final tx in result.items) {
+        if (_pendingTxIds.contains(tx.transactionId)) {
+          mergedList.add(merged[tx.transactionId]!);
+        } else {
+          mergedList.add(tx);
+        }
+      }
+      for (final tx in _transactions) {
+        if (_pendingTxIds.contains(tx.transactionId) && !incomingIds.contains(tx.transactionId)) {
+          // Prepend newly created pending items
+          mergedList.insert(0, tx);
+        }
+      }
+
+      _transactions = mergedList;
       _lastDocument = result.lastDocument;
       _hasMore = result.items.length >= 20;
 
@@ -324,15 +357,23 @@ class TransactionProvider extends BaseProvider {
 
   Future<bool> createTransaction({
     required String walletId,
-    required TransactionType transactionType, // ENUM refactor
+    required TransactionType transactionType,
     required double amount,
     required double commission,
     double serviceFee = 0.0,
-    PaymentStatus paymentStatus = PaymentStatus.paid, // ENUM refactor
+    PaymentStatus paymentStatus = PaymentStatus.paid,
     String? customerPhone,
     String? customerName,
     String? notes,
   }) async {
+    List<TransactionModel>? oldTransactions;
+    Map<String, TransactionModel>? oldTransactionMap;
+    Map<String, dynamic>? oldSummary;
+    StatisticsProvider? statsProvider;
+    StatsSummaryModel? oldStatsSummary;
+    DailyStatsModel? oldStatsToday;
+    String? pendingTxId;
+
     try {
       final user = await _validateUserAndPermission((p) => p.createTransaction);
 
@@ -348,13 +389,66 @@ class TransactionProvider extends BaseProvider {
         throw ValidationException('wallet_is_frozen');
       }
 
+      // Perform client-side limit check
+      final isSend = transactionType == TransactionType.debit;
+      final isReceive = transactionType == TransactionType.credit;
+      final isInstaPay = wallet.walletType == WalletType.instaPay;
+      final isTelecom = [
+        WalletType.vodafoneCash,
+        WalletType.orangeCash,
+        WalletType.etisalatCash,
+        WalletType.wePay
+      ].contains(wallet.walletType);
+
+      if (isInstaPay && amount > 70000) {
+        throw ValidationException('wallet_error_instapay_limit');
+      }
+      if (isTelecom && amount > 60000) {
+        throw ValidationException('wallet_error_telecom_limit');
+      }
+
+      if (isSend) {
+        final totalDeduction = amount + serviceFee;
+        if ((wallet.balance + 0.01) < totalDeduction) {
+          throw ValidationException('wallet_error_insufficient_balance');
+        }
+
+        if (wallet.sendLimits.dailyUsed + amount > wallet.getLimits().dailyLimit) {
+          throw ValidationException('wallet_error_daily_send_limit');
+        }
+        if (wallet.sendLimits.monthlyUsed + amount > wallet.getLimits().monthlyLimit) {
+          throw ValidationException('wallet_error_monthly_send_limit');
+        }
+      } else if (isReceive) {
+        if (wallet.receiveLimits.dailyUsed + amount > wallet.getReceiveLimits().dailyLimit) {
+          throw ValidationException('wallet_error_daily_receive_limit');
+        }
+        if (wallet.receiveLimits.monthlyUsed + amount > wallet.getReceiveLimits().monthlyLimit) {
+          throw ValidationException('wallet_error_monthly_receive_limit');
+        }
+      }
+
       _status = TransactionProviderStatus.creating;
       _errorMessage = null;
       safeNotify();
 
+      // Capture snapshots (Isolated copy)
+      oldTransactions = _transactions.toList();
+      oldTransactionMap = Map<String, TransactionModel>.from(_transactionMap);
+      oldSummary = Map<String, dynamic>.from(_summary);
+
+      statsProvider = sl.isRegistered<StatisticsProvider>() ? sl<StatisticsProvider>() : null;
+      if (statsProvider != null) {
+        oldStatsSummary = statsProvider.dashboardSummary;
+        oldStatsToday = statsProvider.todayStats;
+      }
+
       final now = TimeService.now();
+      final newTransactionId = const Uuid().v4();
+      pendingTxId = newTransactionId;
+      _pendingTxIds.add(pendingTxId);
       final newTransaction = TransactionModel(
-        transactionId: _transactionRepository.generateId(),
+        transactionId: newTransactionId,
         storeId: _currentStoreId!,
         walletId: walletId,
         transactionType: transactionType,
@@ -370,26 +464,54 @@ class TransactionProvider extends BaseProvider {
         createdBy: user.userId,
       );
 
+      // Optimistic mutation: insert locally first
+      _transactions.insert(0, newTransaction);
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
+
+      final double localDeduction = amount + serviceFee;
+      final bool isSendDeduction = transactionType == TransactionType.debit;
+      _walletProvider?.applyLocalDeduction(walletId, localDeduction, isSendDeduction);
+
+      _updateSummaryMapOptimistically(newTransaction);
+
+      if (statsProvider != null) {
+        statsProvider.addTransactionOptimistically({
+          'amount': amount,
+          'commission': commission,
+          'type': transactionType.name,
+        });
+      }
+
+      safeNotify();
+
       await _transactionRepository.createTransaction(newTransaction);
       AnalyticsService.logTransactionCreated(transactionType.name);
 
       _activateFetchShield();
-      await fetchTodaySummary();
       _updateStatus(TransactionProviderStatus.loaded);
+      _walletProvider?.clearPendingWallet(walletId);
       return true;
     } on DomainException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
       setError(e.message, e, stack);
       return false;
     } on ValidationException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
       setError(e.message, e, stack);
       return false;
     } on AppException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
       setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
       setError('transaction_error_create_failed', e, stack);
       return false;
     } finally {
+      if (pendingTxId != null) {
+        _pendingTxIds.remove(pendingTxId);
+      }
       if (_status == TransactionProviderStatus.creating) {
         _updateStatus(TransactionProviderStatus.loaded);
       }
@@ -506,6 +628,52 @@ class TransactionProvider extends BaseProvider {
       }
       safeNotify();
     }
+  }
+
+  void _updateSummaryMapOptimistically(TransactionModel tx) {
+    _summary['totalTransactions'] = (_summary['totalTransactions'] as int? ?? 0) + 1;
+    _summary['totalCommission'] = (_summary['totalCommission'] as double? ?? 0.0) + tx.commission;
+
+    if (tx.transactionType == TransactionType.debit) {
+      _summary['sendCount'] = (_summary['sendCount'] as int? ?? 0) + 1;
+      _summary['totalSendAmount'] = (_summary['totalSendAmount'] as double? ?? 0.0) + tx.amount;
+    } else if (tx.transactionType == TransactionType.credit) {
+      _summary['receiveCount'] = (_summary['receiveCount'] as int? ?? 0) + 1;
+      _summary['totalReceiveAmount'] = (_summary['totalReceiveAmount'] as double? ?? 0.0) + tx.amount;
+    }
+  }
+
+  void _rollbackLocalTx(
+    List<TransactionModel>? oldTransactions,
+    Map<String, TransactionModel>? oldTransactionMap,
+    Map<String, dynamic>? oldSummary,
+    StatisticsProvider? statsProvider,
+    StatsSummaryModel? oldStatsSummary,
+    DailyStatsModel? oldStatsToday,
+    String walletId,
+    double amount,
+    double serviceFee,
+    TransactionType transactionType,
+  ) {
+    if (oldTransactions != null) _transactions = oldTransactions;
+    if (oldTransactionMap != null) _transactionMap = oldTransactionMap;
+    if (oldSummary != null) {
+      _summary.clear();
+      _summary.addAll(oldSummary);
+    }
+    if (_walletProvider != null) {
+      final double localDeduction = amount + serviceFee;
+      final bool isSendDeduction = transactionType == TransactionType.debit;
+      try {
+        _walletProvider!.applyLocalDeduction(walletId, localDeduction, !isSendDeduction);
+        _walletProvider!.clearPendingWallet(walletId);
+      } catch (_) {}
+    }
+    if (statsProvider != null) {
+      statsProvider.rollbackStats(oldStatsSummary, oldStatsToday);
+    }
+    _recomputeTodayTransactions();
+    safeNotify();
   }
 
   Future<bool> deleteTransaction(String transactionId) async {

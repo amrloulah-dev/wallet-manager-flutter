@@ -10,6 +10,8 @@ import 'package:walletmanager/data/models/paginated_result.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter/material.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 class MockStatsRepository extends Mock implements StatsRepository {}
 
@@ -26,10 +28,41 @@ void main() {
 
   const storeId = 'test_store';
 
-  setUp(() {
+  setUp(() async {
+    await sl.reset();
+    AppErrorHandler.isTestMode = true;
+
     mockStatsRepository = MockStatsRepository();
     mockTransactionRepository = MockTransactionRepository();
     mockWalletRepository = MockWalletRepository();
+
+    final defaultSummary = StatsSummaryModel(
+      totalBalance: 5000.0,
+      totalWallets: 5,
+      totalTransactionsToday: 10,
+      totalCommissionToday: 100.0,
+      totalSentAmount: 2000.0,
+      totalReceivedAmount: 3000.0,
+      sendCount: 4,
+      receiveCount: 6,
+    );
+
+    final defaultTodayStats = DailyStatsModel(
+      date: '2026-05-26',
+      transactionCount: 5,
+      totalCommission: 50.0,
+      totalServiceFee: 10.0,
+      totalAmount: 1000.0,
+      sendCount: 2,
+      receiveCount: 3,
+      totalSentAmount: 400.0,
+      totalReceivedAmount: 600.0,
+    );
+
+    when(() => mockStatsRepository.getStatsSummary(any()))
+        .thenAnswer((_) async => defaultSummary);
+    when(() => mockStatsRepository.fetchTodayStats(any()))
+        .thenAnswer((_) async => defaultTodayStats);
 
     statisticsProvider =
         StatisticsProvider(statsRepository: mockStatsRepository);

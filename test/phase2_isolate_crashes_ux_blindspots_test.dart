@@ -9,9 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:walletmanager/main.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
-import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:get_it/get_it.dart';
 
 class MockFlutterLocalNotificationsPlugin extends Mock

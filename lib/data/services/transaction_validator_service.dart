@@ -54,8 +54,9 @@ class TransactionValidatorService {
             .collection(FirebaseConstants.walletsCollection)
             .doc(transaction.walletId);
         final walletSnap = await tx.get(walletRef);
-        if (!walletSnap.exists)
+        if (!walletSnap.exists) {
           throw NotFoundException('wallet_error_not_found');
+        }
 
         var wallet = WalletModel.fromFirestore(walletSnap);
 

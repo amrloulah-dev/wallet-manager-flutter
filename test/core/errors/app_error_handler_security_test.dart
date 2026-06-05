@@ -1,11 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
-import 'package:walletmanager/core/errors/error_severity.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 
 class MockFirebaseCrashlytics extends Mock implements FirebaseCrashlytics {}
 

@@ -13,6 +13,7 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
 import 'subscription_provider.dart';
+import 'package:uuid/uuid.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
@@ -46,7 +47,13 @@ class WalletProvider extends BaseProvider {
   List<WalletModel> _wallets = [];
   Map<String, WalletModel> _walletMap = {};
   final Set<String> _frozenWalletIds = {};
+  final Set<String> _pendingWalletIds = {};
   dynamic _lastDocument; // opaque cursor — typed at the repository boundary
+
+  void clearPendingWallet(String walletId) {
+    _pendingWalletIds.remove(walletId);
+    safeNotify();
+  }
   bool _hasMore = true;
 
   // Status
@@ -130,6 +137,7 @@ class WalletProvider extends BaseProvider {
 
   void applyLocalDeduction(String walletId, double deduction, bool isSend) {
     if (isDisposed) return;
+    _pendingWalletIds.add(walletId);
 
     final index = _wallets.indexWhere((w) => w.walletId == walletId);
     if (index == -1) return;
@@ -171,6 +179,8 @@ class WalletProvider extends BaseProvider {
   WalletType? get filterByType => _filterByType;
   WalletStatus? get filterByStatus => _filterByStatus;
   bool get hasMore => _hasMore;
+  int get totalActiveWallets =>
+      _wallets.where((w) => w.walletStatus == WalletStatus.active && w.isActive).length;
 
   bool get isLoading => _status == WalletProviderStatus.loading;
   bool get isLoadingMore => _status == WalletProviderStatus.loadingMore;
@@ -230,7 +240,34 @@ class WalletProvider extends BaseProvider {
 
       final result = await _walletRepository.getAllWallets(storeId);
 
-      _wallets = result.items;
+      // Smart Merge: match incoming documents by UUID, preserving locally pending modifications/items
+      final Map<String, WalletModel> merged = {};
+      final incomingIds = result.items.map((w) => w.walletId).toSet();
+      for (final w in result.items) {
+        merged[w.walletId] = w;
+      }
+      for (final w in _wallets) {
+        if (_pendingWalletIds.contains(w.walletId)) {
+          merged[w.walletId] = w;
+        }
+      }
+
+      final List<WalletModel> mergedList = [];
+      for (final w in result.items) {
+        if (_pendingWalletIds.contains(w.walletId)) {
+          mergedList.add(merged[w.walletId]!);
+        } else {
+          mergedList.add(w);
+        }
+      }
+      for (final w in _wallets) {
+        if (_pendingWalletIds.contains(w.walletId) && !incomingIds.contains(w.walletId)) {
+          // Prepend newly created pending items
+          mergedList.insert(0, w);
+        }
+      }
+
+      _wallets = mergedList;
       _lastDocument = result.lastDocument;
       _hasMore = result.items.length >= 20;
 
@@ -305,6 +342,11 @@ class WalletProvider extends BaseProvider {
     _status = WalletProviderStatus.creating;
     _errorMessage = null;
     safeNotify();
+
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+    String? pendingWalletId;
+
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
@@ -320,8 +362,16 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_limit_reached');
       }
 
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+
+      final newWalletId = const Uuid().v4();
+      pendingWalletId = newWalletId;
+      _pendingWalletIds.add(pendingWalletId);
+
       final newWallet = WalletModel.fromWalletStatus(
-        walletId: _walletRepository.generateId(),
+        walletId: newWalletId,
         storeId: storeId,
         phoneNumber: phoneNumber,
         walletType: walletType.name,
@@ -331,18 +381,29 @@ class WalletProvider extends BaseProvider {
         createdBy: createdBy,
       );
 
+      // Mutate locally
+      _wallets.add(newWallet);
+      _rebuildWalletMap();
+      safeNotify();
+
       await _walletRepository.createWallet(newWallet);
+      _activateFetchShield();
       _updateStatus(WalletProviderStatus.loaded);
       return true;
     } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError(e.message, e, stack);
       _handleUIFeedback();
       return false;
     } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError('wallet_error_create_failed', e, stack);
       _handleUIFeedback();
       return false;
     } finally {
+      if (pendingWalletId != null) {
+        _pendingWalletIds.remove(pendingWalletId);
+      }
       if (_status == WalletProviderStatus.creating) {
         _updateStatus(WalletProviderStatus.loaded);
       }
@@ -351,9 +412,9 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
-    _status = WalletProviderStatus.updating;
-    _errorMessage = null;
-    safeNotify();
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
@@ -361,18 +422,53 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_frozen');
       }
 
+      _status = WalletProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+      _pendingWalletIds.add(walletId);
+
+      // Mutate locally
+      final index = _wallets.indexWhere((w) => w.walletId == walletId);
+      if (index == -1) {
+        throw ValidationException('wallet_error_not_found');
+      }
+      final oldWallet = _wallets[index];
+      final newWallet = oldWallet.copyWith(
+        phoneNumber: data['phoneNumber'] as String?,
+        walletType: data['walletType'] != null ? WalletType.fromString(data['walletType'] as String) : null,
+        walletStatus: data['walletStatus'] != null ? WalletStatus.fromString(data['walletStatus'] as String) : null,
+        balance: data['balance'] != null ? NumberParser.toDouble(data['balance']) : null,
+        notes: data.containsKey('notes') ? data['notes'] as String? : null,
+        isActive: data['isActive'] as bool?,
+      );
+
+      _wallets = [
+        for (int i = 0; i < _wallets.length; i++)
+          if (i == index) newWallet else _wallets[i],
+      ];
+      _rebuildWalletMap();
+      safeNotify();
+
       await _walletRepository.updateWallet(walletId, data);
+      _activateFetchShield();
       _updateStatus(WalletProviderStatus.loaded);
       return true;
     } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError(e.message, e, stack);
       _handleUIFeedback();
       return false;
     } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError('wallet_error_update_failed', e, stack);
       _handleUIFeedback();
       return false;
     } finally {
+      _pendingWalletIds.remove(walletId);
       if (_status == WalletProviderStatus.updating) {
         _updateStatus(WalletProviderStatus.loaded);
       }
@@ -420,30 +516,57 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<bool> deleteWallet(String walletId) async {
-    _updateStatus(WalletProviderStatus.deleting);
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+
     try {
       // Security Guard: Only Owners can delete wallets (Axis 2/Phase 6)
       if (!_authProvider.isOwner) {
         throw PermissionDeniedException();
       }
 
+      _status = WalletProviderStatus.deleting;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+      _pendingWalletIds.add(walletId);
+
+      // Mutate locally
+      _wallets = _wallets.where((w) => w.walletId != walletId).toList();
+      _rebuildWalletMap();
+      safeNotify();
+
       await _walletRepository.deleteWallet(walletId);
+      _activateFetchShield();
       _updateStatus(WalletProviderStatus.loaded);
       return true;
     } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError(e.message, e, stack);
       _handleUIFeedback();
       return false;
     } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
       setError('wallet_error_delete_failed', e, stack);
       _handleUIFeedback();
       return false;
     } finally {
+      _pendingWalletIds.remove(walletId);
       if (_status == WalletProviderStatus.deleting) {
         _updateStatus(WalletProviderStatus.loaded);
       }
       safeNotify();
     }
+  }
+
+  void _rollbackLocalWallet(List<WalletModel>? oldWallets, Map<String, WalletModel>? oldWalletMap) {
+    if (oldWallets != null) _wallets = oldWallets;
+    if (oldWalletMap != null) _walletMap = oldWalletMap;
+    _rebuildWalletMap();
+    safeNotify();
   }
 
   void _handleUIFeedback() {

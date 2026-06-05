@@ -29,7 +29,6 @@ import 'providers/subscription_provider.dart';
 import 'providers/system_config_provider.dart';
 
 import 'presentation/screens/auth/login_landing_screen.dart';
-import 'presentation/screens/subscription/paywall_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
 
 import 'l10n/arb/app_localizations.dart';

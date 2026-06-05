@@ -69,8 +69,9 @@ void main() async {
         }
       });
     } catch (e, stackTrace) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] App initialization failed: $e');
+      }
       if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
 
       AppErrorHandler.handle(e,

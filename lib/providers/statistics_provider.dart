@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
@@ -7,7 +6,6 @@ import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../core/utils/number_parser.dart';
-import '../core/errors/app_error_handler.dart';
 import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
@@ -278,6 +276,44 @@ class StatisticsProvider extends BaseProvider {
       totalAmount: today.totalAmount + amount,
     );
 
+    safeNotify();
+  }
+
+  void addDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      openDebtsCount: summary.openDebtsCount + 1,
+      totalOpenAmount: summary.totalOpenAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void settleDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      openDebtsCount: summary.openDebtsCount > 0 ? summary.openDebtsCount - 1 : 0,
+      totalOpenAmount: summary.totalOpenAmount >= amount ? summary.totalOpenAmount - amount : 0.0,
+      paidDebtsCount: summary.paidDebtsCount + 1,
+      totalPaidAmount: summary.totalPaidAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void payPartialDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      totalOpenAmount: summary.totalOpenAmount >= amount ? summary.totalOpenAmount - amount : 0.0,
+      totalPaidAmount: summary.totalPaidAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void rollbackStats(StatsSummaryModel? oldSummary, DailyStatsModel? oldToday) {
+    _dashboardSummary = oldSummary;
+    _todayStats = oldToday;
     safeNotify();
   }
 
