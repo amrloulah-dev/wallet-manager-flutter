@@ -2,24 +2,24 @@
 
 ## Phase 0: Stream Eradication
 
-- [ ] Task: Convert StatisticsProvider from Stream to Future-based fetch
-    - [ ] Write tests for StatisticsProvider one-shot fetch behavior (Red)
-    - [ ] Remove `StreamSubscription _summarySubscription` and `_todayStatsSubscription`
-    - [ ] Replace with one-shot `Future`-based fetch on initialization
-    - [ ] Ensure `dispose()` cleanup is updated (remove stream cancel calls)
-    - [ ] Run tests and confirm green
+- [x] Task: Convert StatisticsProvider from Stream to Future-based fetch b946e8c
+    - [x] Write tests for StatisticsProvider one-shot fetch behavior (Red)
+    - [x] Remove `StreamSubscription _summarySubscription` and `_todayStatsSubscription`
+    - [x] Replace with one-shot `Future`-based fetch on initialization
+    - [x] Ensure `dispose()` cleanup is updated (remove stream cancel calls)
+    - [x] Run tests and confirm green
 
-- [ ] Task: Convert EmployeeProvider from Stream to Future-based fetch
-    - [ ] Write tests for EmployeeProvider one-shot fetch behavior (Red)
-    - [ ] Remove `StreamSubscription _employeeStreamSubscription`
-    - [ ] Replace with one-shot `Future`-based fetch on initialization
-    - [ ] Ensure `dispose()` cleanup is updated
-    - [ ] Run tests and confirm green
+- [x] Task: Convert EmployeeProvider from Stream to Future-based fetch b946e8c
+    - [x] Write tests for EmployeeProvider one-shot fetch behavior (Red)
+    - [x] Remove `StreamSubscription _employeeStreamSubscription`
+    - [x] Replace with one-shot `Future`-based fetch on initialization
+    - [x] Ensure `dispose()` cleanup is updated
+    - [x] Run tests and confirm green
 
-- [ ] Task: Audit and verify zero Firestore streams remain in core providers
-    - [ ] Grep codebase for `.snapshots()` usage in Transaction, Wallet, Debt, Statistics, Employee providers
-    - [ ] Document remaining `.snapshots()` usages (if any) in non-core providers (SystemConfig, etc.) as out-of-scope
-    - [ ] Confirm no `StreamSubscription` fields remain in the 5 target providers
+- [x] Task: Audit and verify zero Firestore streams remain in core providers b946e8c
+    - [x] Grep codebase for `.snapshots()` usage in Transaction, Wallet, Debt, Statistics, Employee providers
+    - [x] Document remaining `.snapshots()` usages (if any) in non-core providers (SystemConfig, etc.) as out-of-scope
+    - [x] Confirm no `StreamSubscription` fields remain in the 5 target providers
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 0: Stream Eradication' (Protocol in workflow.md)
 
