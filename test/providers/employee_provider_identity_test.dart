@@ -58,8 +58,11 @@ void main() {
     registerFallbackValue(mockEmployee);
 
     // Seed the internal list of employees
-    when(() => mockRepository.watchEmployees(any()))
-        .thenAnswer((_) => Stream.value([mockEmployee]));
+    when(() => mockRepository.getEmployeesByStoreId(
+            storeId: any(named: 'storeId'),
+            searchQuery: any(named: 'searchQuery'),
+            activeOnly: any(named: 'activeOnly')))
+        .thenAnswer((_) async => [mockEmployee]);
     employeeProvider.setStoreId('store-123');
   });
 

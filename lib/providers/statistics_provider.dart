@@ -31,9 +31,6 @@ class StatisticsProvider extends BaseProvider {
   StatsSummaryModel? _cachedSummary;
   DateTime? _cacheTimestamp;
 
-  StreamSubscription? _summarySubscription;
-  StreamSubscription? _todayStatsSubscription;
-
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
 
@@ -64,8 +61,6 @@ class StatisticsProvider extends BaseProvider {
 
   @override
   void dispose() {
-    _summarySubscription?.cancel();
-    _todayStatsSubscription?.cancel();
     _fetchShieldTimer?.cancel();
     super.dispose();
   }
@@ -76,10 +71,6 @@ class StatisticsProvider extends BaseProvider {
       if (storeId != null && storeId.isNotEmpty) {
         fetchDashboardStats();
       } else {
-        _summarySubscription?.cancel();
-        _summarySubscription = null;
-        _todayStatsSubscription?.cancel();
-        _todayStatsSubscription = null;
         _dashboardSummary = null;
         _todayStats = null;
         _cachedSummary = null;
@@ -126,10 +117,6 @@ class StatisticsProvider extends BaseProvider {
       return;
     }
 
-    // Cancel old subscriptions
-    _summarySubscription?.cancel();
-    _todayStatsSubscription?.cancel();
-
     _isLoading = true;
     safeNotify();
 
@@ -137,71 +124,27 @@ class StatisticsProvider extends BaseProvider {
 
     if (kDebugMode) {
       debugPrint(
-          '⏳ [INIT DATA] StatisticsProvider: Establishing stats streams...');
+          '⏳ [INIT DATA] StatisticsProvider: Fetching stats via Futures...');
     }
 
-    // Phase 4: Ensure stats are initialized before watching
     try {
-      await _statsRepository.getStatsSummary(_storeId!);
-    } catch (e, stack) {
-      if (kDebugMode) {
-        debugPrint(
-            '⚠️ [INIT WARNING] StatisticsProvider: Initialization failed: $e');
-      }
-      AppErrorHandler.logSilentError(
-          e.toString(), 'StatisticsProvider.fetchDashboardStats',
-          stackTrace: stack);
-    }
-
-    // 1. Establish Summary Stream
-    _summarySubscription =
-        _statsRepository.watchStatsSummary(_storeId!).listen((summary) {
-      if (kDebugMode) {
-        debugPrint(
-            '✅ [INIT SUCCESS] StatisticsProvider: Received stats summary.');
-      }
+      final summary = await _statsRepository.getStatsSummary(_storeId!);
       _dashboardSummary = summary;
       _cachedSummary = summary;
       _cacheTimestamp = DateTime.now();
+
+      final today = await _statsRepository.fetchTodayStats(_storeId!);
+      _todayStats = today;
+
       _isLoading = false;
       safeNotify();
-    }, onError: (e, stack) {
-      if (e is FirebaseException && e.code == 'permission-denied') {
-        // Silently ignore: this happens naturally during the logout flow
-        return;
-      }
-      // Guard: if storeId is already null we are logging out — swallow this
-      // orphaned stream error (fired after cancel()) to prevent spurious toasts.
-      if (_storeId == null) return;
-      if (kDebugMode) {
-        debugPrint('❌ [INIT FATAL] StatisticsProvider (SummaryStream): $e');
-      }
-      setError('stats_error_summary_fetch', e, stack);
-    });
-
-    // 2. Establish Today Stats Stream
-    _todayStatsSubscription =
-        _statsRepository.watchTodayStats(_storeId!).listen((today) {
+    } catch (e, stack) {
       if (kDebugMode) {
         debugPrint(
-            '✅ [INIT SUCCESS] StatisticsProvider: Received today stats.');
+            '❌ [INIT FATAL] StatisticsProvider: Fetching dashboard stats failed: $e');
       }
-      _todayStats = today;
-      _isLoading = false;
-      safeNotify();
-    }, onError: (e, stack) {
-      if (e is FirebaseException && e.code == 'permission-denied') {
-        // Silently ignore: this happens naturally during the logout flow
-        return;
-      }
-      // Guard: if storeId is already null we are logging out — swallow this
-      // orphaned stream error to prevent spurious toasts.
-      if (_storeId == null) return;
-      if (kDebugMode) {
-        debugPrint('❌ [INIT FATAL] StatisticsProvider (TodayStatsStream): $e');
-      }
-      setError('stats_error_today_fetch', e, stack);
-    });
+      setError('stats_error_summary_fetch', e, stack);
+    }
   }
 
   Future<void> fetchFilteredStats(DateTimeRange dateRange) async {
@@ -375,10 +318,6 @@ class StatisticsProvider extends BaseProvider {
 
   void clearAndCancel() {
     _storeId = null;
-    _summarySubscription?.cancel();
-    _summarySubscription = null;
-    _todayStatsSubscription?.cancel();
-    _todayStatsSubscription = null;
     _fetchShieldTimer?.cancel();
     _dashboardSummary = null;
     _todayStats = null;

@@ -22,6 +22,7 @@ class EmployeeRepository {
 
   Future<List<UserModel>> getEmployeesByStoreId({
     required String storeId,
+    String? searchQuery,
     bool activeOnly = true,
     int limit = 20,
   }) async {
@@ -35,14 +36,22 @@ class EmployeeRepository {
         query = query.where(FirebaseConstants.isActive, isEqualTo: true);
       }
 
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query
+            .where(FirebaseConstants.fullName,
+                isGreaterThanOrEqualTo: searchQuery)
+            .where(FirebaseConstants.fullName,
+                isLessThanOrEqualTo: '$searchQuery\uf8ff');
+      }
+
       final snapshot = await query
-          .orderBy(FirebaseConstants.createdAt, descending: true)
+          .orderBy(FirebaseConstants.fullName)
           .limit(limit)
           .get();
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'EmployeeRepository');
+          stackTrace: stack, operation: 'EmployeeRepository.getEmployeesByStoreId');
       throw ServerException('employee_error_fetch_failed');
     }
   }

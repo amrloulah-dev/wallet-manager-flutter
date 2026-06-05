@@ -18,48 +18,61 @@ void main() {
     employeeProvider =
         EmployeeProvider(employeeRepository: mockEmployeeRepository);
 
-    // Default mock behavior for watchEmployees
-    when(() => mockEmployeeRepository.watchEmployees(any(),
+    // Default mock behavior for getEmployeesByStoreId
+    when(() => mockEmployeeRepository.getEmployeesByStoreId(
+            storeId: any(named: 'storeId'),
             searchQuery: any(named: 'searchQuery'),
             activeOnly: any(named: 'activeOnly')))
-        .thenAnswer((_) => Stream.value([]));
+        .thenAnswer((_) async => []);
   });
 
   group('Client-Side Search Filtering (TDD - Phase 2)', () {
     test(
-        'EmployeeProvider should call watchEmployees with searchQuery when setSearchQuery is called',
+        'EmployeeProvider should call getEmployeesByStoreId with searchQuery when setSearchQuery is called',
         () async {
-      // 1. Initial setStoreId should call watchEmployees with default params
+      // 1. Initial setStoreId should call getEmployeesByStoreId with default params
       employeeProvider.setStoreId(storeId);
+      await Future.delayed(Duration.zero);
 
-      verify(() => mockEmployeeRepository.watchEmployees(storeId,
-          searchQuery: null, activeOnly: true)).called(1);
+      verify(() => mockEmployeeRepository.getEmployeesByStoreId(
+          storeId: storeId,
+          searchQuery: null,
+          activeOnly: true)).called(1);
 
-      // 2. Setting search query should trigger a NEW call to watchEmployees
+      // 2. Setting search query should trigger a NEW call to getEmployeesByStoreId
       const query = 'Alice';
       employeeProvider.setSearchQuery(query);
+      await Future.delayed(Duration.zero);
 
-      // We expect watchEmployees to be called again with the query
-      verify(() => mockEmployeeRepository.watchEmployees(storeId,
-          searchQuery: query, activeOnly: true)).called(1);
+      // We expect getEmployeesByStoreId to be called again with the query
+      verify(() => mockEmployeeRepository.getEmployeesByStoreId(
+          storeId: storeId,
+          searchQuery: query,
+          activeOnly: true)).called(1);
     });
 
     test(
-        'EmployeeProvider should call watchEmployees with activeOnly when toggleActiveFilter is called',
+        'EmployeeProvider should call getEmployeesByStoreId with activeOnly when toggleActiveFilter is called',
         () async {
       employeeProvider.setStoreId(storeId);
+      await Future.delayed(Duration.zero);
 
-      verify(() => mockEmployeeRepository.watchEmployees(storeId,
-          searchQuery: null, activeOnly: true)).called(1);
+      verify(() => mockEmployeeRepository.getEmployeesByStoreId(
+          storeId: storeId,
+          searchQuery: null,
+          activeOnly: true)).called(1);
 
       // Toggle active filter (should change activeOnly to false)
       employeeProvider.toggleActiveFilter();
+      await Future.delayed(Duration.zero);
 
-      verify(() => mockEmployeeRepository.watchEmployees(storeId,
-          searchQuery: null, activeOnly: false)).called(1);
+      verify(() => mockEmployeeRepository.getEmployeesByStoreId(
+          storeId: storeId,
+          searchQuery: null,
+          activeOnly: false)).called(1);
     });
 
-    test('filteredEmployees should return the list provided by the stream',
+    test('filteredEmployees should return the list provided by getEmployeesByStoreId',
         () async {
       final mockEmployees = [
         UserModel(
@@ -71,14 +84,15 @@ void main() {
             lastLogin: DateTime.now()),
       ];
 
-      when(() => mockEmployeeRepository.watchEmployees(any(),
+      when(() => mockEmployeeRepository.getEmployeesByStoreId(
+              storeId: any(named: 'storeId'),
               searchQuery: any(named: 'searchQuery'),
               activeOnly: any(named: 'activeOnly')))
-          .thenAnswer((_) => Stream.value(mockEmployees));
+          .thenAnswer((_) async => mockEmployees);
 
       employeeProvider.setStoreId(storeId);
 
-      // Give the stream a moment to emit
+      // Give a moment for async operations to complete
       await Future.delayed(Duration.zero);
 
       expect(employeeProvider.filteredEmployees, equals(mockEmployees));

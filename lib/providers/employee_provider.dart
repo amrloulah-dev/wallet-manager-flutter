@@ -27,7 +27,7 @@ class EmployeeProvider extends BaseProvider {
 
   final Set<String> _suspendedEmployeeIds = {};
 
-  StreamSubscription? _employeeStreamSubscription;
+
 
   List<UserModel> get employees => _employees;
   EmployeeProviderStatus get status => _status;
@@ -60,22 +60,19 @@ class EmployeeProvider extends BaseProvider {
 
   @override
   void dispose() {
-    _employeeStreamSubscription?.cancel();
     super.dispose();
   }
 
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _employeeStreamSubscription?.cancel();
-      _employeeStreamSubscription = null;
       _employees = [];
       _status = EmployeeProviderStatus.initial;
       _errorMessage = null;
       _searchQuery = '';
 
       if (storeId != null && storeId.isNotEmpty) {
-        _listenToEmployees(storeId);
+        _fetchEmployees(storeId);
       } else {
         safeNotify();
       }
@@ -84,36 +81,32 @@ class EmployeeProvider extends BaseProvider {
 
   void refresh() {
     if (_currentStoreId != null) {
-      _listenToEmployees(_currentStoreId!);
+      _fetchEmployees(_currentStoreId!);
     }
   }
 
-  void _listenToEmployees(String storeId) {
+  Future<void> _fetchEmployees(String storeId) async {
     _updateStatus(EmployeeProviderStatus.loading);
-    _employeeStreamSubscription?.cancel();
+    safeNotify();
 
-    _employeeStreamSubscription = _employeeRepository
-        .watchEmployees(
-      storeId,
-      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-      activeOnly: _showActiveOnly,
-    )
-        .listen(
-      (employees) {
-        _employees = employees;
-        _recalculateSuspendedEmployees();
-        _updateStatus(EmployeeProviderStatus.loaded);
-        safeNotify();
-      },
-      onError: (error, stack) {
-        if (error is FirebaseException && error.code == 'permission-denied') {
-          // Silently ignore: this happens naturally during the logout flow
-          return;
-        }
-        setError('employee_error_fetch_failed', error, stack);
-        safeNotify();
-      },
-    );
+    try {
+      final employees = await _employeeRepository.getEmployeesByStoreId(
+        storeId: storeId,
+        searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+        activeOnly: _showActiveOnly,
+      );
+      _employees = employees;
+      _recalculateSuspendedEmployees();
+      _updateStatus(EmployeeProviderStatus.loaded);
+      safeNotify();
+    } catch (error, stack) {
+      if (error is FirebaseException && error.code == 'permission-denied') {
+        // Silently ignore: this happens naturally during the logout flow
+        return;
+      }
+      setError('employee_error_fetch_failed', error, stack);
+      safeNotify();
+    }
   }
 
   Future<bool> addEmployee({
@@ -352,7 +345,7 @@ class EmployeeProvider extends BaseProvider {
     if (_searchQuery != query) {
       _searchQuery = query;
       if (_currentStoreId != null) {
-        _listenToEmployees(_currentStoreId!);
+        _fetchEmployees(_currentStoreId!);
       } else {
         safeNotify();
       }
@@ -362,7 +355,7 @@ class EmployeeProvider extends BaseProvider {
   void toggleActiveFilter() {
     _showActiveOnly = !_showActiveOnly;
     if (_currentStoreId != null) {
-      _listenToEmployees(_currentStoreId!);
+      _fetchEmployees(_currentStoreId!);
     } else {
       safeNotify();
     }
@@ -372,7 +365,7 @@ class EmployeeProvider extends BaseProvider {
     if (_searchQuery.isNotEmpty) {
       _searchQuery = '';
       if (_currentStoreId != null) {
-        _listenToEmployees(_currentStoreId!);
+        _fetchEmployees(_currentStoreId!);
       } else {
         safeNotify();
       }

@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:flutter/material.dart';
 
 class MockStatsRepository extends Mock implements StatsRepository {}
@@ -28,6 +29,8 @@ void main() {
         .thenAnswer((_) => const Stream.empty());
     when(() => mockStatsRepo.getStatsSummary(any()))
         .thenAnswer((_) async => summary);
+    when(() => mockStatsRepo.fetchTodayStats(any()))
+        .thenAnswer((_) async => DailyStatsModel.empty('2026-06-05'));
     when(() => mockStatsRepo.getStatsByDateRange(any(), any(), any()))
         .thenAnswer((_) async => {
               'transactionCount': 10,
@@ -55,7 +58,7 @@ void main() {
     test('fetchFilteredStats should use pre-aggregated summary data', () async {
       provider.setStoreId(storeId);
 
-      // Wait for the stream to emit and update the provider state
+      // Wait for the stream/future to emit and update the provider state
       await Future.delayed(Duration.zero);
 
       final dateRange = DateTimeRange(
@@ -74,6 +77,36 @@ void main() {
       expect(provider.filteredStats!['totalSentAmount'], 2000.0);
       expect(provider.filteredStats!['totalReceivedAmount'], 3000.0);
       expect(provider.filteredStats!['totalCommission'], 100.0);
+    });
+
+    test('should fetch dashboard stats using Futures instead of Streams', () async {
+      final summary = StatsSummaryModel.empty().copyWith(
+        totalBalance: 1500.0,
+        totalWallets: 3,
+      );
+      final todayStats = DailyStatsModel.empty('2026-06-05').copyWith(
+        transactionCount: 5,
+        totalCommission: 50.0,
+      );
+
+      // Reset mock behaviors to verify exact calls
+      reset(mockStatsRepo);
+      when(() => mockStatsRepo.getStatsSummary(storeId))
+          .thenAnswer((_) async => summary);
+      when(() => mockStatsRepo.fetchTodayStats(storeId))
+          .thenAnswer((_) async => todayStats);
+
+      provider.setStoreId(storeId);
+      // Wait for async operations to complete
+      await Future.delayed(Duration.zero);
+
+      expect(provider.dashboardSummary, equals(summary));
+      expect(provider.todayStats, equals(todayStats));
+
+      verify(() => mockStatsRepo.getStatsSummary(storeId)).called(1);
+      verify(() => mockStatsRepo.fetchTodayStats(storeId)).called(1);
+      verifyNever(() => mockStatsRepo.watchStatsSummary(any()));
+      verifyNever(() => mockStatsRepo.watchTodayStats(any()));
     });
   });
 }
