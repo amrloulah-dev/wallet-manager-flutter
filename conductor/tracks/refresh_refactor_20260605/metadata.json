@@ -1,0 +1,8 @@
+{
+  "track_id": "refresh_refactor_20260605",
+  "type": "refactor",
+  "status": "new",
+  "created_at": "2026-06-05T06:27:23Z",
+  "updated_at": "2026-06-05T06:52:00Z",
+  "description": "Migrate Transactions, Wallets, and Debts to Optimistic UI architecture with stream eradication, client-side UUIDs, WriteBatch atomicity, strict rollback, derived summaries, and smart pull-to-refresh merge"
+}
