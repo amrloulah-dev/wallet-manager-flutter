@@ -1,6 +1,6 @@
 # Implementation Plan: Optimistic UI Refresh Refactor
 
-## Phase 0: Stream Eradication
+## Phase 0: Stream Eradication [checkpoint: 59bae7d]
 
 - [x] Task: Convert StatisticsProvider from Stream to Future-based fetch b946e8c
     - [x] Write tests for StatisticsProvider one-shot fetch behavior (Red)
