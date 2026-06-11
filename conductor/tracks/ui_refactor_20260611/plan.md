@@ -75,7 +75,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 2: UX Adjustments' (Protocol in workflow.md) 1436aaf
 
-## Phase 3: UI Redesign — WalletCard via Stitch
+## Phase 3: UI Redesign — WalletCard via Stitch [checkpoint: 8427795]
 
 - [x] Task: Fetch WalletCard design from Stitch MCP 4e85f3b
     - [x] Use Stitch MCP to fetch design from Project ID: `17710906945534389850`, Screen ID: `84cff1ca188a4264bff171511a7713bf`
