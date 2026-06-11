@@ -45,35 +45,35 @@
 
 ## Phase 2: UX Adjustments
 
-- [ ] Task: Write failing tests for "Add Balance" quick action (FR-4)
-    - [ ] Create/update widget test for `dashboard_quick_actions.dart`
-    - [ ] Test that the quick actions grid contains an "Add Balance" / "إضافة رصيد" action
-    - [ ] Test that tapping the action triggers navigation to `RouteConstants.addBalance`
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for "Add Balance" quick action (FR-4) 1436aaf
+    - [x] Create/update widget test for `dashboard_quick_actions.dart`
+    - [x] Test that the quick actions grid contains an "Add Balance" / "إضافة رصيد" action
+    - [x] Test that tapping the action triggers navigation to `RouteConstants.addBalance`
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Implement "Add Balance" quick action (FR-4)
-    - [ ] In `lib/presentation/widgets/dashboard/dashboard_quick_actions.dart`: add a new quick action card for "Add Balance" (إضافة رصيد)
-    - [ ] Route `onTap` to `RouteConstants.addBalance`
-    - [ ] Follow existing quick action card pattern for styling, icon, and localization
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Implement "Add Balance" quick action (FR-4) 1436aaf
+    - [x] In `lib/presentation/widgets/dashboard/dashboard_quick_actions.dart`: add a new quick action card for "Add Balance" (إضافة رصيد)
+    - [x] Route `onTap` to `RouteConstants.addBalance`
+    - [x] Follow existing quick action card pattern for styling, icon, and localization
+    - [x] Run tests and confirm all pass (Green phase)
 
-- [ ] Task: Write failing tests for simplified FAB (FR-5)
-    - [ ] Create/update widget test for `wallets_list_screen.dart`
-    - [ ] Test that a `FloatingActionButton.extended` with "Add Wallet" label is present
-    - [ ] Test that no SpeedDial/expandable FAB widgets exist
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for simplified FAB (FR-5) 1436aaf
+    - [x] Create/update widget test for `wallets_list_screen.dart`
+    - [x] Test that a `FloatingActionButton.extended` with "Add Wallet" label is present
+    - [x] Test that no SpeedDial/expandable FAB widgets exist
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Simplify Wallets screen FAB (FR-5)
-    - [ ] In `lib/presentation/screens/wallets/wallets_list_screen.dart`: delete `_buildSpeedDialFab` and `_buildFabOptions` methods entirely
-    - [ ] Replace `floatingActionButton` with `FloatingActionButton.extended(label: Text(AppLocalizations.of(context)!.addWallet), icon: Icon(Icons.add), onPressed: _navigateToAddWallet)`
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Simplify Wallets screen FAB (FR-5) 1436aaf
+    - [x] In `lib/presentation/screens/wallets/wallets_list_screen.dart`: delete `_buildSpeedDialFab` and `_buildFabOptions` methods entirely
+    - [x] Replace `floatingActionButton` with `FloatingActionButton.extended(label: Text(AppLocalizations.of(context)!.addWallet), icon: Icon(Icons.add), onPressed: _navigateToAddWallet)`
+    - [x] Run tests and confirm all pass (Green phase)
 
-- [ ] Task: Filter transaction list UI (FR-1 supplement)
-    - [ ] In `lib/presentation/screens/transactions/transactions_screen.dart`: filter the displayed transaction list to only show `TransactionType.debit` and `TransactionType.credit` items
-    - [ ] Ensure summary numbers at the top of the screen match the filtered visible list
-    - [ ] Verify existing transaction list tests still pass
+- [x] Task: Filter transaction list UI (FR-1 supplement) 1436aaf
+    - [x] In `lib/presentation/screens/transactions/transactions_screen.dart`: filter the displayed transaction list to only show `TransactionType.debit` and `TransactionType.credit` items
+    - [x] Ensure summary numbers at the top of the screen match the filtered visible list
+    - [x] Verify existing transaction list tests still pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: UX Adjustments' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: UX Adjustments' (Protocol in workflow.md) 1436aaf
 
 ## Phase 3: UI Redesign — WalletCard via Stitch
 
