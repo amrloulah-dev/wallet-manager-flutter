@@ -10,6 +10,7 @@ import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/state/safe_change_notifier.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService;
@@ -132,26 +133,23 @@ class OverlayProvider extends SafeChangeNotifier {
         _selectedWalletId = passedId;
         final selectedWallet =
             _availableWallets.firstWhere((w) => w['id'] == passedId);
-        final walletType =
+        final rawWalletType =
             selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
+        final walletType = WalletType.fromString(rawWalletType);
         _commission = FeeCalculator.calculateTransactionFee(
           amount: _amount,
-          sourceWalletType: walletType,
+          sourceWalletType: walletType.dbValue,
           receiverPhone: _sender,
         );
         if (kDebugMode) {
           debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
-              'auto-selected walletId=$passedId, walletType=$walletType, '
+              'auto-selected walletId=$passedId, walletType=${walletType.name}, '
               'calculatedCommission=$_commission');
         }
 
-        final isInstaPay = walletType == 'instapay';
-        final isTelecom = [
-          'vodafone_cash',
-          'orange_cash',
-          'etisalat_cash',
-          'we_pay'
-        ].contains(walletType);
+        final isInstaPay = walletType == WalletType.instaPay;
+        final isTelecom =
+            walletType != WalletType.instaPay && walletType != WalletType.other;
 
         if (isInstaPay && _amount > 70000) {
           _errorMessage = "overlay_error_amount_limit_instapay";
@@ -199,15 +197,17 @@ class OverlayProvider extends SafeChangeNotifier {
             orElse: () => null,
           );
       if (match != null) {
-        final walletType = match['walletType']?.toString() ?? 'vodafone_cash';
+        final rawWalletType =
+            match['walletType']?.toString() ?? 'vodafone_cash';
+        final walletType = WalletType.fromString(rawWalletType);
         _commission = FeeCalculator.calculateTransactionFee(
           amount: _amount,
-          sourceWalletType: walletType,
+          sourceWalletType: walletType.dbValue,
           receiverPhone: _sender,
         );
         if (kDebugMode) {
           debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-              'walletType=$walletType, recalculatedCommission=$_commission');
+              'walletType=${walletType.name}, recalculatedCommission=$_commission');
         }
       }
     } else {

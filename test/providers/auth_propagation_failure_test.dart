@@ -89,7 +89,8 @@ void main() {
     mockStoreRepo = MockStoreRepository();
     mockStorage = MockLocalStorageService();
     mockAuthRepo = MockAuthRepository();
-    when(() => mockAuthRepo.authStateChanges()).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuthRepo.authStateChanges())
+        .thenAnswer((_) => const Stream.empty());
     mockDatabaseSyncService = MockDatabaseSyncService();
     mockLicenseRepo = MockLicenseKeyRepository();
 
@@ -186,4 +187,3 @@ void main() {
     });
   });
 }
-

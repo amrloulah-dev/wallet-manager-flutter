@@ -19,7 +19,6 @@ import 'package:walletmanager/core/utils/password_hasher.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
-import 'package:walletmanager/data/services/firebase_service.dart';
 
 class AuthSessionResult {
   final UserModel user;
@@ -39,7 +38,6 @@ class DatabaseSyncService {
   final UserRepository _userRepository;
   final DeviceRepository _deviceRepository;
   final LocalStorageService _localStorage;
-  final FirebaseFirestore _firestore;
   final SubscriptionRepository _subscriptionRepository;
 
   DatabaseSyncService({
@@ -55,7 +53,6 @@ class DatabaseSyncService {
         _userRepository = userRepository,
         _deviceRepository = deviceRepository,
         _localStorage = localStorage,
-        _firestore = firestore ?? sl<FirebaseService>().firestore,
         _subscriptionRepository =
             subscriptionRepository ?? sl<SubscriptionRepository>();
 
@@ -338,15 +335,18 @@ class DatabaseSyncService {
     required String storePassword,
   }) async {
     // 1. CREATE AUTH FIRST (To satisfy Firestore Security Rules request.auth != null)
-    UserCredential userCredential = await _authRepository.createUserWithEmail(email, password);
+    UserCredential userCredential =
+        await _authRepository.createUserWithEmail(email, password);
     final user = userCredential.user!;
     await user.updateDisplayName(ownerName);
 
     // 2. NOW it is safe to check device eligibility
     final deviceId = await _deviceRepository.getDeviceId();
-    var isEligibleForTrial = await _deviceRepository.checkDeviceEligibility(deviceId);
+    var isEligibleForTrial =
+        await _deviceRepository.checkDeviceEligibility(deviceId);
     if (isEligibleForTrial) {
-      final hasConsumed = await _subscriptionRepository.hasDeviceConsumedTrial();
+      final hasConsumed =
+          await _subscriptionRepository.hasDeviceConsumedTrial();
       if (hasConsumed) isEligibleForTrial = false;
     }
 
@@ -435,12 +435,13 @@ class DatabaseSyncService {
     // ABANDON BATCH: Sequential creation to satisfy Firestore Security Rules
     // 1. Create User first and wait for it
     await _userRepository.createUser(newOwner);
-    
+
     // 2. Short delay to allow Firestore rules to recognize the new user document
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     // 3. Now safely create the store
-    await _storeRepository.createStore(newStore, isEligibleForTrial: isEligibleForTrial);
+    await _storeRepository.createStore(newStore,
+        isEligibleForTrial: isEligibleForTrial);
 
     final freshStore = await _storeRepository.getStoreById(storeId);
     final resolvedStore = freshStore ?? newStore;

@@ -13,7 +13,8 @@ class SubscriptionDetailsScreen extends StatefulWidget {
   const SubscriptionDetailsScreen({super.key});
 
   @override
-  State<SubscriptionDetailsScreen> createState() => _SubscriptionDetailsScreenState();
+  State<SubscriptionDetailsScreen> createState() =>
+      _SubscriptionDetailsScreenState();
 }
 
 class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
@@ -34,11 +35,15 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
     final subscription = context.select<AuthProvider, StoreSubscription?>(
       (p) => p.currentStore?.subscription,
     );
-    final isWalletLoading = context.select<WalletProvider, bool>((p) => p.isLoading);
-    final walletCount = context.select<WalletProvider, int>((p) => p.wallets.length);
+    final isWalletLoading =
+        context.select<WalletProvider, bool>((p) => p.isLoading);
+    final walletCount =
+        context.select<WalletProvider, int>((p) => p.wallets.length);
 
-    final isEmployeeLoading = context.select<EmployeeProvider, bool>((p) => p.isLoading);
-    final employeeCount = context.select<EmployeeProvider, int>((p) => p.employeesCount);
+    final isEmployeeLoading =
+        context.select<EmployeeProvider, bool>((p) => p.isLoading);
+    final employeeCount =
+        context.select<EmployeeProvider, int>((p) => p.employeesCount);
 
     if (subscription == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -225,8 +230,8 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
               else
                 Text(
                   isMax ? '$current / ∞' : '$current / $max',
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
             ],
           ),

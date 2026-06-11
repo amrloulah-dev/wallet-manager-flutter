@@ -68,7 +68,8 @@ void main() {
     statsRepository = StatsRepository(firestore: fakeFirestore);
 
     mockAuthRepository = MockAuthRepository();
-    when(() => mockAuthRepository.authStateChanges()).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuthRepository.authStateChanges())
+        .thenAnswer((_) => const Stream.empty());
     mockDeviceRepository = MockDeviceRepository();
     mockLocalStorage = MockLocalStorageService();
     mockSubscriptionRepository = MockSubscriptionRepository();
@@ -159,4 +160,3 @@ void main() {
     });
   });
 }
-

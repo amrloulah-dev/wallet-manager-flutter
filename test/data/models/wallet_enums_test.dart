@@ -37,6 +37,29 @@ void main() {
       expect(WalletType.fromString('we pay  '), equals(WalletType.wePay));
     });
 
+    test('should parse camelCase and other variations resiliently', () {
+      expect(WalletType.fromString('vodafoneCash'),
+          equals(WalletType.vodafoneCash));
+      expect(WalletType.fromString('instaPay'), equals(WalletType.instaPay));
+      expect(
+          WalletType.fromString('orangeCash'), equals(WalletType.orangeCash));
+      expect(WalletType.fromString('etisalatCash'),
+          equals(WalletType.etisalatCash));
+      expect(WalletType.fromString('wePay'), equals(WalletType.wePay));
+    });
+
+    test('should parse Arabic wallet type names correctly', () {
+      expect(WalletType.fromString('فودافون كاش'),
+          equals(WalletType.vodafoneCash));
+      expect(WalletType.fromString('إنستاباي'), equals(WalletType.instaPay));
+      expect(WalletType.fromString('انستاباي'), equals(WalletType.instaPay));
+      expect(
+          WalletType.fromString('أورانج كاش'), equals(WalletType.orangeCash));
+      expect(WalletType.fromString('اتصالات كاش'),
+          equals(WalletType.etisalatCash));
+      expect(WalletType.fromString('وي باي'), equals(WalletType.wePay));
+    });
+
     test('should default to WalletType.other for unknown strings', () {
       expect(WalletType.fromString('unknown_wallet'), equals(WalletType.other));
       expect(WalletType.fromString(''), equals(WalletType.other));

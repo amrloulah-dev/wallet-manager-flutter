@@ -8,8 +8,6 @@ import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/presentation/widgets/dashboard/stats_card.dart';
-import '../../../../data/models/stats_summary_model.dart';
-import '../../../../data/models/daily_stats_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/errors/app_error_handler.dart';
@@ -31,8 +29,10 @@ class DashboardQuickStats extends StatelessWidget {
               ),
             );
           }
-          if (provider.errorMessage != null && provider.dashboardSummary == null) {
-            return SliverToBoxAdapter(child: Center(child: Text(provider.errorMessage!)));
+          if (provider.errorMessage != null &&
+              provider.dashboardSummary == null) {
+            return SliverToBoxAdapter(
+                child: Center(child: Text(provider.errorMessage!)));
           }
 
           final stats = provider.dashboardSummary;
@@ -117,8 +117,9 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                              value: (provider.todayStats?.transactionCount ?? 0)
-                                  .toString(),
+                              value:
+                                  (provider.todayStats?.transactionCount ?? 0)
+                                      .toString(),
                               icon: Icons.swap_horiz,
                               color: Colors.green.shade700,
                               onTap: () {

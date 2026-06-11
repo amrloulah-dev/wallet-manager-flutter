@@ -147,7 +147,7 @@ void main() {
           createdAt: DateTime.now(),
           lastLogin: DateTime.now(),
         );
-        
+
         final mockWallet = WalletModel.fromWalletStatus(
           walletId: 'w1',
           storeId: 's1',

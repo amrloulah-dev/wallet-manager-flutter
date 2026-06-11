@@ -16,11 +16,17 @@ import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/data/models/paginated_result.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockWalletCacheManager extends Mock implements WalletCacheManager {}
+
 class MockWalletUseCase extends Mock implements WalletUseCase {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 class FakeWalletModel extends Fake implements WalletModel {}
 
 void main() {
@@ -81,7 +87,8 @@ void main() {
     when(() => mockAuth.ensureUserLoaded()).thenAnswer((_) async => mockUser);
     when(() => mockAuth.currentUserId).thenReturn('u1');
 
-    when(() => mockUseCase.validatePermission(any())).thenAnswer((_) async => mockUser);
+    when(() => mockUseCase.validatePermission(any()))
+        .thenAnswer((_) async => mockUser);
     when(() => mockUseCase.calculateFrozenWallets(
           wallets: any(named: 'wallets'),
           subscriptionProvider: any(named: 'subscriptionProvider'),
@@ -90,7 +97,8 @@ void main() {
 
     when(() => mockCacheManager.cacheWallets(any())).thenAnswer((_) async {});
     when(() => mockWalletRepo.getAllWallets(storeId)).thenAnswer((_) async =>
-        PaginatedResult<WalletModel>(items: [initialWallet], lastDocument: null));
+        PaginatedResult<WalletModel>(
+            items: [initialWallet], lastDocument: null));
 
     when(() => mockSubProvider.canAddWallet(any())).thenReturn(true);
 
@@ -106,10 +114,14 @@ void main() {
   });
 
   group('WalletProvider Optimistic UI Tests', () {
-    test('createWallet should generate client-side UUID and insert to local list immediately', () async {
+    test(
+        'createWallet should generate client-side UUID and insert to local list immediately',
+        () async {
       final createCompleter = Completer<void>();
-      when(() => mockWalletRepo.getWalletsCount(storeId)).thenAnswer((_) async => 1);
-      when(() => mockWalletRepo.createWallet(any())).thenAnswer((_) => createCompleter.future);
+      when(() => mockWalletRepo.getWalletsCount(storeId))
+          .thenAnswer((_) async => 1);
+      when(() => mockWalletRepo.createWallet(any()))
+          .thenAnswer((_) => createCompleter.future);
 
       // Fetch initial state first so we have the initial list
       await provider.fetchInitialWallets();
@@ -129,10 +141,14 @@ void main() {
 
       // Verify optimistic mutation: wallet should be in local list
       expect(provider.wallets.length, 2);
-      final newWallet = provider.wallets.firstWhere((w) => w.walletId != 'w_initial');
+      final newWallet =
+          provider.wallets.firstWhere((w) => w.walletId != 'w_initial');
 
       // ID should be a UUID
-      expect(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$').hasMatch(newWallet.walletId), isTrue);
+      expect(
+          RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+              .hasMatch(newWallet.walletId),
+          isTrue);
       expect(newWallet.balance, 100.0);
       expect(provider.walletMap.containsKey(newWallet.walletId), isTrue);
 
@@ -143,8 +159,10 @@ void main() {
     });
 
     test('failed createWallet should trigger rollback to snapshot', () async {
-      when(() => mockWalletRepo.getWalletsCount(storeId)).thenAnswer((_) async => 1);
-      when(() => mockWalletRepo.createWallet(any())).thenThrow(Exception('Firestore write failed'));
+      when(() => mockWalletRepo.getWalletsCount(storeId))
+          .thenAnswer((_) async => 1);
+      when(() => mockWalletRepo.createWallet(any()))
+          .thenThrow(Exception('Firestore write failed'));
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.length, 1);
@@ -163,15 +181,19 @@ void main() {
       expect(provider.wallets.first.walletId, 'w_initial');
     });
 
-    test('updateWallet should optimistically update local model and rollback on failure', () async {
+    test(
+        'updateWallet should optimistically update local model and rollback on failure',
+        () async {
       final updateCompleter = Completer<void>();
-      when(() => mockWalletRepo.updateWallet(any(), any())).thenAnswer((_) => updateCompleter.future);
+      when(() => mockWalletRepo.updateWallet(any(), any()))
+          .thenAnswer((_) => updateCompleter.future);
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.first.balance, 500.0);
 
       // Trigger update
-      final updateFuture = provider.updateWallet('w_initial', {'balance': 600.0});
+      final updateFuture =
+          provider.updateWallet('w_initial', {'balance': 600.0});
 
       // Yield control
       await Future.delayed(Duration.zero);
@@ -186,21 +208,26 @@ void main() {
     });
 
     test('updateWallet rollback on failure', () async {
-      when(() => mockWalletRepo.updateWallet(any(), any())).thenThrow(Exception('Update failed'));
+      when(() => mockWalletRepo.updateWallet(any(), any()))
+          .thenThrow(Exception('Update failed'));
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.first.balance, 500.0);
 
-      final result = await provider.updateWallet('w_initial', {'balance': 600.0});
+      final result =
+          await provider.updateWallet('w_initial', {'balance': 600.0});
 
       expect(result, isFalse);
       // Reverted to original balance
       expect(provider.wallets.first.balance, 500.0);
     });
 
-    test('deleteWallet should optimistically remove local model and rollback on failure', () async {
+    test(
+        'deleteWallet should optimistically remove local model and rollback on failure',
+        () async {
       final deleteCompleter = Completer<void>();
-      when(() => mockWalletRepo.deleteWallet(any())).thenAnswer((_) => deleteCompleter.future);
+      when(() => mockWalletRepo.deleteWallet(any()))
+          .thenAnswer((_) => deleteCompleter.future);
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.length, 1);
@@ -221,7 +248,8 @@ void main() {
     });
 
     test('deleteWallet rollback on failure', () async {
-      when(() => mockWalletRepo.deleteWallet(any())).thenThrow(Exception('Delete failed'));
+      when(() => mockWalletRepo.deleteWallet(any()))
+          .thenThrow(Exception('Delete failed'));
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.length, 1);
@@ -239,7 +267,8 @@ void main() {
       expect(provider.totalActiveWallets, 1);
 
       // Stub createWallet to succeed
-      when(() => mockWalletRepo.getWalletsCount(storeId)).thenAnswer((_) async => 1);
+      when(() => mockWalletRepo.getWalletsCount(storeId))
+          .thenAnswer((_) async => 1);
       when(() => mockWalletRepo.createWallet(any())).thenAnswer((_) async {});
 
       await provider.createWallet(
@@ -254,10 +283,14 @@ void main() {
       expect(provider.totalActiveWallets, 2);
     });
 
-    test('fetchInitialWallets with forceRefresh should preserve pending optimistic wallets', () async {
+    test(
+        'fetchInitialWallets with forceRefresh should preserve pending optimistic wallets',
+        () async {
       final createCompleter = Completer<void>();
-      when(() => mockWalletRepo.getWalletsCount(storeId)).thenAnswer((_) async => 1);
-      when(() => mockWalletRepo.createWallet(any())).thenAnswer((_) => createCompleter.future);
+      when(() => mockWalletRepo.getWalletsCount(storeId))
+          .thenAnswer((_) async => 1);
+      when(() => mockWalletRepo.createWallet(any()))
+          .thenAnswer((_) => createCompleter.future);
 
       await provider.fetchInitialWallets();
       expect(provider.wallets.length, 1);
@@ -275,7 +308,9 @@ void main() {
 
       // We have 1 pending wallet in provider's local list
       expect(provider.wallets.length, 2);
-      final pendingWalletId = provider.wallets.firstWhere((w) => w.walletId != 'w_initial').walletId;
+      final pendingWalletId = provider.wallets
+          .firstWhere((w) => w.walletId != 'w_initial')
+          .walletId;
 
       // Mock repository response for fetchInitialWallets
       final serverWallet = WalletModel(
@@ -297,8 +332,9 @@ void main() {
             totalSentAmount: 0,
             totalReceivedAmount: 0),
       );
-      when(() => mockWalletRepo.getAllWallets(storeId))
-          .thenAnswer((_) async => PaginatedResult<WalletModel>(items: [serverWallet], lastDocument: null));
+      when(() => mockWalletRepo.getAllWallets(storeId)).thenAnswer((_) async =>
+          PaginatedResult<WalletModel>(
+              items: [serverWallet], lastDocument: null));
 
       // Trigger pull-to-refresh
       await provider.fetchInitialWallets(forceRefresh: true);
@@ -306,7 +342,8 @@ void main() {
       // Verify that the local list now has the fetched server wallet AND the pending wallet!
       expect(provider.wallets.length, 2);
       expect(provider.wallets.any((w) => w.walletId == 'w_server'), isTrue);
-      expect(provider.wallets.any((w) => w.walletId == pendingWalletId), isTrue);
+      expect(
+          provider.wallets.any((w) => w.walletId == pendingWalletId), isTrue);
 
       // Clean up/Complete pending write
       createCompleter.complete();

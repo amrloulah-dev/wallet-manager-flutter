@@ -279,9 +279,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
           // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
           itemLabelBuilder: (WalletModel wallet) {
-            String label = '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            String label =
+                '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
             if (wallet.isFrozen) {
-              label += ' ${l10n.walletIsFrozenShort}'; 
+              label += ' ${l10n.walletIsFrozenShort}';
             }
             return label;
           },

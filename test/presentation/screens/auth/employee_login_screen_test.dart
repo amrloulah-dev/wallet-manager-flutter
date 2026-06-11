@@ -14,9 +14,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockEmployeeProvider extends Mock implements EmployeeProvider {}
 
 class FakeUserModel extends Fake implements UserModel {}
+
 class FakeStoreModel extends Fake implements StoreModel {}
 
 void main() {
@@ -31,7 +33,7 @@ void main() {
   setUp(() {
     mockAuthProvider = MockAuthProvider();
     mockEmployeeProvider = MockEmployeeProvider();
-    
+
     when(() => mockEmployeeProvider.setStoreId(any())).thenAnswer((_) async {});
     when(() => mockEmployeeProvider.isLoading).thenReturn(false);
     when(() => mockEmployeeProvider.hasError).thenReturn(false);
@@ -43,7 +45,8 @@ void main() {
         fullName: 'Test Employee',
         role: UserRole.employee,
         storeId: 'store_1',
-        pin: '1234', // hashed pin matching test? actually the test will fail on PasswordHasher without mock, but the check is BEFORE login.
+        pin:
+            '1234', // hashed pin matching test? actually the test will fail on PasswordHasher without mock, but the check is BEFORE login.
       )
     ]);
   });
@@ -52,7 +55,8 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
-        ChangeNotifierProvider<EmployeeProvider>.value(value: mockEmployeeProvider),
+        ChangeNotifierProvider<EmployeeProvider>.value(
+            value: mockEmployeeProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -63,17 +67,16 @@ void main() {
         ],
         supportedLocales: const [Locale('en')],
         home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              return EmployeeLoginScreen(store: store);
-            }
-          ),
+          body: Builder(builder: (context) {
+            return EmployeeLoginScreen(store: store);
+          }),
         ),
       ),
     );
   }
 
-  testWidgets('Employee login aborts when subscription is expired', (tester) async {
+  testWidgets('Employee login aborts when subscription is expired',
+      (tester) async {
     final expiredStore = StoreModel(
       storeId: 'store_1',
       storeName: 'Test Store',
@@ -113,14 +116,14 @@ void main() {
 
     // Enter PIN
     await tester.enterText(find.byType(TextFormField).last, '1234');
-    
+
     // Tap Login
     await tester.tap(find.byIcon(Icons.login));
     await tester.pump(); // trigger toast
 
     // Verify loginAsEmployee was NEVER called
     verifyNever(() => mockAuthProvider.loginAsEmployee(any(), any()));
-    
+
     // Check if toast is shown (toast uses root scaffold messenger usually, or custom overlay)
     // In ToastUtils, it usually uses fluttertoast or similar. We can just verify the block happened by loginAsEmployee not being called.
   });

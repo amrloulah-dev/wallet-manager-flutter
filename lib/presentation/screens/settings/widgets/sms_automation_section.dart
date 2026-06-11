@@ -178,7 +178,8 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
                         final l10n = AppLocalizations.of(context)!;
                         if (isOwner) {
                           ToastUtils.showError(l10n.upgradeRequiredToEnableSms);
-                          Navigator.pushNamed(context, RouteConstants.upgradeScreen);
+                          Navigator.pushNamed(
+                              context, RouteConstants.upgradeScreen);
                         } else {
                           ToastUtils.showError(l10n.requestUpgradeFromOwner);
                         }
@@ -193,7 +194,8 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
                     ),
                     subtitle: Text(
                       AppLocalizations.of(context)!.autoDetectTransactions,
-                      style: AppTextStyles.bodySmall.copyWith(color: Colors.grey),
+                      style:
+                          AppTextStyles.bodySmall.copyWith(color: Colors.grey),
                     ),
                     value: _isEnabled,
                     activeThumbColor: AppColors.primary,
@@ -235,7 +237,8 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
   Widget _buildSimDropdown(
       int slot, String label, SimWalletConfig? currentConfig) {
     final String? currentId = currentConfig?.walletId;
-    final bool valueExists = currentId != null && _availableWallets.any((w) => w['id'] == currentId);
+    final bool valueExists =
+        currentId != null && _availableWallets.any((w) => w['id'] == currentId);
     final String? safeValue = valueExists ? currentId : null;
 
     return DropdownButtonFormField<String>(

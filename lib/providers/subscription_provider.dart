@@ -210,6 +210,7 @@ class SubscriptionProvider extends BaseProvider {
     if (_subscription != null && isExpired && !hasPendingRequest) return 0;
     return _subscription?.maxEmployees ?? 0;
   }
+
   bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
 
   bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;

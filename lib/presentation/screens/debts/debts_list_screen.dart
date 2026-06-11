@@ -170,8 +170,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
 
         if (hasError) {
           return CustomErrorWidget(
-            message: errorMessage ??
-                AppLocalizations.of(context)!.errorLoadingDebts,
+            message:
+                errorMessage ?? AppLocalizations.of(context)!.errorLoadingDebts,
             onRetry: provider.fetchInitialDebts,
           );
         }
@@ -179,8 +179,7 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         if (debts.isEmpty) {
           return EmptyStateWidget(
             message: AppLocalizations.of(context)!.noDebtsRecorded,
-            description:
-                AppLocalizations.of(context)!.debtsWillAppearHere,
+            description: AppLocalizations.of(context)!.debtsWillAppearHere,
             icon: Icons.credit_card_off_outlined,
             actionText: AppLocalizations.of(context)!.addNewDebt,
             onAction: () => _navigateToAddDebt(context),
@@ -208,10 +207,10 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 onTap: PermissionHelper.canMarkDebtPaid(context)
                     ? () => _showPartialPaymentSheet(context, debt)
                     : null,
-                onMarkPaid: debt.isOpen &&
-                        PermissionHelper.canMarkDebtPaid(context)
-                    ? () => _showMarkPaidDialog(debt)
-                    : null,
+                onMarkPaid:
+                    debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
+                        ? () => _showMarkPaidDialog(debt)
+                        : null,
               );
             },
           ),

@@ -90,7 +90,8 @@ void main() {
 
     when(() => mockStatsProvider.dashboardSummary).thenReturn(null);
     when(() => mockStatsProvider.todayStats).thenReturn(null);
-    when(() => mockStatsProvider.addDebtOptimistically(amount: any(named: 'amount'))).thenAnswer((_) {});
+    when(() => mockStatsProvider.addDebtOptimistically(
+        amount: any(named: 'amount'))).thenAnswer((_) {});
 
     sl.registerSingleton<StatisticsProvider>(mockStatsProvider);
   });

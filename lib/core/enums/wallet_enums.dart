@@ -44,16 +44,39 @@ enum WalletType {
     final sanitized = type.toLowerCase().trim().replaceAll(' ', '_');
     switch (sanitized) {
       case 'vodafone_cash':
+      case 'vodafonecash':
         return WalletType.vodafoneCash;
       case 'instapay':
+      case 'insta_pay':
         return WalletType.instaPay;
       case 'orange_cash':
+      case 'orangecash':
         return WalletType.orangeCash;
       case 'etisalat_cash':
+      case 'etisalatcash':
         return WalletType.etisalatCash;
       case 'we_pay':
+      case 'wepay':
         return WalletType.wePay;
       default:
+        // Handle Arabic string mappings directly to prevent "أخرى" fallback
+        final normalizedAr =
+            type.trim().replaceAll(' ', '').replaceAll('_', '');
+        if (normalizedAr == 'فودافونكاش') {
+          return WalletType.vodafoneCash;
+        }
+        if (normalizedAr == 'إنستاباي' || normalizedAr == 'انستاباي') {
+          return WalletType.instaPay;
+        }
+        if (normalizedAr == 'أورانجكاش' || normalizedAr == 'اورانجكاش') {
+          return WalletType.orangeCash;
+        }
+        if (normalizedAr == 'اتصالاتكاش') {
+          return WalletType.etisalatCash;
+        }
+        if (normalizedAr == 'ويباي') {
+          return WalletType.wePay;
+        }
         return WalletType.other;
     }
   }

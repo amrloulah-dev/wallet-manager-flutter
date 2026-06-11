@@ -55,6 +55,7 @@ class WalletProvider extends BaseProvider {
     _pendingWalletIds.remove(walletId);
     safeNotify();
   }
+
   bool _hasMore = true;
 
   // Status
@@ -174,7 +175,9 @@ class WalletProvider extends BaseProvider {
     if (index != -1) {
       final oldWallet = _wallets[index];
       final totalChange = isIncome ? amount : amount + serviceFee;
-      final newBalance = isIncome ? oldWallet.balance + totalChange : oldWallet.balance - totalChange;
+      final newBalance = isIncome
+          ? oldWallet.balance + totalChange
+          : oldWallet.balance - totalChange;
 
       // Create a brand new instance using copyWith
       _wallets[index] = oldWallet.copyWith(balance: newBalance);
@@ -185,14 +188,16 @@ class WalletProvider extends BaseProvider {
       _rebuildWalletMap();
       notifyListeners();
     } else {
-      debugPrint("CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
+      debugPrint(
+          "CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
     }
   }
 
-  void updateLocalBalance(String walletId, double amount, dynamic type, {double serviceFee = 0.0}) {
+  void updateLocalBalance(String walletId, double amount, dynamic type,
+      {double serviceFee = 0.0}) {
     if (isDisposed) return;
-    final TransactionType t = type is String 
-        ? TransactionType.fromString(type) 
+    final TransactionType t = type is String
+        ? TransactionType.fromString(type)
         : (type is TransactionType ? type : TransactionType.credit);
     final isIncome = t == TransactionType.credit;
     updateLocalWalletBalance(
@@ -220,8 +225,9 @@ class WalletProvider extends BaseProvider {
   WalletType? get filterByType => _filterByType;
   WalletStatus? get filterByStatus => _filterByStatus;
   bool get hasMore => _hasMore;
-  int get totalActiveWallets =>
-      _wallets.where((w) => w.walletStatus == WalletStatus.active && w.isActive).length;
+  int get totalActiveWallets => _wallets
+      .where((w) => w.walletStatus == WalletStatus.active && w.isActive)
+      .length;
 
   bool get isLoading => _status == WalletProviderStatus.loading;
   bool get isLoadingMore => _status == WalletProviderStatus.loadingMore;
@@ -302,7 +308,8 @@ class WalletProvider extends BaseProvider {
         }
       }
       for (final w in _wallets) {
-        if (_pendingWalletIds.contains(w.walletId) && !incomingIds.contains(w.walletId)) {
+        if (_pendingWalletIds.contains(w.walletId) &&
+            !incomingIds.contains(w.walletId)) {
           // Prepend newly created pending items
           mergedList.insert(0, w);
         }
@@ -325,7 +332,9 @@ class WalletProvider extends BaseProvider {
       _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
-        if (kDebugMode) debugPrint('🤫 [SILENT ERROR] WalletProvider: permission-denied (likely native sign-out)');
+        if (kDebugMode)
+          debugPrint(
+              '🤫 [SILENT ERROR] WalletProvider: permission-denied (likely native sign-out)');
         return;
       }
       setError('wallet_error_fetch_failed', e, stack);
@@ -480,9 +489,15 @@ class WalletProvider extends BaseProvider {
       final oldWallet = _wallets[index];
       final newWallet = oldWallet.copyWith(
         phoneNumber: data['phoneNumber'] as String?,
-        walletType: data['walletType'] != null ? WalletType.fromString(data['walletType'] as String) : null,
-        walletStatus: data['walletStatus'] != null ? WalletStatus.fromString(data['walletStatus'] as String) : null,
-        balance: data['balance'] != null ? NumberParser.toDouble(data['balance']) : null,
+        walletType: data['walletType'] != null
+            ? WalletType.fromString(data['walletType'] as String)
+            : null,
+        walletStatus: data['walletStatus'] != null
+            ? WalletStatus.fromString(data['walletStatus'] as String)
+            : null,
+        balance: data['balance'] != null
+            ? NumberParser.toDouble(data['balance'])
+            : null,
         notes: data.containsKey('notes') ? data['notes'] as String? : null,
         isActive: data['isActive'] as bool?,
       );
@@ -603,7 +618,8 @@ class WalletProvider extends BaseProvider {
     }
   }
 
-  void _rollbackLocalWallet(List<WalletModel>? oldWallets, Map<String, WalletModel>? oldWalletMap) {
+  void _rollbackLocalWallet(
+      List<WalletModel>? oldWallets, Map<String, WalletModel>? oldWalletMap) {
     if (oldWallets != null) _wallets = oldWallets;
     if (oldWalletMap != null) _walletMap = oldWalletMap;
     _rebuildWalletMap();

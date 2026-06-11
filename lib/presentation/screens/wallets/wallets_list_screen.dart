@@ -13,7 +13,6 @@ import '../../widgets/common/error_widget.dart';
 import '../../../core/utils/debouncer.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/wallet/wallet_card.dart';
-import '../../widgets/common/add_close_animated_icon.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletsListScreen extends StatefulWidget {
@@ -23,21 +22,14 @@ class WalletsListScreen extends StatefulWidget {
   State<WalletsListScreen> createState() => _WalletsListScreenState();
 }
 
-class _WalletsListScreenState extends State<WalletsListScreen>
-    with TickerProviderStateMixin {
+class _WalletsListScreenState extends State<WalletsListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
   final _scrollController = ScrollController();
-  late AnimationController _fabAnimationController;
-  bool isFabMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _fabAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
 
     // Add listener for pagination
     _scrollController.addListener(_onScroll);
@@ -54,7 +46,6 @@ class _WalletsListScreenState extends State<WalletsListScreen>
     _debouncer.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _fabAnimationController.dispose();
     super.dispose();
   }
 
@@ -65,23 +56,8 @@ class _WalletsListScreenState extends State<WalletsListScreen>
     }
   }
 
-  void _toggleFabMenu() {
-    setState(() {
-      isFabMenuOpen = !isFabMenuOpen;
-      if (isFabMenuOpen) {
-        _fabAnimationController.forward();
-      } else {
-        _fabAnimationController.reverse();
-      }
-    });
-  }
-
   void _navigateToAddWallet() {
     Navigator.pushNamed(context, RouteConstants.walletForm);
-  }
-
-  void _navigateToAddBalance() {
-    Navigator.pushNamed(context, RouteConstants.addBalance);
   }
 
   void _navigateToEditWallet(WalletModel wallet) {
@@ -141,7 +117,11 @@ class _WalletsListScreenState extends State<WalletsListScreen>
           ),
         ],
       ),
-      floatingActionButton: _buildSpeedDialFab(),
+      floatingActionButton: FloatingActionButton.extended(
+        label: Text(AppLocalizations.of(context)!.addWallet),
+        icon: const Icon(Icons.add),
+        onPressed: _navigateToAddWallet,
+      ),
     );
   }
 
@@ -193,8 +173,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
                 child: ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.only(bottom: 80),
-                  itemCount:
-                      filteredWallets.length + (isLoadingMore ? 1 : 0),
+                  itemCount: filteredWallets.length + (isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == filteredWallets.length) {
                       return const Padding(
@@ -207,8 +186,7 @@ class _WalletsListScreenState extends State<WalletsListScreen>
                       key: ValueKey(
                           '${wallet.walletId}_${wallet.balance}_${provider.isWalletFrozenSync(wallet.walletId)}'),
                       wallet: wallet,
-                      onTap: () =>
-                          _navigateToWalletDetails(wallet.walletId),
+                      onTap: () => _navigateToWalletDetails(wallet.walletId),
                       onEdit: () => _navigateToEditWallet(wallet),
                       onDelete: () => _showDeleteDialog(wallet),
                     );
@@ -220,51 +198,6 @@ class _WalletsListScreenState extends State<WalletsListScreen>
         );
       },
     );
-  }
-
-  Widget _buildSpeedDialFab() {
-    return SizedBox(
-      height: 250.0,
-      width: 250.0,
-      child: Stack(
-        alignment: AlignmentDirectional.bottomStart,
-        children: [
-          ..._buildFabOptions(),
-          FloatingActionButton(
-            onPressed: _toggleFabMenu,
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            tooltip: AppLocalizations.of(context)!.addWallet,
-            child: AddCloseAnimatedIcon(
-              progress: _fabAnimationController,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildFabOptions() {
-    final options = <Widget>[
-      _FabOption(
-        label: AppLocalizations.of(context)!.addBalance,
-        icon: Icons.add_card_outlined,
-        onPressed: _navigateToAddBalance,
-        animation: _fabAnimationController,
-        translation: const Offset(0, -65),
-      ),
-      _FabOption(
-        label: AppLocalizations.of(context)!.addWallet,
-        icon: Icons.account_balance_wallet_outlined,
-        onPressed: _navigateToAddWallet,
-        animation: _fabAnimationController,
-        translation: const Offset(0, -130),
-      ),
-    ];
-
-    return options;
   }
 
   Widget _buildSearchBar() {
@@ -351,64 +284,6 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(value, style: AppTextStyles.h3.copyWith(color: AppColors.primary)),
       ],
-    );
-  }
-}
-
-class _FabOption extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Animation<double> animation;
-  final Offset translation;
-
-  const _FabOption({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    required this.animation,
-    required this.translation,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(
-            translation.dx * animation.value,
-            translation.dy * animation.value,
-          ),
-          child: Opacity(
-            opacity: animation.value,
-            child: child,
-          ),
-        );
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Card(
-            elevation: 4,
-            color: AppColors.primary,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(label,
-                  style: AppTextStyles.labelMedium
-                      .copyWith(color: AppColors.surface(context))),
-            ),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton.small(
-            onPressed: onPressed,
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.surface(context),
-            heroTag: null,
-            child: Icon(icon),
-          ),
-        ],
-      ),
     );
   }
 }

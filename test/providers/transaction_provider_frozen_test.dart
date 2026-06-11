@@ -18,10 +18,15 @@ import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockStatsRepository extends Mock implements StatsRepository {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockWalletProvider extends Mock implements WalletProvider {}
+
 class FakeTransactionModel extends Fake implements TransactionModel {}
 
 void main() {

@@ -19,7 +19,6 @@ import 'package:walletmanager/core/di/service_locator.dart';
 class TransactionRepository {
   final FirebaseService _firebaseService;
   final CacheManager _cacheManager;
-  final StatsRepository _statsRepository;
 
   final FirebaseFirestore? _customFirestore;
 
@@ -30,7 +29,6 @@ class TransactionRepository {
     FirebaseFirestore? firestore,
   })  : _firebaseService = firebaseService ?? sl<FirebaseService>(),
         _cacheManager = cacheManager ?? sl<CacheManager>(),
-        _statsRepository = statsRepository ?? sl<StatsRepository>(),
         _customFirestore = firestore;
 
   FirebaseFirestore get _firestore =>
@@ -111,9 +109,11 @@ class TransactionRepository {
       // 2. Prepare Wallet Updates
       final Map<String, dynamic> walletUpdateData = {};
       walletUpdateData['balance'] = FieldValue.increment(balanceChange);
-      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
+      walletUpdateData[
+              '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactions}'] =
           FieldValue.increment(1);
-      walletUpdateData['${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
+      walletUpdateData[
+              '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}'] =
           FieldValue.serverTimestamp();
 
       if (needsDailyReset) {
@@ -136,10 +136,12 @@ class TransactionRepository {
                 : FieldValue.increment(transaction.amount);
 
         if (needsDailyReset) {
-          walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] = 0.0;
+          walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] =
+              0.0;
         }
         if (needsMonthlyReset) {
-          walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] = 0.0;
+          walletUpdateData['${FirebaseConstants.receiveLimits}.monthlyUsed'] =
+              0.0;
         }
       } else if (transaction.isReceive) {
         walletUpdateData['${FirebaseConstants.receiveLimits}.dailyUsed'] =

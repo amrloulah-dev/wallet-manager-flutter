@@ -233,7 +233,8 @@ class StoreSubscription {
   int? daysRemainingAt(DateTime serverNow) {
     if (endDate == null) return null; // Lifetime — no end date
     final endDateOnly = DateTime(endDate!.year, endDate!.month, endDate!.day);
-    final serverNowOnly = DateTime(serverNow.year, serverNow.month, serverNow.day);
+    final serverNowOnly =
+        DateTime(serverNow.year, serverNow.month, serverNow.day);
     return endDateOnly.difference(serverNowOnly).inDays;
   }
 

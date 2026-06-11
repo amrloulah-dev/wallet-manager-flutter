@@ -14,10 +14,9 @@ class SubscriptionBanner extends StatelessWidget {
     final subscriptionProvider = context.watch<SubscriptionProvider>();
     final subscription = authProvider.currentStore?.subscription;
     final latestRequest = subscriptionProvider.latestRequest;
-    final isExpired = subscriptionProvider.isExpired;
     final hasDismissedRejection = subscriptionProvider.hasDismissedRejection;
     final daysRemaining = subscriptionProvider.daysRemaining;
-    
+
     final l10n = AppLocalizations.of(context)!;
 
     if (subscription == null) return const SizedBox.shrink();
@@ -51,7 +50,7 @@ class SubscriptionBanner extends StatelessWidget {
 
     // Now evaluate plan and days
     final plan = subscription.planId;
-    
+
     bool shouldShowBanner = false;
     if (plan == SubscriptionPlan.trial) {
       shouldShowBanner = true;
@@ -74,7 +73,8 @@ class SubscriptionBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    if (daysRemaining < 0) { // negative days
+    if (daysRemaining < 0) {
+      // negative days
       message = l10n.subscriptionExpired;
       color = Colors.redAccent;
       icon = Icons.warning_rounded;

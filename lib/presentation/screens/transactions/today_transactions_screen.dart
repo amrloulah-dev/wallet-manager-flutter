@@ -197,7 +197,13 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
         return Selector<TransactionProvider, List<TransactionModel>>(
           selector: (context, provider) => provider.transactions,
           builder: (context, transactions, child) {
-            if (transactions.isEmpty) {
+            final filteredTransactions = transactions
+                .where((tx) =>
+                    tx.transactionType == TransactionType.debit ||
+                    tx.transactionType == TransactionType.credit)
+                .toList();
+
+            if (filteredTransactions.isEmpty) {
               return EmptyStateWidget(
                 message: filterType == null
                     ? AppLocalizations.of(context)!.noTransactionsTodayEmpty
@@ -216,15 +222,16 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.only(bottom: 80), // For FAB
-                itemCount: transactions.length + (isLoadingMore ? 1 : 0),
+                itemCount:
+                    filteredTransactions.length + (isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
-                  if (index == transactions.length) {
+                  if (index == filteredTransactions.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  final transaction = transactions[index];
+                  final transaction = filteredTransactions[index];
                   return TransactionCard(
                     key: ValueKey(
                         '${transaction.transactionId}_${transaction.amount}_${transaction.paymentStatus}'),

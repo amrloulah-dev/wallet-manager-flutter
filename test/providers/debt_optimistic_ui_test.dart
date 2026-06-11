@@ -17,8 +17,11 @@ import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockDebtRepository extends Mock implements DebtRepository {}
+
 class MockStatisticsProvider extends Mock implements StatisticsProvider {}
+
 class FakeDebtModel extends Fake implements DebtModel {}
 
 void main() {
@@ -66,15 +69,19 @@ void main() {
     final sl = GetIt.instance;
     await sl.reset();
     sl.registerLazySingleton<StatisticsProvider>(() => mockStatsProvider);
-    print('TEST_SETUP_REGISTERED: registered=${sl.isRegistered<StatisticsProvider>()} | typeHash=${(StatisticsProvider).hashCode}');
+    print(
+        'TEST_SETUP_REGISTERED: registered=${sl.isRegistered<StatisticsProvider>()} | typeHash=${(StatisticsProvider).hashCode}');
 
     when(() => mockAuth.currentStoreId).thenReturn(storeId);
     when(() => mockAuth.isOwner).thenReturn(true);
     when(() => mockAuth.currentUser).thenReturn(mockUser);
 
-    when(() => mockStatsProvider.addDebtOptimistically(amount: any(named: 'amount'))).thenReturn(null);
-    when(() => mockStatsProvider.settleDebtOptimistically(amount: any(named: 'amount'))).thenReturn(null);
-    when(() => mockStatsProvider.payPartialDebtOptimistically(amount: any(named: 'amount'))).thenReturn(null);
+    when(() => mockStatsProvider.addDebtOptimistically(
+        amount: any(named: 'amount'))).thenReturn(null);
+    when(() => mockStatsProvider.settleDebtOptimistically(
+        amount: any(named: 'amount'))).thenReturn(null);
+    when(() => mockStatsProvider.payPartialDebtOptimistically(
+        amount: any(named: 'amount'))).thenReturn(null);
     when(() => mockStatsProvider.rollbackStats(any(), any())).thenReturn(null);
     when(() => mockStatsProvider.dashboardSummary).thenReturn(
       StatsSummaryModel(
@@ -85,17 +92,21 @@ void main() {
         lastUpdated: DateTime.now(),
       ),
     );
-    when(() => mockStatsProvider.todayStats).thenReturn(DailyStatsModel.empty('2026-06-05'));
+    when(() => mockStatsProvider.todayStats)
+        .thenReturn(DailyStatsModel.empty('2026-06-05'));
 
-    when(() => mockDebtRepo.getDebtByCustomerPhone(storeId, any())).thenAnswer((_) async => null);
+    when(() => mockDebtRepo.getDebtByCustomerPhone(storeId, any()))
+        .thenAnswer((_) async => null);
     when(() => mockDebtRepo.getDebtsByDateRange(
-          storeId,
-          any(),
-          any(),
-          lastDocument: any(named: 'lastDocument'),
-          debtType: any(named: 'debtType'),
-          debtStatus: any(named: 'debtStatus'),
-        )).thenAnswer((_) async => PaginatedResult<DebtModel>(items: [initialDebt], lastDocument: null));
+              storeId,
+              any(),
+              any(),
+              lastDocument: any(named: 'lastDocument'),
+              debtType: any(named: 'debtType'),
+              debtStatus: any(named: 'debtStatus'),
+            ))
+        .thenAnswer((_) async => PaginatedResult<DebtModel>(
+            items: [initialDebt], lastDocument: null));
 
     when(() => mockDebtRepo.fetchDebtStatistics(
           storeId: storeId,
@@ -115,9 +126,12 @@ void main() {
   });
 
   group('DebtProvider Optimistic UI Tests', () {
-    test('createDebt should generate client-side UUID and insert to local list immediately', () async {
+    test(
+        'createDebt should generate client-side UUID and insert to local list immediately',
+        () async {
       final createCompleter = Completer<void>();
-      when(() => mockDebtRepo.createDebt(any())).thenAnswer((_) => createCompleter.future);
+      when(() => mockDebtRepo.createDebt(any()))
+          .thenAnswer((_) => createCompleter.future);
 
       await provider.fetchInitialDebts();
       expect(provider.debts.length, 1);
@@ -139,11 +153,15 @@ void main() {
       final newDebt = provider.debts.firstWhere((d) => d.debtId != 'd_initial');
 
       // ID must be a UUID
-      expect(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$').hasMatch(newDebt.debtId), isTrue);
+      expect(
+          RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+              .hasMatch(newDebt.debtId),
+          isTrue);
       expect(newDebt.amountDue, 200.0);
       expect(provider.debtMap.containsKey(newDebt.debtId), isTrue);
 
-      verify(() => mockStatsProvider.addDebtOptimistically(amount: 200.0)).called(1);
+      verify(() => mockStatsProvider.addDebtOptimistically(amount: 200.0))
+          .called(1);
 
       createCompleter.complete();
       final result = await createFuture;
@@ -151,7 +169,8 @@ void main() {
     });
 
     test('createDebt rollback on failure', () async {
-      when(() => mockDebtRepo.createDebt(any())).thenThrow(Exception('Firestore write failed'));
+      when(() => mockDebtRepo.createDebt(any()))
+          .thenThrow(Exception('Firestore write failed'));
 
       await provider.fetchInitialDebts();
       expect(provider.debts.length, 1);
@@ -173,9 +192,12 @@ void main() {
       verify(() => mockStatsProvider.rollbackStats(any(), any())).called(1);
     });
 
-    test('payPartialDebt (partial payment) optimistic amountDue change and rollback', () async {
+    test(
+        'payPartialDebt (partial payment) optimistic amountDue change and rollback',
+        () async {
       final payCompleter = Completer<void>();
-      when(() => mockDebtRepo.processPayment('d_initial', 100.0, 'u1')).thenAnswer((_) => payCompleter.future);
+      when(() => mockDebtRepo.processPayment('d_initial', 100.0, 'u1'))
+          .thenAnswer((_) => payCompleter.future);
 
       await provider.fetchInitialDebts();
       expect(provider.debts.first.amountDue, 300.0);
@@ -188,7 +210,9 @@ void main() {
       expect(provider.debts.first.amountDue, 200.0);
       expect(provider.debts.first.debtStatus, DebtStatus.open);
 
-      verify(() => mockStatsProvider.payPartialDebtOptimistically(amount: 100.0)).called(1);
+      verify(() =>
+              mockStatsProvider.payPartialDebtOptimistically(amount: 100.0))
+          .called(1);
 
       payCompleter.complete();
       final result = await payFuture;
@@ -196,7 +220,8 @@ void main() {
     });
 
     test('payPartialDebt rollback on failure', () async {
-      when(() => mockDebtRepo.processPayment('d_initial', 100.0, 'u1')).thenThrow(Exception('Payment failed'));
+      when(() => mockDebtRepo.processPayment('d_initial', 100.0, 'u1'))
+          .thenThrow(Exception('Payment failed'));
 
       await provider.fetchInitialDebts();
       expect(provider.debts.first.amountDue, 300.0);
@@ -208,9 +233,12 @@ void main() {
       expect(provider.debts.first.amountDue, 300.0);
     });
 
-    test('payPartialDebt (full payment/settlement) optimistic status change and filtering', () async {
+    test(
+        'payPartialDebt (full payment/settlement) optimistic status change and filtering',
+        () async {
       final payCompleter = Completer<void>();
-      when(() => mockDebtRepo.processPayment('d_initial', 300.0, 'u1')).thenAnswer((_) => payCompleter.future);
+      when(() => mockDebtRepo.processPayment('d_initial', 300.0, 'u1'))
+          .thenAnswer((_) => payCompleter.future);
 
       // Set filter to open
       provider.setFilter('open');
@@ -223,15 +251,18 @@ void main() {
 
       // Instantly filtered out from 'open' list
       expect(provider.debts, isEmpty);
-      verify(() => mockStatsProvider.settleDebtOptimistically(amount: 300.0)).called(1);
+      verify(() => mockStatsProvider.settleDebtOptimistically(amount: 300.0))
+          .called(1);
 
       payCompleter.complete();
       final result = await payFuture;
       expect(result, isTrue);
     });
 
-    test('payPartialDebt (full payment/settlement) rollback on failure', () async {
-      when(() => mockDebtRepo.processPayment('d_initial', 300.0, 'u1')).thenThrow(Exception('Payment failed'));
+    test('payPartialDebt (full payment/settlement) rollback on failure',
+        () async {
+      when(() => mockDebtRepo.processPayment('d_initial', 300.0, 'u1'))
+          .thenThrow(Exception('Payment failed'));
 
       provider.setFilter('open');
       await provider.fetchInitialDebts();
@@ -266,9 +297,11 @@ void main() {
       expect(provider.summary['totalOpenAmount'], 500.0);
     });
 
-    test('fetch shield behavior - blocks fetch for 5 seconds after activation', () async {
+    test('fetch shield behavior - blocks fetch for 5 seconds after activation',
+        () async {
       // Injects data and triggers activateFetchShield (this happens inside provider when needed, or we can invoke it)
-      provider.activateFetchShieldExternal(); // Custom helper or we test it by triggering a successful write
+      provider
+          .activateFetchShieldExternal(); // Custom helper or we test it by triggering a successful write
 
       // Should block fetchInitialDebts
       await provider.fetchInitialDebts();
@@ -283,9 +316,12 @@ void main() {
           ));
     });
 
-    test('fetchInitialDebts with forceRefresh should preserve pending optimistic debts', () async {
+    test(
+        'fetchInitialDebts with forceRefresh should preserve pending optimistic debts',
+        () async {
       final createCompleter = Completer<void>();
-      when(() => mockDebtRepo.createDebt(any())).thenAnswer((_) => createCompleter.future);
+      when(() => mockDebtRepo.createDebt(any()))
+          .thenAnswer((_) => createCompleter.future);
 
       await provider.fetchInitialDebts();
       expect(provider.debts.length, 1);
@@ -303,7 +339,8 @@ void main() {
 
       // We have 1 pending debt in provider's local list (total 2)
       expect(provider.debts.length, 2);
-      final pendingDebtId = provider.debts.firstWhere((d) => d.debtId != 'd_initial').debtId;
+      final pendingDebtId =
+          provider.debts.firstWhere((d) => d.debtId != 'd_initial').debtId;
 
       // Mock repository response for fetchInitialDebts
       final serverDebt = DebtModel(
@@ -320,13 +357,15 @@ void main() {
         createdAt: DateTime.now(),
       );
       when(() => mockDebtRepo.getDebtsByDateRange(
-            storeId,
-            any(),
-            any(),
-            lastDocument: any(named: 'lastDocument'),
-            debtType: any(named: 'debtType'),
-            debtStatus: any(named: 'debtStatus'),
-          )).thenAnswer((_) async => PaginatedResult<DebtModel>(items: [serverDebt], lastDocument: null));
+                storeId,
+                any(),
+                any(),
+                lastDocument: any(named: 'lastDocument'),
+                debtType: any(named: 'debtType'),
+                debtStatus: any(named: 'debtStatus'),
+              ))
+          .thenAnswer((_) async => PaginatedResult<DebtModel>(
+              items: [serverDebt], lastDocument: null));
 
       // Trigger pull-to-refresh
       await provider.fetchInitialDebts(forceRefresh: true);

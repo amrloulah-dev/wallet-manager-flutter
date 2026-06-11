@@ -80,10 +80,13 @@ class DebtProvider extends BaseProvider {
   List<DebtModel> get debts => _debts;
   Map<String, DebtModel> get debtMap => _debtMap;
   Map<String, dynamic> get summary {
-    final openDebts = _debts.where((d) => d.debtStatus == DebtStatus.open).toList();
-    final paidDebts = _debts.where((d) => d.debtStatus == DebtStatus.paid).toList();
+    final openDebts =
+        _debts.where((d) => d.debtStatus == DebtStatus.open).toList();
+    final paidDebts =
+        _debts.where((d) => d.debtStatus == DebtStatus.paid).toList();
     final double openTotal = openDebts.fold(0.0, (acc, d) => acc + d.amountDue);
-    final double paidTotal = paidDebts.fold(0.0, (acc, d) => acc + d.totalAmount);
+    final double paidTotal =
+        paidDebts.fold(0.0, (acc, d) => acc + d.totalAmount);
 
     return {
       'openDebtsCount': openDebts.length,
@@ -93,6 +96,7 @@ class DebtProvider extends BaseProvider {
       'totalPaidAmount': paidTotal,
     };
   }
+
   DebtProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String get currentFilter => _currentFilter;
@@ -224,7 +228,8 @@ class DebtProvider extends BaseProvider {
         }
       }
       for (final d in _debts) {
-        if (_pendingDebtIds.contains(d.debtId) && !incomingIds.contains(d.debtId)) {
+        if (_pendingDebtIds.contains(d.debtId) &&
+            !incomingIds.contains(d.debtId)) {
           // Prepend newly created pending items
           mergedList.insert(0, d);
         }
@@ -238,7 +243,9 @@ class DebtProvider extends BaseProvider {
       _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
-        if (kDebugMode) debugPrint('🤫 [SILENT ERROR] DebtProvider: permission-denied (likely native sign-out)');
+        if (kDebugMode)
+          debugPrint(
+              '🤫 [SILENT ERROR] DebtProvider: permission-denied (likely native sign-out)');
         return;
       }
       setError('debt_error_fetch_failed', e, stack);
@@ -319,7 +326,6 @@ class DebtProvider extends BaseProvider {
         return await addPartialDebt(
             existingDebtByPhone.debtId, amountDue, user.userId);
       } else {
-
         // Capture snapshot
         oldDebts = _debts.toList();
         oldDebtMap = Map<String, DebtModel>.from(_debtMap);
@@ -328,7 +334,8 @@ class DebtProvider extends BaseProvider {
           statsProvider = sl<StatisticsProvider>();
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('STATS_PROVIDER_RESOLVE_ERROR: $e | typeHash=${(StatisticsProvider).hashCode}');
+            debugPrint(
+                'STATS_PROVIDER_RESOLVE_ERROR: $e | typeHash=${(StatisticsProvider).hashCode}');
           }
           statsProvider = null;
         }
@@ -367,7 +374,8 @@ class DebtProvider extends BaseProvider {
         try {
           await _debtRepository.createDebt(newDebt);
         } catch (e, stack) {
-          _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+          _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider,
+              oldStatsSummary, oldStatsToday);
           AppErrorHandler.handle(e,
               severity: ErrorSeverity.medium,
               operation: 'debt_create',
@@ -389,11 +397,13 @@ class DebtProvider extends BaseProvider {
       _updateStatus(DebtProviderStatus.loaded); // Reset status
       return true;
     } on AppException catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError('debt_error_create_failed', e, stack);
       return false;
     } finally {
@@ -465,7 +475,8 @@ class DebtProvider extends BaseProvider {
       try {
         await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
       } catch (e, stack) {
-        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary,
+            oldStatsToday);
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.addPartialDebt');
         return false;
@@ -475,11 +486,13 @@ class DebtProvider extends BaseProvider {
       _updateStatus(DebtProviderStatus.loaded);
       return true;
     } on AppException catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError('debt_error_add_amount_failed', e, stack);
       return false;
     } finally {
@@ -516,11 +529,19 @@ class DebtProvider extends BaseProvider {
       final newDebt = oldDebt.copyWith(
         customerName: data['customerName'] as String?,
         customerPhone: data['customerPhone'] as String?,
-        debtType: data['debtType'] != null ? DebtType.fromString(data['debtType'] as String) : null,
-        amountDue: data['amountDue'] != null ? NumberParser.toDouble(data['amountDue']) : null,
-        totalAmount: data['totalAmount'] != null ? NumberParser.toDouble(data['totalAmount']) : null,
+        debtType: data['debtType'] != null
+            ? DebtType.fromString(data['debtType'] as String)
+            : null,
+        amountDue: data['amountDue'] != null
+            ? NumberParser.toDouble(data['amountDue'])
+            : null,
+        totalAmount: data['totalAmount'] != null
+            ? NumberParser.toDouble(data['totalAmount'])
+            : null,
         notes: data.containsKey('notes') ? data['notes'] as String? : null,
-        debtStatus: data['debtStatus'] != null ? DebtStatus.fromString(data['debtStatus'] as String) : null,
+        debtStatus: data['debtStatus'] != null
+            ? DebtStatus.fromString(data['debtStatus'] as String)
+            : null,
         updatedAt: DateTime.now(),
       );
 
@@ -638,7 +659,8 @@ class DebtProvider extends BaseProvider {
       try {
         await _debtRepository.processPayment(debtId, amountToPay, userId);
       } catch (e, stack) {
-        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary,
+            oldStatsToday);
         AppErrorHandler.handle(e,
             stackTrace: stack, operation: 'DebtProvider.payPartialDebt');
         return false;
@@ -648,11 +670,13 @@ class DebtProvider extends BaseProvider {
       _updateStatus(DebtProviderStatus.loaded);
       return true;
     } on AppException catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
-      _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
       setError('debt_error_settle_failed', e, stack);
       return false;
     } finally {

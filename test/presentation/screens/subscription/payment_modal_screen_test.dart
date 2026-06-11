@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
 
 void main() {
@@ -24,17 +25,18 @@ void main() {
     mockAuthProvider = MockAuthProvider();
     mockSubscriptionProvider = MockSubscriptionProvider();
     when(() => mockSubscriptionProvider.submitSubscriptionRequest(
-      planId: any(named: 'planId'),
-      paymentMethod: any(named: 'paymentMethod'),
-      receiptNumber: any(named: 'receiptNumber'),
-    )).thenAnswer((_) async {});
+          planId: any(named: 'planId'),
+          paymentMethod: any(named: 'paymentMethod'),
+          receiptNumber: any(named: 'receiptNumber'),
+        )).thenAnswer((_) async {});
   });
 
   Widget buildTestableWidget() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
-        ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSubscriptionProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubscriptionProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -58,7 +60,7 @@ void main() {
 
       final phoneField = find.byType(TextFormField);
       expect(phoneField, findsOneWidget);
-      
+
       final iconFinder = find.byIcon(Icons.phone);
       expect(iconFinder, findsOneWidget);
     });
@@ -68,7 +70,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final confirmButton = find.byType(ElevatedButton);
-      
+
       // Tap without entering anything
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
@@ -78,13 +80,13 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '123');
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
-      expect(find.text('رقم الموبايل غير صحيح'), findsOneWidget); 
+      expect(find.text('رقم الموبايل غير صحيح'), findsOneWidget);
 
       // Enter valid phone
       await tester.enterText(find.byType(TextFormField), '01091264053');
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
-      
+
       expect(find.text('رقم الموبايل غير صحيح'), findsNothing);
     });
   });

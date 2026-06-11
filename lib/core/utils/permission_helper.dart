@@ -56,7 +56,7 @@ class PermissionHelper {
   static bool canAccessScreen(BuildContext context, String routeName,
       {bool showMessage = false}) {
     final authProvider = context.read<AuthProvider>();
-    
+
     // Core routes must not block authenticated owners and employees due to expired subscription/trial
     if (authProvider.isAuthenticated) {
       if (routeName == RouteConstants.mainDashboard ||

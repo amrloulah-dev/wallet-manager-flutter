@@ -12,8 +12,11 @@ import 'package:walletmanager/routes/navigation_service.dart';
 import 'package:bot_toast/bot_toast.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
+
 class FakeRoute extends Fake implements Route<dynamic> {}
 
 void main() {
@@ -29,7 +32,7 @@ void main() {
     mockAuthProvider = MockAuthProvider();
     mockSubscriptionProvider = MockSubscriptionProvider();
     mockNavigatorObserver = MockNavigatorObserver();
-    
+
     when(() => mockAuthProvider.isOwner).thenReturn(true);
     when(() => mockAuthProvider.isEmployee).thenReturn(false);
     when(() => mockSubscriptionProvider.isExpired).thenReturn(false);
@@ -39,7 +42,8 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
-        ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSubscriptionProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubscriptionProvider),
       ],
       child: MaterialApp(
         navigatorKey: NavigationService.navigatorKey,
@@ -51,9 +55,13 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('ar')],
-        navigatorObservers: [BotToastNavigatorObserver(), mockNavigatorObserver],
+        navigatorObservers: [
+          BotToastNavigatorObserver(),
+          mockNavigatorObserver
+        ],
         routes: {
-          RouteConstants.upgradeScreen: (context) => const Scaffold(body: Text('Paywall')),
+          RouteConstants.upgradeScreen: (context) =>
+              const Scaffold(body: Text('Paywall')),
         },
         home: const Scaffold(body: SmsAutomationSection()),
       ),
@@ -61,7 +69,8 @@ void main() {
   }
 
   group('SmsAutomationSection Widget Tests', () {
-    testWidgets('Active subscription allows toggle to work normally', (tester) async {
+    testWidgets('Active subscription allows toggle to work normally',
+        (tester) async {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
@@ -72,13 +81,15 @@ void main() {
       expect(switchWidget.onChanged, isNotNull); // not disabled visually
     });
 
-    testWidgets('Expired subscription for Employee shows toast and does NOT navigate', (tester) async {
+    testWidgets(
+        'Expired subscription for Employee shows toast and does NOT navigate',
+        (tester) async {
       when(() => mockAuthProvider.isOwner).thenReturn(false);
       when(() => mockSubscriptionProvider.isExpired).thenReturn(true);
 
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
-      
+
       clearInteractions(mockNavigatorObserver);
 
       await tester.tap(find.byType(SwitchListTile), warnIfMissed: false);
@@ -88,7 +99,9 @@ void main() {
       verifyNever(() => mockNavigatorObserver.didPush(any(), any()));
     });
 
-    testWidgets('Expired subscription for Owner shows toast and routes to Paywall', (tester) async {
+    testWidgets(
+        'Expired subscription for Owner shows toast and routes to Paywall',
+        (tester) async {
       when(() => mockAuthProvider.isOwner).thenReturn(true);
       when(() => mockSubscriptionProvider.isExpired).thenReturn(true);
 
@@ -96,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(SwitchListTile), warnIfMissed: false);
-      
+
       // Wait for navigation animation
       await tester.pumpAndSettle();
       expect(find.text('Paywall'), findsOneWidget); // Routed correctly

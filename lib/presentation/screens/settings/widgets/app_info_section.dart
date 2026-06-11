@@ -40,8 +40,8 @@ class AppInfoSection extends StatelessWidget {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.star_outline,
-                    color: AppColors.primary),
+                leading:
+                    const Icon(Icons.star_outline, color: AppColors.primary),
                 title: Text(AppLocalizations.of(context)!.subscriptionPlans,
                     style: AppTextStyles.bodyLarge),
                 trailing: Icon(

@@ -105,7 +105,8 @@ class MyApp extends StatelessWidget {
                   authProvider: auth, debtRepository: sl<DebtRepository>()))
             ..updateAuthState(auth),
         ),
-        ChangeNotifierProxyProvider2<AuthProvider, WalletProvider, TransactionProvider>(
+        ChangeNotifierProxyProvider2<AuthProvider, WalletProvider,
+            TransactionProvider>(
           create: (_) => TransactionProvider(),
           update: (_, auth, walletProvider, prev) => prev!
             ..updateAuthState(auth)
@@ -209,12 +210,13 @@ class _AuthCheckWrapperState extends State<AuthCheckWrapper> {
               // Push Dashboard as the base route
               Navigator.of(context)
                   .pushReplacementNamed(RouteConstants.mainDashboard);
-              
+
               // IF EXPIRED, push Paywall ON TOP of the Dashboard
-              if (auth.isSubscriptionExpired && 
-                  auth.currentStore?.subscription.planId != SubscriptionPlan.lifetime) {
+              if (auth.isSubscriptionExpired &&
+                  auth.currentStore?.subscription.planId !=
+                      SubscriptionPlan.lifetime) {
                 // Ensure you use your exact route constant for Paywall
-                Navigator.of(context).pushNamed(RouteConstants.upgradeScreen); 
+                Navigator.of(context).pushNamed(RouteConstants.upgradeScreen);
               }
             } else {
               auth.logout(context);

@@ -67,8 +67,7 @@ class WalletCard extends StatelessWidget {
               start: 0,
               end: 0,
               child: Center(
-                child:
-                    Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+                child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
               ),
             ),
         ],

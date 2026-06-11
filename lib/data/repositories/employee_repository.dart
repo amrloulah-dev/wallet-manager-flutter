@@ -44,14 +44,13 @@ class EmployeeRepository {
                 isLessThanOrEqualTo: '$searchQuery\uf8ff');
       }
 
-      final snapshot = await query
-          .orderBy(FirebaseConstants.fullName)
-          .limit(limit)
-          .get();
+      final snapshot =
+          await query.orderBy(FirebaseConstants.fullName).limit(limit).get();
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'EmployeeRepository.getEmployeesByStoreId');
+          stackTrace: stack,
+          operation: 'EmployeeRepository.getEmployeesByStoreId');
       throw ServerException('employee_error_fetch_failed');
     }
   }

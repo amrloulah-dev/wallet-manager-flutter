@@ -20,10 +20,9 @@ void main() {
 
     // Default mock behavior for getEmployeesByStoreId
     when(() => mockEmployeeRepository.getEmployeesByStoreId(
-            storeId: any(named: 'storeId'),
-            searchQuery: any(named: 'searchQuery'),
-            activeOnly: any(named: 'activeOnly')))
-        .thenAnswer((_) async => []);
+        storeId: any(named: 'storeId'),
+        searchQuery: any(named: 'searchQuery'),
+        activeOnly: any(named: 'activeOnly'))).thenAnswer((_) async => []);
   });
 
   group('Client-Side Search Filtering (TDD - Phase 2)', () {
@@ -35,9 +34,7 @@ void main() {
       await Future.delayed(Duration.zero);
 
       verify(() => mockEmployeeRepository.getEmployeesByStoreId(
-          storeId: storeId,
-          searchQuery: null,
-          activeOnly: true)).called(1);
+          storeId: storeId, searchQuery: null, activeOnly: true)).called(1);
 
       // 2. Setting search query should trigger a NEW call to getEmployeesByStoreId
       const query = 'Alice';
@@ -46,9 +43,7 @@ void main() {
 
       // We expect getEmployeesByStoreId to be called again with the query
       verify(() => mockEmployeeRepository.getEmployeesByStoreId(
-          storeId: storeId,
-          searchQuery: query,
-          activeOnly: true)).called(1);
+          storeId: storeId, searchQuery: query, activeOnly: true)).called(1);
     });
 
     test(
@@ -58,21 +53,18 @@ void main() {
       await Future.delayed(Duration.zero);
 
       verify(() => mockEmployeeRepository.getEmployeesByStoreId(
-          storeId: storeId,
-          searchQuery: null,
-          activeOnly: true)).called(1);
+          storeId: storeId, searchQuery: null, activeOnly: true)).called(1);
 
       // Toggle active filter (should change activeOnly to false)
       employeeProvider.toggleActiveFilter();
       await Future.delayed(Duration.zero);
 
       verify(() => mockEmployeeRepository.getEmployeesByStoreId(
-          storeId: storeId,
-          searchQuery: null,
-          activeOnly: false)).called(1);
+          storeId: storeId, searchQuery: null, activeOnly: false)).called(1);
     });
 
-    test('filteredEmployees should return the list provided by getEmployeesByStoreId',
+    test(
+        'filteredEmployees should return the list provided by getEmployeesByStoreId',
         () async {
       final mockEmployees = [
         UserModel(

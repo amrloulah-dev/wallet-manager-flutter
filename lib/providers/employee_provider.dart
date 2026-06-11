@@ -27,8 +27,6 @@ class EmployeeProvider extends BaseProvider {
 
   final Set<String> _suspendedEmployeeIds = {};
 
-
-
   List<UserModel> get employees => _employees;
   EmployeeProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -57,7 +55,6 @@ class EmployeeProvider extends BaseProvider {
   void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
     _subscriptionProvider = subscriptionProvider;
   }
-
 
   void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {

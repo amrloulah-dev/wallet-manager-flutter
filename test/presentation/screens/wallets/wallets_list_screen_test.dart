@@ -12,6 +12,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockWalletProvider extends Mock implements WalletProvider {
   @override
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {}
@@ -72,7 +73,9 @@ void main() {
     );
   }
 
-  testWidgets('Wallets list edit and delete actions block when subscription expired', (tester) async {
+  testWidgets(
+      'Wallets list edit and delete actions block when subscription expired',
+      (tester) async {
     when(() => mockAuthProvider.isSubscriptionExpired).thenReturn(true);
 
     await tester.pumpWidget(buildTestableWidget());
@@ -91,5 +94,22 @@ void main() {
 
     // Since it's blocked, deleteWallet should never be called
     verifyNever(() => mockWalletProvider.deleteWallet(any()));
+  });
+
+  testWidgets(
+      'Wallets list screen shows a simple FloatingActionButton.extended for adding a wallet',
+      (tester) async {
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    // Verify FloatingActionButton.extended is present with label and icon
+    final fabFinder = find.byType(FloatingActionButton);
+    expect(fabFinder, findsOneWidget);
+
+    final fabTextFinder = find.text('Add Wallet');
+    expect(fabTextFinder, findsOneWidget);
+
+    final iconFinder = find.byIcon(Icons.add);
+    expect(iconFinder, findsOneWidget);
   });
 }

@@ -69,7 +69,8 @@ class AuthProvider extends BaseProvider {
     _authRepository.authStateChanges().listen((user) {
       if (user == null && _currentUser != null) {
         if (kDebugMode) {
-          debugPrint('⚠️ [AuthProvider] Native sign-out detected via authStateChanges.');
+          debugPrint(
+              '⚠️ [AuthProvider] Native sign-out detected via authStateChanges.');
         }
         logout();
       }
@@ -399,7 +400,8 @@ class AuthProvider extends BaseProvider {
 
       // 4. Navigate away instantly! This safely unmounts the Dashboard UI.
       if (navigator != null) {
-        navigator.pushNamedAndRemoveUntil(RouteConstants.loginLanding, (route) => false);
+        navigator.pushNamedAndRemoveUntil(
+            RouteConstants.loginLanding, (route) => false);
       }
 
       // 5. Allow a brief moment for the UI transition to complete
@@ -411,7 +413,6 @@ class AuthProvider extends BaseProvider {
       // 7. Destroy the native token
       await _authRepository.signOut();
       await _localStorage.clearSession();
-
     } catch (e, stack) {
       setError('auth_error_logout_failed', e, stack);
     }

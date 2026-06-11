@@ -77,6 +77,21 @@ class DashboardQuickActions extends StatelessWidget {
                     },
                   ),
                   QuickActionCard(
+                    title: l10n.addBalance,
+                    icon: Icons.add_card_outlined,
+                    color: Colors.green.shade700,
+                    onTap: () {
+                      final user = context.read<AuthProvider>().currentUser;
+                      if (user != null &&
+                          user.hasPermission((p) => p.createTransaction)) {
+                        Navigator.pushNamed(context, RouteConstants.addBalance);
+                      } else {
+                        ToastUtils.showError(
+                            l10n.noPermissionCreateTransaction);
+                      }
+                    },
+                  ),
+                  QuickActionCard(
                     title: '${l10n.newDebt} ($openDebtsCount)',
                     icon: Icons.post_add_outlined,
                     color: AppColors.error,
