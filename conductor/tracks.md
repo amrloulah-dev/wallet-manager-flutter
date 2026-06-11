@@ -13,5 +13,10 @@
 - [ ] **Track: Refactor monetization constraints, settings navigation, dashboard banners, anti-cycling locks, and employee login guards**
 *Link: [./tracks/freesub_refactor_20260604/](./tracks/freesub_refactor_20260604/)*
 
+---
+
+- [ ] **Track: UI Refactor — Business Logic Fixes, UX Adjustments & WalletCard Redesign**
+*Link: [./tracks/ui_refactor_20260611/](./tracks/ui_refactor_20260611/)*
+
 
 
