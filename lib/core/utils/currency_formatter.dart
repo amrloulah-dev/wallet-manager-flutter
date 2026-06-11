@@ -2,34 +2,31 @@ import 'package:intl/intl.dart';
 
 /// A utility class for formatting currency and amounts.
 class CurrencyFormatter {
-  /// The active locale for currency formatting.
-  /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
-  static String _locale = 'en_US';
-
   /// Configures the locale used by all formatting methods.
   /// Should be called once during app initialization.
   static void setLocale(String locale) {
-    _locale = locale;
+    // No-op: Enforce en_US for currency formatting
   }
 
   /// Formats a number as a currency amount with thousand separators.
   static String formatAmount(num? amount,
       {bool showCurrency = false, String? currencySymbol}) {
     if (amount == null) {
-      return '0.00';
+      return '0';
     }
 
+    final formatter = NumberFormat('#,##0.##', 'en_US');
+    final formatted = formatter.format(amount);
+
     if (showCurrency) {
-      final formatter = NumberFormat.currency(
-        locale: _locale,
-        name: 'EGP',
-        symbol: currencySymbol,
-        decimalDigits: 2,
-      );
-      return formatter.format(amount);
+      final symbol = currencySymbol ?? 'EGP';
+      if (symbol == 'EGP') {
+        return 'EGP $formatted';
+      } else {
+        return '$formatted $symbol';
+      }
     } else {
-      final formatter = NumberFormat('#,##0.00', _locale);
-      return formatter.format(amount);
+      return formatted;
     }
   }
 

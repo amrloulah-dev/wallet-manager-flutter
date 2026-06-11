@@ -2,14 +2,10 @@ import 'package:intl/intl.dart';
 import 'currency_formatter.dart';
 
 class NumberFormatter {
-  /// The active locale for number formatting.
-  /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
-  static String _locale = 'en_US';
-
   /// Configures the locale used by all formatting methods.
   /// Should be called once during app initialization.
   static void setLocale(String locale) {
-    _locale = locale;
+    // No-op: Enforce en_US for number formatting
   }
 
   // ===========================
@@ -21,7 +17,7 @@ class NumberFormatter {
     if (number == null) {
       return '0';
     }
-    final formatter = NumberFormat('#,##0.##', _locale);
+    final formatter = NumberFormat('#,##0.##', 'en_US');
     return formatter.format(number);
   }
 
@@ -58,6 +54,16 @@ class NumberFormatter {
     return CurrencyFormatter.parseAmount(text);
   }
 
+  static String _convertArabicToEnglishDigits(String input) {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    var result = input;
+    for (var i = 0; i < 10; i++) {
+      result = result.replaceAll(arabicDigits[i], englishDigits[i]);
+    }
+    return result;
+  }
+
   // ===========================
   // Format Phone Number (01012345678 → 0101 234 5678)
   // ===========================
@@ -67,9 +73,10 @@ class NumberFormatter {
     if (phone == null) {
       return '';
     }
-    // Format pattern: 0XXX XXX XXXX
-    if (phone.length == 11) {
-      return '${phone.substring(7)} ${phone.substring(4, 7)} ${phone.substring(0, 4)}';
+    final normalized =
+        _convertArabicToEnglishDigits(phone).replaceAll(RegExp(r'\D'), '');
+    if (normalized.length == 11) {
+      return '${normalized.substring(7)} ${normalized.substring(4, 7)} ${normalized.substring(0, 4)}';
     }
     return phone;
   }

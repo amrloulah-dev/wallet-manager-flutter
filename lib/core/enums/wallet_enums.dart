@@ -41,7 +41,8 @@ enum WalletType {
   }
 
   static WalletType fromString(String type) {
-    switch (type.toLowerCase()) {
+    final sanitized = type.toLowerCase().trim().replaceAll(' ', '_');
+    switch (sanitized) {
       case 'vodafone_cash':
         return WalletType.vodafoneCash;
       case 'instapay':

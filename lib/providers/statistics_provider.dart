@@ -238,12 +238,14 @@ class StatisticsProvider extends BaseProvider {
   void addTransactionOptimistically(Map<String, dynamic> txData) {
     if (_dashboardSummary == null || _todayStats == null) return;
 
+    final String? type = txData['type'] as String?;
+    if (type != 'credit' && type != 'debit') return;
+
     final summary = _dashboardSummary!;
     final today = _todayStats!;
 
     final double amount = NumberParser.toDouble(txData['amount']);
     final double commission = NumberParser.toDouble(txData['commission']);
-    final String? type = txData['type'] as String?;
 
     // 1. Update Dashboard Summary
     double newTotalReceived = summary.totalReceivedAmount;
@@ -298,8 +300,11 @@ class StatisticsProvider extends BaseProvider {
     if (_dashboardSummary == null) return;
     final summary = _dashboardSummary!;
     _dashboardSummary = summary.copyWith(
-      openDebtsCount: summary.openDebtsCount > 0 ? summary.openDebtsCount - 1 : 0,
-      totalOpenAmount: summary.totalOpenAmount >= amount ? summary.totalOpenAmount - amount : 0.0,
+      openDebtsCount:
+          summary.openDebtsCount > 0 ? summary.openDebtsCount - 1 : 0,
+      totalOpenAmount: summary.totalOpenAmount >= amount
+          ? summary.totalOpenAmount - amount
+          : 0.0,
       paidDebtsCount: summary.paidDebtsCount + 1,
       totalPaidAmount: summary.totalPaidAmount + amount,
     );
@@ -310,7 +315,9 @@ class StatisticsProvider extends BaseProvider {
     if (_dashboardSummary == null) return;
     final summary = _dashboardSummary!;
     _dashboardSummary = summary.copyWith(
-      totalOpenAmount: summary.totalOpenAmount >= amount ? summary.totalOpenAmount - amount : 0.0,
+      totalOpenAmount: summary.totalOpenAmount >= amount
+          ? summary.totalOpenAmount - amount
+          : 0.0,
       totalPaidAmount: summary.totalPaidAmount + amount,
     );
     safeNotify();
@@ -322,7 +329,8 @@ class StatisticsProvider extends BaseProvider {
     safeNotify();
   }
 
-  void applyTransactionLocally(double amount, bool isIncome, {double commission = 0.0}) {
+  void applyTransactionLocally(double amount, bool isIncome,
+      {double commission = 0.0}) {
     if (isDisposed) return;
     addTransactionOptimistically({
       'amount': amount,
@@ -331,10 +339,11 @@ class StatisticsProvider extends BaseProvider {
     });
   }
 
-  void updateLocalStats(double amount, dynamic type, {double commission = 0.0}) {
+  void updateLocalStats(double amount, dynamic type,
+      {double commission = 0.0}) {
     if (isDisposed) return;
-    final TransactionType t = type is String 
-        ? TransactionType.fromString(type) 
+    final TransactionType t = type is String
+        ? TransactionType.fromString(type)
         : (type is TransactionType ? type : TransactionType.credit);
     final isIncome = t == TransactionType.credit;
     applyTransactionLocally(amount, isIncome, commission: commission);
