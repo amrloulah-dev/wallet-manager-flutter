@@ -43,7 +43,7 @@
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Core Business Logic Fixes' (Protocol in workflow.md)
 
-## Phase 2: UX Adjustments
+## Phase 2: UX Adjustments [checkpoint: d4ca92b]
 
 - [x] Task: Write failing tests for "Add Balance" quick action (FR-4) 1436aaf
     - [x] Create/update widget test for `dashboard_quick_actions.dart`
