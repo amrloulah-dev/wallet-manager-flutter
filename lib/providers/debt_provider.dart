@@ -358,12 +358,11 @@ class DebtProvider extends BaseProvider {
         // Optimistically insert locally first
         _debts.insert(0, newDebt);
         _rebuildDebtMap();
+        notifyListeners();
 
         if (statsProvider != null) {
           statsProvider.addDebtOptimistically(amount: amountDue);
         }
-
-        safeNotify();
 
         try {
           await _debtRepository.createDebt(newDebt);

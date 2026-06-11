@@ -20,6 +20,7 @@ import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
 import '../core/utils/number_parser.dart';
 import '../core/enums/wallet_enums.dart';
+import '../core/enums/transaction_enums.dart';
 
 enum WalletProviderStatus {
   idle,
@@ -160,6 +161,46 @@ class WalletProvider extends BaseProvider {
 
     _rebuildWalletMap();
     safeNotify();
+  }
+
+  void updateLocalWalletBalance({
+    required String walletId,
+    required double amount,
+    required bool isIncome,
+    double serviceFee = 0.0,
+  }) {
+    if (isDisposed) return;
+    final index = _wallets.indexWhere((w) => w.walletId == walletId);
+    if (index != -1) {
+      final oldWallet = _wallets[index];
+      final totalChange = isIncome ? amount : amount + serviceFee;
+      final newBalance = isIncome ? oldWallet.balance + totalChange : oldWallet.balance - totalChange;
+
+      // Create a brand new instance using copyWith
+      _wallets[index] = oldWallet.copyWith(balance: newBalance);
+
+      // Crucial: Update map reference
+      _walletMap[walletId] = _wallets[index];
+
+      _rebuildWalletMap();
+      notifyListeners();
+    } else {
+      debugPrint("CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
+    }
+  }
+
+  void updateLocalBalance(String walletId, double amount, dynamic type, {double serviceFee = 0.0}) {
+    if (isDisposed) return;
+    final TransactionType t = type is String 
+        ? TransactionType.fromString(type) 
+        : (type is TransactionType ? type : TransactionType.credit);
+    final isIncome = t == TransactionType.credit;
+    updateLocalWalletBalance(
+      walletId: walletId,
+      amount: amount,
+      isIncome: isIncome,
+      serviceFee: serviceFee,
+    );
   }
 
   @override
@@ -567,6 +608,16 @@ class WalletProvider extends BaseProvider {
     if (oldWalletMap != null) _walletMap = oldWalletMap;
     _rebuildWalletMap();
     safeNotify();
+  }
+
+  void rollbackWallet(WalletModel wallet) {
+    if (isDisposed) return;
+    final index = _wallets.indexWhere((w) => w.walletId == wallet.walletId);
+    if (index != -1) {
+      _wallets[index] = wallet;
+      _rebuildWalletMap();
+      safeNotify();
+    }
   }
 
   void _handleUIFeedback() {

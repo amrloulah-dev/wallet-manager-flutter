@@ -20,23 +20,10 @@ class DashboardQuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<
-        StatisticsProvider,
-        ({
-          StatsSummaryModel? summary,
-          DailyStatsModel? today,
-          bool isLoading,
-          String? error
-        })>(
-      selector: (context, provider) => (
-        summary: provider.dashboardSummary,
-        today: provider.todayStats,
-        isLoading: provider.isLoading,
-        error: provider.errorMessage,
-      ),
-      builder: (context, data, child) {
+    return Consumer<StatisticsProvider>(
+      builder: (context, provider, child) {
         try {
-          if (data.isLoading && data.summary == null) {
+          if (provider.isLoading && provider.dashboardSummary == null) {
             return const SliverToBoxAdapter(
               child: SizedBox(
                 height: 200,
@@ -44,11 +31,11 @@ class DashboardQuickStats extends StatelessWidget {
               ),
             );
           }
-          if (data.error != null && data.summary == null) {
-            return SliverToBoxAdapter(child: Center(child: Text(data.error!)));
+          if (provider.errorMessage != null && provider.dashboardSummary == null) {
+            return SliverToBoxAdapter(child: Center(child: Text(provider.errorMessage!)));
           }
 
-          final stats = data.summary;
+          final stats = provider.dashboardSummary;
           if (stats == null) {
             return SliverToBoxAdapter(
               child: Center(
@@ -130,7 +117,7 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                              value: (data.today?.transactionCount ?? 0)
+                              value: (provider.todayStats?.transactionCount ?? 0)
                                   .toString(),
                               icon: Icons.swap_horiz,
                               color: Colors.green.shade700,
@@ -157,7 +144,7 @@ class DashboardQuickStats extends StatelessWidget {
                               title:
                                   '${AppLocalizations.of(context)!.totalCommission} ',
                               value: NumberFormatter.formatAmount(
-                                  data.today?.totalCommission),
+                                  provider.todayStats?.totalCommission),
                               icon: Icons.attach_money,
                               color: Colors.orange.shade800,
                               onTap: () {

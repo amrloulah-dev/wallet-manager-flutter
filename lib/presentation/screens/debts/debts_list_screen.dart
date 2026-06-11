@@ -156,76 +156,65 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   Widget _buildContent() {
-    return Selector<DebtProvider, bool>(
-      selector: (context, provider) => provider.isLoading,
-      builder: (context, isLoading, child) {
+    return Consumer<DebtProvider>(
+      builder: (context, provider, child) {
+        final isLoading = provider.isLoading;
+        final hasError = provider.errorMessage != null;
+        final errorMessage = provider.errorMessage;
+        final debts = provider.debts;
+        final isLoadingMore = provider.isLoadingMore;
+
         if (isLoading) {
           return const SkeletonList(itemCount: 5, itemHeight: 120);
         }
 
-        return Selector<DebtProvider, bool>(
-          selector: (context, provider) => provider.errorMessage != null,
-          builder: (context, hasError, child) {
-            if (hasError) {
-              final provider = context.read<DebtProvider>();
-              return CustomErrorWidget(
-                message: provider.errorMessage ??
-                    AppLocalizations.of(context)!.errorLoadingDebts,
-                onRetry: provider.fetchInitialDebts,
-              );
-            }
+        if (hasError) {
+          return CustomErrorWidget(
+            message: errorMessage ??
+                AppLocalizations.of(context)!.errorLoadingDebts,
+            onRetry: provider.fetchInitialDebts,
+          );
+        }
 
-            return Selector<DebtProvider, List<DebtModel>>(
-              selector: (context, provider) => provider.debts,
-              builder: (context, debts, child) {
-                if (debts.isEmpty) {
-                  return EmptyStateWidget(
-                    message: AppLocalizations.of(context)!.noDebtsRecorded,
-                    description:
-                        AppLocalizations.of(context)!.debtsWillAppearHere,
-                    icon: Icons.credit_card_off_outlined,
-                    actionText: AppLocalizations.of(context)!.addNewDebt,
-                    onAction: () => _navigateToAddDebt(context),
-                  );
-                }
+        if (debts.isEmpty) {
+          return EmptyStateWidget(
+            message: AppLocalizations.of(context)!.noDebtsRecorded,
+            description:
+                AppLocalizations.of(context)!.debtsWillAppearHere,
+            icon: Icons.credit_card_off_outlined,
+            actionText: AppLocalizations.of(context)!.addNewDebt,
+            onAction: () => _navigateToAddDebt(context),
+          );
+        }
 
-                return Selector<DebtProvider, bool>(
-                  selector: (context, provider) => provider.isLoadingMore,
-                  builder: (context, isLoadingMore, child) {
-                    return RefreshIndicator(
-                      onRefresh: context.read<DebtProvider>().fetchInitialDebts,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemCount: debts.length + (isLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == debts.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.0),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          final debt = debts[index];
-                          return DebtCard(
-                            key: ValueKey(
-                                '${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
-                            debt: debt,
-                            onTap: PermissionHelper.canMarkDebtPaid(context)
-                                ? () => _showPartialPaymentSheet(context, debt)
-                                : null,
-                            onMarkPaid: debt.isOpen &&
-                                    PermissionHelper.canMarkDebtPaid(context)
-                                ? () => _showMarkPaidDialog(debt)
-                                : null,
-                          );
-                        },
-                      ),
-                    );
-                  },
+        return RefreshIndicator(
+          onRefresh: provider.fetchInitialDebts,
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(bottom: 80),
+            itemCount: debts.length + (isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == debts.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(child: CircularProgressIndicator()),
                 );
-              },
-            );
-          },
+              }
+              final debt = debts[index];
+              return DebtCard(
+                key: ValueKey(
+                    '${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
+                debt: debt,
+                onTap: PermissionHelper.canMarkDebtPaid(context)
+                    ? () => _showPartialPaymentSheet(context, debt)
+                    : null,
+                onMarkPaid: debt.isOpen &&
+                        PermissionHelper.canMarkDebtPaid(context)
+                    ? () => _showMarkPaidDialog(debt)
+                    : null,
+              );
+            },
+          ),
         );
       },
     );

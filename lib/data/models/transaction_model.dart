@@ -30,6 +30,8 @@ class TransactionModel {
   final DateTime? deletedAt;
   final String? deletedBy;
 
+  bool get isIncome => transactionType == TransactionType.credit;
+
   TransactionModel({
     required this.transactionId,
     required this.storeId,
@@ -121,9 +123,8 @@ class TransactionModel {
       'paymentStatus': paymentStatus.name,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
-      'transactionDate':
-          transactionDate != null ? Timestamp.fromDate(transactionDate!) : null,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'transactionDate': FieldValue.serverTimestamp(),
+      'createdAt': FieldValue.serverTimestamp(),
       FirebaseConstants.createdBy: createdBy,
       'createdById': createdById,
       'createdByName': createdByName,

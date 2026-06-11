@@ -118,22 +118,19 @@ void main() {
 
     test('TransactionProvider should not perform manual for-loop aggregations',
         () async {
-      final dailyStats = DailyStatsModel(
-        date: '2026-05-26',
-        transactionCount: 5,
-        totalCommission: 50.0,
-        totalServiceFee: 10.0,
-        totalAmount: 1000.0,
+      final summaryStats = StatsSummaryModel(
+        totalTransactionsToday: 5,
         sendCount: 2,
         receiveCount: 3,
         totalSentAmount: 400.0,
         totalReceivedAmount: 600.0,
+        totalCommissionToday: 50.0,
       );
 
       registerFallbackValue(DateTime.now());
 
-      when(() => mockStatsRepository.fetchTodayStats(storeId))
-          .thenAnswer((_) async => dailyStats);
+      when(() => mockStatsRepository.getStatsSummary(storeId))
+          .thenAnswer((_) async => summaryStats);
 
       when(() => mockTransactionRepository.getTransactionsByDateRange(
                 any(),
@@ -155,7 +152,7 @@ void main() {
       expect(transactionProvider.summary['totalReceiveAmount'], 600.0);
       expect(transactionProvider.summary['totalCommission'], 50.0);
 
-      verify(() => mockStatsRepository.fetchTodayStats(storeId)).called(1);
+      verify(() => mockStatsRepository.getStatsSummary(storeId)).called(1);
     });
   });
 }

@@ -146,18 +146,12 @@ class _WalletsListScreenState extends State<WalletsListScreen>
   }
 
   Widget _buildContent() {
-    return Selector<WalletProvider, (bool, bool, String?, bool)>(
-      selector: (context, provider) => (
-        provider.isLoading,
-        provider.hasError,
-        provider.errorMessage,
-        provider.isLoadingMore
-      ),
-      builder: (context, status, child) {
-        final isLoading = status.$1;
-        final hasError = status.$2;
-        final errorMessage = status.$3;
-        final isLoadingMore = status.$4;
+    return Consumer<WalletProvider>(
+      builder: (context, provider, child) {
+        final isLoading = provider.isLoading;
+        final hasError = provider.hasError;
+        final errorMessage = provider.errorMessage;
+        final isLoadingMore = provider.isLoadingMore;
 
         if (isLoading) {
           return const SkeletonList(itemCount: 4, itemHeight: 150);
@@ -167,68 +161,62 @@ class _WalletsListScreenState extends State<WalletsListScreen>
           return CustomErrorWidget(
             message: errorMessage ??
                 AppLocalizations.of(context)!.somethingWentWrong,
-            onRetry: () => context
-                .read<WalletProvider>()
-                .fetchInitialWallets(forceRefresh: true),
+            onRetry: () => provider.fetchInitialWallets(forceRefresh: true),
           );
         }
 
-        return Selector<WalletProvider, List<WalletModel>>(
-          selector: (context, provider) => provider.wallets,
-          builder: (context, wallets, child) {
-            final filteredWallets = wallets.where((wallet) {
-              final search = _searchController.text.toLowerCase();
-              if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
-                return false;
-              }
-              return true;
-            }).toList();
+        final wallets = provider.wallets;
+        final filteredWallets = wallets.where((wallet) {
+          final search = _searchController.text.toLowerCase();
+          if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
+            return false;
+          }
+          return true;
+        }).toList();
 
-            if (filteredWallets.isEmpty) {
-              return EmptyStateWidget(
-                message: AppLocalizations.of(context)!.noWalletsYet,
-                description: AppLocalizations.of(context)!.startAddingWallets,
-                icon: Icons.wallet_outlined,
-                actionText: AppLocalizations.of(context)!.addWallet,
-                onAction: _navigateToAddWallet,
-              );
-            }
+        if (filteredWallets.isEmpty) {
+          return EmptyStateWidget(
+            message: AppLocalizations.of(context)!.noWalletsYet,
+            description: AppLocalizations.of(context)!.startAddingWallets,
+            icon: Icons.wallet_outlined,
+            actionText: AppLocalizations.of(context)!.addWallet,
+            onAction: _navigateToAddWallet,
+          );
+        }
 
-            return RefreshIndicator(
-              onRefresh: () => context.read<WalletProvider>().refresh(),
-              child: Column(
-                children: [
-                  _SummaryCard(wallets: filteredWallets),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.only(bottom: 80),
-                      itemCount:
-                          filteredWallets.length + (isLoadingMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == filteredWallets.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16.0),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        final wallet = filteredWallets[index];
-                        return WalletCard(
-                          key: ValueKey(
-                              '${wallet.walletId}_${wallet.balance}_${context.read<WalletProvider>().isWalletFrozenSync(wallet.walletId)}'),
-                          wallet: wallet,
-                          onTap: () =>
-                              _navigateToWalletDetails(wallet.walletId),
-                          onEdit: () => _navigateToEditWallet(wallet),
-                          onDelete: () => _showDeleteDialog(wallet),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+        return RefreshIndicator(
+          onRefresh: () => provider.refresh(),
+          child: Column(
+            children: [
+              _SummaryCard(wallets: filteredWallets),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount:
+                      filteredWallets.length + (isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == filteredWallets.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final wallet = filteredWallets[index];
+                    return WalletCard(
+                      key: ValueKey(
+                          '${wallet.walletId}_${wallet.balance}_${provider.isWalletFrozenSync(wallet.walletId)}'),
+                      wallet: wallet,
+                      onTap: () =>
+                          _navigateToWalletDetails(wallet.walletId),
+                      onEdit: () => _navigateToEditWallet(wallet),
+                      onDelete: () => _showDeleteDialog(wallet),
+                    );
+                  },
+                ),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );

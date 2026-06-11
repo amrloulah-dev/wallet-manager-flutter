@@ -11,6 +11,7 @@ import '../data/repositories/transaction_repository.dart';
 import '../data/repositories/stats_repository.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/transaction_model.dart';
+import '../data/models/wallet_model.dart';
 import '../data/models/stats_summary_model.dart';
 import '../data/models/daily_stats_model.dart';
 import '../data/models/user_model.dart';
@@ -61,6 +62,7 @@ class TransactionProvider extends BaseProvider {
 
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
+  bool _hasFetchedInitial = false;
 
   WalletProvider? _walletProvider;
 
@@ -122,8 +124,19 @@ class TransactionProvider extends BaseProvider {
   List<TransactionModel> get transactions => _transactions;
   Map<String, TransactionModel> get transactionMap => _transactionMap;
   List<TransactionModel> get todayTransactions => _todayTransactions;
-  Map<String, dynamic> get summary => _summary;
+  Map<String, dynamic> get summary => Map<String, dynamic>.from(_summary);
   TransactionProviderStatus get status => _status;
+
+  double get totalSent => _transactions
+      .where((tx) => tx.transactionType == TransactionType.debit)
+      .fold(0.0, (sum, tx) => sum + tx.amount);
+
+  double get totalReceived => _transactions
+      .where((tx) => tx.transactionType == TransactionType.credit)
+      .fold(0.0, (sum, tx) => sum + tx.amount);
+
+  double get totalCommission => _transactions
+      .fold(0.0, (sum, tx) => sum + tx.commission);
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   bool get hasMore => _hasMore;
@@ -300,7 +313,13 @@ class TransactionProvider extends BaseProvider {
 
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
-      await fetchTodaySummary();
+      if (!_hasFetchedInitial && _transactions.isEmpty) {
+        await fetchTodaySummary();
+        _hasFetchedInitial = true;
+      } else {
+        _hasFetchedInitial = true;
+        _deriveSummaryLocally();
+      }
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
@@ -372,9 +391,11 @@ class TransactionProvider extends BaseProvider {
     StatisticsProvider? statsProvider;
     StatsSummaryModel? oldStatsSummary;
     DailyStatsModel? oldStatsToday;
+    WalletModel? oldWalletSnapshot;
     String? pendingTxId;
 
     try {
+      // Removed fallback to sl<WalletProvider>() to prevent ghost instances.
       final user = await _validateUserAndPermission((p) => p.createTransaction);
 
       // Validate wallet is not frozen
@@ -437,6 +458,10 @@ class TransactionProvider extends BaseProvider {
       oldTransactionMap = Map<String, TransactionModel>.from(_transactionMap);
       oldSummary = Map<String, dynamic>.from(_summary);
 
+      if (_walletProvider != null && _walletProvider!.walletMap.containsKey(walletId)) {
+        oldWalletSnapshot = _walletProvider!.walletMap[walletId];
+      }
+
       statsProvider = sl.isRegistered<StatisticsProvider>() ? sl<StatisticsProvider>() : null;
       if (statsProvider != null) {
         oldStatsSummary = statsProvider.dashboardSummary;
@@ -469,18 +494,29 @@ class TransactionProvider extends BaseProvider {
       _rebuildTransactionMap();
       _recomputeTodayTransactions();
 
-      final double localDeduction = amount + serviceFee;
-      final bool isSendDeduction = transactionType == TransactionType.debit;
-      _walletProvider?.applyLocalDeduction(walletId, localDeduction, isSendDeduction);
+      // STRICTLY use the correctly injected instance from ProxyProvider. 
+      // Never fallback to 'sl' for WalletProvider to avoid DI Ghost Instances.
+      if (_walletProvider != null) {
+        _walletProvider!.updateLocalWalletBalance(
+          walletId: newTransaction.walletId,
+          amount: newTransaction.amount,
+          isIncome: transactionType == TransactionType.credit,
+          serviceFee: serviceFee,
+        );
+      } else {
+        debugPrint("CRITICAL UI BUG CAUGHT: _walletProvider is null inside TransactionProvider. ProxyProvider injection failed.");
+      }
 
-      _updateSummaryMapOptimistically(newTransaction);
+      if (_hasFetchedInitial) {
+        _deriveSummaryLocally();
+      } else {
+        _updateSummaryMapOptimistically(newTransaction);
+      }
 
-      if (statsProvider != null) {
-        statsProvider.addTransactionOptimistically({
-          'amount': amount,
-          'commission': commission,
-          'type': transactionType.name,
-        });
+      if (sl.isRegistered<StatisticsProvider>()) {
+        sl<StatisticsProvider>().updateLocalStats(amount, transactionType, commission: commission);
+      } else if (statsProvider != null) {
+        statsProvider.applyTransactionLocally(amount, newTransaction.isIncome, commission: commission);
       }
 
       safeNotify();
@@ -493,19 +529,19 @@ class TransactionProvider extends BaseProvider {
       _walletProvider?.clearPendingWallet(walletId);
       return true;
     } on DomainException catch (e, stack) {
-      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
       setError(e.message, e, stack);
       return false;
     } on ValidationException catch (e, stack) {
-      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
       setError(e.message, e, stack);
       return false;
     } on AppException catch (e, stack) {
-      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
       setError(e.message, e, stack);
       return false;
     } catch (e, stack) {
-      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, walletId, amount, serviceFee, transactionType);
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary, statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
       setError('transaction_error_create_failed', e, stack);
       return false;
     } finally {
@@ -539,17 +575,41 @@ class TransactionProvider extends BaseProvider {
     safeNotify();
   }
 
+  void _deriveSummaryLocally() {
+    final now = TimeService.now();
+    final todayTxs = _transactions.where((tx) {
+      return DateHelper.isSameDay(tx.transactionDate ?? now, now);
+    }).toList();
+
+    _summary['totalTransactions'] = todayTxs.length;
+    _summary['sendCount'] = todayTxs.where((tx) => tx.transactionType == TransactionType.debit).length;
+    _summary['receiveCount'] = todayTxs.where((tx) => tx.transactionType == TransactionType.credit).length;
+    _summary['totalSendAmount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.debit)
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+    _summary['totalReceiveAmount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.credit)
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+    _summary['totalCommission'] = todayTxs
+        .fold(0.0, (sum, tx) => sum + tx.commission);
+  }
+
   Future<void> fetchTodaySummary() async {
     if (_currentStoreId == null) return;
+    if (_hasFetchedInitial) {
+      _deriveSummaryLocally();
+      safeNotify();
+      return;
+    }
     try {
-      final stats = await _statsRepository.fetchTodayStats(_currentStoreId!);
+      final stats = await _statsRepository.getStatsSummary(_currentStoreId!);
       if (isDisposed) return;
-      _summary['totalTransactions'] = stats.transactionCount;
+      _summary['totalTransactions'] = stats.totalTransactionsToday;
       _summary['sendCount'] = stats.sendCount;
       _summary['receiveCount'] = stats.receiveCount;
       _summary['totalSendAmount'] = stats.totalSentAmount;
       _summary['totalReceiveAmount'] = stats.totalReceivedAmount;
-      _summary['totalCommission'] = stats.totalCommission;
+      _summary['totalCommission'] = stats.totalCommissionToday;
       safeNotify();
     } catch (e, stack) {
       setError('transaction_error_summary_fetch_failed', e, stack);
@@ -650,10 +710,7 @@ class TransactionProvider extends BaseProvider {
     StatisticsProvider? statsProvider,
     StatsSummaryModel? oldStatsSummary,
     DailyStatsModel? oldStatsToday,
-    String walletId,
-    double amount,
-    double serviceFee,
-    TransactionType transactionType,
+    WalletModel? oldWalletSnapshot,
   ) {
     if (oldTransactions != null) _transactions = oldTransactions;
     if (oldTransactionMap != null) _transactionMap = oldTransactionMap;
@@ -661,16 +718,15 @@ class TransactionProvider extends BaseProvider {
       _summary.clear();
       _summary.addAll(oldSummary);
     }
-    if (_walletProvider != null) {
-      final double localDeduction = amount + serviceFee;
-      final bool isSendDeduction = transactionType == TransactionType.debit;
-      try {
-        _walletProvider!.applyLocalDeduction(walletId, localDeduction, !isSendDeduction);
-        _walletProvider!.clearPendingWallet(walletId);
-      } catch (_) {}
+    
+    final walletProvider = sl.isRegistered<WalletProvider>() ? sl<WalletProvider>() : _walletProvider;
+    if (walletProvider != null && oldWalletSnapshot != null) {
+      walletProvider.rollbackWallet(oldWalletSnapshot);
     }
-    if (statsProvider != null) {
-      statsProvider.rollbackStats(oldStatsSummary, oldStatsToday);
+    
+    final sProvider = sl.isRegistered<StatisticsProvider>() ? sl<StatisticsProvider>() : statsProvider;
+    if (sProvider != null) {
+      sProvider.rollbackStats(oldStatsSummary, oldStatsToday);
     }
     _recomputeTodayTransactions();
     safeNotify();

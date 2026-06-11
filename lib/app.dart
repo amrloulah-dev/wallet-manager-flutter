@@ -81,13 +81,20 @@ class MyApp extends StatelessWidget {
               subscriptionProvider:
                   Provider.of<SubscriptionProvider>(context, listen: false),
               walletRepository: sl<WalletRepository>()),
-          update: (_, auth, subscription, previous) => (previous ??
-              WalletProvider(
-                  authProvider: auth,
-                  subscriptionProvider: subscription,
-                  walletRepository: sl<WalletRepository>()))
-            ..updateAuthState(auth)
-            ..updateSubscriptionProvider(subscription),
+          update: (_, auth, subscription, previous) {
+            final p = (previous ??
+                WalletProvider(
+                    authProvider: auth,
+                    subscriptionProvider: subscription,
+                    walletRepository: sl<WalletRepository>()))
+              ..updateAuthState(auth)
+              ..updateSubscriptionProvider(subscription);
+            if (sl.isRegistered<WalletProvider>()) {
+              sl.unregister<WalletProvider>();
+            }
+            sl.registerSingleton<WalletProvider>(p);
+            return p;
+          },
         ),
         ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
           create: (context) => DebtProvider(
@@ -108,8 +115,14 @@ class MyApp extends StatelessWidget {
           create: (_) => StatisticsProvider(
             statsRepository: sl<StatsRepository>(),
           ),
-          update: (_, auth, previous) =>
-              previous!..setStoreId(auth.currentStoreId),
+          update: (_, auth, previous) {
+            final p = previous!..setStoreId(auth.currentStoreId);
+            if (sl.isRegistered<StatisticsProvider>()) {
+              sl.unregister<StatisticsProvider>();
+            }
+            sl.registerSingleton<StatisticsProvider>(p);
+            return p;
+          },
         ),
       ],
       child: GlobalOverlayListener(

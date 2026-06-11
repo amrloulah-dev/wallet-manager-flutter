@@ -6,6 +6,7 @@ import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../core/utils/number_parser.dart';
+import '../core/enums/transaction_enums.dart';
 import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
@@ -249,13 +250,16 @@ class StatisticsProvider extends BaseProvider {
     double newTotalSent = summary.totalSentAmount;
     int newReceiveCount = summary.receiveCount;
     int newSendCount = summary.sendCount;
+    double newTotalBalance = summary.totalBalance;
 
     if (type == 'credit') {
       newTotalReceived += amount;
       newReceiveCount += 1;
+      newTotalBalance += amount;
     } else if (type == 'debit') {
       newTotalSent += amount;
       newSendCount += 1;
+      newTotalBalance -= amount;
     }
 
     _dashboardSummary = summary.copyWith(
@@ -267,6 +271,7 @@ class StatisticsProvider extends BaseProvider {
       totalSentAmount: newTotalSent,
       receiveCount: newReceiveCount,
       sendCount: newSendCount,
+      totalBalance: newTotalBalance,
     );
 
     // 2. Update Today Stats
@@ -315,6 +320,25 @@ class StatisticsProvider extends BaseProvider {
     _dashboardSummary = oldSummary;
     _todayStats = oldToday;
     safeNotify();
+  }
+
+  void applyTransactionLocally(double amount, bool isIncome, {double commission = 0.0}) {
+    if (isDisposed) return;
+    addTransactionOptimistically({
+      'amount': amount,
+      'commission': commission,
+      'type': isIncome ? 'credit' : 'debit',
+    });
+  }
+
+  void updateLocalStats(double amount, dynamic type, {double commission = 0.0}) {
+    if (isDisposed) return;
+    final TransactionType t = type is String 
+        ? TransactionType.fromString(type) 
+        : (type is TransactionType ? type : TransactionType.credit);
+    final isIncome = t == TransactionType.credit;
+    applyTransactionLocally(amount, isIncome, commission: commission);
+    notifyListeners();
   }
 
   @override

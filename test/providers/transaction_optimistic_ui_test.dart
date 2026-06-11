@@ -18,13 +18,18 @@ import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 class MockAuthProvider extends Mock implements AuthProvider {}
 class MockStatsRepository extends Mock implements StatsRepository {}
 class MockWalletRepository extends Mock implements WalletRepository {}
 class MockWalletProvider extends Mock implements WalletProvider {}
+class MockStatisticsProvider extends Mock implements StatisticsProvider {}
 class FakeTransactionModel extends Fake implements TransactionModel {}
+class FakeWalletModel extends Fake implements WalletModel {}
 
 void main() {
   late MockTransactionRepository mockTxRepo;
@@ -32,6 +37,7 @@ void main() {
   late MockAuthProvider mockAuth;
   late MockWalletProvider mockWalletProvider;
   late MockStatsRepository mockStatsRepo;
+  late MockStatisticsProvider mockStatsProvider;
   late TransactionProvider provider;
 
   const storeId = 's1';
@@ -69,6 +75,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(UserRole.employee);
     registerFallbackValue(FakeTransactionModel());
+    registerFallbackValue(FakeWalletModel());
   });
 
   setUp(() async {
@@ -79,10 +86,13 @@ void main() {
     mockAuth = MockAuthProvider();
     mockWalletProvider = MockWalletProvider();
     mockStatsRepo = MockStatsRepository();
+    mockStatsProvider = MockStatisticsProvider();
 
     final sl = GetIt.instance;
     await sl.reset();
     sl.registerLazySingleton<StatsRepository>(() => mockStatsRepo);
+    sl.registerLazySingleton<StatisticsProvider>(() => mockStatsProvider);
+    sl.registerLazySingleton<WalletProvider>(() => mockWalletProvider);
 
     when(() => mockAuth.currentStoreId).thenReturn(storeId);
     when(() => mockAuth.isOwner).thenReturn(true);
@@ -91,9 +101,24 @@ void main() {
     when(() => mockWalletRepo.getWalletById(walletId, expectedStoreId: storeId))
         .thenAnswer((_) async => mockWallet);
     when(() => mockWalletProvider.isWalletFrozenSync(walletId)).thenReturn(false);
+    when(() => mockWalletProvider.walletMap).thenReturn({walletId: mockWallet});
+    when(() => mockWalletProvider.rollbackWallet(any())).thenReturn(null);
+    when(() => mockWalletProvider.updateLocalWalletBalance(
+      walletId: any(named: 'walletId'),
+      amount: any(named: 'amount'),
+      isIncome: any(named: 'isIncome'),
+      serviceFee: any(named: 'serviceFee'),
+    )).thenReturn(null);
+    when(() => mockWalletProvider.updateLocalBalance(any(), any(), any(), serviceFee: any(named: 'serviceFee'))).thenReturn(null);
+    when(() => mockStatsProvider.applyTransactionLocally(any(), any(), commission: any(named: 'commission'))).thenReturn(null);
+    when(() => mockStatsProvider.updateLocalStats(any(), any(), commission: any(named: 'commission'))).thenReturn(null);
+    when(() => mockStatsProvider.rollbackStats(any(), any())).thenReturn(null);
 
     when(() => mockStatsRepo.fetchTodayStats(storeId))
         .thenAnswer((_) async => DailyStatsModel.empty('2026-06-05'));
+
+    when(() => mockStatsRepo.getStatsSummary(any()))
+        .thenAnswer((_) async => StatsSummaryModel.empty());
 
     when(() => mockTxRepo.getTransactionsByDateRange(any(), any(), any(), lastDocument: any(named: 'lastDocument')))
         .thenAnswer((_) async => PaginatedResult<TransactionModel>(items: [], lastDocument: null));
@@ -112,7 +137,12 @@ void main() {
       final txCompleter = Completer<void>();
       when(() => mockTxRepo.createTransaction(any()))
           .thenAnswer((_) => txCompleter.future);
-      when(() => mockWalletProvider.applyLocalDeduction(any(), any(), any())).thenReturn(null);
+      when(() => mockWalletProvider.updateLocalWalletBalance(
+        walletId: any(named: 'walletId'),
+        amount: any(named: 'amount'),
+        isIncome: any(named: 'isIncome'),
+        serviceFee: any(named: 'serviceFee'),
+      )).thenReturn(null);
 
       // Create transaction (returns a Future that is not complete yet)
       final createFuture = provider.createTransaction(
@@ -134,7 +164,12 @@ void main() {
       expect(optimisticTx.amount, 100.0);
 
       // Verify local wallet balance update was triggered
-      verify(() => mockWalletProvider.applyLocalDeduction(walletId, 100.0, true)).called(1);
+      verify(() => mockWalletProvider.updateLocalWalletBalance(
+        walletId: walletId,
+        amount: 100.0,
+        isIncome: false,
+        serviceFee: 0.0,
+      )).called(1);
 
       // Complete the repository future
       txCompleter.complete();
@@ -145,7 +180,12 @@ void main() {
     test('failed createTransaction should trigger rollback to snapshot', () async {
       when(() => mockTxRepo.createTransaction(any()))
           .thenThrow(Exception('Firestore write failed'));
-      when(() => mockWalletProvider.applyLocalDeduction(any(), any(), any())).thenReturn(null);
+      when(() => mockWalletProvider.updateLocalWalletBalance(
+        walletId: any(named: 'walletId'),
+        amount: any(named: 'amount'),
+        isIncome: any(named: 'isIncome'),
+        serviceFee: any(named: 'serviceFee'),
+      )).thenReturn(null);
 
       // We start with 0 transactions in list
       expect(provider.transactions, isEmpty);
@@ -163,10 +203,14 @@ void main() {
       // State should have rolled back, list should be empty again
       expect(provider.transactions, isEmpty);
 
-      // Balance rollback should be triggered (compensating update)
-      // Since it was updated with true (send), it should be compensated with false (receive)
-      verify(() => mockWalletProvider.applyLocalDeduction(walletId, 100.0, true)).called(1);
-      verify(() => mockWalletProvider.applyLocalDeduction(walletId, 100.0, false)).called(1);
+      // Balance rollback should be triggered via snapshot rollback
+      verify(() => mockWalletProvider.updateLocalWalletBalance(
+        walletId: walletId,
+        amount: 100.0,
+        isIncome: false,
+        serviceFee: 0.0,
+      )).called(1);
+      verify(() => mockWalletProvider.rollbackWallet(any())).called(1);
     });
 
     test('summaries should be computed dynamically from local list after initial load', () async {
@@ -174,27 +218,45 @@ void main() {
       when(() => mockWalletProvider.applyLocalDeduction(any(), any(), any())).thenReturn(null);
 
       // Initial stats mock
-      final summaryStats = DailyStatsModel.empty('2026-06-05').copyWith(
-        transactionCount: 2,
-        totalCommission: 10.0,
+      final summaryStats = StatsSummaryModel(
+        totalTransactionsToday: 2,
+        totalCommissionToday: 10.0,
       );
-      when(() => mockStatsRepo.fetchTodayStats(storeId)).thenAnswer((_) async => summaryStats);
+      when(() => mockStatsRepo.getStatsSummary(storeId)).thenAnswer((_) async => summaryStats);
 
-      await provider.fetchTodaySummary();
-      expect(provider.summary['totalTransactions'], 2);
-      expect(provider.summary['totalCommission'], 10.0);
+      final testProvider = TransactionProvider(
+        transactionRepository: mockTxRepo,
+        statsRepository: mockStatsRepo,
+        walletRepository: mockWalletRepo,
+        storeId: storeId,
+      );
+      testProvider.updateWalletProvider(mockWalletProvider);
+      testProvider.updateAuthState(mockAuth);
 
-      // Adding transaction should dynamically update summaries
-      await provider.createTransaction(
+      await testProvider.fetchTodaySummary();
+      expect(testProvider.summary['totalTransactions'], 2);
+      expect(testProvider.summary['totalCommission'], 10.0);
+
+      // Now fetch initial transactions (to set _hasFetchedInitial to true)
+      final serverTx = TransactionModel(
+        transactionId: 't_server',
+        storeId: storeId,
         walletId: walletId,
-        transactionType: TransactionType.debit, // Sent
-        amount: 200.0,
-        commission: 5.0,
+        transactionType: TransactionType.credit,
+        amount: 50.0,
+        commission: 1.0,
+        transactionDate: DateTime.now(),
+        createdAt: DateTime.now(),
+        createdBy: 'u1',
       );
+      when(() => mockTxRepo.getTransactionsByDateRange(storeId, any(), any(), lastDocument: any(named: 'lastDocument')))
+          .thenAnswer((_) async => PaginatedResult<TransactionModel>(items: [serverTx], lastDocument: null));
 
-      // Summaries should increase dynamically
-      expect(provider.summary['totalTransactions'], 3);
-      expect(provider.summary['totalCommission'], 15.0);
+      await testProvider.fetchInitialTransactions(forceRefresh: true);
+
+      // Summaries should now be derived from local list
+      expect(testProvider.summary['totalTransactions'], 1);
+      expect(testProvider.summary['totalCommission'], 1.0);
     });
 
     test('fetchInitialTransactions with forceRefresh should preserve pending optimistic transactions', () async {
@@ -243,6 +305,94 @@ void main() {
       // Clean up/Complete pending write
       txCompleter.complete();
       await createFuture;
+    });
+
+    test('dynamic summary getters (totalSent, totalReceived, totalCommission) compute correctly from local list', () {
+      final tx1 = TransactionModel(
+        transactionId: 't1',
+        storeId: storeId,
+        walletId: walletId,
+        transactionType: TransactionType.debit,
+        amount: 100.0,
+        commission: 2.0,
+        createdBy: 'u1',
+        transactionDate: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+      final tx2 = TransactionModel(
+        transactionId: 't2',
+        storeId: storeId,
+        walletId: walletId,
+        transactionType: TransactionType.credit,
+        amount: 50.0,
+        commission: 1.0,
+        createdBy: 'u1',
+        transactionDate: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+
+      provider.insertTransactionLocally(tx1);
+      provider.insertTransactionLocally(tx2);
+
+      expect(provider.totalSent, 100.0);
+      expect(provider.totalReceived, 50.0);
+      expect(provider.totalCommission, 3.0);
+    });
+
+    test('fetchTodaySummary on initial load should fetch from stats/summary document', () async {
+      final summaryStats = StatsSummaryModel(
+        totalTransactionsToday: 5,
+        totalCommissionToday: 25.0,
+        totalSentAmount: 200.0,
+        totalReceivedAmount: 300.0,
+        sendCount: 3,
+        receiveCount: 2,
+      );
+      when(() => mockStatsRepo.getStatsSummary(storeId))
+          .thenAnswer((_) async => summaryStats);
+
+      final newProvider = TransactionProvider(
+        transactionRepository: mockTxRepo,
+        statsRepository: mockStatsRepo,
+        walletRepository: mockWalletRepo,
+        storeId: storeId,
+      );
+      newProvider.updateAuthState(mockAuth);
+
+      clearInteractions(mockStatsRepo);
+
+      await newProvider.fetchTodaySummary();
+
+      expect(newProvider.summary['totalTransactions'], 5);
+      expect(newProvider.summary['totalCommission'], 25.0);
+      expect(newProvider.summary['totalSendAmount'], 200.0);
+      expect(newProvider.summary['totalReceiveAmount'], 300.0);
+      expect(newProvider.summary['sendCount'], 3);
+      expect(newProvider.summary['receiveCount'], 2);
+
+      verify(() => mockStatsRepo.getStatsSummary(storeId)).called(1);
+    });
+
+    test('transaction model toFirestore should serialize createdAt and transactionDate as FieldValue.serverTimestamp()', () {
+      final now = DateTime.now();
+      final tx = TransactionModel(
+        transactionId: 't1',
+        storeId: storeId,
+        walletId: walletId,
+        transactionType: TransactionType.debit,
+        amount: 100.0,
+        commission: 2.0,
+        createdBy: 'u1',
+        transactionDate: now,
+        createdAt: now,
+      );
+
+      expect(tx.transactionDate, now);
+      expect(tx.createdAt, now);
+
+      final firestoreData = tx.toFirestore();
+      expect(firestoreData['createdAt'], isA<FieldValue>());
+      expect(firestoreData['transactionDate'], isA<FieldValue>());
     });
   });
 }
