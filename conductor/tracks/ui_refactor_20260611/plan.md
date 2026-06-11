@@ -2,44 +2,44 @@
 
 ## Phase 1: Core Business Logic Fixes
 
-- [ ] Task: Write failing tests for transaction count filtering (FR-1)
-    - [ ] Create/update `test/providers/statistics_provider_test.dart`
-    - [ ] Test that `addTransactionOptimistically` with `type: 'deposit'` or `type: 'add_balance'` does NOT increment `transactionCount`, `totalSent`, or `totalReceived`
-    - [ ] Test that `addTransactionOptimistically` with `type: 'credit'` or `type: 'debit'` DOES increment the correct counters
-    - [ ] Create/update `test/providers/transaction_provider_test.dart`
-    - [ ] Test that `_deriveSummaryLocally` excludes non-debit/non-credit transactions from length and fold calculations
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for transaction count filtering (FR-1) 99a5d48
+    - [x] Create/update `test/providers/statistics_provider_test.dart`
+    - [x] Test that `addTransactionOptimistically` with `type: 'deposit'` or `type: 'add_balance'` does NOT increment `transactionCount`, `totalSent`, or `totalReceived`
+    - [x] Test that `addTransactionOptimistically` with `type: 'credit'` or `type: 'debit'` DOES increment the correct counters
+    - [x] Create/update `test/providers/transaction_provider_test.dart`
+    - [x] Test that `_deriveSummaryLocally` excludes non-debit/non-credit transactions from length and fold calculations
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Implement transaction count fix in providers (FR-1)
-    - [ ] In `lib/providers/transaction_provider.dart` (`_deriveSummaryLocally`): filter `transactionsList` to only include `TransactionType.debit` and `TransactionType.credit` before length checks and `.fold` calculations
-    - [ ] In `lib/providers/statistics_provider.dart` (`addTransactionOptimistically`): wrap counter increment logic in `if (type == 'credit' || type == 'debit')` guard
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Implement transaction count fix in providers (FR-1) 99a5d48
+    - [x] In `lib/providers/transaction_provider.dart` (`_deriveSummaryLocally`): filter `transactionsList` to only include `TransactionType.debit` and `TransactionType.credit` before length checks and `.fold` calculations
+    - [x] In `lib/providers/statistics_provider.dart` (`addTransactionOptimistically`): wrap counter increment logic in `if (type == 'credit' || type == 'debit')` guard
+    - [x] Run tests and confirm all pass (Green phase)
 
-- [ ] Task: Write failing tests for wallet enum deserialization (FR-2)
-    - [ ] Create/update `test/data/models/wallet_enums_test.dart`
-    - [ ] Test `fromString('vodafone cash')` → `WalletType.vodafoneCash`
-    - [ ] Test `fromString('  Vodafone_Cash ')` → `WalletType.vodafoneCash`
-    - [ ] Test all supported wallet types with mixed casing, extra whitespace, and underscore/space variations
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for wallet enum deserialization (FR-2) 99a5d48
+    - [x] Create/update `test/data/models/wallet_enums_test.dart`
+    - [x] Test `fromString('vodafone cash')` → `WalletType.vodafoneCash`
+    - [x] Test `fromString('  Vodafone_Cash ')` → `WalletType.vodafoneCash`
+    - [x] Test all supported wallet types with mixed casing, extra whitespace, and underscore/space variations
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Implement wallet enum sanitization fix (FR-2)
-    - [ ] In `lib/data/models/wallet_enums.dart` (`fromString`): add `final sanitized = type.toLowerCase().trim().replaceAll(' ', '_');` before the switch
-    - [ ] Update switch cases to match against sanitized keys: `'vodafone_cash'`, `'instapay'`, `'orange_cash'`, `'etisalat_cash'`, `'we_pay'`, etc.
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Implement wallet enum sanitization fix (FR-2) 99a5d48
+    - [x] In `lib/data/models/wallet_enums.dart` (`fromString`): add `final sanitized = type.toLowerCase().trim().replaceAll(' ', '_');` before the switch
+    - [x] Update switch cases to match against sanitized keys: `'vodafone_cash'`, `'instapay'`, `'orange_cash'`, `'etisalat_cash'`, `'we_pay'`, etc.
+    - [x] Run tests and confirm all pass (Green phase)
 
-- [ ] Task: Write failing tests for number formatting (FR-3)
-    - [ ] Create/update `test/core/utils/number_formatter_test.dart`
-    - [ ] Test integer amounts format without `.00` (e.g., `1500` → `'1,500'` not `'1,500.00'`)
-    - [ ] Test fractional amounts preserve decimals (e.g., `1500.75` → `'1,500.75'`)
-    - [ ] Test all formatted numbers use English (Western) numerals regardless of locale
-    - [ ] Test `formatPhoneNumber` returns English digits without thousands separators
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for number formatting (FR-3) 99a5d48
+    - [x] Create/update `test/core/utils/number_formatter_test.dart`
+    - [x] Test integer amounts format without `.00` (e.g., `1500` → `'1,500'` not `'1,500.00'`)
+    - [x] Test fractional amounts preserve decimals (e.g., `1500.75` → `'1,500.75'`)
+    - [x] Test all formatted numbers use English (Western) numerals regardless of locale
+    - [x] Test `formatPhoneNumber` returns English digits without thousands separators
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Implement number formatting fixes (FR-3)
-    - [ ] In `lib/core/utils/number_formatter.dart`: change currency formatter to `NumberFormat('#,##0.##', 'en_US')`
-    - [ ] Ensure `formatPhoneNumber` uses simple string replacement (Arabic-to-English digit mapping) — NOT `NumberFormat` class — to avoid thousands separators in phone numbers
-    - [ ] Apply English locale enforcement to all currency/amount formatting methods
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Implement number formatting fixes (FR-3) 99a5d48
+    - [x] In `lib/core/utils/number_formatter.dart`: change currency formatter to `NumberFormat('#,##0.##', 'en_US')`
+    - [x] Ensure `formatPhoneNumber` uses simple string replacement (Arabic-to-English digit mapping) — NOT `NumberFormat` class — to avoid thousands separators in phone numbers
+    - [x] Apply English locale enforcement to all currency/amount formatting methods
+    - [x] Run tests and confirm all pass (Green phase)
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Core Business Logic Fixes' (Protocol in workflow.md)
 
