@@ -77,31 +77,31 @@
 
 ## Phase 3: UI Redesign — WalletCard via Stitch
 
-- [ ] Task: Fetch WalletCard design from Stitch MCP
-    - [ ] Use Stitch MCP to fetch design from Project ID: `17710906945534389850`, Screen ID: `84cff1ca188a4264bff171511a7713bf`
-    - [ ] Analyze the fetched design: identify layout structure, colors, typography, spacing, and visual elements
-    - [ ] Document the design interpretation for implementation reference
+- [x] Task: Fetch WalletCard design from Stitch MCP 4e85f3b
+    - [x] Use Stitch MCP to fetch design from Project ID: `17710906945534389850`, Screen ID: `84cff1ca188a4264bff171511a7713bf`
+    - [x] Analyze the fetched design: identify layout structure, colors, typography, spacing, and visual elements
+    - [x] Document the design interpretation for implementation reference
 
-- [ ] Task: Write failing tests for new WalletCard (FR-6)
-    - [ ] Create/update `test/presentation/widgets/wallets/wallet_card_test.dart`
-    - [ ] Test that WalletCard is a `StatelessWidget`
-    - [ ] Test that WalletCard renders wallet name, balance, and provider type from constructor-injected `WalletModel`
-    - [ ] Test frozen state visual indication when `isFrozen: true`
-    - [ ] Test `onTap`, `onEdit`, `onDelete` callbacks fire correctly
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for new WalletCard (FR-6) 4e85f3b
+    - [x] Create/update `test/presentation/widgets/wallets/wallet_card_test.dart`
+    - [x] Test that WalletCard is a `StatelessWidget`
+    - [x] Test that WalletCard renders wallet name, balance, and provider type from constructor-injected `WalletModel`
+    - [x] Test frozen state visual indication when `isFrozen: true`
+    - [x] Test `onTap`, `onEdit`, `onDelete` callbacks fire correctly
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Implement new WalletCard design (FR-6)
-    - [ ] In `lib/presentation/widgets/wallets/wallet_card.dart`: implement the new Stitch-based layout
-    - [ ] Maintain `StatelessWidget` with constructor parameters: `WalletModel wallet`, `bool isFrozen`, `VoidCallback onTap`, `VoidCallback onEdit`, `VoidCallback onDelete`
-    - [ ] No `Selector`, `Consumer`, or `context.read/watch` inside the widget
-    - [ ] Implement frozen state visual treatment (opacity, overlay, icon, etc.)
-    - [ ] Ensure RTL/LTR compatibility with logical constraints (`EdgeInsetsDirectional`, `start`/`end`)
-    - [ ] Use `ValueKey('${wallet.id}_${wallet.balance}')` for the widget key
-    - [ ] Run tests and confirm all pass (Green phase)
+- [x] Task: Implement new WalletCard design (FR-6) 4e85f3b
+    - [x] In `lib/presentation/widgets/wallets/wallet_card.dart`: implement the new Stitch-based layout
+    - [x] Maintain `StatelessWidget` with constructor parameters: `WalletModel wallet`, `bool isFrozen`, `VoidCallback onTap`, `VoidCallback onEdit`, `VoidCallback onDelete`
+    - [x] No `Selector`, `Consumer`, or `context.read/watch` inside the widget
+    - [x] Implement frozen state visual treatment (opacity, overlay, icon, etc.)
+    - [x] Ensure RTL/LTR compatibility with logical constraints (`EdgeInsetsDirectional`, `start`/`end`)
+    - [x] Use `ValueKey('${wallet.id}_${wallet.balance}')` for the widget key
+    - [x] Run tests and confirm all pass (Green phase)
 
-- [ ] Task: Verify WalletCard integration with parent screen
-    - [ ] Confirm `wallets_list_screen.dart` passes updated data to WalletCard via `Consumer`/`Selector` at the parent level
-    - [ ] Verify wallet list renders correctly with the new card design
-    - [ ] Run full test suite to check for regressions
+- [x] Task: Verify WalletCard integration with parent screen 4e85f3b
+    - [x] Confirm `wallets_list_screen.dart` passes updated data to WalletCard via `Consumer`/`Selector` at the parent level
+    - [x] Verify wallet list renders correctly with the new card design
+    - [x] Run full test suite to check for regressions
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: UI Redesign — WalletCard via Stitch' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: UI Redesign — WalletCard via Stitch' (Protocol in workflow.md) 4e85f3b
