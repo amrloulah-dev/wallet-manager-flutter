@@ -186,6 +186,7 @@ class _WalletsListScreenState extends State<WalletsListScreen> {
                       key: ValueKey(
                           '${wallet.walletId}_${wallet.balance}_${provider.isWalletFrozenSync(wallet.walletId)}'),
                       wallet: wallet,
+                      isFrozen: provider.isWalletFrozenSync(wallet.walletId),
                       onTap: () => _navigateToWalletDetails(wallet.walletId),
                       onEdit: () => _navigateToEditWallet(wallet),
                       onDelete: () => _showDeleteDialog(wallet),

@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
-import 'package:walletmanager/presentation/widgets/common/animated_hover_card.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
-import '../../../providers/wallet_provider.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../../core/enums/wallet_enums.dart';
 
 class WalletCard extends StatelessWidget {
   final WalletModel wallet;
+  final bool isFrozen;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -21,6 +17,7 @@ class WalletCard extends StatelessWidget {
   const WalletCard({
     super.key,
     required this.wallet,
+    required this.isFrozen,
     required this.onTap,
     this.onEdit,
     this.onDelete,
@@ -28,266 +25,381 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<WalletProvider>();
-    final isFrozen = provider.isWalletFrozenSync(wallet.walletId);
-    final reactiveWallet = wallet; // Use the passed wallet directly
+    final l10n = AppLocalizations.of(context)!;
+    final providerColor =
+        isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
-    return AnimatedHoverCard(
+    return InkWell(
       onTap: isFrozen
           ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
           : onTap,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, reactiveWallet, isFrozen),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildLimits(context, reactiveWallet, isFrozen),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildStats(context, reactiveWallet, isFrozen),
-                if (onEdit != null || onDelete != null) ...[
-                  const SizedBox(height: 12),
-                  _buildActions(context, isFrozen),
-                ]
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isFrozen
+                              ? Colors.blue.shade900.withOpacity(0.3)
+                              : (wallet.walletStatus == WalletStatus.suspended
+                                  ? Colors.red.shade900.withOpacity(0.3)
+                                  : Colors.green.shade900.withOpacity(0.3)),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(
+                            color: isFrozen
+                                ? Colors.blue.withOpacity(0.2)
+                                : (wallet.walletStatus == WalletStatus.suspended
+                                    ? Colors.red.withOpacity(0.2)
+                                    : Colors.green.withOpacity(0.2)),
+                          ),
+                        ),
+                        child: Text(
+                          isFrozen
+                              ? l10n.getWalletStatusName(WalletStatus.inactive)
+                              : l10n.getWalletStatusName(wallet.walletStatus),
+                          style: TextStyle(
+                            color: isFrozen
+                                ? Colors.blue.shade400
+                                : (wallet.walletStatus == WalletStatus.suspended
+                                    ? Colors.red.shade400
+                                    : Colors.green.shade400),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Phone Number (enforced LTR format directionally)
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Provider Type
+                      Text(
+                        l10n.getWalletTypeName(wallet.walletType),
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Provider Icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: providerColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: providerColor.withOpacity(0.1)),
+                  ),
+                  child: Icon(
+                    wallet.walletTypeIcon,
+                    color: providerColor,
+                    size: 32,
+                  ),
+                ),
               ],
             ),
-          ),
-          if (isFrozen)
-            const PositionedDirectional(
-              top: 0,
-              bottom: 0,
-              start: 0,
-              end: 0,
-              child: Center(
-                child: Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+            const SizedBox(height: 20),
+            Divider(color: Colors.white.withOpacity(0.05), height: 1),
+            const SizedBox(height: 20),
+
+            // Limits Section
+            _buildLimitBar(
+              context: context,
+              label: l10n.sendDaily,
+              used: wallet.getLimits().dailyUsed,
+              limit: wallet.getLimits().dailyLimit,
+              percentage: wallet.getLimits().dailyPercentage,
+              warningLevel: isFrozen ? 'grey' : wallet.sendDailyWarningLevel,
+            ),
+            const SizedBox(height: 16),
+            _buildLimitBar(
+              context: context,
+              label: l10n.receiveDaily,
+              used: wallet.getReceiveLimits().dailyUsed,
+              limit: wallet.getReceiveLimits().dailyLimit,
+              percentage: wallet.getReceiveLimits().dailyPercentage,
+              warningLevel: isFrozen ? 'grey' : 'green',
+            ),
+            const SizedBox(height: 20),
+            Divider(color: Colors.white.withOpacity(0.05), height: 1),
+            const SizedBox(height: 20),
+
+            // Balance Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.credit_card,
+                          color: Colors.blue.shade400,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        l10n.currentBalance,
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    NumberFormatter.formatAmount(wallet.balance,
+                        showCurrency: true),
+                    style: TextStyle(
+                      color: isFrozen ? Colors.grey : Colors.blue.shade400,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
+
+            // Action Buttons
+            if (onEdit != null || onDelete != null) ...[
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (onDelete != null)
+                    Expanded(
+                      flex: 1,
+                      child: InkWell(
+                        onTap: isFrozen ? null : onDelete,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border:
+                                Border.all(color: Colors.red.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.delete_outline,
+                                  size: 20, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.delete,
+                                style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (onDelete != null && onEdit != null)
+                    const SizedBox(width: 16),
+                  if (onEdit != null)
+                    Expanded(
+                      flex: 2,
+                      child: InkWell(
+                        onTap: isFrozen ? null : onEdit,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isFrozen
+                                ? Colors.grey.withOpacity(0.2)
+                                : Colors.blue.shade600,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: isFrozen
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color:
+                                          Colors.blue.shade600.withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.edit_outlined,
+                                  size: 20, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.edit,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, WalletModel wallet, bool isFrozen) {
-    final l10n = AppLocalizations.of(context)!;
-    final primaryColor = isFrozen ? Colors.grey : AppColors.primary;
-    final textColor = isFrozen ? Colors.grey : null;
+  Widget _buildLimitBar({
+    required BuildContext context,
+    required String label,
+    required double used,
+    required double limit,
+    required double percentage,
+    required String warningLevel,
+  }) {
+    final int displayPercentage = percentage.clamp(0.0, 100.0).toInt();
+    final double progressValue = (percentage / 100).clamp(0.0, 1.0);
+    final Color barColor = _getColorForWarningLevel(warningLevel);
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(wallet.walletTypeIcon, size: 32, color: primaryColor),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$displayPercentage%',
+              style: TextStyle(
+                color: barColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey.shade300,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A2A2A),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progressValue,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation(barColor),
+              minHeight: 8,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
-                style: AppTextStyles.h3.copyWith(
-                  color: textColor,
-                  decoration: isFrozen ? TextDecoration.lineThrough : null,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.getWalletTypeName(wallet.walletType),
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary(context)
-                      .withAlpha(isFrozen ? 128 : 255),
+                '${NumberFormatter.formatAmount(used, showCurrency: false)} / ${NumberFormatter.formatAmount(limit)} EGP',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 10,
+                  fontFamily: 'monospace',
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        if (isFrozen)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.red.withAlpha(26),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.lock, size: 14, color: Colors.red),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.frozen,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: (wallet.walletStatus ==
-                          WalletStatus.suspended // ENUM refactor (placeholder)
-                      ? AppColors.error
-                      : AppColors.primary)
-                  .withAlpha(38),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              l10n.getWalletStatusName(wallet.walletStatus),
-              style: AppTextStyles.labelSmall.copyWith(
-                fontWeight: FontWeight.bold,
-                color: wallet.walletStatus == WalletStatus.suspended
-                    ? AppColors.error
-                    : AppColors.primary,
-              ),
-            ),
-          ),
       ],
     );
   }
 
-  Widget _buildLimits(BuildContext context, WalletModel wallet, bool isFrozen) {
-    final l10n = AppLocalizations.of(context)!;
-    final sendLimits = wallet.getLimits();
-    final receiveLimits = wallet.getReceiveLimits();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        WalletLimitBar(
-          label: l10n.sendDaily,
-          used: sendLimits.dailyUsed,
-          limit: sendLimits.dailyLimit,
-          percentage: sendLimits.dailyPercentage,
-          warningLevel: isFrozen ? 'grey' : wallet.sendDailyWarningLevel,
-        ),
-        const SizedBox(height: 8),
-        WalletLimitBar(
-          label: l10n.receiveDaily,
-          used: receiveLimits.dailyUsed,
-          limit: receiveLimits.dailyLimit,
-          percentage: receiveLimits.dailyPercentage,
-          warningLevel: isFrozen ? 'grey' : 'green',
-        ),
-      ],
-    );
+  Color _getColorForWarningLevel(String level) {
+    switch (level) {
+      case 'grey':
+        return Colors.grey;
+      case 'green':
+        return AppColors.success;
+      case 'yellow':
+        return AppColors.warning;
+      case 'red':
+        return AppColors.error;
+      default:
+        return AppColors.primary;
+    }
   }
 
-  Widget _buildStats(BuildContext context, WalletModel wallet, bool isFrozen) {
-    final l10n = AppLocalizations.of(context)!;
-    final iconColor = isFrozen ? Colors.grey : AppColors.primary;
-    final secondaryIconColor =
-        isFrozen ? Colors.grey : AppColors.textSecondary(context);
-    final valueColor = isFrozen ? Colors.grey : AppColors.primary;
-    final commissionColor = isFrozen ? Colors.grey : AppColors.success;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.account_balance_wallet_outlined,
-                    size: 16, color: iconColor),
-                const SizedBox(width: 4),
-                Text(l10n.currentBalance,
-                    style: AppTextStyles.bodySmall.copyWith(
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.color
-                            ?.withAlpha(isFrozen ? 128 : 255))),
-              ],
-            ),
-            Text(
-              NumberFormatter.formatAmount(wallet.balance),
-              style: AppTextStyles.labelMedium
-                  .copyWith(color: valueColor, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.swap_horiz, size: 16, color: secondaryIconColor),
-                const SizedBox(width: 4),
-                Text(
-                  '${l10n.transactions}: ${NumberFormatter.formatNumber(wallet.stats.totalTransactions)}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.color
-                          ?.withAlpha(isFrozen ? 128 : 255)),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Icon(Icons.attach_money, size: 16, color: secondaryIconColor),
-                const SizedBox(width: 4),
-                Text(
-                  '${l10n.commission}: ${NumberFormatter.formatAmount(wallet.stats.totalCommission)}',
-                  style:
-                      AppTextStyles.bodySmall.copyWith(color: commissionColor),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActions(BuildContext context, bool isFrozen) {
-    final l10n = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        if (onEdit != null)
-          ElevatedButton.icon(
-            onPressed: isFrozen ? null : onEdit,
-            icon:
-                const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
-            label: Text(
-              l10n.edit,
-              style: const TextStyle(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isFrozen ? Colors.grey : AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-          ),
-        const SizedBox(
-          width: 15,
-        ),
-        if (onDelete != null)
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isFrozen ? Colors.grey : AppColors.error,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            onPressed: isFrozen ? null : onDelete,
-            icon:
-                const Icon(Icons.delete_outline, size: 18, color: Colors.white),
-            label: Text(
-              l10n.delete,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-      ],
-    );
+  Color _getProviderColor(WalletType type) {
+    switch (type) {
+      case WalletType.vodafoneCash:
+        return Colors.red;
+      case WalletType.instaPay:
+        return Colors.blue;
+      case WalletType.orangeCash:
+        return Colors.orange;
+      case WalletType.etisalatCash:
+        return Colors.green;
+      case WalletType.wePay:
+        return Colors.purple;
+      case WalletType.other:
+        return AppColors.primary;
+    }
   }
 }
