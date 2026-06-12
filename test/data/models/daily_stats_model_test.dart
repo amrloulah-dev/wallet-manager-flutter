@@ -8,8 +8,6 @@ void main() {
       expect(stats.date, '2026-05-26');
       expect(stats.transactionCount, 0);
       expect(stats.totalCommission, 0.0);
-      expect(stats.totalServiceFee, 0.0);
-      expect(stats.totalAmount, 0.0);
 
       // New fields
       expect(stats.sendCount, 0);
@@ -26,8 +24,6 @@ void main() {
       final map = {
         'transactionCount': 5,
         'totalCommission': 25.0,
-        'totalServiceFee': 10.0,
-        'totalAmount': 500.0,
         'sendCount': 3,
         'receiveCount': 2,
         'totalSentAmount': 300.0,
@@ -43,8 +39,6 @@ void main() {
       expect(stats.date, '2026-05-26');
       expect(stats.transactionCount, 5);
       expect(stats.totalCommission, 25.0);
-      expect(stats.totalServiceFee, 10.0);
-      expect(stats.totalAmount, 500.0);
       expect(stats.sendCount, 3);
       expect(stats.receiveCount, 2);
       expect(stats.totalSentAmount, 300.0);
@@ -60,8 +54,6 @@ void main() {
         date: '2026-05-26',
         transactionCount: 5,
         totalCommission: 25.0,
-        totalServiceFee: 10.0,
-        totalAmount: 500.0,
         sendCount: 3,
         receiveCount: 2,
         totalSentAmount: 300.0,
@@ -77,8 +69,6 @@ void main() {
       expect(map['date'], '2026-05-26');
       expect(map['transactionCount'], 5);
       expect(map['totalCommission'], 25.0);
-      expect(map['totalServiceFee'], 10.0);
-      expect(map['totalAmount'], 500.0);
       expect(map['sendCount'], 3);
       expect(map['receiveCount'], 2);
       expect(map['totalSentAmount'], 300.0);
@@ -87,6 +77,10 @@ void main() {
       expect(map['totalOpenAmount'], 150.0);
       expect(map['paidDebtsCount'], 1);
       expect(map['totalPaidAmount'], 50.0);
+
+      // Verify that removed fields are not present
+      expect(map.containsKey('totalAmount'), isFalse);
+      expect(map.containsKey('totalServiceFee'), isFalse);
     });
 
     test('copyWith should correctly clone and modify selected fields', () {

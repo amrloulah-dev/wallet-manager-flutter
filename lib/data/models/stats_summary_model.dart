@@ -44,7 +44,6 @@ class StatsSummaryModel {
 
   // Transactions
   final int totalTransactions;
-  final int totalTransactionsToday;
   final double totalSentAmount;
   final double totalReceivedAmount;
   final int sendCount;
@@ -52,11 +51,6 @@ class StatsSummaryModel {
 
   // Commission
   final double totalCommission;
-  final double totalCommissionToday;
-
-  // Service Fee
-  final double totalServiceFee;
-  final double totalServiceFeeToday;
 
   // Debts
   final int openDebtsCount;
@@ -71,15 +65,11 @@ class StatsSummaryModel {
     this.activeWallets = 0,
     this.totalBalance = 0.0,
     this.totalTransactions = 0,
-    this.totalTransactionsToday = 0,
     this.totalSentAmount = 0.0,
     this.totalReceivedAmount = 0.0,
     this.sendCount = 0,
     this.receiveCount = 0,
     this.totalCommission = 0.0,
-    this.totalCommissionToday = 0.0,
-    this.totalServiceFee = 0.0,
-    this.totalServiceFeeToday = 0.0,
     this.openDebtsCount = 0,
     this.paidDebtsCount = 0,
     this.totalOpenAmount = 0.0,
@@ -93,16 +83,11 @@ class StatsSummaryModel {
       activeWallets: NumberParser.toInt(data['activeWallets']),
       totalBalance: NumberParser.toDouble(data['totalBalance']),
       totalTransactions: NumberParser.toInt(data['totalTransactions']),
-      totalTransactionsToday:
-          NumberParser.toInt(data['totalTransactionsToday']),
       totalSentAmount: NumberParser.toDouble(data['totalSentAmount']),
       totalReceivedAmount: NumberParser.toDouble(data['totalReceivedAmount']),
       sendCount: NumberParser.toInt(data['sendCount']),
       receiveCount: NumberParser.toInt(data['receiveCount']),
       totalCommission: NumberParser.toDouble(data['totalCommission']),
-      totalCommissionToday: NumberParser.toDouble(data['totalCommissionToday']),
-      totalServiceFee: NumberParser.toDouble(data['totalServiceFee']),
-      totalServiceFeeToday: NumberParser.toDouble(data['totalServiceFeeToday']),
       openDebtsCount: NumberParser.toInt(data['openDebtsCount']),
       paidDebtsCount: NumberParser.toInt(data['paidDebtsCount']),
       totalOpenAmount: NumberParser.toDouble(data['totalOpenAmount']),
@@ -118,15 +103,11 @@ class StatsSummaryModel {
       'activeWallets': activeWallets,
       'totalBalance': totalBalance,
       'totalTransactions': totalTransactions,
-      'totalTransactionsToday': totalTransactionsToday,
       'totalSentAmount': totalSentAmount,
       'totalReceivedAmount': totalReceivedAmount,
       'sendCount': sendCount,
       'receiveCount': receiveCount,
       'totalCommission': totalCommission,
-      'totalCommissionToday': totalCommissionToday,
-      'totalServiceFee': totalServiceFee,
-      'totalServiceFeeToday': totalServiceFeeToday,
       'openDebtsCount': openDebtsCount,
       'paidDebtsCount': paidDebtsCount,
       'totalOpenAmount': totalOpenAmount,
@@ -141,15 +122,11 @@ class StatsSummaryModel {
     int? activeWallets,
     double? totalBalance,
     int? totalTransactions,
-    int? totalTransactionsToday,
     double? totalSentAmount,
     double? totalReceivedAmount,
     int? sendCount,
     int? receiveCount,
     double? totalCommission,
-    double? totalCommissionToday,
-    double? totalServiceFee,
-    double? totalServiceFeeToday,
     int? openDebtsCount,
     int? paidDebtsCount,
     double? totalOpenAmount,
@@ -161,16 +138,11 @@ class StatsSummaryModel {
       activeWallets: activeWallets ?? this.activeWallets,
       totalBalance: totalBalance ?? this.totalBalance,
       totalTransactions: totalTransactions ?? this.totalTransactions,
-      totalTransactionsToday:
-          totalTransactionsToday ?? this.totalTransactionsToday,
       totalSentAmount: totalSentAmount ?? this.totalSentAmount,
       totalReceivedAmount: totalReceivedAmount ?? this.totalReceivedAmount,
       sendCount: sendCount ?? this.sendCount,
       receiveCount: receiveCount ?? this.receiveCount,
       totalCommission: totalCommission ?? this.totalCommission,
-      totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
-      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
-      totalServiceFeeToday: totalServiceFeeToday ?? this.totalServiceFeeToday,
       openDebtsCount: openDebtsCount ?? this.openDebtsCount,
       paidDebtsCount: paidDebtsCount ?? this.paidDebtsCount,
       totalOpenAmount: totalOpenAmount ?? this.totalOpenAmount,
@@ -187,13 +159,11 @@ class StatsSummaryModel {
         other.activeWallets == activeWallets &&
         other.totalBalance == totalBalance &&
         other.totalTransactions == totalTransactions &&
-        other.totalTransactionsToday == totalTransactionsToday &&
         other.totalSentAmount == totalSentAmount &&
         other.totalReceivedAmount == totalReceivedAmount &&
         other.sendCount == sendCount &&
         other.receiveCount == receiveCount &&
         other.totalCommission == totalCommission &&
-        other.totalCommissionToday == totalCommissionToday &&
         other.openDebtsCount == openDebtsCount &&
         other.paidDebtsCount == paidDebtsCount &&
         other.totalOpenAmount == totalOpenAmount &&
@@ -207,13 +177,11 @@ class StatsSummaryModel {
       activeWallets.hashCode ^
       totalBalance.hashCode ^
       totalTransactions.hashCode ^
-      totalTransactionsToday.hashCode ^
       totalSentAmount.hashCode ^
       totalReceivedAmount.hashCode ^
       sendCount.hashCode ^
       receiveCount.hashCode ^
       totalCommission.hashCode ^
-      totalCommissionToday.hashCode ^
       openDebtsCount.hashCode ^
       paidDebtsCount.hashCode ^
       totalOpenAmount.hashCode ^
@@ -226,13 +194,11 @@ class StatsSummaryModel {
       activeWallets: 0,
       totalBalance: 0.0,
       totalTransactions: 0,
-      totalTransactionsToday: 0,
       totalSentAmount: 0.0,
       totalReceivedAmount: 0.0,
       sendCount: 0,
       receiveCount: 0,
       totalCommission: 0.0,
-      totalCommissionToday: 0.0,
       openDebtsCount: 0,
       paidDebtsCount: 0,
       totalOpenAmount: 0.0,

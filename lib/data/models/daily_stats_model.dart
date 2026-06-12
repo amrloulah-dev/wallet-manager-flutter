@@ -4,8 +4,6 @@ class DailyStatsModel {
   final String date;
   final int transactionCount;
   final double totalCommission;
-  final double totalServiceFee;
-  final double totalAmount;
 
   // New fields
   final int sendCount;
@@ -21,8 +19,6 @@ class DailyStatsModel {
     required this.date,
     required this.transactionCount,
     required this.totalCommission,
-    required this.totalServiceFee,
-    required this.totalAmount,
     this.sendCount = 0,
     this.receiveCount = 0,
     this.totalSentAmount = 0.0,
@@ -38,8 +34,6 @@ class DailyStatsModel {
       'date': date,
       'transactionCount': transactionCount,
       'totalCommission': totalCommission,
-      'totalServiceFee': totalServiceFee,
-      'totalAmount': totalAmount,
       'sendCount': sendCount,
       'receiveCount': receiveCount,
       'totalSentAmount': totalSentAmount,
@@ -56,8 +50,6 @@ class DailyStatsModel {
       date: docId,
       transactionCount: NumberParser.toInt(map['transactionCount']),
       totalCommission: NumberParser.toDouble(map['totalCommission']),
-      totalServiceFee: NumberParser.toDouble(map['totalServiceFee']),
-      totalAmount: NumberParser.toDouble(map['totalAmount']),
       sendCount: NumberParser.toInt(map['sendCount']),
       receiveCount: NumberParser.toInt(map['receiveCount']),
       totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
@@ -74,8 +66,6 @@ class DailyStatsModel {
       date: date,
       transactionCount: 0,
       totalCommission: 0.0,
-      totalServiceFee: 0.0,
-      totalAmount: 0.0,
       sendCount: 0,
       receiveCount: 0,
       totalSentAmount: 0.0,
@@ -91,8 +81,6 @@ class DailyStatsModel {
     String? date,
     int? transactionCount,
     double? totalCommission,
-    double? totalServiceFee,
-    double? totalAmount,
     int? sendCount,
     int? receiveCount,
     double? totalSentAmount,
@@ -106,8 +94,6 @@ class DailyStatsModel {
       date: date ?? this.date,
       transactionCount: transactionCount ?? this.transactionCount,
       totalCommission: totalCommission ?? this.totalCommission,
-      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
-      totalAmount: totalAmount ?? this.totalAmount,
       sendCount: sendCount ?? this.sendCount,
       receiveCount: receiveCount ?? this.receiveCount,
       totalSentAmount: totalSentAmount ?? this.totalSentAmount,
