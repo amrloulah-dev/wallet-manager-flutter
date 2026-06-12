@@ -86,7 +86,7 @@ void main() {
         totalWallets: 3,
       );
       final todayStats = DailyStatsModel.empty('2026-06-05').copyWith(
-        transactionCount: 5,
+        totalTransactions: 5,
         totalCommission: 50.0,
       );
 
@@ -121,7 +121,7 @@ void main() {
         totalBalance: 500.0,
       );
       final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
-        transactionCount: 5,
+        totalTransactions: 5,
         totalCommission: 10.0,
         receiveCount: 2,
         totalReceivedAmount: 800.0,
@@ -141,7 +141,7 @@ void main() {
       expect(provider.dashboardSummary!.receiveCount, 4);
       expect(provider.dashboardSummary!.totalBalance, 700.0);
 
-      expect(provider.todayStats!.transactionCount, 6);
+      expect(provider.todayStats!.totalTransactions, 6);
       expect(provider.todayStats!.totalCommission, 15.0);
       expect(provider.todayStats!.receiveCount, 3);
       expect(provider.todayStats!.totalReceivedAmount, 1000.0);
@@ -158,7 +158,7 @@ void main() {
         totalBalance: 500.0,
       );
       final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
-        transactionCount: 5,
+        totalTransactions: 5,
         totalCommission: 10.0,
         receiveCount: 2,
         totalReceivedAmount: 800.0,
@@ -178,7 +178,7 @@ void main() {
       expect(provider.dashboardSummary!.receiveCount, 3);
       expect(provider.dashboardSummary!.totalBalance, 500.0);
 
-      expect(provider.todayStats!.transactionCount, 5);
+      expect(provider.todayStats!.totalTransactions, 5);
       expect(provider.todayStats!.totalCommission, 10.0);
       expect(provider.todayStats!.receiveCount, 2);
       expect(provider.todayStats!.totalReceivedAmount, 800.0);

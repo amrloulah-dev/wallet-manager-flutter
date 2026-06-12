@@ -48,7 +48,7 @@ void main() {
 
     final defaultTodayStats = DailyStatsModel(
       date: '2026-05-26',
-      transactionCount: 5,
+      totalTransactions: 5,
       totalCommission: 50.0,
       sendCount: 2,
       receiveCount: 3,
@@ -125,7 +125,7 @@ void main() {
         () async {
       final todayStats = DailyStatsModel(
         date: DateHelper.getCurrentDateString(),
-        transactionCount: 5,
+        totalTransactions: 5,
         sendCount: 2,
         receiveCount: 3,
         totalSentAmount: 400.0,

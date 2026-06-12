@@ -627,7 +627,7 @@ class TransactionProvider extends BaseProvider {
     try {
       final stats = await _statsRepository.fetchTodayStats(_currentStoreId!);
       if (isDisposed) return;
-      _summary['totalTransactions'] = stats.transactionCount;
+      _summary['totalTransactions'] = stats.totalTransactions;
       _summary['sendCount'] = stats.sendCount;
       _summary['receiveCount'] = stats.receiveCount;
       _summary['totalSendAmount'] = stats.totalSentAmount;

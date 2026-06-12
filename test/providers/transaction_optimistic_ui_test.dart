@@ -243,7 +243,7 @@ void main() {
       // Initial stats mock
       final todayStats = DailyStatsModel(
         date: DateHelper.getCurrentDateString(),
-        transactionCount: 2,
+        totalTransactions: 2,
         totalCommission: 10.0,
       );
       when(() => mockStatsRepo.fetchTodayStats(storeId))
@@ -381,7 +381,7 @@ void main() {
         () async {
       final todayStats = DailyStatsModel(
         date: DateHelper.getCurrentDateString(),
-        transactionCount: 5,
+        totalTransactions: 5,
         totalCommission: 25.0,
         totalSentAmount: 200.0,
         totalReceivedAmount: 300.0,

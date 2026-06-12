@@ -6,7 +6,7 @@ void main() {
     test('empty factory should initialize all fields to zero', () {
       final stats = DailyStatsModel.empty('2026-05-26');
       expect(stats.date, '2026-05-26');
-      expect(stats.transactionCount, 0);
+      expect(stats.totalTransactions, 0);
       expect(stats.totalCommission, 0.0);
 
       // New fields
@@ -37,7 +37,7 @@ void main() {
       final stats = DailyStatsModel.fromMap(map, '2026-05-26');
 
       expect(stats.date, '2026-05-26');
-      expect(stats.transactionCount, 5);
+      expect(stats.totalTransactions, 5);
       expect(stats.totalCommission, 25.0);
       expect(stats.sendCount, 3);
       expect(stats.receiveCount, 2);
@@ -52,7 +52,7 @@ void main() {
     test('toMap should serialize all fields including new metrics', () {
       final stats = DailyStatsModel(
         date: '2026-05-26',
-        transactionCount: 5,
+        totalTransactions: 5,
         totalCommission: 25.0,
         sendCount: 3,
         receiveCount: 2,
@@ -87,13 +87,13 @@ void main() {
       final stats = DailyStatsModel.empty('2026-05-26');
 
       final updated = stats.copyWith(
-        transactionCount: 10,
+        totalTransactions: 10,
         sendCount: 6,
         totalSentAmount: 600.0,
       );
 
       expect(updated.date, '2026-05-26');
-      expect(updated.transactionCount, 10);
+      expect(updated.totalTransactions, 10);
       expect(updated.sendCount, 6);
       expect(updated.totalSentAmount, 600.0);
       expect(updated.receiveCount, 0); // Unchanged

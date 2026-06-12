@@ -2,7 +2,7 @@ import '../../core/utils/number_parser.dart';
 
 class DailyStatsModel {
   final String date;
-  final int transactionCount;
+  final int totalTransactions;
   final double totalCommission;
 
   // New fields
@@ -17,7 +17,7 @@ class DailyStatsModel {
 
   DailyStatsModel({
     required this.date,
-    required this.transactionCount,
+    required this.totalTransactions,
     required this.totalCommission,
     this.sendCount = 0,
     this.receiveCount = 0,
@@ -32,7 +32,7 @@ class DailyStatsModel {
   Map<String, dynamic> toMap() {
     return {
       'date': date,
-      'transactionCount': transactionCount,
+      'transactionCount': totalTransactions,
       'totalCommission': totalCommission,
       'sendCount': sendCount,
       'receiveCount': receiveCount,
@@ -48,7 +48,7 @@ class DailyStatsModel {
   factory DailyStatsModel.fromMap(Map<String, dynamic> map, String docId) {
     return DailyStatsModel(
       date: docId,
-      transactionCount: NumberParser.toInt(map['transactionCount']),
+      totalTransactions: NumberParser.toInt(map['transactionCount']),
       totalCommission: NumberParser.toDouble(map['totalCommission']),
       sendCount: NumberParser.toInt(map['sendCount']),
       receiveCount: NumberParser.toInt(map['receiveCount']),
@@ -64,7 +64,7 @@ class DailyStatsModel {
   factory DailyStatsModel.empty(String date) {
     return DailyStatsModel(
       date: date,
-      transactionCount: 0,
+      totalTransactions: 0,
       totalCommission: 0.0,
       sendCount: 0,
       receiveCount: 0,
@@ -79,7 +79,7 @@ class DailyStatsModel {
 
   DailyStatsModel copyWith({
     String? date,
-    int? transactionCount,
+    int? totalTransactions,
     double? totalCommission,
     int? sendCount,
     int? receiveCount,
@@ -92,7 +92,7 @@ class DailyStatsModel {
   }) {
     return DailyStatsModel(
       date: date ?? this.date,
-      transactionCount: transactionCount ?? this.transactionCount,
+      totalTransactions: totalTransactions ?? this.totalTransactions,
       totalCommission: totalCommission ?? this.totalCommission,
       sendCount: sendCount ?? this.sendCount,
       receiveCount: receiveCount ?? this.receiveCount,

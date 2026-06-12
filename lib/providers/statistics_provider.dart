@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
@@ -266,7 +265,7 @@ class StatisticsProvider extends BaseProvider {
     }
 
     _todayStats = today.copyWith(
-      transactionCount: today.transactionCount + 1,
+      totalTransactions: today.totalTransactions + 1,
       totalCommission: today.totalCommission + commission,
       receiveCount: newTodayReceiveCount,
       sendCount: newTodaySendCount,

@@ -117,8 +117,8 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                              value:
-                                  (provider.todayStats?.transactionCount ?? 0)
+                               value:
+                                  (provider.todayStats?.totalTransactions ?? 0)
                                       .toString(),
                               icon: Icons.swap_horiz,
                               color: Colors.green.shade700,
