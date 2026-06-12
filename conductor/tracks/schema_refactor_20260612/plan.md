@@ -2,27 +2,27 @@
 
 ## Phase 1: Data Model Rebuild
 
-- [ ] Task: Write failing tests for `StatsSummaryModel` cleanup (FR-1)
-    - [ ] Test that `StatsSummaryModel` has exactly 8 fields (no `totalCommissionToday`, `totalReceivedAmountToday`, `totalSentAmountToday`, `totalTransactionsToday`, `totalServiceFee`, `totalServiceFeeToday`)
-    - [ ] Test `fromMap` gracefully defaults missing fields to 0/0.0
-    - [ ] Test `toMap` only serializes the 8 kept fields
-    - [ ] Test `copyWith` works correctly for all 8 fields
-- [ ] Task: Implement `StatsSummaryModel` cleanup (FR-1)
-    - [ ] Remove the 6 dead fields from the class definition
-    - [ ] Update `fromMap` to only read kept fields with `?? 0` / `?? 0.0` defaults
-    - [ ] Update `toMap` to only serialize kept fields
-    - [ ] Update `copyWith` to only include kept fields
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Write failing tests for `DailyStatsModel` redefine (FR-2)
-    - [ ] Test that `DailyStatsModel` has exactly 11 fields (`date` + 10 numeric)
-    - [ ] Test `fromMap` gracefully defaults missing fields to 0/0.0
-    - [ ] Test `toMap` only serializes the new schema fields
-    - [ ] Test `copyWith` works correctly for all 11 fields
-- [ ] Task: Implement `DailyStatsModel` redefine (FR-2)
-    - [ ] Remove `totalAmount` and `totalServiceFee` from the class definition
-    - [ ] Update `fromMap`, `toMap`, and `copyWith` accordingly
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Data Model Rebuild' (Protocol in workflow.md)
+- [x] Task: Write failing tests for `StatsSummaryModel` cleanup (FR-1) bd0bd03
+    - [x] Test that `StatsSummaryModel` has exactly 8 fields (no `totalCommissionToday`, `totalReceivedAmountToday`, `totalSentAmountToday`, `totalTransactionsToday`, `totalServiceFee`, `totalServiceFeeToday`) bd0bd03
+    - [x] Test `fromMap` gracefully defaults missing fields to 0/0.0 bd0bd03
+    - [x] Test `toMap` only serializes the 8 kept fields bd0bd03
+    - [x] Test `copyWith` works correctly for all 8 fields bd0bd03
+- [x] Task: Implement `StatsSummaryModel` cleanup (FR-1) bd0bd03
+    - [x] Remove the 6 dead fields from the class definition bd0bd03
+    - [x] Update `fromMap` to only read kept fields with `?? 0` / `?? 0.0` defaults bd0bd03
+    - [x] Update `toMap` to only serialize kept fields bd0bd03
+    - [x] Update `copyWith` to only include kept fields bd0bd03
+    - [x] Run tests and confirm all pass bd0bd03
+- [x] Task: Write failing tests for `DailyStatsModel` redefine (FR-2) bd0bd03
+    - [x] Test that `DailyStatsModel` has exactly 11 fields (`date` + 10 numeric) bd0bd03
+    - [x] Test `fromMap` gracefully defaults missing fields to 0/0.0 bd0bd03
+    - [x] Test `toMap` only serializes the new schema fields bd0bd03
+    - [x] Test `copyWith` works correctly for all 11 fields bd0bd03
+- [x] Task: Implement `DailyStatsModel` redefine (FR-2) bd0bd03
+    - [x] Remove `totalAmount` and `totalServiceFee` from the class definition bd0bd03
+    - [x] Update `fromMap`, `toMap`, and `copyWith` accordingly bd0bd03
+    - [x] Run tests and confirm all pass bd0bd03
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Data Model Rebuild' (Protocol in workflow.md) bd0bd03
 
 ## Phase 2: Data Layer & Aggregation Fix
 
