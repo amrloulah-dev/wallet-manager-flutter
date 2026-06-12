@@ -20,5 +20,5 @@
 
 ---
 
-- [ ] **Track: Firebase Schema Refactor & Data Source Decoupling**
+- [~] **Track: Firebase Schema Refactor & Data Source Decoupling**
 *Link: [./tracks/schema_refactor_20260612/](./tracks/schema_refactor_20260612/)*
