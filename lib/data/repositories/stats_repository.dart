@@ -299,15 +299,23 @@ class StatsRepository {
           .get();
 
       final Map<String, dynamic> aggregation = {};
+      final validKeys = {
+        'transactionCount',
+        'totalCommission',
+        'sendCount',
+        'receiveCount',
+        'totalSentAmount',
+        'totalReceivedAmount',
+        'openDebtsCount',
+        'totalOpenAmount',
+        'paidDebtsCount',
+        'totalPaidAmount',
+      };
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
         data.forEach((key, value) {
-          // Exclude point-in-time fields and non-numeric fields
-          if (key == 'totalBalance' || key == 'totalWallets' || key == 'date') {
-            return;
-          }
-          if (value is num) {
+          if (validKeys.contains(key) && value is num) {
             final num current = aggregation[key] ?? 0;
             aggregation[key] = current + value;
           }

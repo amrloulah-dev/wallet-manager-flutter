@@ -157,61 +157,38 @@ class StatisticsProvider extends BaseProvider {
     try {
       if (_storeId == null) throw Exception("Store ID not found");
 
-      // Check if it's today's range
-      final isToday = DateHelper.isToday(dateRange.start) &&
-          DateHelper.isToday(dateRange.end);
+      // Query daily stats rollup for range
+      final aggregated = await _statsRepository.getStatsByDateRange(
+          _storeId!, dateRange.start, dateRange.end);
 
-      if (isToday && _dashboardSummary != null) {
-        final s = _dashboardSummary!;
-        _filteredStats = {
-          'totalBalance': s.totalBalance,
-          'totalWallets': s.totalWallets,
-          'totalTransactions': s.totalTransactionsToday,
-          'totalCommission': s.totalCommissionToday,
-          'sendCount': s.sendCount,
-          'totalSentAmount': s.totalSentAmount,
-          'receiveCount': s.receiveCount,
-          'totalReceivedAmount': s.totalReceivedAmount,
-          'openDebtsCount': s.openDebtsCount,
-          'totalOpenAmount': s.totalOpenAmount,
-          'paidDebtsCount': s.paidDebtsCount,
-          'totalPaidAmount': s.totalPaidAmount,
-          'totalDebtsCount': s.openDebtsCount + s.paidDebtsCount,
-        };
-      } else {
-        // Query daily stats rollup for non-today range
-        final aggregated = await _statsRepository.getStatsByDateRange(
-            _storeId!, dateRange.start, dateRange.end);
+      // Include current total balance and total wallets as point-in-time metrics
+      final totalBalance = _dashboardSummary?.totalBalance ?? 0.0;
+      final totalWallets = _dashboardSummary?.totalWallets ?? 0;
 
-        // Include current total balance and total wallets as point-in-time metrics
-        final totalBalance = _dashboardSummary?.totalBalance ?? 0.0;
-        final totalWallets = _dashboardSummary?.totalWallets ?? 0;
+      final openDebts = NumberParser.toInt(aggregated['openDebtsCount']);
+      final paidDebts = NumberParser.toInt(aggregated['paidDebtsCount']);
 
-        final openDebts = NumberParser.toInt(aggregated['openDebtsCount']);
-        final paidDebts = NumberParser.toInt(aggregated['paidDebtsCount']);
-
-        _filteredStats = {
-          'totalBalance': totalBalance,
-          'totalWallets': totalWallets,
-          'totalTransactions':
-              NumberParser.toInt(aggregated['transactionCount']),
-          'totalCommission':
-              NumberParser.toDouble(aggregated['totalCommission']),
-          'sendCount': NumberParser.toInt(aggregated['sendCount']),
-          'totalSentAmount':
-              NumberParser.toDouble(aggregated['totalSentAmount']),
-          'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
-          'totalReceivedAmount':
-              NumberParser.toDouble(aggregated['totalReceivedAmount']),
-          'openDebtsCount': openDebts,
-          'totalOpenAmount':
-              NumberParser.toDouble(aggregated['totalOpenAmount']),
-          'paidDebtsCount': paidDebts,
-          'totalPaidAmount':
-              NumberParser.toDouble(aggregated['totalPaidAmount']),
-          'totalDebtsCount': openDebts + paidDebts,
-        };
-      }
+      _filteredStats = {
+        'totalBalance': totalBalance,
+        'totalWallets': totalWallets,
+        'totalTransactions':
+            NumberParser.toInt(aggregated['transactionCount']),
+        'totalCommission':
+            NumberParser.toDouble(aggregated['totalCommission']),
+        'sendCount': NumberParser.toInt(aggregated['sendCount']),
+        'totalSentAmount':
+            NumberParser.toDouble(aggregated['totalSentAmount']),
+        'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
+        'totalReceivedAmount':
+            NumberParser.toDouble(aggregated['totalReceivedAmount']),
+        'openDebtsCount': openDebts,
+        'totalOpenAmount':
+            NumberParser.toDouble(aggregated['totalOpenAmount']),
+        'paidDebtsCount': paidDebts,
+        'totalPaidAmount':
+            NumberParser.toDouble(aggregated['totalPaidAmount']),
+        'totalDebtsCount': openDebts + paidDebts,
+      };
     } catch (e, stack) {
       setError("stats_error_filtered_fetch", e, stack);
       _filteredStats = null;
@@ -266,9 +243,7 @@ class StatisticsProvider extends BaseProvider {
 
     _dashboardSummary = summary.copyWith(
       totalTransactions: summary.totalTransactions + 1,
-      totalTransactionsToday: summary.totalTransactionsToday + 1,
       totalCommission: summary.totalCommission + commission,
-      totalCommissionToday: summary.totalCommissionToday + commission,
       totalReceivedAmount: newTotalReceived,
       totalSentAmount: newTotalSent,
       receiveCount: newReceiveCount,
@@ -277,10 +252,26 @@ class StatisticsProvider extends BaseProvider {
     );
 
     // 2. Update Today Stats
+    int newTodayReceiveCount = today.receiveCount;
+    int newTodaySendCount = today.sendCount;
+    double newTodayReceivedAmount = today.totalReceivedAmount;
+    double newTodaySentAmount = today.totalSentAmount;
+
+    if (type == 'credit') {
+      newTodayReceiveCount += 1;
+      newTodayReceivedAmount += amount;
+    } else if (type == 'debit') {
+      newTodaySendCount += 1;
+      newTodaySentAmount += amount;
+    }
+
     _todayStats = today.copyWith(
       transactionCount: today.transactionCount + 1,
       totalCommission: today.totalCommission + commission,
-      totalAmount: today.totalAmount + amount,
+      receiveCount: newTodayReceiveCount,
+      sendCount: newTodaySendCount,
+      totalReceivedAmount: newTodayReceivedAmount,
+      totalSentAmount: newTodaySentAmount,
     );
 
     safeNotify();

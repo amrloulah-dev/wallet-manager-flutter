@@ -85,6 +85,10 @@ void main() {
         'totalAmount': 500.0,
         'totalBalance': 5000.0,
         'totalWallets': 5,
+        'openDebtsCount': 2,
+        'totalOpenAmount': 100.0,
+        'paidDebtsCount': 1,
+        'totalPaidAmount': 50.0,
       };
 
       final stats2 = {
@@ -98,6 +102,10 @@ void main() {
         'totalAmount': 600.0,
         'totalBalance': 6000.0,
         'totalWallets': 6,
+        'openDebtsCount': 1,
+        'totalOpenAmount': 50.0,
+        'paidDebtsCount': 2,
+        'totalPaidAmount': 150.0,
       };
 
       await fakeFirestore
@@ -119,12 +127,18 @@ void main() {
       expect(result['totalSentAmount'], 300.0);
       expect(result['totalReceivedAmount'], 400.0);
       expect(result['totalCommission'], 30.0);
-      expect(result['totalServiceFee'], 5.0);
-      expect(result['totalAmount'], 1100.0);
+      expect(result['openDebtsCount'], 3);
+      expect(result['totalOpenAmount'], 150.0);
+      expect(result['paidDebtsCount'], 3);
+      expect(result['totalPaidAmount'], 200.0);
 
       // Exclude totalBalance and totalWallets
       expect(result.containsKey('totalBalance'), isFalse);
       expect(result.containsKey('totalWallets'), isFalse);
+
+      // Exclude deleted fields
+      expect(result.containsKey('totalServiceFee'), isFalse);
+      expect(result.containsKey('totalAmount'), isFalse);
     });
   });
 }

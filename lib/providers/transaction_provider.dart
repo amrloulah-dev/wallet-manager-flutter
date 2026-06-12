@@ -625,14 +625,14 @@ class TransactionProvider extends BaseProvider {
       return;
     }
     try {
-      final stats = await _statsRepository.getStatsSummary(_currentStoreId!);
+      final stats = await _statsRepository.fetchTodayStats(_currentStoreId!);
       if (isDisposed) return;
-      _summary['totalTransactions'] = stats.totalTransactionsToday;
+      _summary['totalTransactions'] = stats.transactionCount;
       _summary['sendCount'] = stats.sendCount;
       _summary['receiveCount'] = stats.receiveCount;
       _summary['totalSendAmount'] = stats.totalSentAmount;
       _summary['totalReceiveAmount'] = stats.totalReceivedAmount;
-      _summary['totalCommission'] = stats.totalCommissionToday;
+      _summary['totalCommission'] = stats.totalCommission;
       safeNotify();
     } catch (e, stack) {
       setError('transaction_error_summary_fetch_failed', e, stack);

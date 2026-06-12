@@ -115,9 +115,7 @@ void main() {
         () {
       final summaryBefore = StatsSummaryModel.empty().copyWith(
         totalTransactions: 10,
-        totalTransactionsToday: 5,
         totalCommission: 50.0,
-        totalCommissionToday: 10.0,
         totalReceivedAmount: 1000.0,
         receiveCount: 3,
         totalBalance: 500.0,
@@ -125,7 +123,8 @@ void main() {
       final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
         transactionCount: 5,
         totalCommission: 10.0,
-        totalAmount: 1000.0,
+        receiveCount: 2,
+        totalReceivedAmount: 800.0,
       );
 
       provider.rollbackStats(summaryBefore, todayBefore);
@@ -137,16 +136,15 @@ void main() {
       });
 
       expect(provider.dashboardSummary!.totalTransactions, 11);
-      expect(provider.dashboardSummary!.totalTransactionsToday, 6);
       expect(provider.dashboardSummary!.totalCommission, 55.0);
-      expect(provider.dashboardSummary!.totalCommissionToday, 15.0);
       expect(provider.dashboardSummary!.totalReceivedAmount, 1200.0);
       expect(provider.dashboardSummary!.receiveCount, 4);
       expect(provider.dashboardSummary!.totalBalance, 700.0);
 
       expect(provider.todayStats!.transactionCount, 6);
       expect(provider.todayStats!.totalCommission, 15.0);
-      expect(provider.todayStats!.totalAmount, 1200.0);
+      expect(provider.todayStats!.receiveCount, 3);
+      expect(provider.todayStats!.totalReceivedAmount, 1000.0);
     });
 
     test(
@@ -154,9 +152,7 @@ void main() {
         () {
       final summaryBefore = StatsSummaryModel.empty().copyWith(
         totalTransactions: 10,
-        totalTransactionsToday: 5,
         totalCommission: 50.0,
-        totalCommissionToday: 10.0,
         totalReceivedAmount: 1000.0,
         receiveCount: 3,
         totalBalance: 500.0,
@@ -164,7 +160,8 @@ void main() {
       final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
         transactionCount: 5,
         totalCommission: 10.0,
-        totalAmount: 1000.0,
+        receiveCount: 2,
+        totalReceivedAmount: 800.0,
       );
 
       provider.rollbackStats(summaryBefore, todayBefore);
@@ -176,16 +173,15 @@ void main() {
       });
 
       expect(provider.dashboardSummary!.totalTransactions, 10);
-      expect(provider.dashboardSummary!.totalTransactionsToday, 5);
       expect(provider.dashboardSummary!.totalCommission, 50.0);
-      expect(provider.dashboardSummary!.totalCommissionToday, 10.0);
       expect(provider.dashboardSummary!.totalReceivedAmount, 1000.0);
       expect(provider.dashboardSummary!.receiveCount, 3);
       expect(provider.dashboardSummary!.totalBalance, 500.0);
 
       expect(provider.todayStats!.transactionCount, 5);
       expect(provider.todayStats!.totalCommission, 10.0);
-      expect(provider.todayStats!.totalAmount, 1000.0);
+      expect(provider.todayStats!.receiveCount, 2);
+      expect(provider.todayStats!.totalReceivedAmount, 800.0);
     });
   });
 }

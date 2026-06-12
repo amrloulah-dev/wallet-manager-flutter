@@ -21,6 +21,7 @@ import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
 
@@ -240,12 +241,13 @@ void main() {
           .thenReturn(null);
 
       // Initial stats mock
-      final summaryStats = StatsSummaryModel(
-        totalTransactionsToday: 2,
-        totalCommissionToday: 10.0,
+      final todayStats = DailyStatsModel(
+        date: DateHelper.getCurrentDateString(),
+        transactionCount: 2,
+        totalCommission: 10.0,
       );
-      when(() => mockStatsRepo.getStatsSummary(storeId))
-          .thenAnswer((_) async => summaryStats);
+      when(() => mockStatsRepo.fetchTodayStats(storeId))
+          .thenAnswer((_) async => todayStats);
 
       final testProvider = TransactionProvider(
         transactionRepository: mockTxRepo,
@@ -375,18 +377,19 @@ void main() {
     });
 
     test(
-        'fetchTodaySummary on initial load should fetch from stats/summary document',
+        'fetchTodaySummary on initial load should fetch from daily_stats document',
         () async {
-      final summaryStats = StatsSummaryModel(
-        totalTransactionsToday: 5,
-        totalCommissionToday: 25.0,
+      final todayStats = DailyStatsModel(
+        date: DateHelper.getCurrentDateString(),
+        transactionCount: 5,
+        totalCommission: 25.0,
         totalSentAmount: 200.0,
         totalReceivedAmount: 300.0,
         sendCount: 3,
         receiveCount: 2,
       );
-      when(() => mockStatsRepo.getStatsSummary(storeId))
-          .thenAnswer((_) async => summaryStats);
+      when(() => mockStatsRepo.fetchTodayStats(storeId))
+          .thenAnswer((_) async => todayStats);
 
       final newProvider = TransactionProvider(
         transactionRepository: mockTxRepo,
@@ -407,7 +410,7 @@ void main() {
       expect(newProvider.summary['sendCount'], 3);
       expect(newProvider.summary['receiveCount'], 2);
 
-      verify(() => mockStatsRepo.getStatsSummary(storeId)).called(1);
+      verify(() => mockStatsRepo.fetchTodayStats(storeId)).called(1);
     });
 
     test(
