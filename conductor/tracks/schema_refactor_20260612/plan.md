@@ -26,33 +26,33 @@
 
 ## Phase 2: Data Layer & Aggregation Fix
 
-- [ ] Task: Write failing tests for `getStatsByDateRange` aggregation fix (FR-3)
-    - [ ] Test that aggregation only folds keys from new `DailyStatsModel` schema
-    - [ ] Test that dead keys (`totalAmount`, `totalServiceFee`) are NOT aggregated even if present in source documents
-    - [ ] Test correct summation across multiple daily_stats documents
-- [ ] Task: Implement `getStatsByDateRange` aggregation fix (FR-3)
-    - [ ] Update the loop to only aggregate the exact keys in the new `DailyStatsModel`
-    - [ ] Remove any references to dead keys
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Write failing tests for `fetchFilteredStats` rewrite (FR-4)
-    - [ ] Test that "today" stats are fetched via `getStatsByDateRange` with today's date
-    - [ ] Test that no `if (isToday)` branching exists (always delegates to repository)
-    - [ ] Test that result map uses new schema field names
-- [ ] Task: Implement `fetchFilteredStats` rewrite (FR-4)
-    - [ ] Delete the `if (isToday)` logic that mixes lifetime and daily variables
-    - [ ] Always call `getStatsByDateRange` for all date ranges including today
-    - [ ] Map the result directly to the UI map using new schema names
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Write failing tests for `addTransactionOptimistically` rewrite (FR-4, FR-1, FR-2)
-    - [ ] Test that only new `StatsSummaryModel` fields are incremented
-    - [ ] Test that only new `DailyStatsModel` fields are incremented
-    - [ ] Test that no deleted fields (`totalServiceFee`, `totalServiceFeeToday`, `totalCommissionToday`, etc.) are referenced
-- [ ] Task: Implement `addTransactionOptimistically` rewrite (FR-4, FR-1, FR-2)
-    - [ ] Update increments to strictly use new schema fields
-    - [ ] Remove all references to deleted fields
-    - [ ] Maintain Optimistic UI pattern (mutate RAM first, `safeNotify()`, Firestore write in background)
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Data Layer & Aggregation Fix' (Protocol in workflow.md)
+- [x] Task: Write failing tests for `getStatsByDateRange` aggregation fix (FR-3) 25d2785
+    - [x] Test that aggregation only folds keys from new `DailyStatsModel` schema 25d2785
+    - [x] Test that dead keys (`totalAmount`, `totalServiceFee`) are NOT aggregated even if present in source documents 25d2785
+    - [x] Test correct summation across multiple daily_stats documents 25d2785
+- [x] Task: Implement `getStatsByDateRange` aggregation fix (FR-3) 25d2785
+    - [x] Update the loop to only aggregate the exact keys in the new `DailyStatsModel` 25d2785
+    - [x] Remove any references to dead keys 25d2785
+    - [x] Run tests and confirm all pass 25d2785
+- [x] Task: Write failing tests for `fetchFilteredStats` rewrite (FR-4) 25d2785
+    - [x] Test that "today" stats are fetched via `getStatsByDateRange` with today's date 25d2785
+    - [x] Test that no `if (isToday)` branching exists (always delegates to repository) 25d2785
+    - [x] Test that result map uses new schema field names 25d2785
+- [x] Task: Implement `fetchFilteredStats` rewrite (FR-4) 25d2785
+    - [x] Delete the `if (isToday)` logic that mixes lifetime and daily variables 25d2785
+    - [x] Always call `getStatsByDateRange` for all date ranges including today 25d2785
+    - [x] Map the result directly to the UI map using new schema names 25d2785
+    - [x] Run tests and confirm all pass 25d2785
+- [x] Task: Write failing tests for `addTransactionOptimistically` rewrite (FR-4, FR-1, FR-2) 25d2785
+    - [x] Test that only new `StatsSummaryModel` fields are incremented 25d2785
+    - [x] Test that only new `DailyStatsModel` fields are incremented 25d2785
+    - [x] Test that no deleted fields (`totalServiceFee`, `totalServiceFeeToday`, `totalCommissionToday`, etc.) are referenced 25d2785
+- [x] Task: Implement `addTransactionOptimistically` rewrite (FR-4, FR-1, FR-2) 25d2785
+    - [x] Update increments to strictly use new schema fields 25d2785
+    - [x] Remove all references to deleted fields 25d2785
+    - [x] Maintain Optimistic UI pattern (mutate RAM first, `safeNotify()`, Firestore write in background) 25d2785
+    - [x] Run tests and confirm all pass 25d2785
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Data Layer & Aggregation Fix' (Protocol in workflow.md) 25d2785
 
 ## Phase 3: UI Data Routing
 
