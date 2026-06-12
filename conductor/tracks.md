@@ -18,3 +18,8 @@
 - [x] **Track: UI Refactor — Business Logic Fixes, UX Adjustments & WalletCard Redesign**
 *Link: [./tracks/ui_refactor_20260611/](./tracks/ui_refactor_20260611/)*
 
+---
+
+- [ ] **Track: UI/Logic Bug-Fix Sweep — Transaction Creator, Wallet Card RTL/Scale/Badge, Employee Limit**
+*Link: [./tracks/ui_logic_bugfixes_20260613/](./tracks/ui_logic_bugfixes_20260613/)*
+
