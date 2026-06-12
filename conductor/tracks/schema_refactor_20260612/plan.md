@@ -56,35 +56,38 @@
 
 ## Phase 3: UI Data Routing
 
-- [ ] Task: Write failing tests for Dashboard Quick Stats routing (FR-5)
-    - [ ] Test "Total Wallets" reads from `provider.dashboardSummary.totalWallets`
-    - [ ] Test "Open Debts" reads from `provider.dashboardSummary.openDebtsCount`
-    - [ ] Test "Total Transactions" reads from `provider.todayStats?.totalTransactions`
-    - [ ] Test "Total Commission" reads from `provider.todayStats?.totalCommission`
-    - [ ] Test no references to deleted fields remain
-- [ ] Task: Implement Dashboard Quick Stats routing fix (FR-5)
-    - [ ] Update card data bindings to correct provider properties
-    - [ ] Remove any references to deleted model fields
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Write failing tests for Statistics Screen UI update (FR-6)
-    - [ ] Test `_buildStatistics` reads only from defined schema properties
-    - [ ] Test no calls to `.totalAmount` or `.totalServiceFee` exist
-- [ ] Task: Implement Statistics Screen UI update (FR-6)
-    - [ ] Update all UI builders to use new schema property names
-    - [ ] Remove references to `.totalAmount`, `.totalServiceFee`, and any other deleted property
-    - [ ] Run tests and confirm all pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: UI Data Routing' (Protocol in workflow.md)
+- [x] Task: Write failing tests for Dashboard Quick Stats routing (FR-5) 6ca4e89
+    - [x] Test "Total Wallets" reads from `provider.dashboardSummary.totalWallets` 6ca4e89
+    - [x] Test "Open Debts" reads from `provider.dashboardSummary.openDebtsCount` 6ca4e89
+    - [x] Test "Total Transactions" reads from `provider.todayStats?.totalTransactions` 6ca4e89
+    - [x] Test "Total Commission" reads from `provider.todayStats?.totalCommission` 6ca4e89
+    - [x] Test no references to deleted fields remain 6ca4e89
+- [x] Task: Implement Dashboard Quick Stats routing fix (FR-5) 6ca4e89
+    - [x] Update card data bindings to correct provider properties 6ca4e89
+    - [x] Remove any references to deleted model fields 6ca4e89
+    - [x] Run tests and confirm all pass 6ca4e89
+- [x] Task: Write failing tests for Statistics Screen UI update (FR-6) 6ca4e89
+    - [x] Test `_buildStatistics` reads only from defined schema properties 6ca4e89
+    - [x] Test no calls to `.totalAmount` or `.totalServiceFee` exist 6ca4e89
+- [x] Task: Implement Statistics Screen UI update (FR-6) 6ca4e89
+    - [x] Update all UI builders to use new schema property names 6ca4e89
+    - [x] Remove references to `.totalAmount`, `.totalServiceFee`, and any other deleted property 6ca4e89
+    - [x] Run tests and confirm all pass 6ca4e89
+- [x] Task: Conductor - User Manual Verification 'Phase 3: UI Data Routing' (Protocol in workflow.md) 6ca4e89
 
 ## Phase 4: Final Verification & Cleanup
 
-- [ ] Task: Run `flutter analyze` and fix any new warnings/errors
-    - [ ] Execute `flutter analyze` across the entire project
-    - [ ] Fix any issues introduced by the refactor
-- [ ] Task: Run full test suite and verify zero regressions
-    - [ ] Execute `CI=true flutter test`
-    - [ ] Confirm all existing and new tests pass
-- [ ] Task: Code review and dead-code sweep
-    - [ ] Grep codebase for any remaining references to deleted fields
-    - [ ] Remove any orphaned imports, unused variables, or dead code paths
-    - [ ] Verify no `.arb` localization files reference deleted fields
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Verification & Cleanup' (Protocol in workflow.md)
+- [x] Task: Run `flutter analyze` and fix any new warnings/errors 6ca4e89
+    - [x] Execute `flutter analyze` across the entire project 6ca4e89
+    - [x] Fix any issues introduced by the refactor 6ca4e89
+- [x] Task: Run full test suite and verify zero regressions 6ca4e89
+    - [x] Execute `CI=true flutter test` 6ca4e89
+    - [x] Confirm all existing and new tests pass 6ca4e89
+- [x] Task: Code review and dead-code sweep 6ca4e89
+    - [x] Grep codebase for any remaining references to deleted fields 6ca4e89
+    - [x] Remove any orphaned imports, unused variables, or dead code paths 6ca4e89
+    - [x] Verify no `.arb` localization files reference deleted fields 6ca4e89
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Verification & Cleanup' (Protocol in workflow.md) 6ca4e89
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 6ca4e89
