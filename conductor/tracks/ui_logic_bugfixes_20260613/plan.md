@@ -1,6 +1,6 @@
 # Implementation Plan: UI/Logic Bug-Fix Sweep
 
-## Phase 1: Fix Transaction Creator Name
+## Phase 1: Fix Transaction Creator Name [checkpoint: 1f9a5c7]
 
 - [x] Task: Write Failing Tests — Transaction Creator Name [e3a8bcf]
     - [x] Create/update test file for transaction creation (e.g., `test/providers/transaction_provider_test.dart`)
