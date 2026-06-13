@@ -53,24 +53,24 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Fix Wallet Card Display' (Protocol in workflow.md) [c7bcca4]
 
-## Phase 3: Fix Employee Limit Validation
+## Phase 3: Fix Employee Limit Validation [checkpoint: 3ef5dd4]
 
-- [ ] Task: Write Failing Tests — Employee Limit Boundary
-    - [ ] Create/update test file (e.g., `test/providers/employee_provider_test.dart` or `test/providers/subscription_provider_test.dart`)
-    - [ ] Write test: `canAddEmployee` returns `true` when `currentEmployees == 0`
-    - [ ] Write test: `canAddEmployee` returns `true` when `currentEmployees == maxLimit - 1`
-    - [ ] Write test: `canAddEmployee` returns `false` when `currentEmployees == maxLimit`
-    - [ ] Write test: `canAddEmployee` returns `false` when `currentEmployees > maxLimit`
-    - [ ] Run tests and confirm they fail (Red Phase)
+- [x] Task: Write Failing Tests — Employee Limit Boundary [3ef5dd4]
+    - [x] Create/update test file (e.g., `test/providers/employee_provider_test.dart` or `test/providers/subscription_provider_test.dart`)
+    - [x] Write test: `canAddEmployee` returns `true` when `currentEmployees == 0`
+    - [x] Write test: `canAddEmployee` returns `true` when `currentEmployees == maxLimit - 1`
+    - [x] Write test: `canAddEmployee` returns `false` when `currentEmployees == maxLimit`
+    - [x] Write test: `canAddEmployee` returns `false` when `currentEmployees > maxLimit`
+    - [x] Run tests and confirm they fail (Red Phase)
 
-- [ ] Task: Implement Fix — Employee Limit Validation
-    - [ ] In `subscription_provider.dart`, fix `canAddEmployee` to strictly return `true` when `currentEmployees < maxLimit`
-    - [ ] In `employee_provider.dart`, verify that `addEmployee` correctly passes the current employee count to `canAddEmployee`
-    - [ ] Run tests and confirm they pass (Green Phase)
+- [x] Task: Implement Fix — Employee Limit Validation [3ef5dd4]
+    - [x] In `subscription_provider.dart`, fix `canAddEmployee` to strictly return `true` when `currentEmployees < maxLimit`
+    - [x] In `employee_provider.dart`, verify that `addEmployee` correctly passes the current employee count to `canAddEmployee`
+    - [x] Run tests and confirm they pass (Green Phase)
 
-- [ ] Task: Refactor — Employee Limit Validation
-    - [ ] Review the conditional logic for readability
-    - [ ] Ensure error message `employee_error_max_limit_reached` is only triggered at the correct boundary
-    - [ ] Re-run all tests to confirm they still pass
+- [x] Task: Refactor — Employee Limit Validation [3ef5dd4]
+    - [x] Review the conditional logic for readability
+    - [x] Ensure error message `employee_error_max_limit_reached` is only triggered at the correct boundary
+    - [x] Re-run all tests to confirm they still pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Fix Employee Limit Validation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Fix Employee Limit Validation' (Protocol in workflow.md) [3ef5dd4]
