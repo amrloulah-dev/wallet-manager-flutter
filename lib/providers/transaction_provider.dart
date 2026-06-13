@@ -19,6 +19,7 @@ import '../data/models/user_permissions.dart';
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 import 'wallet_provider.dart';
+import 'employee_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'base_provider.dart';
@@ -65,9 +66,14 @@ class TransactionProvider extends BaseProvider {
   bool _hasFetchedInitial = false;
 
   WalletProvider? _walletProvider;
+  EmployeeProvider? _employeeProvider;
 
   void updateWalletProvider(WalletProvider walletProvider) {
     _walletProvider = walletProvider;
+  }
+
+  void updateEmployeeProvider(EmployeeProvider employeeProvider) {
+    _employeeProvider = employeeProvider;
   }
 
   // Constructor
@@ -482,6 +488,26 @@ class TransactionProvider extends BaseProvider {
       final newTransactionId = const Uuid().v4();
       pendingTxId = newTransactionId;
       _pendingTxIds.add(pendingTxId);
+
+      String? createdByName;
+      String? creatorRole;
+
+      if (_employeeProvider != null) {
+        final employee = _employeeProvider!.getEmployeeById(user.userId);
+        if (employee != null) {
+          createdByName = employee.fullName;
+          creatorRole = employee.role.name;
+        }
+      }
+
+      if (createdByName == null || createdByName.isEmpty) {
+        createdByName =
+            user.fullName.isNotEmpty ? user.fullName : 'Store Member';
+      }
+      if (creatorRole == null || creatorRole.isEmpty) {
+        creatorRole = user.role.name;
+      }
+
       final newTransaction = TransactionModel(
         transactionId: newTransactionId,
         storeId: _currentStoreId!,
@@ -497,6 +523,9 @@ class TransactionProvider extends BaseProvider {
         transactionDate: now,
         createdAt: now,
         createdBy: user.userId,
+        createdById: user.userId,
+        createdByName: createdByName,
+        creatorRole: creatorRole,
       );
 
       // Optimistic mutation: insert locally first

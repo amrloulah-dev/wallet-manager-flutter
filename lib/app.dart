@@ -105,12 +105,13 @@ class MyApp extends StatelessWidget {
                   authProvider: auth, debtRepository: sl<DebtRepository>()))
             ..updateAuthState(auth),
         ),
-        ChangeNotifierProxyProvider2<AuthProvider, WalletProvider,
-            TransactionProvider>(
+        ChangeNotifierProxyProvider3<AuthProvider, WalletProvider,
+            EmployeeProvider, TransactionProvider>(
           create: (_) => TransactionProvider(),
-          update: (_, auth, walletProvider, prev) => prev!
+          update: (_, auth, walletProvider, employeeProvider, prev) => prev!
             ..updateAuthState(auth)
-            ..updateWalletProvider(walletProvider),
+            ..updateWalletProvider(walletProvider)
+            ..updateEmployeeProvider(employeeProvider),
         ),
         ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
           create: (_) => StatisticsProvider(
