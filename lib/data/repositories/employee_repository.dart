@@ -137,10 +137,10 @@ class EmployeeRepository {
 
       final storeData = storeSnap.data()!;
 
-      // ✅ التعديل هنا: القراءة من settings بدلاً من subscription
-      final maxEmployees = storeData['settings'] != null
-          ? storeData['settings']['maxEmployees'] ?? 0
-          : 0;
+      // ✅ التعديل هنا: القراءة من subscription
+      final maxEmployees = storeData['subscription'] != null
+          ? storeData['subscription']['maxEmployees'] ?? 1
+          : 1;
 
       final currentEmployees = storeData['stats'] != null
           ? storeData['stats']['totalEmployees'] ?? 0

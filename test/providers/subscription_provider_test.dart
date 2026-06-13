@@ -117,4 +117,80 @@ void main() {
     expect(provider.maxWallets, 50);
     expect(provider.maxEmployees, 20);
   });
+
+  group('canAddEmployee Boundary Tests', () {
+    test('should allow adding employee when count is below limit', () {
+      final sub = StoreSubscription(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 10)),
+        trialConsumed: true,
+        maxWallets: 50,
+        maxEmployees: 5,
+        smsEnabled: true,
+        pendingRequestDate: null,
+      );
+
+      final store = StoreModel(
+        storeId: 'test_store',
+        storeName: 'Test Store',
+        storePassword: 'hashed_password',
+        ownerId: 'owner_id',
+        ownerName: 'Owner Name',
+        ownerEmail: 'owner@test.com',
+        subscription: sub,
+        settings: StoreSettings(),
+        stats: StoreStats(),
+      );
+
+      when(() => mockAuthProvider.currentStore).thenReturn(store);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.canAddEmployee(0), isTrue);
+      expect(provider.canAddEmployee(4), isTrue);
+      expect(provider.canAddEmployee(5), isFalse);
+      expect(provider.canAddEmployee(6), isFalse);
+    });
+
+    test('should handle unlimited (-1) limit correctly', () {
+      final sub = StoreSubscription(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 10)),
+        trialConsumed: true,
+        maxWallets: 50,
+        maxEmployees: -1, // Unlimited
+        smsEnabled: true,
+        pendingRequestDate: null,
+      );
+
+      final store = StoreModel(
+        storeId: 'test_store',
+        storeName: 'Test Store',
+        storePassword: 'hashed_password',
+        ownerId: 'owner_id',
+        ownerName: 'Owner Name',
+        ownerEmail: 'owner@test.com',
+        subscription: sub,
+        settings: StoreSettings(),
+        stats: StoreStats(),
+      );
+
+      when(() => mockAuthProvider.currentStore).thenReturn(store);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.canAddEmployee(0), isTrue);
+      expect(provider.canAddEmployee(999), isTrue);
+    });
+  });
 }

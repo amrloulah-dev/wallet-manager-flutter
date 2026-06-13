@@ -208,7 +208,7 @@ class SubscriptionProvider extends BaseProvider {
   int get maxEmployees {
     // T053: Fallback to Free tier caps when explicitly expired with no pending request
     if (_subscription != null && isExpired && !hasPendingRequest) return 0;
-    return _subscription?.maxEmployees ?? 0;
+    return _subscription?.maxEmployees ?? 1;
   }
 
   bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
@@ -229,7 +229,9 @@ class SubscriptionProvider extends BaseProvider {
     if (_subscription != null && isExpired && !hasPendingRequest) {
       return currentWalletCount < 3;
     }
-    return currentWalletCount < maxWallets;
+    final limit = maxWallets;
+    if (limit == -1) return true;
+    return currentWalletCount < limit;
   }
 
   bool canAddEmployee(int currentEmployeeCount) {
@@ -237,7 +239,9 @@ class SubscriptionProvider extends BaseProvider {
     if (_subscription != null && isExpired && !hasPendingRequest) {
       return currentEmployeeCount < 1;
     }
-    return currentEmployeeCount < maxEmployees;
+    final limit = maxEmployees;
+    if (limit == -1) return true;
+    return currentEmployeeCount < limit;
   }
 
   @override
