@@ -143,6 +143,9 @@ class EmployeeProvider extends BaseProvider {
 
       _employeeRepository.provisionIdentity(newEmployee);
 
+      _employees.insert(0, newEmployee);
+      _recalculateSuspendedEmployees();
+
       _errorMessage = null;
       _updateStatus(EmployeeProviderStatus.loaded);
       return true;

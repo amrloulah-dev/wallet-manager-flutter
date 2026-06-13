@@ -144,5 +144,45 @@ void main() {
           .called(1);
       verify(() => mockRepository.cleanupIdentity(mockEmployee)).called(1);
     });
+
+    test('addEmployee inserts the new employee at the top of the local list',
+        () async {
+      final newEmp = UserModel(
+        userId: 'emp-456',
+        storeId: 'store-123',
+        role: UserRole.employee,
+        fullName: 'New Employee',
+        phone: '987654321',
+        pin: 'new_pin_hash',
+        isActive: true,
+        createdAt: DateTime.now().add(const Duration(seconds: 10)),
+        permissions: mockEmployee.permissions!,
+      );
+
+      when(() => mockRepository.addEmployee(
+            storeId: 'store-123',
+            fullName: 'New Employee',
+            phone: '987654321',
+            pin: '1234',
+            permissions: any(named: 'permissions'),
+          )).thenAnswer((_) async => newEmp);
+
+      when(() => mockRepository.provisionIdentity(any()))
+          .thenAnswer((_) async {});
+
+      expect(employeeProvider.employees.length, 1);
+      expect(employeeProvider.employees.first.userId, 'emp-123');
+
+      final result = await employeeProvider.addEmployee(
+        fullName: 'New Employee',
+        phone: '987654321',
+        pin: '1234',
+        permissions: mockEmployee.permissions!,
+      );
+
+      expect(result, true);
+      expect(employeeProvider.employees.length, 2);
+      expect(employeeProvider.employees.first.userId, 'emp-456');
+    });
   });
 }

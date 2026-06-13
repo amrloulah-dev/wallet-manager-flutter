@@ -121,6 +121,8 @@ class _WalletsListScreenState extends State<WalletsListScreen> {
         label: Text(AppLocalizations.of(context)!.addWallet),
         icon: const Icon(Icons.add),
         onPressed: _navigateToAddWallet,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
     );
   }

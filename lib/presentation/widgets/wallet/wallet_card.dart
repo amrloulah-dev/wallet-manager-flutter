@@ -30,7 +30,7 @@ class WalletCard extends StatelessWidget {
         isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
     return Transform.scale(
-      scale: 0.85,
+      scale: 0.90,
       child: InkWell(
         onTap: isFrozen
             ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
