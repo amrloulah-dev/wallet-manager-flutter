@@ -23,35 +23,35 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Fix Transaction Creator Name' (Protocol in workflow.md) [e3a8bcf]
 
-## Phase 2: Fix Wallet Card Display
+## Phase 2: Fix Wallet Card Display [checkpoint: c7bcca4]
 
-- [ ] Task: Write Failing Tests — Phone Number RTL
-    - [ ] Create/update test file for `number_formatter.dart` (e.g., `test/core/utils/number_formatter_test.dart`)
-    - [ ] Write test: `formatPhoneNumber` returns the normalized number without naive substring reversal
-    - [ ] Run tests and confirm they fail (Red Phase)
+- [x] Task: Write Failing Tests — Phone Number RTL [c7bcca4]
+    - [x] Create/update test file for `number_formatter.dart` (e.g., `test/core/utils/number_formatter_test.dart`)
+    - [x] Write test: `formatPhoneNumber` returns the normalized number without naive substring reversal
+    - [x] Run tests and confirm they fail (Red Phase)
 
-- [ ] Task: Implement Fix — Phone Number RTL
-    - [ ] Update `formatPhoneNumber` in `number_formatter.dart` to return the number logically (no naive concatenation)
-    - [ ] In `wallet_card.dart`, wrap the phone number `Text` widget with `Directionality(textDirection: TextDirection.ltr, child: ...)`
-    - [ ] Run tests and confirm they pass (Green Phase)
+- [x] Task: Implement Fix — Phone Number RTL [c7bcca4]
+    - [x] Update `formatPhoneNumber` in `number_formatter.dart` to return the number logically (no naive concatenation)
+    - [x] In `wallet_card.dart`, wrap the phone number `Text` widget with `Directionality(textDirection: TextDirection.ltr, child: ...)`
+    - [x] Run tests and confirm they pass (Green Phase)
 
-- [ ] Task: Write Failing Tests — Inactive Badge Logic
-    - [ ] Create/update widget test for `wallet_card.dart` (e.g., `test/presentation/widgets/wallet_card_test.dart`)
-    - [ ] Write test: inactive badge shows when `wallet.walletStatus == WalletStatus.suspended`
-    - [ ] Write test: inactive badge does NOT show when wallet is active (even if `isFrozen` is true)
-    - [ ] Run tests and confirm they fail (Red Phase)
+- [x] Task: Write Failing Tests — Inactive Badge Logic [c7bcca4]
+    - [x] Create/update widget test for `wallet_card.dart` (e.g., `test/presentation/widgets/wallet_card_test.dart`)
+    - [x] Write test: inactive badge shows when `wallet.walletStatus == WalletStatus.suspended`
+    - [x] Write test: inactive badge does NOT show when wallet is active (even if `isFrozen` is true)
+    - [x] Run tests and confirm they fail (Red Phase)
 
-- [ ] Task: Implement Fix — Inactive Badge & Card Scale
-    - [ ] In `wallet_card.dart`, update inactive badge condition from `isFrozen` to `wallet.walletStatus == WalletStatus.suspended`
-    - [ ] Wrap the outermost wallet card container with `Transform.scale(scale: 0.85)`
-    - [ ] Run tests and confirm they pass (Green Phase)
+- [x] Task: Implement Fix — Inactive Badge & Card Scale [c7bcca4]
+    - [x] In `wallet_card.dart`, update inactive badge condition from `isFrozen` to `wallet.walletStatus == WalletStatus.suspended`
+    - [x] Wrap the outermost wallet card container with `Transform.scale(scale: 0.85)`
+    - [x] Run tests and confirm they pass (Green Phase)
 
-- [ ] Task: Refactor — Wallet Card Fixes
-    - [ ] Review wallet card code for clarity and consistency with project patterns
-    - [ ] Ensure no duplicate directionality wrappers or redundant badge logic
-    - [ ] Re-run all tests to confirm they still pass
+- [x] Task: Refactor — Wallet Card Fixes [c7bcca4]
+    - [x] Review wallet card code for clarity and consistency with project patterns
+    - [x] Ensure no duplicate directionality wrappers or redundant badge logic
+    - [x] Re-run all tests to confirm they still pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Fix Wallet Card Display' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Fix Wallet Card Display' (Protocol in workflow.md) [c7bcca4]
 
 ## Phase 3: Fix Employee Limit Validation
 
