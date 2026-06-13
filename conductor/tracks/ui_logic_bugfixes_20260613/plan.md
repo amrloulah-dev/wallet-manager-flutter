@@ -2,26 +2,26 @@
 
 ## Phase 1: Fix Transaction Creator Name
 
-- [ ] Task: Write Failing Tests — Transaction Creator Name
-    - [ ] Create/update test file for transaction creation (e.g., `test/providers/transaction_provider_test.dart`)
-    - [ ] Write test: when an employee creates a transaction, `createdByName` equals the employee's name and `creatorRole` equals `employee`
-    - [ ] Write test: when the store owner creates a transaction, `createdByName` equals the owner's display name and `creatorRole` equals `owner`
-    - [ ] Write test: if both providers return null/empty, a sensible fallback is used (not "Unknown")
-    - [ ] Run tests and confirm they fail (Red Phase)
+- [x] Task: Write Failing Tests — Transaction Creator Name [e3a8bcf]
+    - [x] Create/update test file for transaction creation (e.g., `test/providers/transaction_provider_test.dart`)
+    - [x] Write test: when an employee creates a transaction, `createdByName` equals the employee's name and `creatorRole` equals `employee`
+    - [x] Write test: when the store owner creates a transaction, `createdByName` equals the owner's display name and `creatorRole` equals `owner`
+    - [x] Write test: if both providers return null/empty, a sensible fallback is used (not "Unknown")
+    - [x] Run tests and confirm they fail (Red Phase)
 
-- [ ] Task: Implement Fix — Transaction Creator Name
-    - [ ] Locate the transaction creation method (e.g., `addTransaction` / `createTransaction` in `transaction_provider.dart`)
-    - [ ] Add logic to check `EmployeeProvider` first for the logged-in user's name and role
-    - [ ] Fall back to `AuthProvider` display name and assign `owner` role if not an employee
-    - [ ] Populate `createdByName` and `creatorRole` on the new `TransactionModel` before Firestore write
-    - [ ] Run tests and confirm they pass (Green Phase)
+- [x] Task: Implement Fix — Transaction Creator Name [e3a8bcf]
+    - [x] Locate the transaction creation method (e.g., `addTransaction` / `createTransaction` in `transaction_provider.dart`)
+    - [x] Add logic to check `EmployeeProvider` first for the logged-in user's name and role
+    - [x] Fall back to `AuthProvider` display name and assign `owner` role if not an employee
+    - [x] Populate `createdByName` and `creatorRole` on the new `TransactionModel` before Firestore write
+    - [x] Run tests and confirm they pass (Green Phase)
 
-- [ ] Task: Refactor — Transaction Creator Name
-    - [ ] Review and refactor implementation for clarity (e.g., extract a `_resolveCreatorInfo()` helper if appropriate)
-    - [ ] Ensure no redundant provider lookups
-    - [ ] Re-run tests to confirm they still pass
+- [x] Task: Refactor — Transaction Creator Name [e3a8bcf]
+    - [x] Review and refactor implementation for clarity (e.g., extract a `_resolveCreatorInfo()` helper if appropriate)
+    - [x] Ensure no redundant provider lookups
+    - [x] Re-run tests to confirm they still pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Fix Transaction Creator Name' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Fix Transaction Creator Name' (Protocol in workflow.md) [e3a8bcf]
 
 ## Phase 2: Fix Wallet Card Display
 
