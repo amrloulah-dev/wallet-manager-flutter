@@ -29,12 +29,14 @@ class WalletCard extends StatelessWidget {
     final providerColor =
         isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
-    return InkWell(
-      onTap: isFrozen
-          ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
-          : onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
+    return Transform.scale(
+      scale: 0.85,
+      child: InkWell(
+        onTap: isFrozen
+            ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+            : onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),
@@ -65,30 +67,22 @@ class WalletCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isFrozen
-                              ? Colors.blue.shade900.withOpacity(0.3)
-                              : (wallet.walletStatus == WalletStatus.suspended
-                                  ? Colors.red.shade900.withOpacity(0.3)
-                                  : Colors.green.shade900.withOpacity(0.3)),
+                          color: wallet.walletStatus == WalletStatus.suspended
+                              ? Colors.red.shade900.withOpacity(0.3)
+                              : Colors.green.shade900.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(100),
                           border: Border.all(
-                            color: isFrozen
-                                ? Colors.blue.withOpacity(0.2)
-                                : (wallet.walletStatus == WalletStatus.suspended
-                                    ? Colors.red.withOpacity(0.2)
-                                    : Colors.green.withOpacity(0.2)),
+                            color: wallet.walletStatus == WalletStatus.suspended
+                                ? Colors.red.withOpacity(0.2)
+                                : Colors.green.withOpacity(0.2),
                           ),
                         ),
                         child: Text(
-                          isFrozen
-                              ? l10n.getWalletStatusName(WalletStatus.inactive)
-                              : l10n.getWalletStatusName(wallet.walletStatus),
+                          l10n.getWalletStatusName(wallet.walletStatus),
                           style: TextStyle(
-                            color: isFrozen
-                                ? Colors.blue.shade400
-                                : (wallet.walletStatus == WalletStatus.suspended
-                                    ? Colors.red.shade400
-                                    : Colors.green.shade400),
+                            color: wallet.walletStatus == WalletStatus.suspended
+                                ? Colors.red.shade400
+                                : Colors.green.shade400,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -295,6 +289,7 @@ class WalletCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

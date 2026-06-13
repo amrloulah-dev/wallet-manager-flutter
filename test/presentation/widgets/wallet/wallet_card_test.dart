@@ -128,7 +128,7 @@ void main() {
     expect(editTapped, isTrue);
   });
 
-  testWidgets('WalletCard displays status correctly when frozen',
+  testWidgets('WalletCard displays status correctly when frozen (but active)',
       (tester) async {
     await tester.pumpWidget(
       buildTestableWidget(
@@ -143,7 +143,43 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify "غير نشطة" badge is displayed
-    expect(find.text('غير نشطة'), findsOneWidget);
+    // Verify "غير نشطة" badge is NOT displayed, and "نشطة" is displayed instead
+    expect(find.text('غير نشطة'), findsNothing);
+    expect(find.text('نشطة'), findsOneWidget);
+  });
+
+  testWidgets('WalletCard displays status correctly when suspended',
+      (tester) async {
+    final suspendedWallet = WalletModel(
+      walletId: 'w3',
+      phoneNumber: '01168686098',
+      walletType: WalletType.instaPay,
+      walletStatus: WalletStatus.suspended,
+      balance: 1612.00,
+      storeId: 'store_1',
+      createdBy: 'owner_1',
+      sendLimits: WalletLimits(dailyLimit: 120000, monthlyLimit: 100000),
+      receiveLimits: WalletLimits(dailyLimit: 120000, monthlyLimit: 100000),
+      stats: WalletStats(
+        totalTransactions: 0,
+        totalCommission: 0,
+      ),
+    );
+
+    await tester.pumpWidget(
+      buildTestableWidget(
+        WalletCard(
+          wallet: suspendedWallet,
+          isFrozen: false,
+          onTap: () {},
+          onEdit: () {},
+          onDelete: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify "معلقة" badge is displayed
+    expect(find.text('معلقة'), findsOneWidget);
   });
 }
