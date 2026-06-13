@@ -76,8 +76,8 @@ class NumberFormatter {
     final normalized =
         _convertArabicToEnglishDigits(phone).replaceAll(RegExp(r'\D'), '');
     if (normalized.length == 11) {
-      return '${normalized.substring(0, 4)} ${normalized.substring(4, 7)} ${normalized.substring(7)}';
+      return '\u200E${normalized.substring(0, 4)} ${normalized.substring(4, 7)} ${normalized.substring(7)}\u200E';
     }
-    return phone;
+    return '\u200E$phone\u200E';
   }
 }

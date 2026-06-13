@@ -30,6 +30,17 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   bool _isSubmitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final walletProvider = context.read<WalletProvider>();
+      if (walletProvider.wallets.isEmpty) {
+        walletProvider.fetchInitialWallets();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _amountController.dispose();
     super.dispose();

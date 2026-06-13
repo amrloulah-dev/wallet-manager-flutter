@@ -59,6 +59,11 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     _customerPhoneController.addListener(_updateTotal);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final walletProvider = context.read<WalletProvider>();
+      if (walletProvider.wallets.isEmpty) {
+        walletProvider.fetchInitialWallets();
+      }
+
       // Pre-select wallet if ID is passed
       final arguments = ModalRoute.of(context)?.settings.arguments as String?;
       if (arguments != null) {

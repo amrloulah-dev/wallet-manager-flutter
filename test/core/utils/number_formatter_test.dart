@@ -50,13 +50,13 @@ void main() {
         'formatPhoneNumber should strictly use English digits and not add thousands separators',
         () {
       expect(NumberFormatter.formatPhoneNumber('01012345678'),
-          equals('0101 234 5678'));
+          equals('\u200E0101 234 5678\u200E'));
       expect(NumberFormatter.formatPhoneNumber('01234567890'),
-          equals('0123 456 7890'));
+          equals('\u200E0123 456 7890\u200E'));
       // Messy input with Arabic digits or extra spaces should be handled
       expect(NumberFormatter.formatPhoneNumber('٠١٠١٢٣٤٥٦٧٨'),
-          equals('0101 234 5678'));
-      expect(NumberFormatter.formatPhoneNumber('12345'), equals('12345'));
+          equals('\u200E0101 234 5678\u200E'));
+      expect(NumberFormatter.formatPhoneNumber('12345'), equals('\u200E12345\u200E'));
     });
   });
 }
