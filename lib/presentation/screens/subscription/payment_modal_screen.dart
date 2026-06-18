@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/errors/app_error_handler.dart';
 import '../../../core/enums/subscription_enums.dart';
+import '../../../core/utils/number_parser.dart';
+import '../../../core/utils/amount_validator.dart';
 
 class PaymentModalScreen extends StatefulWidget {
   final SubscriptionPlan planId; // ENUM refactor
@@ -29,11 +31,13 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
   final _formKey = GlobalKey<FormState>();
   String _selectedMethod = 'vodafone_cash';
   final _phoneController = TextEditingController();
+  final _amountController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -43,11 +47,15 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final amount = NumberParser.toDouble(_amountController.text);
+      AmountValidator.ensurePositiveOrZero(amount);
+
       final subProvider = context.read<SubscriptionProvider>();
       await subProvider.submitSubscriptionRequest(
         planId: widget.planId,
         paymentMethod: _selectedMethod,
         receiptNumber: _phoneController.text.trim(),
+        amount: amount,
       );
 
       if (!mounted) return;
@@ -157,6 +165,19 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
+                key: const Key('subscription_amount_field'),
+                controller: _amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'المبلغ المدفوع (جنيه)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.payments),
+                ),
+                validator: (value) => Validators.validateAmount(value),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                key: const Key('subscription_phone_field'),
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(

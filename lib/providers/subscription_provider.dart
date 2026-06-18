@@ -140,6 +140,7 @@ class SubscriptionProvider extends BaseProvider {
     required SubscriptionPlan planId, // ENUM refactor
     required String paymentMethod,
     required String receiptNumber,
+    required double amount,
   }) async {
     final storeId = _authProvider.currentStoreId;
     if (storeId == null) throw AuthException('auth_error_store_not_found');
@@ -156,7 +157,7 @@ class SubscriptionProvider extends BaseProvider {
       storeId: storeId,
       planId: planId
           .name, // Mapping to string for the model if it still uses string
-      amount: _deduceAmount(planId),
+      amount: amount,
       paymentMethod: paymentMethod,
       receiptNumber: receiptNumber,
       status: 'pending',
@@ -170,6 +171,7 @@ class SubscriptionProvider extends BaseProvider {
         planId: planId.name,
         paymentMethod: paymentMethod,
         receiptNumber: receiptNumber,
+        amount: amount,
       );
       // Data will refresh on next _fetchLatestRequest or auth sync
     } catch (e, stack) {

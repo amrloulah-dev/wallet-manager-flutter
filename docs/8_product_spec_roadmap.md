@@ -21,7 +21,9 @@ The system enforces strict Role-Based Access Control (RBAC) to ensure security a
 | **Create Transactions** | ✅ | ✅ |
 | **Edit/Delete Transactions** | ✅ | ❌ |
 | **Manage Debts** | ✅ | ✅ |
-| **View Aggregate Dashboard Stats** | ✅ | ❌ (Limited to own shifts/wallets) |
+| **Collect/Settle Debts** | ✅ | ❌ (Unless explicitly granted `collectDebt`) |
+| **View Aggregate Dashboard Stats** | ✅ | ❌ (Unless explicitly granted `viewDashboardStats`) |
+| **View Wallet Balances** | ✅ | ❌ (Unless explicitly granted `viewWalletBalance`) |
 | **Manage Subscriptions & Billing** | ✅ | ❌ |
 | **Manage Store Settings & Employees** | ✅ | ❌ |
 
@@ -31,20 +33,21 @@ The system enforces strict Role-Based Access Control (RBAC) to ensure security a
 
 The application operates within two distinct sets of boundaries: the internal SaaS limits defined by the user's subscription, and the external operational limits dictated by the Egyptian mobile money market.
 
-### Subscription Limits (SaaS)
+### 2.1 Subscription Limits (SaaS)
 
 The platform employs a freemium model to encourage onboarding while monetizing power users and larger stores.
 
 *   **Free Plan:**
     *   Maximum Wallets: 3
     *   Maximum Employees: 1
+    *   **Automated SMS Processing:** Disabled (`smsEnabled == false`). It is a premium gating feature unlocked strictly on Pro/Lifetime tiers to drive SaaS conversion.
     *   Suitable for small kiosks or individual merchants.
 *   **Pro / Lifetime Plan:**
     *   Maximum Wallets: 999 (Effectively unlimited)
     *   Maximum Employees: 999 (Effectively unlimited)
     *   Unlocks advanced analytics, full SMS automation customization, and priority support.
 
-### Egyptian Market Wallet Limits (Operational)
+### 2.2 Egyptian Market Wallet Limits (Operational)
 
 To prevent blocked transactions and account freezes, the system actively monitors and alerts users based on the physical limits of the Egyptian mobile money ecosystem.
 
@@ -58,11 +61,23 @@ To prevent blocked transactions and account freezes, the system actively monitor
 **Tracking with the `WalletLimits` Model:**
 The application utilizes a `WalletLimits` data model associated with each wallet. This model aggregates the `totalIncoming` and `totalOutgoing` transaction values for the current day and month. Before a new transaction is committed, the system calculates the projected totals and validates them against the hardcoded market limits above. If a limit is approaching (e.g., >90%) or exceeded, the app surfaces a warning UI to prevent the user from attempting a transaction that the network will reject.
 
+### 2.3 Dynamic Cross-Network Fee Calculations
+
+Before execution, the system automatically applies dynamic transaction fees at the model boundary to accurately reflect external costs:
+*   **Same Telecom Network:** Flat fee of 1.0 EGP.
+*   **Cross Telecom Network:** 0.5% of the transaction amount (Minimum 1.0 EGP, Maximum 15.0 EGP).
+*   **InstaPay Transfers:** 0.1% of the transaction amount (Minimum 0.5 EGP, Maximum 20.0 EGP).
+
 ---
 
 ## 3. Platform Limitations & Technical Constraints
 
 Certain constraints are dictated by the underlying mobile operating systems (Android and iOS) which define what the application technically cannot do.
+
+### Dual-SIM & Smart Fallback Logic
+
+*   **Dual-SIM Mapping:** The app possesses advanced capability to support Dual-SIM devices via `SimWalletConfig`. Incoming SMS messages are actively mapped to specific wallets based on the physical SIM slot index (SIM1/SIM2) or Android subscription ID.
+*   **Smart Fallback Mechanism:** If restrictive OEM platforms block access to native SIM subscription IDs, the system automatically employs a Smart Fallback. It checks if the user has only one unique wallet mapped to the available slots. If so, it auto-routes the transaction safely to that wallet instead of failing.
 
 ### iOS Ecosystem Constraints
 

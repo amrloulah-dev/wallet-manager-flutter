@@ -24,10 +24,12 @@ void main() {
   setUp(() {
     mockAuthProvider = MockAuthProvider();
     mockSubscriptionProvider = MockSubscriptionProvider();
+    when(() => mockAuthProvider.tryAutoLogin()).thenAnswer((_) async => true);
     when(() => mockSubscriptionProvider.submitSubscriptionRequest(
           planId: any(named: 'planId'),
           paymentMethod: any(named: 'paymentMethod'),
           receiptNumber: any(named: 'receiptNumber'),
+          amount: any(named: 'amount'),
         )).thenAnswer((_) async {});
   });
 
@@ -54,18 +56,22 @@ void main() {
   }
 
   group('PaymentModalScreen Widget Tests', () {
-    testWidgets('Shows phone number field instead of receipt', (tester) async {
+    testWidgets('Shows amount and phone number fields', (tester) async {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      final phoneField = find.byType(TextFormField);
-      expect(phoneField, findsOneWidget);
+      expect(find.byType(TextFormField), findsNWidgets(2));
 
-      final iconFinder = find.byIcon(Icons.phone);
-      expect(iconFinder, findsOneWidget);
+      // Verify the phone number field exists
+      expect(find.byKey(const Key('subscription_phone_field')), findsOneWidget);
+      expect(find.byIcon(Icons.phone), findsOneWidget);
+
+      // Verify the amount field exists
+      expect(find.byKey(const Key('subscription_amount_field')), findsOneWidget);
+      expect(find.byIcon(Icons.payments), findsOneWidget);
     });
 
-    testWidgets('Validates phone number', (tester) async {
+    testWidgets('Validates fields and submits', (tester) async {
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
@@ -74,20 +80,38 @@ void main() {
       // Tap without entering anything
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
-      expect(find.text('This field is required'), findsOneWidget);
 
-      // Enter invalid phone
-      await tester.enterText(find.byType(TextFormField), '123');
+      // Both should show required messages
+      expect(find.text('This field is required'), findsOneWidget); // For phone
+      expect(find.text('يرجى إدخال المبلغ'), findsOneWidget); // For amount
+
+      // Enter invalid amount and invalid phone
+      final amountField = find.byKey(const Key('subscription_amount_field'));
+      final phoneField = find.byKey(const Key('subscription_phone_field'));
+
+      await tester.enterText(amountField, '-50');
+      await tester.enterText(phoneField, '123');
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
+
+      expect(find.text('المبلغ يجب أن يكون أكبر من 0.0'), findsOneWidget);
       expect(find.text('رقم الموبايل غير صحيح'), findsOneWidget);
 
-      // Enter valid phone
-      await tester.enterText(find.byType(TextFormField), '01091264053');
+      // Enter valid values and submit
+      await tester.enterText(amountField, '1200');
+      await tester.enterText(phoneField, '01091264053');
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
 
+      expect(find.text('المبلغ يجب أن يكون أكبر من 0.0'), findsNothing);
       expect(find.text('رقم الموبايل غير صحيح'), findsNothing);
+
+      verify(() => mockSubscriptionProvider.submitSubscriptionRequest(
+            planId: SubscriptionPlan.proYearly,
+            paymentMethod: 'vodafone_cash',
+            receiptNumber: '01091264053',
+            amount: 1200.0,
+          )).called(1);
     });
   });
 }

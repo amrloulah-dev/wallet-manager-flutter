@@ -101,20 +101,19 @@ class SubscriptionRepository {
     required String planId,
     required String paymentMethod,
     required String receiptNumber,
+    required double amount,
   }) async {
     try {
       final rootRef = _firestore
           .collection(FirebaseConstants.subscriptionRequestsCollection)
           .doc();
       final now = DateTime.now();
-      // T045: Implicitly deduce amount using tierName locally
-      final double deducedAmount = _deduceAmount(planId);
 
       final request = SubscriptionRequestModel(
         id: rootRef.id,
         storeId: storeId,
         planId: planId,
-        amount: deducedAmount,
+        amount: amount,
         paymentMethod: paymentMethod,
         receiptNumber: receiptNumber,
         status: 'pending',
