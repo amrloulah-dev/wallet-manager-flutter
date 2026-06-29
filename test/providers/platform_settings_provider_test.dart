@@ -4,7 +4,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
-import 'package:walletmanager/data/models/platform_settings_model.dart';
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}

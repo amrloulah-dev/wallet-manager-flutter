@@ -12,6 +12,7 @@ import 'core/services/background_service.dart';
 import 'core/errors/app_error_handler.dart';
 import 'core/errors/error_severity.dart';
 import 'l10n/arb/app_localizations.dart';
+import 'providers/platform_settings_provider.dart';
 
 void main() async {
   runZonedGuarded(() async {
