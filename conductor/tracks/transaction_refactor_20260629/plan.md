@@ -62,22 +62,22 @@
         - `transaction_fee_calculator.dart` (line ~54)
         - `overlay_provider.dart` (lines ~139, ~203)
 
-- [ ] Task: Write Tests — Dynamic Limit Validation in `TransactionProvider`
-    - [ ] Test `createTransaction` rejects amount exceeding dynamic InstaPay transaction limit
-    - [ ] Test `createTransaction` rejects amount exceeding dynamic wallet-tier transaction limit
-    - [ ] Test `createTransaction` allows amount within dynamic limits
-    - [ ] Test with modified settings values (different from defaults)
+- [x] Task: Write Tests — Dynamic Limit Validation in `TransactionProvider` [1be1289]
+    - [x] Test `createTransaction` rejects amount exceeding dynamic InstaPay transaction limit
+    - [x] Test `createTransaction` rejects amount exceeding dynamic wallet-tier transaction limit
+    - [x] Test `createTransaction` allows amount within dynamic limits
+    - [x] Test with modified settings values (different from defaults)
 
-- [ ] Task: Refactor `TransactionProvider` for Dynamic Limits
-    - [ ] Inject `PlatformSettingsProvider` into `TransactionProvider` (via `sl<PlatformSettingsProvider>()`)
-    - [ ] Replace hardcoded IF conditions in `createTransaction()` with dynamic limit reads from `PlatformSettingsModel`
-    - [ ] Verify existing optimistic UI / fetch-shield / rollback logic is untouched
+- [x] Task: Refactor `TransactionProvider` for Dynamic Limits [1be1289]
+    - [x] Inject `PlatformSettingsProvider` into `TransactionProvider` (via `sl<PlatformSettingsProvider>()`)
+    - [x] Replace hardcoded IF conditions in `createTransaction()` with dynamic limit reads from `PlatformSettingsModel`
+    - [x] Verify existing optimistic UI / fetch-shield / rollback logic is untouched
 
-- [ ] Task: Clean Up `AppConstants` and Update Call-Sites
-    - [ ] Remove 8 hardcoded limit constants from `app_constants.dart`
-    - [ ] Update `wallet_model.dart` (lines ~371-384): replace `AppConstants.*Limit` references with dynamic settings
-    - [ ] Update `wallet_form_screen.dart` (lines ~338-359): replace `AppConstants.*Limit` references with dynamic settings
-    - [ ] Verify `flutter analyze` passes cleanly after all changes
+- [x] Task: Clean Up `AppConstants` and Update Call-Sites [1be1289]
+    - [x] Remove 8 hardcoded limit constants from `app_constants.dart`
+    - [x] Update `wallet_model.dart` (lines ~371-384): replace `AppConstants.*Limit` references with dynamic settings
+    - [x] Update `wallet_form_screen.dart` (lines ~338-359): replace `AppConstants.*Limit` references with dynamic settings
+    - [x] Verify `flutter analyze` passes cleanly after all changes
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Hardcoded Logic Cleanup & Injection' (Protocol in workflow.md)
 
