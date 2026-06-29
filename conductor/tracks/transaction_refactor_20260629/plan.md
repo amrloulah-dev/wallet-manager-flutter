@@ -45,19 +45,19 @@
 
 ## Phase 2: Hardcoded Logic Cleanup & Injection
 
-- [ ] Task: Write Tests — Dynamic `FeeCalculator`
-    - [ ] Test Vodafone same-network fee using dynamic settings value
-    - [ ] Test cross-network percentage fee using dynamic settings rates/min/max
-    - [ ] Test InstaPay fee using dynamic settings rates/min/max
-    - [ ] Test with non-default settings values (verify no residual hardcoding)
-    - [ ] Test edge cases: zero amount, boundary amounts at min/max fees
+- [x] Task: Write Tests — Dynamic `FeeCalculator` [afc0f9f]
+    - [x] Test Vodafone same-network fee using dynamic settings value
+    - [x] Test cross-network percentage fee using dynamic settings rates/min/max
+    - [x] Test InstaPay fee using dynamic settings rates/min/max
+    - [x] Test with non-default settings values (verify no residual hardcoding)
+    - [x] Test edge cases: zero amount, boundary amounts at min/max fees
 
-- [ ] Task: Refactor `FeeCalculator` to Accept Dynamic Settings
-    - [ ] Add `PlatformSettingsModel settings` parameter to `calculateTransactionFee()`
-    - [ ] Replace hardcoded `1.0` (same-network fee) with `settings.serviceFees.sameNetworkFee`
-    - [ ] Replace hardcoded `0.005`, `1.0`, `15.0` (cross-network) with `settings.serviceFees` / `settings.feeLimits` paths
-    - [ ] Replace hardcoded `0.001`, `0.5`, `20.0` (InstaPay) with dynamic settings paths
-    - [ ] Update all call-sites:
+- [x] Task: Refactor `FeeCalculator` to Accept Dynamic Settings [afc0f9f]
+    - [x] Add `PlatformSettingsModel settings` parameter to `calculateTransactionFee()`
+    - [x] Replace hardcoded `1.0` (same-network fee) with `settings.serviceFees.sameNetworkFee`
+    - [x] Replace hardcoded `0.005`, `1.0`, `15.0` (cross-network) with `settings.serviceFees` / `settings.feeLimits` paths
+    - [x] Replace hardcoded `0.001`, `0.5`, `20.0` (InstaPay) with dynamic settings paths
+    - [x] Update all call-sites:
         - `overlay_usecase.dart` (line ~63)
         - `transaction_fee_calculator.dart` (line ~54)
         - `overlay_provider.dart` (lines ~139, ~203)
