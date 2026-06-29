@@ -5,6 +5,8 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
 
 class TransactionResult {
   final String txId;
@@ -60,10 +62,12 @@ class OverlayUseCase {
     final rawWalletType = match?['walletType']?.toString() ?? 'vodafone_cash';
     final walletType = WalletType.fromString(rawWalletType);
 
+    final settings = sl<PlatformSettingsProvider>().settings;
     final calculatedServiceFee = FeeCalculator.calculateTransactionFee(
       amount: amount,
       sourceWalletType: walletType.dbValue,
       receiverPhone: sender,
+      settings: settings,
     );
 
     final newTransaction = TransactionModel(

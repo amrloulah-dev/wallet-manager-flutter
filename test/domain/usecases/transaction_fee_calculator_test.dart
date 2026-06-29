@@ -5,10 +5,13 @@ import 'package:walletmanager/domain/usecases/transaction_fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
 
 class MockWalletModel extends Mock implements WalletModel {}
-
 class MockWalletLimits extends Mock implements WalletLimits {}
+class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
 
 void main() {
   late TransactionFeeCalculator calculator;
@@ -19,6 +22,14 @@ void main() {
     calculator = TransactionFeeCalculator();
     mockWallet = MockWalletModel();
     mockLimits = MockWalletLimits();
+
+    final mockSettingsProvider = MockPlatformSettingsProvider();
+    final mockSettings = const PlatformSettingsModel.defaults();
+    when(() => mockSettingsProvider.settings).thenReturn(mockSettings);
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      sl.unregister<PlatformSettingsProvider>();
+    }
+    sl.registerSingleton<PlatformSettingsProvider>(mockSettingsProvider);
 
     // Default mocks
     when(() => mockWallet.walletType).thenReturn(WalletType.vodafoneCash);

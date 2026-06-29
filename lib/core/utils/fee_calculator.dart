@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../errors/app_exceptions.dart';
 import 'amount_validator.dart';
+import '../../data/models/platform_settings_model.dart';
 
 class FeeCalculator {
   // Network Prefixes
@@ -30,23 +31,11 @@ class FeeCalculator {
   }
 
   /// Calculates the transaction fee based on source wallet and receiver number.
-  ///
-  /// Rules:
-  /// 1. Vodafone Cash:
-  ///    - To Vodafone (010): 1 EGP
-  ///    - To Others: 0.5% (Min 1, Max 15)
-  /// 2. Etisalat Cash:
-  ///    - To Etisalat (011): 1 EGP
-  ///    - To Others: 0.5% (Min 1, Max 15)
-  /// 3. Orange Cash:
-  ///    - To Orange (012): 1 EGP
-  ///    - To Others: 0.5% (Min 1, Max 15)
-  /// 4. InstaPay:
-  ///    - To Any: 0.1% (Min 0.5, Max 20)
   static double calculateTransactionFee({
     required double amount,
     required String sourceWalletType,
     required String receiverPhone,
+    required PlatformSettingsModel settings,
   }) {
     AmountValidator.ensurePositive(amount);
 
@@ -60,34 +49,59 @@ class FeeCalculator {
     switch (sourceWalletType) {
       case walletVodafone:
         if (provider == 'Vodafone') {
-          return 1.0;
+          return settings.sameNetworkFee;
         } else {
-          return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
+          return _calculatePercentageFee(
+            amount,
+            settings.crossNetworkFeeRate,
+            settings.minCrossNetworkFee,
+            settings.maxCrossNetworkFee,
+          );
         }
 
       case walletEtisalat:
         if (provider == 'Etisalat') {
-          return 1.0;
+          return settings.sameNetworkFee;
         } else {
-          return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
+          return _calculatePercentageFee(
+            amount,
+            settings.crossNetworkFeeRate,
+            settings.minCrossNetworkFee,
+            settings.maxCrossNetworkFee,
+          );
         }
 
       case walletOrange:
         if (provider == 'Orange') {
-          return 1.0;
+          return settings.sameNetworkFee;
         } else {
-          return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
+          return _calculatePercentageFee(
+            amount,
+            settings.crossNetworkFeeRate,
+            settings.minCrossNetworkFee,
+            settings.maxCrossNetworkFee,
+          );
         }
 
       case walletWePay:
         if (provider == 'WE') {
-          return 1.0;
+          return settings.sameNetworkFee;
         } else {
-          return _calculatePercentageFee(amount, 0.005, 1.0, 15.0);
+          return _calculatePercentageFee(
+            amount,
+            settings.crossNetworkFeeRate,
+            settings.minCrossNetworkFee,
+            settings.maxCrossNetworkFee,
+          );
         }
 
       case walletInstaPay:
-        return _calculatePercentageFee(amount, 0.001, 0.5, 20.0);
+        return _calculatePercentageFee(
+          amount,
+          settings.instapayFeeRate,
+          settings.minInstapayFee,
+          settings.maxInstapayFee,
+        );
 
       default:
         throw DomainException(

@@ -3,6 +3,8 @@ import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/utils/amount_validator.dart';
 import '../../core/errors/app_exceptions.dart';
+import '../../core/di/service_locator.dart';
+import '../../providers/platform_settings_provider.dart';
 
 class TransactionCalculationResult {
   final double serviceFee;
@@ -51,10 +53,12 @@ class TransactionFeeCalculator {
 
     double fee = 0.0;
     if (transactionType == TransactionType.debit) {
+      final settings = sl<PlatformSettingsProvider>().settings;
       fee = FeeCalculator.calculateTransactionFee(
         amount: amount,
         sourceWalletType: wallet.walletType.dbValue,
         receiverPhone: receiverPhone,
+        settings: settings,
       );
     }
 

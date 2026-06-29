@@ -11,6 +11,7 @@ import 'package:walletmanager/core/state/safe_change_notifier.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService;
@@ -136,10 +137,12 @@ class OverlayProvider extends SafeChangeNotifier {
         final rawWalletType =
             selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
         final walletType = WalletType.fromString(rawWalletType);
+        final settings = sl<PlatformSettingsProvider>().settings;
         _commission = FeeCalculator.calculateTransactionFee(
           amount: _amount,
           sourceWalletType: walletType.dbValue,
           receiverPhone: _sender,
+          settings: settings,
         );
         if (kDebugMode) {
           debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
@@ -200,10 +203,12 @@ class OverlayProvider extends SafeChangeNotifier {
         final rawWalletType =
             match['walletType']?.toString() ?? 'vodafone_cash';
         final walletType = WalletType.fromString(rawWalletType);
+        final settings = sl<PlatformSettingsProvider>().settings;
         _commission = FeeCalculator.calculateTransactionFee(
           amount: _amount,
           sourceWalletType: walletType.dbValue,
           receiverPhone: _sender,
+          settings: settings,
         );
         if (kDebugMode) {
           debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
