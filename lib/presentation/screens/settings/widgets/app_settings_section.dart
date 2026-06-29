@@ -6,17 +6,26 @@ import '../../../../core/utils/dialog_utils.dart';
 import '../../../../l10n/arb/app_localizations.dart';
 import '../../../../providers/localization_provider.dart';
 import '../../../../providers/theme_provider.dart';
+import '../../../../providers/platform_settings_provider.dart';
 import 'section_title.dart';
 
-class AppSettingsSection extends StatelessWidget {
+class AppSettingsSection extends StatefulWidget {
   const AppSettingsSection({super.key});
 
   @override
+  State<AppSettingsSection> createState() => _AppSettingsSectionState();
+}
+
+class _AppSettingsSectionState extends State<AppSettingsSection> {
+  bool _isRefreshing = false;
+
+  @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle(title: AppLocalizations.of(context)!.appSettings),
+        SectionTitle(title: localizations.appSettings),
         Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return Card(
@@ -27,7 +36,7 @@ class AppSettingsSection extends StatelessWidget {
               child: ListTile(
                 leading: Icon(_getThemeIcon(themeProvider.themeMode),
                     color: AppColors.primary),
-                title: Text(AppLocalizations.of(context)!.theme,
+                title: Text(localizations.theme,
                     style: AppTextStyles.bodyLarge),
                 subtitle: Text(
                     _getThemeModeName(context, themeProvider.themeMode),
@@ -52,12 +61,12 @@ class AppSettingsSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: const Icon(Icons.language, color: AppColors.primary),
-                title: Text(AppLocalizations.of(context)!.language,
+                title: Text(localizations.language,
                     style: AppTextStyles.bodyLarge),
                 subtitle: Text(
                     localizationProvider.isArabic
-                        ? AppLocalizations.of(context)!.arabic
-                        : AppLocalizations.of(context)!.english,
+                        ? localizations.arabic
+                        : localizations.english,
                     style: AppTextStyles.bodyMedium),
                 trailing: Icon(
                     IconData(Icons.arrow_forward_ios.codePoint,
@@ -68,6 +77,63 @@ class AppSettingsSection extends StatelessWidget {
               ),
             );
           },
+        ),
+        const SizedBox(height: 12),
+        Card(
+          elevation: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            leading: _isRefreshing
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync, color: AppColors.primary),
+            title: Text(localizations.refreshPlatformSettings,
+                style: AppTextStyles.bodyLarge),
+            trailing: Icon(
+                IconData(Icons.arrow_forward_ios.codePoint,
+                    fontFamily: Icons.arrow_forward_ios.fontFamily,
+                    matchTextDirection: true),
+                size: 16),
+            onTap: _isRefreshing
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    setState(() {
+                      _isRefreshing = true;
+                    });
+                    try {
+                      await context.read<PlatformSettingsProvider>().forceRefresh();
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(localizations.platformSettingsRefreshed),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (_) {
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(localizations.platformSettingsRefreshFailed),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          _isRefreshing = false;
+                        });
+                      }
+                    }
+                  },
+          ),
         ),
       ],
     );

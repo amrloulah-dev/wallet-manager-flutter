@@ -818,5 +818,8 @@
   "employeeLoginBlockedSubscriptionExpired": "لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.",
   "walletsLimitExceededFree": "لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.",
   "walletIsFrozen": "هذه المحفظة مجمدة. يرجى ترقية الباقة لاستخدامها.",
-  "walletIsFrozenShort": "(مجمدة)"
+  "walletIsFrozenShort": "(مجمدة)",
+  "refreshPlatformSettings": "تحديث إعدادات المنصة",
+  "platformSettingsRefreshed": "تم تحديث إعدادات المنصة بنجاح",
+  "platformSettingsRefreshFailed": "فشل تحديث إعدادات المنصة"
 }

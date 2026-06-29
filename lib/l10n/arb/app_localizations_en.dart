@@ -2152,4 +2152,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletIsFrozenShort => '(Frozen)';
+
+  @override
+  String get refreshPlatformSettings => 'Refresh Platform Settings';
+
+  @override
+  String get platformSettingsRefreshed =>
+      'Platform settings refreshed successfully';
+
+  @override
+  String get platformSettingsRefreshFailed =>
+      'Failed to refresh platform settings';
 }

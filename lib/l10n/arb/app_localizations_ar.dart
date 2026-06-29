@@ -2136,4 +2136,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get walletIsFrozenShort => '(مجمدة)';
+
+  @override
+  String get refreshPlatformSettings => 'تحديث إعدادات المنصة';
+
+  @override
+  String get platformSettingsRefreshed => 'تم تحديث إعدادات المنصة بنجاح';
+
+  @override
+  String get platformSettingsRefreshFailed => 'فشل تحديث إعدادات المنصة';
 }

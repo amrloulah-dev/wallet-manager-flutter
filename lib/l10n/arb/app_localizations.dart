@@ -4033,6 +4033,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'(مجمدة)'**
   String get walletIsFrozenShort;
+
+  /// No description provided for @refreshPlatformSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث إعدادات المنصة'**
+  String get refreshPlatformSettings;
+
+  /// No description provided for @platformSettingsRefreshed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث إعدادات المنصة بنجاح'**
+  String get platformSettingsRefreshed;
+
+  /// No description provided for @platformSettingsRefreshFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحديث إعدادات المنصة'**
+  String get platformSettingsRefreshFailed;
 }
 
 class _AppLocalizationsDelegate
