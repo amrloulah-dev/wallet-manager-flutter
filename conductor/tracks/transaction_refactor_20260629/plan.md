@@ -17,29 +17,29 @@
     - [x] Test `toJson` round-trip serialization
     - [x] Test that default values match current `AppConstants` values exactly
 
-- [ ] Task: Create `PlatformSettingsProvider`
-    - [ ] Define `PlatformSettingsProvider` extending `SafeChangeNotifier` at `lib/providers/platform_settings_provider.dart`
-    - [ ] Inject `LocalStorageService` and Firestore instance via constructor
-    - [ ] Implement `initialize()` method with 24-hour TTL check logic:
+- [x] Task: Create `PlatformSettingsProvider` [5f5a1a2]
+    - [x] Define `PlatformSettingsProvider` extending `SafeChangeNotifier` at `lib/providers/platform_settings_provider.dart`
+    - [x] Inject `LocalStorageService` and Firestore instance via constructor
+    - [x] Implement `initialize()` method with 24-hour TTL check logic:
         - Read `last_platform_settings_fetch_time` from `LocalStorageService`
         - If null or > 24h: fetch from Firestore `settings/global`, cache JSON + timestamp, load into RAM, `safeNotify()`
         - If < 24h: deserialize from `LocalStorageService` cache synchronously
-    - [ ] Implement `forceRefresh()` method bypassing TTL check
-    - [ ] Expose `PlatformSettingsModel` via public `settings` getter
-    - [ ] Handle Firestore fetch failure gracefully (fall back to cache or defaults)
+    - [x] Implement `forceRefresh()` method bypassing TTL check
+    - [x] Expose `PlatformSettingsModel` via public `settings` getter
+    - [x] Handle Firestore fetch failure gracefully (fall back to cache or defaults)
 
-- [ ] Task: Write Tests — `PlatformSettingsProvider`
-    - [ ] Test initialization with no cache (first launch) — fetches from Firestore
-    - [ ] Test initialization with fresh cache (< 24h) — loads from local storage
-    - [ ] Test initialization with stale cache (> 24h) — re-fetches from Firestore
-    - [ ] Test `forceRefresh()` bypasses TTL and fetches fresh data
-    - [ ] Test Firestore fetch failure falls back to cached/default values
-    - [ ] Test `safeNotify()` is called after successful fetch
+- [x] Task: Write Tests — `PlatformSettingsProvider` [5f5a1a2]
+    - [x] Test initialization with no cache (first launch) — fetches from Firestore
+    - [x] Test initialization with fresh cache (< 24h) — loads from local storage
+    - [x] Test initialization with stale cache (> 24h) — re-fetches from Firestore
+    - [x] Test `forceRefresh()` bypasses TTL and fetches fresh data
+    - [x] Test Firestore fetch failure falls back to cached/default values
+    - [x] Test `safeNotify()` is called after successful fetch
 
-- [ ] Task: Register `PlatformSettingsProvider` in DI & Widget Tree
-    - [ ] Register as lazy singleton in `service_locator.dart` via `sl.registerLazySingleton<PlatformSettingsProvider>(...)`
-    - [ ] Add `ChangeNotifierProvider` for `PlatformSettingsProvider` in the app's provider tree (`app.dart`)
-    - [ ] Call `initialize()` during app startup in `main.dart` (after `setupServiceLocator()`)
+- [x] Task: Register `PlatformSettingsProvider` in DI & Widget Tree [c9f0c0a]
+    - [x] Register as lazy singleton in `service_locator.dart` via `sl.registerLazySingleton<PlatformSettingsProvider>(...)`
+    - [x] Add `ChangeNotifierProvider` for `PlatformSettingsProvider` in the app's provider tree (`app.dart`)
+    - [x] Call `initialize()` during app startup in `main.dart` (after `setupServiceLocator()`)
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Dynamic Settings Model & Cached Provider' (Protocol in workflow.md)
 
