@@ -2,20 +2,20 @@
 
 ## Phase 1: Dynamic Settings Model & Cached Provider
 
-- [ ] Task: Create `PlatformSettingsModel`
-    - [ ] Define `PlatformSettingsModel` class at `lib/data/models/platform_settings_model.dart`
-    - [ ] Map nested Firestore structure: `limits`, `feeLimits`, `serviceFees`, `subscriptions`
-    - [ ] Implement `fromJson(Map<String, dynamic>)` factory with null-safe parsing via `NumberParser`
-    - [ ] Implement `toJson()` for serialization to `LocalStorageService`
-    - [ ] Define safe defaults mirroring current `AppConstants` hardcoded values
-    - [ ] Add `kDebugMode`-guarded warning log when defaults are active
+- [x] Task: Create `PlatformSettingsModel` [7b76eaf]
+    - [x] Define `PlatformSettingsModel` class at `lib/data/models/platform_settings_model.dart`
+    - [x] Map nested Firestore structure: `limits`, `feeLimits`, `serviceFees`, `subscriptions`
+    - [x] Implement `fromJson(Map<String, dynamic>)` factory with null-safe parsing via `NumberParser`
+    - [x] Implement `toJson()` for serialization to `LocalStorageService`
+    - [x] Define safe defaults mirroring current `AppConstants` hardcoded values
+    - [x] Add `kDebugMode`-guarded warning log when defaults are active
 
-- [ ] Task: Write Tests — `PlatformSettingsModel`
-    - [ ] Test `fromJson` with complete valid data
-    - [ ] Test `fromJson` with partial/missing fields (safe defaults kick in)
-    - [ ] Test `fromJson` with null input (full defaults)
-    - [ ] Test `toJson` round-trip serialization
-    - [ ] Test that default values match current `AppConstants` values exactly
+- [x] Task: Write Tests — `PlatformSettingsModel` [7b76eaf]
+    - [x] Test `fromJson` with complete valid data
+    - [x] Test `fromJson` with partial/missing fields (safe defaults kick in)
+    - [x] Test `fromJson` with null input (full defaults)
+    - [x] Test `toJson` round-trip serialization
+    - [x] Test that default values match current `AppConstants` values exactly
 
 - [ ] Task: Create `PlatformSettingsProvider`
     - [ ] Define `PlatformSettingsProvider` extending `SafeChangeNotifier` at `lib/providers/platform_settings_provider.dart`
