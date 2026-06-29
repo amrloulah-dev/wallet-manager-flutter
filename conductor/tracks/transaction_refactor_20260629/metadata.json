@@ -1,0 +1,8 @@
+{
+  "track_id": "transaction_refactor_20260629",
+  "type": "refactor",
+  "status": "new",
+  "created_at": "2026-06-29T12:43:20+03:00",
+  "updated_at": "2026-06-29T12:43:20+03:00",
+  "description": "Replace hardcoded fees and limits with dynamic Firestore-backed values, implement 24-hour local cache, and add global stats increment"
+}

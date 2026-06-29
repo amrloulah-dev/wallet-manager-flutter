@@ -23,3 +23,8 @@
 - [x] **Track: UI/Logic Bug-Fix Sweep — Transaction Creator, Wallet Card RTL/Scale/Badge, Employee Limit**
 *Link: [./tracks/ui_logic_bugfixes_20260613/](./tracks/ui_logic_bugfixes_20260613/)*
 
+---
+
+- [ ] **Track: Transaction Engine Dynamic Settings Refactor**
+*Link: [./tracks/transaction_refactor_20260629/](./tracks/transaction_refactor_20260629/)*
+
