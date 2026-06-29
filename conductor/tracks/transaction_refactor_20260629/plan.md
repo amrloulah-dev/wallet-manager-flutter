@@ -79,32 +79,32 @@
     - [x] Update `wallet_form_screen.dart` (lines ~338-359): replace `AppConstants.*Limit` references with dynamic settings
     - [x] Verify `flutter analyze` passes cleanly after all changes
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Hardcoded Logic Cleanup & Injection' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Hardcoded Logic Cleanup & Injection' (Protocol in workflow.md)
 
 ## Phase 3: WriteBatch Enhancement & Admin UI
 
-- [ ] Task: Write Tests — WriteBatch Global Stats Increment
-    - [ ] Test that `createTransaction` WriteBatch includes 5th operation for `stats/global`
-    - [ ] Test that `totalTransactions` is incremented by 1 via `FieldValue.increment(1)`
-    - [ ] Test that `SetOptions(merge: true)` is used (no overwrite of other fields)
-    - [ ] Test that existing 4 batch operations remain untouched
+- [x] Task: Write Tests — WriteBatch Global Stats Increment [be56d3e]
+    - [x] Test that `createTransaction` WriteBatch includes 5th operation for `stats/global`
+    - [x] Test that `totalTransactions` is incremented by 1 via `FieldValue.increment(1)`
+    - [x] Test that `SetOptions(merge: true)` is used (no overwrite of other fields)
+    - [x] Test that existing 4 batch operations remain untouched
 
-- [ ] Task: Add Global Stats Increment to `TransactionRepository.createTransaction()`
-    - [ ] Add 5th WriteBatch operation: `batch.set(globalStatsRef, {'totalTransactions': FieldValue.increment(1)}, SetOptions(merge: true))`
-    - [ ] Verify existing 4 batch operations are not modified
+- [x] Task: Add Global Stats Increment to `TransactionRepository.createTransaction()` [be56d3e]
+    - [x] Add 5th WriteBatch operation: `batch.set(globalStatsRef, {'totalTransactions': FieldValue.increment(1)}, SetOptions(merge: true))`
+    - [x] Verify existing 4 batch operations are not modified
 
-- [ ] Task: Add Manual Refresh UI to Admin/Settings Screen
+- [~] Task: Add Manual Refresh UI to Admin/Settings Screen
     - [ ] Add "Refresh Platform Settings" button/tile to the settings or admin screen
     - [ ] On tap, call `PlatformSettingsProvider.forceRefresh()`
     - [ ] Display success/failure feedback (SnackBar or similar)
     - [ ] Use `Consumer` or `Selector` for reactive UI (not blanket `watch`)
 
-- [ ] Task: Write Tests — Manual Refresh UI
+- [~] Task: Write Tests — Manual Refresh UI
     - [ ] Widget test: verify refresh button is rendered
     - [ ] Widget test: verify tapping refresh button triggers `forceRefresh()`
     - [ ] Widget test: verify success/failure feedback is displayed
 
-- [ ] Task: Final Static Analysis & Integration Verification
+- [~] Task: Final Static Analysis & Integration Verification
     - [ ] Run `flutter analyze` — zero new warnings/errors
     - [ ] Run full test suite `CI=true flutter test` — all tests pass
     - [ ] Verify coverage > 80% for new code
