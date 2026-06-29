@@ -84,6 +84,9 @@ class FirebaseConstants {
   static String statsSummaryPath(String storeId) =>
       '${statsSubcollection(storeId)}/$summaryDoc';
 
+  static String globalStatsPath(String storeId) =>
+      '${statsSubcollection(storeId)}/global';
+
   static String dailyStatsSubcollection(String storeId) =>
       '${storePath(storeId)}/$dailyStatsCollection';
 

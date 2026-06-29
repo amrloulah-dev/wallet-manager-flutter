@@ -236,6 +236,14 @@ class TransactionRepository {
         SetOptions(merge: true),
       );
 
+      // 4.1 Update Global Stats (totalTransactions counter)
+      final globalStatsRef = _firestore.doc(FirebaseConstants.globalStatsPath(transaction.storeId));
+      batch.set(
+        globalStatsRef,
+        {FirebaseConstants.totalTransactions: FieldValue.increment(1)},
+        SetOptions(merge: true),
+      );
+
       // 5. Extra Writes (Debt increment)
       if (transaction.isDebt) {
         final Map<String, dynamic> debtSummaryUpdates = {
