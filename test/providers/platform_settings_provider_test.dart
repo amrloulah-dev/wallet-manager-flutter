@@ -1,0 +1,154 @@
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
+
+class MockLocalStorageService extends Mock implements LocalStorageService {}
+class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
+class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
+class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+
+void main() {
+  late MockLocalStorageService mockStorage;
+  late MockFirebaseFirestore mockFirestore;
+  late MockCollectionReference mockCollection;
+  late MockDocumentReference mockDoc;
+  late MockDocumentSnapshot mockSnapshot;
+
+  final testJson = {
+    'limits': {
+      'newWalletTransactionLimit': 15000.0,
+      'newWalletMonthlyLimit': 75000.0,
+      'oldWalletTransactionLimit': 80000.0,
+      'oldWalletMonthlyLimit': 250000.0,
+      'registeredStoreTransactionLimit': 90000.0,
+      'registeredStoreMonthlyLimit': 500000.0,
+      'instapayTransactionLimit': 150000.0,
+      'instapayMonthlyLimit': 600000.0,
+    },
+    'feeLimits': {
+      'minCrossNetworkFee': 2.0,
+      'maxCrossNetworkFee': 20.0,
+      'minInstapayFee': 1.0,
+      'maxInstapayFee': 30.0,
+    },
+    'serviceFees': {
+      'sameNetworkFee': 1.5,
+      'crossNetworkFeeRate': 0.007,
+      'instapayFeeRate': 0.002,
+    },
+    'subscriptions': {
+      'trialDurationDays': 45,
+    }
+  };
+
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  });
+
+  setUp(() {
+    mockStorage = MockLocalStorageService();
+    mockFirestore = MockFirebaseFirestore();
+    mockCollection = MockCollectionReference();
+    mockDoc = MockDocumentReference();
+    mockSnapshot = MockDocumentSnapshot();
+
+    when(() => mockFirestore.collection('settings')).thenReturn(mockCollection);
+    when(() => mockCollection.doc('global')).thenReturn(mockDoc);
+    when(() => mockDoc.get()).thenAnswer((_) async => mockSnapshot);
+  });
+
+  group('PlatformSettingsProvider', () {
+    test('initialize fetches from Firestore when cache is empty', () async {
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(null);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(null);
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.data()).thenReturn(testJson);
+      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      expect(provider.settings.trialDurationDays, 45);
+      verify(() => mockStorage.savePlatformSettings(any())).called(1);
+    });
+
+    test('initialize loads from cache when cache is fresh (<24h)', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      verifyNever(() => mockDoc.get());
+    });
+
+    test('initialize fetches from Firestore when cache is stale (>24h)', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final twentyFiveHoursAgo = now - const Duration(hours: 25).inMilliseconds;
+
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(twentyFiveHoursAgo);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.data()).thenReturn(testJson);
+      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      verify(() => mockDoc.get()).called(1);
+      verify(() => mockStorage.savePlatformSettings(any())).called(1);
+    });
+
+    test('forceRefresh bypasses TTL and fetches from Firestore', () async {
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.data()).thenReturn(testJson);
+      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.forceRefresh();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      verify(() => mockDoc.get()).called(1);
+    });
+
+    test('falls back to cache when Firestore fetch fails', () async {
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(null);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
+      when(() => mockDoc.get()).thenThrow(FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+    });
+  });
+}

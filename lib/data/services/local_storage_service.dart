@@ -533,4 +533,27 @@ class LocalStorageService {
 
   /// Retrieves the saved persistent device ID.
   String? get persistentDeviceId => _prefs?.getString(_kPersistentDeviceId);
+
+  // ===========================
+  // Platform Settings Cache
+  // ===========================
+  static const String _kPlatformSettingsJson = 'platform_settings_json';
+  static const String _kPlatformSettingsFetchTime = 'platform_settings_fetch_time';
+
+  /// Saves the serialized PlatformSettingsModel JSON to local storage and updates the fetch timestamp.
+  Future<void> savePlatformSettings(String jsonStr) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kPlatformSettingsJson, jsonStr);
+    await _prefs!.setInt(_kPlatformSettingsFetchTime, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Retrieves the cached PlatformSettingsModel JSON, if any.
+  String? getPlatformSettingsJson() {
+    return _prefs?.getString(_kPlatformSettingsJson);
+  }
+
+  /// Retrieves the timestamp when the settings were last fetched.
+  int? getPlatformSettingsFetchTime() {
+    return _prefs?.getInt(_kPlatformSettingsFetchTime);
+  }
 }
