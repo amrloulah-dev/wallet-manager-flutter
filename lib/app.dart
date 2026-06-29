@@ -27,6 +27,7 @@ import 'providers/transaction_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/system_config_provider.dart';
+import 'providers/platform_settings_provider.dart';
 
 import 'presentation/screens/auth/login_landing_screen.dart';
 import 'presentation/screens/subscription/admin_block_screen.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => sl<PlatformSettingsProvider>()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(

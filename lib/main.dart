@@ -33,7 +33,8 @@ void main() async {
       // Step 2: Setup Dependency Injection.
       if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
       await setupServiceLocator();
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator ready.');
+      await sl<PlatformSettingsProvider>().initialize();
+      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator & Settings ready.');
 
       // Step 3: Check and initialize SMS automation if enabled
       if (sl<LocalStorageService>().isSmsAutomationEnabled) {
@@ -141,6 +142,7 @@ void overlayMain() async {
 
     // Now dependency injection container can safely resolve repositories needing Firestore
     await setupServiceLocator();
+    await sl<PlatformSettingsProvider>().initialize();
 
     runApp(const TransactionOverlayApp());
   } catch (e, stack) {

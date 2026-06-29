@@ -17,6 +17,7 @@ import '../../data/repositories/wallet_repository.dart';
 import '../../data/services/local_storage_service.dart';
 import '../../data/services/wallet_cache_manager.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/platform_settings_provider.dart';
 import '../../providers/app_events.dart';
 import '../../domain/usecases/overlay_usecase.dart';
 import '../../domain/usecases/transaction_fee_calculator.dart';
@@ -77,6 +78,7 @@ Future<void> setupServiceLocator() async {
 
   // ── 5. Providers (depend on repositories & composite services) ──
   sl.registerLazySingleton<AuthProvider>(() => AuthProvider());
+  sl.registerLazySingleton<PlatformSettingsProvider>(() => PlatformSettingsProvider());
 
   // ── 6. UseCases (depend on providers & repositories) ─────
   sl.registerLazySingleton<TransactionFeeCalculator>(
