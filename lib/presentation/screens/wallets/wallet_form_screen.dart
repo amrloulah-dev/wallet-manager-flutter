@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -17,6 +16,7 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../providers/subscription_provider.dart';
 import '../../../core/enums/wallet_enums.dart';
+import '../../../providers/platform_settings_provider.dart';
 
 class WalletFormScreen extends StatefulWidget {
   const WalletFormScreen({super.key});
@@ -333,30 +333,32 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   double _getDailyLimit() {
+    final settings = context.read<PlatformSettingsProvider>().settings;
     if (_selectedWalletType == WalletType.instaPay) {
       // ENUM refactor
-      return AppConstants.instapayTransactionLimit;
+      return settings.instapayTransactionLimit;
     }
     if (_selectedWalletStatus == WalletStatus.suspended) {
       // Mapping registered_store to suspended for now as placeholder
-      return AppConstants.registeredStoreTransactionLimit;
+      return settings.registeredStoreTransactionLimit;
     }
     return _selectedWalletStatus == WalletStatus.active // Mapping new to active
-        ? AppConstants.newWalletTransactionLimit
-        : AppConstants.oldWalletTransactionLimit;
+        ? settings.newWalletTransactionLimit
+        : settings.oldWalletTransactionLimit;
   }
 
   double _getMonthlyLimit() {
+    final settings = context.read<PlatformSettingsProvider>().settings;
     if (_selectedWalletType == WalletType.instaPay) {
       // ENUM refactor
-      return AppConstants.instapayMonthlyLimit;
+      return settings.instapayMonthlyLimit;
     }
     if (_selectedWalletStatus == WalletStatus.suspended) {
-      return AppConstants.registeredStoreMonthlyLimit;
+      return settings.registeredStoreMonthlyLimit;
     }
     return _selectedWalletStatus == WalletStatus.active
-        ? AppConstants.newWalletMonthlyLimit
-        : AppConstants.oldWalletMonthlyLimit;
+        ? settings.newWalletMonthlyLimit
+        : settings.oldWalletMonthlyLimit;
   }
 
   Widget _buildLimitRow(String label, String value) {

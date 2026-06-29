@@ -20,6 +20,8 @@ import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
 import 'wallet_provider.dart';
 import 'employee_provider.dart';
+import 'platform_settings_provider.dart';
+import '../data/models/platform_settings_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
 import 'base_provider.dart';
@@ -38,6 +40,7 @@ class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
   final StatsRepository _statsRepository;
   final WalletRepository _walletRepository;
+  final PlatformSettingsProvider? _platformSettingsProvider;
 
   // State
   String? _currentStoreId;
@@ -58,6 +61,10 @@ class TransactionProvider extends BaseProvider {
 
   TransactionModel? _selectedTransaction;
 
+  // Providers
+  WalletProvider? _walletProvider;
+  EmployeeProvider? _employeeProvider;
+
   // Filter
   TransactionType? _filterType; // ENUM refactor
 
@@ -65,8 +72,7 @@ class TransactionProvider extends BaseProvider {
   bool _fetchShieldActive = false;
   bool _hasFetchedInitial = false;
 
-  WalletProvider? _walletProvider;
-  EmployeeProvider? _employeeProvider;
+
 
   void updateWalletProvider(WalletProvider walletProvider) {
     _walletProvider = walletProvider;
@@ -81,11 +87,16 @@ class TransactionProvider extends BaseProvider {
     TransactionRepository? transactionRepository,
     StatsRepository? statsRepository,
     WalletRepository? walletRepository,
+    PlatformSettingsProvider? platformSettingsProvider,
     String? storeId,
   })  : _transactionRepository =
             transactionRepository ?? sl<TransactionRepository>(),
         _statsRepository = statsRepository ?? sl<StatsRepository>(),
         _walletRepository = walletRepository ?? sl<WalletRepository>(),
+        _platformSettingsProvider = platformSettingsProvider ??
+            (sl.isRegistered<PlatformSettingsProvider>()
+                ? sl<PlatformSettingsProvider>()
+                : null),
         _currentStoreId = storeId {
     _initializeDateRange();
   }
@@ -423,18 +434,22 @@ class TransactionProvider extends BaseProvider {
       final isSend = transactionType == TransactionType.debit;
       final isReceive = transactionType == TransactionType.credit;
       final isInstaPay = wallet.walletType == WalletType.instaPay;
-      final isTelecom = [
-        WalletType.vodafoneCash,
-        WalletType.orangeCash,
-        WalletType.etisalatCash,
-        WalletType.wePay
-      ].contains(wallet.walletType);
 
-      if (isInstaPay && amount > 70000) {
-        throw ValidationException('wallet_error_instapay_limit');
-      }
-      if (isTelecom && amount > 60000) {
-        throw ValidationException('wallet_error_telecom_limit');
+      final settings = _platformSettingsProvider?.settings ?? const PlatformSettingsModel.defaults();
+      final double txLimit = isInstaPay
+          ? settings.instapayTransactionLimit
+          : (wallet.walletStatus == WalletStatus.suspended
+              ? settings.registeredStoreTransactionLimit
+              : (wallet.walletStatus == WalletStatus.active
+                  ? settings.newWalletTransactionLimit
+                  : settings.oldWalletTransactionLimit));
+
+      if (amount > txLimit) {
+        if (isInstaPay) {
+          throw ValidationException('wallet_error_instapay_limit');
+        } else {
+          throw ValidationException('wallet_error_telecom_limit');
+        }
       }
 
       if (isSend) {

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/wallet_enums.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/amount_validator.dart';
+import '../../core/di/service_locator.dart';
+import '../../providers/platform_settings_provider.dart';
+import 'platform_settings_model.dart';
 
 class WalletLimits {
   final double dailyLimit;
@@ -359,6 +361,7 @@ class WalletModel {
     required double balance,
     required String createdBy,
     String? notes,
+    PlatformSettingsModel? settings,
   }) {
     final now = DateTime.now();
     final typeEnum = WalletType.fromString(walletType);
@@ -367,21 +370,25 @@ class WalletModel {
     final isNew = walletStatus == 'new';
     final isInstapay = typeEnum == WalletType.instaPay;
 
+    final resolvedSettings = settings ??
+        (sl.isRegistered<PlatformSettingsProvider>()
+            ? sl<PlatformSettingsProvider>().settings
+            : const PlatformSettingsModel.defaults());
     final double dailyLimit = isInstapay
-        ? AppConstants.instapayTransactionLimit
+        ? resolvedSettings.instapayTransactionLimit
         : (isNew
-            ? AppConstants.newWalletTransactionLimit
+            ? resolvedSettings.newWalletTransactionLimit
             : (walletStatus == 'registered_store'
-                ? AppConstants.registeredStoreTransactionLimit
-                : AppConstants.oldWalletTransactionLimit));
+                ? resolvedSettings.registeredStoreTransactionLimit
+                : resolvedSettings.oldWalletTransactionLimit));
 
     final double monthlyLimit = isInstapay
-        ? AppConstants.instapayMonthlyLimit
+        ? resolvedSettings.instapayMonthlyLimit
         : (isNew
-            ? AppConstants.newWalletMonthlyLimit
+            ? resolvedSettings.newWalletMonthlyLimit
             : (walletStatus == 'registered_store'
-                ? AppConstants.registeredStoreMonthlyLimit
-                : AppConstants.oldWalletMonthlyLimit));
+                ? resolvedSettings.registeredStoreMonthlyLimit
+                : resolvedSettings.oldWalletMonthlyLimit));
 
     return WalletModel(
       walletId: walletId,

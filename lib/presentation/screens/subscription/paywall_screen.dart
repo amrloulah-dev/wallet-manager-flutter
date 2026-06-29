@@ -102,27 +102,34 @@ class PaywallScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                const SizedBox(height: 80),
+                const SizedBox(height: 16),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    // Safely dismiss the Paywall to reveal the Dashboard underneath
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      Navigator.pushReplacementNamed(
+                          context, RouteConstants.mainDashboard);
+                    }
+                  },
+                  child: Text(
+                    loc.continueWithFreePlan,
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      decoration: TextDecoration.underline,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              // Safely dismiss the Paywall to reveal the Dashboard underneath
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else {
-                Navigator.pushReplacementNamed(
-                    context, RouteConstants.mainDashboard);
-              }
-            },
-            label: Text(
-              loc.continueWithFreePlan,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
         );
       },
     );
