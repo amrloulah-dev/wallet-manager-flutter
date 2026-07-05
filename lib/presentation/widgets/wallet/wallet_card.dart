@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../../data/models/platform_settings_model.dart';
+import '../../../providers/platform_settings_provider.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../../core/enums/wallet_enums.dart';
@@ -28,6 +31,22 @@ class WalletCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final providerColor =
         isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
+
+    final settings = Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+
+    final double sendDailyPercentage = dynamicLimits.dailySend > 0
+        ? (wallet.sendLimits.dailyUsed / dynamicLimits.dailySend * 100).clamp(0.0, 100.0)
+        : 0.0;
+    final double receiveDailyPercentage = dynamicLimits.dailyReceive > 0
+        ? (wallet.receiveLimits.dailyUsed / dynamicLimits.dailyReceive * 100).clamp(0.0, 100.0)
+        : 0.0;
+
+    final String sendDailyWarningLevel = isFrozen
+        ? 'grey'
+        : (sendDailyPercentage >= 90
+            ? 'red'
+            : (sendDailyPercentage >= 70 ? 'yellow' : 'green'));
 
     return Transform.scale(
       scale: 0.90,
@@ -139,17 +158,17 @@ class WalletCard extends StatelessWidget {
               context: context,
               label: l10n.sendDaily,
               used: wallet.getLimits().dailyUsed,
-              limit: wallet.getLimits().dailyLimit,
-              percentage: wallet.getLimits().dailyPercentage,
-              warningLevel: isFrozen ? 'grey' : wallet.sendDailyWarningLevel,
+              limit: dynamicLimits.dailySend,
+              percentage: sendDailyPercentage,
+              warningLevel: sendDailyWarningLevel,
             ),
             const SizedBox(height: 16),
             _buildLimitBar(
               context: context,
               label: l10n.receiveDaily,
               used: wallet.getReceiveLimits().dailyUsed,
-              limit: wallet.getReceiveLimits().dailyLimit,
-              percentage: wallet.getReceiveLimits().dailyPercentage,
+              limit: dynamicLimits.dailyReceive,
+              percentage: receiveDailyPercentage,
               warningLevel: isFrozen ? 'grey' : 'green',
             ),
             const SizedBox(height: 20),

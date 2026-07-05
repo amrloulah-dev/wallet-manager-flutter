@@ -25,6 +25,6 @@
 
 ---
 
-- [ ] **Track: Transaction Engine Dynamic Settings Refactor**
+- [~] **Track: Transaction Engine Dynamic Settings Refactor**
 *Link: [./tracks/transaction_refactor_20260629/](./tracks/transaction_refactor_20260629/)*
 

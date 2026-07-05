@@ -691,8 +691,22 @@
   "wallet_error_limit_reached": "تم الوصول للحد الأقصى للمحافظ.",
   "wallet_error_frozen": "هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية.",
   "wallet_error_subscription_unresolved": "تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.",
-  "overlay_error_amount_limit_instapay": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)",
-  "overlay_error_amount_limit_telecom": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)",
+  "overlay_error_amount_limit_instapay": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})",
+  "@overlay_error_amount_limit_instapay": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "overlay_error_amount_limit_telecom": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})",
+  "@overlay_error_amount_limit_telecom": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "sendLink": "إرسال الرابط",
   "passwordResetEmailSent": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.",
   "weakPasswordException": "كلمة المرور ضعيفة جداً.",
@@ -755,10 +769,31 @@
   },
   "wallet_error_not_found": "المحفظة غير موجودة.",
   "wallet_error_inactive": "لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها.",
-  "wallet_error_instapay_limit": "الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.",
-  "wallet_error_telecom_limit": "الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.",
+  "wallet_error_instapay_limit": "الحد الأقصى للمعاملة الواحدة لإنستاباي هو {limit} جنيه.",
+  "@wallet_error_instapay_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_telecom_limit": "الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو {limit} جنيه.",
+  "@wallet_error_telecom_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "wallet_error_insufficient_balance": "المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.",
-  "wallet_error_instapay_daily_limit": "تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).",
+  "wallet_error_instapay_daily_limit": "تم تجاوز الحد اليومي لمحفظة InstaPay ({limit} جنيه).",
+  "@wallet_error_instapay_daily_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "wallet_error_daily_send_limit": "تم تجاوز الحد اليومي للإرسال لهذه المحفظة.",
   "wallet_error_monthly_send_limit": "تم تجاوز الحد الشهري للإرسال لهذه المحفظة.",
   "wallet_error_daily_receive_limit": "تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.",

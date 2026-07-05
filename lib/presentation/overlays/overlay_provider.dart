@@ -6,12 +6,14 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/core/utils/fee_calculator.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/core/utils/number_parser.dart';
+import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/domain/usecases/overlay_usecase.dart';
 import 'package:walletmanager/core/state/safe_change_notifier.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
 
 class OverlayProvider extends SafeChangeNotifier {
   final LocalStorageService _localStorageService;
@@ -128,14 +130,14 @@ class OverlayProvider extends SafeChangeNotifier {
       String? passedId = data['walletId']?.toString();
       if (passedId != null && passedId.trim().isEmpty) passedId = null;
 
-      final bool exists = _availableWallets.any((w) => w['id'] == passedId);
+      final bool exists = passedId != null && _availableWallets.any((w) => w['id'] == passedId);
 
       if (exists) {
         _selectedWalletId = passedId;
         final selectedWallet =
             _availableWallets.firstWhere((w) => w['id'] == passedId);
         final rawWalletType =
-            selectedWallet['walletType']?.toString() ?? 'vodafone_cash';
+            selectedWallet['walletType']?.toString() ?? selectedWallet['type']?.toString() ?? 'vodafone_cash';
         final walletType = WalletType.fromString(rawWalletType);
         final settings = sl<PlatformSettingsProvider>().settings;
         _commission = FeeCalculator.calculateTransactionFee(
@@ -150,14 +152,27 @@ class OverlayProvider extends SafeChangeNotifier {
               'calculatedCommission=$_commission');
         }
 
-        final isInstaPay = walletType == WalletType.instaPay;
-        final isTelecom =
-            walletType != WalletType.instaPay && walletType != WalletType.other;
+        final wallet = WalletModel.fromWalletStatus(
+          walletId: passedId,
+          storeId: _cachedStoreId ?? '',
+          phoneNumber: selectedWallet['phone']?.toString() ?? '',
+          walletType: rawWalletType,
+          walletStatus: selectedWallet['walletStatus']?.toString() ?? selectedWallet['status']?.toString() ?? 'active',
+          balance: 0.0,
+          createdBy: _cachedUserName ?? 'SMS Auto',
+          settings: settings,
+        );
 
-        if (isInstaPay && _amount > 70000) {
-          _errorMessage = "overlay_error_amount_limit_instapay";
-        } else if (isTelecom && _amount > 60000) {
-          _errorMessage = "overlay_error_amount_limit_telecom";
+        final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+        final isInstaPay = walletType == WalletType.instaPay;
+
+        if (_amount > dynamicLimits.maxPerTransaction) {
+          final formattedLimit = NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction);
+          if (isInstaPay) {
+            _errorMessage = "overlay_error_amount_limit_instapay:$formattedLimit";
+          } else {
+            _errorMessage = "overlay_error_amount_limit_telecom:$formattedLimit";
+          }
         }
       } else {
         _selectedWalletId = null;

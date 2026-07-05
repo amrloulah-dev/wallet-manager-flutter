@@ -73,16 +73,36 @@ void main() {
   });
 
   group('TransactionProvider Dynamic Limits Validation', () {
-    final customSettings = PlatformSettingsModel(
-      newWalletTransactionLimit: 5000.0,
-      newWalletMonthlyLimit: 30000.0,
-      oldWalletTransactionLimit: 40000.0,
-      oldWalletMonthlyLimit: 150000.0,
-      registeredStoreTransactionLimit: 50000.0,
-      registeredStoreMonthlyLimit: 300000.0,
-      instapayTransactionLimit: 80000.0,
-      instapayMonthlyLimit: 300000.0,
-      
+    const customSettings = PlatformSettingsModel(
+      isRegistrationOpen: true,
+      instapayLimits: NetworkLimits(
+        dailyReceive: 80000,
+        dailySend: 80000,
+        maxPerTransaction: 80000.0,
+        monthlyReceive: 300000,
+        monthlySend: 300000.0,
+      ),
+      networkCommercialLimits: NetworkLimits(
+        dailyReceive: 50000,
+        dailySend: 50000,
+        maxPerTransaction: 50000.0,
+        monthlyReceive: 300000,
+        monthlySend: 300000.0,
+      ),
+      networkNewLimits: NetworkLimits(
+        dailyReceive: 5000,
+        dailySend: 5000,
+        maxPerTransaction: 5000.0,
+        monthlyReceive: 30000,
+        monthlySend: 30000.0,
+      ),
+      networkOldLimits: NetworkLimits(
+        dailyReceive: 40000,
+        dailySend: 40000,
+        maxPerTransaction: 40000.0,
+        monthlyReceive: 150000,
+        monthlySend: 150000.0,
+      ),
       minCrossNetworkFee: 1.0,
       maxCrossNetworkFee: 15.0,
       minInstapayFee: 0.5,
@@ -90,7 +110,9 @@ void main() {
       sameNetworkFee: 1.0,
       crossNetworkFeeRate: 0.005,
       instapayFeeRate: 0.001,
-      trialDurationDays: 30,
+      lifetimeCountLimit: 50,
+      lifetimePrice: 2500,
+      proPrice: 1200,
     );
 
     test('should reject debit transaction when amount exceeds dynamic limits', () async {

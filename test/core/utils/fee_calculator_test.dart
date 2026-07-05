@@ -7,26 +7,46 @@ void main() {
   group('FeeCalculator Dynamic Fees', () {
     const defaultSettings = PlatformSettingsModel.defaults();
 
-    final customSettings = PlatformSettingsModel(
-      newWalletTransactionLimit: 10000.0,
-      newWalletMonthlyLimit: 60000.0,
-      oldWalletTransactionLimit: 60000.0,
-      oldWalletMonthlyLimit: 200000.0,
-      registeredStoreTransactionLimit: 60000.0,
-      registeredStoreMonthlyLimit: 400000.0,
-      instapayTransactionLimit: 120000.0,
-      instapayMonthlyLimit: 400000.0,
-      
+    const customSettings = PlatformSettingsModel(
+      isRegistrationOpen: true,
+      instapayLimits: NetworkLimits(
+        dailyReceive: 120000,
+        dailySend: 120000,
+        maxPerTransaction: 120000.0,
+        monthlyReceive: 400000,
+        monthlySend: 400000.0,
+      ),
+      networkCommercialLimits: NetworkLimits(
+        dailyReceive: 200000,
+        dailySend: 200000,
+        maxPerTransaction: 60000.0,
+        monthlyReceive: 500000,
+        monthlySend: 400000.0,
+      ),
+      networkNewLimits: NetworkLimits(
+        dailyReceive: 10000,
+        dailySend: 10000,
+        maxPerTransaction: 10000.0,
+        monthlyReceive: 600000,
+        monthlySend: 60000.0,
+      ),
+      networkOldLimits: NetworkLimits(
+        dailyReceive: 60000,
+        dailySend: 80000,
+        maxPerTransaction: 60000.0,
+        monthlyReceive: 200000,
+        monthlySend: 200000.0,
+      ),
       minCrossNetworkFee: 2.0, // Default is 1.0
       maxCrossNetworkFee: 20.0, // Default is 15.0
       minInstapayFee: 1.0, // Default is 0.5
       maxInstapayFee: 30.0, // Default is 20.0
-      
       sameNetworkFee: 2.0, // Default is 1.0
       crossNetworkFeeRate: 0.01, // Default is 0.005 (0.5%)
       instapayFeeRate: 0.002, // Default is 0.001 (0.1%)
-      
-      trialDurationDays: 30,
+      lifetimeCountLimit: 50,
+      lifetimePrice: 2500,
+      proPrice: 1200,
     );
 
     test('Vodafone same-network fee uses sameNetworkFee settings', () {

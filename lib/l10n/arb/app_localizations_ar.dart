@@ -1859,12 +1859,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.';
 
   @override
-  String get overlay_error_amount_limit_instapay =>
-      'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)';
+  String overlay_error_amount_limit_instapay(String limit) {
+    return 'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ($limit)';
+  }
 
   @override
-  String get overlay_error_amount_limit_telecom =>
-      'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)';
+  String overlay_error_amount_limit_telecom(String limit) {
+    return 'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ($limit)';
+  }
 
   @override
   String get sendLink => 'إرسال الرابط';
@@ -1986,20 +1988,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها.';
 
   @override
-  String get wallet_error_instapay_limit =>
-      'الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.';
+  String wallet_error_instapay_limit(String limit) {
+    return 'الحد الأقصى للمعاملة الواحدة لإنستاباي هو $limit جنيه.';
+  }
 
   @override
-  String get wallet_error_telecom_limit =>
-      'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.';
+  String wallet_error_telecom_limit(String limit) {
+    return 'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو $limit جنيه.';
+  }
 
   @override
   String get wallet_error_insufficient_balance =>
       'المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.';
 
   @override
-  String get wallet_error_instapay_daily_limit =>
-      'تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).';
+  String wallet_error_instapay_daily_limit(String limit) {
+    return 'تم تجاوز الحد اليومي لمحفظة InstaPay ($limit جنيه).';
+  }
 
   @override
   String get wallet_error_daily_send_limit =>

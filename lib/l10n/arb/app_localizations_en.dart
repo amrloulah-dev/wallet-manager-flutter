@@ -1873,12 +1873,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not verify subscription status. Please try again later.';
 
   @override
-  String get overlay_error_amount_limit_instapay =>
-      'Amount exceeds the maximum limit for a single transaction (70,000)';
+  String overlay_error_amount_limit_instapay(String limit) {
+    return 'Amount exceeds the maximum limit for a single transaction ($limit)';
+  }
 
   @override
-  String get overlay_error_amount_limit_telecom =>
-      'Amount exceeds the maximum limit for a single transaction (60,000)';
+  String overlay_error_amount_limit_telecom(String limit) {
+    return 'Amount exceeds the maximum limit for a single transaction ($limit)';
+  }
 
   @override
   String get sendLink => 'Send Link';
@@ -1992,20 +1994,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cannot perform transaction: Wallet is inactive or deleted.';
 
   @override
-  String get wallet_error_instapay_limit =>
-      'Maximum limit per InstaPay transaction is 70,000 EGP.';
+  String wallet_error_instapay_limit(String limit) {
+    return 'Maximum limit per InstaPay transaction is $limit EGP.';
+  }
 
   @override
-  String get wallet_error_telecom_limit =>
-      'Maximum limit per mobile wallet transaction is 60,000 EGP.';
+  String wallet_error_telecom_limit(String limit) {
+    return 'Maximum limit per mobile wallet transaction is $limit EGP.';
+  }
 
   @override
   String get wallet_error_insufficient_balance =>
       'Amount to send (with commission) exceeds available balance.';
 
   @override
-  String get wallet_error_instapay_daily_limit =>
-      'Daily limit for InstaPay wallet exceeded (120,000 EGP).';
+  String wallet_error_instapay_daily_limit(String limit) {
+    return 'Daily limit for InstaPay wallet exceeded ($limit EGP).';
+  }
 
   @override
   String get wallet_error_daily_send_limit =>

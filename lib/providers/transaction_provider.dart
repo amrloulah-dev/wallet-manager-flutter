@@ -72,8 +72,6 @@ class TransactionProvider extends BaseProvider {
   bool _fetchShieldActive = false;
   bool _hasFetchedInitial = false;
 
-
-
   void updateWalletProvider(WalletProvider walletProvider) {
     _walletProvider = walletProvider;
   }
@@ -435,16 +433,14 @@ class TransactionProvider extends BaseProvider {
       final isReceive = transactionType == TransactionType.credit;
       final isInstaPay = wallet.walletType == WalletType.instaPay;
 
-      final settings = _platformSettingsProvider?.settings ?? const PlatformSettingsModel.defaults();
-      final double txLimit = isInstaPay
-          ? settings.instapayTransactionLimit
-          : (wallet.walletStatus == WalletStatus.suspended
-              ? settings.registeredStoreTransactionLimit
-              : (wallet.walletStatus == WalletStatus.active
-                  ? settings.newWalletTransactionLimit
-                  : settings.oldWalletTransactionLimit));
+      final settings = _platformSettingsProvider?.settings ??
+          const PlatformSettingsModel.defaults();
+      final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
-      if (amount > txLimit) {
+      debugPrint(
+          '🔥 CURRENT TX LIMIT: ${dynamicLimits.maxPerTransaction} | LOADED FROM SETTINGS: ${settings.toJson()}');
+
+      if (amount > dynamicLimits.maxPerTransaction) {
         if (isInstaPay) {
           throw ValidationException('wallet_error_instapay_limit');
         } else {
@@ -458,21 +454,17 @@ class TransactionProvider extends BaseProvider {
           throw ValidationException('wallet_error_insufficient_balance');
         }
 
-        if (wallet.sendLimits.dailyUsed + amount >
-            wallet.getLimits().dailyLimit) {
+        if (wallet.sendLimits.dailyUsed + amount > dynamicLimits.dailySend) {
           throw ValidationException('wallet_error_daily_send_limit');
         }
-        if (wallet.sendLimits.monthlyUsed + amount >
-            wallet.getLimits().monthlyLimit) {
+        if (wallet.sendLimits.monthlyUsed + amount > dynamicLimits.monthlySend) {
           throw ValidationException('wallet_error_monthly_send_limit');
         }
       } else if (isReceive) {
-        if (wallet.receiveLimits.dailyUsed + amount >
-            wallet.getReceiveLimits().dailyLimit) {
+        if (wallet.receiveLimits.dailyUsed + amount > dynamicLimits.dailyReceive) {
           throw ValidationException('wallet_error_daily_receive_limit');
         }
-        if (wallet.receiveLimits.monthlyUsed + amount >
-            wallet.getReceiveLimits().monthlyLimit) {
+        if (wallet.receiveLimits.monthlyUsed + amount > dynamicLimits.monthlyReceive) {
           throw ValidationException('wallet_error_monthly_receive_limit');
         }
       }

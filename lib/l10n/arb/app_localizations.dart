@@ -3641,14 +3641,14 @@ abstract class AppLocalizations {
   /// No description provided for @overlay_error_amount_limit_instapay.
   ///
   /// In ar, this message translates to:
-  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (70,000)'**
-  String get overlay_error_amount_limit_instapay;
+  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})'**
+  String overlay_error_amount_limit_instapay(String limit);
 
   /// No description provided for @overlay_error_amount_limit_telecom.
   ///
   /// In ar, this message translates to:
-  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة (60,000)'**
-  String get overlay_error_amount_limit_telecom;
+  /// **'المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})'**
+  String overlay_error_amount_limit_telecom(String limit);
 
   /// No description provided for @sendLink.
   ///
@@ -3773,14 +3773,14 @@ abstract class AppLocalizations {
   /// No description provided for @wallet_error_instapay_limit.
   ///
   /// In ar, this message translates to:
-  /// **'الحد الأقصى للمعاملة الواحدة لإنستاباي هو 70,000 جنيه.'**
-  String get wallet_error_instapay_limit;
+  /// **'الحد الأقصى للمعاملة الواحدة لإنستاباي هو {limit} جنيه.'**
+  String wallet_error_instapay_limit(String limit);
 
   /// No description provided for @wallet_error_telecom_limit.
   ///
   /// In ar, this message translates to:
-  /// **'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو 60,000 جنيه.'**
-  String get wallet_error_telecom_limit;
+  /// **'الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو {limit} جنيه.'**
+  String wallet_error_telecom_limit(String limit);
 
   /// No description provided for @wallet_error_insufficient_balance.
   ///
@@ -3791,8 +3791,8 @@ abstract class AppLocalizations {
   /// No description provided for @wallet_error_instapay_daily_limit.
   ///
   /// In ar, this message translates to:
-  /// **'تم تجاوز الحد اليومي لمحفظة InstaPay (120,000 جنيه).'**
-  String get wallet_error_instapay_daily_limit;
+  /// **'تم تجاوز الحد اليومي لمحفظة InstaPay ({limit} جنيه).'**
+  String wallet_error_instapay_daily_limit(String limit);
 
   /// No description provided for @wallet_error_daily_send_limit.
   ///

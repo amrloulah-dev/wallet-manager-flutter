@@ -367,28 +367,21 @@ class WalletModel {
     final typeEnum = WalletType.fromString(walletType);
     final statusEnum = WalletStatus.fromString(walletStatus);
 
-    final isNew = walletStatus == 'new';
-    final isInstapay = typeEnum == WalletType.instaPay;
-
     final resolvedSettings = settings ??
         (sl.isRegistered<PlatformSettingsProvider>()
             ? sl<PlatformSettingsProvider>().settings
             : const PlatformSettingsModel.defaults());
-    final double dailyLimit = isInstapay
-        ? resolvedSettings.instapayTransactionLimit
-        : (isNew
-            ? resolvedSettings.newWalletTransactionLimit
-            : (walletStatus == 'registered_store'
-                ? resolvedSettings.registeredStoreTransactionLimit
-                : resolvedSettings.oldWalletTransactionLimit));
 
-    final double monthlyLimit = isInstapay
-        ? resolvedSettings.instapayMonthlyLimit
-        : (isNew
-            ? resolvedSettings.newWalletMonthlyLimit
-            : (walletStatus == 'registered_store'
-                ? resolvedSettings.registeredStoreMonthlyLimit
-                : resolvedSettings.oldWalletMonthlyLimit));
+    final NetworkLimits networkLimits;
+    if (typeEnum == WalletType.instaPay) {
+      networkLimits = resolvedSettings.instapayLimits;
+    } else if (statusEnum == WalletStatus.suspended || walletStatus == 'registered_store') {
+      networkLimits = resolvedSettings.networkCommercialLimits;
+    } else if (statusEnum == WalletStatus.active || walletStatus == 'new') {
+      networkLimits = resolvedSettings.networkNewLimits;
+    } else {
+      networkLimits = resolvedSettings.networkOldLimits;
+    }
 
     return WalletModel(
       walletId: walletId,
@@ -405,15 +398,30 @@ class WalletModel {
       lastDailyReset: now,
       lastMonthlyReset: now,
       sendLimits: WalletLimits(
-        dailyLimit: dailyLimit,
-        monthlyLimit: monthlyLimit,
+        dailyLimit: networkLimits.dailySend,
+        monthlyLimit: networkLimits.monthlySend,
       ),
       receiveLimits: WalletLimits(
-        dailyLimit: dailyLimit,
-        monthlyLimit: monthlyLimit,
+        dailyLimit: networkLimits.dailyReceive,
+        monthlyLimit: networkLimits.monthlyReceive,
       ),
       stats: WalletStats(),
     );
+  }
+
+  NetworkLimits getDynamicNetworkLimits(PlatformSettingsModel settings) {
+    final isInstapay = walletType == WalletType.instaPay;
+    if (isInstapay) return settings.instapayLimits;
+    
+    if (walletStatus == WalletStatus.suspended) {
+      return settings.networkCommercialLimits;
+    }
+    
+    if (walletStatus == WalletStatus.active) {
+      return settings.networkNewLimits;
+    } else {
+      return settings.networkOldLimits;
+    }
   }
 
   bool get needsDailyReset {

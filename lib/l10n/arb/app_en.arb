@@ -685,8 +685,22 @@
   "wallet_error_limit_reached": "Wallet limit reached.",
   "wallet_error_frozen": "This wallet is frozen due to exceeding your current plan limit.",
   "wallet_error_subscription_unresolved": "Could not verify subscription status. Please try again later.",
-  "overlay_error_amount_limit_instapay": "Amount exceeds the maximum limit for a single transaction (70,000)",
-  "overlay_error_amount_limit_telecom": "Amount exceeds the maximum limit for a single transaction (60,000)",
+  "overlay_error_amount_limit_instapay": "Amount exceeds the maximum limit for a single transaction ({limit})",
+  "@overlay_error_amount_limit_instapay": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "overlay_error_amount_limit_telecom": "Amount exceeds the maximum limit for a single transaction ({limit})",
+  "@overlay_error_amount_limit_telecom": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "sendLink": "Send Link",
   "passwordResetEmailSent": "Reset link has been sent to your email.",
   "weakPasswordException": "The password is too weak.",
@@ -762,10 +776,31 @@
   },
   "wallet_error_not_found": "Wallet not found.",
   "wallet_error_inactive": "Cannot perform transaction: Wallet is inactive or deleted.",
-  "wallet_error_instapay_limit": "Maximum limit per InstaPay transaction is 70,000 EGP.",
-  "wallet_error_telecom_limit": "Maximum limit per mobile wallet transaction is 60,000 EGP.",
+  "wallet_error_instapay_limit": "Maximum limit per InstaPay transaction is {limit} EGP.",
+  "@wallet_error_instapay_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_telecom_limit": "Maximum limit per mobile wallet transaction is {limit} EGP.",
+  "@wallet_error_telecom_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "wallet_error_insufficient_balance": "Amount to send (with commission) exceeds available balance.",
-  "wallet_error_instapay_daily_limit": "Daily limit for InstaPay wallet exceeded (120,000 EGP).",
+  "wallet_error_instapay_daily_limit": "Daily limit for InstaPay wallet exceeded ({limit} EGP).",
+  "@wallet_error_instapay_daily_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "wallet_error_daily_send_limit": "Daily sending limit exceeded for this wallet.",
   "wallet_error_monthly_send_limit": "Monthly sending limit exceeded for this wallet.",
   "wallet_error_daily_receive_limit": "Daily receiving limit exceeded for this wallet.",

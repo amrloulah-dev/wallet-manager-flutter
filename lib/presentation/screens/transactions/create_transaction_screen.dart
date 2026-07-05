@@ -12,6 +12,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
+import '../../../providers/platform_settings_provider.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../domain/usecases/transaction_fee_calculator.dart';
@@ -531,13 +532,31 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         final isSend =
             _transactionType == TransactionType.debit; // ENUM refactor
         final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
+
+        // Fetch dynamic limits matching the wallet's current type and status
+        final settings = context.read<PlatformSettingsProvider>().settings;
+        final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+
+        final dailyLimit = isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
+        final monthlyLimit = isSend ? dynamicLimits.monthlySend : dynamicLimits.monthlyReceive;
+
         final newUsed = limits.dailyUsed + amount;
         final newMonthlyUsed = limits.monthlyUsed + amount;
 
         // Check individual limits
-        final bool dailyExceeded = newUsed > limits.dailyLimit;
-        final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
+        final bool dailyExceeded = newUsed > dailyLimit;
+        final bool monthlyExceeded = newMonthlyUsed > monthlyLimit;
         final bool willExceed = dailyExceeded || monthlyExceeded;
+
+        final double dailyPercentage = dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
+        final double monthlyPercentage = monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
+
+        final dailyWarningLevel = dailyExceeded
+            ? 'red'
+            : (dailyPercentage >= 70 ? 'yellow' : 'green');
+        final monthlyWarningLevel = monthlyExceeded
+            ? 'red'
+            : (monthlyPercentage >= 70 ? 'yellow' : 'green');
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -576,21 +595,17 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               WalletLimitBar(
                 label: l10n.dailyLimitAfterTransaction,
                 used: newUsed,
-                limit: limits.dailyLimit,
-                percentage: limits.dailyLimit > 0
-                    ? (newUsed / limits.dailyLimit) * 100
-                    : 0,
-                warningLevel: dailyExceeded ? 'red' : 'green',
+                limit: dailyLimit,
+                percentage: dailyPercentage,
+                warningLevel: dailyWarningLevel,
               ),
               const SizedBox(height: 16),
               WalletLimitBar(
                 label: l10n.monthlyLimitAfterTransaction,
                 used: newMonthlyUsed,
-                limit: limits.monthlyLimit,
-                percentage: limits.monthlyLimit > 0
-                    ? (newMonthlyUsed / limits.monthlyLimit) * 100
-                    : 0,
-                warningLevel: monthlyExceeded ? 'red' : 'green',
+                limit: monthlyLimit,
+                percentage: monthlyPercentage,
+                warningLevel: monthlyWarningLevel,
               ),
               if (willExceed)
                 Padding(

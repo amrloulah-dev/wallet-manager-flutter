@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
@@ -190,7 +191,7 @@ void main() {
       when(() => mockWalletSnap.data())
           .thenReturn(createValidWalletData(balance: 99.99));
 
-      await service.validateAndSave(mockTxModel);
+      await service.validateAndSave(mockTxModel, const PlatformSettingsModel.defaults());
     });
 
     test(
@@ -200,7 +201,7 @@ void main() {
           .thenReturn(createValidWalletData(balance: 50.0));
 
       expect(
-        () => service.validateAndSave(mockTxModel),
+        () => service.validateAndSave(mockTxModel, const PlatformSettingsModel.defaults()),
         throwsA(isA<ValidationException>()),
       );
     });

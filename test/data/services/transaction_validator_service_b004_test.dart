@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
@@ -82,7 +83,7 @@ void main() {
     );
 
     try {
-      await service.validateAndSave(transaction);
+      await service.validateAndSave(transaction, const PlatformSettingsModel.defaults());
       fail('Should have thrown ValidationException for inactive wallet');
     } on ValidationException catch (e) {
       expect(e.message, equals('wallet_error_inactive'));

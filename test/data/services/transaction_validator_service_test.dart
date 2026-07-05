@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:walletmanager/data/services/transaction_validator_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/data/models/wallet_model.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
@@ -71,7 +73,7 @@ void main() {
       );
 
       // Execute
-      await service.validateAndSave(txModel);
+      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
 
       // Verify final state
       final walletSnap = await fakeFirestore
@@ -135,7 +137,7 @@ void main() {
       );
 
       // Execute
-      await service.validateAndSave(txModel);
+      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
 
       // Verify final state
       final walletSnap = await fakeFirestore
@@ -197,7 +199,7 @@ void main() {
         paymentStatus: PaymentStatus.paid,
       );
 
-      await service.validateAndSave(txModel);
+      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
 
       final todayDate = DateHelper.getCurrentDateString();
       final dailyStatsSnap = await fakeFirestore
