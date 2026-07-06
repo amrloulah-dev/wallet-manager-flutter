@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/presentation/overlays/transaction_overlay_screen.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'app.dart';
 import 'data/services/firebase_service.dart';
 import 'data/services/local_storage_service.dart';
@@ -12,7 +13,6 @@ import 'core/services/background_service.dart';
 import 'core/errors/app_error_handler.dart';
 import 'core/errors/error_severity.dart';
 import 'l10n/arb/app_localizations.dart';
-import 'providers/platform_settings_provider.dart';
 
 void main() async {
   runZonedGuarded(() async {

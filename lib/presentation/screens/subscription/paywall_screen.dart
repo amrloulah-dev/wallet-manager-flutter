@@ -290,7 +290,7 @@ class PaywallScreen extends StatelessWidget {
                       child: Text(
                           isDisabled ? loc.unavailable : loc.subscribeNow,
                           style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                              fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white)),
                     ),
                   ),
                 ],
