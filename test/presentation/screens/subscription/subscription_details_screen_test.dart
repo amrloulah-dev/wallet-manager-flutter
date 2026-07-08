@@ -55,7 +55,6 @@ void main() {
           smsEnabled: true,
         ),
         settings: StoreSettings(),
-        stats: StoreStats(),
       ),
     );
   });

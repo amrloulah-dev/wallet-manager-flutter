@@ -26,7 +26,6 @@ class StoreModel {
 
   final StoreSubscription subscription;
   final StoreSettings settings;
-  final StoreStats stats;
   final Map<String, dynamic>? legacyData;
 
   StoreModel({
@@ -43,7 +42,6 @@ class StoreModel {
     this.updatedAt,
     required this.subscription,
     required this.settings,
-    required this.stats,
     this.legacyData,
   });
 
@@ -81,9 +79,6 @@ class StoreModel {
       settings: data['settings'] is Map<String, dynamic>
           ? StoreSettings.fromMap(data['settings'] as Map<String, dynamic>)
           : StoreSettings(),
-      stats: data['stats'] is Map<String, dynamic>
-          ? StoreStats.fromMap(data['stats'] as Map<String, dynamic>)
-          : StoreStats(),
       legacyData: data['legacyData'] is Map<String, dynamic>
           ? data['legacyData'] as Map<String, dynamic>
           : {
@@ -122,7 +117,6 @@ class StoreModel {
           : FieldValue.serverTimestamp(),
       'subscription': subscription.toMap(),
       'settings': settings.toMap(),
-      'stats': stats.toMap(),
       if (legacyData != null && legacyData!.isNotEmpty)
         'legacyData': legacyData,
     };
@@ -158,7 +152,6 @@ class StoreModel {
     DateTime? updatedAt,
     StoreSubscription? subscription,
     StoreSettings? settings,
-    StoreStats? stats,
     Map<String, dynamic>? legacyData,
   }) {
     return StoreModel(
@@ -175,7 +168,6 @@ class StoreModel {
       updatedAt: updatedAt ?? this.updatedAt,
       subscription: subscription ?? this.subscription,
       settings: settings ?? this.settings,
-      stats: stats ?? this.stats,
       legacyData: legacyData ?? this.legacyData,
     );
   }
@@ -334,69 +326,6 @@ class StoreSettings {
     return StoreSettings(
       currency: currency ?? this.currency,
       timezone: timezone ?? this.timezone,
-    );
-  }
-}
-
-class StoreStats {
-  final int totalWallets;
-  final int activeWallets;
-  final int totalTransactionsToday;
-  final double totalCommissionToday;
-  final double totalServiceFeeToday;
-  final DateTime? lastUpdated; // Made nullable
-
-  double get totalEarningsToday => totalCommissionToday + totalServiceFeeToday;
-
-  StoreStats({
-    this.totalWallets = 0,
-    this.activeWallets = 0,
-    this.totalTransactionsToday = 0,
-    this.totalCommissionToday = 0.0,
-    this.totalServiceFeeToday = 0.0,
-    this.lastUpdated,
-  });
-
-  factory StoreStats.fromMap(Map<String, dynamic> map) {
-    final lastUpdated = (map['lastUpdated'] as Timestamp?)?.toDate();
-    return StoreStats(
-      totalWallets: NumberParser.toInt(map['totalWallets']),
-      activeWallets: NumberParser.toInt(map['activeWallets']),
-      totalTransactionsToday: NumberParser.toInt(map['totalTransactionsToday']),
-      totalCommissionToday: NumberParser.toDouble(map['totalCommissionToday']),
-      totalServiceFeeToday: NumberParser.toDouble(map['totalServiceFeeToday']),
-      lastUpdated: lastUpdated,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'totalWallets': totalWallets,
-      'activeWallets': activeWallets,
-      'totalTransactionsToday': totalTransactionsToday,
-      'totalCommissionToday': totalCommissionToday,
-      'totalServiceFeeToday': totalServiceFeeToday,
-      'lastUpdated':
-          lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
-    };
-  }
-
-  StoreStats copyWith({
-    int? totalWallets,
-    int? activeWallets,
-    int? totalTransactionsToday,
-    double? totalCommissionToday,
-    double? totalServiceFeeToday,
-    DateTime? lastUpdated,
-  }) {
-    return StoreStats(
-      totalWallets: totalWallets ?? this.totalWallets,
-      activeWallets: activeWallets ?? this.activeWallets,
-      totalTransactionsToday:
-          totalTransactionsToday ?? this.totalTransactionsToday,
-      totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
-      totalServiceFeeToday: totalServiceFeeToday ?? this.totalServiceFeeToday,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
 }

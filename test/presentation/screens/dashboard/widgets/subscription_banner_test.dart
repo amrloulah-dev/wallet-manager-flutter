@@ -72,7 +72,6 @@ void main() {
             maxEmployees: 1,
             smsEnabled: false),
         settings: StoreSettings(),
-        stats: StoreStats(),
       ));
 
       await tester.pumpWidget(buildTestableWidget());
@@ -98,7 +97,6 @@ void main() {
             maxEmployees: 1,
             smsEnabled: false),
         settings: StoreSettings(),
-        stats: StoreStats(),
       ));
 
       await tester.pumpWidget(buildTestableWidget());
@@ -125,7 +123,6 @@ void main() {
             maxEmployees: 1,
             smsEnabled: false),
         settings: StoreSettings(),
-        stats: StoreStats(),
       ));
 
       await tester.pumpWidget(buildTestableWidget());
@@ -152,7 +149,6 @@ void main() {
             maxEmployees: 1,
             smsEnabled: false),
         settings: StoreSettings(),
-        stats: StoreStats(),
       ));
 
       await tester.pumpWidget(buildTestableWidget());

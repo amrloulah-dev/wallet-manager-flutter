@@ -149,7 +149,6 @@ void main() {
         smsEnabled: false,
       ),
       settings: StoreSettings(currency: 'SAR', timezone: 'Asia/Riyadh'),
-      stats: StoreStats(lastUpdated: DateTime.now()),
     );
 
     mockEmployee = UserModel(

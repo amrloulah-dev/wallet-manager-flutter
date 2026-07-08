@@ -229,49 +229,7 @@ class StoreRepository {
     await updateStore(storeId, data);
   }
 
-  /// Updates the statistics for a specific store.
-  Future<void> updateStoreStats({
-    required String storeId,
-    int? incrementTotalWallets,
-    int? incrementActiveWallets,
-    int? incrementTotalTransactionsToday,
-    double? incrementTotalCommissionToday,
-  }) async {
-    try {
-      final Map<String, dynamic> statsData = {
-        '${FirebaseConstants.stats}.lastUpdated': FieldValue.serverTimestamp(),
-      };
-      if (incrementTotalWallets != null) {
-        statsData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.totalWallets}'] =
-            FieldValue.increment(incrementTotalWallets);
-      }
-      if (incrementActiveWallets != null) {
-        statsData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.activeWallets}'] =
-            FieldValue.increment(incrementActiveWallets);
-      }
-      if (incrementTotalTransactionsToday != null) {
-        statsData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.totalTransactionsToday}'] =
-            FieldValue.increment(incrementTotalTransactionsToday);
-      }
-      if (incrementTotalCommissionToday != null) {
-        statsData[
-                '${FirebaseConstants.stats}.${FirebaseConstants.totalCommissionToday}'] =
-            FieldValue.increment(incrementTotalCommissionToday);
-      }
-      await _storesCollection.doc(storeId).update(statsData);
-    } on FirebaseException catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
-      throw ServerException('store_error_update_stats_failed', code: e.code);
-    } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository.updateStoreStats');
-      throw ServerException('store_error_unexpected');
-    }
-  }
+
 
   // ===========================
   // Password Methods

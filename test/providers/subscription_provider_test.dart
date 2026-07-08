@@ -67,7 +67,6 @@ void main() {
       ownerEmail: 'owner@test.com',
       subscription: sub,
       settings: StoreSettings(),
-      stats: StoreStats(),
     );
 
     when(() => mockAuthProvider.currentStore).thenReturn(store);
@@ -103,7 +102,6 @@ void main() {
       ownerEmail: 'owner@test.com',
       subscription: sub,
       settings: StoreSettings(),
-      stats: StoreStats(),
     );
 
     when(() => mockAuthProvider.currentStore).thenReturn(store);
@@ -140,7 +138,6 @@ void main() {
         ownerEmail: 'owner@test.com',
         subscription: sub,
         settings: StoreSettings(),
-        stats: StoreStats(),
       );
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);
@@ -178,7 +175,6 @@ void main() {
         ownerEmail: 'owner@test.com',
         subscription: sub,
         settings: StoreSettings(),
-        stats: StoreStats(),
       );
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);

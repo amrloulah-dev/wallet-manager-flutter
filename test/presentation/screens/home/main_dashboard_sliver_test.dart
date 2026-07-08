@@ -51,13 +51,6 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
           currency: 'EGP',
           timezone: 'Africa/Cairo',
         ),
-        stats: StoreStats(
-          totalWallets: 0,
-          activeWallets: 0,
-          totalTransactionsToday: 0,
-          totalCommissionToday: 0.0,
-          totalServiceFeeToday: 0.0,
-        ),
         createdAt: DateTime.now(),
       );
   @override

@@ -73,13 +73,6 @@ void main() {
           currency: 'USD',
           timezone: 'UTC',
         ),
-        stats: StoreStats(
-          totalWallets: 0,
-          activeWallets: 0,
-          totalTransactionsToday: 0,
-          totalCommissionToday: 0.0,
-          lastUpdated: now,
-        ),
       ),
     );
     when(() => mockAuthProvider.isTrial).thenReturn(true);

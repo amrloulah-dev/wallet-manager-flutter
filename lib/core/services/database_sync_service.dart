@@ -412,13 +412,6 @@ class DatabaseSyncService {
       createdAt: DateTime.now(),
       subscription: placeholderSubscription,
       settings: StoreSettings(),
-      stats: StoreStats(
-        totalWallets: 0,
-        activeWallets: 0,
-        totalTransactionsToday: 0,
-        totalCommissionToday: 0.0,
-        lastUpdated: DateTime.now(),
-      ),
     );
 
     final newOwner = UserModel(

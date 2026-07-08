@@ -213,7 +213,6 @@ void main() {
           smsEnabled: true,
         ),
         settings: StoreSettings(),
-        stats: StoreStats(lastUpdated: now),
       );
 
       final firestoreMap = store.toFirestore();

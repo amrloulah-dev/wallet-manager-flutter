@@ -94,7 +94,6 @@ void main() {
         smsEnabled: true,
       ),
       settings: StoreSettings(),
-      stats: StoreStats(),
     );
 
     await tester.pumpWidget(buildTestableWidget(expiredStore));
