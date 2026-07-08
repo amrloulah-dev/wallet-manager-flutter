@@ -24,6 +24,7 @@ class MockDocumentSnapshot extends Mock
 class MockStatsRepository extends Mock implements StatsRepository {}
 class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
 class MockCacheManager extends Mock implements CacheManager {}
+class MockTransaction extends Mock implements Transaction {}
 class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
@@ -36,6 +37,7 @@ void main() {
   late MockStatsRepository mockStatsRepository;
   late MockPlatformSettingsProvider mockSettingsProvider;
   late MockCacheManager mockCacheManager;
+  late MockTransaction mockTransaction;
   late TransactionRepository repository;
 
   setUpAll(() {
@@ -54,6 +56,19 @@ void main() {
     mockStatsRepository = MockStatsRepository();
     mockSettingsProvider = MockPlatformSettingsProvider();
     mockCacheManager = MockCacheManager();
+    mockTransaction = MockTransaction();
+
+    // Mock runTransaction
+    when(() => mockFirestore.runTransaction<void>(any()))
+        .thenAnswer((invocation) async {
+      final transactionHandler = invocation.positionalArguments[0]
+          as Future<void> Function(Transaction);
+      await transactionHandler(mockTransaction);
+    });
+    when(() => mockTransaction.get<Map<String, dynamic>>(any())).thenAnswer((_) async => mockWalletSnap);
+    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any())).thenReturn(mockTransaction);
+    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any(), any())).thenReturn(mockTransaction);
+    when(() => mockTransaction.update(any(), any())).thenReturn(mockTransaction);
 
     // Register PlatformSettingsProvider in sl for WalletModel defaults resolution
     if (sl.isRegistered<PlatformSettingsProvider>()) {
@@ -122,18 +137,15 @@ void main() {
 
       // Assert
       // Verify stats/global path set operation is called
-      verify(() => mockFirestore.doc('stores/test_store/stats/global')).called(1);
+      verify(() => mockFirestore.doc('stats/global')).called(1);
       
-      // Verify that the batch.set is called for the global stats document
+      // Verify that the transaction.set is called for the global stats document
       // with totalTransactions incremented and SetOptions(merge: true)
-      verify(() => mockBatch.set<Map<String, dynamic>>(
+      verify(() => mockTransaction.set<Map<String, dynamic>>(
         any(that: isA<DocumentReference<Map<String, dynamic>>>()),
         any(that: equals({'totalTransactions': FieldValue.increment(1)})),
         any(that: isA<SetOptions>()),
       )).called(1);
-      
-      // Verify batch commit
-      verify(() => mockBatch.commit()).called(1);
     });
   });
 }

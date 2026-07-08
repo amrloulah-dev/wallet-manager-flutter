@@ -45,8 +45,9 @@ void main() {
       crossNetworkFeeRate: 0.01, // Default is 0.005 (0.5%)
       instapayFeeRate: 0.002, // Default is 0.001 (0.1%)
       lifetimeCountLimit: 50,
-      lifetimePrice: 2500,
-      proPrice: 1200,
+      gracePeriodHours: 48,
+      trialDays: 14,
+      plans: const {},
     );
 
     test('Vodafone same-network fee uses sameNetworkFee settings', () {

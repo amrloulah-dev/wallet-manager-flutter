@@ -1,118 +1,146 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
+import 'package:walletmanager/data/models/subscription_plan_model.dart';
 
 void main() {
   group('PlatformSettingsModel', () {
-    test('fromJson creates correct model with valid inputs', () {
+    test('fromJson creates correct model with new format JSON', () {
       final json = {
+        'isRegistrationOpen': true,
         'limits': {
-          'newWalletTransactionLimit': 15000.0,
-          'newWalletMonthlyLimit': 75000.0,
-          'oldWalletTransactionLimit': 80000.0,
-          'oldWalletMonthlyLimit': 250000.0,
-          'registeredStoreTransactionLimit': 90000.0,
-          'registeredStoreMonthlyLimit': 500000.0,
-          'instapayTransactionLimit': 150000.0,
-          'instapayMonthlyLimit': 600000.0,
+          'instapay': {
+            'dailyReceive': 100000.0,
+            'dailySend': 100000.0,
+            'maxPerTransaction': 50000.0,
+            'monthlyReceive': 300000.0,
+            'monthlySend': 300000.0,
+          },
         },
         'feeLimits': {
-          'minCrossNetworkFee': 2.0,
-          'maxCrossNetworkFee': 20.0,
-          'minInstapayFee': 1.0,
-          'maxInstapayFee': 30.0,
+          'networks': {
+            'min': 2.0,
+            'max': 20.0,
+          },
+          'instapay': {
+            'min': 1.0,
+            'max': 30.0,
+          },
         },
         'serviceFees': {
-          'sameNetworkFee': 1.5,
-          'crossNetworkFeeRate': 0.007,
-          'instapayFeeRate': 0.002,
+          'sameNetwork': 1.5,
+          'crossNetwork': 0.007,
+          'instapay': 0.002,
         },
         'subscriptions': {
-          'trialDurationDays': 45,
+          'gracePeriodHours': 72,
+          'trialDays': 30,
+          'lifetimeCountLimit': 100,
+          'plans': {
+            'pro': {
+              'name': 'Pro Plan',
+              'description': 'Description',
+              'isActive': true,
+              'price': 150.0,
+              'maxWallets': 10,
+              'maxEmployees': 5,
+              'smsEnabled': true,
+            }
+          }
         }
       };
 
       final model = PlatformSettingsModel.fromJson(json);
 
-      expect(model.newWalletTransactionLimit, 15000.0);
-      expect(model.newWalletMonthlyLimit, 75000.0);
-      expect(model.oldWalletTransactionLimit, 80000.0);
-      expect(model.oldWalletMonthlyLimit, 250000.0);
-      expect(model.registeredStoreTransactionLimit, 90000.0);
-      expect(model.registeredStoreMonthlyLimit, 500000.0);
-      expect(model.instapayTransactionLimit, 150000.0);
-      expect(model.instapayMonthlyLimit, 600000.0);
-
+      expect(model.isRegistrationOpen, isTrue);
+      expect(model.instapayLimits.maxPerTransaction, 50000.0);
       expect(model.minCrossNetworkFee, 2.0);
-      expect(model.maxCrossNetworkFee, 20.0);
-      expect(model.minInstapayFee, 1.0);
-      expect(model.maxInstapayFee, 30.0);
-
       expect(model.sameNetworkFee, 1.5);
-      expect(model.crossNetworkFeeRate, 0.007);
-      expect(model.instapayFeeRate, 0.002);
-
-      expect(model.trialDurationDays, 45);
+      
+      // New global subscription fields
+      expect(model.gracePeriodHours, 72);
+      expect(model.trialDays, 30);
+      expect(model.lifetimeCountLimit, 100);
+      
+      // Plans map
+      expect(model.plans.containsKey('pro'), isTrue);
+      expect(model.plans['pro']!.name, equals('Pro Plan'));
+      expect(model.plans['pro']!.price, equals(150.0));
+      expect(model.plans['pro']!.maxWallets, equals(10));
     });
 
-    test('fromJson falls back to safe defaults when inputs are empty or null', () {
-      final model = PlatformSettingsModel.fromJson({});
-
-      expect(model.newWalletTransactionLimit, 10000.0);
-      expect(model.newWalletMonthlyLimit, 60000.0);
-      expect(model.oldWalletTransactionLimit, 60000.0);
-      expect(model.oldWalletMonthlyLimit, 200000.0);
-      expect(model.registeredStoreTransactionLimit, 60000.0);
-      expect(model.registeredStoreMonthlyLimit, 400000.0);
-      expect(model.instapayTransactionLimit, 120000.0);
-      expect(model.instapayMonthlyLimit, 400000.0);
-
-      expect(model.minCrossNetworkFee, 1.0);
-      expect(model.maxCrossNetworkFee, 15.0);
-      expect(model.minInstapayFee, 0.5);
-      expect(model.maxInstapayFee, 20.0);
-
-      expect(model.sameNetworkFee, 1.0);
-      expect(model.crossNetworkFeeRate, 0.005);
-      expect(model.instapayFeeRate, 0.001);
-
-      expect(model.trialDurationDays, 30);
-    });
-
-    test('toJson serializes correctly', () {
+    test('fromJson handles old format JSON and falls back to defaults', () {
       final json = {
-        'limits': {
-          'newWalletTransactionLimit': 15000.0,
-          'newWalletMonthlyLimit': 75000.0,
-          'oldWalletTransactionLimit': 80000.0,
-          'oldWalletMonthlyLimit': 250000.0,
-          'registeredStoreTransactionLimit': 90000.0,
-          'registeredStoreMonthlyLimit': 500000.0,
-          'instapayTransactionLimit': 150000.0,
-          'instapayMonthlyLimit': 600000.0,
-        },
-        'feeLimits': {
-          'minCrossNetworkFee': 2.0,
-          'maxCrossNetworkFee': 20.0,
-          'minInstapayFee': 1.0,
-          'maxInstapayFee': 30.0,
-        },
-        'serviceFees': {
-          'sameNetworkFee': 1.5,
-          'crossNetworkFeeRate': 0.007,
-          'instapayFeeRate': 0.002,
-        },
         'subscriptions': {
-          'trialDurationDays': 45,
+          // Old legacy fields
+          'proPrice': 1200,
+          'lifetimePrice': 2500,
+          'lifetimeCountLimit': 50,
         }
       };
 
       final model = PlatformSettingsModel.fromJson(json);
-      final serialized = model.toJson();
 
-      expect(serialized['limits']['newWalletTransactionLimit'], 15000.0);
-      expect(serialized['feeLimits']['minCrossNetworkFee'], 2.0);
-      expect(serialized['serviceFees']['sameNetworkFee'], 1.5);
-      expect(serialized['subscriptions']['trialDurationDays'], 45);
+      // Should default gracePeriodHours and trialDays safely
+      expect(model.gracePeriodHours, equals(48));
+      expect(model.trialDays, equals(14));
+      expect(model.lifetimeCountLimit, equals(50));
+      expect(model.plans, isEmpty);
+    });
+
+    test('defaults() constructor provides expected initial values', () {
+      const model = PlatformSettingsModel.defaults();
+
+      expect(model.isRegistrationOpen, isTrue);
+      expect(model.gracePeriodHours, equals(48));
+      expect(model.trialDays, equals(14));
+      expect(model.lifetimeCountLimit, equals(50));
+      expect(model.plans, isEmpty);
+    });
+
+    test('toJson serializes new fields correctly', () {
+      final plan = SubscriptionPlanModel(
+        name: 'Pro Plan',
+        description: 'Description',
+        isActive: true,
+        price: 150.0,
+        maxWallets: 10,
+        maxEmployees: 5,
+        smsEnabled: true,
+      );
+
+      final model = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(dailyReceive: 120000, dailySend: 120000, maxPerTransaction: 70000, monthlyReceive: 400000, monthlySend: 400000),
+        networkCommercialLimits: const NetworkLimits(dailyReceive: 200000, dailySend: 200000, maxPerTransaction: 200000, monthlyReceive: 500000, monthlySend: 500000),
+        networkNewLimits: const NetworkLimits(dailyReceive: 10000, dailySend: 10000, maxPerTransaction: 30000, monthlyReceive: 600000, monthlySend: 600000),
+        networkOldLimits: const NetworkLimits(dailyReceive: 60000, dailySend: 80000, maxPerTransaction: 70000, monthlyReceive: 200000, monthlySend: 200000),
+        minCrossNetworkFee: 1.0,
+        maxCrossNetworkFee: 15.0,
+        minInstapayFee: 0.5,
+        maxInstapayFee: 20.0,
+        sameNetworkFee: 1.0,
+        crossNetworkFeeRate: 0.005,
+        instapayFeeRate: 0.001,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {'pro': plan},
+      );
+
+      final serialized = model.toJson();
+      final subscriptions = serialized['subscriptions'] as Map<String, dynamic>;
+
+      expect(subscriptions['gracePeriodHours'], equals(48));
+      expect(subscriptions['trialDays'], equals(14));
+      expect(subscriptions['lifetimeCountLimit'], equals(50));
+      
+      // Verify legacy fields proPrice and lifetimePrice are NOT present in serialized map
+      expect(subscriptions.containsKey('proPrice'), isFalse);
+      expect(subscriptions.containsKey('lifetimePrice'), isFalse);
+
+      final serializedPlans = subscriptions['plans'] as Map<String, dynamic>;
+      expect(serializedPlans.containsKey('pro'), isTrue);
+      expect(serializedPlans['pro']['name'], equals('Pro Plan'));
     });
   });
 }

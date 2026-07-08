@@ -6,6 +6,8 @@ import 'package:walletmanager/presentation/screens/wallets/wallets_list_screen.d
 import 'package:walletmanager/presentation/widgets/wallet/wallet_card.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
@@ -18,11 +20,14 @@ class MockWalletProvider extends Mock implements WalletProvider {
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {}
 }
 
+class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
 class FakeWalletModel extends Fake implements WalletModel {}
 
 void main() {
   late MockAuthProvider mockAuthProvider;
   late MockWalletProvider mockWalletProvider;
+  late MockPlatformSettingsProvider mockSettingsProvider;
 
   setUpAll(() {
     registerFallbackValue(FakeWalletModel());
@@ -31,6 +36,9 @@ void main() {
   setUp(() {
     mockAuthProvider = MockAuthProvider();
     mockWalletProvider = MockWalletProvider();
+    mockSettingsProvider = MockPlatformSettingsProvider();
+
+    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
 
     when(() => mockAuthProvider.isSubscriptionExpired).thenReturn(true);
     when(() => mockWalletProvider.isLoading).thenReturn(false);
@@ -59,6 +67,7 @@ void main() {
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
         ChangeNotifierProvider<WalletProvider>.value(value: mockWalletProvider),
+        ChangeNotifierProvider<PlatformSettingsProvider>.value(value: mockSettingsProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [

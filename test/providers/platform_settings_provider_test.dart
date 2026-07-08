@@ -20,28 +20,55 @@ void main() {
 
   final testJson = {
     'limits': {
-      'newWalletTransactionLimit': 15000.0,
-      'newWalletMonthlyLimit': 75000.0,
-      'oldWalletTransactionLimit': 80000.0,
-      'oldWalletMonthlyLimit': 250000.0,
-      'registeredStoreTransactionLimit': 90000.0,
-      'registeredStoreMonthlyLimit': 500000.0,
-      'instapayTransactionLimit': 150000.0,
-      'instapayMonthlyLimit': 600000.0,
+      'instapay': {
+        'dailyReceive': 120000.0,
+        'dailySend': 120000.0,
+        'maxPerTransaction': 150000.0,
+        'monthlyReceive': 400000.0,
+        'monthlySend': 600000.0,
+      },
+      'networkCommercial': {
+        'dailyReceive': 200000.0,
+        'dailySend': 200000.0,
+        'maxPerTransaction': 90000.0,
+        'monthlyReceive': 500000.0,
+        'monthlySend': 500000.0,
+      },
+      'networkNew': {
+        'dailyReceive': 10000.0,
+        'dailySend': 10000.0,
+        'maxPerTransaction': 15000.0,
+        'monthlyReceive': 600000.0,
+        'monthlySend': 75000.0,
+      },
+      'networkOld': {
+        'dailyReceive': 60000.0,
+        'dailySend': 80000.0,
+        'maxPerTransaction': 80000.0,
+        'monthlyReceive': 200000.0,
+        'monthlySend': 250000.0,
+      },
     },
     'feeLimits': {
-      'minCrossNetworkFee': 2.0,
-      'maxCrossNetworkFee': 20.0,
-      'minInstapayFee': 1.0,
-      'maxInstapayFee': 30.0,
+      'networks': {
+        'min': 2.0,
+        'max': 20.0,
+      },
+      'instapay': {
+        'min': 1.0,
+        'max': 30.0,
+      },
     },
     'serviceFees': {
-      'sameNetworkFee': 1.5,
-      'crossNetworkFeeRate': 0.007,
-      'instapayFeeRate': 0.002,
+      'sameNetwork': 1.5,
+      'crossNetwork': 0.007,
+      'instapay': 0.002,
     },
     'subscriptions': {
-      'trialDurationDays': 45,
+      'lifetimeCountLimit': 50,
+      'gracePeriodHours': 48,
+      'trialDays': 45,
+      'plans': {}
     }
   };
 

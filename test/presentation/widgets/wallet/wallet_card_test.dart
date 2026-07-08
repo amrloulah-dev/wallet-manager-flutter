@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/presentation/widgets/wallet/wallet_card.dart';
 import 'package:walletmanager/data/models/wallet_model.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
 void main() {
   late WalletModel activeWallet;
   late WalletModel frozenWallet;
+  late MockPlatformSettingsProvider mockSettingsProvider;
 
   setUp(() {
+    mockSettingsProvider = MockPlatformSettingsProvider();
+    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
     activeWallet = WalletModel(
       walletId: 'w1',
       phoneNumber: '01168686098',
@@ -46,19 +55,22 @@ void main() {
   });
 
   Widget buildTestableWidget(Widget child) {
-    return MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('ar'), Locale('en')],
-      locale: const Locale('ar'), // Set to Arabic to match Stitch specs
-      home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: child,
+    return ChangeNotifierProvider<PlatformSettingsProvider>.value(
+      value: mockSettingsProvider,
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        locale: const Locale('ar'), // Set to Arabic to match Stitch specs
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: child,
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:walletmanager/core/utils/number_parser.dart';
+import 'subscription_plan_model.dart';
 
 class NetworkLimits {
   final double dailyReceive;
@@ -49,8 +50,9 @@ class PlatformSettingsModel {
 
   // Subscriptions
   final int lifetimeCountLimit;
-  final int lifetimePrice;
-  final int proPrice;
+  final int gracePeriodHours;
+  final int trialDays;
+  final Map<String, SubscriptionPlanModel> plans;
 
   const PlatformSettingsModel({
     required this.isRegistrationOpen,
@@ -66,8 +68,9 @@ class PlatformSettingsModel {
     required this.crossNetworkFeeRate,
     required this.instapayFeeRate,
     required this.lifetimeCountLimit,
-    required this.lifetimePrice,
-    required this.proPrice,
+    required this.gracePeriodHours,
+    required this.trialDays,
+    required this.plans,
   });
 
   factory PlatformSettingsModel.fromJson(Map<String, dynamic>? json) {
@@ -110,8 +113,18 @@ class PlatformSettingsModel {
       instapayFeeRate: NumberParser.toDouble(serviceFees['instapay'], 0.001),
 
       lifetimeCountLimit: NumberParser.toInt(subscriptions['lifetimeCountLimit'], 50),
-      lifetimePrice: NumberParser.toInt(subscriptions['lifetimePrice'], 2500),
-      proPrice: NumberParser.toInt(subscriptions['proPrice'], 1200),
+      gracePeriodHours: NumberParser.toInt(subscriptions['gracePeriodHours'], 48),
+      trialDays: NumberParser.toInt(subscriptions['trialDays'], 14),
+      plans: subscriptions['plans'] is Map
+          ? (subscriptions['plans'] as Map).map(
+              (key, value) => MapEntry(
+                key.toString(),
+                SubscriptionPlanModel.fromMap(
+                  value is Map ? Map<String, dynamic>.from(value) : null,
+                ),
+              ),
+            )
+          : const {},
     );
   }
 
@@ -130,8 +143,9 @@ class PlatformSettingsModel {
         crossNetworkFeeRate = 0.005,
         instapayFeeRate = 0.001,
         lifetimeCountLimit = 50,
-        lifetimePrice = 2500,
-        proPrice = 1200;
+        gracePeriodHours = 48,
+        trialDays = 14,
+        plans = const {};
 
   // Compatibility getters for legacy code
   double get newWalletTransactionLimit => networkNewLimits.maxPerTransaction;
@@ -142,7 +156,7 @@ class PlatformSettingsModel {
   double get registeredStoreMonthlyLimit => networkCommercialLimits.monthlySend;
   double get instapayTransactionLimit => instapayLimits.maxPerTransaction;
   double get instapayMonthlyLimit => instapayLimits.monthlySend;
-  int get trialDurationDays => 30; // legacy placeholder
+  int get trialDurationDays => trialDays;
 
   Map<String, dynamic> toJson() {
     return {
@@ -194,8 +208,9 @@ class PlatformSettingsModel {
       },
       'subscriptions': {
         'lifetimeCountLimit': lifetimeCountLimit,
-        'lifetimePrice': lifetimePrice,
-        'proPrice': proPrice,
+        'gracePeriodHours': gracePeriodHours,
+        'trialDays': trialDays,
+        'plans': plans.map((key, value) => MapEntry(key, value.toMap())),
       },
     };
   }

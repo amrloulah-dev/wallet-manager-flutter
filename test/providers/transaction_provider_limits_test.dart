@@ -111,8 +111,9 @@ void main() {
       crossNetworkFeeRate: 0.005,
       instapayFeeRate: 0.001,
       lifetimeCountLimit: 50,
-      lifetimePrice: 2500,
-      proPrice: 1200,
+      gracePeriodHours: 48,
+      trialDays: 14,
+      plans: const {},
     );
 
     test('should reject debit transaction when amount exceeds dynamic limits', () async {
