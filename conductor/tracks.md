@@ -28,3 +28,8 @@
 - [~] **Track: Transaction Engine Dynamic Settings Refactor**
 *Link: [./tracks/transaction_refactor_20260629/](./tracks/transaction_refactor_20260629/)*
 
+---
+
+- [ ] **Track: Subscription Model Unification & Store Cleanup**
+*Link: [./tracks/subscription_model_cleanup_20260708/](./tracks/subscription_model_cleanup_20260708/)*
+
