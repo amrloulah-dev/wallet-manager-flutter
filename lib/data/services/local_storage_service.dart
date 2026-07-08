@@ -556,4 +556,11 @@ class LocalStorageService {
   int? getPlatformSettingsFetchTime() {
     return _prefs?.getInt(_kPlatformSettingsFetchTime);
   }
+
+  /// Clears the cached PlatformSettingsModel JSON and fetch timestamp.
+  Future<void> clearPlatformSettings() async {
+    _ensureInitialized();
+    await _prefs!.remove(_kPlatformSettingsJson);
+    await _prefs!.remove(_kPlatformSettingsFetchTime);
+  }
 }

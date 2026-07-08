@@ -176,5 +176,65 @@ void main() {
 
       expect(provider.settings.newWalletTransactionLimit, 15000.0);
     });
+
+    test('self-heals and clears cache when cached JSON is malformed', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn("invalid-json-string");
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.data()).thenReturn(testJson);
+      when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      verify(() => mockStorage.clearPlatformSettings()).called(1);
+      verify(() => mockDoc.get()).called(1);
+    });
+
+    test('self-heals and clears cache when cached JSON has schema mismatch', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
+      // 'limits' as int instead of map will cause PlatformSettingsModel.fromJson to throw
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode({'limits': 123}));
+      when(() => mockSnapshot.exists).thenReturn(true);
+      when(() => mockSnapshot.data()).thenReturn(testJson);
+      when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 15000.0);
+      verify(() => mockStorage.clearPlatformSettings()).called(1);
+      verify(() => mockDoc.get()).called(1);
+    });
+
+    test('falls back to defaults and clears cache when Firestore fails and cache is malformed', () async {
+      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(null);
+      when(() => mockStorage.getPlatformSettingsJson()).thenReturn("invalid-json-string");
+      when(() => mockDoc.get()).thenThrow(FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
+      when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
+
+      final provider = PlatformSettingsProvider(
+        storage: mockStorage,
+        firestore: mockFirestore,
+      );
+
+      await provider.initialize();
+
+      expect(provider.settings.newWalletTransactionLimit, 30000.0); // defaults value
+      verify(() => mockStorage.clearPlatformSettings()).called(1);
+    });
   });
 }

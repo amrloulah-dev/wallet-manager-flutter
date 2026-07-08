@@ -51,6 +51,7 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
         final decoded = json.decode(cachedJson) as Map<String, dynamic>;
         _settings = PlatformSettingsModel.fromJson(decoded);
       } catch (e, stack) {
+        await _storage.clearPlatformSettings();
         AppErrorHandler.handle(
           e,
           stackTrace: stack,
@@ -100,6 +101,7 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
           final decoded = json.decode(cachedJson) as Map<String, dynamic>;
           _settings = PlatformSettingsModel.fromJson(decoded);
         } catch (_) {
+          await _storage.clearPlatformSettings();
           _settings = const PlatformSettingsModel.defaults();
         }
       } else {
