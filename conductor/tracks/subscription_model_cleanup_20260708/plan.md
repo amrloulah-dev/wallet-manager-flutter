@@ -38,12 +38,12 @@
     - [x] Audit all consumers of the removed fields across the codebase — stub or adapt references (Phase 3 will provide the permanent fix for `SubscriptionProvider` and UI consumers)
     - [x] Verify all tests pass
 
-- [~] Task: Fix `EmployeeRepository` architectural trap (FR-6)
-    - [ ] Write unit tests for `addEmployee()` using `.count()` — mock Firestore aggregate query returning employee count; mock `PlatformSettingsProvider` providing `maxEmployees` from catalog; verify limit enforcement (under limit, at limit, unlimited `-1`)
-    - [ ] Write unit tests for `deactivateEmployee()` — verify `stats.totalEmployees` decrement on store document is removed
-    - [ ] In `addEmployee()`: replace `storeData['stats']['totalEmployees']` with Firestore `.count()` aggregate query on the employees collection for the store
-    - [ ] In `addEmployee()`: replace `storeData['subscription']['maxEmployees']` with lookup from centralized `PlatformSettingsProvider` catalog (via DI `sl<PlatformSettingsProvider>()`)
-    - [ ] In `deactivateEmployee()`: remove `stats.totalEmployees` decrement on the store document
-    - [ ] Verify all tests pass
+- [x] Task: Fix `EmployeeRepository` architectural trap (FR-6) [cbec0ff]
+    - [x] Write unit tests for `addEmployee()` using `.count()` — mock Firestore aggregate query returning employee count; mock `PlatformSettingsProvider` providing `maxEmployees` from catalog; verify limit enforcement (under limit, at limit, unlimited `-1`)
+    - [x] Write unit tests for `deactivateEmployee()` — verify `stats.totalEmployees` decrement on store document is removed
+    - [x] In `addEmployee()`: replace `storeData['stats']['totalEmployees']` with Firestore `.count()` aggregate query on the employees collection for the store
+    - [x] In `addEmployee()`: replace `storeData['subscription']['maxEmployees']` with lookup from centralized `PlatformSettingsProvider` catalog (via DI `sl<PlatformSettingsProvider>()`)
+    - [x] In `deactivateEmployee()`: remove `stats.totalEmployees` decrement on the store document
+    - [x] Verify all tests pass
 
-- [ ] Task: Conductor — User Manual Verification 'Phase 2: Store Cleanup & Repository Fix' (Protocol in workflow.md)
+- [~] Task: Conductor — User Manual Verification 'Phase 2: Store Cleanup & Repository Fix' (Protocol in workflow.md)
