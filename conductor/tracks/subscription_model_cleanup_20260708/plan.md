@@ -24,14 +24,14 @@
 
 ## Phase 2: Store Cleanup & Repository Fix
 
-- [ ] Task: Remove `StoreStats` class (FR-4)
-    - [ ] Write unit tests for `StoreModel` without `StoreStats` — verify `fromFirestore()` and `toFirestore()` work correctly without the `stats` field; verify no `StoreStats` references remain
-    - [ ] Delete the `StoreStats` class from `lib/data/models/store_model.dart`
-    - [ ] Remove the `StoreStats stats` field from `StoreModel`, and all references in `fromFirestore()` and `toFirestore()`
-    - [ ] Audit and fix all other files that import or reference `StoreStats`
-    - [ ] Verify all tests pass
+- [x] Task: Remove `StoreStats` class (FR-4) [f899620]
+    - [x] Write unit tests for `StoreModel` without `StoreStats` — verify `fromFirestore()` and `toFirestore()` work correctly without the `stats` field; verify no `StoreStats` references remain
+    - [x] Delete the `StoreStats` class from `lib/data/models/store_model.dart`
+    - [x] Remove the `StoreStats stats` field from `StoreModel`, and all references in `fromFirestore()` and `toFirestore()`
+    - [x] Audit and fix all other files that import or reference `StoreStats`
+    - [x] Verify all tests pass
 
-- [ ] Task: Clean `StoreSubscription` — remove feature-limit fields (FR-5)
+- [~] Task: Clean `StoreSubscription` — remove feature-limit fields (FR-5)
     - [ ] Write unit tests for trimmed `StoreSubscription` — verify `fromMap()` and `toMap()` only handle state fields (`planId`, `status`, `endDate`, `trialConsumed`, `pendingRequestDate`); verify `migratedLifetime()` works without the removed fields
     - [ ] Remove `maxWallets`, `maxEmployees`, and `smsEnabled` fields from the `StoreSubscription` class declaration
     - [ ] Remove these fields from `StoreSubscription.fromMap()`, `toMap()`, and the `migratedLifetime()` factory constructor
