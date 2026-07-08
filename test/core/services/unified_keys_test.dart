@@ -75,5 +75,18 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('pending_overlay_tx'), isFalse);
     });
+
+    test('should clear platform settings from cache', () async {
+      await storage.savePlatformSettings('{"limits": {}}');
+      
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('platform_settings_json'), isTrue);
+      expect(prefs.containsKey('platform_settings_fetch_time'), isTrue);
+
+      await storage.clearPlatformSettings();
+
+      expect(prefs.containsKey('platform_settings_json'), isFalse);
+      expect(prefs.containsKey('platform_settings_fetch_time'), isFalse);
+    });
   });
 }
