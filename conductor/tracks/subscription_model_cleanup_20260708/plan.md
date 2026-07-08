@@ -31,14 +31,14 @@
     - [x] Audit and fix all other files that import or reference `StoreStats`
     - [x] Verify all tests pass
 
-- [~] Task: Clean `StoreSubscription` — remove feature-limit fields (FR-5)
-    - [ ] Write unit tests for trimmed `StoreSubscription` — verify `fromMap()` and `toMap()` only handle state fields (`planId`, `status`, `endDate`, `trialConsumed`, `pendingRequestDate`); verify `migratedLifetime()` works without the removed fields
-    - [ ] Remove `maxWallets`, `maxEmployees`, and `smsEnabled` fields from the `StoreSubscription` class declaration
-    - [ ] Remove these fields from `StoreSubscription.fromMap()`, `toMap()`, and the `migratedLifetime()` factory constructor
-    - [ ] Audit all consumers of the removed fields across the codebase — stub or adapt references (Phase 3 will provide the permanent fix for `SubscriptionProvider` and UI consumers)
-    - [ ] Verify all tests pass
+- [x] Task: Clean `StoreSubscription` — remove feature-limit fields (FR-5) [fd7e69c]
+    - [x] Write unit tests for trimmed `StoreSubscription` — verify `fromMap()` and `toMap()` only handle state fields (`planId`, `status`, `endDate`, `trialConsumed`, `pendingRequestDate`); verify `migratedLifetime()` works without the removed fields
+    - [x] Remove `maxWallets`, `maxEmployees`, and `smsEnabled` fields from the `StoreSubscription` class declaration
+    - [x] Remove these fields from `StoreSubscription.fromMap()`, `toMap()`, and the `migratedLifetime()` factory constructor
+    - [x] Audit all consumers of the removed fields across the codebase — stub or adapt references (Phase 3 will provide the permanent fix for `SubscriptionProvider` and UI consumers)
+    - [x] Verify all tests pass
 
-- [ ] Task: Fix `EmployeeRepository` architectural trap (FR-6)
+- [~] Task: Fix `EmployeeRepository` architectural trap (FR-6)
     - [ ] Write unit tests for `addEmployee()` using `.count()` — mock Firestore aggregate query returning employee count; mock `PlatformSettingsProvider` providing `maxEmployees` from catalog; verify limit enforcement (under limit, at limit, unlimited `-1`)
     - [ ] Write unit tests for `deactivateEmployee()` — verify `stats.totalEmployees` decrement on store document is removed
     - [ ] In `addEmployee()`: replace `storeData['stats']['totalEmployees']` with Firestore `.count()` aggregate query on the employees collection for the store
