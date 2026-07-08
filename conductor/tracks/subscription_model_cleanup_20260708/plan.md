@@ -22,7 +22,7 @@
 
 - [x] Task: Conductor — User Manual Verification 'Phase 1: Model Unification & Cache Safety' (Protocol in workflow.md)
 
-## Phase 2: Store Cleanup & Repository Fix
+## Phase 2: Store Cleanup & Repository Fix [checkpoint: 5150d1a]
 
 - [x] Task: Remove `StoreStats` class (FR-4) [f899620]
     - [x] Write unit tests for `StoreModel` without `StoreStats` — verify `fromFirestore()` and `toFirestore()` work correctly without the `stats` field; verify no `StoreStats` references remain
@@ -46,4 +46,4 @@
     - [x] In `deactivateEmployee()`: remove `stats.totalEmployees` decrement on the store document
     - [x] Verify all tests pass
 
-- [~] Task: Conductor — User Manual Verification 'Phase 2: Store Cleanup & Repository Fix' (Protocol in workflow.md)
+- [x] Task: Conductor — User Manual Verification 'Phase 2: Store Cleanup & Repository Fix' (Protocol in workflow.md) [5150d1a]
