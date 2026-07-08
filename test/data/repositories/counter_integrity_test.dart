@@ -79,8 +79,8 @@ void main() {
           .doc('summary')
           .get();
 
-      // With FieldValue.increment(-1), it will be -1
-      expect(storeDoc.data()!['stats']['totalEmployees'], equals(-1));
+      // Store document is no longer updated during deactivation, so it remains 0
+      expect(storeDoc.data()!['stats']['totalEmployees'], equals(0));
       expect(statsDoc.data()!['totalEmployees'], equals(-1));
     });
 

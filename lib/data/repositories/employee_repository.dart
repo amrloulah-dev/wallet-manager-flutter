@@ -10,6 +10,8 @@ import '../models/user_permissions.dart';
 import '../../core/enums/user_enums.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
 
 class EmployeeRepository {
   final FirebaseFirestore _firestore;
@@ -118,6 +120,8 @@ class EmployeeRepository {
       FirebaseConstants.pinLockPath(storeId, hashedPin),
     );
 
+    final currentEmployees = await getEmployeesCount(storeId);
+
     await _firestore.runTransaction((transaction) async {
       // 1. Atomic PIN uniqueness check
       final pinLockSnap = await transaction.get(pinLockRef);
@@ -137,14 +141,34 @@ class EmployeeRepository {
 
       final storeData = storeSnap.data()!;
 
-      // ✅ التعديل هنا: القراءة من subscription
-      final maxEmployees = storeData['subscription'] != null
-          ? storeData['subscription']['maxEmployees'] ?? 1
-          : 1;
+      final subscriptionData = storeData['subscription'] as Map<String, dynamic>?;
+      final planIdStr = subscriptionData?['planId'] ?? 'free';
+      final plan = SubscriptionPlan.fromString(planIdStr);
 
-      final currentEmployees = storeData['stats'] != null
-          ? storeData['stats']['totalEmployees'] ?? 0
-          : 0;
+      final settingsProvider = sl<PlatformSettingsProvider>();
+      final planKey = plan.name;
+      final planKeySnake = planIdStr == 'pro_yearly' ? 'pro_yearly' : planKey;
+      final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+
+      int maxEmployees = 1;
+      if (planModel != null) {
+        maxEmployees = planModel.maxEmployees;
+      } else {
+        switch (plan) {
+          case SubscriptionPlan.free:
+            maxEmployees = 1;
+            break;
+          case SubscriptionPlan.trial:
+            maxEmployees = 1;
+            break;
+          case SubscriptionPlan.proYearly:
+            maxEmployees = 20;
+            break;
+          case SubscriptionPlan.lifetime:
+            maxEmployees = 999;
+            break;
+        }
+      }
 
       if (currentEmployees >= maxEmployees && maxEmployees != -1) {
         throw ServerException('employee_error_max_limit_reached');
@@ -216,9 +240,6 @@ class EmployeeRepository {
       final hashedPin = userData[FirebaseConstants.pin] as String?;
 
       if (wasActive && storeId != null) {
-        final storeRef = _firestore
-            .collection(FirebaseConstants.storesCollection)
-            .doc(storeId);
         final statsSummaryRef = _firestore
             .collection(FirebaseConstants.storesCollection)
             .doc(storeId)
@@ -228,11 +249,6 @@ class EmployeeRepository {
         transaction.update(userRef, {
           FirebaseConstants.isActive: false,
           FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        transaction.update(storeRef, {
-          'stats.totalEmployees': FieldValue.increment(-1),
-          'stats.lastUpdated': FieldValue.serverTimestamp(),
         });
 
         transaction.update(statsSummaryRef, {
