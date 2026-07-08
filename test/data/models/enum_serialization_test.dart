@@ -208,9 +208,6 @@ void main() {
           planId: SubscriptionPlan.trial,
           status: SubscriptionStatus.active,
           trialConsumed: false,
-          maxWallets: 999,
-          maxEmployees: 999,
-          smsEnabled: true,
         ),
         settings: StoreSettings(),
       );

@@ -43,9 +43,6 @@ class DummyAuthProvider extends ChangeNotifier implements AuthProvider {
           planId: SubscriptionPlan.trial,
           status: SubscriptionStatus.active,
           trialConsumed: true,
-          maxWallets: 3,
-          maxEmployees: 1,
-          smsEnabled: true,
         ),
         settings: StoreSettings(
           currency: 'EGP',

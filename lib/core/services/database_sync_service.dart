@@ -393,9 +393,6 @@ class DatabaseSyncService {
       status: SubscriptionStatus.active,
       endDate: DateTime.now().add(const Duration(days: 14)),
       trialConsumed: false,
-      maxWallets: 999,
-      maxEmployees: 999,
-      smsEnabled: true,
     );
 
     final hashedStorePassword =

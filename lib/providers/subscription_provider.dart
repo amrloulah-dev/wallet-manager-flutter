@@ -7,6 +7,7 @@ import '../core/errors/error_severity.dart';
 import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'auth_provider.dart';
+import 'platform_settings_provider.dart';
 import '../data/repositories/subscription_repository.dart';
 import '../data/models/subscription_request_model.dart';
 import 'base_provider.dart';
@@ -190,7 +191,7 @@ class SubscriptionProvider extends BaseProvider {
       LocalStorageService.instance.saveSubscriptionLimits(
         endDateMs: sub.endDate?.millisecondsSinceEpoch,
         isLifetime: sub.planId == SubscriptionPlan.lifetime,
-        smsEnabled: sub.smsEnabled,
+        smsEnabled: isSmsEnabled,
         isSuspended: sub.status == SubscriptionStatus.suspended,
       );
       LocalStorageService.instance.saveSubLastSyncMs();
@@ -204,16 +205,76 @@ class SubscriptionProvider extends BaseProvider {
   int get maxWallets {
     // T053: Fallback to Free tier caps when explicitly expired with no pending request
     if (_subscription != null && isExpired && !hasPendingRequest) return 2;
-    return _subscription?.maxWallets ?? 2;
+    if (_subscription == null) return 2;
+
+    final settingsProvider = sl<PlatformSettingsProvider>();
+    final planKey = _subscription!.planId.name;
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+
+    if (planModel != null) {
+      return planModel.maxWallets;
+    }
+
+    switch (_subscription!.planId) {
+      case SubscriptionPlan.free:
+        return 2;
+      case SubscriptionPlan.trial:
+        return 3;
+      case SubscriptionPlan.proYearly:
+        return 50;
+      case SubscriptionPlan.lifetime:
+        return 999;
+    }
   }
 
   int get maxEmployees {
     // T053: Fallback to Free tier caps when explicitly expired with no pending request
     if (_subscription != null && isExpired && !hasPendingRequest) return 0;
-    return _subscription?.maxEmployees ?? 1;
+    if (_subscription == null) return 1;
+
+    final settingsProvider = sl<PlatformSettingsProvider>();
+    final planKey = _subscription!.planId.name;
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+
+    if (planModel != null) {
+      return planModel.maxEmployees;
+    }
+
+    switch (_subscription!.planId) {
+      case SubscriptionPlan.free:
+        return 1;
+      case SubscriptionPlan.trial:
+        return 1;
+      case SubscriptionPlan.proYearly:
+        return 20;
+      case SubscriptionPlan.lifetime:
+        return 999;
+    }
   }
 
-  bool get isSmsEnabled => _subscription?.smsEnabled ?? false;
+  bool get isSmsEnabled {
+    if (_subscription == null) return false;
+
+    final settingsProvider = sl<PlatformSettingsProvider>();
+    final planKey = _subscription!.planId.name;
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+
+    if (planModel != null) {
+      return planModel.smsEnabled;
+    }
+
+    switch (_subscription!.planId) {
+      case SubscriptionPlan.free:
+        return false;
+      case SubscriptionPlan.trial:
+      case SubscriptionPlan.proYearly:
+      case SubscriptionPlan.lifetime:
+        return true;
+    }
+  }
 
   bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;
 

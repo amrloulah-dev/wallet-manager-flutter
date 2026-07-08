@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:get_it/get_it.dart';
 import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/providers/platform_settings_provider.dart';
+import 'package:walletmanager/data/models/platform_settings_model.dart';
+import 'package:walletmanager/data/models/subscription_plan_model.dart';
 import 'package:walletmanager/data/repositories/subscription_repository.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
@@ -16,9 +20,13 @@ class MockSubscriptionRepository extends Mock
 
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
+
 void main() {
   late MockAuthProvider mockAuthProvider;
   late MockSubscriptionRepository mockSubscriptionRepository;
+  late MockPlatformSettingsProvider mockPlatformSettingsProvider;
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,12 +46,23 @@ void main() {
   setUp(() {
     mockAuthProvider = MockAuthProvider();
     mockSubscriptionRepository = MockSubscriptionRepository();
+    mockPlatformSettingsProvider = MockPlatformSettingsProvider();
+
+    final GetIt sl = GetIt.instance;
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      sl.unregister<PlatformSettingsProvider>();
+    }
+    sl.registerSingleton<PlatformSettingsProvider>(mockPlatformSettingsProvider);
 
     when(() => mockAuthProvider.addListener(any())).thenReturn(null);
     when(() => mockAuthProvider.removeListener(any())).thenReturn(null);
     when(() => mockAuthProvider.refreshUserData()).thenAnswer((_) async {});
     when(() => mockSubscriptionRepository.getLatestSubscriptionRequest(any()))
         .thenAnswer((_) async => null);
+
+    // Default settings stub
+    const settings = PlatformSettingsModel.defaults();
+    when(() => mockPlatformSettingsProvider.settings).thenReturn(settings);
   });
 
   test('maxWallets and maxEmployees return 2 and 0 when expired', () {
@@ -52,9 +71,6 @@ void main() {
       status: SubscriptionStatus.expired,
       endDate: DateTime.now().subtract(const Duration(days: 10)),
       trialConsumed: true,
-      maxWallets: 50,
-      maxEmployees: 20,
-      smsEnabled: true,
       pendingRequestDate: null,
     );
 
@@ -87,9 +103,6 @@ void main() {
       status: SubscriptionStatus.active,
       endDate: DateTime.now().add(const Duration(days: 10)),
       trialConsumed: true,
-      maxWallets: 50,
-      maxEmployees: 20,
-      smsEnabled: true,
       pendingRequestDate: null,
     );
 
@@ -103,6 +116,36 @@ void main() {
       subscription: sub,
       settings: StoreSettings(),
     );
+
+    final mockSettings = PlatformSettingsModel(
+      isRegistrationOpen: true,
+      instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+      networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+      networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+      networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+      minCrossNetworkFee: 0,
+      maxCrossNetworkFee: 0,
+      minInstapayFee: 0,
+      maxInstapayFee: 0,
+      sameNetworkFee: 0,
+      crossNetworkFeeRate: 0,
+      instapayFeeRate: 0,
+      lifetimeCountLimit: 50,
+      gracePeriodHours: 48,
+      trialDays: 14,
+      plans: {
+        'pro_yearly': const SubscriptionPlanModel(
+          name: 'Pro Yearly',
+          description: '',
+          isActive: true,
+          price: 100,
+          maxWallets: 50,
+          maxEmployees: 20,
+          smsEnabled: true,
+        ),
+      },
+    );
+    when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
 
     when(() => mockAuthProvider.currentStore).thenReturn(store);
     when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
@@ -123,9 +166,6 @@ void main() {
         status: SubscriptionStatus.active,
         endDate: DateTime.now().add(const Duration(days: 10)),
         trialConsumed: true,
-        maxWallets: 50,
-        maxEmployees: 5,
-        smsEnabled: true,
         pendingRequestDate: null,
       );
 
@@ -139,6 +179,36 @@ void main() {
         subscription: sub,
         settings: StoreSettings(),
       );
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'pro_yearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly',
+            description: '',
+            isActive: true,
+            price: 100,
+            maxWallets: 50,
+            maxEmployees: 5,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);
       when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
@@ -160,9 +230,6 @@ void main() {
         status: SubscriptionStatus.active,
         endDate: DateTime.now().add(const Duration(days: 10)),
         trialConsumed: true,
-        maxWallets: 50,
-        maxEmployees: -1, // Unlimited
-        smsEnabled: true,
         pendingRequestDate: null,
       );
 
@@ -176,6 +243,36 @@ void main() {
         subscription: sub,
         settings: StoreSettings(),
       );
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'pro_yearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly',
+            description: '',
+            isActive: true,
+            price: 100,
+            maxWallets: 50,
+            maxEmployees: -1, // Unlimited
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);
       when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');

@@ -128,11 +128,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   }
 
   Widget _buildEmployeeCountHeader() {
-    return Consumer2<EmployeeProvider, AuthProvider>(
-      builder: (context, employeeProvider, authProvider, _) {
+    return Consumer2<EmployeeProvider, SubscriptionProvider>(
+      builder: (context, employeeProvider, subProvider, _) {
         final currentCount = employeeProvider.employeesCount;
-        final maxEmployees =
-            authProvider.currentStore?.subscription.maxEmployees ?? 5;
+        final maxEmployees = subProvider.maxEmployees;
         final isAtLimit = currentCount >= maxEmployees;
 
         return Container(
@@ -295,12 +294,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       builder: (context, provider, _) {
 // ... existing code ...
         final isAtLimit = provider.employeesCount >=
-            (context
-                    .read<AuthProvider>()
-                    .currentStore
-                    ?.subscription
-                    .maxEmployees ??
-                5);
+            context.read<SubscriptionProvider>().maxEmployees;
 
         return CustomButton(
           text: AppLocalizations.of(context)!.addEmployeeAction,

@@ -65,9 +65,6 @@ void main() {
           planId: SubscriptionPlan.trial, // ENUM refactor
           status: SubscriptionStatus.active, // ENUM refactor
           trialConsumed: false,
-          maxWallets: 5,
-          maxEmployees: 2,
-          smsEnabled: true,
         ),
         settings: StoreSettings(
           currency: 'USD',

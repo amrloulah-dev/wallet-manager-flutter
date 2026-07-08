@@ -67,10 +67,7 @@ void main() {
         subscription: StoreSubscription(
             planId: SubscriptionPlan.trial,
             status: SubscriptionStatus.active,
-            trialConsumed: false,
-            maxWallets: 1,
-            maxEmployees: 1,
-            smsEnabled: false),
+            trialConsumed: false),
         settings: StoreSettings(),
       ));
 
@@ -92,10 +89,7 @@ void main() {
         subscription: StoreSubscription(
             planId: SubscriptionPlan.trial,
             status: SubscriptionStatus.active,
-            trialConsumed: false,
-            maxWallets: 1,
-            maxEmployees: 1,
-            smsEnabled: false),
+            trialConsumed: false),
         settings: StoreSettings(),
       ));
 
@@ -118,10 +112,7 @@ void main() {
         subscription: StoreSubscription(
             planId: SubscriptionPlan.proYearly,
             status: SubscriptionStatus.expired,
-            trialConsumed: false,
-            maxWallets: 1,
-            maxEmployees: 1,
-            smsEnabled: false),
+            trialConsumed: false),
         settings: StoreSettings(),
       ));
 
@@ -144,10 +135,7 @@ void main() {
         subscription: StoreSubscription(
             planId: SubscriptionPlan.proYearly,
             status: SubscriptionStatus.active,
-            trialConsumed: false,
-            maxWallets: 1,
-            maxEmployees: 1,
-            smsEnabled: false),
+            trialConsumed: false),
         settings: StoreSettings(),
       ));
 

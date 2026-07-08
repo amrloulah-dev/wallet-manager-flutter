@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/subscription_provider.dart';
 import 'paywall_screen.dart';
 import '../../../data/models/store_model.dart';
 import '../../../providers/employee_provider.dart';
@@ -35,6 +36,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
     final subscription = context.select<AuthProvider, StoreSubscription?>(
       (p) => p.currentStore?.subscription,
     );
+    final subProvider = context.watch<SubscriptionProvider>();
     final isWalletLoading =
         context.select<WalletProvider, bool>((p) => p.isLoading);
     final walletCount =
@@ -79,7 +81,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
               context,
               title: loc.activeWallets,
               current: walletCount,
-              max: subscription.maxWallets,
+              max: subProvider.maxWallets,
               icon: Icons.account_balance_wallet,
               isLoading: isWalletLoading,
             ),
@@ -88,7 +90,7 @@ class _SubscriptionDetailsScreenState extends State<SubscriptionDetailsScreen> {
               context,
               title: loc.employeeAccounts,
               current: employeeCount,
-              max: subscription.maxEmployees,
+              max: subProvider.maxEmployees,
               icon: Icons.people,
               isLoading: isEmployeeLoading,
             ),

@@ -190,9 +190,6 @@ class StoreSubscription {
   final SubscriptionStatus status; // ENUM refactor
   final DateTime? endDate; // null for lifetime
   final bool trialConsumed; // true if trial was used
-  final int maxWallets; // e.g., 3 or 999
-  final int maxEmployees; // e.g., 1 or 999
-  final bool smsEnabled;
   final DateTime? pendingRequestDate;
 
   StoreSubscription({
@@ -200,9 +197,6 @@ class StoreSubscription {
     required this.status,
     this.endDate,
     required this.trialConsumed,
-    required this.maxWallets,
-    required this.maxEmployees,
-    required this.smsEnabled,
     this.pendingRequestDate,
   });
 
@@ -236,9 +230,6 @@ class StoreSubscription {
       status: SubscriptionStatus.active,
       endDate: null,
       trialConsumed: true,
-      maxWallets: 999,
-      maxEmployees: 999,
-      smsEnabled: true,
       pendingRequestDate: null,
     );
   }
@@ -252,9 +243,6 @@ class StoreSubscription {
           ? (map['endDate'] as Timestamp).toDate()
           : null,
       trialConsumed: map['trialConsumed'] as bool? ?? false,
-      maxWallets: NumberParser.toInt(map['maxWallets'], 3),
-      maxEmployees: NumberParser.toInt(map['maxEmployees'], 1),
-      smsEnabled: map['smsEnabled'] as bool? ?? false,
       pendingRequestDate: map['pendingRequestDate'] != null
           ? (map['pendingRequestDate'] as Timestamp).toDate()
           : null,
@@ -267,9 +255,6 @@ class StoreSubscription {
       'status': status.name,
       'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'trialConsumed': trialConsumed,
-      'maxWallets': maxWallets,
-      'maxEmployees': maxEmployees,
-      'smsEnabled': smsEnabled,
       'pendingRequestDate': pendingRequestDate != null
           ? Timestamp.fromDate(pendingRequestDate!)
           : null,
@@ -281,9 +266,6 @@ class StoreSubscription {
     SubscriptionStatus? status,
     DateTime? endDate,
     bool? trialConsumed,
-    int? maxWallets,
-    int? maxEmployees,
-    bool? smsEnabled,
     DateTime? pendingRequestDate,
   }) {
     return StoreSubscription(
@@ -291,9 +273,6 @@ class StoreSubscription {
       status: status ?? this.status,
       endDate: endDate ?? this.endDate,
       trialConsumed: trialConsumed ?? this.trialConsumed,
-      maxWallets: maxWallets ?? this.maxWallets,
-      maxEmployees: maxEmployees ?? this.maxEmployees,
-      smsEnabled: smsEnabled ?? this.smsEnabled,
       pendingRequestDate: pendingRequestDate ?? this.pendingRequestDate,
     );
   }

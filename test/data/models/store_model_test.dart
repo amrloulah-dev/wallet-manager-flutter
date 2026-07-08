@@ -73,9 +73,6 @@ void main() {
           status: SubscriptionStatus.active,
           endDate: now,
           trialConsumed: true,
-          maxWallets: 10,
-          maxEmployees: 5,
-          smsEnabled: true,
         ),
         settings: StoreSettings(
           currency: 'EGP',

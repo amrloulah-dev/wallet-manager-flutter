@@ -48,9 +48,6 @@ class StoreRepository {
           status: SubscriptionStatus.active,
           endDate: DateTime.now().add(const Duration(days: 14)),
           trialConsumed: false,
-          maxWallets: 999,
-          maxEmployees: 999,
-          smsEnabled: true,
         );
       } else {
         // H002: Device-ineligible users land on Free tier directly
@@ -59,9 +56,6 @@ class StoreRepository {
           status: SubscriptionStatus.active,
           endDate: null,
           trialConsumed: true,
-          maxWallets: 3,
-          maxEmployees: 1,
-          smsEnabled: false,
         );
       }
 

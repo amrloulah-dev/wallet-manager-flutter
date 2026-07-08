@@ -5,6 +5,7 @@ import 'package:walletmanager/presentation/screens/subscription/subscription_det
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/providers/wallet_provider.dart';
 import 'package:walletmanager/providers/employee_provider.dart';
+import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,15 +18,19 @@ class MockWalletProvider extends Mock implements WalletProvider {}
 
 class MockEmployeeProvider extends Mock implements EmployeeProvider {}
 
+class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 void main() {
   late MockAuthProvider mockAuthProvider;
   late MockWalletProvider mockWalletProvider;
   late MockEmployeeProvider mockEmployeeProvider;
+  late MockSubscriptionProvider mockSubscriptionProvider;
 
   setUp(() {
     mockAuthProvider = MockAuthProvider();
     mockWalletProvider = MockWalletProvider();
     mockEmployeeProvider = MockEmployeeProvider();
+    mockSubscriptionProvider = MockSubscriptionProvider();
 
     // Mock initial state
     when(() => mockWalletProvider.isLoading).thenReturn(false);
@@ -34,8 +39,11 @@ void main() {
 
     when(() => mockEmployeeProvider.isLoading).thenReturn(false);
     when(() => mockEmployeeProvider.employeesCount).thenReturn(0);
-    when(() => mockEmployeeProvider.refresh()).thenAnswer(
-        (_) {}); // refresh() in EmployeeProvider is void, wait let me check, or maybe async. If error I'll fix
+    when(() => mockEmployeeProvider.refresh()).thenAnswer((_) {});
+
+    when(() => mockSubscriptionProvider.maxWallets).thenReturn(50);
+    when(() => mockSubscriptionProvider.maxEmployees).thenReturn(20);
+    when(() => mockSubscriptionProvider.isSmsEnabled).thenReturn(true);
 
     when(() => mockAuthProvider.currentStore).thenReturn(
       StoreModel(
@@ -49,10 +57,7 @@ void main() {
         subscription: StoreSubscription(
           planId: SubscriptionPlan.proYearly,
           status: SubscriptionStatus.active,
-          maxWallets: 50,
-          maxEmployees: 20,
           trialConsumed: false,
-          smsEnabled: true,
         ),
         settings: StoreSettings(),
       ),
@@ -66,6 +71,8 @@ void main() {
         ChangeNotifierProvider<WalletProvider>.value(value: mockWalletProvider),
         ChangeNotifierProvider<EmployeeProvider>.value(
             value: mockEmployeeProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubscriptionProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [

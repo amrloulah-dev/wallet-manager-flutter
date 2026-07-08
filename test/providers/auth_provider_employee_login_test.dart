@@ -144,9 +144,6 @@ void main() {
         planId: SubscriptionPlan.free,
         status: SubscriptionStatus.active,
         trialConsumed: false,
-        maxWallets: 3,
-        maxEmployees: 1,
-        smsEnabled: false,
       ),
       settings: StoreSettings(currency: 'SAR', timezone: 'Asia/Riyadh'),
     );

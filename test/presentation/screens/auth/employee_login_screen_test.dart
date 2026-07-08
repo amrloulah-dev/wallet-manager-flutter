@@ -88,10 +88,7 @@ void main() {
         planId: SubscriptionPlan.proYearly,
         status: SubscriptionStatus.active,
         endDate: DateTime.now().subtract(const Duration(days: 10)),
-        maxWallets: 3,
-        maxEmployees: 1,
         trialConsumed: true,
-        smsEnabled: true,
       ),
       settings: StoreSettings(),
     );
