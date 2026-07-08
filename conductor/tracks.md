@@ -30,6 +30,6 @@
 
 ---
 
-- [ ] **Track: Subscription Model Unification & Store Cleanup**
+- [~] **Track: Subscription Model Unification & Store Cleanup**
 *Link: [./tracks/subscription_model_cleanup_20260708/](./tracks/subscription_model_cleanup_20260708/)*
 

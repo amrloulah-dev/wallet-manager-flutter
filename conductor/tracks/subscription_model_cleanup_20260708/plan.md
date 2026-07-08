@@ -7,14 +7,14 @@
     - [x] Implement `SubscriptionPlanModel` at `lib/data/models/subscription_plan_model.dart` with all 7 fields (`name`, `description`, `isActive`, `price` as `num`, `maxWallets`, `maxEmployees`, `smsEnabled`), `fromMap()` factory, and `toMap()` method
     - [x] Verify all tests pass
 
-- [ ] Task: Update `PlatformSettingsModel` — Remove legacy fields & add plans + global variables (FR-2)
-    - [ ] Write unit tests for updated `PlatformSettingsModel` — parse new-format JSON with `plans` map and global variables (`gracePeriodHours`, `trialDays`, `lifetimeCountLimit`); parse old-format JSON (with `proPrice`/`lifetimePrice`, no `plans`) verifying graceful handling; round-trip `toJson()`/`fromJson()`; verify `defaults()` returns correct new defaults
-    - [ ] Remove `proPrice` and `lifetimePrice` fields, their parsing from `fromJson()`, serialization in `toJson()`, and values in `defaults()`
-    - [ ] Retain `lifetimeCountLimit`; add `gracePeriodHours` (int, default 48) and `trialDays` (int, default 14) — parse from `subscriptions` map in `fromJson()`, serialize in `toJson()`
-    - [ ] Add `Map<String, SubscriptionPlanModel> plans` field — parse from `subscriptions['plans']` in `fromJson()`, serialize in `toJson()`, default to empty map
-    - [ ] Verify all tests pass
+- [x] Task: Update `PlatformSettingsModel` — Remove legacy fields & add plans + global variables (FR-2) [4e1501c]
+    - [x] Write unit tests for updated `PlatformSettingsModel` — parse new-format JSON with `plans` map and global variables (`gracePeriodHours`, `trialDays`, `lifetimeCountLimit`); parse old-format JSON (with `proPrice`/`lifetimePrice`, no `plans`) verifying graceful handling; round-trip `toJson()`/`fromJson()`; verify `defaults()` returns correct new defaults
+    - [x] Remove `proPrice` and `lifetimePrice` fields, their parsing from `fromJson()`, serialization in `toJson()`, and values in `defaults()`
+    - [x] Retain `lifetimeCountLimit`; add `gracePeriodHours` (int, default 48) and `trialDays` (int, default 14) — parse from `subscriptions` map in `fromJson()`, serialize in `toJson()`
+    - [x] Add `Map<String, SubscriptionPlanModel> plans` field — parse from `subscriptions['plans']` in `fromJson()`, serialize in `toJson()`, default to empty map
+    - [x] Verify all tests pass
 
-- [ ] Task: Implement self-healing cache mechanism (FR-3)
+- [~] Task: Implement self-healing cache mechanism (FR-3)
     - [ ] Write unit tests for cache invalidation — mock `LocalStorageService` returning malformed JSON, empty string, and schema-mismatched JSON; verify `clearPlatformSettings()` is called and `_fetchFromFirestore()` is triggered; verify no exceptions propagate
     - [ ] Add `clearPlatformSettings()` method to `LocalStorageService` if not present (removes both `_kPlatformSettingsJson` and `_kPlatformSettingsFetchTime` keys)
     - [ ] Wrap JSON deserialization in `PlatformSettingsProvider.initialize()` with `try-catch`; on failure: clear cache, log via `AppErrorHandler`, and trigger fresh Firestore fetch
