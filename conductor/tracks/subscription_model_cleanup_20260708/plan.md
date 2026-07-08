@@ -14,11 +14,11 @@
     - [x] Add `Map<String, SubscriptionPlanModel> plans` field — parse from `subscriptions['plans']` in `fromJson()`, serialize in `toJson()`, default to empty map
     - [x] Verify all tests pass
 
-- [~] Task: Implement self-healing cache mechanism (FR-3)
-    - [ ] Write unit tests for cache invalidation — mock `LocalStorageService` returning malformed JSON, empty string, and schema-mismatched JSON; verify `clearPlatformSettings()` is called and `_fetchFromFirestore()` is triggered; verify no exceptions propagate
-    - [ ] Add `clearPlatformSettings()` method to `LocalStorageService` if not present (removes both `_kPlatformSettingsJson` and `_kPlatformSettingsFetchTime` keys)
-    - [ ] Wrap JSON deserialization in `PlatformSettingsProvider.initialize()` with `try-catch`; on failure: clear cache, log via `AppErrorHandler`, and trigger fresh Firestore fetch
-    - [ ] Verify all tests pass
+- [x] Task: Implement self-healing cache mechanism (FR-3) [4099207]
+    - [x] Write unit tests for cache invalidation — mock `LocalStorageService` returning malformed JSON, empty string, and schema-mismatched JSON; verify `clearPlatformSettings()` is called and `_fetchFromFirestore()` is triggered; verify no exceptions propagate
+    - [x] Add `clearPlatformSettings()` method to `LocalStorageService` if not present (removes both `_kPlatformSettingsJson` and `_kPlatformSettingsFetchTime` keys)
+    - [x] Wrap JSON deserialization in `PlatformSettingsProvider.initialize()` with `try-catch`; on failure: clear cache, log via `AppErrorHandler`, and trigger fresh Firestore fetch
+    - [x] Verify all tests pass
 
 - [ ] Task: Conductor — User Manual Verification 'Phase 1: Model Unification & Cache Safety' (Protocol in workflow.md)
 
