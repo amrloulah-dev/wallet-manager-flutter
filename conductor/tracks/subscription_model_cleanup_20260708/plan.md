@@ -20,7 +20,7 @@
     - [x] Wrap JSON deserialization in `PlatformSettingsProvider.initialize()` with `try-catch`; on failure: clear cache, log via `AppErrorHandler`, and trigger fresh Firestore fetch
     - [x] Verify all tests pass
 
-- [ ] Task: Conductor — User Manual Verification 'Phase 1: Model Unification & Cache Safety' (Protocol in workflow.md)
+- [x] Task: Conductor — User Manual Verification 'Phase 1: Model Unification & Cache Safety' (Protocol in workflow.md)
 
 ## Phase 2: Store Cleanup & Repository Fix
 
