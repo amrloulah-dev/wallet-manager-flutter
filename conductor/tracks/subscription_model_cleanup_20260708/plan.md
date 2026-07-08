@@ -2,10 +2,10 @@
 
 ## Phase 1: Model Unification & Cache Safety
 
-- [ ] Task: Create `SubscriptionPlanModel` (FR-1)
-    - [ ] Write unit tests for `SubscriptionPlanModel` serialization — `fromMap()` with valid data, missing fields (defaults), and `price` as both `int` and `double` values; `toMap()` round-trip
-    - [ ] Implement `SubscriptionPlanModel` at `lib/data/models/subscription_plan_model.dart` with all 7 fields (`name`, `description`, `isActive`, `price` as `num`, `maxWallets`, `maxEmployees`, `smsEnabled`), `fromMap()` factory, and `toMap()` method
-    - [ ] Verify all tests pass
+- [x] Task: Create `SubscriptionPlanModel` (FR-1) [d690dd1]
+    - [x] Write unit tests for `SubscriptionPlanModel` serialization — `fromMap()` with valid data, missing fields (defaults), and `price` as both `int` and `double` values; `toMap()` round-trip
+    - [x] Implement `SubscriptionPlanModel` at `lib/data/models/subscription_plan_model.dart` with all 7 fields (`name`, `description`, `isActive`, `price` as `num`, `maxWallets`, `maxEmployees`, `smsEnabled`), `fromMap()` factory, and `toMap()` method
+    - [x] Verify all tests pass
 
 - [ ] Task: Update `PlatformSettingsModel` — Remove legacy fields & add plans + global variables (FR-2)
     - [ ] Write unit tests for updated `PlatformSettingsModel` — parse new-format JSON with `plans` map and global variables (`gracePeriodHours`, `trialDays`, `lifetimeCountLimit`); parse old-format JSON (with `proPrice`/`lifetimePrice`, no `plans`) verifying graceful handling; round-trip `toJson()`/`fromJson()`; verify `defaults()` returns correct new defaults
