@@ -28,6 +28,7 @@ class SubscriptionProvider extends BaseProvider {
         _repository = repository ?? sl<SubscriptionRepository>() {
     _previousSubscription = _authProvider.currentStore?.subscription;
     _authProvider.addListener(_onAuthChanged);
+    sl<PlatformSettingsProvider>().addListener(_onSettingsChanged);
     Future.microtask(() {
       _checkIntegrityAndFreshness();
       _syncToStorage();
@@ -203,6 +204,26 @@ class SubscriptionProvider extends BaseProvider {
   /// All expiration checks MUST go through this method.
   DateTime _serverNow() => TimeService.now();
 
+  SubscriptionPlanModel? _lookupPlanCaseInsensitive(
+      Map<String, SubscriptionPlanModel> plans, String targetKey) {
+    final targetLower = targetKey.toLowerCase();
+    for (final entry in plans.entries) {
+      if (entry.key.toLowerCase() == targetLower) {
+        return entry.value;
+      }
+    }
+    final targetNormalized =
+        targetLower.replaceAll('_', '').replaceAll(' ', '');
+    for (final entry in plans.entries) {
+      final entryNormalized =
+          entry.key.toLowerCase().replaceAll('_', '').replaceAll(' ', '');
+      if (entryNormalized == targetNormalized) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
   SubscriptionPlanModel get currentPlanLimits {
     final sub = _subscription;
     final settingsProvider = sl<PlatformSettingsProvider>();
@@ -210,16 +231,14 @@ class SubscriptionProvider extends BaseProvider {
 
     if (sub != null && (!isExpired || hasPendingRequest)) {
       final planKey = sub.planId.name;
-      final planKeySnake =
-          sub.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
-      final planModel = plans[planKey] ?? plans[planKeySnake];
+      final planModel = _lookupPlanCaseInsensitive(plans, planKey);
       if (planModel != null) {
         return planModel;
       }
     }
 
     // Expired or null subscription or plan not found in catalog: fallback to Free plan
-    final freePlan = plans['free'];
+    final freePlan = _lookupPlanCaseInsensitive(plans, 'free');
     if (freePlan != null) {
       return freePlan;
     }
@@ -257,9 +276,14 @@ class SubscriptionProvider extends BaseProvider {
     return currentEmployeeCount < limit;
   }
 
+  void _onSettingsChanged() {
+    safeNotify();
+  }
+
   @override
   void dispose() {
     _authProvider.removeListener(_onAuthChanged);
+    sl<PlatformSettingsProvider>().removeListener(_onSettingsChanged);
     super.dispose();
   }
 }

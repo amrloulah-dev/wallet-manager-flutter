@@ -13,8 +13,10 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
   final FirebaseFirestore _firestore;
 
   PlatformSettingsModel _settings = const PlatformSettingsModel.defaults();
+  bool _isInitialized = false;
 
   PlatformSettingsModel get settings => _settings;
+  bool get isInitialized => _isInitialized;
 
   PlatformSettingsProvider({
     LocalStorageService? storage,
@@ -29,9 +31,11 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
 
     if (lastFetch == null || cachedJson == null) {
       if (kDebugMode) {
-        debugPrint('🔥 [PlatformSettingsProvider] No cache found. Fetching from Firestore.');
+        debugPrint(
+            '🔥 [PlatformSettingsProvider] No cache found. Fetching from Firestore.');
       }
       await _fetchFromFirestore();
+      _isInitialized = true;
       return;
     }
 
@@ -40,7 +44,8 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
 
     if (isStale) {
       if (kDebugMode) {
-        debugPrint('🔥 [PlatformSettingsProvider] Cache expired (>24h). Refreshing from Firestore.');
+        debugPrint(
+            '🔥 [PlatformSettingsProvider] Cache expired (>24h). Refreshing from Firestore.');
       }
       await _fetchFromFirestore();
     } else {
@@ -62,6 +67,7 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
         await _fetchFromFirestore();
       }
     }
+    _isInitialized = true;
   }
 
   /// Bypasses the 24-hour TTL check and forces a fresh fetch from Firestore.

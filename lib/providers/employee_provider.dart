@@ -9,6 +9,8 @@ import '../core/errors/error_severity.dart';
 import '../data/models/user_permissions.dart';
 import 'auth_provider.dart';
 import 'subscription_provider.dart';
+import 'platform_settings_provider.dart';
+import 'package:get_it/get_it.dart';
 import 'base_provider.dart';
 import '../core/enums/user_enums.dart';
 
@@ -416,6 +418,15 @@ class EmployeeProvider extends BaseProvider {
   }
 
   Future<void> _enforceEmployeeLimits() async {
+    final GetIt sl = GetIt.instance;
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      final settingsProvider = sl<PlatformSettingsProvider>();
+      if (!settingsProvider.isInitialized ||
+          settingsProvider.settings.plans.isEmpty) {
+        return;
+      }
+    }
+
     final subProvider = _subscriptionProvider;
     if (subProvider == null) return;
 

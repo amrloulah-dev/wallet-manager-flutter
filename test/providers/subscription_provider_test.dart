@@ -64,6 +64,11 @@ void main() {
     // Default settings stub
     const settings = PlatformSettingsModel.defaults();
     when(() => mockPlatformSettingsProvider.settings).thenReturn(settings);
+    when(() => mockPlatformSettingsProvider.isInitialized).thenReturn(true);
+    when(() => mockPlatformSettingsProvider.addListener(any()))
+        .thenReturn(null);
+    when(() => mockPlatformSettingsProvider.removeListener(any()))
+        .thenReturn(null);
   });
 
   test('maxWallets and maxEmployees return 2 and 0 when expired', () {

@@ -10,9 +10,11 @@ import '../core/errors/app_exceptions.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:get_it/get_it.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
 import 'subscription_provider.dart';
+import 'platform_settings_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -749,6 +751,15 @@ class WalletProvider extends BaseProvider {
   }
 
   Future<void> _enforceWalletLimits() async {
+    final GetIt sl = GetIt.instance;
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      final settingsProvider = sl<PlatformSettingsProvider>();
+      if (!settingsProvider.isInitialized ||
+          settingsProvider.settings.plans.isEmpty) {
+        return;
+      }
+    }
+
     final subProvider = _subscriptionProvider;
     if (subProvider == null) return;
 
