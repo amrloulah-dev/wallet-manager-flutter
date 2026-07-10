@@ -25,16 +25,16 @@
     - [x] Implement hybrid fallback: catalog `'free'` → `SubscriptionPlanModel.fallback()`.
 
 ### 3.3 Refactor Existing Limit Getters (FR-2)
-- [ ] Task: Write Tests — Refactored `maxWallets`, `maxEmployees`, `isSmsEnabled`
-    - [ ] Test `maxWallets` delegates to `currentPlanLimits.maxWallets`.
-    - [ ] Test `maxEmployees` delegates to `currentPlanLimits.maxEmployees`.
-    - [ ] Test `isSmsEnabled` delegates to `currentPlanLimits.smsEnabled`.
-    - [ ] Test all hardcoded fallback switches are removed (no residual hardcoded values).
-- [ ] Task: Implement refactored limit getters
-    - [ ] Refactor `maxWallets` to return `currentPlanLimits.maxWallets`.
-    - [ ] Refactor `maxEmployees` to return `currentPlanLimits.maxEmployees`.
-    - [ ] Refactor `isSmsEnabled` to return `currentPlanLimits.smsEnabled`.
-    - [ ] Remove all duplicated plan-resolution logic and hardcoded switch statements.
+- [x] Task: Write Tests — Refactored `maxWallets`, `maxEmployees`, `isSmsEnabled` [92e9815]
+    - [x] Test `maxWallets` delegates to `currentPlanLimits.maxWallets`.
+    - [x] Test `maxEmployees` delegates to `currentPlanLimits.maxEmployees`.
+    - [x] Test `isSmsEnabled` delegates to `currentPlanLimits.smsEnabled`.
+    - [x] Test all hardcoded fallback switches are removed (no residual hardcoded values).
+- [x] Task: Implement refactored limit getters [92e9815]
+    - [x] Refactor `maxWallets` to return `currentPlanLimits.maxWallets`.
+    - [x] Refactor `maxEmployees` to return `currentPlanLimits.maxEmployees`.
+    - [x] Refactor `isSmsEnabled` to return `currentPlanLimits.smsEnabled`.
+    - [x] Remove all duplicated plan-resolution logic and hardcoded switch statements.
 
 ### 3.4 Unify `canAddWallet` & `canAddEmployee` (FR-3)
 - [ ] Task: Write Tests — Unified `canAddWallet` and `canAddEmployee`
