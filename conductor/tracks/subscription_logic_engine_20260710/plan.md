@@ -64,18 +64,18 @@
     - [x] Trigger from subscription state change listener.
 
 ### 3.6 Retroactive Enforcement — Employee Suspension (FR-5)
-- [ ] Task: Write Tests — Employee suspension on limit change
-    - [ ] Test: when employee count exceeds new limit, excess employees are suspended (most recently added first).
-    - [ ] Test: when employee count is within limit, no employees are suspended.
-    - [ ] Test: unlimited plan (`maxEmployees == -1`) never suspends employees.
-    - [ ] Test: Optimistic UI — RAM mutation before Firestore.
-    - [ ] Test: rollback on Firestore failure.
-- [ ] Task: Implement employee suspension enforcement
-    - [ ] Add `enforceEmployeeLimits()` method to `SubscriptionProvider` (or `EmployeeProvider`).
-    - [ ] Compare `currentPlanLimits.maxEmployees` against current active employee count.
-    - [ ] Suspend excess employees starting from most recently added.
-    - [ ] Follow Optimistic UI pattern with rollback.
-    - [ ] Trigger from subscription state change listener.
+- [x] Task: Write Tests — Employee suspension on limit change [68e0d72]
+    - [x] Test: when employee count exceeds new limit, excess employees are suspended (most recently added first).
+    - [x] Test: when employee count is within limit, no employees are suspended.
+    - [x] Test: unlimited plan (`maxEmployees == -1`) never suspends employees.
+    - [x] Test: Optimistic UI — RAM mutation before Firestore.
+    - [x] Test: rollback on Firestore failure.
+- [x] Task: Implement employee suspension enforcement [68e0d72]
+    - [x] Add `enforceEmployeeLimits()` method to `SubscriptionProvider` (or `EmployeeProvider`).
+    - [x] Compare `currentPlanLimits.maxEmployees` against current active employee count.
+    - [x] Suspend excess employees starting from most recently added.
+    - [x] Follow Optimistic UI pattern with rollback.
+    - [x] Trigger from subscription state change listener.
 
 ### 3.7 Verify `AddEmployeeScreen` (FR-6)
 - [ ] Task: Write Tests — `AddEmployeeScreen` integration verification
