@@ -86,6 +86,56 @@ void main() {
       settings: StoreSettings(),
     );
 
+    final mockSettings = PlatformSettingsModel(
+      isRegistrationOpen: true,
+      instapayLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkCommercialLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkNewLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkOldLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      minCrossNetworkFee: 0,
+      maxCrossNetworkFee: 0,
+      minInstapayFee: 0,
+      maxInstapayFee: 0,
+      sameNetworkFee: 0,
+      crossNetworkFeeRate: 0,
+      instapayFeeRate: 0,
+      lifetimeCountLimit: 50,
+      gracePeriodHours: 48,
+      trialDays: 14,
+      plans: {
+        'free': const SubscriptionPlanModel(
+          name: 'Dynamic Free Plan',
+          description: '',
+          isActive: true,
+          price: 0,
+          maxWallets: 2,
+          maxEmployees: 0,
+          smsEnabled: false,
+        ),
+      },
+    );
+    when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+
     when(() => mockAuthProvider.currentStore).thenReturn(store);
     when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
 
@@ -818,6 +868,141 @@ void main() {
 
       expect(provider.currentPlanLimits.name, equals('Free'));
       expect(provider.currentPlanLimits.maxWallets, equals(1));
+    });
+
+    test('maxWallets, maxEmployees, isSmsEnabled delegate to currentPlanLimits',
+        () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'proYearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly Dynamic',
+            description: '',
+            isActive: true,
+            price: 1500,
+            maxWallets: 30,
+            maxEmployees: 10,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.maxWallets, equals(30));
+      expect(provider.maxEmployees, equals(10));
+      expect(provider.isSmsEnabled, isTrue);
+    });
+
+    test(
+        'maxWallets returns fallback limits when plan missing from catalog (no old hardcoded switch)',
+        () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: const {}, // Empty catalog
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      // In old code, this returned 50 because of the switch fallback.
+      // In refactored code, it should return 1 (from fallback).
+      expect(provider.maxWallets, equals(1));
+      expect(provider.maxEmployees, equals(1));
+      expect(provider.isSmsEnabled, isFalse);
     });
   });
 }

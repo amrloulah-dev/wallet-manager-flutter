@@ -228,88 +228,11 @@ class SubscriptionProvider extends BaseProvider {
     return const SubscriptionPlanModel.fallback();
   }
 
-  int get maxWallets {
-    // T053: Fallback to Free tier caps when explicitly expired with no pending request
-    if (_subscription != null && isExpired && !hasPendingRequest) return 2;
-    if (_subscription == null) return 2;
+  int get maxWallets => currentPlanLimits.maxWallets;
 
-    final settingsProvider = sl<PlatformSettingsProvider>();
-    final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
-        ? 'pro_yearly'
-        : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ??
-        settingsProvider.settings.plans[planKeySnake];
+  int get maxEmployees => currentPlanLimits.maxEmployees;
 
-    if (planModel != null) {
-      return planModel.maxWallets;
-    }
-
-    switch (_subscription!.planId) {
-      case SubscriptionPlan.free:
-        return 2;
-      case SubscriptionPlan.trial:
-        return 3;
-      case SubscriptionPlan.proYearly:
-        return 50;
-      case SubscriptionPlan.lifetime:
-        return 999;
-    }
-  }
-
-  int get maxEmployees {
-    // T053: Fallback to Free tier caps when explicitly expired with no pending request
-    if (_subscription != null && isExpired && !hasPendingRequest) return 0;
-    if (_subscription == null) return 1;
-
-    final settingsProvider = sl<PlatformSettingsProvider>();
-    final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
-        ? 'pro_yearly'
-        : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ??
-        settingsProvider.settings.plans[planKeySnake];
-
-    if (planModel != null) {
-      return planModel.maxEmployees;
-    }
-
-    switch (_subscription!.planId) {
-      case SubscriptionPlan.free:
-        return 1;
-      case SubscriptionPlan.trial:
-        return 1;
-      case SubscriptionPlan.proYearly:
-        return 20;
-      case SubscriptionPlan.lifetime:
-        return 999;
-    }
-  }
-
-  bool get isSmsEnabled {
-    if (_subscription == null) return false;
-
-    final settingsProvider = sl<PlatformSettingsProvider>();
-    final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
-        ? 'pro_yearly'
-        : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ??
-        settingsProvider.settings.plans[planKeySnake];
-
-    if (planModel != null) {
-      return planModel.smsEnabled;
-    }
-
-    switch (_subscription!.planId) {
-      case SubscriptionPlan.free:
-        return false;
-      case SubscriptionPlan.trial:
-      case SubscriptionPlan.proYearly:
-      case SubscriptionPlan.lifetime:
-        return true;
-    }
-  }
+  bool get isSmsEnabled => currentPlanLimits.smsEnabled;
 
   bool get isSuspended => _subscription?.status == SubscriptionStatus.suspended;
 
