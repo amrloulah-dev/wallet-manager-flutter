@@ -50,18 +50,18 @@
     - [x] Preserve `-1` as "unlimited" behavior.
 
 ### 3.5 Retroactive Enforcement — Wallet Freezing (FR-4)
-- [ ] Task: Write Tests — Wallet freezing on limit change
-    - [ ] Test: when wallet count exceeds new limit, excess wallets are frozen (most recently created first).
-    - [ ] Test: when wallet count is within limit, no wallets are frozen.
-    - [ ] Test: unlimited plan (`maxWallets == -1`) never freezes wallets.
-    - [ ] Test: Optimistic UI — RAM is mutated before Firestore write.
-    - [ ] Test: rollback on Firestore failure (frozen wallets restored to active).
-- [ ] Task: Implement wallet freezing enforcement
-    - [ ] Add `enforceWalletLimits()` method to `SubscriptionProvider` (or `WalletProvider`).
-    - [ ] Compare `currentPlanLimits.maxWallets` against current active wallet count.
-    - [ ] Freeze excess wallets starting from most recently created.
-    - [ ] Follow Optimistic UI: mutate RAM → `safeNotify()` → Firestore write → rollback on failure.
-    - [ ] Trigger from subscription state change listener.
+- [x] Task: Write Tests — Wallet freezing on limit change [b102e96]
+    - [x] Test: when wallet count exceeds new limit, excess wallets are frozen (most recently created first).
+    - [x] Test: when wallet count is within limit, no wallets are frozen.
+    - [x] Test: unlimited plan (`maxWallets == -1`) never freezes wallets.
+    - [x] Test: Optimistic UI — RAM is mutated before Firestore write.
+    - [x] Test: rollback on Firestore failure (frozen wallets restored to active).
+- [x] Task: Implement wallet freezing enforcement [b102e96]
+    - [x] Add `enforceWalletLimits()` method to `SubscriptionProvider` (or `WalletProvider`).
+    - [x] Compare `currentPlanLimits.maxWallets` against current active wallet count.
+    - [x] Freeze excess wallets starting from most recently created.
+    - [x] Follow Optimistic UI: mutate RAM → `safeNotify()` → Firestore write → rollback on failure.
+    - [x] Trigger from subscription state change listener.
 
 ### 3.6 Retroactive Enforcement — Employee Suspension (FR-5)
 - [ ] Task: Write Tests — Employee suspension on limit change
