@@ -19,6 +19,15 @@ class SubscriptionPlanModel {
     required this.smsEnabled,
   });
 
+  const SubscriptionPlanModel.fallback()
+      : name = 'Free',
+        description = 'Basic plan',
+        isActive = true,
+        price = 0,
+        maxWallets = 1,
+        maxEmployees = 1,
+        smsEnabled = false;
+
   factory SubscriptionPlanModel.fromMap(Map<String, dynamic>? map) {
     if (map == null) {
       return const SubscriptionPlanModel(
@@ -36,7 +45,9 @@ class SubscriptionPlanModel {
       name: map['name'] as String? ?? '',
       description: map['description'] as String? ?? '',
       isActive: map['isActive'] as bool? ?? false,
-      price: map['price'] is num ? (map['price'] as num) : NumberParser.toDouble(map['price'], 0.0),
+      price: map['price'] is num
+          ? (map['price'] as num)
+          : NumberParser.toDouble(map['price'], 0.0),
       maxWallets: NumberParser.toInt(map['maxWallets'], 0),
       maxEmployees: NumberParser.toInt(map['maxEmployees'], 0),
       smsEnabled: map['smsEnabled'] as bool? ?? false,

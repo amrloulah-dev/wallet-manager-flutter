@@ -75,5 +75,24 @@ void main() {
       expect(map['maxEmployees'], equals(1));
       expect(map['smsEnabled'], isFalse);
     });
+
+    group('fallback constructor', () {
+      test('returns instance with expected defaults', () {
+        const fallback = SubscriptionPlanModel.fallback();
+        expect(fallback.name, equals('Free'));
+        expect(fallback.price, equals(0));
+        expect(fallback.maxWallets, equals(1));
+        expect(fallback.maxEmployees, equals(1));
+        expect(fallback.smsEnabled, isFalse);
+        expect(fallback.isActive, isTrue);
+      });
+
+      test('supports value equality', () {
+        const f1 = SubscriptionPlanModel.fallback();
+        const f2 = SubscriptionPlanModel.fallback();
+        expect(identical(f1, f2),
+            isTrue); // Should be a const constructor returning the same constant instance
+      });
+    });
   });
 }
