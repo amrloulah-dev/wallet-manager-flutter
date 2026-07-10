@@ -52,7 +52,8 @@ void main() {
     if (sl.isRegistered<PlatformSettingsProvider>()) {
       sl.unregister<PlatformSettingsProvider>();
     }
-    sl.registerSingleton<PlatformSettingsProvider>(mockPlatformSettingsProvider);
+    sl.registerSingleton<PlatformSettingsProvider>(
+        mockPlatformSettingsProvider);
 
     when(() => mockAuthProvider.addListener(any())).thenReturn(null);
     when(() => mockAuthProvider.removeListener(any())).thenReturn(null);
@@ -119,10 +120,30 @@ void main() {
 
     final mockSettings = PlatformSettingsModel(
       isRegistrationOpen: true,
-      instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-      networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-      networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-      networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+      instapayLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkCommercialLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkNewLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
+      networkOldLimits: const NetworkLimits(
+          dailyReceive: 0,
+          dailySend: 0,
+          maxPerTransaction: 0,
+          monthlyReceive: 0,
+          monthlySend: 0),
       minCrossNetworkFee: 0,
       maxCrossNetworkFee: 0,
       minInstapayFee: 0,
@@ -182,10 +203,30 @@ void main() {
 
       final mockSettings = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -208,7 +249,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);
       when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
@@ -246,10 +288,30 @@ void main() {
 
       final mockSettings = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -272,7 +334,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       when(() => mockAuthProvider.currentStore).thenReturn(store);
       when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
@@ -284,6 +347,477 @@ void main() {
 
       expect(provider.canAddEmployee(0), isTrue);
       expect(provider.canAddEmployee(999), isTrue);
+    });
+  });
+
+  group('currentPlanLimits getter', () {
+    late StoreModel testStore;
+
+    StoreModel createStoreWithSub({
+      required SubscriptionPlan planId,
+      required SubscriptionStatus status,
+      required DateTime endDate,
+      DateTime? pendingRequestDate,
+    }) {
+      return StoreModel(
+        storeId: 'test_store',
+        storeName: 'Test Store',
+        storePassword: 'hashed_password',
+        ownerId: 'owner_id',
+        ownerName: 'Owner Name',
+        ownerEmail: 'owner@test.com',
+        subscription: StoreSubscription(
+          planId: planId,
+          status: status,
+          endDate: endDate,
+          trialConsumed: true,
+          pendingRequestDate: pendingRequestDate,
+        ),
+        settings: StoreSettings(),
+      );
+    }
+
+    test('resolves active plan from catalog via camelCase key', () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'proYearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly Dynamic',
+            description: '',
+            isActive: true,
+            price: 1500,
+            maxWallets: 30,
+            maxEmployees: 10,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Pro Yearly Dynamic'));
+      expect(provider.currentPlanLimits.maxWallets, equals(30));
+    });
+
+    test('resolves active plan from catalog via snake_case key fallback', () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'pro_yearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly Snake Dynamic',
+            description: '',
+            isActive: true,
+            price: 1200,
+            maxWallets: 25,
+            maxEmployees: 8,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(
+          provider.currentPlanLimits.name, equals('Pro Yearly Snake Dynamic'));
+      expect(provider.currentPlanLimits.maxWallets, equals(25));
+    });
+
+    test('expired subscription with no pending request returns free plan', () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.expired,
+        endDate: DateTime.now().subtract(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'free': const SubscriptionPlanModel(
+            name: 'Dynamic Free Plan',
+            description: '',
+            isActive: true,
+            price: 0,
+            maxWallets: 2,
+            maxEmployees: 0,
+            smsEnabled: false,
+          ),
+          'pro_yearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly Dynamic',
+            description: '',
+            isActive: true,
+            price: 1200,
+            maxWallets: 50,
+            maxEmployees: 20,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Dynamic Free Plan'));
+      expect(provider.currentPlanLimits.maxWallets, equals(2));
+      expect(provider.currentPlanLimits.maxEmployees, equals(0));
+    });
+
+    test('expired subscription WITH pending request returns actual plan limits',
+        () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.expired,
+        endDate: DateTime.now().subtract(const Duration(days: 5)),
+        pendingRequestDate: DateTime.now(),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'free': const SubscriptionPlanModel(
+            name: 'Dynamic Free Plan',
+            description: '',
+            isActive: true,
+            price: 0,
+            maxWallets: 2,
+            maxEmployees: 0,
+            smsEnabled: false,
+          ),
+          'pro_yearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly Dynamic',
+            description: '',
+            isActive: true,
+            price: 1200,
+            maxWallets: 50,
+            maxEmployees: 20,
+            smsEnabled: true,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Pro Yearly Dynamic'));
+      expect(provider.currentPlanLimits.maxWallets, equals(50));
+    });
+
+    test('plan not found in catalog returns catalog free plan', () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'free': const SubscriptionPlanModel(
+            name: 'Catalog Free Fallback',
+            description: '',
+            isActive: true,
+            price: 0,
+            maxWallets: 2,
+            maxEmployees: 0,
+            smsEnabled: false,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Catalog Free Fallback'));
+      expect(provider.currentPlanLimits.maxWallets, equals(2));
+    });
+
+    test(
+        'both plan and free missing from catalog returns SubscriptionPlanModel.fallback()',
+        () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: const {}, // Empty plans map
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Free'));
+      expect(provider.currentPlanLimits.maxWallets, equals(1));
+      expect(provider.currentPlanLimits.maxEmployees, equals(1));
+      expect(provider.currentPlanLimits.smsEnabled, isFalse);
+    });
+
+    test('null subscription returns SubscriptionPlanModel.fallback()', () {
+      when(() => mockAuthProvider.currentStore).thenReturn(null);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      expect(provider.currentPlanLimits.name, equals('Free'));
+      expect(provider.currentPlanLimits.maxWallets, equals(1));
     });
   });
 }

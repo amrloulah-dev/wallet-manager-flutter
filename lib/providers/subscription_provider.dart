@@ -11,6 +11,7 @@ import 'platform_settings_provider.dart';
 import '../data/repositories/subscription_repository.dart';
 import '../data/models/subscription_request_model.dart';
 import 'base_provider.dart';
+import '../data/models/subscription_plan_model.dart';
 import '../core/enums/subscription_enums.dart';
 
 class SubscriptionProvider extends BaseProvider {
@@ -202,6 +203,31 @@ class SubscriptionProvider extends BaseProvider {
   /// All expiration checks MUST go through this method.
   DateTime _serverNow() => TimeService.now();
 
+  SubscriptionPlanModel get currentPlanLimits {
+    final sub = _subscription;
+    final settingsProvider = sl<PlatformSettingsProvider>();
+    final plans = settingsProvider.settings.plans;
+
+    if (sub != null && (!isExpired || hasPendingRequest)) {
+      final planKey = sub.planId.name;
+      final planKeySnake =
+          sub.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
+      final planModel = plans[planKey] ?? plans[planKeySnake];
+      if (planModel != null) {
+        return planModel;
+      }
+    }
+
+    // Expired or null subscription or plan not found in catalog: fallback to Free plan
+    final freePlan = plans['free'];
+    if (freePlan != null) {
+      return freePlan;
+    }
+
+    // Last resort fallback
+    return const SubscriptionPlanModel.fallback();
+  }
+
   int get maxWallets {
     // T053: Fallback to Free tier caps when explicitly expired with no pending request
     if (_subscription != null && isExpired && !hasPendingRequest) return 2;
@@ -209,8 +235,11 @@ class SubscriptionProvider extends BaseProvider {
 
     final settingsProvider = sl<PlatformSettingsProvider>();
     final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
+        ? 'pro_yearly'
+        : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ??
+        settingsProvider.settings.plans[planKeySnake];
 
     if (planModel != null) {
       return planModel.maxWallets;
@@ -235,8 +264,11 @@ class SubscriptionProvider extends BaseProvider {
 
     final settingsProvider = sl<PlatformSettingsProvider>();
     final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
+        ? 'pro_yearly'
+        : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ??
+        settingsProvider.settings.plans[planKeySnake];
 
     if (planModel != null) {
       return planModel.maxEmployees;
@@ -259,8 +291,11 @@ class SubscriptionProvider extends BaseProvider {
 
     final settingsProvider = sl<PlatformSettingsProvider>();
     final planKey = _subscription!.planId.name;
-    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly ? 'pro_yearly' : planKey;
-    final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+    final planKeySnake = _subscription!.planId == SubscriptionPlan.proYearly
+        ? 'pro_yearly'
+        : planKey;
+    final planModel = settingsProvider.settings.plans[planKey] ??
+        settingsProvider.settings.plans[planKeySnake];
 
     if (planModel != null) {
       return planModel.smsEnabled;
