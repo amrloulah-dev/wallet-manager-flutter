@@ -1004,5 +1004,82 @@ void main() {
       expect(provider.maxEmployees, equals(1));
       expect(provider.isSmsEnabled, isFalse);
     });
+
+    test(
+        'unified canAddWallet and canAddEmployee follow catalog free limits when expired',
+        () {
+      testStore = createStoreWithSub(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.expired,
+        endDate: DateTime.now().subtract(const Duration(days: 5)),
+      );
+      when(() => mockAuthProvider.currentStore).thenReturn(testStore);
+      when(() => mockAuthProvider.currentStoreId).thenReturn('test_store');
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'free': const SubscriptionPlanModel(
+            name: 'Free Plan',
+            description: '',
+            isActive: true,
+            price: 0,
+            maxWallets: 1, // Enforced limit of 1
+            maxEmployees: 0, // Enforced limit of 0
+            smsEnabled: false,
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      // Under old code, expired would allow up to 2 wallets (currentWalletCount < 3)
+      // and up to 0 employees (currentEmployeeCount < 1).
+      // Under unified code, it uses free limits from catalog: maxWallets (1) and maxEmployees (0).
+      expect(provider.canAddWallet(0), isTrue);
+      expect(
+          provider.canAddWallet(1), isFalse); // Old allowed this because 1 < 3
+      expect(provider.canAddEmployee(0),
+          isFalse); // Old allowed this because 0 < 1
+    });
   });
 }

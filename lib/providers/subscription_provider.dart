@@ -246,20 +246,12 @@ class SubscriptionProvider extends BaseProvider {
   int? get daysRemaining => _subscription?.daysRemainingAt(_serverNow());
 
   bool canAddWallet(int currentWalletCount) {
-    // T053: Fallback to Free tier caps when explicitly expired with no pending request
-    if (_subscription != null && isExpired && !hasPendingRequest) {
-      return currentWalletCount < 3;
-    }
     final limit = maxWallets;
     if (limit == -1) return true;
     return currentWalletCount < limit;
   }
 
   bool canAddEmployee(int currentEmployeeCount) {
-    // T053: Fallback to Free tier caps when explicitly expired with no pending request
-    if (_subscription != null && isExpired && !hasPendingRequest) {
-      return currentEmployeeCount < 1;
-    }
     final limit = maxEmployees;
     if (limit == -1) return true;
     return currentEmployeeCount < limit;
