@@ -33,3 +33,8 @@
 - [~] **Track: Subscription Model Unification & Store Cleanup**
 *Link: [./tracks/subscription_model_cleanup_20260708/](./tracks/subscription_model_cleanup_20260708/)*
 
+---
+
+- [ ] **Track: Subscription Logic Engine & Dynamic UI**
+*Link: [./tracks/subscription_logic_engine_20260710/](./tracks/subscription_logic_engine_20260710/)*
+
