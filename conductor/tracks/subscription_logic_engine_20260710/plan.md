@@ -37,17 +37,17 @@
     - [x] Remove all duplicated plan-resolution logic and hardcoded switch statements.
 
 ### 3.4 Unify `canAddWallet` & `canAddEmployee` (FR-3)
-- [ ] Task: Write Tests — Unified `canAddWallet` and `canAddEmployee`
-    - [ ] Test `canAddWallet` uses `currentPlanLimits.maxWallets` for all states (active, expired, null).
-    - [ ] Test `canAddEmployee` uses `currentPlanLimits.maxEmployees` for all states.
-    - [ ] Test unlimited behavior (`maxWallets == -1` returns true).
-    - [ ] Test off-by-one fix: expired with free plan (`maxWallets: 1`) blocks at 1 wallet (not 2).
-    - [ ] Test with pending request: uses actual plan limits, not free fallback.
-- [ ] Task: Implement unified `canAddWallet` and `canAddEmployee`
-    - [ ] Remove hardcoded `< 3` expired fallback from `canAddWallet`.
-    - [ ] Remove hardcoded `< 1` expired fallback from `canAddEmployee`.
-    - [ ] Both methods delegate to `currentPlanLimits` for limit resolution.
-    - [ ] Preserve `-1` as "unlimited" behavior.
+- [x] Task: Write Tests — Unified `canAddWallet` and `canAddEmployee` [8fde82b]
+    - [x] Test `canAddWallet` uses `currentPlanLimits.maxWallets` for all states (active, expired, null).
+    - [x] Test `canAddEmployee` uses `currentPlanLimits.maxEmployees` for all states.
+    - [x] Test unlimited behavior (`maxWallets == -1` returns true).
+    - [x] Test off-by-one fix: expired with free plan (`maxWallets: 1`) blocks at 1 wallet (not 2).
+    - [x] Test with pending request: uses actual plan limits, not free fallback.
+- [x] Task: Implement unified `canAddWallet` and `canAddEmployee` [8fde82b]
+    - [x] Remove hardcoded `< 3` expired fallback from `canAddWallet`.
+    - [x] Remove hardcoded `< 1` expired fallback from `canAddEmployee`.
+    - [x] Both methods delegate to `currentPlanLimits` for limit resolution.
+    - [x] Preserve `-1` as "unlimited" behavior.
 
 ### 3.5 Retroactive Enforcement — Wallet Freezing (FR-4)
 - [ ] Task: Write Tests — Wallet freezing on limit change
