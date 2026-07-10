@@ -3,12 +3,12 @@
 ## Phase 3: Centralized Logic Engine & Rule Enforcement
 
 ### 3.1 Create `SubscriptionPlanModel.fallback()` Factory (FR-10)
-- [ ] Task: Write Tests — `SubscriptionPlanModel.fallback()`
-    - [ ] Test that `SubscriptionPlanModel.fallback()` returns an instance with expected defaults: `name: 'Free'`, `price: 0`, `maxWallets: 1`, `maxEmployees: 1`, `smsEnabled: false`, `isActive: true`.
-    - [ ] Test immutability and equality of the fallback instance.
-- [ ] Task: Implement `SubscriptionPlanModel.fallback()`
-    - [ ] Add `factory SubscriptionPlanModel.fallback()` named constructor to `lib/data/models/subscription_plan_model.dart`.
-    - [ ] Return a constant instance with minimum safe defaults.
+- [x] Task: Write Tests — `SubscriptionPlanModel.fallback()` [56976e8]
+    - [x] Test that `SubscriptionPlanModel.fallback()` returns an instance with expected defaults: `name: 'Free'`, `price: 0`, `maxWallets: 1`, `maxEmployees: 1`, `smsEnabled: false`, `isActive: true`.
+    - [x] Test immutability and equality of the fallback instance.
+- [x] Task: Implement `SubscriptionPlanModel.fallback()` [56976e8]
+    - [x] Add `factory SubscriptionPlanModel.fallback()` named constructor to `lib/data/models/subscription_plan_model.dart`.
+    - [x] Return a constant instance with minimum safe defaults.
 
 ### 3.2 Implement `currentPlanLimits` Getter (FR-1)
 - [ ] Task: Write Tests — `currentPlanLimits` getter
