@@ -350,4 +350,107 @@ void main() {
       await createFuture;
     });
   });
+
+  group('Wallet Freezing on Limit Change', () {
+    late WalletModel w1;
+    late WalletModel w2;
+    late WalletModel w3;
+
+    setUp(() {
+      w1 = WalletModel(
+        walletId: 'w1',
+        storeId: storeId,
+        phoneNumber: '0101',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        stats: WalletStats(),
+      );
+
+      w2 = WalletModel(
+        walletId: 'w2',
+        storeId: storeId,
+        phoneNumber: '0102',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        stats: WalletStats(),
+      );
+
+      w3 = WalletModel(
+        walletId: 'w3',
+        storeId: storeId,
+        phoneNumber: '0103',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 1000, dailyUsed: 0, monthlyLimit: 5000, monthlyUsed: 0),
+        stats: WalletStats(),
+      );
+    });
+
+    test(
+        'optimistically suspends excess wallets (newest first) and writes to Firestore',
+        () async {
+      provider.setWalletsForTesting([w1, w2, w3]);
+
+      when(() => mockSubProvider.maxWallets).thenReturn(2);
+      when(() =>
+              mockWalletRepo.updateWallet('w3', {'walletStatus': 'suspended'}))
+          .thenAnswer((_) async => {});
+
+      // Trigger the update
+      provider.updateSubscriptionProvider(mockSubProvider);
+
+      // Expect w3 to be suspended immediately (Optimistic UI)
+      expect(
+          provider.wallets.firstWhere((w) => w.walletId == 'w1').walletStatus,
+          WalletStatus.active);
+      expect(
+          provider.wallets.firstWhere((w) => w.walletId == 'w2').walletStatus,
+          WalletStatus.active);
+      expect(
+          provider.wallets.firstWhere((w) => w.walletId == 'w3').walletStatus,
+          WalletStatus.suspended);
+
+      // Wait for background writes
+      await Future.delayed(Duration.zero);
+
+      verify(() =>
+              mockWalletRepo.updateWallet('w3', {'walletStatus': 'suspended'}))
+          .called(1);
+    });
+
+    test('rolls back to active status on Firestore write failure', () async {
+      provider.setWalletsForTesting([w1, w2, w3]);
+
+      when(() => mockSubProvider.maxWallets).thenReturn(2);
+      when(() =>
+              mockWalletRepo.updateWallet('w3', {'walletStatus': 'suspended'}))
+          .thenThrow(Exception('Firestore write failed'));
+
+      // Trigger update
+      provider.updateSubscriptionProvider(mockSubProvider);
+
+      // Should be active again after failure rollback
+      await Future.delayed(Duration.zero);
+      expect(
+          provider.wallets.firstWhere((w) => w.walletId == 'w3').walletStatus,
+          WalletStatus.active);
+    });
+  });
 }

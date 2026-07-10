@@ -18,6 +18,7 @@ import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
 import '../core/utils/number_parser.dart';
 import '../core/enums/wallet_enums.dart';
 import '../core/enums/transaction_enums.dart';
@@ -246,6 +247,7 @@ class WalletProvider extends BaseProvider {
     _subscriptionProvider = subscriptionProvider;
     if (_wallets.isNotEmpty) {
       _rebuildWalletMap();
+      _enforceWalletLimits();
       safeNotify();
     }
   }
@@ -744,5 +746,66 @@ class WalletProvider extends BaseProvider {
 
   bool isWalletFrozenSync(String walletId) {
     return _frozenWalletIds.contains(walletId);
+  }
+
+  Future<void> _enforceWalletLimits() async {
+    final subProvider = _subscriptionProvider;
+    if (subProvider == null) return;
+
+    final maxWallets = subProvider.maxWallets;
+    if (maxWallets == -1) return;
+
+    // Filter active wallets
+    final activeWallets =
+        _wallets.where((w) => w.walletStatus == WalletStatus.active).toList();
+    if (activeWallets.length <= maxWallets) return;
+
+    // Sort active wallets by createdAt ascending (oldest first)
+    activeWallets.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime(1970);
+      final bDate = b.createdAt ?? DateTime(1970);
+      return aDate.compareTo(bDate);
+    });
+
+    // The excess active wallets starting from the most recently created (indices >= maxWallets)
+    final excessWallets = activeWallets.sublist(maxWallets);
+
+    // Save previous state for rollback
+    final previousWallets = _wallets.toList();
+
+    // Optimistically update RAM
+    for (final wallet in excessWallets) {
+      final index = _wallets.indexWhere((w) => w.walletId == wallet.walletId);
+      if (index != -1) {
+        _wallets[index] =
+            _wallets[index].copyWith(walletStatus: WalletStatus.suspended);
+      }
+    }
+    _rebuildWalletMap();
+    safeNotify();
+
+    // Perform Firestore writes in background
+    try {
+      for (final wallet in excessWallets) {
+        await _walletRepository
+            .updateWallet(wallet.walletId, {'walletStatus': 'suspended'});
+      }
+      _activateFetchShield();
+    } catch (e, stack) {
+      // Rollback on failure
+      _wallets = previousWallets;
+      _rebuildWalletMap();
+      safeNotify();
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'wallet_enforce_limits_rollback',
+          stackTrace: stack);
+    }
+  }
+
+  @visibleForTesting
+  void setWalletsForTesting(List<WalletModel> wallets) {
+    _wallets = wallets;
+    _rebuildWalletMap();
   }
 }
