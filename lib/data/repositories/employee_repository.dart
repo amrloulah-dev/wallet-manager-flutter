@@ -141,14 +141,16 @@ class EmployeeRepository {
 
       final storeData = storeSnap.data()!;
 
-      final subscriptionData = storeData['subscription'] as Map<String, dynamic>?;
+      final subscriptionData =
+          storeData['subscription'] as Map<String, dynamic>?;
       final planIdStr = subscriptionData?['planId'] ?? 'free';
       final plan = SubscriptionPlan.fromString(planIdStr);
 
       final settingsProvider = sl<PlatformSettingsProvider>();
       final planKey = plan.name;
       final planKeySnake = planIdStr == 'pro_yearly' ? 'pro_yearly' : planKey;
-      final planModel = settingsProvider.settings.plans[planKey] ?? settingsProvider.settings.plans[planKeySnake];
+      final planModel = settingsProvider.settings.plans[planKey] ??
+          settingsProvider.settings.plans[planKeySnake];
 
       int maxEmployees = 1;
       if (planModel != null) {
@@ -270,6 +272,22 @@ class EmployeeRepository {
         });
       }
     });
+  }
+
+  Future<void> updateEmployee(String userId, Map<String, dynamic> data) async {
+    try {
+      await _usersCollection.doc(userId).update({
+        ...data,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+      });
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'EmployeeRepository.updateEmployee',
+      );
+      throw ServerException('employee_error_update_failed');
+    }
   }
 
   Future<bool> resetEmployeePIN({

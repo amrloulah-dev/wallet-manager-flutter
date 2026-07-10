@@ -8,11 +8,14 @@ import 'package:walletmanager/providers/employee_provider.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/providers/subscription_provider.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 
 class MockEmployeeRepository extends Mock implements EmployeeRepository {}
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
+class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
 
 class FakeUserPermissions extends Fake implements UserPermissions {}
 
@@ -183,6 +186,88 @@ void main() {
       expect(result, true);
       expect(employeeProvider.employees.length, 2);
       expect(employeeProvider.employees.first.userId, 'emp-456');
+    });
+  });
+
+  group('Employee Suspension on Limit Change', () {
+    late MockSubscriptionProvider mockSubProvider;
+    late UserModel e1;
+    late UserModel e2;
+    late UserModel e3;
+
+    setUp(() {
+      mockSubProvider = MockSubscriptionProvider();
+
+      e1 = UserModel(
+        userId: 'e1',
+        storeId: 'store-123',
+        role: UserRole.employee,
+        fullName: 'Employee 1',
+        phone: '111',
+        isActive: true,
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        lastLogin: DateTime.now(),
+      );
+
+      e2 = UserModel(
+        userId: 'e2',
+        storeId: 'store-123',
+        role: UserRole.employee,
+        fullName: 'Employee 2',
+        phone: '222',
+        isActive: true,
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        lastLogin: DateTime.now(),
+      );
+
+      e3 = UserModel(
+        userId: 'e3',
+        storeId: 'store-123',
+        role: UserRole.employee,
+        fullName: 'Employee 3',
+        phone: '333',
+        isActive: true,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        lastLogin: DateTime.now(),
+      );
+    });
+
+    test(
+        'optimistically suspends excess employees (newest first) and writes to Firestore',
+        () async {
+      employeeProvider.setEmployeesForTesting([e1, e2, e3]);
+
+      when(() => mockSubProvider.maxEmployees).thenReturn(2);
+      when(() => mockRepository.updateEmployee('e3', {'isSuspended': true}))
+          .thenAnswer((_) async => {});
+
+      // Trigger update
+      employeeProvider.updateSubscriptionProvider(mockSubProvider);
+
+      // Verify that e3 is suspended in memory (isEmployeeFrozen returns true)
+      expect(employeeProvider.isEmployeeFrozen(e1), isFalse);
+      expect(employeeProvider.isEmployeeFrozen(e2), isFalse);
+      expect(employeeProvider.isEmployeeFrozen(e3), isTrue);
+
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockRepository.updateEmployee('e3', {'isSuspended': true}))
+          .called(1);
+    });
+
+    test('rolls back to active status on Firestore write failure', () async {
+      employeeProvider.setEmployeesForTesting([e1, e2, e3]);
+
+      when(() => mockSubProvider.maxEmployees).thenReturn(2);
+      when(() => mockRepository.updateEmployee('e3', {'isSuspended': true}))
+          .thenThrow(Exception('Firestore write failed'));
+
+      // Trigger update
+      employeeProvider.updateSubscriptionProvider(mockSubProvider);
+
+      // Verify that e3 is rolled back and is NOT frozen after failure
+      await Future.delayed(Duration.zero);
+      expect(employeeProvider.isEmployeeFrozen(e3), isFalse);
     });
   });
 }

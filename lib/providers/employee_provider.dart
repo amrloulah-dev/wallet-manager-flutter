@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/employee_repository.dart';
 import '../core/errors/app_exceptions.dart';
@@ -54,6 +55,11 @@ class EmployeeProvider extends BaseProvider {
 
   void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
     _subscriptionProvider = subscriptionProvider;
+    if (_employees.isNotEmpty) {
+      _recalculateSuspendedEmployees();
+      _enforceEmployeeLimits();
+      safeNotify();
+    }
   }
 
   void setStoreId(String? storeId) {
@@ -407,5 +413,64 @@ class EmployeeProvider extends BaseProvider {
     _errorMessage = null;
     _status = EmployeeProviderStatus.loaded;
     safeNotify();
+  }
+
+  Future<void> _enforceEmployeeLimits() async {
+    final subProvider = _subscriptionProvider;
+    if (subProvider == null) return;
+
+    final maxEmployees = subProvider.maxEmployees;
+    if (maxEmployees == -1) return;
+
+    // Filter active employees (excluding owner)
+    final activeStaff = _employees
+        .where((e) => e.isActive && e.role != UserRole.owner)
+        .toList();
+    if (activeStaff.length <= maxEmployees) return;
+
+    // Sort active staff by createdAt ascending (oldest first)
+    activeStaff.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime.now();
+      final bDate = b.createdAt ?? DateTime.now();
+      return aDate.compareTo(bDate);
+    });
+
+    // The excess active employees starting from the most recently added (indices >= maxEmployees)
+    final excessEmployees = activeStaff.sublist(maxEmployees);
+
+    // Save previous state for rollback
+    final previousEmployees = _employees.toList();
+
+    // Optimistically update RAM
+    for (final employee in excessEmployees) {
+      _suspendedEmployeeIds.add(employee.userId);
+    }
+    safeNotify();
+
+    // Perform Firestore writes in background
+    try {
+      for (final employee in excessEmployees) {
+        await _employeeRepository
+            .updateEmployee(employee.userId, {'isSuspended': true});
+      }
+    } catch (e, stack) {
+      // Rollback on failure
+      _employees = previousEmployees;
+      _recalculateSuspendedEmployees();
+      for (final employee in excessEmployees) {
+        _suspendedEmployeeIds.remove(employee.userId);
+      }
+      safeNotify();
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'employee_enforce_limits_rollback',
+          stackTrace: stack);
+    }
+  }
+
+  @visibleForTesting
+  void setEmployeesForTesting(List<UserModel> employees) {
+    _employees = employees;
+    _recalculateSuspendedEmployees();
   }
 }
