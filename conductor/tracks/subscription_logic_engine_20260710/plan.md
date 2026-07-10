@@ -11,18 +11,18 @@
     - [x] Return a constant instance with minimum safe defaults.
 
 ### 3.2 Implement `currentPlanLimits` Getter (FR-1)
-- [ ] Task: Write Tests — `currentPlanLimits` getter
-    - [ ] Test resolution of active plan from catalog via `planId` (camelCase key).
-    - [ ] Test resolution via snake_case fallback key (`pro_yearly`).
-    - [ ] Test expired subscription (no pending request) returns `plans['free']`.
-    - [ ] Test expired subscription with pending request returns the actual plan.
-    - [ ] Test plan not found in catalog returns `plans['free']`.
-    - [ ] Test both plan and `'free'` missing returns `SubscriptionPlanModel.fallback()`.
-    - [ ] Test null subscription returns `SubscriptionPlanModel.fallback()`.
-- [ ] Task: Implement `currentPlanLimits` getter
-    - [ ] Add `SubscriptionPlanModel get currentPlanLimits` to `SubscriptionProvider`.
-    - [ ] Consolidate dual-key lookup logic (camelCase + snake_case).
-    - [ ] Implement hybrid fallback: catalog `'free'` → `SubscriptionPlanModel.fallback()`.
+- [x] Task: Write Tests — `currentPlanLimits` getter [8c5b312]
+    - [x] Test resolution of active plan from catalog via `planId` (camelCase key).
+    - [x] Test resolution via snake_case fallback key (`pro_yearly`).
+    - [x] Test expired subscription (no pending request) returns `plans['free']`.
+    - [x] Test expired subscription with pending request returns the actual plan.
+    - [x] Test plan not found in catalog returns `plans['free']`.
+    - [x] Test both plan and `'free'` missing returns `SubscriptionPlanModel.fallback()`.
+    - [x] Test null subscription returns `SubscriptionPlanModel.fallback()`.
+- [x] Task: Implement `currentPlanLimits` getter [8c5b312]
+    - [x] Add `SubscriptionPlanModel get currentPlanLimits` to `SubscriptionProvider`.
+    - [x] Consolidate dual-key lookup logic (camelCase + snake_case).
+    - [x] Implement hybrid fallback: catalog `'free'` → `SubscriptionPlanModel.fallback()`.
 
 ### 3.3 Refactor Existing Limit Getters (FR-2)
 - [ ] Task: Write Tests — Refactored `maxWallets`, `maxEmployees`, `isSmsEnabled`
