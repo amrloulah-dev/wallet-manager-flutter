@@ -78,13 +78,15 @@
     - [x] Trigger from subscription state change listener.
 
 ### 3.7 Verify `AddEmployeeScreen` (FR-6)
-- [ ] Task: Write Tests — `AddEmployeeScreen` integration verification
-    - [ ] Test that `AddEmployeeScreen` reads limits from `SubscriptionProvider.maxEmployees` (no independent calculation).
-    - [ ] Test limit badge display with refactored provider.
-    - [ ] Test submit button disabling at limit.
-- [ ] Task: Verify and fix `AddEmployeeScreen` if needed
-    - [ ] Confirm screen delegates entirely to `SubscriptionProvider`.
-    - [ ] Fix any regressions caused by the refactor.
+- [x] Task: Write Tests — `AddEmployeeScreen` integration verification [0da48a8]
+    - [x] Test: verify that it queries limits from `SubscriptionProvider`.
+    - [x] Test: displays paywall or warning if `maxEmployees` is exceeded.
+- [x] Task: Ensure integration is complete and correct [0da48a8]
+    - [x] Locate `AddEmployeeScreen`.
+    - [x] Verify that it displays the correct warnings/limits dynamically.
+    - [x] Ensure that clicking 'Add Employee' is blocked/disabled when over limit.
+    - [x] Confirm screen delegates entirely to `SubscriptionProvider`.
+    - [x] Fix any regressions caused by the refactor.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Centralized Logic Engine & Rule Enforcement' (Protocol in workflow.md)
 
