@@ -11,7 +11,8 @@ import 'package:walletmanager/data/models/subscription_plan_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
 import 'package:walletmanager/core/errors/app_exceptions.dart';
 
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   late EmployeeRepository repository;
@@ -43,7 +44,8 @@ void main() {
     if (sl.isRegistered<PlatformSettingsProvider>()) {
       sl.unregister<PlatformSettingsProvider>();
     }
-    sl.registerSingleton<PlatformSettingsProvider>(mockPlatformSettingsProvider);
+    sl.registerSingleton<PlatformSettingsProvider>(
+        mockPlatformSettingsProvider);
 
     // Mock platform settings default
     const settings = PlatformSettingsModel.defaults();
@@ -93,7 +95,8 @@ void main() {
       expect(statsSnap.data()?['totalEmployees'], 9);
     });
 
-    test('addEmployee enforces capacity limits from catalog (under limit)', () async {
+    test('addEmployee enforces capacity limits from catalog (under limit)',
+        () async {
       final storeId = 'store_under';
       final storePath = '${FirebaseConstants.storesCollection}/$storeId';
 
@@ -117,10 +120,30 @@ void main() {
       // Mock catalog plan limit of 5 employees
       final mockSettings = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -143,7 +166,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       // Should succeed since current = 1 < limit = 5
       final employee = await repository.addEmployee(
@@ -157,7 +181,8 @@ void main() {
       expect(employee.fullName, 'New Employee');
     });
 
-    test('addEmployee enforces capacity limits from catalog (at limit)', () async {
+    test('addEmployee enforces capacity limits from catalog (at limit)',
+        () async {
       final storeId = 'store_at_limit';
       final storePath = '${FirebaseConstants.storesCollection}/$storeId';
 
@@ -183,10 +208,30 @@ void main() {
       // Mock catalog plan limit of 2 employees
       final mockSettings = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -209,7 +254,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       // Should fail since current = 2 >= limit = 2
       expect(
@@ -224,7 +270,8 @@ void main() {
       );
     });
 
-    test('addEmployee enforces capacity limits from catalog (unlimited -1)', () async {
+    test('addEmployee enforces capacity limits from catalog (unlimited -1)',
+        () async {
       final storeId = 'store_unlimited';
       final storePath = '${FirebaseConstants.storesCollection}/$storeId';
 
@@ -250,10 +297,30 @@ void main() {
       // Mock catalog plan limit of -1 (unlimited)
       final mockSettings = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkNewLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
-        networkOldLimits: const NetworkLimits(dailyReceive: 0, dailySend: 0, maxPerTransaction: 0, monthlyReceive: 0, monthlySend: 0),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -276,7 +343,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       // Should succeed since limit is -1 (unlimited)
       final employee = await repository.addEmployee(
@@ -288,6 +356,32 @@ void main() {
       );
 
       expect(employee.fullName, 'New Employee');
+    });
+
+    test('updateEmployee updates user fields in Firestore', () async {
+      final userId = 'emp-update-123';
+      await fakeFirestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(userId)
+          .set({
+        'userId': userId,
+        'storeId': 'store-123',
+        'isActive': true,
+        'role': 'employee',
+        'fullName': 'Old Name',
+      });
+
+      await repository.updateEmployee(
+          userId, {'isSuspended': true, 'fullName': 'New Name'});
+
+      final doc = await fakeFirestore
+          .collection(FirebaseConstants.usersCollection)
+          .doc(userId)
+          .get();
+
+      expect(doc.data()?['isSuspended'], true);
+      expect(doc.data()?['fullName'], 'New Name');
+      expect(doc.data()?['updatedAt'], isNotNull);
     });
   });
 }
