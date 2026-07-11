@@ -83,6 +83,20 @@ class PlatformSettingsModel {
     final serviceFees = json['serviceFees'] as Map<String, dynamic>? ?? {};
     final subscriptions = json['subscriptions'] as Map<String, dynamic>? ?? {};
 
+    final plansData = json['plans'] ?? subscriptions['plans'];
+    final Map<String, SubscriptionPlanModel> parsedPlans = {};
+    if (plansData is Map) {
+      plansData.forEach((key, value) {
+        if (value is Map) {
+          try {
+            parsedPlans[key.toString()] = SubscriptionPlanModel.fromMap(
+              Map<String, dynamic>.from(value),
+            );
+          } catch (_) {}
+        }
+      });
+    }
+
     return PlatformSettingsModel(
       isRegistrationOpen: json['isRegistrationOpen'] as bool? ?? true,
       
@@ -115,16 +129,7 @@ class PlatformSettingsModel {
       lifetimeCountLimit: NumberParser.toInt(subscriptions['lifetimeCountLimit'], 50),
       gracePeriodHours: NumberParser.toInt(subscriptions['gracePeriodHours'], 48),
       trialDays: NumberParser.toInt(subscriptions['trialDays'], 14),
-      plans: subscriptions['plans'] is Map
-          ? (subscriptions['plans'] as Map).map(
-              (key, value) => MapEntry(
-                key.toString(),
-                SubscriptionPlanModel.fromMap(
-                  value is Map ? Map<String, dynamic>.from(value) : null,
-                ),
-              ),
-            )
-          : const {},
+      plans: parsedPlans,
     );
   }
 

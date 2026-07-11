@@ -85,6 +85,11 @@ class PlatformSettingsProvider extends SafeChangeNotifier {
       if (doc.exists && doc.data() != null) {
         final model = PlatformSettingsModel.fromJson(doc.data()!);
         _settings = model;
+        // ignore: avoid_print
+        print('🔥 [PlatformSettingsProvider] Parsed ${model.plans.length} plans successfully.');
+        if (kDebugMode) {
+          debugPrint('🔥 [PlatformSettingsProvider] Parsed ${model.plans.length} plans successfully.');
+        }
         await _storage.savePlatformSettings(json.encode(model.toJson()));
         safeNotify();
       } else {
