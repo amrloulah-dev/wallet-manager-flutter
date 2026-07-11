@@ -46,8 +46,8 @@ class PaywallScreen extends StatelessWidget {
 
     String getPlanTitle(String key, SubscriptionPlanModel plan) {
       final id = key.toLowerCase().replaceAll('_', '');
-      if (id == 'free') return 'Free';
-      if (id == 'trial') return 'Trial';
+      if (id == 'free') return loc.freePlan;
+      if (id == 'trial') return loc.trialPlan;
       if (id == 'proyearly') return loc.proYearlyTitle;
       if (id == 'lifetime') return loc.lifetimeTitle;
       return plan.name;
@@ -66,18 +66,18 @@ class PaywallScreen extends StatelessWidget {
       final id = key.toLowerCase().replaceAll('_', '');
       if (id == 'free') {
         return [
-          'Manual transaction logging only',
-          'Up to ${plan.maxWallets} wallets',
-          'Up to ${plan.maxEmployees} employees',
-          'Community support',
+          loc.freeFeature1,
+          loc.freeFeature2(plan.maxWallets),
+          loc.freeFeature3(plan.maxEmployees),
+          loc.freeFeature4,
         ];
       }
       if (id == 'trial') {
         return [
-          'Auto-sync transactions (trial)',
-          'Up to ${plan.maxWallets} wallets',
-          'Up to ${plan.maxEmployees} employees',
-          'Dedicated support during trial',
+          loc.trialFeature1,
+          loc.trialFeature2(plan.maxWallets),
+          loc.trialFeature3(plan.maxEmployees),
+          loc.trialFeature4,
         ];
       }
       if (id == 'proyearly') {

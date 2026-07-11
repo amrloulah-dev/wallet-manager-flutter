@@ -1381,6 +1381,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trialPrice => 'Free Trial';
 
   @override
+  String get freeFeature1 => 'Manual transaction logging only';
+
+  @override
+  String freeFeature2(int count) {
+    return 'Up to $count wallets';
+  }
+
+  @override
+  String freeFeature3(int count) {
+    return 'Up to $count employees';
+  }
+
+  @override
+  String get freeFeature4 => 'Community support';
+
+  @override
+  String get trialFeature1 => 'Auto-sync transactions (trial)';
+
+  @override
+  String trialFeature2(int count) {
+    return 'Up to $count wallets';
+  }
+
+  @override
+  String trialFeature3(int count) {
+    return 'Up to $count employees';
+  }
+
+  @override
+  String get trialFeature4 => 'Dedicated support during trial';
+
+  @override
   String get lifetimeFeature1 => 'Auto-sync transactions';
 
   @override

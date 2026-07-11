@@ -521,6 +521,42 @@
   },
   "freePrice": "مجاناً",
   "trialPrice": "فترة تجريبية مجاناً",
+  "freeFeature1": "تسجيل المعاملات يدوياً فقط",
+  "freeFeature2": "حتى {count} محافظ",
+  "@freeFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature3": "حتى {count} موظفين",
+  "@freeFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature4": "دعم مجتمعي",
+  "trialFeature1": "قراءة المعاملات تلقائياً (فترة تجريبية)",
+  "trialFeature2": "حتى {count} محافظ",
+  "@trialFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature3": "حتى {count} موظفين",
+  "@trialFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature4": "دعم فني مخصص خلال الفترة التجريبية",
   "lifetimeFeature1": "قراءة المعاملات تلقائياً",
   "lifetimeFeature2": "عدد لا نهائي من المحافظ",
   "lifetimeFeature3": "عدد لا نهائي من الموظفين",

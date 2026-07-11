@@ -2744,6 +2744,54 @@ abstract class AppLocalizations {
   /// **'فترة تجريبية مجاناً'**
   String get trialPrice;
 
+  /// No description provided for @freeFeature1.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل المعاملات يدوياً فقط'**
+  String get freeFeature1;
+
+  /// No description provided for @freeFeature2.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى {count} محافظ'**
+  String freeFeature2(int count);
+
+  /// No description provided for @freeFeature3.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى {count} موظفين'**
+  String freeFeature3(int count);
+
+  /// No description provided for @freeFeature4.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعم مجتمعي'**
+  String get freeFeature4;
+
+  /// No description provided for @trialFeature1.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة المعاملات تلقائياً (فترة تجريبية)'**
+  String get trialFeature1;
+
+  /// No description provided for @trialFeature2.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى {count} محافظ'**
+  String trialFeature2(int count);
+
+  /// No description provided for @trialFeature3.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى {count} موظفين'**
+  String trialFeature3(int count);
+
+  /// No description provided for @trialFeature4.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعم فني مخصص خلال الفترة التجريبية'**
+  String get trialFeature4;
+
   /// No description provided for @lifetimeFeature1.
   ///
   /// In ar, this message translates to:

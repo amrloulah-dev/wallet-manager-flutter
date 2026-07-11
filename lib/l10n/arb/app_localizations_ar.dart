@@ -1378,6 +1378,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trialPrice => 'فترة تجريبية مجاناً';
 
   @override
+  String get freeFeature1 => 'تسجيل المعاملات يدوياً فقط';
+
+  @override
+  String freeFeature2(int count) {
+    return 'حتى $count محافظ';
+  }
+
+  @override
+  String freeFeature3(int count) {
+    return 'حتى $count موظفين';
+  }
+
+  @override
+  String get freeFeature4 => 'دعم مجتمعي';
+
+  @override
+  String get trialFeature1 => 'قراءة المعاملات تلقائياً (فترة تجريبية)';
+
+  @override
+  String trialFeature2(int count) {
+    return 'حتى $count محافظ';
+  }
+
+  @override
+  String trialFeature3(int count) {
+    return 'حتى $count موظفين';
+  }
+
+  @override
+  String get trialFeature4 => 'دعم فني مخصص خلال الفترة التجريبية';
+
+  @override
   String get lifetimeFeature1 => 'قراءة المعاملات تلقائياً';
 
   @override

@@ -507,6 +507,42 @@
   },
   "freePrice": "Free",
   "trialPrice": "Free Trial",
+  "freeFeature1": "Manual transaction logging only",
+  "freeFeature2": "Up to {count} wallets",
+  "@freeFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature3": "Up to {count} employees",
+  "@freeFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature4": "Community support",
+  "trialFeature1": "Auto-sync transactions (trial)",
+  "trialFeature2": "Up to {count} wallets",
+  "@trialFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature3": "Up to {count} employees",
+  "@trialFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature4": "Dedicated support during trial",
   "lifetimeFeature1": "Auto-sync transactions",
   "lifetimeFeature2": "Unlimited wallets",
   "lifetimeFeature3": "Unlimited employees",
