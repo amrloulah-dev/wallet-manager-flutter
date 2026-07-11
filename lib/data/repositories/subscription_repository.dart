@@ -90,11 +90,7 @@ class SubscriptionRepository {
     }
   }
 
-  double _deduceAmount(String planId) {
-    if (planId == 'lifetime') return 2500.0;
-    if (planId == 'pro_yearly') return 1200.0;
-    return 0.0; // Assume free/trial or fallback
-  }
+
 
   Future<void> submitSubscriptionRequest({
     required String storeId,

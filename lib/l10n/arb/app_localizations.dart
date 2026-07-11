@@ -2684,6 +2684,12 @@ abstract class AppLocalizations {
   /// **'1200 جنيه / سنة'**
   String get proYearlyPrice;
 
+  /// No description provided for @proYearlyPriceTemplate.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} جنيه / سنة'**
+  String proYearlyPriceTemplate(String price);
+
   /// No description provided for @proFeature1.
   ///
   /// In ar, this message translates to:
@@ -2719,6 +2725,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'2500 جنيه فقط مرة واحدة'**
   String get lifetimePrice;
+
+  /// No description provided for @lifetimePriceTemplate.
+  ///
+  /// In ar, this message translates to:
+  /// **'{price} جنيه فقط مرة واحدة'**
+  String lifetimePriceTemplate(String price);
+
+  /// No description provided for @freePrice.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجاناً'**
+  String get freePrice;
+
+  /// No description provided for @trialPrice.
+  ///
+  /// In ar, this message translates to:
+  /// **'فترة تجريبية مجاناً'**
+  String get trialPrice;
 
   /// No description provided for @lifetimeFeature1.
   ///

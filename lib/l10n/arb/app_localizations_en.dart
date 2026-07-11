@@ -1347,6 +1347,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proYearlyPrice => '1200 EGP / year';
 
   @override
+  String proYearlyPriceTemplate(String price) {
+    return '$price EGP / year';
+  }
+
+  @override
   String get proFeature1 => 'Auto-sync transactions';
 
   @override
@@ -1363,6 +1368,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lifetimePrice => '2500 EGP one-time only';
+
+  @override
+  String lifetimePriceTemplate(String price) {
+    return '$price EGP one-time only';
+  }
+
+  @override
+  String get freePrice => 'Free';
+
+  @override
+  String get trialPrice => 'Free Trial';
 
   @override
   String get lifetimeFeature1 => 'Auto-sync transactions';

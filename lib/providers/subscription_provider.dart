@@ -133,11 +133,7 @@ class SubscriptionProvider extends BaseProvider {
     }
   }
 
-  double _deduceAmount(SubscriptionPlan planId) {
-    if (planId == SubscriptionPlan.lifetime) return 2500.0;
-    if (planId == SubscriptionPlan.proYearly) return 1200.0;
-    return 0.0;
-  }
+
 
   Future<void> submitSubscriptionRequest({
     required SubscriptionPlan planId, // ENUM refactor

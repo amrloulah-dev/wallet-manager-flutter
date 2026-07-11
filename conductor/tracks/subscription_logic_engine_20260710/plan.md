@@ -88,53 +88,53 @@
     - [x] Confirm screen delegates entirely to `SubscriptionProvider`.
     - [x] Fix any regressions caused by the refactor.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Centralized Logic Engine & Rule Enforcement' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Centralized Logic Engine & Rule Enforcement' (Protocol in workflow.md)
 
 ## Phase 4: Dynamic UI & Background Service Maintenance
 
 ### 4.1 Refactor `_syncToStorage()` (FR-7)
-- [ ] Task: Write Tests — `_syncToStorage()` refactor
-    - [ ] Test that `smsEnabled` value written to storage comes from `currentPlanLimits.smsEnabled`.
-    - [ ] Test that HMAC encryption mechanism is preserved.
-    - [ ] Test sync behavior with expired subscription (uses free plan SMS flag).
-- [ ] Task: Implement `_syncToStorage()` refactor
-    - [ ] Modify `_syncToStorage()` to read SMS flag via `isSmsEnabled` (which delegates to `currentPlanLimits.smsEnabled`).
-    - [ ] Remove any reference to removed store subscription fields.
-    - [ ] Verify HMAC encryption is maintained.
+- [x] Task: Write Tests — `_syncToStorage()` refactor
+    - [x] Test that `smsEnabled` value written to storage comes from `currentPlanLimits.smsEnabled`.
+    - [x] Test that HMAC encryption mechanism is preserved.
+    - [x] Test sync behavior with expired subscription (uses free plan SMS flag).
+- [x] Task: Implement `_syncToStorage()` refactor
+    - [x] Modify `_syncToStorage()` to read SMS flag via `isSmsEnabled` (which delegates to `currentPlanLimits.smsEnabled`).
+    - [x] Remove any reference to removed store subscription fields.
+    - [x] Verify HMAC encryption is maintained.
 
 ### 4.2 Remove Dead Code — `_deduceAmount` (FR-8)
-- [ ] Task: Write Tests — Dead code removal verification
-    - [ ] Test that no compilation errors result from removing `_deduceAmount`.
-    - [ ] Test that `submitSubscriptionRequest` still works (takes `amount` as parameter).
-- [ ] Task: Remove `_deduceAmount` dead code
-    - [ ] Delete `_deduceAmount(SubscriptionPlan planId)` from `SubscriptionProvider`.
-    - [ ] Delete `_deduceAmount` from `SubscriptionRepository` if present.
-    - [ ] Verify no callers reference these methods (grep codebase).
+- [x] Task: Write Tests — Dead code removal verification
+    - [x] Test that no compilation errors result from removing `_deduceAmount`.
+    - [x] Test that `submitSubscriptionRequest` still works (takes `amount` as parameter).
+- [x] Task: Remove `_deduceAmount` dead code
+    - [x] Delete `_deduceAmount(SubscriptionPlan planId)` from `SubscriptionProvider`.
+    - [x] Delete `_deduceAmount` from `SubscriptionRepository` if present.
+    - [x] Verify no callers reference these methods (grep codebase).
 
 ### 4.3 Dynamic `PaywallScreen` (FR-9)
-- [ ] Task: Write Tests — Dynamic `PaywallScreen`
-    - [ ] Test plan cards are rendered from catalog data (not hardcoded).
-    - [ ] Test plans with `isActive == false` are excluded.
-    - [ ] Test plan ordering follows explicit array: `['free', 'trial', 'proYearly', 'lifetime']`.
-    - [ ] Test prices display from `plan.price` via String Interpolation.
-    - [ ] Test empty catalog shows fallback UI (no crash).
-    - [ ] Test lifetime plan availability still respects `SystemConfigProvider`.
-- [ ] Task: Implement dynamic `PaywallScreen`
-    - [ ] Replace hardcoded plan cards with dynamic iteration over `PlatformSettingsProvider.settings.plans`.
-    - [ ] Apply `isActive == true` filter before rendering.
-    - [ ] Sort using predefined order array: `['free', 'trial', 'proYearly', 'lifetime']`.
-    - [ ] Display `plan.price` via String Interpolation with localized currency formatting.
-    - [ ] Remove hardcoded `.arb` price strings (`proYearlyPrice`, `lifetimePrice`) or repurpose them as templates with interpolation.
-    - [ ] Preserve `SystemConfigProvider` integration for lifetime plan business rules.
-    - [ ] Handle empty catalog gracefully with fallback UI.
+- [x] Task: Write Tests — Dynamic `PaywallScreen`
+    - [x] Test plan cards are rendered from catalog data (not hardcoded).
+    - [x] Test plans with `isActive == false` are excluded.
+    - [x] Test plan ordering follows explicit array: `['free', 'trial', 'proYearly', 'lifetime']`.
+    - [x] Test prices display from `plan.price` via String Interpolation.
+    - [x] Test empty catalog shows fallback UI (no crash).
+    - [x] Test lifetime plan availability still respects `SystemConfigProvider`.
+- [x] Task: Implement dynamic `PaywallScreen`
+    - [x] Replace hardcoded plan cards with dynamic iteration over `PlatformSettingsProvider.settings.plans`.
+    - [x] Apply `isActive == true` filter before rendering.
+    - [x] Sort using predefined order array: `['free', 'trial', 'proYearly', 'lifetime']`.
+    - [x] Display `plan.price` via String Interpolation with localized currency formatting.
+    - [x] Remove hardcoded `.arb` price strings (`proYearlyPrice`, `lifetimePrice`) or repurpose them as templates with interpolation.
+    - [x] Preserve `SystemConfigProvider` integration for lifetime plan business rules.
+    - [x] Handle empty catalog gracefully with fallback UI.
 
 ### 4.4 Localization Updates (FR-9 / NFR-4)
-- [ ] Task: Write Tests — Localization for dynamic pricing
-    - [ ] Test currency formatting in Arabic locale.
-    - [ ] Test currency formatting in English locale.
-- [ ] Task: Update `.arb` files for dynamic pricing
-    - [ ] Add/update localization keys for dynamic price templates (e.g., `planPrice` with `{price}` placeholder).
-    - [ ] Remove or deprecate hardcoded price strings (`proYearlyPrice`, `lifetimePrice`).
-    - [ ] Run `flutter gen-l10n` to regenerate localization files.
+- [x] Task: Write Tests — Localization for dynamic pricing
+    - [x] Test currency formatting in Arabic locale.
+    - [x] Test currency formatting in English locale.
+- [x] Task: Update `.arb` files for dynamic pricing
+    - [x] Add/update localization keys for dynamic price templates (e.g., `planPrice` with `{price}` placeholder).
+    - [x] Remove or deprecate hardcoded price strings (`proYearlyPrice`, `lifetimePrice`).
+    - [x] Run `flutter gen-l10n` to regenerate localization files.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Dynamic UI & Background Service Maintenance' (Protocol in workflow.md)

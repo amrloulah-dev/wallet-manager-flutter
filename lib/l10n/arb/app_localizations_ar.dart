@@ -1344,6 +1344,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get proYearlyPrice => '1200 جنيه / سنة';
 
   @override
+  String proYearlyPriceTemplate(String price) {
+    return '$price جنيه / سنة';
+  }
+
+  @override
   String get proFeature1 => 'قراءة المعاملات تلقائياً';
 
   @override
@@ -1360,6 +1365,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lifetimePrice => '2500 جنيه فقط مرة واحدة';
+
+  @override
+  String lifetimePriceTemplate(String price) {
+    return '$price جنيه فقط مرة واحدة';
+  }
+
+  @override
+  String get freePrice => 'مجاناً';
+
+  @override
+  String get trialPrice => 'فترة تجريبية مجاناً';
 
   @override
   String get lifetimeFeature1 => 'قراءة المعاملات تلقائياً';

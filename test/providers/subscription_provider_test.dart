@@ -1086,5 +1086,89 @@ void main() {
       expect(provider.canAddEmployee(0),
           isFalse); // Old allowed this because 0 < 1
     });
+
+    test('syncToStorage correctly stores limits and SMS enabling flag from active plan', () async {
+      final sub = StoreSubscription(
+        planId: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        endDate: DateTime.now().add(const Duration(days: 30)),
+        trialConsumed: true,
+        pendingRequestDate: null,
+      );
+
+      final store = StoreModel(
+        storeId: 'test_store',
+        storeName: 'Test Store',
+        storePassword: 'hashed_password',
+        ownerId: 'owner_123',
+        ownerName: 'Owner Name',
+        ownerEmail: 'owner@test.com',
+        subscription: sub,
+        settings: StoreSettings(),
+      );
+
+      when(() => mockAuthProvider.currentStore).thenReturn(store);
+
+      final mockSettings = PlatformSettingsModel(
+        isRegistrationOpen: true,
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 0,
+            dailySend: 0,
+            maxPerTransaction: 0,
+            monthlyReceive: 0,
+            monthlySend: 0),
+        minCrossNetworkFee: 0,
+        maxCrossNetworkFee: 0,
+        minInstapayFee: 0,
+        maxInstapayFee: 0,
+        sameNetworkFee: 0,
+        crossNetworkFeeRate: 0,
+        instapayFeeRate: 0,
+        lifetimeCountLimit: 50,
+        gracePeriodHours: 48,
+        trialDays: 14,
+        plans: {
+          'proYearly': const SubscriptionPlanModel(
+            name: 'Pro Yearly',
+            description: '',
+            isActive: true,
+            price: 100,
+            maxWallets: 10,
+            maxEmployees: 10,
+            smsEnabled: true, // SMS Enabled for Pro Yearly
+          ),
+        },
+      );
+      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+
+      final provider = SubscriptionProvider(
+        authProvider: mockAuthProvider,
+        repository: mockSubscriptionRepository,
+      );
+
+      await Future.delayed(Duration.zero);
+
+      expect(provider.isSmsEnabled, isTrue);
+      expect(LocalStorageService.instance.isSubIntegrityValid, isTrue);
+      expect(LocalStorageService.instance.subSmsEnabled, isTrue);
+    });
   });
 }

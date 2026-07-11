@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../providers/system_config_provider.dart';
+import '../../../providers/platform_settings_provider.dart';
 import '../../../data/models/system_configs_model.dart';
+import '../../../data/models/subscription_plan_model.dart';
 import 'package:provider/provider.dart';
 import 'payment_modal_screen.dart';
 import '../../../core/enums/subscription_enums.dart';
@@ -10,9 +12,133 @@ import '../../../core/constants/route_constants.dart';
 class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
 
+  SubscriptionPlan? _mapPlanKeyToEnum(String key) {
+    final lowerKey = key.toLowerCase().replaceAll('_', '');
+    if (lowerKey == 'free') return SubscriptionPlan.free;
+    if (lowerKey == 'trial') return SubscriptionPlan.trial;
+    if (lowerKey == 'proyearly') return SubscriptionPlan.proYearly;
+    if (lowerKey == 'lifetime') return SubscriptionPlan.lifetime;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final settingsProvider = Provider.of<PlatformSettingsProvider>(context);
+    final plansMap = settingsProvider.settings.plans;
+
+    // Filter active plans
+    final activePlans = plansMap.entries
+        .where((entry) => entry.value.isActive)
+        .toList();
+
+    // Sorting order
+    const order = ['free', 'trial', 'proyearly', 'lifetime'];
+
+    int getSortOrder(String key) {
+      final index = order.indexOf(key.toLowerCase().replaceAll('_', ''));
+      return index == -1 ? 9999 : index;
+    }
+
+    activePlans.sort((a, b) {
+      return getSortOrder(a.key).compareTo(getSortOrder(b.key));
+    });
+
+    String getPlanTitle(String key, SubscriptionPlanModel plan) {
+      final id = key.toLowerCase().replaceAll('_', '');
+      if (id == 'free') return 'Free';
+      if (id == 'trial') return 'Trial';
+      if (id == 'proyearly') return loc.proYearlyTitle;
+      if (id == 'lifetime') return loc.lifetimeTitle;
+      return plan.name;
+    }
+
+    String getPlanPrice(String key, SubscriptionPlanModel plan) {
+      final id = key.toLowerCase().replaceAll('_', '');
+      if (id == 'free') return loc.freePrice;
+      if (id == 'trial') return loc.trialPrice;
+      if (id == 'proyearly') return loc.proYearlyPriceTemplate(plan.price.toString());
+      if (id == 'lifetime') return loc.lifetimePriceTemplate(plan.price.toString());
+      return '${plan.price} EGP';
+    }
+
+    List<String> getPlanFeatures(String key, SubscriptionPlanModel plan) {
+      final id = key.toLowerCase().replaceAll('_', '');
+      if (id == 'free') {
+        return [
+          'Manual transaction logging only',
+          'Up to ${plan.maxWallets} wallets',
+          'Up to ${plan.maxEmployees} employees',
+          'Community support',
+        ];
+      }
+      if (id == 'trial') {
+        return [
+          'Auto-sync transactions (trial)',
+          'Up to ${plan.maxWallets} wallets',
+          'Up to ${plan.maxEmployees} employees',
+          'Dedicated support during trial',
+        ];
+      }
+      if (id == 'proyearly') {
+        return [
+          loc.proFeature1,
+          loc.proFeature2,
+          loc.proFeature3,
+          loc.proFeature4,
+        ];
+      }
+      if (id == 'lifetime') {
+        return [
+          loc.lifetimeFeature1,
+          loc.lifetimeFeature2,
+          loc.lifetimeFeature3,
+          loc.lifetimeFeature4,
+        ];
+      }
+      if (plan.description.isNotEmpty) {
+        return [plan.description];
+      }
+      return [];
+    }
+
+    if (activePlans.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(loc.upgradeAccount),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.info_outline, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  'No subscription plans available at the moment.',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      Navigator.pushReplacementNamed(context, RouteConstants.mainDashboard);
+                    }
+                  },
+                  child: Text(loc.continueWithFreePlan),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Selector<SystemConfigProvider, SystemConfigsModel>(
       selector: (_, provider) => provider.configs,
@@ -51,52 +177,53 @@ class PaywallScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Pro Yearly Plan
-                _buildPlanCard(
-                  context,
-                  loc: loc,
-                  title: loc.proYearlyTitle,
-                  price: loc.proYearlyPrice,
-                  features: [
-                    loc.proFeature1,
-                    loc.proFeature2,
-                    loc.proFeature3,
-                    loc.proFeature4,
-                  ],
-                  isPopular: true,
-                  onTap: () => PaymentModalScreen.show(
-                      context, SubscriptionPlan.proYearly), // ENUM refactor
-                ),
-                const SizedBox(height: 24),
+                // Dynamic plan cards
+                ...activePlans.map((entry) {
+                  final key = entry.key;
+                  final plan = entry.value;
+                  final planEnum = _mapPlanKeyToEnum(key);
+                  final isLifetime = planEnum == SubscriptionPlan.lifetime;
+                  final isPurchasable = planEnum == SubscriptionPlan.proYearly || isLifetime;
 
-                // Lifetime VIP Plan
-                if (systemConfigs.lifetimePlanEnabled)
-                  _buildPlanCard(
-                    context,
-                    loc: loc,
-                    title: loc.lifetimeTitle,
-                    price: loc.lifetimePrice,
-                    scarcityText: systemConfigs.remainingLifetimeSeats > 0
-                        ? loc.remainingSeats(
-                            systemConfigs.remainingLifetimeSeats)
-                        : loc.soldOut,
-                    isDisabled: systemConfigs.remainingLifetimeSeats <= 0,
-                    features: [
-                      loc.lifetimeFeature1,
-                      loc.lifetimeFeature2,
-                      loc.lifetimeFeature3,
-                      loc.lifetimeFeature4,
-                    ],
-                    isPopular: false,
-                    color: Colors.purple.shade700,
-                    onTap: systemConfigs.remainingLifetimeSeats > 0
-                        ? () => PaymentModalScreen.show(
-                            context, SubscriptionPlan.lifetime) // ENUM refactor
-                        : null,
-                  ),
-                if (systemConfigs.lifetimePlanEnabled)
-                  const SizedBox(height: 32),
+                  // Business rule for lifetime plan visibility
+                  if (isLifetime && !systemConfigs.lifetimePlanEnabled) {
+                    return const SizedBox.shrink();
+                  }
 
+                  final String title = getPlanTitle(key, plan);
+                  final String priceStr = getPlanPrice(key, plan);
+                  final List<String> features = getPlanFeatures(key, plan);
+
+                  String? scarcityText;
+                  bool isPlanDisabled = !isPurchasable;
+
+                  if (isLifetime) {
+                    scarcityText = systemConfigs.remainingLifetimeSeats > 0
+                        ? loc.remainingSeats(systemConfigs.remainingLifetimeSeats)
+                        : loc.soldOut;
+                    isPlanDisabled = systemConfigs.remainingLifetimeSeats <= 0;
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: _buildPlanCard(
+                      context,
+                      loc: loc,
+                      title: title,
+                      price: priceStr,
+                      features: features,
+                      isPopular: planEnum == SubscriptionPlan.proYearly,
+                      scarcityText: scarcityText,
+                      isDisabled: isPlanDisabled,
+                      color: isLifetime ? Colors.purple.shade700 : null,
+                      onTap: isPlanDisabled
+                          ? null
+                          : () => PaymentModalScreen.show(context, planEnum!),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 8),
                 Text(
                   loc.termsAgreement,
                   textAlign: TextAlign.center,

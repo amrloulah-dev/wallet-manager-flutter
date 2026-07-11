@@ -497,12 +497,30 @@
   "paywallSubtitle": "توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.",
   "proYearlyTitle": "باقة برو السنوية",
   "proYearlyPrice": "1200 جنيه / سنة",
+  "proYearlyPriceTemplate": "{price} جنيه / سنة",
+  "@proYearlyPriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "proFeature1": "قراءة المعاملات تلقائياً",
   "proFeature2": "إدارة مرنة حتى 50 محفظة",
   "proFeature3": "بناء فريق عمل حتى 20 موظف",
   "proFeature4": "دعم فني مخصص",
   "lifetimeTitle": "باقة مدى الحياة VIP",
   "lifetimePrice": "2500 جنيه فقط مرة واحدة",
+  "lifetimePriceTemplate": "{price} جنيه فقط مرة واحدة",
+  "@lifetimePriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "freePrice": "مجاناً",
+  "trialPrice": "فترة تجريبية مجاناً",
   "lifetimeFeature1": "قراءة المعاملات تلقائياً",
   "lifetimeFeature2": "عدد لا نهائي من المحافظ",
   "lifetimeFeature3": "عدد لا نهائي من الموظفين",

@@ -483,12 +483,30 @@
   "paywallSubtitle": "Stop entering data manually. Automate your cash flow securely with advanced features.",
   "proYearlyTitle": "Pro Yearly Plan",
   "proYearlyPrice": "1200 EGP / year",
+  "proYearlyPriceTemplate": "{price} EGP / year",
+  "@proYearlyPriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "proFeature1": "Auto-sync transactions",
   "proFeature2": "Flexible management of up to 50 wallets",
   "proFeature3": "Build a team of up to 20 employees",
   "proFeature4": "Dedicated technical support",
   "lifetimeTitle": "Lifetime VIP Plan",
   "lifetimePrice": "2500 EGP one-time only",
+  "lifetimePriceTemplate": "{price} EGP one-time only",
+  "@lifetimePriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "freePrice": "Free",
+  "trialPrice": "Free Trial",
   "lifetimeFeature1": "Auto-sync transactions",
   "lifetimeFeature2": "Unlimited wallets",
   "lifetimeFeature3": "Unlimited employees",
