@@ -89,13 +89,15 @@ class ErrorTranslator {
       case 'wallet_error_inactive':
         return l10n.wallet_error_inactive;
       case 'wallet_error_instapay_limit':
-        return l10n.wallet_error_instapay_limit(arg.isNotEmpty ? arg : '70,000');
+        return l10n
+            .wallet_error_instapay_limit(arg.isNotEmpty ? arg : '70,000');
       case 'wallet_error_telecom_limit':
         return l10n.wallet_error_telecom_limit(arg.isNotEmpty ? arg : '60,000');
       case 'wallet_error_insufficient_balance':
         return l10n.wallet_error_insufficient_balance;
       case 'wallet_error_instapay_daily_limit':
-        return l10n.wallet_error_instapay_daily_limit(arg.isNotEmpty ? arg : '120,000');
+        return l10n.wallet_error_instapay_daily_limit(
+            arg.isNotEmpty ? arg : '120,000');
       case 'wallet_error_daily_send_limit':
         return l10n.wallet_error_daily_send_limit;
       case 'wallet_error_monthly_send_limit':
@@ -117,9 +119,11 @@ class ErrorTranslator {
 
       // Overlay Errors
       case 'overlay_error_amount_limit_instapay':
-        return l10n.overlay_error_amount_limit_instapay(arg.isNotEmpty ? arg : '70,000');
+        return l10n.overlay_error_amount_limit_instapay(
+            arg.isNotEmpty ? arg : '70,000');
       case 'overlay_error_amount_limit_telecom':
-        return l10n.overlay_error_amount_limit_telecom(arg.isNotEmpty ? arg : '60,000');
+        return l10n.overlay_error_amount_limit_telecom(
+            arg.isNotEmpty ? arg : '60,000');
 
       // Logic Keys (from OverlayProvider)
       case 'pleaseSelectWallet':

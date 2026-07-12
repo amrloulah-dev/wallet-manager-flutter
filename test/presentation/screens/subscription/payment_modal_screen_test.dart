@@ -67,7 +67,8 @@ void main() {
       expect(find.byIcon(Icons.phone), findsOneWidget);
 
       // Verify the amount field exists
-      expect(find.byKey(const Key('subscription_amount_field')), findsOneWidget);
+      expect(
+          find.byKey(const Key('subscription_amount_field')), findsOneWidget);
       expect(find.byIcon(Icons.payments), findsOneWidget);
     });
 

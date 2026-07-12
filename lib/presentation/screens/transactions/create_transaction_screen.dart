@@ -537,8 +537,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         final settings = context.read<PlatformSettingsProvider>().settings;
         final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
-        final dailyLimit = isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
-        final monthlyLimit = isSend ? dynamicLimits.monthlySend : dynamicLimits.monthlyReceive;
+        final dailyLimit =
+            isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
+        final monthlyLimit =
+            isSend ? dynamicLimits.monthlySend : dynamicLimits.monthlyReceive;
 
         final newUsed = limits.dailyUsed + amount;
         final newMonthlyUsed = limits.monthlyUsed + amount;
@@ -548,8 +550,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         final bool monthlyExceeded = newMonthlyUsed > monthlyLimit;
         final bool willExceed = dailyExceeded || monthlyExceeded;
 
-        final double dailyPercentage = dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
-        final double monthlyPercentage = monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
+        final double dailyPercentage =
+            dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
+        final double monthlyPercentage =
+            monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
 
         final dailyWarningLevel = dailyExceeded
             ? 'red'

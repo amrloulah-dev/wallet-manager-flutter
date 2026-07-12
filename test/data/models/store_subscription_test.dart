@@ -83,7 +83,9 @@ void main() {
       expect(serialized.containsKey('smsEnabled'), isFalse);
     });
 
-    test('migratedLifetime factory provides correct defaults and no limit fields', () {
+    test(
+        'migratedLifetime factory provides correct defaults and no limit fields',
+        () {
       final sub = StoreSubscription.migratedLifetime();
       expect(sub.planId, SubscriptionPlan.lifetime);
       expect(sub.status, SubscriptionStatus.active);

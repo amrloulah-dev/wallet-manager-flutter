@@ -83,7 +83,8 @@ void main() {
     );
 
     try {
-      await service.validateAndSave(transaction, const PlatformSettingsModel.defaults());
+      await service.validateAndSave(
+          transaction, const PlatformSettingsModel.defaults());
       fail('Should have thrown ValidationException for inactive wallet');
     } on ValidationException catch (e) {
       expect(e.message, equals('wallet_error_inactive'));

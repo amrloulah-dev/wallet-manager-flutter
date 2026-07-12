@@ -11,7 +11,8 @@ import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   late WalletModel activeWallet;
@@ -20,7 +21,8 @@ void main() {
 
   setUp(() {
     mockSettingsProvider = MockPlatformSettingsProvider();
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
     activeWallet = WalletModel(
       walletId: 'w1',
       phoneNumber: '01168686098',

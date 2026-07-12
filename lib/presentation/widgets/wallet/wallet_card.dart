@@ -32,14 +32,17 @@ class WalletCard extends StatelessWidget {
     final providerColor =
         isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
-    final settings = Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
     final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
     final double sendDailyPercentage = dynamicLimits.dailySend > 0
-        ? (wallet.sendLimits.dailyUsed / dynamicLimits.dailySend * 100).clamp(0.0, 100.0)
+        ? (wallet.sendLimits.dailyUsed / dynamicLimits.dailySend * 100)
+            .clamp(0.0, 100.0)
         : 0.0;
     final double receiveDailyPercentage = dynamicLimits.dailyReceive > 0
-        ? (wallet.receiveLimits.dailyUsed / dynamicLimits.dailyReceive * 100).clamp(0.0, 100.0)
+        ? (wallet.receiveLimits.dailyUsed / dynamicLimits.dailyReceive * 100)
+            .clamp(0.0, 100.0)
         : 0.0;
 
     final String sendDailyWarningLevel = isFrozen
@@ -56,259 +59,262 @@ class WalletCard extends StatelessWidget {
             : onTap,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: wallet.walletStatus == WalletStatus.suspended
-                              ? Colors.red.shade900.withOpacity(0.3)
-                              : Colors.green.shade900.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
-                            color: wallet.walletStatus == WalletStatus.suspended
-                                ? Colors.red.withOpacity(0.2)
-                                : Colors.green.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Text(
-                          l10n.getWalletStatusName(wallet.walletStatus),
-                          style: TextStyle(
-                            color: wallet.walletStatus == WalletStatus.suspended
-                                ? Colors.red.shade400
-                                : Colors.green.shade400,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Phone Number (enforced LTR format directionally)
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Text(
-                          NumberFormatter.formatPhoneNumber(wallet.phoneNumber),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Provider Type
-                      Text(
-                        l10n.getWalletTypeName(wallet.walletType),
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Provider Icon
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: providerColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: providerColor.withOpacity(0.1)),
-                  ),
-                  child: Icon(
-                    wallet.walletTypeIcon,
-                    color: providerColor,
-                    size: 32,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Divider(color: Colors.white.withOpacity(0.05), height: 1),
-            const SizedBox(height: 20),
-
-            // Limits Section
-            _buildLimitBar(
-              context: context,
-              label: l10n.sendDaily,
-              used: wallet.getLimits().dailyUsed,
-              limit: dynamicLimits.dailySend,
-              percentage: sendDailyPercentage,
-              warningLevel: sendDailyWarningLevel,
-            ),
-            const SizedBox(height: 16),
-            _buildLimitBar(
-              context: context,
-              label: l10n.receiveDaily,
-              used: wallet.getReceiveLimits().dailyUsed,
-              limit: dynamicLimits.dailyReceive,
-              percentage: receiveDailyPercentage,
-              warningLevel: isFrozen ? 'grey' : 'green',
-            ),
-            const SizedBox(height: 20),
-            Divider(color: Colors.white.withOpacity(0.05), height: 1),
-            const SizedBox(height: 20),
-
-            // Balance Section
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.credit_card,
-                          color: Colors.blue.shade400,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.currentBalance,
-                        style: TextStyle(
-                          color: Colors.grey.shade300,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    NumberFormatter.formatAmount(wallet.balance,
-                        showCurrency: true),
-                    style: TextStyle(
-                      color: isFrozen ? Colors.grey : Colors.blue.shade400,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Action Buttons
-            if (onEdit != null || onDelete != null) ...[
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  if (onDelete != null)
-                    Expanded(
-                      flex: 1,
-                      child: InkWell(
-                        onTap: isFrozen ? null : onDelete,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border:
-                                Border.all(color: Colors.red.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.delete_outline,
-                                  size: 20, color: Colors.red),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.delete,
-                                style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (onDelete != null && onEdit != null)
-                    const SizedBox(width: 16),
-                  if (onEdit != null)
-                    Expanded(
-                      flex: 2,
-                      child: InkWell(
-                        onTap: isFrozen ? null : onEdit,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isFrozen
-                                ? Colors.grey.withOpacity(0.2)
-                                : Colors.blue.shade600,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: isFrozen
-                                ? null
-                                : [
-                                    BoxShadow(
-                                      color:
-                                          Colors.blue.shade600.withOpacity(0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    )
-                                  ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.edit_outlined,
-                                  size: 20, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.edit,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
               ),
             ],
-          ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: wallet.walletStatus == WalletStatus.suspended
+                                ? Colors.red.shade900.withOpacity(0.3)
+                                : Colors.green.shade900.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color:
+                                  wallet.walletStatus == WalletStatus.suspended
+                                      ? Colors.red.withOpacity(0.2)
+                                      : Colors.green.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.getWalletStatusName(wallet.walletStatus),
+                            style: TextStyle(
+                              color:
+                                  wallet.walletStatus == WalletStatus.suspended
+                                      ? Colors.red.shade400
+                                      : Colors.green.shade400,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Phone Number (enforced LTR format directionally)
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            NumberFormatter.formatPhoneNumber(
+                                wallet.phoneNumber),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Provider Type
+                        Text(
+                          l10n.getWalletTypeName(wallet.walletType),
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Provider Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: providerColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: providerColor.withOpacity(0.1)),
+                    ),
+                    child: Icon(
+                      wallet.walletTypeIcon,
+                      color: providerColor,
+                      size: 32,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Divider(color: Colors.white.withOpacity(0.05), height: 1),
+              const SizedBox(height: 20),
+
+              // Limits Section
+              _buildLimitBar(
+                context: context,
+                label: l10n.sendDaily,
+                used: wallet.getLimits().dailyUsed,
+                limit: dynamicLimits.dailySend,
+                percentage: sendDailyPercentage,
+                warningLevel: sendDailyWarningLevel,
+              ),
+              const SizedBox(height: 16),
+              _buildLimitBar(
+                context: context,
+                label: l10n.receiveDaily,
+                used: wallet.getReceiveLimits().dailyUsed,
+                limit: dynamicLimits.dailyReceive,
+                percentage: receiveDailyPercentage,
+                warningLevel: isFrozen ? 'grey' : 'green',
+              ),
+              const SizedBox(height: 20),
+              Divider(color: Colors.white.withOpacity(0.05), height: 1),
+              const SizedBox(height: 20),
+
+              // Balance Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.credit_card,
+                            color: Colors.blue.shade400,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.currentBalance,
+                          style: TextStyle(
+                            color: Colors.grey.shade300,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      NumberFormatter.formatAmount(wallet.balance,
+                          showCurrency: true),
+                      style: TextStyle(
+                        color: isFrozen ? Colors.grey : Colors.blue.shade400,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action Buttons
+              if (onEdit != null || onDelete != null) ...[
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    if (onDelete != null)
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: isFrozen ? null : onDelete,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.red.withOpacity(0.2)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.delete_outline,
+                                    size: 20, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.delete,
+                                  style: const TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (onDelete != null && onEdit != null)
+                      const SizedBox(width: 16),
+                    if (onEdit != null)
+                      Expanded(
+                        flex: 2,
+                        child: InkWell(
+                          onTap: isFrozen ? null : onEdit,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isFrozen
+                                  ? Colors.grey.withOpacity(0.2)
+                                  : Colors.blue.shade600,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: isFrozen
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.blue.shade600
+                                            .withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.edit_outlined,
+                                    size: 20, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.edit,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 

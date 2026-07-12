@@ -125,9 +125,9 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                               value: transferCount.toString(),
-                               icon: Icons.swap_horiz,
-                               color: Colors.green.shade700,
+                              value: transferCount.toString(),
+                              icon: Icons.swap_horiz,
+                              color: Colors.green.shade700,
                               onTap: () {
                                 final user =
                                     context.read<AuthProvider>().currentUser;

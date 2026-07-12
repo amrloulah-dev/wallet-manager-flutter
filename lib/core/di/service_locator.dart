@@ -78,7 +78,8 @@ Future<void> setupServiceLocator() async {
 
   // ── 5. Providers (depend on repositories & composite services) ──
   sl.registerLazySingleton<AuthProvider>(() => AuthProvider());
-  sl.registerLazySingleton<PlatformSettingsProvider>(() => PlatformSettingsProvider());
+  sl.registerLazySingleton<PlatformSettingsProvider>(
+      () => PlatformSettingsProvider());
 
   // ── 6. UseCases (depend on providers & repositories) ─────
   sl.registerLazySingleton<TransactionFeeCalculator>(

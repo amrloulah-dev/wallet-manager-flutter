@@ -2147,6 +2147,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The phone number prefix does not match the selected network.';
 
   @override
+  String get paidAmountEgp => 'Paid Amount (EGP)';
+
+  @override
   String get overlay_error_load_failed =>
       'An error occurred while loading data';
 

@@ -79,7 +79,7 @@ class SubscriptionProvider extends BaseProvider {
           (currentSub.planId == SubscriptionPlan.proYearly ||
               currentSub.planId == SubscriptionPlan.lifetime)) {
         // Dependably trigger success modal state
-        LocalStorageService.instance.setHasSeenSuccessModal(false);
+        LocalStorageService.instance.setLastSeenPaymentKey('');
       }
     }
     _previousSubscription = currentSub;
@@ -89,14 +89,25 @@ class SubscriptionProvider extends BaseProvider {
     safeNotify();
   }
 
-  bool get hasSeenSuccessModal =>
-      LocalStorageService.instance.hasSeenSuccessModal;
+  bool get hasSeenSuccessModal {
+    final sub = _authProvider.currentStore?.subscription;
+    if (sub == null) return true;
+    final key =
+        "${sub.planId.name}_${sub.endDate?.millisecondsSinceEpoch ?? 'lifetime'}";
+    return LocalStorageService.instance.lastSeenPaymentKey == key;
+  }
+
   bool get hasDismissedRejection =>
       LocalStorageService.instance.hasDismissedRejection;
 
   void markSuccessModalSeen() {
-    LocalStorageService.instance.setHasSeenSuccessModal(true);
-    safeNotify();
+    final sub = _authProvider.currentStore?.subscription;
+    if (sub != null) {
+      final key =
+          "${sub.planId.name}_${sub.endDate?.millisecondsSinceEpoch ?? 'lifetime'}";
+      LocalStorageService.instance.setLastSeenPaymentKey(key);
+      safeNotify();
+    }
   }
 
   void dismissRejectionBanner() {
@@ -114,8 +125,8 @@ class SubscriptionProvider extends BaseProvider {
           // If a new request arrives, clear locally dismissed rejection
           if (request != null && _latestRequest?.id != request.id) {
             LocalStorageService.instance.setHasDismissedRejection(false);
-            LocalStorageService.instance.setHasSeenSuccessModal(
-                false); // Reset success too for any future transition
+            LocalStorageService.instance.setLastSeenPaymentKey(
+                ''); // Reset success too for any future transition
           }
 
           _latestRequest = request;
@@ -132,8 +143,6 @@ class SubscriptionProvider extends BaseProvider {
           stackTrace: stack);
     }
   }
-
-
 
   Future<void> submitSubscriptionRequest({
     required SubscriptionPlan planId, // ENUM refactor

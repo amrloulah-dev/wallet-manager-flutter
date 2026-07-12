@@ -20,7 +20,8 @@ class MockWalletProvider extends Mock implements WalletProvider {
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {}
 }
 
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 class FakeWalletModel extends Fake implements WalletModel {}
 
@@ -38,7 +39,8 @@ void main() {
     mockWalletProvider = MockWalletProvider();
     mockSettingsProvider = MockPlatformSettingsProvider();
 
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
 
     when(() => mockAuthProvider.isSubscriptionExpired).thenReturn(true);
     when(() => mockWalletProvider.isLoading).thenReturn(false);
@@ -67,7 +69,8 @@ void main() {
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
         ChangeNotifierProvider<WalletProvider>.value(value: mockWalletProvider),
-        ChangeNotifierProvider<PlatformSettingsProvider>.value(value: mockSettingsProvider),
+        ChangeNotifierProvider<PlatformSettingsProvider>.value(
+            value: mockSettingsProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [

@@ -25,10 +25,8 @@ class TransactionValidatorService {
       : _firestore = firestore ?? sl<FirebaseFirestore>();
 
   Future<void> validateAndSave(
-    TransactionModel transaction,
-    PlatformSettingsModel settings,
-    {Future<void> Function(Transaction)? extraWrites}
-  ) async {
+      TransactionModel transaction, PlatformSettingsModel settings,
+      {Future<void> Function(Transaction)? extraWrites}) async {
     try {
       if (kDebugMode) {
         debugPrint(
@@ -110,13 +108,16 @@ class TransactionValidatorService {
         // 2. EXPLICIT NETWORK LIMITS (InstaPay / Telecom) - Single Transaction
         // ------------------------------------------------------------------
         final isInstaPay = validationWallet.walletType == WalletType.instaPay;
-        final dynamicLimits = validationWallet.getDynamicNetworkLimits(settings);
+        final dynamicLimits =
+            validationWallet.getDynamicNetworkLimits(settings);
 
         if (transaction.amount > dynamicLimits.maxPerTransaction) {
           if (isInstaPay) {
-            throw ValidationException('wallet_error_instapay_limit:${NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction)}');
+            throw ValidationException(
+                'wallet_error_instapay_limit:${NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction)}');
           } else {
-            throw ValidationException('wallet_error_telecom_limit:${NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction)}');
+            throw ValidationException(
+                'wallet_error_telecom_limit:${NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction)}');
           }
         }
 
@@ -142,23 +143,29 @@ class TransactionValidatorService {
         // 4. CUMULATIVE LIMITS (InstaPay & General Capacity)
         // ------------------------------------------------------------------
         if (transaction.isSend) {
-          if (validationWallet.sendLimits.dailyUsed + transaction.amount > dynamicLimits.dailySend) {
+          if (validationWallet.sendLimits.dailyUsed + transaction.amount >
+              dynamicLimits.dailySend) {
             if (isInstaPay) {
-              throw ValidationException('wallet_error_instapay_daily_limit:${NumberFormatter.formatAmount(dynamicLimits.dailySend)}');
+              throw ValidationException(
+                  'wallet_error_instapay_daily_limit:${NumberFormatter.formatAmount(dynamicLimits.dailySend)}');
             }
             throw ValidationException('wallet_error_daily_send_limit');
           }
-          if (validationWallet.sendLimits.monthlyUsed + transaction.amount > dynamicLimits.monthlySend) {
+          if (validationWallet.sendLimits.monthlyUsed + transaction.amount >
+              dynamicLimits.monthlySend) {
             throw ValidationException('wallet_error_monthly_send_limit');
           }
         } else if (transaction.isReceive) {
-          if (validationWallet.receiveLimits.dailyUsed + transaction.amount > dynamicLimits.dailyReceive) {
+          if (validationWallet.receiveLimits.dailyUsed + transaction.amount >
+              dynamicLimits.dailyReceive) {
             if (isInstaPay) {
-              throw ValidationException('wallet_error_instapay_daily_limit:${NumberFormatter.formatAmount(dynamicLimits.dailyReceive)}');
+              throw ValidationException(
+                  'wallet_error_instapay_daily_limit:${NumberFormatter.formatAmount(dynamicLimits.dailyReceive)}');
             }
             throw ValidationException('wallet_error_daily_receive_limit');
           }
-          if (validationWallet.receiveLimits.monthlyUsed + transaction.amount > dynamicLimits.monthlyReceive) {
+          if (validationWallet.receiveLimits.monthlyUsed + transaction.amount >
+              dynamicLimits.monthlyReceive) {
             throw ValidationException('wallet_error_monthly_receive_limit');
           }
         }

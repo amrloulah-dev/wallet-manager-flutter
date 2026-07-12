@@ -22,7 +22,8 @@ void main() {
       expect(stats.lastUpdated, isNull);
     });
 
-    test('fromMap should parse all fields and default missing fields to zero', () {
+    test('fromMap should parse all fields and default missing fields to zero',
+        () {
       final map = {
         'totalWallets': 10,
         'activeWallets': 8,

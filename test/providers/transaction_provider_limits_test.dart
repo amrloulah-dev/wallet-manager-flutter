@@ -22,11 +22,18 @@ import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockStatsRepository extends Mock implements StatsRepository {}
+
 class MockWalletRepository extends Mock implements WalletRepository {}
+
 class MockWalletProvider extends Mock implements WalletProvider {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
+
 class FakeTransactionModel extends Fake implements TransactionModel {}
 
 void main() {
@@ -39,7 +46,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(UserRole.employee);
     registerFallbackValue(FakeTransactionModel());
-    registerFallbackValue(DateTimeRange(start: DateTime.now(), end: DateTime.now()));
+    registerFallbackValue(
+        DateTimeRange(start: DateTime.now(), end: DateTime.now()));
   });
 
   setUp(() {
@@ -62,7 +70,7 @@ void main() {
     }
     final mockStats = MockStatsRepository();
     sl.registerSingleton<StatsRepository>(mockStats);
-    
+
     when(() => mockStats.fetchTodayStats(any()))
         .thenAnswer((_) async => DailyStatsModel.empty('2026-06-29'));
 
@@ -116,7 +124,8 @@ void main() {
       plans: const {},
     );
 
-    test('should reject debit transaction when amount exceeds dynamic limits', () async {
+    test('should reject debit transaction when amount exceeds dynamic limits',
+        () async {
       final user = UserModel(
         userId: 'owner1',
         storeId: 's1',
@@ -131,13 +140,26 @@ void main() {
         storeId: 's1',
         phoneNumber: '01000000000',
         walletType: WalletType.vodafoneCash,
-        walletStatus: WalletStatus.active, // maps to newWalletTransactionLimit (5000.0)
+        walletStatus:
+            WalletStatus.active, // maps to newWalletTransactionLimit (5000.0)
         balance: 10000.0,
         isActive: true,
         createdBy: 'owner1',
-        sendLimits: WalletLimits(dailyLimit: 5000, dailyUsed: 0, monthlyLimit: 30000, monthlyUsed: 0),
-        receiveLimits: WalletLimits(dailyLimit: 5000, dailyUsed: 0, monthlyLimit: 30000, monthlyUsed: 0),
-        stats: WalletStats(totalTransactions: 0, totalCommission: 0, totalSentAmount: 0, totalReceivedAmount: 0),
+        sendLimits: WalletLimits(
+            dailyLimit: 5000,
+            dailyUsed: 0,
+            monthlyLimit: 30000,
+            monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 5000,
+            dailyUsed: 0,
+            monthlyLimit: 30000,
+            monthlyUsed: 0),
+        stats: WalletStats(
+            totalTransactions: 0,
+            totalCommission: 0,
+            totalSentAmount: 0,
+            totalReceivedAmount: 0),
       );
 
       when(() => mockAuth.currentUser).thenReturn(user);
@@ -166,7 +188,9 @@ void main() {
       expect(provider.errorMessage, equals('wallet_error_telecom_limit'));
     });
 
-    test('should reject debit transaction when amount exceeds dynamic InstaPay limit', () async {
+    test(
+        'should reject debit transaction when amount exceeds dynamic InstaPay limit',
+        () async {
       final user = UserModel(
         userId: 'owner1',
         storeId: 's1',
@@ -185,9 +209,21 @@ void main() {
         balance: 100000.0,
         isActive: true,
         createdBy: 'owner1',
-        sendLimits: WalletLimits(dailyLimit: 80000, dailyUsed: 0, monthlyLimit: 300000, monthlyUsed: 0),
-        receiveLimits: WalletLimits(dailyLimit: 80000, dailyUsed: 0, monthlyLimit: 300000, monthlyUsed: 0),
-        stats: WalletStats(totalTransactions: 0, totalCommission: 0, totalSentAmount: 0, totalReceivedAmount: 0),
+        sendLimits: WalletLimits(
+            dailyLimit: 80000,
+            dailyUsed: 0,
+            monthlyLimit: 300000,
+            monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 80000,
+            dailyUsed: 0,
+            monthlyLimit: 300000,
+            monthlyUsed: 0),
+        stats: WalletStats(
+            totalTransactions: 0,
+            totalCommission: 0,
+            totalSentAmount: 0,
+            totalReceivedAmount: 0),
       );
 
       when(() => mockAuth.currentUser).thenReturn(user);
@@ -216,7 +252,8 @@ void main() {
       expect(provider.errorMessage, equals('wallet_error_instapay_limit'));
     });
 
-    test('should allow debit transaction when amount is within dynamic limits', () async {
+    test('should allow debit transaction when amount is within dynamic limits',
+        () async {
       final user = UserModel(
         userId: 'owner1',
         storeId: 's1',
@@ -235,9 +272,21 @@ void main() {
         balance: 10000.0,
         isActive: true,
         createdBy: 'owner1',
-        sendLimits: WalletLimits(dailyLimit: 5000, dailyUsed: 0, monthlyLimit: 30000, monthlyUsed: 0),
-        receiveLimits: WalletLimits(dailyLimit: 5000, dailyUsed: 0, monthlyLimit: 30000, monthlyUsed: 0),
-        stats: WalletStats(totalTransactions: 0, totalCommission: 0, totalSentAmount: 0, totalReceivedAmount: 0),
+        sendLimits: WalletLimits(
+            dailyLimit: 5000,
+            dailyUsed: 0,
+            monthlyLimit: 30000,
+            monthlyUsed: 0),
+        receiveLimits: WalletLimits(
+            dailyLimit: 5000,
+            dailyUsed: 0,
+            monthlyLimit: 30000,
+            monthlyUsed: 0),
+        stats: WalletStats(
+            totalTransactions: 0,
+            totalCommission: 0,
+            totalSentAmount: 0,
+            totalReceivedAmount: 0),
       );
 
       when(() => mockAuth.currentUser).thenReturn(user);

@@ -2140,6 +2140,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'رقم الموبايل لا يتطابق مع شبكة المحفظة المختارة.';
 
   @override
+  String get paidAmountEgp => 'المبلغ المدفوع (جنيه)';
+
+  @override
   String get overlay_error_load_failed => 'حدث خطأ أثناء تحميل البيانات';
 
   @override

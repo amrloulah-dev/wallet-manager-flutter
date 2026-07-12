@@ -223,8 +223,6 @@ class StoreRepository {
     await updateStore(storeId, data);
   }
 
-
-
   // ===========================
   // Password Methods
   // ===========================

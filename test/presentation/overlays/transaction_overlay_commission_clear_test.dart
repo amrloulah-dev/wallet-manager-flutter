@@ -13,8 +13,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
 class MockOverlayUseCase extends Mock implements OverlayUseCase {}
+
 class MockLocalStorageService extends Mock implements LocalStorageService {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   const channel = MethodChannel('x-slayer/overlay_channel');
@@ -50,7 +53,8 @@ void main() {
     sl.reset();
   });
 
-  testWidgets('TransactionOverlayScreen clears commission text field on successful submit',
+  testWidgets(
+      'TransactionOverlayScreen clears commission text field on successful submit',
       (WidgetTester tester) async {
     // Setup Mock behaviours
     when(() => mockStorage.userId).thenReturn('user_123');
@@ -63,10 +67,16 @@ void main() {
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
     when(() => mockStorage.getCachedWalletLiteList()).thenReturn([
-      {'id': 'w1', 'name': 'InstaPay Wallet', 'walletType': 'instapay', 'isFrozen': false}
+      {
+        'id': 'w1',
+        'name': 'InstaPay Wallet',
+        'walletType': 'instapay',
+        'isFrozen': false
+      }
     ]);
 
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
 
     when(() => mockUseCase.execute(
           storeId: any(named: 'storeId'),

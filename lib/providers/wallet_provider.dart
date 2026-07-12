@@ -404,8 +404,6 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
-
-
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
@@ -493,8 +491,6 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_not_found');
       }
       final oldWallet = _wallets[index];
-
-
 
       final newWallet = oldWallet.copyWith(
         phoneNumber: data['phoneNumber'] as String?,

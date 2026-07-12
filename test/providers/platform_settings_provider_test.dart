@@ -6,10 +6,17 @@ import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
+
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
 
 void main() {
   late MockLocalStorageService mockStorage;
@@ -94,7 +101,8 @@ void main() {
       when(() => mockStorage.getPlatformSettingsJson()).thenReturn(null);
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.data()).thenReturn(testJson);
-      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any()))
+          .thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -110,8 +118,10 @@ void main() {
 
     test('initialize loads from cache when cache is fresh (<24h)', () async {
       final now = DateTime.now().millisecondsSinceEpoch;
-      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
+      when(() => mockStorage.getPlatformSettingsFetchTime())
+          .thenReturn(now - 1000);
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn(json.encode(testJson));
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -124,15 +134,19 @@ void main() {
       verifyNever(() => mockDoc.get());
     });
 
-    test('initialize fetches from Firestore when cache is stale (>24h)', () async {
+    test('initialize fetches from Firestore when cache is stale (>24h)',
+        () async {
       final now = DateTime.now().millisecondsSinceEpoch;
       final twentyFiveHoursAgo = now - const Duration(hours: 25).inMilliseconds;
 
-      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(twentyFiveHoursAgo);
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
+      when(() => mockStorage.getPlatformSettingsFetchTime())
+          .thenReturn(twentyFiveHoursAgo);
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn(json.encode(testJson));
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.data()).thenReturn(testJson);
-      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any()))
+          .thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -149,7 +163,8 @@ void main() {
     test('forceRefresh bypasses TTL and fetches from Firestore', () async {
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.data()).thenReturn(testJson);
-      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any()))
+          .thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -164,8 +179,10 @@ void main() {
 
     test('falls back to cache when Firestore fetch fails', () async {
       when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(null);
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode(testJson));
-      when(() => mockDoc.get()).thenThrow(FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn(json.encode(testJson));
+      when(() => mockDoc.get()).thenThrow(
+          FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -179,12 +196,15 @@ void main() {
 
     test('self-heals and clears cache when cached JSON is malformed', () async {
       final now = DateTime.now().millisecondsSinceEpoch;
-      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn("invalid-json-string");
+      when(() => mockStorage.getPlatformSettingsFetchTime())
+          .thenReturn(now - 1000);
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn("invalid-json-string");
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.data()).thenReturn(testJson);
       when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
-      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any()))
+          .thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -198,15 +218,19 @@ void main() {
       verify(() => mockDoc.get()).called(1);
     });
 
-    test('self-heals and clears cache when cached JSON has schema mismatch', () async {
+    test('self-heals and clears cache when cached JSON has schema mismatch',
+        () async {
       final now = DateTime.now().millisecondsSinceEpoch;
-      when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(now - 1000);
+      when(() => mockStorage.getPlatformSettingsFetchTime())
+          .thenReturn(now - 1000);
       // 'limits' as int instead of map will cause PlatformSettingsModel.fromJson to throw
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn(json.encode({'limits': 123}));
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn(json.encode({'limits': 123}));
       when(() => mockSnapshot.exists).thenReturn(true);
       when(() => mockSnapshot.data()).thenReturn(testJson);
       when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
-      when(() => mockStorage.savePlatformSettings(any())).thenAnswer((_) async {});
+      when(() => mockStorage.savePlatformSettings(any()))
+          .thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
         storage: mockStorage,
@@ -220,10 +244,14 @@ void main() {
       verify(() => mockDoc.get()).called(1);
     });
 
-    test('falls back to defaults and clears cache when Firestore fails and cache is malformed', () async {
+    test(
+        'falls back to defaults and clears cache when Firestore fails and cache is malformed',
+        () async {
       when(() => mockStorage.getPlatformSettingsFetchTime()).thenReturn(null);
-      when(() => mockStorage.getPlatformSettingsJson()).thenReturn("invalid-json-string");
-      when(() => mockDoc.get()).thenThrow(FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
+      when(() => mockStorage.getPlatformSettingsJson())
+          .thenReturn("invalid-json-string");
+      when(() => mockDoc.get()).thenThrow(
+          FirebaseException(plugin: 'cloud_firestore', message: 'Offline'));
       when(() => mockStorage.clearPlatformSettings()).thenAnswer((_) async {});
 
       final provider = PlatformSettingsProvider(
@@ -233,7 +261,8 @@ void main() {
 
       await provider.initialize();
 
-      expect(provider.settings.newWalletTransactionLimit, 30000.0); // defaults value
+      expect(provider.settings.newWalletTransactionLimit,
+          30000.0); // defaults value
       verify(() => mockStorage.clearPlatformSettings()).called(1);
     });
   });

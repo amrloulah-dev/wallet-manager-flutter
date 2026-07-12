@@ -375,7 +375,8 @@ class WalletModel {
     final NetworkLimits networkLimits;
     if (typeEnum == WalletType.instaPay) {
       networkLimits = resolvedSettings.instapayLimits;
-    } else if (statusEnum == WalletStatus.suspended || walletStatus == 'registered_store') {
+    } else if (statusEnum == WalletStatus.suspended ||
+        walletStatus == 'registered_store') {
       networkLimits = resolvedSettings.networkCommercialLimits;
     } else if (statusEnum == WalletStatus.active || walletStatus == 'new') {
       networkLimits = resolvedSettings.networkNewLimits;
@@ -412,11 +413,11 @@ class WalletModel {
   NetworkLimits getDynamicNetworkLimits(PlatformSettingsModel settings) {
     final isInstapay = walletType == WalletType.instaPay;
     if (isInstapay) return settings.instapayLimits;
-    
+
     if (walletStatus == WalletStatus.suspended) {
       return settings.networkCommercialLimits;
     }
-    
+
     if (walletStatus == WalletStatus.active) {
       return settings.networkNewLimits;
     } else {

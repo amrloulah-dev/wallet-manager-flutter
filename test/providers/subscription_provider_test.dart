@@ -1087,7 +1087,9 @@ void main() {
           isFalse); // Old allowed this because 0 < 1
     });
 
-    test('syncToStorage correctly stores limits and SMS enabling flag from active plan', () async {
+    test(
+        'syncToStorage correctly stores limits and SMS enabling flag from active plan',
+        () async {
       final sub = StoreSubscription(
         planId: SubscriptionPlan.proYearly,
         status: SubscriptionStatus.active,
@@ -1157,7 +1159,8 @@ void main() {
           ),
         },
       );
-      when(() => mockPlatformSettingsProvider.settings).thenReturn(mockSettings);
+      when(() => mockPlatformSettingsProvider.settings)
+          .thenReturn(mockSettings);
 
       final provider = SubscriptionProvider(
         authProvider: mockAuthProvider,

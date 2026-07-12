@@ -385,6 +385,7 @@ class LocalStorageService {
   // Subscription UI states
   static const String _kHasSeenSuccessModal = 'has_seen_success_modal';
   static const String _kHasDismissedRejection = 'has_dismissed_rejection';
+  static const String _kLastSeenPaymentKey = 'last_seen_payment_key';
 
   Future<void> setHasSeenSuccessModal(bool seen) async {
     _ensureInitialized();
@@ -393,6 +394,13 @@ class LocalStorageService {
 
   bool get hasSeenSuccessModal =>
       _prefs?.getBool(_kHasSeenSuccessModal) ?? false;
+
+  Future<void> setLastSeenPaymentKey(String key) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kLastSeenPaymentKey, key);
+  }
+
+  String? get lastSeenPaymentKey => _prefs?.getString(_kLastSeenPaymentKey);
 
   Future<void> setHasDismissedRejection(bool dismissed) async {
     _ensureInitialized();
@@ -538,13 +546,15 @@ class LocalStorageService {
   // Platform Settings Cache
   // ===========================
   static const String _kPlatformSettingsJson = 'platform_settings_json';
-  static const String _kPlatformSettingsFetchTime = 'platform_settings_fetch_time';
+  static const String _kPlatformSettingsFetchTime =
+      'platform_settings_fetch_time';
 
   /// Saves the serialized PlatformSettingsModel JSON to local storage and updates the fetch timestamp.
   Future<void> savePlatformSettings(String jsonStr) async {
     _ensureInitialized();
     await _prefs!.setString(_kPlatformSettingsJson, jsonStr);
-    await _prefs!.setInt(_kPlatformSettingsFetchTime, DateTime.now().millisecondsSinceEpoch);
+    await _prefs!.setInt(
+        _kPlatformSettingsFetchTime, DateTime.now().millisecondsSinceEpoch);
   }
 
   /// Retrieves the cached PlatformSettingsModel JSON, if any.

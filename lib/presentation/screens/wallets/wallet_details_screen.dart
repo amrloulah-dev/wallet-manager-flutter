@@ -254,7 +254,8 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   Widget _buildSendLimitsCard(WalletModel wallet) {
-    final settings = Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
     final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
     final limits = wallet.getLimits();
 
@@ -262,7 +263,8 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
         ? (limits.dailyUsed / dynamicLimits.dailySend * 100).clamp(0.0, 100.0)
         : 0.0;
     final double sendMonthlyPercentage = dynamicLimits.monthlySend > 0
-        ? (limits.monthlyUsed / dynamicLimits.monthlySend * 100).clamp(0.0, 100.0)
+        ? (limits.monthlyUsed / dynamicLimits.monthlySend * 100)
+            .clamp(0.0, 100.0)
         : 0.0;
 
     String getWarningLevel(double percentage) {
@@ -274,8 +276,10 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     final dailySendWarningLevel = getWarningLevel(sendDailyPercentage);
     final monthlySendWarningLevel = getWarningLevel(sendMonthlyPercentage);
 
-    final bool isDailyLimitReached = limits.dailyUsed >= dynamicLimits.dailySend;
-    final bool isMonthlyLimitReached = limits.monthlyUsed >= dynamicLimits.monthlySend;
+    final bool isDailyLimitReached =
+        limits.dailyUsed >= dynamicLimits.dailySend;
+    final bool isMonthlyLimitReached =
+        limits.monthlyUsed >= dynamicLimits.monthlySend;
 
     return Card(
       elevation: 1,
@@ -310,15 +314,18 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   Widget _buildReceiveLimitsCard(WalletModel wallet) {
-    final settings = Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
     final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
     final limits = wallet.getReceiveLimits();
 
     final double receiveDailyPercentage = dynamicLimits.dailyReceive > 0
-        ? (limits.dailyUsed / dynamicLimits.dailyReceive * 100).clamp(0.0, 100.0)
+        ? (limits.dailyUsed / dynamicLimits.dailyReceive * 100)
+            .clamp(0.0, 100.0)
         : 0.0;
     final double receiveMonthlyPercentage = dynamicLimits.monthlyReceive > 0
-        ? (limits.monthlyUsed / dynamicLimits.monthlyReceive * 100).clamp(0.0, 100.0)
+        ? (limits.monthlyUsed / dynamicLimits.monthlyReceive * 100)
+            .clamp(0.0, 100.0)
         : 0.0;
 
     String getWarningLevel(double percentage) {
@@ -328,10 +335,13 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     }
 
     final dailyReceiveWarningLevel = getWarningLevel(receiveDailyPercentage);
-    final monthlyReceiveWarningLevel = getWarningLevel(receiveMonthlyPercentage);
+    final monthlyReceiveWarningLevel =
+        getWarningLevel(receiveMonthlyPercentage);
 
-    final bool isDailyLimitReached = limits.dailyUsed >= dynamicLimits.dailyReceive;
-    final bool isMonthlyLimitReached = limits.monthlyUsed >= dynamicLimits.monthlyReceive;
+    final bool isDailyLimitReached =
+        limits.dailyUsed >= dynamicLimits.dailyReceive;
+    final bool isMonthlyLimitReached =
+        limits.monthlyUsed >= dynamicLimits.monthlyReceive;
 
     return Card(
       elevation: 1,

@@ -417,14 +417,16 @@ class _CommissionFieldWidget extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     // Sync provider's commission to controller
-    final commission = context.select<OverlayProvider, double>((p) => p.commission);
+    final commission =
+        context.select<OverlayProvider, double>((p) => p.commission);
     final currentTextVal = double.tryParse(controller.text) ?? 0.0;
     if (commission != currentTextVal) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (commission == 0.0) {
           controller.clear();
         } else {
-          controller.text = commission.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+          controller.text =
+              commission.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
         }
       });
     }

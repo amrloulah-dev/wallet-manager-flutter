@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
@@ -35,7 +36,8 @@ void main() async {
       if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
       await setupServiceLocator();
       await sl<PlatformSettingsProvider>().initialize();
-      if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Service Locator & Settings ready.');
+      if (kDebugMode)
+        debugPrint('✅ [INIT SUCCESS] Service Locator & Settings ready.');
 
       // Step 3: Check and initialize SMS automation if enabled
       if (sl<LocalStorageService>().isSmsAutomationEnabled) {
@@ -84,34 +86,54 @@ void main() async {
       if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
       if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
 
+      final String systemLang = PlatformDispatcher.instance.locale.languageCode;
+      String lang = systemLang == 'ar' ? 'ar' : 'en';
+      try {
+        if (sl.isRegistered<LocalStorageService>()) {
+          lang = sl<LocalStorageService>().languageCode;
+        }
+      } catch (_) {}
+
+      final isAr = lang == 'ar';
+      final title = isAr ? 'فشل تهيئة التطبيق' : 'App initialization failed';
+      final subtitle = isAr
+          ? 'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.'
+          : 'Please check your connection and try again.';
+      final direction = isAr ? TextDirection.rtl : TextDirection.ltr;
+
       runApp(
         MaterialApp(
-          home: Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: Colors.red, size: 64),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'App initialization failed',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 22,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Please check your connection and try again.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    ],
+          debugShowCheckedModeBanner: false,
+          home: Directionality(
+            textDirection: direction,
+            child: Scaffold(
+              body: SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline_rounded,
+                            color: Colors.red, size: 64),
+                        const SizedBox(height: 24),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 22,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          subtitle,
+                          textAlign: TextAlign.center,
+                          style:
+                              const TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

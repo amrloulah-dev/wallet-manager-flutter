@@ -880,6 +880,7 @@
   "warning": "Warning",
   "confirmAnyway": "Confirm Anyway",
   "carrier_mismatch_warning": "The phone number prefix does not match the selected network.",
+  "paidAmountEgp": "Paid Amount (EGP)",
   "overlay_error_load_failed": "An error occurred while loading data",
   "overlay_error_submit_failed": "An error occurred while processing the transaction",
   "debt_error_create_failed": "An error occurred while creating the debt",

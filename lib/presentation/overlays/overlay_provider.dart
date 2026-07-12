@@ -133,14 +133,16 @@ class OverlayProvider extends SafeChangeNotifier {
       String? passedId = data['walletId']?.toString();
       if (passedId != null && passedId.trim().isEmpty) passedId = null;
 
-      final bool exists = passedId != null && _availableWallets.any((w) => w['id'] == passedId);
+      final bool exists =
+          passedId != null && _availableWallets.any((w) => w['id'] == passedId);
 
       if (exists) {
         _selectedWalletId = passedId;
         final selectedWallet =
             _availableWallets.firstWhere((w) => w['id'] == passedId);
-        final rawWalletType =
-            selectedWallet['walletType']?.toString() ?? selectedWallet['type']?.toString() ?? 'vodafone_cash';
+        final rawWalletType = selectedWallet['walletType']?.toString() ??
+            selectedWallet['type']?.toString() ??
+            'vodafone_cash';
         final walletType = WalletType.fromString(rawWalletType);
         final settings = sl<PlatformSettingsProvider>().settings;
         _commission = FeeCalculator.calculateTransactionFee(
@@ -160,7 +162,9 @@ class OverlayProvider extends SafeChangeNotifier {
           storeId: _cachedStoreId ?? '',
           phoneNumber: selectedWallet['phone']?.toString() ?? '',
           walletType: rawWalletType,
-          walletStatus: selectedWallet['walletStatus']?.toString() ?? selectedWallet['status']?.toString() ?? 'active',
+          walletStatus: selectedWallet['walletStatus']?.toString() ??
+              selectedWallet['status']?.toString() ??
+              'active',
           balance: 0.0,
           createdBy: _cachedUserName ?? 'SMS Auto',
           settings: settings,
@@ -170,11 +174,14 @@ class OverlayProvider extends SafeChangeNotifier {
         final isInstaPay = walletType == WalletType.instaPay;
 
         if (_amount > dynamicLimits.maxPerTransaction) {
-          final formattedLimit = NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction);
+          final formattedLimit =
+              NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction);
           if (isInstaPay) {
-            _errorMessage = "overlay_error_amount_limit_instapay:$formattedLimit";
+            _errorMessage =
+                "overlay_error_amount_limit_instapay:$formattedLimit";
           } else {
-            _errorMessage = "overlay_error_amount_limit_telecom:$formattedLimit";
+            _errorMessage =
+                "overlay_error_amount_limit_telecom:$formattedLimit";
           }
         }
       } else {

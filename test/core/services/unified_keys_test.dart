@@ -78,7 +78,7 @@ void main() {
 
     test('should clear platform settings from cache', () async {
       await storage.savePlatformSettings('{"limits": {}}');
-      
+
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('platform_settings_json'), isTrue);
       expect(prefs.containsKey('platform_settings_fetch_time'), isTrue);

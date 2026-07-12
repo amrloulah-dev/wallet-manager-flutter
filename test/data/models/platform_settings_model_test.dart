@@ -55,12 +55,12 @@ void main() {
       expect(model.instapayLimits.maxPerTransaction, 50000.0);
       expect(model.minCrossNetworkFee, 2.0);
       expect(model.sameNetworkFee, 1.5);
-      
+
       // New global subscription fields
       expect(model.gracePeriodHours, 72);
       expect(model.trialDays, 30);
       expect(model.lifetimeCountLimit, 100);
-      
+
       // Plans map
       expect(model.plans.containsKey('pro'), isTrue);
       expect(model.plans['pro']!.name, equals('Pro Plan'));
@@ -110,10 +110,30 @@ void main() {
 
       final model = PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: const NetworkLimits(dailyReceive: 120000, dailySend: 120000, maxPerTransaction: 70000, monthlyReceive: 400000, monthlySend: 400000),
-        networkCommercialLimits: const NetworkLimits(dailyReceive: 200000, dailySend: 200000, maxPerTransaction: 200000, monthlyReceive: 500000, monthlySend: 500000),
-        networkNewLimits: const NetworkLimits(dailyReceive: 10000, dailySend: 10000, maxPerTransaction: 30000, monthlyReceive: 600000, monthlySend: 600000),
-        networkOldLimits: const NetworkLimits(dailyReceive: 60000, dailySend: 80000, maxPerTransaction: 70000, monthlyReceive: 200000, monthlySend: 200000),
+        instapayLimits: const NetworkLimits(
+            dailyReceive: 120000,
+            dailySend: 120000,
+            maxPerTransaction: 70000,
+            monthlyReceive: 400000,
+            monthlySend: 400000),
+        networkCommercialLimits: const NetworkLimits(
+            dailyReceive: 200000,
+            dailySend: 200000,
+            maxPerTransaction: 200000,
+            monthlyReceive: 500000,
+            monthlySend: 500000),
+        networkNewLimits: const NetworkLimits(
+            dailyReceive: 10000,
+            dailySend: 10000,
+            maxPerTransaction: 30000,
+            monthlyReceive: 600000,
+            monthlySend: 600000),
+        networkOldLimits: const NetworkLimits(
+            dailyReceive: 60000,
+            dailySend: 80000,
+            maxPerTransaction: 70000,
+            monthlyReceive: 200000,
+            monthlySend: 200000),
         minCrossNetworkFee: 1.0,
         maxCrossNetworkFee: 15.0,
         minInstapayFee: 0.5,
@@ -133,7 +153,7 @@ void main() {
       expect(subscriptions['gracePeriodHours'], equals(48));
       expect(subscriptions['trialDays'], equals(14));
       expect(subscriptions['lifetimeCountLimit'], equals(50));
-      
+
       // Verify legacy fields proPrice and lifetimePrice are NOT present in serialized map
       expect(subscriptions.containsKey('proPrice'), isFalse);
       expect(subscriptions.containsKey('lifetimePrice'), isFalse);

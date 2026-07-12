@@ -4016,6 +4016,12 @@ abstract class AppLocalizations {
   /// **'رقم الموبايل لا يتطابق مع شبكة المحفظة المختارة.'**
   String get carrier_mismatch_warning;
 
+  /// No description provided for @paidAmountEgp.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المدفوع (جنيه)'**
+  String get paidAmountEgp;
+
   /// No description provided for @overlay_error_load_failed.
   ///
   /// In ar, this message translates to:

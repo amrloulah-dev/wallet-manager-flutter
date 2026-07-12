@@ -28,7 +28,8 @@ class MockAuthProvider extends ChangeNotifier implements AuthProvider {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class MockStatisticsProvider extends ChangeNotifier implements StatisticsProvider {
+class MockStatisticsProvider extends ChangeNotifier
+    implements StatisticsProvider {
   @override
   bool get isLoading => false;
   @override
@@ -58,7 +59,8 @@ class MockStatisticsProvider extends ChangeNotifier implements StatisticsProvide
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class MockTransactionProvider extends ChangeNotifier implements TransactionProvider {
+class MockTransactionProvider extends ChangeNotifier
+    implements TransactionProvider {
   final List<TransactionModel> _todayTxns;
   MockTransactionProvider(this._todayTxns);
 
@@ -73,7 +75,8 @@ class MockTransactionProvider extends ChangeNotifier implements TransactionProvi
 }
 
 void main() {
-  testWidgets('DashboardQuickStats Total Transactions card shows only transfer (debit) transactions count',
+  testWidgets(
+      'DashboardQuickStats Total Transactions card shows only transfer (debit) transactions count',
       (WidgetTester tester) async {
     // 1 debit (transfer), 1 credit (receive), 1 deposit (top-up)
     final mockTxns = [
@@ -117,7 +120,8 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
-          ChangeNotifierProvider<StatisticsProvider>.value(value: statsProvider),
+          ChangeNotifierProvider<StatisticsProvider>.value(
+              value: statsProvider),
           ChangeNotifierProvider<TransactionProvider>.value(value: txProvider),
         ],
         child: const MaterialApp(

@@ -457,14 +457,17 @@ class TransactionProvider extends BaseProvider {
         if (wallet.sendLimits.dailyUsed + amount > dynamicLimits.dailySend) {
           throw ValidationException('wallet_error_daily_send_limit');
         }
-        if (wallet.sendLimits.monthlyUsed + amount > dynamicLimits.monthlySend) {
+        if (wallet.sendLimits.monthlyUsed + amount >
+            dynamicLimits.monthlySend) {
           throw ValidationException('wallet_error_monthly_send_limit');
         }
       } else if (isReceive) {
-        if (wallet.receiveLimits.dailyUsed + amount > dynamicLimits.dailyReceive) {
+        if (wallet.receiveLimits.dailyUsed + amount >
+            dynamicLimits.dailyReceive) {
           throw ValidationException('wallet_error_daily_receive_limit');
         }
-        if (wallet.receiveLimits.monthlyUsed + amount > dynamicLimits.monthlyReceive) {
+        if (wallet.receiveLimits.monthlyUsed + amount >
+            dynamicLimits.monthlyReceive) {
           throw ValidationException('wallet_error_monthly_receive_limit');
         }
       }

@@ -170,22 +170,17 @@ class StatisticsProvider extends BaseProvider {
       _filteredStats = {
         'totalBalance': totalBalance,
         'totalWallets': totalWallets,
-        'totalTransactions':
-            NumberParser.toInt(aggregated['transactionCount']),
-        'totalCommission':
-            NumberParser.toDouble(aggregated['totalCommission']),
+        'totalTransactions': NumberParser.toInt(aggregated['transactionCount']),
+        'totalCommission': NumberParser.toDouble(aggregated['totalCommission']),
         'sendCount': NumberParser.toInt(aggregated['sendCount']),
-        'totalSentAmount':
-            NumberParser.toDouble(aggregated['totalSentAmount']),
+        'totalSentAmount': NumberParser.toDouble(aggregated['totalSentAmount']),
         'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
         'totalReceivedAmount':
             NumberParser.toDouble(aggregated['totalReceivedAmount']),
         'openDebtsCount': openDebts,
-        'totalOpenAmount':
-            NumberParser.toDouble(aggregated['totalOpenAmount']),
+        'totalOpenAmount': NumberParser.toDouble(aggregated['totalOpenAmount']),
         'paidDebtsCount': paidDebts,
-        'totalPaidAmount':
-            NumberParser.toDouble(aggregated['totalPaidAmount']),
+        'totalPaidAmount': NumberParser.toDouble(aggregated['totalPaidAmount']),
         'totalDebtsCount': openDebts + paidDebts,
       };
     } catch (e, stack) {

@@ -36,8 +36,8 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
               child: ListTile(
                 leading: Icon(_getThemeIcon(themeProvider.themeMode),
                     color: AppColors.primary),
-                title: Text(localizations.theme,
-                    style: AppTextStyles.bodyLarge),
+                title:
+                    Text(localizations.theme, style: AppTextStyles.bodyLarge),
                 subtitle: Text(
                     _getThemeModeName(context, themeProvider.themeMode),
                     style: AppTextStyles.bodyMedium),
@@ -82,8 +82,8 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
         Card(
           elevation: 1,
           margin: const EdgeInsets.symmetric(horizontal: 16.0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ListTile(
             leading: _isRefreshing
                 ? const SizedBox(
@@ -107,11 +107,14 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
                       _isRefreshing = true;
                     });
                     try {
-                      await context.read<PlatformSettingsProvider>().forceRefresh();
+                      await context
+                          .read<PlatformSettingsProvider>()
+                          .forceRefresh();
                       if (mounted) {
                         messenger.showSnackBar(
                           SnackBar(
-                            content: Text(localizations.platformSettingsRefreshed),
+                            content:
+                                Text(localizations.platformSettingsRefreshed),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -120,7 +123,8 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
                       if (mounted) {
                         messenger.showSnackBar(
                           SnackBar(
-                            content: Text(localizations.platformSettingsRefreshFailed),
+                            content: Text(
+                                localizations.platformSettingsRefreshFailed),
                             backgroundColor: Colors.red,
                           ),
                         );

@@ -167,11 +167,12 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
               TextFormField(
                 key: const Key('subscription_amount_field'),
                 controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'المبلغ المدفوع (جنيه)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.payments),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: loc.paidAmountEgp,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.payments),
                 ),
                 validator: (value) => Validators.validateAmount(value),
               ),

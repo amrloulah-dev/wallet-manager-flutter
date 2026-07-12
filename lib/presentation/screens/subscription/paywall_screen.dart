@@ -28,9 +28,8 @@ class PaywallScreen extends StatelessWidget {
     final plansMap = settingsProvider.settings.plans;
 
     // Filter active plans
-    final activePlans = plansMap.entries
-        .where((entry) => entry.value.isActive)
-        .toList();
+    final activePlans =
+        plansMap.entries.where((entry) => entry.value.isActive).toList();
 
     // Sorting order
     const order = ['free', 'trial', 'proyearly', 'lifetime'];
@@ -57,8 +56,10 @@ class PaywallScreen extends StatelessWidget {
       final id = key.toLowerCase().replaceAll('_', '');
       if (id == 'free') return loc.freePrice;
       if (id == 'trial') return loc.trialPrice;
-      if (id == 'proyearly') return loc.proYearlyPriceTemplate(plan.price.toString());
-      if (id == 'lifetime') return loc.lifetimePriceTemplate(plan.price.toString());
+      if (id == 'proyearly')
+        return loc.proYearlyPriceTemplate(plan.price.toString());
+      if (id == 'lifetime')
+        return loc.lifetimePriceTemplate(plan.price.toString());
       return '${plan.price} EGP';
     }
 
@@ -119,7 +120,10 @@ class PaywallScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'No subscription plans available at the moment.',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -128,7 +132,8 @@ class PaywallScreen extends StatelessWidget {
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
                     } else {
-                      Navigator.pushReplacementNamed(context, RouteConstants.mainDashboard);
+                      Navigator.pushReplacementNamed(
+                          context, RouteConstants.mainDashboard);
                     }
                   },
                   child: Text(loc.continueWithFreePlan),
@@ -183,7 +188,8 @@ class PaywallScreen extends StatelessWidget {
                   final plan = entry.value;
                   final planEnum = _mapPlanKeyToEnum(key);
                   final isLifetime = planEnum == SubscriptionPlan.lifetime;
-                  final isPurchasable = planEnum == SubscriptionPlan.proYearly || isLifetime;
+                  final isPurchasable =
+                      planEnum == SubscriptionPlan.proYearly || isLifetime;
 
                   // Business rule for lifetime plan visibility
                   if (isLifetime && !systemConfigs.lifetimePlanEnabled) {
@@ -199,7 +205,8 @@ class PaywallScreen extends StatelessWidget {
 
                   if (isLifetime) {
                     scarcityText = systemConfigs.remainingLifetimeSeats > 0
-                        ? loc.remainingSeats(systemConfigs.remainingLifetimeSeats)
+                        ? loc.remainingSeats(
+                            systemConfigs.remainingLifetimeSeats)
                         : loc.soldOut;
                     isPlanDisabled = systemConfigs.remainingLifetimeSeats <= 0;
                   }
@@ -417,7 +424,9 @@ class PaywallScreen extends StatelessWidget {
                       child: Text(
                           isDisabled ? loc.unavailable : loc.subscribeNow,
                           style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white)),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
                     ),
                   ),
                 ],

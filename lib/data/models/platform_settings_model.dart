@@ -16,14 +16,19 @@ class NetworkLimits {
     required this.monthlySend,
   });
 
-  factory NetworkLimits.fromJson(Map<String, dynamic>? json, NetworkLimits fallback) {
+  factory NetworkLimits.fromJson(
+      Map<String, dynamic>? json, NetworkLimits fallback) {
     if (json == null) return fallback;
     return NetworkLimits(
-      dailyReceive: NumberParser.toDouble(json['dailyReceive'], fallback.dailyReceive),
+      dailyReceive:
+          NumberParser.toDouble(json['dailyReceive'], fallback.dailyReceive),
       dailySend: NumberParser.toDouble(json['dailySend'], fallback.dailySend),
-      maxPerTransaction: NumberParser.toDouble(json['maxPerTransaction'], fallback.maxPerTransaction),
-      monthlyReceive: NumberParser.toDouble(json['monthlyReceive'], fallback.monthlyReceive),
-      monthlySend: NumberParser.toDouble(json['monthlySend'], fallback.monthlySend),
+      maxPerTransaction: NumberParser.toDouble(
+          json['maxPerTransaction'], fallback.maxPerTransaction),
+      monthlyReceive: NumberParser.toDouble(
+          json['monthlyReceive'], fallback.monthlyReceive),
+      monthlySend:
+          NumberParser.toDouble(json['monthlySend'], fallback.monthlySend),
     );
   }
 }
@@ -74,7 +79,8 @@ class PlatformSettingsModel {
   });
 
   factory PlatformSettingsModel.fromJson(Map<String, dynamic>? json) {
-    if (json == null || json.isEmpty) return const PlatformSettingsModel.defaults();
+    if (json == null || json.isEmpty)
+      return const PlatformSettingsModel.defaults();
 
     final limits = json['limits'] as Map<String, dynamic>? ?? {};
     final feeLimits = json['feeLimits'] as Map<String, dynamic>? ?? {};
@@ -99,35 +105,34 @@ class PlatformSettingsModel {
 
     return PlatformSettingsModel(
       isRegistrationOpen: json['isRegistrationOpen'] as bool? ?? true,
-      
       instapayLimits: NetworkLimits.fromJson(
-        limits['instapay'] as Map<String, dynamic>?, 
+        limits['instapay'] as Map<String, dynamic>?,
         const PlatformSettingsModel.defaults().instapayLimits,
       ),
       networkCommercialLimits: NetworkLimits.fromJson(
-        limits['networkCommercial'] as Map<String, dynamic>?, 
+        limits['networkCommercial'] as Map<String, dynamic>?,
         const PlatformSettingsModel.defaults().networkCommercialLimits,
       ),
       networkNewLimits: NetworkLimits.fromJson(
-        limits['networkNew'] as Map<String, dynamic>?, 
+        limits['networkNew'] as Map<String, dynamic>?,
         const PlatformSettingsModel.defaults().networkNewLimits,
       ),
       networkOldLimits: NetworkLimits.fromJson(
-        limits['networkOld'] as Map<String, dynamic>?, 
+        limits['networkOld'] as Map<String, dynamic>?,
         const PlatformSettingsModel.defaults().networkOldLimits,
       ),
-
       minCrossNetworkFee: NumberParser.toDouble(feeNetworks['min'], 1.0),
       maxCrossNetworkFee: NumberParser.toDouble(feeNetworks['max'], 15.0),
       minInstapayFee: NumberParser.toDouble(feeInstapay['min'], 0.5),
       maxInstapayFee: NumberParser.toDouble(feeInstapay['max'], 20.0),
-
       sameNetworkFee: NumberParser.toDouble(serviceFees['sameNetwork'], 1.0),
-      crossNetworkFeeRate: NumberParser.toDouble(serviceFees['crossNetwork'], 0.005),
+      crossNetworkFeeRate:
+          NumberParser.toDouble(serviceFees['crossNetwork'], 0.005),
       instapayFeeRate: NumberParser.toDouble(serviceFees['instapay'], 0.001),
-
-      lifetimeCountLimit: NumberParser.toInt(subscriptions['lifetimeCountLimit'], 50),
-      gracePeriodHours: NumberParser.toInt(subscriptions['gracePeriodHours'], 48),
+      lifetimeCountLimit:
+          NumberParser.toInt(subscriptions['lifetimeCountLimit'], 50),
+      gracePeriodHours:
+          NumberParser.toInt(subscriptions['gracePeriodHours'], 48),
       trialDays: NumberParser.toInt(subscriptions['trialDays'], 14),
       plans: parsedPlans,
     );
@@ -136,10 +141,30 @@ class PlatformSettingsModel {
   // Safe defaults matching our exact Firestore schema structure
   const PlatformSettingsModel.defaults()
       : isRegistrationOpen = true,
-        instapayLimits = const NetworkLimits(dailyReceive: 120000, dailySend: 120000, maxPerTransaction: 70000, monthlyReceive: 400000, monthlySend: 400000),
-        networkCommercialLimits = const NetworkLimits(dailyReceive: 200000, dailySend: 200000, maxPerTransaction: 200000, monthlyReceive: 500000, monthlySend: 500000),
-        networkNewLimits = const NetworkLimits(dailyReceive: 10000, dailySend: 10000, maxPerTransaction: 30000, monthlyReceive: 600000, monthlySend: 600000),
-        networkOldLimits = const NetworkLimits(dailyReceive: 60000, dailySend: 80000, maxPerTransaction: 70000, monthlyReceive: 200000, monthlySend: 200000),
+        instapayLimits = const NetworkLimits(
+            dailyReceive: 120000,
+            dailySend: 120000,
+            maxPerTransaction: 70000,
+            monthlyReceive: 400000,
+            monthlySend: 400000),
+        networkCommercialLimits = const NetworkLimits(
+            dailyReceive: 200000,
+            dailySend: 200000,
+            maxPerTransaction: 200000,
+            monthlyReceive: 500000,
+            monthlySend: 500000),
+        networkNewLimits = const NetworkLimits(
+            dailyReceive: 10000,
+            dailySend: 10000,
+            maxPerTransaction: 30000,
+            monthlyReceive: 600000,
+            monthlySend: 600000),
+        networkOldLimits = const NetworkLimits(
+            dailyReceive: 60000,
+            dailySend: 80000,
+            maxPerTransaction: 70000,
+            monthlyReceive: 200000,
+            monthlySend: 200000),
         minCrossNetworkFee = 1.0,
         maxCrossNetworkFee = 15.0,
         minInstapayFee = 0.5,
@@ -157,7 +182,8 @@ class PlatformSettingsModel {
   double get newWalletMonthlyLimit => networkNewLimits.monthlySend;
   double get oldWalletTransactionLimit => networkOldLimits.maxPerTransaction;
   double get oldWalletMonthlyLimit => networkOldLimits.monthlySend;
-  double get registeredStoreTransactionLimit => networkCommercialLimits.maxPerTransaction;
+  double get registeredStoreTransactionLimit =>
+      networkCommercialLimits.maxPerTransaction;
   double get registeredStoreMonthlyLimit => networkCommercialLimits.monthlySend;
   double get instapayTransactionLimit => instapayLimits.maxPerTransaction;
   double get instapayMonthlyLimit => instapayLimits.monthlySend;

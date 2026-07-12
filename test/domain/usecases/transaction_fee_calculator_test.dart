@@ -10,8 +10,11 @@ import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
 
 class MockWalletModel extends Mock implements WalletModel {}
+
 class MockWalletLimits extends Mock implements WalletLimits {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   late TransactionFeeCalculator calculator;

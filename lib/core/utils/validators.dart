@@ -272,7 +272,8 @@ class Validators {
   // Carrier Match Validation
   // ===========================
   /// Validates that the selected wallet type matches the phone number prefix (carrier) for Egyptian providers.
-  static String? validateCarrierMatch(String? walletTypeName, String? phoneNumber) {
+  static String? validateCarrierMatch(
+      String? walletTypeName, String? phoneNumber) {
     if (walletTypeName == null || phoneNumber == null || phoneNumber.isEmpty) {
       return null;
     }

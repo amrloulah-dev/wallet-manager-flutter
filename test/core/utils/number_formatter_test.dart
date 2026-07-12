@@ -56,7 +56,8 @@ void main() {
       // Messy input with Arabic digits or extra spaces should be handled
       expect(NumberFormatter.formatPhoneNumber('٠١٠١٢٣٤٥٦٧٨'),
           equals('\u200E0101 234 5678\u200E'));
-      expect(NumberFormatter.formatPhoneNumber('12345'), equals('\u200E12345\u200E'));
+      expect(NumberFormatter.formatPhoneNumber('12345'),
+          equals('\u200E12345\u200E'));
     });
   });
 }

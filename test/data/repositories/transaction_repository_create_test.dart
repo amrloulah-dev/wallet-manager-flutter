@@ -13,19 +13,31 @@ import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
 class MockWriteBatch extends Mock implements WriteBatch {}
+
 class MockFirebaseService extends Mock implements FirebaseService {}
+
 class MockCollectionReference extends Mock
     implements CollectionReference<Map<String, dynamic>> {}
+
 class MockDocumentReference extends Mock
     implements DocumentReference<Map<String, dynamic>> {}
+
 class MockDocumentSnapshot extends Mock
     implements DocumentSnapshot<Map<String, dynamic>> {}
+
 class MockStatsRepository extends Mock implements StatsRepository {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
+
 class MockCacheManager extends Mock implements CacheManager {}
+
 class MockTransaction extends Mock implements Transaction {}
-class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {}
+
+class FakeDocumentReference extends Fake
+    implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
   late MockFirebaseFirestore mockFirestore;
@@ -65,16 +77,21 @@ void main() {
           as Future<void> Function(Transaction);
       await transactionHandler(mockTransaction);
     });
-    when(() => mockTransaction.get<Map<String, dynamic>>(any())).thenAnswer((_) async => mockWalletSnap);
-    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any())).thenReturn(mockTransaction);
-    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any(), any())).thenReturn(mockTransaction);
-    when(() => mockTransaction.update(any(), any())).thenReturn(mockTransaction);
+    when(() => mockTransaction.get<Map<String, dynamic>>(any()))
+        .thenAnswer((_) async => mockWalletSnap);
+    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any()))
+        .thenReturn(mockTransaction);
+    when(() => mockTransaction.set<Map<String, dynamic>>(any(), any(), any()))
+        .thenReturn(mockTransaction);
+    when(() => mockTransaction.update(any(), any()))
+        .thenReturn(mockTransaction);
 
     // Register PlatformSettingsProvider in sl for WalletModel defaults resolution
     if (sl.isRegistered<PlatformSettingsProvider>()) {
       sl.unregister<PlatformSettingsProvider>();
     }
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
     sl.registerSingleton<PlatformSettingsProvider>(mockSettingsProvider);
 
     when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
@@ -100,9 +117,24 @@ void main() {
       'createdAt': Timestamp.now(),
       'lastDailyReset': Timestamp.now(),
       'lastMonthlyReset': Timestamp.now(),
-      'sendLimits': {'dailyLimit': 60000.0, 'dailyUsed': 0.0, 'monthlyLimit': 200000.0, 'monthlyUsed': 0.0},
-      'receiveLimits': {'dailyLimit': 60000.0, 'dailyUsed': 0.0, 'monthlyLimit': 200000.0, 'monthlyUsed': 0.0},
-      'stats': {'totalTransactions': 0, 'totalCommission': 0, 'totalSentAmount': 0, 'totalReceivedAmount': 0},
+      'sendLimits': {
+        'dailyLimit': 60000.0,
+        'dailyUsed': 0.0,
+        'monthlyLimit': 200000.0,
+        'monthlyUsed': 0.0
+      },
+      'receiveLimits': {
+        'dailyLimit': 60000.0,
+        'dailyUsed': 0.0,
+        'monthlyLimit': 200000.0,
+        'monthlyUsed': 0.0
+      },
+      'stats': {
+        'totalTransactions': 0,
+        'totalCommission': 0,
+        'totalSentAmount': 0,
+        'totalReceivedAmount': 0
+      },
     });
 
     repository = TransactionRepository(
@@ -113,7 +145,9 @@ void main() {
   });
 
   group('TransactionRepository.createTransaction WriteBatch global stats', () {
-    test('should include 5th batch operation to increment totalTransactions in stats/global doc', () async {
+    test(
+        'should include 5th batch operation to increment totalTransactions in stats/global doc',
+        () async {
       // Arrange
       final transaction = TransactionModel(
         transactionId: 't1',
@@ -138,14 +172,14 @@ void main() {
       // Assert
       // Verify stats/global path set operation is called
       verify(() => mockFirestore.doc('stats/global')).called(1);
-      
+
       // Verify that the transaction.set is called for the global stats document
       // with totalTransactions incremented and SetOptions(merge: true)
       verify(() => mockTransaction.set<Map<String, dynamic>>(
-        any(that: isA<DocumentReference<Map<String, dynamic>>>()),
-        any(that: equals({'totalTransactions': FieldValue.increment(1)})),
-        any(that: isA<SetOptions>()),
-      )).called(1);
+            any(that: isA<DocumentReference<Map<String, dynamic>>>()),
+            any(that: equals({'totalTransactions': FieldValue.increment(1)})),
+            any(that: isA<SetOptions>()),
+          )).called(1);
     });
   });
 }

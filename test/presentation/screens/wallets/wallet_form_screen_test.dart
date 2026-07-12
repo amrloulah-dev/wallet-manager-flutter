@@ -14,9 +14,13 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockWalletProvider extends Mock implements WalletProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   late MockAuthProvider mockAuthProvider;
@@ -35,7 +39,8 @@ void main() {
     mockSubscriptionProvider = MockSubscriptionProvider();
     mockSettingsProvider = MockPlatformSettingsProvider();
 
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
     when(() => mockWalletProvider.isLoading).thenReturn(false);
     when(() => mockWalletProvider.isCreating).thenReturn(false);
     when(() => mockWalletProvider.isUpdating).thenReturn(false);
@@ -45,13 +50,16 @@ void main() {
     when(() => mockAuthProvider.currentUserId).thenReturn('user_123');
   });
 
-  Widget buildTestableWidget({Locale locale = const Locale('ar'), WalletModel? walletToEdit}) {
+  Widget buildTestableWidget(
+      {Locale locale = const Locale('ar'), WalletModel? walletToEdit}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
         ChangeNotifierProvider<WalletProvider>.value(value: mockWalletProvider),
-        ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSubscriptionProvider),
-        ChangeNotifierProvider<PlatformSettingsProvider>.value(value: mockSettingsProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubscriptionProvider),
+        ChangeNotifierProvider<PlatformSettingsProvider>.value(
+            value: mockSettingsProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -124,7 +132,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Select Active status dropdown
-    final statusDropdownFinder = find.byType(DropdownButtonFormField<WalletStatus>);
+    final statusDropdownFinder =
+        find.byType(DropdownButtonFormField<WalletStatus>);
     await tester.tap(statusDropdownFinder);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Active').last);
@@ -171,9 +180,11 @@ void main() {
       stats: WalletStats(),
     );
 
-    when(() => mockWalletProvider.updateWallet(any(), any())).thenAnswer((_) async => true);
+    when(() => mockWalletProvider.updateWallet(any(), any()))
+        .thenAnswer((_) async => true);
 
-    await tester.pumpWidget(buildTestableWidget(locale: const Locale('en'), walletToEdit: editWallet));
+    await tester.pumpWidget(buildTestableWidget(
+        locale: const Locale('en'), walletToEdit: editWallet));
     await tester.pumpAndSettle();
 
     // Find notes field
@@ -181,7 +192,8 @@ void main() {
     expect(notesFinder, findsOneWidget);
 
     // Find CustomTextField for notes
-    final notesTextFieldFinder = find.ancestor(of: notesFinder, matching: find.byType(TextField));
+    final notesTextFieldFinder =
+        find.ancestor(of: notesFinder, matching: find.byType(TextField));
     await tester.enterText(notesTextFieldFinder, 'Preserve carrier test');
     await tester.pumpAndSettle();
 

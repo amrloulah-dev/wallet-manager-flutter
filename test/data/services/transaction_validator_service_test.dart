@@ -73,7 +73,8 @@ void main() {
       );
 
       // Execute
-      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
+      await service.validateAndSave(
+          txModel, const PlatformSettingsModel.defaults());
 
       // Verify final state
       final walletSnap = await fakeFirestore
@@ -137,7 +138,8 @@ void main() {
       );
 
       // Execute
-      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
+      await service.validateAndSave(
+          txModel, const PlatformSettingsModel.defaults());
 
       // Verify final state
       final walletSnap = await fakeFirestore
@@ -199,7 +201,8 @@ void main() {
         paymentStatus: PaymentStatus.paid,
       );
 
-      await service.validateAndSave(txModel, const PlatformSettingsModel.defaults());
+      await service.validateAndSave(
+          txModel, const PlatformSettingsModel.defaults());
 
       final todayDate = DateHelper.getCurrentDateString();
       final dailyStatsSnap = await fakeFirestore

@@ -18,10 +18,15 @@ import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
+
 class MockThemeProvider extends Mock implements ThemeProvider {}
+
 class MockLocalizationProvider extends Mock implements LocalizationProvider {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
 
 void main() {
   late MockAuthProvider mockAuthProvider;
@@ -84,8 +89,9 @@ void main() {
 
     when(() => mockLocProvider.locale).thenReturn(const Locale('en'));
     when(() => mockLocProvider.isArabic).thenReturn(false);
-    
-    when(() => mockSettingsProvider.settings).thenReturn(const PlatformSettingsModel.defaults());
+
+    when(() => mockSettingsProvider.settings)
+        .thenReturn(const PlatformSettingsModel.defaults());
     when(() => mockSettingsProvider.forceRefresh()).thenAnswer((_) async {});
   });
 
@@ -140,10 +146,12 @@ void main() {
     );
   }
 
-  testWidgets('AppSettingsSection displays Refresh Platform Settings tile and tapping triggers forceRefresh',
+  testWidgets(
+      'AppSettingsSection displays Refresh Platform Settings tile and tapping triggers forceRefresh',
       (WidgetTester tester) async {
     final completer = Completer<void>();
-    when(() => mockSettingsProvider.forceRefresh()).thenAnswer((_) => completer.future);
+    when(() => mockSettingsProvider.forceRefresh())
+        .thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(createAppSettingsSectionUnderTest());
     await tester.pumpAndSettle();
@@ -167,12 +175,14 @@ void main() {
     verify(() => mockSettingsProvider.forceRefresh()).called(1);
 
     // Verify success snackbar is shown
-    expect(find.text('Platform settings refreshed successfully'), findsOneWidget);
+    expect(
+        find.text('Platform settings refreshed successfully'), findsOneWidget);
   });
 
   testWidgets('AppSettingsSection shows error SnackBar when forceRefresh fails',
       (WidgetTester tester) async {
-    when(() => mockSettingsProvider.forceRefresh()).thenThrow(Exception('Firestore error'));
+    when(() => mockSettingsProvider.forceRefresh())
+        .thenThrow(Exception('Firestore error'));
 
     await tester.pumpWidget(createAppSettingsSectionUnderTest());
     await tester.pumpAndSettle();

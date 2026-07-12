@@ -191,7 +191,8 @@ void main() {
       when(() => mockWalletSnap.data())
           .thenReturn(createValidWalletData(balance: 99.99));
 
-      await service.validateAndSave(mockTxModel, const PlatformSettingsModel.defaults());
+      await service.validateAndSave(
+          mockTxModel, const PlatformSettingsModel.defaults());
     });
 
     test(
@@ -201,7 +202,8 @@ void main() {
           .thenReturn(createValidWalletData(balance: 50.0));
 
       expect(
-        () => service.validateAndSave(mockTxModel, const PlatformSettingsModel.defaults()),
+        () => service.validateAndSave(
+            mockTxModel, const PlatformSettingsModel.defaults()),
         throwsA(isA<ValidationException>()),
       );
     });
