@@ -31,16 +31,16 @@
 
 ## Phase 3: Localization & Subscription Fixes (FR-2, FR-6)
 
-- [ ] Task: Targeted Localization Enforcement (FR-2)
-    - [ ] Write failing tests: Widget test asserting that `OverlayErrorApp` and other error handlers in `main.dart` display localized strings rather than hardcoded English. Widget test for `PaymentModalScreen` verifying all user-visible strings are localized.
-    - [ ] Implement: Audit `lib/main.dart` (error blocks, `OverlayErrorApp`, `runZonedGuarded`), `lib/presentation/screens/subscriptions/payment_modal_screen.dart`, and any closely related error screens. Replace all hardcoded English strings with `AppLocalizations.of(context)!` calls or safe fallbacks.
-    - [ ] Add localization keys: Add any new keys to both `app_ar.arb` and `app_en.arb`. Run `flutter gen-l10n`.
-    - [ ] Refactor: Ensure error fallback widgets handle the case where `AppLocalizations` is unavailable (e.g., during fatal init failure) with a hardcoded Arabic/English dual fallback.
+- [x] Task: Targeted Localization Enforcement (FR-2)
+    - [x] Write failing tests: Widget test asserting that `OverlayErrorApp` and other error handlers in `main.dart` display localized strings rather than hardcoded English. Widget test for `PaymentModalScreen` verifying all user-visible strings are localized.
+    - [x] Implement: Audit `lib/main.dart` (error blocks, `OverlayErrorApp`, `runZonedGuarded`), `lib/presentation/screens/subscriptions/payment_modal_screen.dart`, and any closely related error screens. Replace all hardcoded English strings with `AppLocalizations.of(context)!` calls or safe fallbacks.
+    - [x] Add localization keys: Add any new keys to both `app_ar.arb` and `app_en.arb`. Run `flutter gen-l10n`.
+    - [x] Refactor: Ensure error fallback widgets handle the case where `AppLocalizations` is unavailable (e.g., during fatal init failure) with a hardcoded Arabic/English dual fallback.
 
-- [ ] Task: Persistent Payment Success Dialog (FR-6)
-    - [ ] Write failing tests: Unit test for `LocalStorageService` verifying read/write of the composite `endDate+planType` key. Unit test for the decision logic in `_maybeShowSuccessModal` asserting the dialog shows only when the stored key differs from the current subscription state.
-    - [ ] Implement: Add `getLastSeenPaymentKey()` and `setLastSeenPaymentKey(String key)` methods to `LocalStorageService`. In `MainDashboardScreen._maybeShowSuccessModal`, replace the RAM-based `hasSeenSuccessModal` flag with a `SharedPreferences` check using the composite key (`"${subscription.endDate}_${subscription.planType}"`).
-    - [ ] Refactor: Clean up any remaining RAM-only flag references. Ensure the dialog-dismiss callback writes the key immediately.
+- [x] Task: Persistent Payment Success Dialog (FR-6)
+    - [x] Write failing tests: Unit test for `LocalStorageService` verifying read/write of the composite `endDate+planType` key. Unit test for the decision logic in `_maybeShowSuccessModal` asserting the dialog shows only when the stored key differs from the current subscription state.
+    - [x] Implement: Add `getLastSeenPaymentKey()` and `setLastSeenPaymentKey(String key)` methods to `LocalStorageService`. In `MainDashboardScreen._maybeShowSuccessModal`, replace the RAM-based `hasSeenSuccessModal` flag with a `SharedPreferences` check using the composite key (`"${subscription.endDate}_${subscription.planType}"`).
+    - [x] Refactor: Clean up any remaining RAM-only flag references. Ensure the dialog-dismiss callback writes the key immediately.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Localization & Subscription Fixes' (Protocol in workflow.md)
 
