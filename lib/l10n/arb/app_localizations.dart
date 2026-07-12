@@ -3998,6 +3998,24 @@ abstract class AppLocalizations {
   /// **'رقم محفظة وي باي يجب أن يبدأ بـ 015'**
   String get carrier_mismatch_we;
 
+  /// No description provided for @warning.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه'**
+  String get warning;
+
+  /// No description provided for @confirmAnyway.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد على أي حال'**
+  String get confirmAnyway;
+
+  /// No description provided for @carrier_mismatch_warning.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الموبايل لا يتطابق مع شبكة المحفظة المختارة.'**
+  String get carrier_mismatch_warning;
+
   /// No description provided for @overlay_error_load_failed.
   ///
   /// In ar, this message translates to:

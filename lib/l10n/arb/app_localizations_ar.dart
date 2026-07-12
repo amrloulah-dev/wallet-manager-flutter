@@ -2130,6 +2130,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get carrier_mismatch_we => 'رقم محفظة وي باي يجب أن يبدأ بـ 015';
 
   @override
+  String get warning => 'تنبيه';
+
+  @override
+  String get confirmAnyway => 'تأكيد على أي حال';
+
+  @override
+  String get carrier_mismatch_warning =>
+      'رقم الموبايل لا يتطابق مع شبكة المحفظة المختارة.';
+
+  @override
   String get overlay_error_load_failed => 'حدث خطأ أثناء تحميل البيانات';
 
   @override

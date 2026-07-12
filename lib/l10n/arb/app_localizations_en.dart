@@ -2137,6 +2137,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carrier_mismatch_we => 'WE Pay number must start with 015';
 
   @override
+  String get warning => 'Warning';
+
+  @override
+  String get confirmAnyway => 'Confirm Anyway';
+
+  @override
+  String get carrier_mismatch_warning =>
+      'The phone number prefix does not match the selected network.';
+
+  @override
   String get overlay_error_load_failed =>
       'An error occurred while loading data';
 

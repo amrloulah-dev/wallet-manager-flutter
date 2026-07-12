@@ -106,7 +106,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSubmit() async {
+  Future<void> _handleSubmit({bool bypassCarrierCheck = false}) async {
     final walletProvider = context.read<WalletProvider>();
     final authProvider = context.read<AuthProvider>();
 
@@ -139,24 +139,36 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     }
 
     // Carrier prefix validation (FR-5)
-    final carrierErrKey = Validators.validateCarrierMatch(
-      _selectedWalletType!.name,
-      _phoneController.text,
-    );
-    if (carrierErrKey != null) {
-      final l10n = AppLocalizations.of(context)!;
-      String errMsg = carrierErrKey;
-      if (carrierErrKey == 'carrier_mismatch_vodafone') {
-        errMsg = l10n.carrier_mismatch_vodafone;
-      } else if (carrierErrKey == 'carrier_mismatch_etisalat') {
-        errMsg = l10n.carrier_mismatch_etisalat;
-      } else if (carrierErrKey == 'carrier_mismatch_orange') {
-        errMsg = l10n.carrier_mismatch_orange;
-      } else if (carrierErrKey == 'carrier_mismatch_we') {
-        errMsg = l10n.carrier_mismatch_we;
+    if (!bypassCarrierCheck) {
+      final carrierErrKey = Validators.validateCarrierMatch(
+        _selectedWalletType!.name,
+        _phoneController.text,
+      );
+      if (carrierErrKey != null) {
+        final l10n = AppLocalizations.of(context)!;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.warning),
+            content: Text(l10n.carrier_mismatch_warning),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(l10n.edit),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _handleSubmit(bypassCarrierCheck: true);
+                },
+                child: Text(l10n.confirmAnyway),
+              ),
+            ],
+          ),
+        );
+        return;
       }
-      ToastUtils.showError(errMsg);
-      return;
     }
 
     final userId = authProvider.currentUserId;
@@ -249,28 +261,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       maxLength: 11,
-      validator: (val) {
-        final phoneErr = Validators.validatePhoneNumber(val);
-        if (phoneErr != null) return phoneErr;
-        final carrierErrKey = Validators.validateCarrierMatch(
-          _selectedWalletType?.name,
-          val,
-        );
-        if (carrierErrKey != null) {
-          final l10n = AppLocalizations.of(context)!;
-          switch (carrierErrKey) {
-            case 'carrier_mismatch_vodafone':
-              return l10n.carrier_mismatch_vodafone;
-            case 'carrier_mismatch_etisalat':
-              return l10n.carrier_mismatch_etisalat;
-            case 'carrier_mismatch_orange':
-              return l10n.carrier_mismatch_orange;
-            case 'carrier_mismatch_we':
-              return l10n.carrier_mismatch_we;
-          }
-        }
-        return null;
-      },
+      validator: Validators.validatePhoneNumber,
       prefixIcon: const Icon(Icons.phone_android),
     );
   }

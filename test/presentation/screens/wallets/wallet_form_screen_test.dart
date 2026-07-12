@@ -95,6 +95,14 @@ void main() {
       (WidgetTester tester) async {
     // Inject limits so create checks pass
     when(() => mockSubscriptionProvider.canAddWallet(any())).thenReturn(true);
+    when(() => mockWalletProvider.createWallet(
+          phoneNumber: any(named: 'phoneNumber'),
+          walletType: any(named: 'walletType'),
+          walletStatus: any(named: 'walletStatus'),
+          balance: any(named: 'balance'),
+          notes: any(named: 'notes'),
+          createdBy: any(named: 'createdBy'),
+        )).thenAnswer((_) async => true);
 
     await tester.pumpWidget(buildTestableWidget(locale: const Locale('en')));
     await tester.pumpAndSettle();
@@ -128,14 +136,23 @@ void main() {
     await tester.tap(saveBtnFinder);
     await tester.pumpAndSettle();
 
-    // Verify update/create not called due to validation failure
-    verifyNever(() => mockWalletProvider.createWallet(
-          phoneNumber: any(named: 'phoneNumber'),
-          walletType: any(named: 'walletType'),
-          walletStatus: any(named: 'walletStatus'),
-          balance: any(named: 'balance'),
-          createdBy: any(named: 'createdBy'),
-        ));
+    // Verify warning dialog is displayed
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Warning'), findsOneWidget);
+
+    // Tap "Confirm Anyway"
+    await tester.tap(find.text('Confirm Anyway'));
+    await tester.pumpAndSettle();
+
+    // Verify dialog closed and createWallet was called
+    verify(() => mockWalletProvider.createWallet(
+          phoneNumber: '01012345678',
+          walletType: WalletType.etisalatCash,
+          walletStatus: WalletStatus.active,
+          balance: 100.0,
+          notes: '',
+          createdBy: 'user_123',
+        )).called(1);
   });
 
   testWidgets(
