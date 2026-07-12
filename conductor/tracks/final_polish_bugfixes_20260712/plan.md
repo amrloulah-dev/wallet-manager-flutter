@@ -2,10 +2,10 @@
 
 ## Phase 1: Dashboard & Overlay Fixes (FR-1, FR-3)
 
-- [ ] Task: Separate Transfer Transaction Counter (FR-1)
-    - [ ] Write failing tests: Unit test for `DashboardQuickStats` (or `StatisticsProvider`) asserting that the displayed transaction count only includes `TransactionType.transfer` items, excluding top-ups and other types.
-    - [ ] Implement: Modify the logic in `DashboardQuickStats` / `StatisticsProvider` to filter the transaction list by `TransactionType.transfer` before computing the count. Ensure the "Latest Transactions" list remains unaffected.
-    - [ ] Refactor: Extract filtering logic into a reusable helper if applicable.
+- [x] Task: Separate Transfer Transaction Counter (FR-1) [e101da9]
+    - [x] Write failing tests: Unit test for `DashboardQuickStats` (or `StatisticsProvider`) asserting that the displayed transaction count only includes `TransactionType.transfer` items, excluding top-ups and other types.
+    - [x] Implement: Modify the logic in `DashboardQuickStats` / `StatisticsProvider` to filter the transaction list by `TransactionType.transfer` before computing the count. Ensure the "Latest Transactions" list remains unaffected.
+    - [x] Refactor: Extract filtering logic into a reusable helper if applicable.
 
 - [ ] Task: Overlay Commission State Reset (FR-3)
     - [ ] Write failing tests: Unit/widget test for `OverlayProvider` and `TransactionOverlayScreen` asserting that after a successful submission, `commission` is reset to `0` and the commission `TextEditingController` is cleared.
