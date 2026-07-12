@@ -27,7 +27,7 @@
     - [x] Add localization keys: Add warning message and button labels to both `app_ar.arb` and `app_en.arb`. Run `flutter gen-l10n`.
     - [x] Refactor: Extract prefix validation into a pure utility function (e.g., `Validators.validateCarrierMatch(walletType, phoneNumber)`) for testability and reuse.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Wallet Form Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Wallet Form Fixes' (Protocol in workflow.md) [f82a9b7]
 
 ## Phase 3: Localization & Subscription Fixes (FR-2, FR-6)
 
