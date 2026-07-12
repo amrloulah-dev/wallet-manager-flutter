@@ -16,16 +16,16 @@
 
 ## Phase 2: Wallet Form Fixes (FR-4, FR-5)
 
-- [ ] Task: Wallet Status UI Label Fix (FR-4)
-    - [ ] Write failing tests: Widget test for `WalletFormScreen` asserting that `WalletStatus.active` renders the correct active label (نشطة) and `WalletStatus.inactive` renders the correct inactive label (غير نشطة).
-    - [ ] Implement: Fix the status-to-localization-key mapping in `WalletFormScreen`. Map `WalletStatus.active` → `wallet_status_active` and `WalletStatus.inactive` → the correct inactive key.
-    - [ ] Refactor: Consider extracting the mapping into a utility/extension if it's duplicated elsewhere.
+- [x] Task: Wallet Status UI Label Fix (FR-4) [4cd7f79]
+    - [x] Write failing tests: Widget test for `WalletFormScreen` asserting that `WalletStatus.active` renders the correct active label (نشطة) and `WalletStatus.inactive` renders the correct inactive label (غير نشطة).
+    - [x] Implement: Fix the status-to-localization-key mapping in `WalletFormScreen`. Map `WalletStatus.active` → `wallet_status_active` and `WalletStatus.inactive` → the correct inactive key.
+    - [x] Refactor: Consider extracting the mapping into a utility/extension if it's duplicated elsewhere.
 
-- [ ] Task: Smart Carrier Prefix Validation (FR-5)
-    - [ ] Write failing tests: Unit test for the prefix validation logic (Vodafone→010, Etisalat→011, Orange→012, WE→015, InstaPay→skip). Widget test asserting that a mismatched prefix shows the warning `AlertDialog` with "Edit" and "Confirm Anyway" buttons.
-    - [ ] Implement: In `WalletFormScreen._handleSubmit`, add prefix validation before `walletProvider.createWallet` / update calls. Show localized `AlertDialog` on mismatch. Wire "Edit" to pop dialog, "Confirm Anyway" to proceed.
-    - [ ] Add localization keys: Add warning message and button labels to both `app_ar.arb` and `app_en.arb`. Run `flutter gen-l10n`.
-    - [ ] Refactor: Extract prefix validation into a pure utility function (e.g., `CarrierValidator.isMatchingPrefix(walletType, phoneNumber)`) for testability and reuse.
+- [x] Task: Smart Carrier Prefix Validation (FR-5) [5034938]
+    - [x] Write failing tests: Unit test for the prefix validation logic (Vodafone→010, Etisalat→011, Orange→012, WE→015, InstaPay→skip). Widget test asserting that a mismatched prefix shows the warning `AlertDialog` with "Edit" and "Confirm Anyway" buttons.
+    - [x] Implement: In `WalletFormScreen._handleSubmit`, add prefix validation before `walletProvider.createWallet` / update calls. Show localized `AlertDialog` on mismatch. Wire "Edit" to pop dialog, "Confirm Anyway" to proceed.
+    - [x] Add localization keys: Add warning message and button labels to both `app_ar.arb` and `app_en.arb`. Run `flutter gen-l10n`.
+    - [x] Refactor: Extract prefix validation into a pure utility function (e.g., `Validators.validateCarrierMatch(walletType, phoneNumber)`) for testability and reuse.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Wallet Form Fixes' (Protocol in workflow.md)
 
