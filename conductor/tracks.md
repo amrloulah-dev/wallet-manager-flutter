@@ -38,3 +38,8 @@
 - [x] **Track: Subscription Logic Engine & Dynamic UI**
 *Link: [./tracks/subscription_logic_engine_20260710/](./tracks/subscription_logic_engine_20260710/)*
 
+---
+
+- [ ] **Track: Final Polish & Bug Squashing**
+*Link: [./tracks/final_polish_bugfixes_20260712/](./tracks/final_polish_bugfixes_20260712/)*
+
