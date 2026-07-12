@@ -107,6 +107,8 @@ class DummyTransactionProvider extends ChangeNotifier
   @override
   List<TransactionModel> get transactions => [];
   @override
+  List<TransactionModel> get todayTransactions => [];
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

@@ -118,6 +118,8 @@ class DummyTransactionProvider extends ChangeNotifier
   @override
   List<TransactionModel> get transactions => [];
   @override
+  List<TransactionModel> get todayTransactions => [];
+  @override
   void updateAuthState(AuthProvider auth) {}
   @override
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {}
