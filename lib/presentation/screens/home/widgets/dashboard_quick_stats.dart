@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/providers/transaction_provider.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -18,6 +20,12 @@ class DashboardQuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final transferCount = context.select<TransactionProvider, int>(
+      (p) => p.todayTransactions
+          .where((t) => t.transactionType == TransactionType.debit)
+          .length,
+    );
+
     return Consumer<StatisticsProvider>(
       builder: (context, provider, child) {
         try {
@@ -117,11 +125,9 @@ class DashboardQuickStats extends StatelessWidget {
                             StatsCard(
                               title:
                                   '${AppLocalizations.of(context)!.totalTransactions} ',
-                               value:
-                                  (provider.todayStats?.totalTransactions ?? 0)
-                                      .toString(),
-                              icon: Icons.swap_horiz,
-                              color: Colors.green.shade700,
+                               value: transferCount.toString(),
+                               icon: Icons.swap_horiz,
+                               color: Colors.green.shade700,
                               onTap: () {
                                 final user =
                                     context.read<AuthProvider>().currentUser;
