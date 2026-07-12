@@ -12,7 +12,7 @@
     - [x] Implement: In the successful submission callback, add `context.read<OverlayProvider>().setCommission(0)` and `.clear()` on the commission controller.
     - [x] Refactor: Verify no other state fields leak between overlay transactions.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Dashboard & Overlay Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Dashboard & Overlay Fixes' (Protocol in workflow.md) [0cdee25]
 
 ## Phase 2: Wallet Form Fixes (FR-4, FR-5)
 
