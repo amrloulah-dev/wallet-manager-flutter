@@ -7,10 +7,10 @@
     - [x] Implement: Modify the logic in `DashboardQuickStats` / `StatisticsProvider` to filter the transaction list by `TransactionType.transfer` before computing the count. Ensure the "Latest Transactions" list remains unaffected.
     - [x] Refactor: Extract filtering logic into a reusable helper if applicable.
 
-- [ ] Task: Overlay Commission State Reset (FR-3)
-    - [ ] Write failing tests: Unit/widget test for `OverlayProvider` and `TransactionOverlayScreen` asserting that after a successful submission, `commission` is reset to `0` and the commission `TextEditingController` is cleared.
-    - [ ] Implement: In the successful submission callback, add `context.read<OverlayProvider>().setCommission(0)` and `.clear()` on the commission controller.
-    - [ ] Refactor: Verify no other state fields leak between overlay transactions.
+- [x] Task: Overlay Commission State Reset (FR-3) [3cd92ea]
+    - [x] Write failing tests: Unit/widget test for `OverlayProvider` and `TransactionOverlayScreen` asserting that after a successful submission, `commission` is reset to `0` and the commission `TextEditingController` is cleared.
+    - [x] Implement: In the successful submission callback, add `context.read<OverlayProvider>().setCommission(0)` and `.clear()` on the commission controller.
+    - [x] Refactor: Verify no other state fields leak between overlay transactions.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Dashboard & Overlay Fixes' (Protocol in workflow.md)
 
