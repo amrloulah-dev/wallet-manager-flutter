@@ -2122,6 +2122,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wallet_status_suspended => 'Suspended';
 
   @override
+  String get carrier_mismatch_vodafone =>
+      'Vodafone Cash number must start with 010';
+
+  @override
+  String get carrier_mismatch_etisalat =>
+      'Etisalat Cash number must start with 011';
+
+  @override
+  String get carrier_mismatch_orange =>
+      'Orange Cash number must start with 012';
+
+  @override
+  String get carrier_mismatch_we => 'WE Pay number must start with 015';
+
+  @override
   String get overlay_error_load_failed =>
       'An error occurred while loading data';
 

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,8 +8,6 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';

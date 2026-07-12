@@ -179,6 +179,16 @@ class ErrorTranslator {
       case 'error_unexpected':
         return l10n.error_unexpected;
 
+      // Carrier mismatch errors
+      case 'carrier_mismatch_vodafone':
+        return l10n.carrier_mismatch_vodafone;
+      case 'carrier_mismatch_etisalat':
+        return l10n.carrier_mismatch_etisalat;
+      case 'carrier_mismatch_orange':
+        return l10n.carrier_mismatch_orange;
+      case 'carrier_mismatch_we':
+        return l10n.carrier_mismatch_we;
+
       default:
         return errorCode;
     }

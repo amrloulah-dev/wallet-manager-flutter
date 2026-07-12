@@ -3974,6 +3974,30 @@ abstract class AppLocalizations {
   /// **'معلقة'**
   String get wallet_status_suspended;
 
+  /// No description provided for @carrier_mismatch_vodafone.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم محفظة فودافون كاش يجب أن يبدأ بـ 010'**
+  String get carrier_mismatch_vodafone;
+
+  /// No description provided for @carrier_mismatch_etisalat.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم محفظة اتصالات كاش يجب أن يبدأ بـ 011'**
+  String get carrier_mismatch_etisalat;
+
+  /// No description provided for @carrier_mismatch_orange.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم محفظة أورانج كاش يجب أن يبدأ بـ 012'**
+  String get carrier_mismatch_orange;
+
+  /// No description provided for @carrier_mismatch_we.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم محفظة وي باي يجب أن يبدأ بـ 015'**
+  String get carrier_mismatch_we;
+
   /// No description provided for @overlay_error_load_failed.
   ///
   /// In ar, this message translates to:

@@ -13,6 +13,7 @@ import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:get_it/get_it.dart';
 import 'auth_provider.dart';
 import 'base_provider.dart';
+import 'package:walletmanager/core/utils/validators.dart';
 import 'subscription_provider.dart';
 import 'platform_settings_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -404,6 +405,12 @@ class WalletProvider extends BaseProvider {
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
+      // Validate carrier match (FR-5)
+      final carrierErr = Validators.validateCarrierMatch(walletType.name, phoneNumber);
+      if (carrierErr != null) {
+        throw ValidationException(carrierErr);
+      }
+
       final storeId =
           _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
@@ -491,6 +498,15 @@ class WalletProvider extends BaseProvider {
         throw ValidationException('wallet_error_not_found');
       }
       final oldWallet = _wallets[index];
+
+      // Validate carrier match (FR-5)
+      final updatedPhone = data['phoneNumber'] as String? ?? oldWallet.phoneNumber;
+      final updatedType = data['walletType'] as String? ?? oldWallet.walletType.name;
+      final carrierErr = Validators.validateCarrierMatch(updatedType, updatedPhone);
+      if (carrierErr != null) {
+        throw ValidationException(carrierErr);
+      }
+
       final newWallet = oldWallet.copyWith(
         phoneNumber: data['phoneNumber'] as String?,
         walletType: data['walletType'] != null

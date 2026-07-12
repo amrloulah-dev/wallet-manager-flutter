@@ -51,6 +51,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   @override
   void initState() {
     super.initState();
+    _phoneController.addListener(_onPhoneChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final wallet = ModalRoute.of(context)?.settings.arguments as WalletModel?;
       if (wallet != null) {
@@ -59,6 +60,31 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       // Clear any previous errors when the screen loads
       context.read<WalletProvider>().clearError();
     });
+  }
+
+  void _onPhoneChanged() {
+    if (_isEditMode) return; // Do not overwrite on edit mode!
+
+    final text = _phoneController.text;
+    if (text.length >= 3) {
+      final prefix = text.substring(0, 3);
+      WalletType? detectedType;
+      if (prefix == '010') {
+        detectedType = WalletType.vodafoneCash;
+      } else if (prefix == '011') {
+        detectedType = WalletType.etisalatCash;
+      } else if (prefix == '012') {
+        detectedType = WalletType.orangeCash;
+      } else if (prefix == '015') {
+        detectedType = WalletType.wePay;
+      }
+
+      if (detectedType != null && detectedType != _selectedWalletType) {
+        setState(() {
+          _selectedWalletType = detectedType;
+        });
+      }
+    }
   }
 
   void _initializeEditMode(WalletModel wallet) {
@@ -109,6 +135,27 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     if (_selectedWalletStatus == null) {
       ToastUtils.showError(
           AppLocalizations.of(context)!.pleaseSelectWalletStatus);
+      return;
+    }
+
+    // Carrier prefix validation (FR-5)
+    final carrierErrKey = Validators.validateCarrierMatch(
+      _selectedWalletType!.name,
+      _phoneController.text,
+    );
+    if (carrierErrKey != null) {
+      final l10n = AppLocalizations.of(context)!;
+      String errMsg = carrierErrKey;
+      if (carrierErrKey == 'carrier_mismatch_vodafone') {
+        errMsg = l10n.carrier_mismatch_vodafone;
+      } else if (carrierErrKey == 'carrier_mismatch_etisalat') {
+        errMsg = l10n.carrier_mismatch_etisalat;
+      } else if (carrierErrKey == 'carrier_mismatch_orange') {
+        errMsg = l10n.carrier_mismatch_orange;
+      } else if (carrierErrKey == 'carrier_mismatch_we') {
+        errMsg = l10n.carrier_mismatch_we;
+      }
+      ToastUtils.showError(errMsg);
       return;
     }
 
@@ -202,7 +249,28 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       maxLength: 11,
-      validator: Validators.validatePhoneNumber,
+      validator: (val) {
+        final phoneErr = Validators.validatePhoneNumber(val);
+        if (phoneErr != null) return phoneErr;
+        final carrierErrKey = Validators.validateCarrierMatch(
+          _selectedWalletType?.name,
+          val,
+        );
+        if (carrierErrKey != null) {
+          final l10n = AppLocalizations.of(context)!;
+          switch (carrierErrKey) {
+            case 'carrier_mismatch_vodafone':
+              return l10n.carrier_mismatch_vodafone;
+            case 'carrier_mismatch_etisalat':
+              return l10n.carrier_mismatch_etisalat;
+            case 'carrier_mismatch_orange':
+              return l10n.carrier_mismatch_orange;
+            case 'carrier_mismatch_we':
+              return l10n.carrier_mismatch_we;
+          }
+        }
+        return null;
+      },
       prefixIcon: const Icon(Icons.phone_android),
     );
   }
@@ -218,7 +286,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
       ],
-      validator: (val) => Validators.validateAmount(val, minAmount: -1),
+      validator: _isEditMode
+          ? null
+          : (val) => Validators.validateAmount(val, minAmount: -1),
       prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
     );
   }

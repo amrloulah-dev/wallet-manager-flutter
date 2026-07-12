@@ -2115,6 +2115,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get wallet_status_suspended => 'معلقة';
 
   @override
+  String get carrier_mismatch_vodafone =>
+      'رقم محفظة فودافون كاش يجب أن يبدأ بـ 010';
+
+  @override
+  String get carrier_mismatch_etisalat =>
+      'رقم محفظة اتصالات كاش يجب أن يبدأ بـ 011';
+
+  @override
+  String get carrier_mismatch_orange =>
+      'رقم محفظة أورانج كاش يجب أن يبدأ بـ 012';
+
+  @override
+  String get carrier_mismatch_we => 'رقم محفظة وي باي يجب أن يبدأ بـ 015';
+
+  @override
   String get overlay_error_load_failed => 'حدث خطأ أثناء تحميل البيانات';
 
   @override

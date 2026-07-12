@@ -267,4 +267,33 @@ class Validators {
     }
     return null;
   }
+
+  // ===========================
+  // Carrier Match Validation
+  // ===========================
+  /// Validates that the selected wallet type matches the phone number prefix (carrier) for Egyptian providers.
+  static String? validateCarrierMatch(String? walletTypeName, String? phoneNumber) {
+    if (walletTypeName == null || phoneNumber == null || phoneNumber.isEmpty) {
+      return null;
+    }
+    if (phoneNumber.length < 3) {
+      return null; // Handled by validatePhoneNumber
+    }
+    final prefix = phoneNumber.substring(0, 3);
+    final type = walletTypeName.toLowerCase();
+
+    if (type.contains('vodafone') && prefix != '010') {
+      return 'carrier_mismatch_vodafone';
+    }
+    if (type.contains('etisalat') && prefix != '011') {
+      return 'carrier_mismatch_etisalat';
+    }
+    if (type.contains('orange') && prefix != '012') {
+      return 'carrier_mismatch_orange';
+    }
+    if (type.contains('we') && prefix != '015') {
+      return 'carrier_mismatch_we';
+    }
+    return null;
+  }
 }
