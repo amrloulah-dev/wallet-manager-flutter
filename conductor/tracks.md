@@ -40,6 +40,6 @@
 
 ---
 
-- [ ] **Track: Final Polish & Bug Squashing**
+- [~] **Track: Final Polish & Bug Squashing**
 *Link: [./tracks/final_polish_bugfixes_20260712/](./tracks/final_polish_bugfixes_20260712/)*
 
