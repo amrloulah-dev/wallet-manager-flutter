@@ -79,7 +79,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc.errorOccurred} $e')),
+          SnackBar(content: Text(loc.error_unexpected)),
         );
       }
     } finally {

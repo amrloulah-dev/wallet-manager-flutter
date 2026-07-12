@@ -123,7 +123,9 @@ class SubscriptionProvider extends BaseProvider {
         if (_latestRequest?.id != request?.id ||
             _latestRequest?.status != request?.status) {
           // If a new request arrives, clear locally dismissed rejection
-          if (request != null && _latestRequest?.id != request.id) {
+          if (request != null &&
+              _latestRequest != null &&
+              _latestRequest!.id != request.id) {
             LocalStorageService.instance.setHasDismissedRejection(false);
             LocalStorageService.instance.setLastSeenPaymentKey(
                 ''); // Reset success too for any future transition
