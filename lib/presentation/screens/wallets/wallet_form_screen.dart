@@ -321,8 +321,6 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
           AppLocalizations.of(context)!.wallet_status_active,
       WalletStatus.inactive:
           AppLocalizations.of(context)!.wallet_status_inactive,
-      WalletStatus.suspended:
-          AppLocalizations.of(context)!.wallet_status_suspended,
     };
 
     return CustomDropdown<WalletStatus>(
