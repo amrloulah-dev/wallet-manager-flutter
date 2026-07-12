@@ -23,7 +23,10 @@ class OverlayProvider extends SafeChangeNotifier {
     OverlayUseCase? overlayUseCase,
     LocalStorageService? localStorageService,
   })  : _overlayUseCase = overlayUseCase ?? sl<OverlayUseCase>(),
-        _localStorageService = localStorageService ?? LocalStorageService();
+        _localStorageService = localStorageService ??
+            (sl.isRegistered<LocalStorageService>()
+                ? sl<LocalStorageService>()
+                : LocalStorageService());
 
   bool _isLoading = false;
   bool _isStorageInitialized = false;
@@ -294,6 +297,7 @@ class OverlayProvider extends SafeChangeNotifier {
       }
 
       _isLoading = false;
+      _commission = 0.0;
       _guardedNotify();
 
       FlutterOverlayWindow.shareData({

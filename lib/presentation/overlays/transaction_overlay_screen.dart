@@ -57,6 +57,7 @@ class _OverlayContent extends StatefulWidget {
 class _OverlayContentState extends State<_OverlayContent> {
   late OverlayProvider _provider;
   late FocusNode _commissionFocusNode;
+  late TextEditingController _commissionController;
   StreamSubscription? _overlaySubscription;
   Timer? _focusTimer;
 
@@ -64,6 +65,7 @@ class _OverlayContentState extends State<_OverlayContent> {
   void initState() {
     super.initState();
     _commissionFocusNode = FocusNode();
+    _commissionController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider = context.read<OverlayProvider>();
 
@@ -91,6 +93,7 @@ class _OverlayContentState extends State<_OverlayContent> {
     _overlaySubscription?.cancel();
     _focusTimer?.cancel();
     _commissionFocusNode.dispose();
+    _commissionController.dispose();
     super.dispose();
   }
 
@@ -171,6 +174,7 @@ class _OverlayContentState extends State<_OverlayContent> {
                             const SizedBox(height: 16),
                             _CommissionFieldWidget(
                               focusNode: _commissionFocusNode,
+                              controller: _commissionController,
                             ),
                             const SizedBox(height: 24),
                             Selector<OverlayProvider, bool>(
@@ -401,15 +405,32 @@ class _WalletDropdownWidget extends StatelessWidget {
 
 class _CommissionFieldWidget extends StatelessWidget {
   final FocusNode focusNode;
+  final TextEditingController controller;
 
   const _CommissionFieldWidget({
     required this.focusNode,
+    required this.controller,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Sync provider's commission to controller
+    final commission = context.select<OverlayProvider, double>((p) => p.commission);
+    final currentTextVal = double.tryParse(controller.text) ?? 0.0;
+    if (commission != currentTextVal) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (commission == 0.0) {
+          controller.clear();
+        } else {
+          controller.text = commission.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
+        }
+      });
+    }
+
     return CustomTextField(
+      controller: controller,
       focusNode: focusNode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       labelText: l10n.commission,
