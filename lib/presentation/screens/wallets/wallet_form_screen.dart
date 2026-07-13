@@ -317,9 +317,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
-      WalletStatus.active: AppLocalizations.of(context)!.wallet_status_active,
-      WalletStatus.inactive:
-          AppLocalizations.of(context)!.wallet_status_inactive,
+      WalletStatus.active: AppLocalizations.of(context)!.newStatus,
+      WalletStatus.inactive: AppLocalizations.of(context)!.oldStatus,
+      WalletStatus.suspended: AppLocalizations.of(context)!.registeredStore,
     };
 
     return CustomDropdown<WalletStatus>(

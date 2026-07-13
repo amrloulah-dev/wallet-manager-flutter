@@ -10,7 +10,6 @@ import '../../../core/utils/dialog_utils.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../providers/platform_settings_provider.dart';
-import '../../../data/models/platform_settings_model.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';

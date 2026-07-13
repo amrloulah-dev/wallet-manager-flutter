@@ -73,11 +73,11 @@ extension WalletLocalization on AppLocalizations {
   String getWalletStatusName(WalletStatus status) {
     switch (status) {
       case WalletStatus.active:
-        return wallet_status_active;
+        return newStatus;
       case WalletStatus.inactive:
-        return wallet_status_inactive;
+        return oldStatus;
       case WalletStatus.suspended:
-        return wallet_status_suspended;
+        return registeredStore;
     }
   }
 }

@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
-import '../../../data/models/platform_settings_model.dart';
 import '../../../providers/platform_settings_provider.dart';
 import '../../utils/wallet_extensions.dart';
 import '../../../l10n/arb/app_localizations.dart';

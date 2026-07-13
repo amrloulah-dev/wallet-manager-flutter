@@ -157,9 +157,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify "غير نشطة" badge is NOT displayed, and "نشطة" is displayed instead
-    expect(find.text('غير نشطة'), findsNothing);
-    expect(find.text('نشطة'), findsOneWidget);
+    // Verify "قديمة" badge is NOT displayed, and "جديدة" is displayed instead
+    expect(find.text('قديمة'), findsNothing);
+    expect(find.text('جديدة'), findsOneWidget);
   });
 
   testWidgets('WalletCard displays status correctly when suspended',
@@ -193,7 +193,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify "معلقة" badge is displayed
-    expect(find.text('معلقة'), findsOneWidget);
+    // Verify "محل مسجل" badge is displayed
+    expect(find.text('محل مسجل'), findsOneWidget);
   });
 }

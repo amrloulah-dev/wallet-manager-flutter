@@ -81,7 +81,7 @@ void main() {
   }
 
   testWidgets(
-      'WalletFormScreen status dropdown displays correct active/inactive Arabic labels',
+      'WalletFormScreen status dropdown displays correct newStatus, oldStatus, and registeredStore Arabic labels',
       (WidgetTester tester) async {
     await tester.pumpWidget(buildTestableWidget(locale: const Locale('ar')));
     await tester.pumpAndSettle();
@@ -93,9 +93,10 @@ void main() {
     await tester.tap(dropdownFinder);
     await tester.pumpAndSettle();
 
-    // Verify "نشطة" (active) and "غير نشطة" (inactive) labels are displayed in the dropdown popup
-    expect(find.text('نشطة'), findsWidgets);
-    expect(find.text('غير نشطة'), findsWidgets);
+    // Verify "جديدة" (active), "قديمة" (inactive) and "محل مسجل" (suspended) labels are displayed in the dropdown popup
+    expect(find.text('جديدة'), findsWidgets);
+    expect(find.text('قديمة'), findsWidgets);
+    expect(find.text('محل مسجل'), findsWidgets);
   });
 
   testWidgets(
@@ -131,12 +132,12 @@ void main() {
     await tester.tap(find.text('Etisalat Cash').last);
     await tester.pumpAndSettle();
 
-    // Select Active status dropdown
+    // Select New status dropdown
     final statusDropdownFinder =
         find.byType(DropdownButtonFormField<WalletStatus>);
     await tester.tap(statusDropdownFinder);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Active').last);
+    await tester.tap(find.text('New').last);
     await tester.pumpAndSettle();
 
     // Try submitting
