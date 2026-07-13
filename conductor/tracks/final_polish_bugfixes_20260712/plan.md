@@ -42,13 +42,13 @@
     - [x] Implement: Add `getLastSeenPaymentKey()` and `setLastSeenPaymentKey(String key)` methods to `LocalStorageService`. In `MainDashboardScreen._maybeShowSuccessModal`, replace the RAM-based `hasSeenSuccessModal` flag with a `SharedPreferences` check using the composite key (`"${subscription.endDate}_${subscription.planType}"`).
     - [x] Refactor: Clean up any remaining RAM-only flag references. Ensure the dialog-dismiss callback writes the key immediately.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Localization & Subscription Fixes' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Localization & Subscription Fixes' (Protocol in workflow.md) [56c17c9]
 
 ## Phase 4: Final Verification
 
-- [ ] Task: Run full test suite and static analysis
-    - [ ] Execute `CI=true flutter test` and confirm all tests pass.
-    - [ ] Execute `flutter analyze` and confirm no new warnings or errors.
-    - [ ] Verify all acceptance criteria (AC-1 through AC-8) are met.
+- [x] Task: Run full test suite and static analysis
+    - [x] Execute `CI=true flutter test` and confirm all tests pass.
+    - [x] Execute `flutter analyze` and confirm no new warnings or errors.
+    - [x] Verify all acceptance criteria (AC-1 through AC-8) are met.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Verification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Verification' (Protocol in workflow.md)
