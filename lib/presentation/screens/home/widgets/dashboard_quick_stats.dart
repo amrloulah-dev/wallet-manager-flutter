@@ -12,8 +12,9 @@ import 'package:walletmanager/core/utils/number_formatter.dart';
 import 'package:walletmanager/presentation/widgets/dashboard/stats_card.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/errors/app_error_handler.dart';
+import '../../../../core/utils/error_translator.dart';
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/errors/app_error_handler.dart';
 
 class DashboardQuickStats extends StatelessWidget {
   const DashboardQuickStats({super.key});
@@ -37,10 +38,15 @@ class DashboardQuickStats extends StatelessWidget {
               ),
             );
           }
-          if (provider.errorMessage != null &&
-              provider.dashboardSummary == null) {
+          if (provider.errorMessage != null && provider.todayStats == null) {
             return SliverToBoxAdapter(
-                child: Center(child: Text(provider.errorMessage!)));
+              child: Center(
+                child: Text(
+                  ErrorTranslator.getLocalizedString(
+                      context, provider.errorMessage!),
+                ),
+              ),
+            );
           }
 
           final stats = provider.dashboardSummary;

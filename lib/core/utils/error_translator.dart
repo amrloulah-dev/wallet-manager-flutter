@@ -112,6 +112,8 @@ class ErrorTranslator {
       // Permission Errors
       case 'permission_denied':
         return l10n.ownerOnlyFeature;
+      case 'battery_optimization_warning':
+        return l10n.battery_optimization_warning;
 
       // Device Errors
       case 'device_limit_exceeded':
@@ -136,6 +138,16 @@ class ErrorTranslator {
         return l10n.migration_error_recalculate_failed;
       case 'migration_error_unexpected':
         return l10n.migration_error_unexpected;
+
+      // Stats Errors
+      case 'stats_error_summary_fetch':
+        return l10n.stats_error_summary_fetch;
+      case 'stats_error_today_fetch':
+        return l10n.stats_error_today_fetch;
+      case 'stats_error_filtered_fetch':
+        return l10n.stats_error_filtered_fetch;
+      case 'stats_error_init_failed':
+        return l10n.stats_error_init_failed;
 
       // Overlay Errors (C-1)
       case 'overlay_error_load_failed':

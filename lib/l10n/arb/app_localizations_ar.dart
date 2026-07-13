@@ -1496,6 +1496,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get continueWithFreePlan => 'المتابعة بالخطة المجانية';
 
   @override
+  String get continueWithCurrentPlan => 'متابعة بالخطة الحالية';
+
+  @override
   String get subscriptionUnderReview =>
       'يتم الآن مراجعة طلب الاشتراك الخاص بك.';
 
@@ -2073,6 +2076,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get wallet_error_transaction_failed =>
       'حدث خطأ غير متوقع أثناء حفظ المعاملة.';
+
+  @override
+  String get battery_optimization_warning =>
+      'قد تنخفض موثوقية العمل في الخلفية بدون استثناء تحسين البطارية.';
 
   @override
   String get auth_error_google_sign_in => 'فشل تسجيل الدخول باستخدام جوجل.';

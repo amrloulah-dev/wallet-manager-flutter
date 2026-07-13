@@ -252,9 +252,9 @@ class PaywallScreen extends StatelessWidget {
                     }
                   },
                   child: Text(
-                    loc.continueWithFreePlan,
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
+                    loc.continueWithCurrentPlan,
+                    style: const TextStyle(
+                      color: Colors.white,
                       decoration: TextDecoration.underline,
                       fontSize: 16,
                     ),

@@ -90,7 +90,7 @@ class SmsService {
           results[Permission.ignoreBatteryOptimizations]?.isPermanentlyDenied ==
               true) {
         ToastUtils.showWarning(
-          'Background reliability may be reduced without battery optimization exemption.',
+          'battery_optimization_warning',
         );
       }
     } catch (e, stack) {

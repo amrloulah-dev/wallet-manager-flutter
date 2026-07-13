@@ -1499,6 +1499,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithFreePlan => 'Continue with Free Plan';
 
   @override
+  String get continueWithCurrentPlan => 'Continue with Current Plan';
+
+  @override
   String get subscriptionUnderReview =>
       'Your subscription request is being reviewed.';
 
@@ -2079,6 +2082,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wallet_error_transaction_failed =>
       'An unexpected error occurred while saving the transaction.';
+
+  @override
+  String get battery_optimization_warning =>
+      'Background reliability may be reduced without battery optimization exemption.';
 
   @override
   String get auth_error_google_sign_in => 'Failed to sign in with Google.';

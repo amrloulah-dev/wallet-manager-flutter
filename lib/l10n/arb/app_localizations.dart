@@ -2948,6 +2948,12 @@ abstract class AppLocalizations {
   /// **'المتابعة بالخطة المجانية'**
   String get continueWithFreePlan;
 
+  /// No description provided for @continueWithCurrentPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة بالخطة الحالية'**
+  String get continueWithCurrentPlan;
+
   /// No description provided for @subscriptionUnderReview.
   ///
   /// In ar, this message translates to:
@@ -3895,6 +3901,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حدث خطأ غير متوقع أثناء حفظ المعاملة.'**
   String get wallet_error_transaction_failed;
+
+  /// No description provided for @battery_optimization_warning.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد تنخفض موثوقية العمل في الخلفية بدون استثناء تحسين البطارية.'**
+  String get battery_optimization_warning;
 
   /// No description provided for @auth_error_google_sign_in.
   ///

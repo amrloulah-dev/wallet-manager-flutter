@@ -48,6 +48,7 @@ class StatisticsProvider extends BaseProvider {
   DailyStatsModel? get todayStats => _todayStats;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get hasError => _errorMessage != null;
 
   StatisticsProvider({
     required StatsRepository statsRepository,
@@ -116,6 +117,7 @@ class StatisticsProvider extends BaseProvider {
     }
 
     _isLoading = true;
+    _errorMessage = null;
     safeNotify();
 
     _activateFetchShield();
@@ -309,6 +311,9 @@ class StatisticsProvider extends BaseProvider {
   }
 
   void rollbackStats(StatsSummaryModel? oldSummary, DailyStatsModel? oldToday) {
+    if (oldSummary == null || oldToday == null) {
+      return;
+    }
     _dashboardSummary = oldSummary;
     _todayStats = oldToday;
     safeNotify();
