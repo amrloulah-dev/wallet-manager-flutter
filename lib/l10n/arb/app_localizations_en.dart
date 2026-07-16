@@ -9,6 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get error_network_timeout =>
+      'Connection timed out. Please check your internet.';
+
+  @override
   String get contactUs => 'Contact Us';
 
   @override

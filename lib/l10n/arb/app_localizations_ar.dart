@@ -9,6 +9,10 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get error_network_timeout =>
+      'انتهى وقت الاتصال، يرجى التحقق من الإنترنت';
+
+  @override
   String get contactUs => 'تواصل معنا';
 
   @override

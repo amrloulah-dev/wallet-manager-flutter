@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+  "error_network_timeout": "Connection timed out. Please check your internet.",
   "contactUs": "Contact Us",
   "whatsapp": "WhatsApp",
   "email": "Email",

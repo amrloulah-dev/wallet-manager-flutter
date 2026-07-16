@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/errors/app_error_handler.dart';
@@ -53,7 +54,10 @@ class UserRepository {
   Future<UserModel?> getUserById(String userId,
       {String? expectedStoreId}) async {
     try {
-      final doc = await _usersCollection.doc(userId).get();
+      final doc = await _usersCollection
+          .doc(userId)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
       if (!doc.exists) return null;
 
       final user = UserModel.fromFirestore(doc);
@@ -64,6 +68,10 @@ class UserRepository {
       }
 
       return user;
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
+          stackTrace: stack);
+      throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
           stackTrace: stack);

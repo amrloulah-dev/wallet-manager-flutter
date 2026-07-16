@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 import '../../core/constants/firebase_constants.dart';
@@ -107,18 +108,25 @@ class StoreRepository {
   /// Fetches a single store by its document ID.
   Future<StoreModel?> getStoreById(String storeId) async {
     try {
-      final doc = await _storesCollection.doc(storeId).get();
+      final doc = await _storesCollection
+          .doc(storeId)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
       if (doc.exists) {
         return StoreModel.fromFirestore(doc);
       }
       return null;
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository');
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
       throw ServerException('store_error_fetch_failed', code: e.code);
     } catch (e, stack) {
       AppErrorHandler.handle(e,
-          stackTrace: stack, operation: 'StoreRepository');
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
       throw ServerException('store_error_unexpected');
     }
   }
@@ -152,12 +160,17 @@ class StoreRepository {
       final querySnapshot = await _storesCollection
           .where(FirebaseConstants.ownerEmail, isEqualTo: email)
           .limit(1)
-          .get();
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
 
       if (querySnapshot.docs.isNotEmpty) {
         return StoreModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');

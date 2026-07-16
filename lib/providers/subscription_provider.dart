@@ -57,7 +57,19 @@ class SubscriptionProvider extends BaseProvider {
         debugPrint(
             '🛡️ [SECURITY] Subscription cache invalid or stale. Triggering Firestore re-validation.');
       }
-      await _authProvider.refreshUserData();
+      try {
+        await _authProvider.refreshUserData();
+      } catch (e, stack) {
+        // Graceful fallback: use last known local cache to avoid blocking app init
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ [SECURITY] Firestore re-validation failed. Using last known local state. Error: $e');
+        }
+        AppErrorHandler.handle(e,
+            severity: ErrorSeverity.medium,
+            operation: 'SubscriptionProvider._checkIntegrityAndFreshness',
+            stackTrace: stack);
+      }
     }
   }
 

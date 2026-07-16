@@ -98,6 +98,12 @@ abstract class AppLocalizations {
     Locale('en')
   ];
 
+  /// No description provided for @error_network_timeout.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهى وقت الاتصال، يرجى التحقق من الإنترنت'**
+  String get error_network_timeout;
+
   /// No description provided for @contactUs.
   ///
   /// In ar, this message translates to:

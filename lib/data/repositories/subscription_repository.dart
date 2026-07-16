@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/firebase_constants.dart';
@@ -70,12 +71,18 @@ class SubscriptionRepository {
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .orderBy(FirebaseConstants.createdAt, descending: true)
           .limit(1)
-          .get();
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
 
       if (snapshot.docs.isNotEmpty) {
         return SubscriptionRequestModel.fromFirestore(snapshot.docs.first);
       }
       return null;
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'SubscriptionRepository.getLatestSubscriptionRequest');
+      throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,
