@@ -48,37 +48,37 @@
 
 ## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2)
 
-- [ ] Task: Write Tests — Amount validation color feedback
-    - [ ] Create test file `test/presentation/screens/transactions/create_transaction_validation_test.dart`
-    - [ ] Test: telecom Receive with amount > `maxAvailable` → Red border, Submit disabled
-    - [ ] Test: telecom Receive with amount <= `maxAvailable` → normal border, Submit enabled
-    - [ ] Test: InstaPay Receive with amount > `maxAvailable` → Orange border, Submit enabled
-    - [ ] Test: contextual error text shows daily message when daily limit breached
-    - [ ] Test: contextual error text shows monthly/capacity message when monthly limit breached
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — Amount validation color feedback (6d40caf)
+    - [x] Create test file `test/presentation/screens/transactions/create_transaction_validation_test.dart`
+    - [x] Test: telecom Receive with amount > `maxAvailable` → Red border, Submit disabled
+    - [x] Test: telecom Receive with amount <= `maxAvailable` → normal border, Submit enabled
+    - [x] Test: InstaPay Receive with amount > `maxAvailable` → Orange border, Submit enabled
+    - [x] Test: contextual error text shows daily message when daily limit breached
+    - [x] Test: contextual error text shows monthly/capacity message when monthly limit breached
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — Amount validation with `ValueListenableBuilder`
-    - [ ] Add `_maxAvailable` calculation method consuming `wallet.availableToReceiveDaily` and `wallet.availableToReceiveMonthly`
-    - [ ] Wrap amount field decoration in `ValueListenableBuilder` on `_amountController`
-    - [ ] Implement dynamic border color: Red for telecom exceeding, Orange for InstaPay exceeding
-    - [ ] Implement contextual `errorText` with strict evaluation order (daily first, then monthly)
-    - [ ] Implement Submit button disable logic for telecom wallets when amount exceeds `maxAvailable`
-    - [ ] Run tests and confirm they pass (Green)
+- [x] Task: Implement — Amount validation with `ValueListenableBuilder` (6d40caf)
+    - [x] Add `_maxAvailable` calculation method consuming `wallet.availableToReceiveDaily` and `wallet.availableToReceiveMonthly`
+    - [x] Wrap amount field decoration in `ValueListenableBuilder` on `_amountController`
+    - [x] Implement dynamic border color: Red for telecom exceeding, Orange for InstaPay exceeding
+    - [x] Implement contextual `errorText` with strict evaluation order (daily first, then monthly)
+    - [x] Implement Submit button disable logic for telecom wallets when amount exceeds `maxAvailable`
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Write Tests — Max button
-    - [ ] Test: Max button visible only for Receive transactions
-    - [ ] Test: Max button hidden for Send transactions
-    - [ ] Test: Tapping Max button populates `_amountController` with `maxAvailable`
-    - [ ] Test: Tapping Max button triggers validation
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — Max button (6d40caf)
+    - [x] Test: Max button visible only for Receive transactions
+    - [x] Test: Max button hidden for Send transactions
+    - [x] Test: Tapping Max button populates `_amountController` with `maxAvailable`
+    - [x] Test: Tapping Max button triggers validation
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — Max button in `suffixIcon`
-    - [ ] Add `TextButton` labeled "الحد الأقصى" (Max) inside the amount field `suffixIcon`
-    - [ ] Conditionally render only for Receive transaction type
-    - [ ] On tap: populate `_amountController.text` with formatted `maxAvailable` and trigger validation
-    - [ ] Run tests and confirm they pass (Green)
+- [x] Task: Implement — Max button in `suffixIcon` (6d40caf)
+    - [x] Add `TextButton` labeled "الحد الأقصى" (Max) inside the amount field `suffixIcon`
+    - [x] Conditionally render only for Receive transaction type
+    - [x] On tap: populate `_amountController.text` with formatted `maxAvailable` and trigger validation
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md)
 
 ## Phase 4: UI — 3-Zone Dynamic Progress Bar (FR-3)
 
