@@ -46,7 +46,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md) (dc1741c)
 
-## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2)
+## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2) [checkpoint: 9336930]
 
 - [x] Task: Write Tests — Amount validation color feedback (6d40caf)
     - [x] Create test file `test/presentation/screens/transactions/create_transaction_validation_test.dart`
@@ -78,7 +78,7 @@
     - [x] On tap: populate `_amountController.text` with formatted `maxAvailable` and trigger validation
     - [x] Run tests and confirm they pass (Green)
 
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md) (9336930)
 
 ## Phase 4: UI — 3-Zone Dynamic Progress Bar (FR-3)
 
