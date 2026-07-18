@@ -480,6 +480,21 @@ class WalletModel {
     return 'green';
   }
 
+  bool get isInstaPay => walletType == WalletType.instaPay;
+
+  double get availableToReceiveDaily => receiveLimits.dailyRemaining;
+
+  double get availableToReceiveMonthly {
+    if (isInstaPay) {
+      return receiveLimits.monthlyRemaining;
+    }
+    final capacityRemaining = receiveLimits.monthlyLimit - balance;
+    final safeCapacity = capacityRemaining < 0 ? 0.0 : capacityRemaining;
+    return receiveLimits.monthlyRemaining < safeCapacity
+        ? receiveLimits.monthlyRemaining
+        : safeCapacity;
+  }
+
   @override
   String toString() {
     return 'WalletModel(walletId: $walletId, phoneNumber: $phoneNumber, walletType: $walletType, walletStatus: $walletStatus)';
