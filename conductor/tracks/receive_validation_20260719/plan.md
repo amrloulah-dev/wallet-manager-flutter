@@ -1,0 +1,121 @@
+# Implementation Plan: Optimistic Validation for Receive Transactions
+
+## Phase 1: Domain Layer — WalletModel Getters (FR-4)
+
+- [ ] Task: Write Tests — `isInstaPay` getter
+    - [ ] Create test file `test/data/models/wallet_model_receive_getters_test.dart`
+    - [ ] Test `isInstaPay` returns `true` for `WalletType.instaPay` and `false` for all other `WalletType` values
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — `isInstaPay` getter
+    - [ ] Add `bool get isInstaPay => walletType == WalletType.instaPay;` to `WalletModel`
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Write Tests — `availableToReceiveDaily` getter
+    - [ ] Test returns `receiveLimits.dailyRemaining` for telecom wallets
+    - [ ] Test returns `receiveLimits.dailyRemaining` for InstaPay wallets
+    - [ ] Test returns `0.0` when daily limit is fully used
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — `availableToReceiveDaily` getter
+    - [ ] Add `double get availableToReceiveDaily` to `WalletModel` returning `receiveLimits.dailyRemaining`
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Write Tests — `availableToReceiveMonthly` getter
+    - [ ] Test for telecom wallets: returns `min(receiveLimits.monthlyRemaining, monthlyLimit - balance)` — the lesser of flow remaining and balance-capacity remaining
+    - [ ] Test for telecom wallets: when balance is high, capacity constrains below flow limit
+    - [ ] Test for telecom wallets: when flow is low, flow constrains below capacity
+    - [ ] Test for InstaPay wallets: returns `receiveLimits.monthlyRemaining` (pure flow, no balance deduction)
+    - [ ] Test returns `0.0` when monthly limit is fully used
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — `availableToReceiveMonthly` getter
+    - [ ] Add `double get availableToReceiveMonthly` to `WalletModel` with dual-constraint logic for telecom and flow-only for InstaPay
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
+
+## Phase 2: Localization — New ARB Strings (NFR-2)
+
+- [ ] Task: Add localization strings to `app_ar.arb` and `app_en.arb`
+    - [ ] Add `exceedsDailyLimit`: "يتجاوز الحد اليومي" / "Exceeds daily limit"
+    - [ ] Add `exceedsMonthlyLimitOrCapacity`: "يتجاوز الحد الشهري أو سعة المحفظة" / "Exceeds monthly limit or wallet capacity"
+    - [ ] Add `maxButtonLabel`: "الحد الأقصى" / "Max"
+    - [ ] Add `zoneUsedLabel`, `zoneAvailableLabel`, `zoneBlockedLabel` for progress bar zone labels
+    - [ ] Run `flutter gen-l10n` and verify generation succeeds
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md)
+
+## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2)
+
+- [ ] Task: Write Tests — Amount validation color feedback
+    - [ ] Create test file `test/presentation/screens/transactions/create_transaction_validation_test.dart`
+    - [ ] Test: telecom Receive with amount > `maxAvailable` → Red border, Submit disabled
+    - [ ] Test: telecom Receive with amount <= `maxAvailable` → normal border, Submit enabled
+    - [ ] Test: InstaPay Receive with amount > `maxAvailable` → Orange border, Submit enabled
+    - [ ] Test: contextual error text shows daily message when daily limit breached
+    - [ ] Test: contextual error text shows monthly/capacity message when monthly limit breached
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — Amount validation with `ValueListenableBuilder`
+    - [ ] Add `_maxAvailable` calculation method consuming `wallet.availableToReceiveDaily` and `wallet.availableToReceiveMonthly`
+    - [ ] Wrap amount field decoration in `ValueListenableBuilder` on `_amountController`
+    - [ ] Implement dynamic border color: Red for telecom exceeding, Orange for InstaPay exceeding
+    - [ ] Implement contextual `errorText` with strict evaluation order (daily first, then monthly)
+    - [ ] Implement Submit button disable logic for telecom wallets when amount exceeds `maxAvailable`
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Write Tests — Max button
+    - [ ] Test: Max button visible only for Receive transactions
+    - [ ] Test: Max button hidden for Send transactions
+    - [ ] Test: Tapping Max button populates `_amountController` with `maxAvailable`
+    - [ ] Test: Tapping Max button triggers validation
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — Max button in `suffixIcon`
+    - [ ] Add `TextButton` labeled "الحد الأقصى" (Max) inside the amount field `suffixIcon`
+    - [ ] Conditionally render only for Receive transaction type
+    - [ ] On tap: populate `_amountController.text` with formatted `maxAvailable` and trigger validation
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md)
+
+## Phase 4: UI — 3-Zone Dynamic Progress Bar (FR-3)
+
+- [ ] Task: Write Tests — 3-Zone progress bar widget
+    - [ ] Create test file `test/presentation/widgets/wallet/three_zone_progress_bar_test.dart`
+    - [ ] Test: telecom Receive renders 3 zones (Used/Red, Available/Green, Blocked/Grey)
+    - [ ] Test: zone widths are proportional to `monthlyUsed`, `maxAvailable`, and `blocked` values
+    - [ ] Test: InstaPay Receive renders standard 2-zone bar (no Grey zone)
+    - [ ] Test: Send transactions render standard 2-zone bar
+    - [ ] Run tests and confirm they fail (Red)
+
+- [ ] Task: Implement — `ThreeZoneProgressBar` widget
+    - [ ] Create `lib/presentation/widgets/wallet/three_zone_progress_bar.dart`
+    - [ ] Implement `Row` of `AnimatedContainer` zones with:
+        - Duration: `300ms`, Curve: `Curves.easeOutCubic`
+        - Zone widths calculated from `LayoutBuilder` constraints
+    - [ ] Implement Grey/Hatched styling for Zone 3 (Blocked by Balance)
+    - [ ] Run tests and confirm they pass (Green)
+
+- [ ] Task: Integrate progress bar into `CreateTransactionScreen`
+    - [ ] Replace `WalletLimitBar` in `_buildLimitsPreview()` with `ThreeZoneProgressBar` for telecom Receive
+    - [ ] Wrap progress bar in `ValueListenableBuilder` on `_amountController` for isolated rebuilds
+    - [ ] Preserve standard 2-zone `WalletLimitBar` for InstaPay and Send transactions
+    - [ ] Run full test suite and confirm all tests pass
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: 3-Zone Progress Bar' (Protocol in workflow.md)
+
+## Phase 5: Polish & Final Verification
+
+- [ ] Task: Performance audit
+    - [ ] Verify `ValueListenableBuilder` isolation prevents full-form rebuilds
+    - [ ] Test typing responsiveness in the amount field (no jank)
+    - [ ] Run `flutter analyze` and resolve any warnings/errors
+
+- [ ] Task: Run full test suite and verify coverage
+    - [ ] Run `CI=true flutter test`
+    - [ ] Verify all acceptance criteria (AC-1 through AC-9) are covered by tests
+    - [ ] Verify coverage > 80% for new code
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 5: Polish & Final Verification' (Protocol in workflow.md)

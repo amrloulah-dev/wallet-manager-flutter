@@ -43,3 +43,8 @@
 - [~] **Track: Final Polish & Bug Squashing**
 *Link: [./tracks/final_polish_bugfixes_20260712/](./tracks/final_polish_bugfixes_20260712/)*
 
+---
+
+- [ ] **Track: Optimistic Validation for Receive Transactions**
+*Link: [./tracks/receive_validation_20260719/](./tracks/receive_validation_20260719/)*
+
