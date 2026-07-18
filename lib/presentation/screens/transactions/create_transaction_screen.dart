@@ -109,7 +109,12 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         _selectedWalletId == null) {
       return null;
     }
-    return TextButton(
+    return IconButton(
+      tooltip: l10n.maxButtonLabel,
+      icon: const Icon(
+        Icons.keyboard_double_arrow_up_rounded,
+        color: AppColors.primary,
+      ),
       onPressed: () {
         final maxVal = _maxAvailable;
         if (maxVal > 0 && maxVal != double.infinity) {
@@ -117,13 +122,6 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           _formKey.currentState?.validate();
         }
       },
-      child: Text(
-        l10n.maxButtonLabel,
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 

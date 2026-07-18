@@ -259,8 +259,8 @@ void main() {
     await tester.tap(receiveButtonFinder);
     await tester.pumpAndSettle();
 
-    // Max button should be visible (labeled 'الحد الأقصى')
-    final maxButtonFinder = find.text('الحد الأقصى');
+    // Max button should be visible (IconButton with arrow up icon)
+    final maxButtonFinder = find.byIcon(Icons.keyboard_double_arrow_up_rounded);
     expect(maxButtonFinder, findsOneWidget);
 
     // Tap Max button
