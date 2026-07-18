@@ -37,14 +37,14 @@
 
 ## Phase 2: Localization — New ARB Strings (NFR-2)
 
-- [ ] Task: Add localization strings to `app_ar.arb` and `app_en.arb`
-    - [ ] Add `exceedsDailyLimit`: "يتجاوز الحد اليومي" / "Exceeds daily limit"
-    - [ ] Add `exceedsMonthlyLimitOrCapacity`: "يتجاوز الحد الشهري أو سعة المحفظة" / "Exceeds monthly limit or wallet capacity"
-    - [ ] Add `maxButtonLabel`: "الحد الأقصى" / "Max"
-    - [ ] Add `zoneUsedLabel`, `zoneAvailableLabel`, `zoneBlockedLabel` for progress bar zone labels
-    - [ ] Run `flutter gen-l10n` and verify generation succeeds
+- [x] Task: Add localization strings to `app_ar.arb` and `app_en.arb` (b737ff9)
+    - [x] Add `exceedsDailyLimit`: "يتجاوز الحد اليومي" / "Exceeds daily limit"
+    - [x] Add `exceedsMonthlyLimitOrCapacity`: "يتجاوز الحد الشهري أو سعة المحفظة" / "Exceeds monthly limit or wallet capacity"
+    - [x] Add `maxButtonLabel`: "الحد الأقصى" / "Max"
+    - [x] Add `zoneUsedLabel`, `zoneAvailableLabel`, `zoneBlockedLabel` for progress bar zone labels
+    - [x] Run `flutter gen-l10n` and verify generation succeeds
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md)
 
 ## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2)
 
