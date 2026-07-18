@@ -80,31 +80,31 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Amount Validation & Max Button' (Protocol in workflow.md) (9336930)
 
-## Phase 4: UI — 3-Zone Dynamic Progress Bar (FR-3)
+## Phase 4: UI — 3-Zone Dynamic Progress Bar (FR-3) [checkpoint: 7f7fe4e]
 
-- [ ] Task: Write Tests — 3-Zone progress bar widget
-    - [ ] Create test file `test/presentation/widgets/wallet/three_zone_progress_bar_test.dart`
-    - [ ] Test: telecom Receive renders 3 zones (Used/Red, Available/Green, Blocked/Grey)
-    - [ ] Test: zone widths are proportional to `monthlyUsed`, `maxAvailable`, and `blocked` values
-    - [ ] Test: InstaPay Receive renders standard 2-zone bar (no Grey zone)
-    - [ ] Test: Send transactions render standard 2-zone bar
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — 3-Zone progress bar widget (66f80d6)
+    - [x] Create test file `test/presentation/widgets/wallet/three_zone_progress_bar_test.dart`
+    - [x] Test: telecom Receive renders 3 zones (Used/Red, Available/Green, Blocked/Grey)
+    - [x] Test: zone widths are proportional to `monthlyUsed`, `maxAvailable`, and `blocked` values
+    - [x] Test: InstaPay Receive renders standard 2-zone bar (no Grey zone)
+    - [x] Test: Send transactions render standard 2-zone bar
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — `ThreeZoneProgressBar` widget
-    - [ ] Create `lib/presentation/widgets/wallet/three_zone_progress_bar.dart`
-    - [ ] Implement `Row` of `AnimatedContainer` zones with:
+- [x] Task: Implement — `ThreeZoneProgressBar` widget (66f80d6)
+    - [x] Create `lib/presentation/widgets/wallet/three_zone_progress_bar.dart`
+    - [x] Implement `Row` of `AnimatedContainer` zones with:
         - Duration: `300ms`, Curve: `Curves.easeOutCubic`
         - Zone widths calculated from `LayoutBuilder` constraints
-    - [ ] Implement Grey/Hatched styling for Zone 3 (Blocked by Balance)
-    - [ ] Run tests and confirm they pass (Green)
+    - [x] Implement Grey/Hatched styling for Zone 3 (Blocked by Balance)
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Integrate progress bar into `CreateTransactionScreen`
-    - [ ] Replace `WalletLimitBar` in `_buildLimitsPreview()` with `ThreeZoneProgressBar` for telecom Receive
-    - [ ] Wrap progress bar in `ValueListenableBuilder` on `_amountController` for isolated rebuilds
-    - [ ] Preserve standard 2-zone `WalletLimitBar` for InstaPay and Send transactions
-    - [ ] Run full test suite and confirm all tests pass
+- [x] Task: Integrate progress bar into `CreateTransactionScreen` (66f80d6)
+    - [x] Replace `WalletLimitBar` in `_buildLimitsPreview()` with `ThreeZoneProgressBar` for telecom Receive
+    - [x] Wrap progress bar in `ValueListenableBuilder` on `_amountController` for isolated rebuilds
+    - [x] Preserve standard 2-zone `WalletLimitBar` for InstaPay and Send transactions
+    - [x] Run full test suite and confirm all tests pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: 3-Zone Progress Bar' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: 3-Zone Progress Bar' (Protocol in workflow.md) (7f7fe4e)
 
 ## Phase 5: Polish & Final Verification
 
