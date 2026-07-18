@@ -35,7 +35,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md) (ed928e4)
 
-## Phase 2: Localization — New ARB Strings (NFR-2)
+## Phase 2: Localization — New ARB Strings (NFR-2) [checkpoint: dc1741c]
 
 - [x] Task: Add localization strings to `app_ar.arb` and `app_en.arb` (b737ff9)
     - [x] Add `exceedsDailyLimit`: "يتجاوز الحد اليومي" / "Exceeds daily limit"
@@ -44,7 +44,7 @@
     - [x] Add `zoneUsedLabel`, `zoneAvailableLabel`, `zoneBlockedLabel` for progress bar zone labels
     - [x] Run `flutter gen-l10n` and verify generation succeeds
 
-- [~] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Localization' (Protocol in workflow.md) (dc1741c)
 
 ## Phase 3: UI — Amount Field Validation & Max Button (FR-1, FR-2)
 
