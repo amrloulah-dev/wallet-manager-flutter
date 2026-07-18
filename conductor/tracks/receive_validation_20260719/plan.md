@@ -106,16 +106,16 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 4: 3-Zone Progress Bar' (Protocol in workflow.md) (7f7fe4e)
 
-## Phase 5: Polish & Final Verification
+## Phase 5: Polish & Final Verification [checkpoint: 7f7fe4e]
 
-- [ ] Task: Performance audit
-    - [ ] Verify `ValueListenableBuilder` isolation prevents full-form rebuilds
-    - [ ] Test typing responsiveness in the amount field (no jank)
-    - [ ] Run `flutter analyze` and resolve any warnings/errors
+- [x] Task: Performance audit (8796526)
+    - [x] Verify `ValueListenableBuilder` isolation prevents full-form rebuilds
+    - [x] Test typing responsiveness in the amount field (no jank)
+    - [x] Run `flutter analyze` and resolve any warnings/errors
 
-- [ ] Task: Run full test suite and verify coverage
-    - [ ] Run `CI=true flutter test`
-    - [ ] Verify all acceptance criteria (AC-1 through AC-9) are covered by tests
-    - [ ] Verify coverage > 80% for new code
+- [x] Task: Run full test suite and verify coverage (8796526)
+    - [x] Run `CI=true flutter test`
+    - [x] Verify all acceptance criteria (AC-1 through AC-9) are covered by tests
+    - [x] Verify coverage > 80% for new code (ThreeZoneProgressBar is at 100% coverage, and edited sections of CreateTransactionScreen are fully covered)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Polish & Final Verification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Polish & Final Verification' (Protocol in workflow.md) (7f7fe4e)
