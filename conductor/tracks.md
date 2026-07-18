@@ -45,6 +45,6 @@
 
 ---
 
-- [~] **Track: Optimistic Validation for Receive Transactions**
+- [x] **Track: Optimistic Validation for Receive Transactions**
 *Link: [./tracks/receive_validation_20260719/](./tracks/receive_validation_20260719/)*
 
