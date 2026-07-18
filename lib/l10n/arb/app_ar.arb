@@ -921,5 +921,11 @@
   "walletIsFrozenShort": "(مجمدة)",
   "refreshPlatformSettings": "تحديث إعدادات المنصة",
   "platformSettingsRefreshed": "تم تحديث إعدادات المنصة بنجاح",
-  "platformSettingsRefreshFailed": "فشل تحديث إعدادات المنصة"
+  "platformSettingsRefreshFailed": "فشل تحديث إعدادات المنصة",
+  "exceedsDailyLimit": "يتجاوز الحد اليومي",
+  "exceedsMonthlyLimitOrCapacity": "يتجاوز الحد الشهري أو سعة المحفظة",
+  "maxButtonLabel": "الحد الأقصى",
+  "zoneUsedLabel": "مستخدم",
+  "zoneAvailableLabel": "متاح",
+  "zoneBlockedLabel": "محجوز بالرصيد"
 }

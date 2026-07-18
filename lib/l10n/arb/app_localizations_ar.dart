@@ -2237,4 +2237,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformSettingsRefreshFailed => 'فشل تحديث إعدادات المنصة';
+
+  @override
+  String get exceedsDailyLimit => 'يتجاوز الحد اليومي';
+
+  @override
+  String get exceedsMonthlyLimitOrCapacity =>
+      'يتجاوز الحد الشهري أو سعة المحفظة';
+
+  @override
+  String get maxButtonLabel => 'الحد الأقصى';
+
+  @override
+  String get zoneUsedLabel => 'مستخدم';
+
+  @override
+  String get zoneAvailableLabel => 'متاح';
+
+  @override
+  String get zoneBlockedLabel => 'محجوز بالرصيد';
 }

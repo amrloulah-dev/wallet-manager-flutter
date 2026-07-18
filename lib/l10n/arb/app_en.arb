@@ -928,5 +928,11 @@
   "walletIsFrozenShort": "(Frozen)",
   "refreshPlatformSettings": "Refresh Platform Settings",
   "platformSettingsRefreshed": "Platform settings refreshed successfully",
-  "platformSettingsRefreshFailed": "Failed to refresh platform settings"
+  "platformSettingsRefreshFailed": "Failed to refresh platform settings",
+  "exceedsDailyLimit": "Exceeds daily limit",
+  "exceedsMonthlyLimitOrCapacity": "Exceeds monthly limit or wallet capacity",
+  "maxButtonLabel": "Max",
+  "zoneUsedLabel": "Used",
+  "zoneAvailableLabel": "Available",
+  "zoneBlockedLabel": "Blocked by Balance"
 }

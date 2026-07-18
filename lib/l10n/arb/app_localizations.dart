@@ -4189,6 +4189,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فشل تحديث إعدادات المنصة'**
   String get platformSettingsRefreshFailed;
+
+  /// No description provided for @exceedsDailyLimit.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتجاوز الحد اليومي'**
+  String get exceedsDailyLimit;
+
+  /// No description provided for @exceedsMonthlyLimitOrCapacity.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتجاوز الحد الشهري أو سعة المحفظة'**
+  String get exceedsMonthlyLimitOrCapacity;
+
+  /// No description provided for @maxButtonLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحد الأقصى'**
+  String get maxButtonLabel;
+
+  /// No description provided for @zoneUsedLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستخدم'**
+  String get zoneUsedLabel;
+
+  /// No description provided for @zoneAvailableLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'متاح'**
+  String get zoneAvailableLabel;
+
+  /// No description provided for @zoneBlockedLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'محجوز بالرصيد'**
+  String get zoneBlockedLabel;
 }
 
 class _AppLocalizationsDelegate

@@ -2255,4 +2255,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get platformSettingsRefreshFailed =>
       'Failed to refresh platform settings';
+
+  @override
+  String get exceedsDailyLimit => 'Exceeds daily limit';
+
+  @override
+  String get exceedsMonthlyLimitOrCapacity =>
+      'Exceeds monthly limit or wallet capacity';
+
+  @override
+  String get maxButtonLabel => 'Max';
+
+  @override
+  String get zoneUsedLabel => 'Used';
+
+  @override
+  String get zoneAvailableLabel => 'Available';
+
+  @override
+  String get zoneBlockedLabel => 'Blocked by Balance';
 }
