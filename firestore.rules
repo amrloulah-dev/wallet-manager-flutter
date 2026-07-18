@@ -7,154 +7,153 @@ service cloud.firestore {
     // 1. دوال مساعدة أمنية (Security Helpers)
     // ==========================================
     
-    // هل المستخدم مسجل دخول؟
     function isAuthenticated() {
       return request.auth != null;
     }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
 
-    // هل المستخدم هو "صاحب المتجر"؟ (بافتراض أن storeId هو نفس الـ UID الخاص بالمالك)
     function isStoreOwner(storeId) {
       return isAuthenticated() && request.auth.uid == storeId;
     }
 
-    // هل المستخدم "موظف" في هذا المتجر؟ 
-    // (نقوم بقراءة مستند المستخدم من قاعدة البيانات بأمان للتحقق من المتجر التابع له)
+    // ضفنا دالة exists عشان لو اليوزر لسه جديد ومستنده مكملش، ميضربش كراش للنسخة القديمة
     function isStoreEmployee(storeId) {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.storeId == storeId;
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isAuthenticated() && exists(userPath) && get(userPath).data.storeId == storeId;
     }
 
-    // هل يحق للمستخدم الوصول؟ (إما صاحب المتجر أو موظف فيه)
     function canAccessStore(storeId) {
       return isStoreOwner(storeId) || isStoreEmployee(storeId);
     }
 
-    // هل يمتلك المستخدم الصلاحية المحددة؟ (للموظفين)
+    // ضفنا دالة exists هنا برضه كحماية
     function hasPermission(permissionName) {
-      let user = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return user.role == 'owner' || 
-             (user.role == 'employee' && user.get('permissions', {}).get(permissionName, false) == true);
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isAuthenticated() && exists(userPath) && (
+        get(userPath).data.role == 'owner' || 
+        (get(userPath).data.role == 'employee' && get(userPath).data.get('permissions', {}).get(permissionName, false) == true)
+      );
     }
 
     // ==========================================
-    // 2. القواعد الأساسية (The Rules)
+    // 2. قواعد لوحة تحكم الإدارة (Admin Panel Rules)
+    // ==========================================
+    
+    match /admin_stats/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ==========================================
+    // 3. القواعد الأساسية لتطبيق الهاتف والإدارة
     // ==========================================
 
-    // --- سجل الأجهزة (مكافحة الاحتيال) ---
     match /device_registrations/{deviceId} {
-      // مسموح فقط قراءة جهاز محدد إذا كنت صاحب الجهاز (ownerUid)
-      allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
-      // السماح بالإنشاء مع ضرورة إرفاق الـ ownerUid الخاص بالمستخدم الحالي
+      allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid || isAdmin();
       allow create: if isAuthenticated() && 
                        request.resource.data.keys().hasAll(['deviceId', 'ownerUid']) && 
-                       request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete, list: if false; // سجل ثابت لا يمكن التلاعب فيه
+                       request.resource.data.ownerUid == request.auth.uid || isAdmin();
+      allow update, delete, list: if isAdmin(); 
     }
 
-    // --- مفاتيح الترخيص القديمة ---
     match /license_keys/{keyId} {
-      // Secure license_keys: Deny read access to all authenticated users (Report 2: C-7, M-10).
-      // Verification should be handled via Admin SDK/Cloud Functions.
-      allow read: if false;
-      allow update: if isAuthenticated() && !resource.data.isUsed; 
-      allow create, delete: if false;
+      allow read: if isAdmin(); 
+      allow update: if (isAuthenticated() && !resource.data.isUsed) || isAdmin(); 
+      allow create, delete: if isAdmin(); 
     }
 
-    // --- المستخدمين والموظفين ---
     match /users/{userId} {
-      // المستخدم يقدر يشوف بياناته
-      allow get: if isAuthenticated() && request.auth.uid == userId;
-      // السماح للمستخدم بتعديل بياناته الشخصية بشرط عدم المساس بالصلاحيات أو المتجر
-      allow update: if isAuthenticated() && request.auth.uid == userId 
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'storeId', 'isActive']);
-      
-      // صاحب المتجر يقدر يقرأ، يضيف، أو يحذف الموظفين اللي تبع متجره
-      // نستخدم request.resource للإنشاء والتعديل، و resource للقراءة والحذف
-      allow get, delete: if isAuthenticated() && isStoreOwner(resource.data.storeId);
-      allow list: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isStoreOwner(request.resource.data.storeId);
-
-      // السماح بإنشاء حساب لنفسك
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow get: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      allow update: if (isAuthenticated() && request.auth.uid == userId 
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'storeId', 'isActive'])) 
+                    || isAdmin();
+      allow get, delete: if (isAuthenticated() && isStoreOwner(resource.data.storeId)) || isAdmin();
+      allow list: if isAuthenticated() || isAdmin();
+      allow create, update: if (isAuthenticated() && isStoreOwner(request.resource.data.storeId)) || isAdmin();
+      allow create: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
     }
 
-    // --- المتاجر والإحصائيات ---
-    match /stores/{storeId} {
-      // القراءة للمالك والموظف
-      allow read: if canAccessStore(storeId);
-      
-      // الإنشاء للمالك فقط
-      allow create: if isStoreOwner(storeId);
-      
-      // التعديل للمالك فقط! (حماية لمنع الموظفين من ترقية الباقة أو تغيير اسم المتجر)
-      allow update: if isStoreOwner(storeId); 
-      allow delete: if false;
+   match /stores/{storeId} {
+      allow read: if true;
+      allow create, update: if isStoreOwner(storeId) || isAdmin();
+      allow delete: if isAdmin();
 
-      // الإحصائيات الفرعية
+      // 🌟 التعديل السحري: ضفنا isStoreOwner في الأول عشان يعدي المالك فوراً
       match /stats/summary {
-        allow read: if canAccessStore(storeId) && hasPermission('viewDashboardStats');
-        // السماح بالكتابة فقط إذا كان يمتلك صلاحية إضافة أو تعديل المعاملات
-        allow write: if canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'));
+        allow read: if isStoreOwner(storeId) || (canAccessStore(storeId) && hasPermission('viewDashboardStats')) || isAdmin();
+        allow write: if isStoreOwner(storeId) || (canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
       }
       match /daily_stats/{day} {
-        allow read: if canAccessStore(storeId) && hasPermission('viewDashboardStats');
-        allow write: if canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'));
+        allow read: if isStoreOwner(storeId) || (canAccessStore(storeId) && hasPermission('viewDashboardStats')) || isAdmin();
+        allow write: if isStoreOwner(storeId) || (canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
+      }
+      match /pin_locks/{hashedPin} {
+        allow read, write: if (isAuthenticated() && (isStoreOwner(storeId) || isStoreEmployee(storeId))) || isAdmin();
       }
     }
 
     // ==========================================
-    // 3. العمليات المالية (المنطقة الحمراء)
+    // 4. العمليات المالية 
     // ==========================================
-    // هنا يجب التأكد أن المستند نفسه يحتوي على storeId وأن المستخدم ينتمي لهذا المتجر
     
+    // 🌟 التعديل السحري: ضفنا isStoreOwner في الأول عشان يعدي المالك في المحافظ والمعاملات
     match /wallets/{walletId} {
-      allow get: if canAccessStore(resource.data.storeId);
-      allow list: if isAuthenticated();
-      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createWallet');
-      // نمنع نقل المحفظة من متجر لمتجر آخر أثناء التحديث
-      allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId &&
-                       (hasPermission('editWallet') || hasPermission('addBalance'));
-      // Change: Restrict delete to Owner (Axis 2/Phase 6)
-      allow delete: if isStoreOwner(resource.data.storeId);
+      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
+      allow list: if isAuthenticated() || isAdmin();
+      allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createWallet')) || isAdmin();
+      allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && (hasPermission('editWallet') || hasPermission('addBalance'))) || isAdmin();
+      allow delete: if isStoreOwner(resource.data.storeId) || isAdmin();
     }
 
     match /transactions/{transactionId} {
-      allow get: if canAccessStore(resource.data.storeId);
-      allow list: if isAuthenticated();
-      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createTransaction');
-      allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId &&
-                       hasPermission('createTransaction');
-      // الحذف ممنوع نهائياً لضمان سلامة السجلات المالية
-      allow delete: if false; 
+      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
+      allow list: if isAuthenticated() || isAdmin();
+      allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createTransaction')) || isAdmin();
+      allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && hasPermission('createTransaction')) || isAdmin();
+      allow delete: if isAdmin(); 
     }
 
     match /debts/{debtId} {
-      allow get: if canAccessStore(resource.data.storeId);
-      allow list: if isAuthenticated();
-      allow create: if canAccessStore(request.resource.data.storeId) && hasPermission('createDebt');
-      allow update: if canAccessStore(resource.data.storeId) && 
-                       request.resource.data.storeId == resource.data.storeId &&
-                       (hasPermission('createDebt') || hasPermission('collectDebt'));
-      // Change: Restrict delete to Owner (Axis 2/Phase 6)
-      allow delete: if isStoreOwner(resource.data.storeId);
+      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
+      allow list: if isAuthenticated() || isAdmin();
+      allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createDebt')) || isAdmin();
+      allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && (hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
+      allow delete: if isStoreOwner(resource.data.storeId) || isAdmin();
     }
 
-    // Subscription upgrade requests — authenticated users can create, only owners can read/delete
     match /subscription_requests/{requestId} {
-      allow create: if request.auth != null;
-      allow get, delete: if request.auth != null &&
-                            isStoreOwner(resource.data.storeId);
-      allow list: if isAuthenticated();
-      allow update: if false; // Immutable after creation; processed by backend
+      allow create: if isAuthenticated() || isAdmin();
+      allow get, delete: if (isAuthenticated() && isStoreOwner(resource.data.storeId)) || isAdmin();
+      allow list: if isAuthenticated() || isAdmin();
+      allow update: if isAdmin(); 
+    }
+    
+    // ==========================================
+    // 5. مسارات الإعدادات والإحصائيات الجديدة
+    // ==========================================
+
+    match /settings/{document=**} {
+      // فتحناها للكل عشان التطبيق يفتح بدون مشاكل
+      allow read: if true; 
+      allow write: if request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    match /stats/{document=**} {
+      allow read, write: if request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // PIN uniqueness lock documents — owned per store, written inside transactions
-    match /stores/{storeId}/pin_locks/{hashedPin} {
-      allow read, write: if request.auth != null &&
-                            (isStoreOwner(storeId) || isStoreEmployee(storeId));
+    // السماح للموبايل يزود العداد براحته
+   match /stats/global {
+      allow read: if request.auth != null;
+      
+      // السماح بالإنشاء لأول مرة لو المستند مش موجود
+      allow create: if request.auth != null;
+      
+      // السماح بالتحديث فقط إذا كان التعديل هو زيادة العداد بـ 1
+      allow update: if request.auth != null 
+                    && request.resource.data.totalTransactions == resource.data.totalTransactions + 1;
     }
   }
 }
-
