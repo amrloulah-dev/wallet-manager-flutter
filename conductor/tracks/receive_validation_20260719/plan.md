@@ -2,38 +2,38 @@
 
 ## Phase 1: Domain Layer — WalletModel Getters (FR-4)
 
-- [ ] Task: Write Tests — `isInstaPay` getter
-    - [ ] Create test file `test/data/models/wallet_model_receive_getters_test.dart`
-    - [ ] Test `isInstaPay` returns `true` for `WalletType.instaPay` and `false` for all other `WalletType` values
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — `isInstaPay` getter (2797c4b)
+    - [x] Create test file `test/data/models/wallet_model_receive_getters_test.dart`
+    - [x] Test `isInstaPay` returns `true` for `WalletType.instaPay` and `false` for all other `WalletType` values
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — `isInstaPay` getter
-    - [ ] Add `bool get isInstaPay => walletType == WalletType.instaPay;` to `WalletModel`
-    - [ ] Run tests and confirm they pass (Green)
+- [x] Task: Implement — `isInstaPay` getter (2797c4b)
+    - [x] Add `bool get isInstaPay => walletType == WalletType.instaPay;` to `WalletModel`
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Write Tests — `availableToReceiveDaily` getter
-    - [ ] Test returns `receiveLimits.dailyRemaining` for telecom wallets
-    - [ ] Test returns `receiveLimits.dailyRemaining` for InstaPay wallets
-    - [ ] Test returns `0.0` when daily limit is fully used
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — `availableToReceiveDaily` getter (2797c4b)
+    - [x] Test returns `receiveLimits.dailyRemaining` for telecom wallets
+    - [x] Test returns `receiveLimits.dailyRemaining` for InstaPay wallets
+    - [x] Test returns `0.0` when daily limit is fully used
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — `availableToReceiveDaily` getter
-    - [ ] Add `double get availableToReceiveDaily` to `WalletModel` returning `receiveLimits.dailyRemaining`
-    - [ ] Run tests and confirm they pass (Green)
+- [x] Task: Implement — `availableToReceiveDaily` getter (2797c4b)
+    - [x] Add `double get availableToReceiveDaily` to `WalletModel` returning `receiveLimits.dailyRemaining`
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Write Tests — `availableToReceiveMonthly` getter
-    - [ ] Test for telecom wallets: returns `min(receiveLimits.monthlyRemaining, monthlyLimit - balance)` — the lesser of flow remaining and balance-capacity remaining
-    - [ ] Test for telecom wallets: when balance is high, capacity constrains below flow limit
-    - [ ] Test for telecom wallets: when flow is low, flow constrains below capacity
-    - [ ] Test for InstaPay wallets: returns `receiveLimits.monthlyRemaining` (pure flow, no balance deduction)
-    - [ ] Test returns `0.0` when monthly limit is fully used
-    - [ ] Run tests and confirm they fail (Red)
+- [x] Task: Write Tests — `availableToReceiveMonthly` getter (2797c4b)
+    - [x] Test for telecom wallets: returns `min(receiveLimits.monthlyRemaining, monthlyLimit - balance)` — the lesser of flow remaining and balance-capacity remaining
+    - [x] Test for telecom wallets: when balance is high, capacity constrains below flow limit
+    - [x] Test for telecom wallets: when flow is low, flow constrains below capacity
+    - [x] Test for InstaPay wallets: returns `receiveLimits.monthlyRemaining` (pure flow, no balance deduction)
+    - [x] Test returns `0.0` when monthly limit is fully used
+    - [x] Run tests and confirm they fail (Red)
 
-- [ ] Task: Implement — `availableToReceiveMonthly` getter
-    - [ ] Add `double get availableToReceiveMonthly` to `WalletModel` with dual-constraint logic for telecom and flow-only for InstaPay
-    - [ ] Run tests and confirm they pass (Green)
+- [x] Task: Implement — `availableToReceiveMonthly` getter (2797c4b)
+    - [x] Add `double get availableToReceiveMonthly` to `WalletModel` with dual-constraint logic for telecom and flow-only for InstaPay
+    - [x] Run tests and confirm they pass (Green)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
 
 ## Phase 2: Localization — New ARB Strings (NFR-2)
 
