@@ -1,6 +1,6 @@
 # Implementation Plan: Optimistic Validation for Receive Transactions
 
-## Phase 1: Domain Layer — WalletModel Getters (FR-4)
+## Phase 1: Domain Layer — WalletModel Getters (FR-4) [checkpoint: ed928e4]
 
 - [x] Task: Write Tests — `isInstaPay` getter (2797c4b)
     - [x] Create test file `test/data/models/wallet_model_receive_getters_test.dart`
@@ -33,7 +33,7 @@
     - [x] Add `double get availableToReceiveMonthly` to `WalletModel` with dual-constraint logic for telecom and flow-only for InstaPay
     - [x] Run tests and confirm they pass (Green)
 
-- [~] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md) (ed928e4)
 
 ## Phase 2: Localization — New ARB Strings (NFR-2)
 
