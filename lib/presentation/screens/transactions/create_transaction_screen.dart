@@ -24,6 +24,7 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
+import '../../widgets/wallet/three_zone_progress_bar.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/enums/transaction_enums.dart';
 
@@ -640,100 +641,119 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       builder: (context, wallet, child) {
         if (wallet == null) return const SizedBox.shrink();
 
-        final amount = double.tryParse(_amountController.text) ?? 0.0;
-        final isSend =
-            _transactionType == TransactionType.debit; // ENUM refactor
-        final limits = isSend ? wallet.getLimits() : wallet.getReceiveLimits();
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountController,
+          builder: (context, amountVal, _) {
+            final amount = double.tryParse(amountVal.text) ?? 0.0;
+            final isSend =
+                _transactionType == TransactionType.debit; // ENUM refactor
+            final limits =
+                isSend ? wallet.getLimits() : wallet.getReceiveLimits();
 
-        // Fetch dynamic limits matching the wallet's current type and status
-        final settings = context.read<PlatformSettingsProvider>().settings;
-        final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+            // Fetch dynamic limits matching the wallet's current type and status
+            final settings = context.read<PlatformSettingsProvider>().settings;
+            final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
-        final dailyLimit =
-            isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
-        final monthlyLimit =
-            isSend ? dynamicLimits.monthlySend : dynamicLimits.monthlyReceive;
+            final dailyLimit =
+                isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
+            final monthlyLimit = isSend
+                ? dynamicLimits.monthlySend
+                : dynamicLimits.monthlyReceive;
 
-        final newUsed = limits.dailyUsed + amount;
-        final newMonthlyUsed = limits.monthlyUsed + amount;
+            final newUsed = limits.dailyUsed + amount;
+            final newMonthlyUsed = limits.monthlyUsed + amount;
 
-        // Check individual limits
-        final bool dailyExceeded = newUsed > dailyLimit;
-        final bool monthlyExceeded = newMonthlyUsed > monthlyLimit;
-        final bool willExceed = dailyExceeded || monthlyExceeded;
+            // Check individual limits
+            final bool dailyExceeded = newUsed > dailyLimit;
+            final bool monthlyExceeded = newMonthlyUsed > monthlyLimit;
+            final bool willExceed = dailyExceeded || monthlyExceeded;
 
-        final double dailyPercentage =
-            dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
-        final double monthlyPercentage =
-            monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
+            final double dailyPercentage =
+                dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
+            final double monthlyPercentage =
+                monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
 
-        final dailyWarningLevel = dailyExceeded
-            ? 'red'
-            : (dailyPercentage >= 70 ? 'yellow' : 'green');
-        final monthlyWarningLevel = monthlyExceeded
-            ? 'red'
-            : (monthlyPercentage >= 70 ? 'yellow' : 'green');
+            final dailyWarningLevel = dailyExceeded
+                ? 'red'
+                : (dailyPercentage >= 70 ? 'yellow' : 'green');
+            final monthlyWarningLevel = monthlyExceeded
+                ? 'red'
+                : (monthlyPercentage >= 70 ? 'yellow' : 'green');
 
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: willExceed
-                ? AppColors.error.withAlpha(13)
-                : AppColors.info.withAlpha(13),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: willExceed
-                  ? AppColors.error.withAlpha(51)
-                  : AppColors.info.withAlpha(51),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            final isThreeZone = !isSend && !wallet.isInstaPay;
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: willExceed
+                    ? AppColors.error.withAlpha(13)
+                    : AppColors.info.withAlpha(13),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: willExceed
+                      ? AppColors.error.withAlpha(51)
+                      : AppColors.info.withAlpha(51),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    willExceed
-                        ? Icons.warning_amber_rounded
-                        : Icons.info_outline,
-                    color: willExceed ? AppColors.error : AppColors.info,
+                  Row(
+                    children: [
+                      Icon(
+                        willExceed
+                            ? Icons.warning_amber_rounded
+                            : Icons.info_outline,
+                        color: willExceed ? AppColors.error : AppColors.info,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.reviewWalletLimits,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: willExceed ? AppColors.error : AppColors.info,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.reviewWalletLimits,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: willExceed ? AppColors.error : AppColors.info,
+                  const Divider(height: 20),
+                  WalletLimitBar(
+                    label: l10n.dailyLimitAfterTransaction,
+                    used: newUsed,
+                    limit: dailyLimit,
+                    percentage: dailyPercentage,
+                    warningLevel: dailyWarningLevel,
+                  ),
+                  const SizedBox(height: 16),
+                  if (isThreeZone)
+                    ThreeZoneProgressBar(
+                      label: l10n.monthlyLimitAfterTransaction,
+                      monthlyLimit: monthlyLimit,
+                      monthlyUsed: limits.monthlyUsed,
+                      maxAvailable: _maxAvailable,
+                      enteredAmount: amount,
+                      isThreeZone: true,
+                    )
+                  else
+                    WalletLimitBar(
+                      label: l10n.monthlyLimitAfterTransaction,
+                      used: newMonthlyUsed,
+                      limit: monthlyLimit,
+                      percentage: monthlyPercentage,
+                      warningLevel: monthlyWarningLevel,
                     ),
-                  ),
+                  if (willExceed)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: Text(
+                        l10n.walletLimitWarning,
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: AppColors.error),
+                      ),
+                    ),
                 ],
               ),
-              const Divider(height: 20),
-              WalletLimitBar(
-                label: l10n.dailyLimitAfterTransaction,
-                used: newUsed,
-                limit: dailyLimit,
-                percentage: dailyPercentage,
-                warningLevel: dailyWarningLevel,
-              ),
-              const SizedBox(height: 16),
-              WalletLimitBar(
-                label: l10n.monthlyLimitAfterTransaction,
-                used: newMonthlyUsed,
-                limit: monthlyLimit,
-                percentage: monthlyPercentage,
-                warningLevel: monthlyWarningLevel,
-              ),
-              if (willExceed)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Text(
-                    l10n.walletLimitWarning,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.error),
-                  ),
-                ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
