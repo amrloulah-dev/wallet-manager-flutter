@@ -88,6 +88,45 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     super.dispose();
   }
 
+  WalletModel? get _selectedWallet {
+    if (_selectedWalletId == null) return null;
+    return context.read<WalletProvider>().walletMap[_selectedWalletId!];
+  }
+
+  double get _maxAvailable {
+    final wallet = _selectedWallet;
+    if (wallet == null) return 0.0;
+    if (_transactionType == TransactionType.credit) {
+      return wallet.availableToReceiveDaily < wallet.availableToReceiveMonthly
+          ? wallet.availableToReceiveDaily
+          : wallet.availableToReceiveMonthly;
+    }
+    return double.infinity;
+  }
+
+  Widget? _buildMaxButton(AppLocalizations l10n) {
+    if (_transactionType != TransactionType.credit ||
+        _selectedWalletId == null) {
+      return null;
+    }
+    return TextButton(
+      onPressed: () {
+        final maxVal = _maxAvailable;
+        if (maxVal > 0 && maxVal != double.infinity) {
+          _amountController.text = maxVal.toStringAsFixed(2);
+          _formKey.currentState?.validate();
+        }
+      },
+      child: Text(
+        l10n.maxButtonLabel,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   void _updateTotal() {
     try {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
@@ -404,16 +443,91 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: CustomTextField(
-                controller: _amountController,
-                labelText: l10n.amountLabel,
-                hintText: l10n.amountPlaceholder,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) =>
-                    Validators.validateAmount(val, minAmount: 0),
-                prefixIcon: const Icon(Icons.money),
-                onChanged: (_) => _updateTotal(),
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _amountController,
+                builder: (context, valValue, _) {
+                  final amount = double.tryParse(valValue.text) ?? 0.0;
+                  final wallet = _selectedWallet;
+                  String? errorText;
+                  InputBorder? errorBorder;
+                  InputBorder? focusedErrorBorder;
+                  TextStyle? errorStyle;
+
+                  if (wallet != null &&
+                      _transactionType == TransactionType.credit &&
+                      amount > 0) {
+                    final maxAvailable = _maxAvailable;
+                    if (amount > maxAvailable) {
+                      final exceedsDaily =
+                          amount > wallet.availableToReceiveDaily;
+                      final errorMsg = exceedsDaily
+                          ? l10n.exceedsDailyLimit
+                          : l10n.exceedsMonthlyLimitOrCapacity;
+
+                      if (wallet.isInstaPay) {
+                        errorText = errorMsg;
+                        errorStyle = const TextStyle(color: Colors.orange);
+                        errorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Colors.orange, width: 1.5),
+                        );
+                        focusedErrorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Colors.orange, width: 2.0),
+                        );
+                      } else {
+                        errorText = errorMsg;
+                        errorStyle = const TextStyle(color: AppColors.error);
+                        errorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppColors.error, width: 1.5),
+                        );
+                        focusedErrorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppColors.error, width: 2.0),
+                        );
+                      }
+                    }
+                  }
+
+                  return CustomTextField(
+                    controller: _amountController,
+                    labelText: l10n.amountLabel,
+                    hintText: l10n.amountPlaceholder,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    errorText: errorText,
+                    errorStyle: errorStyle,
+                    errorBorder: errorBorder,
+                    focusedErrorBorder: focusedErrorBorder,
+                    validator: (val) {
+                      final formatError =
+                          Validators.validateAmount(val, minAmount: 0);
+                      if (formatError != null) return formatError;
+
+                      if (wallet != null &&
+                          _transactionType == TransactionType.credit) {
+                        final amt = double.tryParse(val ?? '') ?? 0.0;
+                        final maxAvailable = _maxAvailable;
+                        if (amt > maxAvailable && !wallet.isInstaPay) {
+                          final exceedsDaily =
+                              amt > wallet.availableToReceiveDaily;
+                          return exceedsDaily
+                              ? l10n.exceedsDailyLimit
+                              : l10n.exceedsMonthlyLimitOrCapacity;
+                        }
+                      }
+                      return null;
+                    },
+                    prefixIcon: const Icon(Icons.money),
+                    suffixIcon: _buildMaxButton(l10n),
+                    onChanged: (_) => _updateTotal(),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -648,38 +762,54 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         hasError: provider.hasError
       ),
       builder: (context, data, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (data.hasError && data.errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha(26),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: AppColors.error),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        data.errorMessage!,
-                        style: AppTextStyles.bodyMedium
-                            .copyWith(color: AppColors.error),
-                      ),
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountController,
+          builder: (context, valValue, _) {
+            final wallet = _selectedWallet;
+            final amount = double.tryParse(valValue.text) ?? 0.0;
+            bool isExceeded = false;
+            if (wallet != null &&
+                _transactionType == TransactionType.credit &&
+                !wallet.isInstaPay) {
+              if (amount > _maxAvailable) {
+                isExceeded = true;
+              }
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (data.hasError && data.errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withAlpha(26),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: AppColors.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            data.errorMessage!,
+                            style: AppTextStyles.bodyMedium
+                                .copyWith(color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                CustomButton(
+                  text: l10n.createTransactionButton,
+                  onPressed: isExceeded ? null : _handleCreate,
+                  isLoading: data.isCreating,
+                  icon: const Icon(Icons.add_circle_outline),
                 ),
-              ),
-            CustomButton(
-              text: l10n.createTransactionButton,
-              onPressed: _handleCreate,
-              isLoading: data.isCreating,
-              icon: const Icon(Icons.add_circle_outline),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
