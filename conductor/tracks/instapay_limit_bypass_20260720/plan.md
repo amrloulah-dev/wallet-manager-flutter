@@ -15,7 +15,7 @@
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
 
-## Phase 2: Provider Layer — Limit Interception Logic
+## Phase 2: Provider Layer — Limit Interception Logic [checkpoint: 30da79c]
 
 - [x] 6366fa5 Task: Add `forceInstaPayBypass` parameter and soft-block logic to `createTransaction`
     - [x] Write unit tests covering all 6 limit-check scenarios:
