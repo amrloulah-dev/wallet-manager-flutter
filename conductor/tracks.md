@@ -48,3 +48,8 @@
 - [x] **Track: Optimistic Validation for Receive Transactions**
 *Link: [./tracks/receive_validation_20260719/](./tracks/receive_validation_20260719/)*
 
+---
+
+- [ ] **Track: InstaPay Limit Force-Bypass**
+*Link: [./tracks/instapay_limit_bypass_20260720/](./tracks/instapay_limit_bypass_20260720/)*
+
