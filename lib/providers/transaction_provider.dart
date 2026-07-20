@@ -432,6 +432,7 @@ class TransactionProvider extends BaseProvider {
       // Perform client-side limit check
       final isSend = transactionType == TransactionType.debit;
       final isReceive = transactionType == TransactionType.credit;
+      final isDeposit = transactionType == TransactionType.deposit;
       final isInstaPay = wallet.walletType == WalletType.instaPay;
 
       final settings = _platformSettingsProvider?.settings ??
@@ -572,10 +573,10 @@ class TransactionProvider extends BaseProvider {
       // STRICTLY use the correctly injected instance from ProxyProvider.
       // Never fallback to 'sl' for WalletProvider to avoid DI Ghost Instances.
       if (_walletProvider != null) {
-        _walletProvider!.updateLocalWalletBalance(
-          walletId: newTransaction.walletId,
-          amount: newTransaction.amount,
-          isIncome: transactionType == TransactionType.credit,
+        _walletProvider!.updateLocalBalance(
+          newTransaction.walletId,
+          newTransaction.amount,
+          transactionType,
           serviceFee: serviceFee,
         );
       } else {

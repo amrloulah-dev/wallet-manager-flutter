@@ -202,7 +202,7 @@ class WalletProvider extends BaseProvider {
     final TransactionType t = type is String
         ? TransactionType.fromString(type)
         : (type is TransactionType ? type : TransactionType.credit);
-    final isIncome = t == TransactionType.credit;
+    final isIncome = (t == TransactionType.credit || t == TransactionType.deposit);
     updateLocalWalletBalance(
       walletId: walletId,
       amount: amount,

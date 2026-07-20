@@ -50,6 +50,6 @@
 
 ---
 
-- [ ] **Track: InstaPay Limit Force-Bypass**
+- [~] **Track: InstaPay Limit Force-Bypass**
 *Link: [./tracks/instapay_limit_bypass_20260720/](./tracks/instapay_limit_bypass_20260720/)*
 

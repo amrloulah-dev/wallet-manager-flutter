@@ -51,6 +51,20 @@ class TransactionFeeCalculator {
     // Step 1.2: Ensure commission is non-negative (zero is valid for no-commission txns)
     AmountValidator.ensurePositiveOrZero(commission);
 
+    if (transactionType == TransactionType.deposit) {
+      return TransactionCalculationResult(
+        serviceFee: 0.0,
+        totalAmount: amount + commission, // No service fee for deposits
+        willExceedLimits: false, // Deposits never exceed operational send/receive limits
+        newDailyUsed: 0.0,
+        newMonthlyUsed: 0.0,
+        dailyLimit: 0.0,
+        monthlyLimit: 0.0,
+        dailyExceeded: false,
+        monthlyExceeded: false,
+      );
+    }
+
     double fee = 0.0;
     if (transactionType == TransactionType.debit) {
       final settings = sl<PlatformSettingsProvider>().settings;
