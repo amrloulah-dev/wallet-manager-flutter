@@ -17,22 +17,22 @@
 
 ## Phase 2: Provider Layer — Limit Interception Logic
 
-- [ ] Task: Add `forceInstaPayBypass` parameter and soft-block logic to `createTransaction`
-    - [ ] Write unit tests covering all 6 limit-check scenarios:
+- [x] 6366fa5 Task: Add `forceInstaPayBypass` parameter and soft-block logic to `createTransaction`
+    - [x] Write unit tests covering all 6 limit-check scenarios:
         - (a) Non-InstaPay wallet + Daily/Monthly limit exceeded → `ValidationException` thrown, returns `false`.
         - (b) InstaPay wallet + Daily/Monthly limit exceeded + `forceInstaPayBypass: false` → `InstaPayLimitWarningException` is re-thrown (propagates to caller).
         - (c) InstaPay wallet + Daily/Monthly limit exceeded + `forceInstaPayBypass: true` → limit check skipped, transaction succeeds, `bypassedLimit: true` on the created model.
         - (d) InstaPay wallet + Max Per Transaction exceeded → `ValidationException` thrown (hard block, no bypass allowed).
         - (e) InstaPay wallet + within all limits + `forceInstaPayBypass: false` → normal success, `bypassedLimit: false`.
         - (f) Non-InstaPay wallet + Max Per Transaction exceeded → `ValidationException` (existing behavior unchanged).
-    - [ ] Add `bool forceInstaPayBypass = false` named parameter to `createTransaction`.
-    - [ ] Inject InstaPay-specific conditional logic into the Daily and Monthly limit check blocks:
+    - [x] Add `bool forceInstaPayBypass = false` named parameter to `createTransaction`.
+    - [x] Inject InstaPay-specific conditional logic into the Daily and Monthly limit check blocks:
         - For each Daily/Monthly limit check: if exceeded AND `isInstaPay` AND `!forceInstaPayBypass` → throw `InstaPayLimitWarningException()`.
         - For each Daily/Monthly limit check: if exceeded AND `isInstaPay` AND `forceInstaPayBypass` → skip the throw (proceed).
         - Non-InstaPay limit checks remain unchanged.
-    - [ ] Add a dedicated `on InstaPayLimitWarningException` catch block in the try-catch chain that performs NO rollback (exception fires pre-mutation) and RE-THROWS the exception so it propagates to the UI.
-    - [ ] When `forceInstaPayBypass == true`, pass `bypassedLimit: true` to the `TransactionModel` constructor.
-    - [ ] Run tests and confirm all 6 scenarios pass.
+    - [x] Add a dedicated `on InstaPayLimitWarningException` catch block in the try-catch chain that performs NO rollback (exception fires pre-mutation) and RE-THROWS the exception so it propagates to the UI.
+    - [x] When `forceInstaPayBypass == true`, pass `bypassedLimit: true` to the `TransactionModel` constructor.
+    - [x] Run tests and confirm all 6 scenarios pass.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Provider Layer' (Protocol in workflow.md)
 
