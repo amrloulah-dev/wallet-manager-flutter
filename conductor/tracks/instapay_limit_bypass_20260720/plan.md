@@ -38,16 +38,16 @@
 
 ## Phase 3: UI Layer — Exception Handling & Warning Dialog
 
-- [ ] Task: Add `InstaPayLimitWarningException` catch block and warning dialog to `_handleCreate`
-    - [ ] Write a widget test for `CreateTransactionScreen` that simulates `createTransaction` throwing `InstaPayLimitWarningException` and verifies the warning dialog appears with the correct Arabic title/message and two buttons.
-    - [ ] In `_handleCreate()`, add `on InstaPayLimitWarningException catch (e)` block BEFORE the existing generic `catch (e, stack)`.
-    - [ ] Inside the catch block, show `AwesomeDialog` with:
+- [x] c653845 Task: Add `InstaPayLimitWarningException` catch block and warning dialog to `_handleCreate`
+    - [x] Write a widget test for `CreateTransactionScreen` that simulates `createTransaction` throwing `InstaPayLimitWarningException` and verifies the warning dialog appears with the correct Arabic title/message and two buttons.
+    - [x] In `_handleCreate()`, add `on InstaPayLimitWarningException catch (e)` block BEFORE the existing generic `catch (e, stack)`.
+    - [x] Inside the catch block, show `AwesomeDialog` with:
         - `dialogType: DialogType.warning`
         - `title: 'تنبيه تجاوز الحدود'`
         - `desc: 'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها'`
         - `btnCancelText: 'إلغاء'` → dismiss dialog
         - `btnOkText: 'تسجيل العملية'` → re-invoke `createTransaction` with `forceInstaPayBypass: true`
-    - [ ] Ensure loading state is properly managed: reset on dialog dismiss, re-engaged on confirm-retry.
-    - [ ] Run tests and confirm they pass.
+    - [x] Ensure loading state is properly managed: reset on dialog dismiss, re-engaged on confirm-retry.
+    - [x] Run tests and confirm they pass.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: UI Layer' (Protocol in workflow.md)
