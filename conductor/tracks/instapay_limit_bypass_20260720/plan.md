@@ -2,10 +2,10 @@
 
 ## Phase 1: Domain Layer — Custom Exception & Model Extension
 
-- [ ] Task: Create `InstaPayLimitWarningException` in app_exceptions.dart
-    - [ ] Write a unit test that asserts `InstaPayLimitWarningException` extends `AppException`, has default message `instapay_limit_warning`, and can be caught distinctly from `ValidationException`.
-    - [ ] Implement `InstaPayLimitWarningException` class extending `AppException` with default message `instapay_limit_warning`.
-    - [ ] Run tests and confirm they pass.
+- [x] c0603c0 Task: Create `InstaPayLimitWarningException` in app_exceptions.dart
+    - [x] Write a unit test that asserts `InstaPayLimitWarningException` extends `AppException`, has default message `instapay_limit_warning`, and can be caught distinctly from `ValidationException`.
+    - [x] Implement `InstaPayLimitWarningException` class extending `AppException` with default message `instapay_limit_warning`.
+    - [x] Run tests and confirm they pass.
 
 - [ ] Task: Add `bypassedLimit` field to `TransactionModel`
     - [ ] Write unit tests for `TransactionModel` verifying: (a) constructor defaults `bypassedLimit` to `false`, (b) `fromMap` parses `bypassedLimit` from Firestore data (true/false/absent), (c) `toFirestore()` includes `bypassedLimit` in output, (d) `copyWith` correctly copies/overrides `bypassedLimit`, (e) `==` and `hashCode` incorporate `bypassedLimit`.
