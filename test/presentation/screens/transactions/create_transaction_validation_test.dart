@@ -16,6 +16,8 @@ import 'package:walletmanager/data/models/platform_settings_model.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:walletmanager/core/errors/app_exceptions.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
 
 class MockWalletProvider extends Mock implements WalletProvider {}
 
@@ -36,9 +38,12 @@ void main() {
       sl.registerLazySingleton<TransactionFeeCalculator>(
           () => TransactionFeeCalculator());
     }
+    registerFallbackValue(TransactionType.debit);
+    registerFallbackValue(PaymentStatus.paid);
   });
 
   setUp(() {
+    CreateTransactionScreen.showRiveInDialog = false;
     mockWalletProvider = MockWalletProvider();
     mockTransactionProvider = MockTransactionProvider();
     mockPlatformSettingsProvider = MockPlatformSettingsProvider();
@@ -276,5 +281,104 @@ void main() {
 
     // Error text should not be shown because 10000 is exactly equal to maxAvailable
     expect(find.text('يتجاوز الحد اليومي'), findsNothing);
+  });
+
+  testWidgets('InstaPay warning warning dialog shows on InstaPayLimitWarningException',
+      (tester) async {
+    // Stub the first invocation to throw warning exception, second to return true
+    int callCount = 0;
+    when(() => mockTransactionProvider.createTransaction(
+          walletId: any(named: 'walletId'),
+          transactionType: any(named: 'transactionType'),
+          amount: any(named: 'amount'),
+          commission: any(named: 'commission'),
+          serviceFee: any(named: 'serviceFee'),
+          paymentStatus: any(named: 'paymentStatus'),
+          customerPhone: any(named: 'customerPhone'),
+          customerName: any(named: 'customerName'),
+          notes: any(named: 'notes'),
+          forceInstaPayBypass: any(named: 'forceInstaPayBypass'),
+        )).thenAnswer((invocation) async {
+      callCount++;
+      final isBypass = invocation.namedArguments[#forceInstaPayBypass] as bool? ?? false;
+      if (!isBypass) {
+        throw InstaPayLimitWarningException();
+      }
+      return true;
+    });
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pumpAndSettle();
+
+    // Select the InstaPay wallet
+    final dropdownFinder = find.byType(CustomDropdown<WalletModel>);
+    await tester.tap(dropdownFinder);
+    await tester.pumpAndSettle();
+    final optionFinder = find.textContaining('إنستاباي').last;
+    await tester.tap(optionFinder);
+    await tester.pumpAndSettle();
+
+    // Select debit transaction type (Send)
+    final sendButtonFinder = find.text('إرسال');
+    await tester.tap(sendButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Enter amount
+    final amountFieldFinder = find.widgetWithText(CustomTextField, 'المبلغ');
+    await tester.enterText(
+        find.descendant(
+            of: amountFieldFinder, matching: find.byType(TextField)),
+        '500');
+    await tester.pumpAndSettle();
+
+    // Enter phone number
+    final phoneFieldFinder = find.widgetWithText(CustomTextField, 'رقم الهاتف');
+    await tester.enterText(
+        find.descendant(
+            of: phoneFieldFinder, matching: find.byType(TextField)),
+        '01012345678');
+    await tester.pumpAndSettle();
+
+    // Submit transaction
+    final submitButtonFinder =
+        find.widgetWithText(CustomButton, 'إنشاء المعاملة');
+    await tester.ensureVisible(submitButtonFinder);
+    await tester.tap(submitButtonFinder);
+    await tester.pump(); // Start animation
+    await tester.pumpAndSettle();
+
+    // Dialog should be visible
+    expect(find.text('تنبيه تجاوز الحدود'), findsOneWidget);
+    expect(
+        find.text(
+            'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها'),
+        findsOneWidget);
+
+    // Tap Cancel
+    final cancelBtnFinder = find.text('إلغاء');
+    expect(cancelBtnFinder, findsOneWidget);
+    await tester.tap(cancelBtnFinder);
+    await tester.pumpAndSettle();
+
+    // Dialog should be gone
+    expect(find.text('تنبيه تجاوز الحدود'), findsNothing);
+    expect(callCount, equals(1)); // Only called once (the one that threw)
+
+    // Tap submit again to trigger dialog
+    await tester.ensureVisible(submitButtonFinder);
+    await tester.tap(submitButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Dialog is visible again
+    expect(find.text('تنبيه تجاوز الحدود'), findsOneWidget);
+
+    // Tap Ok (Confirm)
+    final okBtnFinder = find.text('تسجيل العملية');
+    expect(okBtnFinder, findsOneWidget);
+    await tester.tap(okBtnFinder);
+    await tester.pumpAndSettle();
+
+    // Re-verify callCount
+    expect(callCount, equals(3));
   });
 }

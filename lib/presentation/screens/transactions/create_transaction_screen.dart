@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,8 @@ import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/enums/transaction_enums.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
+  static bool showRiveInDialog = true;
+
   const CreateTransactionScreen({super.key});
 
   @override
@@ -176,7 +179,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     }
   }
 
-  Future<void> _handleCreate() async {
+  Future<void> _handleCreate({bool forceInstaPayBypass = false}) async {
     setState(() {
       _isTypeValidated = _transactionType != null;
     });
@@ -200,6 +203,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         serviceFee: _serviceFee,
         paymentStatus: _paymentStatus,
         notes: _notesController.text,
+        forceInstaPayBypass: forceInstaPayBypass,
       );
 
       if (mounted && success) {
@@ -212,6 +216,22 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 context, transactionProvider.errorMessage!)
             : AppLocalizations.of(context)!.transactionCreateFailed;
         _showErrorDialog(error);
+      }
+    } on InstaPayLimitWarningException {
+      if (mounted) {
+        AwesomeDialog(
+          context: context,
+          dialogType: CreateTransactionScreen.showRiveInDialog
+              ? DialogType.warning
+              : DialogType.noHeader,
+          animType: AnimType.bottomSlide,
+          title: 'تنبيه تجاوز الحدود',
+          desc: 'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها',
+          btnCancelText: 'إلغاء',
+          btnOkText: 'تسجيل العملية',
+          btnCancelOnPress: () {},
+          btnOkOnPress: () => _handleCreate(forceInstaPayBypass: true),
+        ).show();
       }
     } catch (e, stack) {
       AppErrorHandler.handle(
