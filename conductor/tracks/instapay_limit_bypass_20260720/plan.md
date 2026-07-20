@@ -1,6 +1,6 @@
 # Implementation Plan: InstaPay Limit Force-Bypass
 
-## Phase 1: Domain Layer — Custom Exception & Model Extension
+## Phase 1: Domain Layer — Custom Exception & Model Extension [checkpoint: 373a13a]
 
 - [x] c0603c0 Task: Create `InstaPayLimitWarningException` in app_exceptions.dart
     - [x] Write a unit test that asserts `InstaPayLimitWarningException` extends `AppException`, has default message `instapay_limit_warning`, and can be caught distinctly from `ValidationException`.
