@@ -7,11 +7,11 @@
     - [x] Implement `InstaPayLimitWarningException` class extending `AppException` with default message `instapay_limit_warning`.
     - [x] Run tests and confirm they pass.
 
-- [ ] Task: Add `bypassedLimit` field to `TransactionModel`
-    - [ ] Write unit tests for `TransactionModel` verifying: (a) constructor defaults `bypassedLimit` to `false`, (b) `fromMap` parses `bypassedLimit` from Firestore data (true/false/absent), (c) `toFirestore()` includes `bypassedLimit` in output, (d) `copyWith` correctly copies/overrides `bypassedLimit`, (e) `==` and `hashCode` incorporate `bypassedLimit`.
-    - [ ] Add `final bool bypassedLimit` field to `TransactionModel` class with default `false`.
-    - [ ] Update `fromMap`, `toFirestore`, `copyWith`, `==`, and `hashCode` to include `bypassedLimit`.
-    - [ ] Run tests and confirm they pass.
+- [x] 5fb427a Task: Add `bypassedLimit` field to `TransactionModel`
+    - [x] Write unit tests for `TransactionModel` verifying: (a) constructor defaults `bypassedLimit` to `false`, (b) `fromMap` parses `bypassedLimit` from Firestore data (true/false/absent), (c) `toFirestore()` includes `bypassedLimit` in output, (d) `copyWith` correctly copies/overrides `bypassedLimit`, (e) `==` and `hashCode` incorporate `bypassedLimit`.
+    - [x] Add `final bool bypassedLimit` field to `TransactionModel` class with default `false`.
+    - [x] Update `fromMap`, `toFirestore`, `copyWith`, `==`, and `hashCode` to include `bypassedLimit`.
+    - [x] Run tests and confirm they pass.
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Layer' (Protocol in workflow.md)
 
