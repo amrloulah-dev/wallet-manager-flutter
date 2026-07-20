@@ -402,6 +402,7 @@ class TransactionProvider extends BaseProvider {
     String? customerPhone,
     String? customerName,
     String? notes,
+    bool forceInstaPayBypass = false,
   }) async {
     List<TransactionModel>? oldTransactions;
     Map<String, TransactionModel>? oldTransactionMap;
@@ -455,20 +456,44 @@ class TransactionProvider extends BaseProvider {
         }
 
         if (wallet.sendLimits.dailyUsed + amount > dynamicLimits.dailySend) {
-          throw ValidationException('wallet_error_daily_send_limit');
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_daily_send_limit');
+          }
         }
         if (wallet.sendLimits.monthlyUsed + amount >
             dynamicLimits.monthlySend) {
-          throw ValidationException('wallet_error_monthly_send_limit');
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_monthly_send_limit');
+          }
         }
       } else if (isReceive) {
         if (wallet.receiveLimits.dailyUsed + amount >
             dynamicLimits.dailyReceive) {
-          throw ValidationException('wallet_error_daily_receive_limit');
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_daily_receive_limit');
+          }
         }
         if (wallet.receiveLimits.monthlyUsed + amount >
             dynamicLimits.monthlyReceive) {
-          throw ValidationException('wallet_error_monthly_receive_limit');
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_monthly_receive_limit');
+          }
         }
       }
 
@@ -536,6 +561,7 @@ class TransactionProvider extends BaseProvider {
         createdById: user.userId,
         createdByName: createdByName,
         creatorRole: creatorRole,
+        bypassedLimit: forceInstaPayBypass,
       );
 
       // Optimistic mutation: insert locally first
@@ -580,6 +606,10 @@ class TransactionProvider extends BaseProvider {
       _updateStatus(TransactionProviderStatus.loaded);
       _walletProvider?.clearPendingWallet(walletId);
       return true;
+    } on InstaPayLimitWarningException {
+      // Re-throw directly so the UI catch block can handle it.
+      // Limit warnings are pre-mutation validation, so no rollback needed.
+      rethrow;
     } on DomainException catch (e, stack) {
       _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary,
           statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
