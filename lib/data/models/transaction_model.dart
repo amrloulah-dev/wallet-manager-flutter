@@ -29,6 +29,7 @@ class TransactionModel {
   final bool isDeleted;
   final DateTime? deletedAt;
   final String? deletedBy;
+  final bool bypassedLimit;
 
   bool get isIncome => transactionType == TransactionType.credit;
 
@@ -56,6 +57,7 @@ class TransactionModel {
     this.isDeleted = false,
     this.deletedAt,
     this.deletedBy,
+    this.bypassedLimit = false,
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
@@ -107,6 +109,7 @@ class TransactionModel {
       isDeleted: data['isDeleted'] as bool? ?? false,
       deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
       deletedBy: data['deletedBy'] as String?,
+      bypassedLimit: data['bypassedLimit'] as bool? ?? false,
     );
   }
 
@@ -135,6 +138,7 @@ class TransactionModel {
       'isDeleted': isDeleted,
       'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
       'deletedBy': deletedBy,
+      'bypassedLimit': bypassedLimit,
     };
   }
 
@@ -162,6 +166,7 @@ class TransactionModel {
     bool? isDeleted,
     DateTime? deletedAt,
     String? deletedBy,
+    bool? bypassedLimit,
   }) {
     return TransactionModel(
       transactionId: transactionId ?? this.transactionId,
@@ -187,6 +192,7 @@ class TransactionModel {
       isDeleted: isDeleted ?? this.isDeleted,
       deletedAt: deletedAt ?? this.deletedAt,
       deletedBy: deletedBy ?? this.deletedBy,
+      bypassedLimit: bypassedLimit ?? this.bypassedLimit,
     );
   }
 
@@ -219,7 +225,8 @@ class TransactionModel {
         other.serviceFee == serviceFee &&
         other.paymentStatus == paymentStatus &&
         other.debtId == debtId &&
-        other.isDeleted == isDeleted;
+        other.isDeleted == isDeleted &&
+        other.bypassedLimit == bypassedLimit;
   }
 
   @override
@@ -233,5 +240,6 @@ class TransactionModel {
       serviceFee.hashCode ^
       paymentStatus.hashCode ^
       debtId.hashCode ^
-      isDeleted.hashCode;
+      isDeleted.hashCode ^
+      bypassedLimit.hashCode;
 }
