@@ -251,6 +251,14 @@ class UserRepository {
           .doc(userId)
           .update({FirebaseConstants.lastLogin: FieldValue.serverTimestamp()});
     } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        // Graceful degradation: Employee cannot update their own document.
+        AppErrorHandler.logSilentError(
+            'updateLastLogin permission denied for $userId',
+            'UserRepository.updateLastLogin',
+            stackTrace: stack);
+        return;
+      }
       AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
       throw ServerException('user_error_fetch_failed', code: e.code);
     } catch (e, stack) {

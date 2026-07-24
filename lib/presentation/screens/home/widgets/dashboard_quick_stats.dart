@@ -23,7 +23,9 @@ class DashboardQuickStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final transferCount = context.select<TransactionProvider, int>(
       (p) => p.todayTransactions
-          .where((t) => t.transactionType == TransactionType.debit)
+          .where((t) =>
+              t.transactionType == TransactionType.debit ||
+              t.transactionType == TransactionType.credit)
           .length,
     );
 

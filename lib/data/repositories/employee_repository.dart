@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../../core/constants/firebase_constants.dart';
@@ -29,6 +30,8 @@ class EmployeeRepository {
     int limit = 20,
   }) async {
     try {
+      debugPrint(
+          '🔍 [EmployeeRepository.getEmployeesByStoreId] Querying storeId: "$storeId", searchQuery: "$searchQuery", activeOnly: $activeOnly');
       Query query = _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
@@ -46,10 +49,24 @@ class EmployeeRepository {
                 isLessThanOrEqualTo: '$searchQuery\uf8ff');
       }
 
-      final snapshot =
-          await query.orderBy(FirebaseConstants.fullName).limit(limit).get();
-      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      final snapshot = await query.limit(limit).get();
+      debugPrint(
+          '🔍 [EmployeeRepository.getEmployeesByStoreId] Query completed. Docs count: ${snapshot.docs.length}');
+      final employees =
+          snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      employees.sort(
+          (a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+      return employees;
+    } on FirebaseException catch (e, stack) {
+      debugPrint(
+          '💥 [EmployeeRepository.getEmployeesByStoreId] FirebaseException: code="${e.code}", message="${e.message}"');
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'EmployeeRepository.getEmployeesByStoreId');
+      rethrow;
     } catch (e, stack) {
+      debugPrint(
+          '💥 [EmployeeRepository.getEmployeesByStoreId] Unexpected error: $e');
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'EmployeeRepository.getEmployeesByStoreId');

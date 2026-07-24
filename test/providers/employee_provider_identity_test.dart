@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
@@ -268,6 +269,22 @@ void main() {
       // Verify that e3 is rolled back and is NOT frozen after failure
       await Future.delayed(Duration.zero);
       expect(employeeProvider.isEmployeeFrozen(e3), isFalse);
+    });
+
+    test('_fetchEmployees unlocks loading status and sets error on permission-denied', () async {
+      when(() => mockRepository.getEmployeesByStoreId(
+              storeId: 'store-denied',
+              searchQuery: any(named: 'searchQuery'),
+              activeOnly: any(named: 'activeOnly')))
+          .thenThrow(FirebaseException(plugin: 'firestore', code: 'permission-denied'));
+
+      employeeProvider.setStoreId('store-denied');
+      await Future.delayed(Duration.zero);
+
+      expect(employeeProvider.isLoading, isFalse);
+      expect(employeeProvider.hasError, isTrue);
+      expect(employeeProvider.errorMessage, 'employee_error_permission_denied');
+      expect(employeeProvider.employees, isEmpty);
     });
   });
 }

@@ -442,7 +442,7 @@ class TransactionProvider extends BaseProvider {
       debugPrint(
           '🔥 CURRENT TX LIMIT: ${dynamicLimits.maxPerTransaction} | LOADED FROM SETTINGS: ${settings.toJson()}');
 
-      if (amount > dynamicLimits.maxPerTransaction) {
+      if (!isDeposit && amount > dynamicLimits.maxPerTransaction) {
         if (isInstaPay) {
           throw ValidationException('wallet_error_instapay_limit');
         } else {

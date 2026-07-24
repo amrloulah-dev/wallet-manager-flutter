@@ -51,6 +51,16 @@ class AuthProvider extends BaseProvider {
   AuthStatus _status = AuthStatus.idle;
   String? _errorMessage;
 
+  // Auth Shield: prevents authStateChanges listener from triggering
+  // logout() during active authentication flows (e.g. signInAnonymously,
+  // loginAsEmployee). Set true before auth operations, false in finally.
+  bool _isAuthenticating = false;
+
+  // Action Loading: drives button spinners for user-triggered operations
+  // (findStoreByEmail, loginAsEmployee) WITHOUT changing global _status,
+  // which would cause AuthCheckWrapper to rebuild and destroy the UI tree.
+  bool _isActionLoading = false;
+
   // Constructor
   AuthProvider({
     AuthRepository? authRepository,
@@ -67,6 +77,7 @@ class AuthProvider extends BaseProvider {
             licenseKeyRepository ?? sl<LicenseKeyRepository>(),
         _localStorage = localStorage ?? sl<LocalStorageService>() {
     _authRepository.authStateChanges().listen((user) {
+      if (_isAuthenticating) return; // AUTH SHIELD: skip during active auth
       if (user == null && _currentUser != null) {
         if (kDebugMode) {
           debugPrint(
@@ -114,7 +125,7 @@ class AuthProvider extends BaseProvider {
   bool get isSubscriptionExpired =>
       _status == AuthStatus.expired ||
       (_currentStore != null && _isSubExpired(_currentStore!.subscription));
-  bool get isLoading => _status == AuthStatus.loading;
+  bool get isLoading => _status == AuthStatus.loading || _isActionLoading;
   bool get isOwner => _currentUser?.isOwner ?? false;
   bool get isEmployee => _currentUser?.isEmployee ?? false;
 
@@ -255,7 +266,9 @@ class AuthProvider extends BaseProvider {
   }
 
   Future<bool> loginAsEmployee(UserModel employee, StoreModel store) async {
-    _setStatus(AuthStatus.loading);
+    _isAuthenticating = true;
+    _isActionLoading = true;
+    safeNotify();
     try {
       final result =
           await _databaseSyncService.loginAsEmployee(employee, store);
@@ -266,19 +279,36 @@ class AuthProvider extends BaseProvider {
           e is AppException ? e.message : 'auth_error_employee_login_failed',
           e,
           stack);
-      await logout();
+      _clearState(); // Localized cleanup — no full logout to avoid UI loop
       return false;
     } finally {
-      if (_status == AuthStatus.loading) {
-        _setStatus(AuthStatus.idle);
-      }
+      _isAuthenticating = false;
+      _isActionLoading = false;
       safeNotify();
     }
   }
 
-  Future<StoreModel?> findStoreByEmail(String email) async {
-    _setStatus(AuthStatus.loading);
+  Future<bool> ensureAnonymousAuth() async {
+    if (_authRepository.getCurrentUser() != null) {
+      return true;
+    }
     try {
+      await _authRepository.signInAnonymously();
+      return true;
+    } catch (e, stack) {
+      setError('auth_error_anonymous_failed', e, stack);
+      return false;
+    }
+  }
+
+  Future<StoreModel?> findStoreByEmail(String email) async {
+    _isAuthenticating = true;
+    _isActionLoading = true;
+    safeNotify();
+    try {
+      if (_authRepository.getCurrentUser() == null) {
+        await _authRepository.signInAnonymously();
+      }
       final store = await _storeRepository.getStoreByEmail(email);
       if (store == null) throw AuthException('auth_error_store_not_found');
       return store;
@@ -287,9 +317,9 @@ class AuthProvider extends BaseProvider {
           e, stack);
       return null;
     } finally {
-      if (_status == AuthStatus.loading) {
-        _setStatus(AuthStatus.idle);
-      }
+      _isAuthenticating = false;
+      _isActionLoading = false;
+      safeNotify();
     }
   }
 

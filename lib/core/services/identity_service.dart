@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import '../errors/app_error_handler.dart';
+import '../errors/app_exceptions.dart';
 import '../errors/error_severity.dart';
 
 import 'package:flutter/foundation.dart';
@@ -178,7 +179,9 @@ class IdentityService {
   }) async {
     try {
       await _ensureInitialized();
-      if (_secondaryApp == null && authOverride == null) return null;
+      if (_secondaryApp == null && authOverride == null) {
+        throw AuthException('auth_error_internal');
+      }
 
       final email = _generateEmail(phone, storeId);
       final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
@@ -197,7 +200,17 @@ class IdentityService {
           return user.uid;
         }
       }
-      return null;
+      throw AuthException('auth_error_invalid_credentials');
+    } on AuthException {
+      rethrow;
+    } on FirebaseAuthException catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'IdentityService.authenticateEmployee',
+      );
+      throw AuthException('auth_error_invalid_credentials');
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,
@@ -205,7 +218,7 @@ class IdentityService {
         severity: ErrorSeverity.low,
         operation: 'IdentityService.authenticateEmployee',
       );
-      return null;
+      throw AuthException('auth_error_internal');
     }
   }
 }

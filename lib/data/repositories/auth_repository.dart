@@ -172,6 +172,22 @@ class AuthRepository {
     }
   }
 
+  /// Signs in anonymously to establish a temporary auth session.
+  Future<UserCredential> signInAnonymously() async {
+    try {
+      final userCredential = await _auth.signInAnonymously();
+      return userCredential;
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInAnonymously');
+      throw AuthException('auth_error_anonymous_failed');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInAnonymously');
+      throw AuthException('auth_error_unexpected');
+    }
+  }
+
   // ===========================
   // User State Methods
   // ===========================

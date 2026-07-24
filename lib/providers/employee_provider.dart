@@ -87,6 +87,8 @@ class EmployeeProvider extends BaseProvider {
   }
 
   Future<void> _fetchEmployees(String storeId) async {
+    debugPrint(
+        '🔍 [EmployeeProvider._fetchEmployees] Starting fetch for storeId: "$storeId"');
     _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
 
@@ -99,13 +101,37 @@ class EmployeeProvider extends BaseProvider {
       _employees = employees;
       _recalculateSuspendedEmployees();
       _updateStatus(EmployeeProviderStatus.loaded);
-      safeNotify();
+      debugPrint(
+          '🔍 [EmployeeProvider._fetchEmployees] Successfully loaded ${employees.length} employees for storeId: "$storeId"');
     } catch (error, stack) {
-      if (error is FirebaseException && error.code == 'permission-denied') {
-        // Silently ignore: this happens naturally during the logout flow
-        return;
+      _employees = [];
+      AppErrorHandler.handle(
+        error,
+        stackTrace: stack,
+        operation: 'EmployeeProvider._fetchEmployees',
+      );
+      if (error is FirebaseException) {
+        debugPrint(
+            '💥 [EmployeeProvider._fetchEmployees] FirebaseException: code="${error.code}", message="${error.message}"');
+        if (error.message != null &&
+            error.message!.contains('https://console.firebase.google.com')) {
+          debugPrint(
+              '🔗 [FIRESTORE INDEX REQUIRED] Create index here:\n${error.message}');
+        }
+        if (error.code == 'permission-denied') {
+          setError('employee_error_permission_denied', error, stack);
+        } else {
+          setError('employee_error_fetch_failed', error, stack);
+        }
+      } else {
+        debugPrint(
+            '💥 [EmployeeProvider._fetchEmployees] Caught fetch error for storeId: "$storeId": $error');
+        setError('employee_error_fetch_failed', error, stack);
       }
-      setError('employee_error_fetch_failed', error, stack);
+    } finally {
+      if (_status == EmployeeProviderStatus.loading) {
+        _updateStatus(EmployeeProviderStatus.loaded);
+      }
       safeNotify();
     }
   }
@@ -418,6 +444,11 @@ class EmployeeProvider extends BaseProvider {
   }
 
   Future<void> _enforceEmployeeLimits() async {
+    // RBAC GUARD: Only owners can enforce limits and suspend employees.
+    if (_authProvider == null || !_authProvider!.isOwner) {
+      return;
+    }
+
     final GetIt sl = GetIt.instance;
     if (sl.isRegistered<PlatformSettingsProvider>()) {
       final settingsProvider = sl<PlatformSettingsProvider>();

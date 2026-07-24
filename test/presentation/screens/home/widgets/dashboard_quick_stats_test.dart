@@ -34,9 +34,9 @@ class MockStatisticsProvider extends ChangeNotifier
   bool get isLoading => false;
   @override
   StatsSummaryModel? get dashboardSummary => StatsSummaryModel(
-        totalWallets: 3,
+        totalWallets: 4,
         totalBalance: 1500.0,
-        openDebtsCount: 2,
+        openDebtsCount: 7,
         totalTransactions: 10,
         totalCommission: 50.0,
         receiveCount: 3,
@@ -76,7 +76,7 @@ class MockTransactionProvider extends ChangeNotifier
 
 void main() {
   testWidgets(
-      'DashboardQuickStats Total Transactions card shows only transfer (debit) transactions count',
+      'DashboardQuickStats Total Transactions card shows operational transactions (debit + credit) count, excluding deposit top-ups',
       (WidgetTester tester) async {
     // 1 debit (transfer), 1 credit (receive), 1 deposit (top-up)
     final mockTxns = [
@@ -104,7 +104,7 @@ void main() {
         transactionId: 't3',
         storeId: 'store_123',
         walletId: 'w1',
-        transactionType: TransactionType.deposit, // Top-up
+        transactionType: TransactionType.deposit, // Top-up (should be excluded)
         amount: 300.0,
         createdBy: 'user1',
         transactionDate: DateTime.now(),
@@ -145,9 +145,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // The 'Total Transactions' card value should show 1 (only the debit/transfer transaction)
-    // and not the generic provider.todayStats?.totalTransactions which is 5.
-    expect(find.text('1'), findsOneWidget);
-    expect(find.text('5'), findsNothing);
+    // The 'Total Transactions' card value should show 2 (debit + credit only, excluding deposit)
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('3'), findsNothing);
   });
 }
