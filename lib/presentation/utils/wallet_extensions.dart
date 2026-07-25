@@ -43,11 +43,11 @@ extension WalletUIExtensions on WalletModel {
       case WalletType.orangeCash:
       case WalletType.etisalatCash:
       case WalletType.wePay:
-        return FontAwesomeIcons.mobileScreenButton;
+        return FontAwesomeIcons.mobileScreenButton.data;
       case WalletType.instaPay:
-        return FontAwesomeIcons.buildingColumns;
+        return FontAwesomeIcons.buildingColumns.data;
       case WalletType.other:
-        return FontAwesomeIcons.wallet;
+        return FontAwesomeIcons.wallet.data;
     }
   }
 }

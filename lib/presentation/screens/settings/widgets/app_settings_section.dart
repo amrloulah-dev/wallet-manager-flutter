@@ -41,11 +41,7 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
                 subtitle: Text(
                     _getThemeModeName(context, themeProvider.themeMode),
                     style: AppTextStyles.bodyMedium),
-                trailing: Icon(
-                    IconData(Icons.arrow_forward_ios.codePoint,
-                        fontFamily: Icons.arrow_forward_ios.fontFamily,
-                        matchTextDirection: true),
-                    size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => _showThemeDialog(context),
               ),
             );
@@ -68,11 +64,7 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
                         ? localizations.arabic
                         : localizations.english,
                     style: AppTextStyles.bodyMedium),
-                trailing: Icon(
-                    IconData(Icons.arrow_forward_ios.codePoint,
-                        fontFamily: Icons.arrow_forward_ios.fontFamily,
-                        matchTextDirection: true),
-                    size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () => _showLanguageDialog(context),
               ),
             );
@@ -94,11 +86,7 @@ class _AppSettingsSectionState extends State<AppSettingsSection> {
                 : const Icon(Icons.sync, color: AppColors.primary),
             title: Text(localizations.refreshPlatformSettings,
                 style: AppTextStyles.bodyLarge),
-            trailing: Icon(
-                IconData(Icons.arrow_forward_ios.codePoint,
-                    fontFamily: Icons.arrow_forward_ios.fontFamily,
-                    matchTextDirection: true),
-                size: 16),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _isRefreshing
                 ? null
                 : () async {

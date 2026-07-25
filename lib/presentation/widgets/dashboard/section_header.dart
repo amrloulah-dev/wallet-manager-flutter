@@ -60,9 +60,7 @@ class SectionHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Icon(
-                        IconData(Icons.arrow_forward_ios.codePoint,
-                            fontFamily: Icons.arrow_forward_ios.fontFamily,
-                            matchTextDirection: true),
+                        Icons.arrow_forward_ios,
                         size: 14,
                         color: AppColors.primary,
                       ),

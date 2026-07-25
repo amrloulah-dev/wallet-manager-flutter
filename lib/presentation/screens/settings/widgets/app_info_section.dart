@@ -26,11 +26,7 @@ class AppInfoSection extends StatelessWidget {
                     color: AppColors.primary),
                 title: Text(AppLocalizations.of(context)!.mySubscription,
                     style: AppTextStyles.bodyLarge),
-                trailing: Icon(
-                    IconData(Icons.arrow_forward_ios.codePoint,
-                        fontFamily: Icons.arrow_forward_ios.fontFamily,
-                        matchTextDirection: true),
-                    size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   Navigator.pushNamed(
                     context,
@@ -44,11 +40,7 @@ class AppInfoSection extends StatelessWidget {
                     const Icon(Icons.star_outline, color: AppColors.primary),
                 title: Text(AppLocalizations.of(context)!.subscriptionPlans,
                     style: AppTextStyles.bodyLarge),
-                trailing: Icon(
-                    IconData(Icons.arrow_forward_ios.codePoint,
-                        fontFamily: Icons.arrow_forward_ios.fontFamily,
-                        matchTextDirection: true),
-                    size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   Navigator.pushNamed(
                     context,

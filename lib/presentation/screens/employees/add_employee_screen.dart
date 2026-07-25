@@ -7,7 +7,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/constants/route_constants.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/employee_provider.dart';
 import '../../../providers/subscription_provider.dart';
 import '../../widgets/common/custom_text_field.dart';

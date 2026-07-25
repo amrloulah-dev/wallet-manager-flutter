@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../../core/utils/number_parser.dart';
 import '../../core/enums/subscription_enums.dart';
 import '../../core/errors/app_error_handler.dart';
 

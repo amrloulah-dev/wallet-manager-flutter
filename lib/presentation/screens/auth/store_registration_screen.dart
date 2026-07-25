@@ -263,7 +263,7 @@ class _StoreRegistrationScreenState extends State<StoreRegistrationScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(FontAwesomeIcons.google, size: 16),
+                            const FaIcon(FontAwesomeIcons.google, size: 16),
                             const SizedBox(width: 8),
                             Text(
                               'Google',
