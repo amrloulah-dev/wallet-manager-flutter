@@ -78,7 +78,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 3 — Data Resilience & Legacy Data Support' (Protocol in workflow.md) [7c22366]
 
-## Phase 4 — UI/UX Polish
+## Phase 4 — UI/UX Polish [checkpoint: 4576108]
 
 - [x] Task: Write failing tests for WalletCard layout overflow fix [43f4928]
     - [x] Test that the wallet card widget renders without overflow for long Arabic text labels
@@ -99,4 +99,4 @@
     - [x] Reset `_serviceFee` and `_totalAmount` to `0.0`
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 4 — UI/UX Polish' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4 — UI/UX Polish' (Protocol in workflow.md) [4576108]
