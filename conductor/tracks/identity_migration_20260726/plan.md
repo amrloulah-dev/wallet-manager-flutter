@@ -2,27 +2,27 @@
 
 ## Phase A: Refactor Employee Creation Flow
 
-- [ ] Task: Write failing tests for identity-first employee creation
-    - [ ] Create `test/data/repositories/employee_repository_identity_test.dart`
-    - [ ] Test that `addEmployee()` calls `IdentityService.provisionIdentity()` before persisting the document
-    - [ ] Test that the resulting document ID equals the Auth UID returned by `provisionIdentity()`
-    - [ ] Test that `firebaseUid` field is set to the Auth UID at creation time (not null)
-    - [ ] Test that the PIN lock document's `userId` field uses the Auth UID as its value
-    - [ ] Test error handling: provisioning failure prevents employee creation
-    - [ ] Run tests and confirm they fail (Red phase)
+- [x] Task: Write failing tests for identity-first employee creation dd258ca
+    - [x] Create `test/data/repositories/employee_repository_identity_test.dart`
+    - [x] Test that `addEmployee()` calls `IdentityService.provisionIdentity()` before persisting the document
+    - [x] Test that the resulting document ID equals the Auth UID returned by `provisionIdentity()`
+    - [x] Test that `firebaseUid` field is set to the Auth UID at creation time (not null)
+    - [x] Test that the PIN lock document's `userId` field uses the Auth UID as its value
+    - [x] Test error handling: provisioning failure prevents employee creation
+    - [x] Run tests and confirm they fail (Red phase)
 
-- [ ] Task: Refactor `EmployeeRepository.addEmployee()` to use identity-first creation
-    - [ ] Call `IdentityService.provisionIdentity()` at the start of `addEmployee()` to obtain the Auth UID
-    - [ ] Replace `_usersCollection.doc().id` with the returned Auth UID as the canonical document ID
-    - [ ] Set `firebaseUid: authUid` in the `UserModel` constructor (not `null`)
-    - [ ] Ensure `transaction.set(_usersCollection.doc(authUid), userData)` is used within the existing transaction
-    - [ ] Update the PIN lock document to use `authUid` as the `userId` value
-    - [ ] Run tests and confirm they pass (Green phase)
+- [x] Task: Refactor `EmployeeRepository.addEmployee()` to use identity-first creation dd258ca
+    - [x] Call `IdentityService.provisionIdentity()` at the start of `addEmployee()` to obtain the Auth UID
+    - [x] Replace `_usersCollection.doc().id` with the returned Auth UID as the canonical document ID
+    - [x] Set `firebaseUid: authUid` in the `UserModel` constructor (not `null`)
+    - [x] Ensure `transaction.set(_usersCollection.doc(authUid), userData)` is used within the existing transaction
+    - [x] Update the PIN lock document to use `authUid` as the `userId` value
+    - [x] Run tests and confirm they pass (Green phase)
 
-- [ ] Task: Remove redundant `provisionIdentity()` call from `EmployeeProvider`
-    - [ ] In `lib/providers/employee_provider.dart`, remove the separate `_employeeRepository.provisionIdentity(newEmployee)` call after `addEmployee()`
-    - [ ] Verify the provider still returns the employee with correct `firebaseUid` populated
-    - [ ] Run all employee-related tests to confirm no regressions
+- [x] Task: Remove redundant `provisionIdentity()` call from `EmployeeProvider` dd258ca
+    - [x] In `lib/providers/employee_provider.dart`, remove the separate `_employeeRepository.provisionIdentity(newEmployee)` call after `addEmployee()`
+    - [x] Verify the provider still returns the employee with correct `firebaseUid` populated
+    - [x] Run all employee-related tests to confirm no regressions
 
 - [ ] Task: Conductor - User Manual Verification 'Phase A: Refactor Employee Creation Flow' (Protocol in workflow.md)
 
