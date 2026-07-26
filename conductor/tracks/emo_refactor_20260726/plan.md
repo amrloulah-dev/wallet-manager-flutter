@@ -48,15 +48,15 @@
     - [x] In `lib/providers/wallet_provider.dart`, wrap the `resetLimitsForWallets()` call in `if (_authProvider.isOwner)`
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Write failing tests for `SubscriptionProvider` silent permission-denied handling
-    - [ ] Test that `_fetchLatestRequest()` catches `FirebaseException` with `permission-denied` silently
-    - [ ] Test that the exception is NOT passed to `AppErrorHandler.handle()`
-    - [ ] Test that non-`permission-denied` exceptions are handled normally
+- [x] Task: Write failing tests for `SubscriptionProvider` silent permission-denied handling [7ef8b8c]
+    - [x] Test that `_fetchLatestRequest()` catches `FirebaseException` with `permission-denied` silently
+    - [x] Test that the exception is NOT passed to `AppErrorHandler.handle()`
+    - [x] Test that non-`permission-denied` exceptions are handled normally
 
-- [ ] Task: Implement `SubscriptionProvider._fetchLatestRequest()` silent exception handling
-    - [ ] In `lib/providers/subscription_provider.dart`, add catch for `FirebaseException` with `code == 'permission-denied'`
-    - [ ] Silently return without calling `AppErrorHandler.handle()`
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `SubscriptionProvider._fetchLatestRequest()` silent exception handling [7ef8b8c]
+    - [x] In `lib/providers/subscription_provider.dart`, add catch for `FirebaseException` with `code == 'permission-denied'`
+    - [x] Silently return without calling `AppErrorHandler.handle()`
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2 — Eager Initialization Guards' (Protocol in workflow.md)
 
