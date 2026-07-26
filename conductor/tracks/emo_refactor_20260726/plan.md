@@ -80,14 +80,14 @@
 
 ## Phase 4 — UI/UX Polish
 
-- [ ] Task: Write failing tests for WalletCard layout overflow fix
-    - [ ] Test that the wallet card widget renders without overflow for long Arabic text labels
-    - [ ] Test that the `currentBalance` text widget uses `TextOverflow.ellipsis`
+- [x] Task: Write failing tests for WalletCard layout overflow fix [43f4928]
+    - [x] Test that the wallet card widget renders without overflow for long Arabic text labels
+    - [x] Test that the `currentBalance` text widget uses `TextOverflow.ellipsis`
 
-- [ ] Task: Implement WalletCard layout overflow fix
-    - [ ] In `lib/presentation/widgets/wallet/wallet_card.dart`, wrap the inner `Row` (icon + balance label) with `Expanded`
-    - [ ] Wrap the `Text(l10n.currentBalance)` widget with `Flexible` and set `overflow: TextOverflow.ellipsis`
-    - [ ] Run tests and confirm no overflow
+- [x] Task: Implement WalletCard layout overflow fix [43f4928]
+    - [x] In `lib/presentation/widgets/wallet/wallet_card.dart`, wrap the inner `Row` (icon + balance label) with `Expanded`
+    - [x] Wrap the `Text(l10n.currentBalance)` widget with `Flexible` and set `overflow: TextOverflow.ellipsis`
+    - [x] Run tests and confirm no overflow
 
 - [ ] Task: Write failing tests for `_updateTotal()` early return guard
     - [ ] Test that `_updateTotal()` returns early when amount is `0`
