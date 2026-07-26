@@ -73,6 +73,29 @@ class UserRepository {
           stackTrace: stack);
       throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        try {
+          final querySnapshot = await _usersCollection
+              .where(FirebaseConstants.firebaseUidField, isEqualTo: userId)
+              .limit(1)
+              .get();
+
+          if (querySnapshot.docs.isNotEmpty) {
+            final user = UserModel.fromFirestore(querySnapshot.docs.first);
+            if (expectedStoreId != null && user.storeId != expectedStoreId) {
+              throw PermissionDeniedException();
+            }
+            return user;
+          }
+          return null;
+        } on FirebaseException catch (fallbackErr, fallbackStack) {
+          AppErrorHandler.logSilentError(
+              fallbackErr.toString(), 'UserRepository.getUserById.fallback',
+              stackTrace: fallbackStack);
+          throw ServerException('user_error_fetch_failed',
+              code: fallbackErr.code);
+        }
+      }
       AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
           stackTrace: stack);
       throw ServerException('user_error_fetch_failed', code: e.code);
