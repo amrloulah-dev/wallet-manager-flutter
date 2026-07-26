@@ -1,6 +1,6 @@
 # Implementation Plan: Identity Unification & Silent Data Migration
 
-## Phase A: Refactor Employee Creation Flow
+## Phase A: Refactor Employee Creation Flow [checkpoint: 0fc415a]
 
 - [x] Task: Write failing tests for identity-first employee creation dd258ca
     - [x] Create `test/data/repositories/employee_repository_identity_test.dart`
@@ -24,7 +24,7 @@
     - [x] Verify the provider still returns the employee with correct `firebaseUid` populated
     - [x] Run all employee-related tests to confirm no regressions
 
-- [ ] Task: Conductor - User Manual Verification 'Phase A: Refactor Employee Creation Flow' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase A: Refactor Employee Creation Flow' (Protocol in workflow.md) 0fc415a
 
 ## Phase B: Create Silent Identity Migration UseCase
 
