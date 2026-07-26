@@ -16,6 +16,7 @@ import 'package:walletmanager/core/services/identity_service.dart';
 import 'package:walletmanager/core/services/analytics_service.dart';
 import 'package:walletmanager/services/time_service.dart';
 import 'package:walletmanager/core/utils/password_hasher.dart';
+import 'package:walletmanager/domain/usecases/identity_migration_usecase.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
@@ -39,6 +40,7 @@ class DatabaseSyncService {
   final DeviceRepository _deviceRepository;
   final LocalStorageService _localStorage;
   final SubscriptionRepository _subscriptionRepository;
+  final IdentityMigrationUseCase _identityMigrationUseCase;
 
   DatabaseSyncService({
     required AuthRepository authRepository,
@@ -48,13 +50,16 @@ class DatabaseSyncService {
     required LocalStorageService localStorage,
     FirebaseFirestore? firestore,
     SubscriptionRepository? subscriptionRepository,
+    IdentityMigrationUseCase? identityMigrationUseCase,
   })  : _authRepository = authRepository,
         _storeRepository = storeRepository,
         _userRepository = userRepository,
         _deviceRepository = deviceRepository,
         _localStorage = localStorage,
         _subscriptionRepository =
-            subscriptionRepository ?? sl<SubscriptionRepository>();
+            subscriptionRepository ?? sl<SubscriptionRepository>(),
+        _identityMigrationUseCase =
+            identityMigrationUseCase ?? sl<IdentityMigrationUseCase>();
 
   bool _isSubExpired(StoreSubscription sub) =>
       sub.isExpiredAt(TimeService.now());
@@ -124,6 +129,16 @@ class DatabaseSyncService {
         userName: userModel.fullName,
         storeName: store.storeName,
       );
+
+      try {
+        await _identityMigrationUseCase.executeMigration(store.storeId);
+      } catch (e, stack) {
+        AppErrorHandler.logSilentError(
+          e.toString(),
+          'DatabaseSyncService._finalizeOwnerLogin.migration',
+          stackTrace: stack,
+        );
+      }
     }
 
     return AuthSessionResult(

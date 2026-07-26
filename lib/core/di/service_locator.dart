@@ -19,6 +19,7 @@ import '../../data/services/wallet_cache_manager.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/platform_settings_provider.dart';
 import '../../providers/app_events.dart';
+import '../../domain/usecases/identity_migration_usecase.dart';
 import '../../domain/usecases/overlay_usecase.dart';
 import '../../domain/usecases/transaction_fee_calculator.dart';
 import '../../domain/usecases/wallet_usecase.dart';
@@ -91,4 +92,6 @@ Future<void> setupServiceLocator() async {
         transactionRepository: sl<TransactionRepository>(),
         localStorage: sl<LocalStorageService>(),
       ));
+  sl.registerLazySingleton<IdentityMigrationUseCase>(
+      () => IdentityMigrationUseCase());
 }
