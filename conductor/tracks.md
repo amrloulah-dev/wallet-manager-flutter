@@ -53,3 +53,8 @@
 - [~] **Track: InstaPay Limit Force-Bypass**
 *Link: [./tracks/instapay_limit_bypass_20260720/](./tracks/instapay_limit_bypass_20260720/)*
 
+---
+
+- [ ] **Track: Identity Synchronization, Session Protection & Employee Experience Stabilization**
+*Link: [./tracks/emo_refactor_20260726/](./tracks/emo_refactor_20260726/)*
+

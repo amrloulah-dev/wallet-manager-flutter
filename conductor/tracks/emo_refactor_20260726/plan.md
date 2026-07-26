@@ -1,0 +1,101 @@
+# Plan: Identity Synchronization, Session Protection & Employee Experience Stabilization
+
+## Phase 1 — Identity Synchronization & Session Protection
+
+- [ ] Task: Write failing tests for `UserRepository.getUserById()` permission-denied fallback query
+    - [ ] Test that when `getUserById()` throws `FirebaseException` with `permission-denied`, a fallback query on `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1)` is executed
+    - [ ] Test that the fallback query returns a parsed `UserModel` when a matching document exists
+    - [ ] Test that the fallback query returns `null` when no matching document exists
+    - [ ] Test that non-`permission-denied` `FirebaseException` codes are rethrown normally
+
+- [ ] Task: Implement `UserRepository.getUserById()` fallback query
+    - [ ] In `lib/data/repositories/user_repository.dart`, add a catch block for `FirebaseException` inside `getUserById()`
+    - [ ] When `e.code == 'permission-denied'`, execute fallback query: `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1).get()`
+    - [ ] Parse and return the `UserModel` if a document is found; return `null` otherwise
+    - [ ] Rethrow all other `FirebaseException` codes
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Write failing tests for `WalletUseCase.validatePermission()` session protection
+    - [ ] Test that when `ensureUserLoaded()` throws `PermissionDeniedException`, `validatePermission()` throws `PermissionException` (not `AuthException`)
+    - [ ] Test that `AuthException('auth_error_session_expired')` is never thrown on permission-denied
+    - [ ] Test that non-permission exceptions from `ensureUserLoaded()` propagate unchanged
+
+- [ ] Task: Implement `WalletUseCase.validatePermission()` session protection
+    - [ ] In `lib/domain/usecases/wallet_usecase.dart`, wrap `_authProvider.ensureUserLoaded()` in a try-catch
+    - [ ] Catch `PermissionDeniedException` and throw `PermissionException()` instead
+    - [ ] Ensure the flow never reaches the `user == null` check that throws `AuthException('auth_error_session_expired')`
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 1 — Identity Synchronization & Session Protection' (Protocol in workflow.md)
+
+## Phase 2 — Eager Initialization Guards
+
+- [ ] Task: Write failing tests for `StatisticsProvider` employee guard
+    - [ ] Test that `fetchDashboardStats()` returns early without Firestore call when user is employee without `viewDashboardStats` permission
+    - [ ] Test that `fetchDashboardStats()` proceeds normally for owners
+    - [ ] Test that `fetchDashboardStats()` proceeds normally for employees with `viewDashboardStats` permission
+
+- [ ] Task: Implement `StatisticsProvider.fetchDashboardStats()` employee guard
+    - [ ] In `lib/providers/statistics_provider.dart`, add guard clause checking `_authProvider.currentUser`
+    - [ ] If user is employee and `!user.hasPermission((p) => p.viewDashboardStats)`, silently return
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Write failing tests for `WalletProvider` employee guard on `resetLimitsForWallets()`
+    - [ ] Test that `resetLimitsForWallets()` is not called when user is an employee
+    - [ ] Test that `resetLimitsForWallets()` proceeds normally for owners
+
+- [ ] Task: Implement `WalletProvider` employee guard on `resetLimitsForWallets()`
+    - [ ] In `lib/providers/wallet_provider.dart`, wrap the `resetLimitsForWallets()` call in `if (_authProvider.isOwner)`
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Write failing tests for `SubscriptionProvider` silent permission-denied handling
+    - [ ] Test that `_fetchLatestRequest()` catches `FirebaseException` with `permission-denied` silently
+    - [ ] Test that the exception is NOT passed to `AppErrorHandler.handle()`
+    - [ ] Test that non-`permission-denied` exceptions are handled normally
+
+- [ ] Task: Implement `SubscriptionProvider._fetchLatestRequest()` silent exception handling
+    - [ ] In `lib/providers/subscription_provider.dart`, add catch for `FirebaseException` with `code == 'permission-denied'`
+    - [ ] Silently return without calling `AppErrorHandler.handle()`
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 2 — Eager Initialization Guards' (Protocol in workflow.md)
+
+## Phase 3 — Data Resilience & Legacy Data Support
+
+- [ ] Task: Write failing tests for `WalletModel.fromMap()` nullable timestamp handling
+    - [ ] Test that a map with missing `createdAt` field deserializes to a `WalletModel` with `createdAt == null`
+    - [ ] Test that a map with missing `lastDailyReset` field deserializes to a `WalletModel` with `lastDailyReset == null`
+    - [ ] Test that a map with missing `lastMonthlyReset` field deserializes to a `WalletModel` with `lastMonthlyReset == null`
+    - [ ] Test that a map with all timestamps present deserializes correctly
+    - [ ] Test that a map missing fundamental fields (e.g., `name`, `storeId`) still throws appropriately
+
+- [ ] Task: Implement `WalletModel.fromMap()` nullable timestamp support
+    - [ ] In `lib/data/models/wallet_model.dart`, change `createdAt`, `lastDailyReset`, `lastMonthlyReset` fields from `DateTime` to `DateTime?`
+    - [ ] Remove `NotFoundException` throws for missing timestamp fields
+    - [ ] Parse via `(data[key] as Timestamp?)?.toDate()` allowing null
+    - [ ] Update all callers that reference these fields to handle nullable types
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 3 — Data Resilience & Legacy Data Support' (Protocol in workflow.md)
+
+## Phase 4 — UI/UX Polish
+
+- [ ] Task: Write failing tests for WalletCard layout overflow fix
+    - [ ] Test that the wallet card widget renders without overflow for long Arabic text labels
+    - [ ] Test that the `currentBalance` text widget uses `TextOverflow.ellipsis`
+
+- [ ] Task: Implement WalletCard layout overflow fix
+    - [ ] In `lib/presentation/widgets/wallet/wallet_card.dart`, wrap the inner `Row` (icon + balance label) with `Expanded`
+    - [ ] Wrap the `Text(l10n.currentBalance)` widget with `Flexible` and set `overflow: TextOverflow.ellipsis`
+    - [ ] Run tests and confirm no overflow
+
+- [ ] Task: Write failing tests for `_updateTotal()` early return guard
+    - [ ] Test that `_updateTotal()` returns early when amount is `0`
+    - [ ] Test that `_updateTotal()` returns early when amount is negative
+    - [ ] Test that `_updateTotal()` proceeds normally when amount is positive
+
+- [ ] Task: Implement `CreateTransactionScreen._updateTotal()` early return guard
+    - [ ] In `lib/presentation/screens/transactions/create_transaction_screen.dart`, add `if (amount <= 0) return;` after parsing amount
+    - [ ] Run tests and confirm they pass
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 4 — UI/UX Polish' (Protocol in workflow.md)
