@@ -190,34 +190,40 @@ class WalletCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.credit_card,
+                              color: Colors.blue.shade400,
+                              size: 20,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.credit_card,
-                            color: Colors.blue.shade400,
-                            size: 20,
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              l10n.currentBalance,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade300,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          l10n.currentBalance,
-                          style: TextStyle(
-                            color: Colors.grey.shade300,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     Text(
                       NumberFormatter.formatAmount(wallet.balance,
                           showCurrency: true),
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: isFrozen ? Colors.grey : Colors.blue.shade400,
                         fontWeight: FontWeight.bold,

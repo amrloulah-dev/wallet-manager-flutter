@@ -196,4 +196,24 @@ void main() {
     // Verify "محل مسجل" badge is displayed
     expect(find.text('محل مسجل'), findsOneWidget);
   });
+
+  testWidgets(
+      'WalletCard currentBalance text has TextOverflow.ellipsis to prevent overflow',
+      (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        WalletCard(
+          wallet: activeWallet,
+          isFrozen: false,
+          onTap: () {},
+          onEdit: () {},
+          onDelete: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Text currentBalanceText = tester.widget<Text>(find.text('الرصيد الحالي'));
+    expect(currentBalanceText.overflow, equals(TextOverflow.ellipsis));
+  });
 }
