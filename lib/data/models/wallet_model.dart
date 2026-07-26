@@ -217,13 +217,6 @@ class WalletModel {
     final lastMonthlyReset =
         (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
 
-    if (createdAt == null ||
-        lastDailyReset == null ||
-        lastMonthlyReset == null) {
-      throw NotFoundException(
-          'Wallet document $docId missing required reset timestamps (createdAt, lastDailyReset, or lastMonthlyReset)');
-    }
-
     final balance = NumberParser.toDouble(data['balance']);
     // Phase 3: Boundary Guard
     AmountValidator.ensurePositiveOrZero(balance);

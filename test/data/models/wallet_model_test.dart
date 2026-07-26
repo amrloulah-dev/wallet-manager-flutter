@@ -41,4 +41,48 @@ void main() {
       expect(wallet1.hashCode == wallet2.hashCode, isFalse);
     });
   });
+
+  group('WalletModel.fromMap Nullable Timestamps (Phase 3)', () {
+    final validMap = {
+      'storeId': 's1',
+      'phoneNumber': '01012345678',
+      'walletType': 'vodafoneCash',
+      'walletStatus': 'active',
+      'balance': 100.0,
+      'createdBy': 'u1',
+      'sendLimits': {
+        'dailyLimit': 1000.0,
+        'dailyUsed': 0.0,
+        'monthlyLimit': 5000.0,
+        'monthlyUsed': 0.0,
+      },
+      'receiveLimits': {
+        'dailyLimit': 1000.0,
+        'dailyUsed': 0.0,
+        'monthlyLimit': 5000.0,
+        'monthlyUsed': 0.0,
+      },
+    };
+
+    test('missing createdAt deserializes to createdAt == null', () {
+      final map = Map<String, dynamic>.from(validMap);
+      // createdAt is absent
+      final model = WalletModel.fromMap(map, 'w1');
+      expect(model.createdAt, isNull);
+    });
+
+    test('missing lastDailyReset deserializes to lastDailyReset == null', () {
+      final map = Map<String, dynamic>.from(validMap);
+      // lastDailyReset is absent
+      final model = WalletModel.fromMap(map, 'w1');
+      expect(model.lastDailyReset, isNull);
+    });
+
+    test('missing lastMonthlyReset deserializes to lastMonthlyReset == null', () {
+      final map = Map<String, dynamic>.from(validMap);
+      // lastMonthlyReset is absent
+      final model = WalletModel.fromMap(map, 'w1');
+      expect(model.lastMonthlyReset, isNull);
+    });
+  });
 }
