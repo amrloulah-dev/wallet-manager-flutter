@@ -1,6 +1,6 @@
 # Plan: Identity Synchronization, Session Protection & Employee Experience Stabilization
 
-## Phase 1 — Identity Synchronization & Session Protection
+## Phase 1 — Identity Synchronization & Session Protection [checkpoint: 470773e]
 
 - [x] Task: Write failing tests for `UserRepository.getUserById()` permission-denied fallback query [d2a035d]
     - [x] Test that when `getUserById()` throws `FirebaseException` with `permission-denied`, a fallback query on `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1)` is executed
@@ -26,7 +26,7 @@
     - [x] Ensure the flow never reaches the `user == null` check that throws `AuthException('auth_error_session_expired')`
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1 — Identity Synchronization & Session Protection' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1 — Identity Synchronization & Session Protection' (Protocol in workflow.md) [470773e]
 
 ## Phase 2 — Eager Initialization Guards
 
