@@ -175,8 +175,6 @@ class EmployeeProvider extends BaseProvider {
         permissions: permissions,
       );
 
-      _employeeRepository.provisionIdentity(newEmployee);
-
       _employees.insert(0, newEmployee);
       _recalculateSuspendedEmployees();
 

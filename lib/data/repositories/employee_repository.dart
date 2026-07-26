@@ -112,7 +112,17 @@ class EmployeeRepository {
     required String pin,
     required UserPermissions permissions,
   }) async {
-    final newUserId = _usersCollection.doc().id;
+    final authUid = await IdentityService.provisionIdentity(
+      phone: phone,
+      storeId: storeId,
+      pin: pin,
+    );
+
+    if (authUid == null || authUid.isEmpty) {
+      throw ServerException('employee_error_provisioning_failed');
+    }
+
+    final newUserId = authUid;
     final hashedPin = await PasswordHasher.hashPassword(pin);
 
     final newUser = UserModel(
@@ -122,7 +132,7 @@ class EmployeeRepository {
       fullName: fullName,
       email: null,
       phone: phone,
-      firebaseUid: null,
+      firebaseUid: authUid,
       pin: hashedPin,
       isActive: true,
       createdAt: null, // Set by FieldValue.serverTimestamp
