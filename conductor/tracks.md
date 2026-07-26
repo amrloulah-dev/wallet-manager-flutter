@@ -58,3 +58,8 @@
 - [x] **Track: Identity Synchronization, Session Protection & Employee Experience Stabilization**
 *Link: [./tracks/emo_refactor_20260726/](./tracks/emo_refactor_20260726/)*
 
+---
+
+- [ ] **Track: Identity Unification & Silent Data Migration**
+*Link: [./tracks/identity_migration_20260726/](./tracks/identity_migration_20260726/)*
+
