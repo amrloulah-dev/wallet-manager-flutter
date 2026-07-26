@@ -16,7 +16,12 @@ class WalletUseCase {
   /// Validates user permissions before performing an action.
   Future<UserModel> validatePermission(
       bool Function(UserPermissions) selector) async {
-    final user = await _authProvider.ensureUserLoaded();
+    UserModel? user;
+    try {
+      user = await _authProvider.ensureUserLoaded();
+    } on PermissionDeniedException {
+      throw PermissionException();
+    }
     if (user == null) {
       throw AuthException('auth_error_session_expired');
     }
