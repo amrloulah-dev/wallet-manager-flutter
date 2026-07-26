@@ -89,13 +89,14 @@
     - [x] Wrap the `Text(l10n.currentBalance)` widget with `Flexible` and set `overflow: TextOverflow.ellipsis`
     - [x] Run tests and confirm no overflow
 
-- [ ] Task: Write failing tests for `_updateTotal()` early return guard
-    - [ ] Test that `_updateTotal()` returns early when amount is `0`
-    - [ ] Test that `_updateTotal()` returns early when amount is negative
-    - [ ] Test that `_updateTotal()` proceeds normally when amount is positive
+- [x] Task: Write failing tests for `_updateTotal()` early return guard [b2a6b5b]
+    - [x] Test that `_updateTotal()` returns early when amount is `0`
+    - [x] Test that `_updateTotal()` returns early when amount is negative
+    - [x] Test that `_updateTotal()` proceeds normally when amount is positive
 
-- [ ] Task: Implement `CreateTransactionScreen._updateTotal()` early return guard
-    - [ ] In `lib/presentation/screens/transactions/create_transaction_screen.dart`, add `if (amount <= 0) return;` after parsing amount
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `CreateTransactionScreen._updateTotal()` early return guard [b2a6b5b]
+    - [x] In `lib/presentation/screens/transactions/create_transaction_screen.dart`, add early return `if (amount <= 0)` in `_updateTotal()`
+    - [x] Reset `_serviceFee` and `_totalAmount` to `0.0`
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 4 — UI/UX Polish' (Protocol in workflow.md)
