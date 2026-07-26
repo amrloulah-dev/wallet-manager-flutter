@@ -15,16 +15,16 @@
     - [x] Rethrow all other `FirebaseException` codes
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Write failing tests for `WalletUseCase.validatePermission()` session protection
-    - [ ] Test that when `ensureUserLoaded()` throws `PermissionDeniedException`, `validatePermission()` throws `PermissionException` (not `AuthException`)
-    - [ ] Test that `AuthException('auth_error_session_expired')` is never thrown on permission-denied
-    - [ ] Test that non-permission exceptions from `ensureUserLoaded()` propagate unchanged
+- [x] Task: Write failing tests for `WalletUseCase.validatePermission()` session protection [c4e2e8c]
+    - [x] Test that when `ensureUserLoaded()` throws `PermissionDeniedException`, `validatePermission()` throws `PermissionException` (not `AuthException`)
+    - [x] Test that `AuthException('auth_error_session_expired')` is never thrown on permission-denied
+    - [x] Test that non-permission exceptions from `ensureUserLoaded()` propagate unchanged
 
-- [ ] Task: Implement `WalletUseCase.validatePermission()` session protection
-    - [ ] In `lib/domain/usecases/wallet_usecase.dart`, wrap `_authProvider.ensureUserLoaded()` in a try-catch
-    - [ ] Catch `PermissionDeniedException` and throw `PermissionException()` instead
-    - [ ] Ensure the flow never reaches the `user == null` check that throws `AuthException('auth_error_session_expired')`
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `WalletUseCase.validatePermission()` session protection [c4e2e8c]
+    - [x] In `lib/domain/usecases/wallet_usecase.dart`, wrap `_authProvider.ensureUserLoaded()` in a try-catch
+    - [x] Catch `PermissionDeniedException` and throw `PermissionException()` instead
+    - [x] Ensure the flow never reaches the `user == null` check that throws `AuthException('auth_error_session_expired')`
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1 — Identity Synchronization & Session Protection' (Protocol in workflow.md)
 
