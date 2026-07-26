@@ -2,18 +2,18 @@
 
 ## Phase 1 — Identity Synchronization & Session Protection
 
-- [ ] Task: Write failing tests for `UserRepository.getUserById()` permission-denied fallback query
-    - [ ] Test that when `getUserById()` throws `FirebaseException` with `permission-denied`, a fallback query on `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1)` is executed
-    - [ ] Test that the fallback query returns a parsed `UserModel` when a matching document exists
-    - [ ] Test that the fallback query returns `null` when no matching document exists
-    - [ ] Test that non-`permission-denied` `FirebaseException` codes are rethrown normally
+- [x] Task: Write failing tests for `UserRepository.getUserById()` permission-denied fallback query [d2a035d]
+    - [x] Test that when `getUserById()` throws `FirebaseException` with `permission-denied`, a fallback query on `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1)` is executed
+    - [x] Test that the fallback query returns a parsed `UserModel` when a matching document exists
+    - [x] Test that the fallback query returns `null` when no matching document exists
+    - [x] Test that non-`permission-denied` `FirebaseException` codes are rethrown normally
 
-- [ ] Task: Implement `UserRepository.getUserById()` fallback query
-    - [ ] In `lib/data/repositories/user_repository.dart`, add a catch block for `FirebaseException` inside `getUserById()`
-    - [ ] When `e.code == 'permission-denied'`, execute fallback query: `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1).get()`
-    - [ ] Parse and return the `UserModel` if a document is found; return `null` otherwise
-    - [ ] Rethrow all other `FirebaseException` codes
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `UserRepository.getUserById()` fallback query [d2a035d]
+    - [x] In `lib/data/repositories/user_repository.dart`, add a catch block for `FirebaseException` inside `getUserById()`
+    - [x] When `e.code == 'permission-denied'`, execute fallback query: `_usersCollection.where('firebaseUid', isEqualTo: userId).limit(1).get()`
+    - [x] Parse and return the `UserModel` if a document is found; return `null` otherwise
+    - [x] Rethrow all other `FirebaseException` codes
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Write failing tests for `WalletUseCase.validatePermission()` session protection
     - [ ] Test that when `ensureUserLoaded()` throws `PermissionDeniedException`, `validatePermission()` throws `PermissionException` (not `AuthException`)
