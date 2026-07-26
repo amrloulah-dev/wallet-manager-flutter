@@ -10,6 +10,7 @@ import 'package:walletmanager/data/repositories/subscription_repository.dart';
 import 'package:walletmanager/data/models/store_model.dart';
 import 'package:walletmanager/core/enums/subscription_enums.dart';
 import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1172,6 +1173,47 @@ void main() {
       expect(provider.isSmsEnabled, isTrue);
       expect(LocalStorageService.instance.isSubIntegrityValid, isTrue);
       expect(LocalStorageService.instance.subSmsEnabled, isTrue);
+    });
+  });
+
+  group('SubscriptionProvider Silent Permission-Denied Handling', () {
+    test(
+        '_fetchLatestRequest catches permission-denied exception silently without throwing or crashing',
+        () async {
+      final mockStore = StoreModel(
+        storeId: 'test_store_rbac',
+        storeName: 'Test Store',
+        storePassword: 'hashed',
+        ownerId: 'owner1',
+        ownerName: 'Owner',
+        ownerEmail: 'owner@test.com',
+        createdAt: DateTime.now(),
+        subscription: StoreSubscription(
+          planId: SubscriptionPlan.free,
+          status: SubscriptionStatus.active,
+          trialConsumed: false,
+        ),
+        settings: StoreSettings(),
+      );
+
+      when(() => mockAuthProvider.currentStore).thenReturn(mockStore);
+      when(() => mockSubscriptionRepository
+              .getLatestSubscriptionRequest('test_store_rbac'))
+          .thenThrow(FirebaseException(
+        plugin: 'firestore',
+        code: 'permission-denied',
+        message: 'Permission denied',
+      ));
+
+      expect(
+        () => SubscriptionProvider(
+          authProvider: mockAuthProvider,
+          repository: mockSubscriptionRepository,
+        ),
+        returnsNormally,
+      );
+
+      await Future.delayed(Duration.zero);
     });
   });
 }

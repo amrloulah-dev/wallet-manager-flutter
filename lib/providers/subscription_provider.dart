@@ -1,5 +1,6 @@
 import '../data/models/store_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/services/local_storage_service.dart';
 import 'package:walletmanager/services/time_service.dart';
 import '../core/errors/app_error_handler.dart';
@@ -150,7 +151,25 @@ class SubscriptionProvider extends BaseProvider {
         _latestRequest = null;
         safeNotify();
       }
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🤫 [SILENT RBAC] SubscriptionProvider: Employee permission-denied in _fetchLatestRequest');
+        }
+        return;
+      }
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'subscription_fetch_latest');
     } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🤫 [SILENT RBAC] SubscriptionProvider: Employee permission-denied in _fetchLatestRequest');
+        }
+        return;
+      }
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.low,
           operation: 'subscription_fetch_latest',
