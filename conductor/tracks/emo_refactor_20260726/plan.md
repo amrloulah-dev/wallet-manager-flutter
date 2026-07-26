@@ -60,7 +60,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 2 — Eager Initialization Guards' (Protocol in workflow.md) [bdecd71]
 
-## Phase 3 — Data Resilience & Legacy Data Support
+## Phase 3 — Data Resilience & Legacy Data Support [checkpoint: 7c22366]
 
 - [x] Task: Write failing tests for `WalletModel.fromMap()` nullable timestamp handling [20866b3]
     - [x] Test that a map with missing `createdAt` field deserializes to a `WalletModel` with `createdAt == null`
@@ -76,7 +76,7 @@
     - [x] Update all callers that reference these fields to handle nullable types
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3 — Data Resilience & Legacy Data Support' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3 — Data Resilience & Legacy Data Support' (Protocol in workflow.md) [7c22366]
 
 ## Phase 4 — UI/UX Polish
 
