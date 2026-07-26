@@ -9,6 +9,7 @@ import 'package:walletmanager/data/models/wallet_model.dart';
 import 'package:walletmanager/data/repositories/wallet_repository.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 
+import 'package:walletmanager/data/models/paginated_result.dart';
 import 'package:walletmanager/data/services/wallet_cache_manager.dart';
 import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
 import 'package:walletmanager/core/enums/user_enums.dart';
@@ -138,4 +139,79 @@ void main() {
       expect(walletProvider.hasError, isTrue);
     });
   });
+
+  group('WalletProvider resetLimitsForWallets Employee Guard', () {
+    test(
+        'fetchInitialWallets does NOT call resetLimitsForWallets when user is an employee',
+        () async {
+      when(() => mockAuth.isOwner).thenReturn(false);
+
+      final defaultLimits =
+          WalletLimits(dailyLimit: 10000, monthlyLimit: 50000);
+      final defaultStats = WalletStats();
+
+      final legacyWalletNeedingReset = WalletModel(
+        walletId: 'w1',
+        storeId: 'test_store',
+        phoneNumber: '01012345678',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        balance: 500.0,
+        createdBy: 'u1',
+        sendLimits: defaultLimits,
+        receiveLimits: defaultLimits,
+        stats: defaultStats,
+        lastDailyReset: DateTime.now().subtract(const Duration(days: 2)),
+      );
+
+      when(() => mockWalletRepo.getAllWallets('test_store')).thenAnswer(
+        (_) async => PaginatedResult<WalletModel>(
+          items: [legacyWalletNeedingReset],
+          lastDocument: null,
+        ),
+      );
+
+      await walletProvider.fetchInitialWallets(forceRefresh: true);
+
+      verifyNever(() => mockWalletRepo.resetLimitsForWallets(any()));
+    });
+
+    test(
+        'fetchInitialWallets calls resetLimitsForWallets when user is an owner',
+        () async {
+      when(() => mockAuth.isOwner).thenReturn(true);
+
+      final defaultLimits =
+          WalletLimits(dailyLimit: 10000, monthlyLimit: 50000);
+      final defaultStats = WalletStats();
+
+      final legacyWalletNeedingReset = WalletModel(
+        walletId: 'w1',
+        storeId: 'test_store',
+        phoneNumber: '01012345678',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.active,
+        balance: 500.0,
+        createdBy: 'u1',
+        sendLimits: defaultLimits,
+        receiveLimits: defaultLimits,
+        stats: defaultStats,
+        lastDailyReset: DateTime.now().subtract(const Duration(days: 2)),
+      );
+
+      when(() => mockWalletRepo.getAllWallets('test_store')).thenAnswer(
+        (_) async => PaginatedResult<WalletModel>(
+          items: [legacyWalletNeedingReset],
+          lastDocument: null,
+        ),
+      );
+      when(() => mockWalletRepo.resetLimitsForWallets(any()))
+          .thenAnswer((_) async {});
+
+      await walletProvider.fetchInitialWallets(forceRefresh: true);
+
+      verify(() => mockWalletRepo.resetLimitsForWallets(any())).called(1);
+    });
+  });
 }
+

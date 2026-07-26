@@ -327,7 +327,7 @@ class WalletProvider extends BaseProvider {
           .where((w) => w.needsDailyReset || w.needsMonthlyReset)
           .toList();
 
-      if (walletsNeedingReset.isNotEmpty) {
+      if (_authProvider.isOwner && walletsNeedingReset.isNotEmpty) {
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
       }
 
