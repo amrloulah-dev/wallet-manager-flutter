@@ -40,13 +40,13 @@
     - [x] If user is employee and `!user.hasPermission((p) => p.viewDashboardStats)`, silently return
     - [x] Run tests and confirm they pass
 
-- [ ] Task: Write failing tests for `WalletProvider` employee guard on `resetLimitsForWallets()`
-    - [ ] Test that `resetLimitsForWallets()` is not called when user is an employee
-    - [ ] Test that `resetLimitsForWallets()` proceeds normally for owners
+- [x] Task: Write failing tests for `WalletProvider` employee guard on `resetLimitsForWallets()` [95b406f]
+    - [x] Test that `resetLimitsForWallets()` is not called when user is an employee
+    - [x] Test that `resetLimitsForWallets()` proceeds normally for owners
 
-- [ ] Task: Implement `WalletProvider` employee guard on `resetLimitsForWallets()`
-    - [ ] In `lib/providers/wallet_provider.dart`, wrap the `resetLimitsForWallets()` call in `if (_authProvider.isOwner)`
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `WalletProvider` employee guard on `resetLimitsForWallets()` [95b406f]
+    - [x] In `lib/providers/wallet_provider.dart`, wrap the `resetLimitsForWallets()` call in `if (_authProvider.isOwner)`
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Write failing tests for `SubscriptionProvider` silent permission-denied handling
     - [ ] Test that `_fetchLatestRequest()` catches `FirebaseException` with `permission-denied` silently
