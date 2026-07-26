@@ -62,19 +62,19 @@
 
 ## Phase 3 — Data Resilience & Legacy Data Support
 
-- [ ] Task: Write failing tests for `WalletModel.fromMap()` nullable timestamp handling
-    - [ ] Test that a map with missing `createdAt` field deserializes to a `WalletModel` with `createdAt == null`
-    - [ ] Test that a map with missing `lastDailyReset` field deserializes to a `WalletModel` with `lastDailyReset == null`
-    - [ ] Test that a map with missing `lastMonthlyReset` field deserializes to a `WalletModel` with `lastMonthlyReset == null`
-    - [ ] Test that a map with all timestamps present deserializes correctly
-    - [ ] Test that a map missing fundamental fields (e.g., `name`, `storeId`) still throws appropriately
+- [x] Task: Write failing tests for `WalletModel.fromMap()` nullable timestamp handling [20866b3]
+    - [x] Test that a map with missing `createdAt` field deserializes to a `WalletModel` with `createdAt == null`
+    - [x] Test that a map with missing `lastDailyReset` field deserializes to a `WalletModel` with `lastDailyReset == null`
+    - [x] Test that a map with missing `lastMonthlyReset` field deserializes to a `WalletModel` with `lastMonthlyReset == null`
+    - [x] Test that a map with all timestamps present deserializes correctly
+    - [x] Test that a map missing fundamental fields (e.g., `name`, `storeId`) still throws appropriately
 
-- [ ] Task: Implement `WalletModel.fromMap()` nullable timestamp support
-    - [ ] In `lib/data/models/wallet_model.dart`, change `createdAt`, `lastDailyReset`, `lastMonthlyReset` fields from `DateTime` to `DateTime?`
-    - [ ] Remove `NotFoundException` throws for missing timestamp fields
-    - [ ] Parse via `(data[key] as Timestamp?)?.toDate()` allowing null
-    - [ ] Update all callers that reference these fields to handle nullable types
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `WalletModel.fromMap()` nullable timestamp support [20866b3]
+    - [x] In `lib/data/models/wallet_model.dart`, change `createdAt`, `lastDailyReset`, `lastMonthlyReset` fields from `DateTime` to `DateTime?`
+    - [x] Remove `NotFoundException` throws for missing timestamp fields
+    - [x] Parse via `(data[key] as Timestamp?)?.toDate()` allowing null
+    - [x] Update all callers that reference these fields to handle nullable types
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3 — Data Resilience & Legacy Data Support' (Protocol in workflow.md)
 
