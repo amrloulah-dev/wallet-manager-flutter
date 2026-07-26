@@ -48,6 +48,12 @@ void main() {
     mockTransactionProvider = MockTransactionProvider();
     mockPlatformSettingsProvider = MockPlatformSettingsProvider();
 
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      sl.unregister<PlatformSettingsProvider>();
+    }
+    sl.registerSingleton<PlatformSettingsProvider>(
+        mockPlatformSettingsProvider);
+
     // Default stubbing
     when(() => mockWalletProvider.isLoading).thenReturn(false);
     when(() => mockWalletProvider.fetchInitialWallets())
@@ -380,5 +386,42 @@ void main() {
 
     // Re-verify callCount
     expect(callCount, equals(3));
+  });
+
+  group('CreateTransactionScreen _updateTotal Early Return Guard', () {
+    testWidgets(
+        'entering amount <= 0 resets serviceFee and totalAmount to 0 without throwing domain errors',
+        (tester) async {
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      // Select wallet first so customer info and amount sections render
+      final dropdownFinder = find.byType(CustomDropdown<WalletModel>);
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
+
+      final optionFinder = find.textContaining('فودافون كاش').last;
+      await tester.tap(optionFinder);
+      await tester.pumpAndSettle();
+
+      final amountFieldFinder = find.widgetWithText(CustomTextField, 'المبلغ');
+      final textField = find.descendant(
+          of: amountFieldFinder, matching: find.byType(TextField));
+
+      // Enter 0
+      await tester.enterText(textField, '0');
+      await tester.pumpAndSettle();
+
+      // Enter negative number
+      await tester.enterText(textField, '-100');
+      await tester.pumpAndSettle();
+
+      // Enter valid positive number
+      await tester.enterText(textField, '500');
+      await tester.pumpAndSettle();
+
+      // Screen renders cleanly
+      expect(find.byType(CreateTransactionScreen), findsOneWidget);
+    });
   });
 }

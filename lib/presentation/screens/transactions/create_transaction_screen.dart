@@ -131,6 +131,15 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   void _updateTotal() {
     try {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
+      if (amount <= 0) {
+        if (_serviceFee != 0.0 || _totalAmount != 0.0) {
+          setState(() {
+            _serviceFee = 0.0;
+            _totalAmount = 0.0;
+          });
+        }
+        return;
+      }
       final commission = double.tryParse(_commissionController.text) ?? 0.0;
 
       final wallet = _selectedWalletId != null
