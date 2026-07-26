@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/providers/auth_provider.dart';
+import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/data/models/user_permissions.dart';
+import 'package:walletmanager/core/enums/user_enums.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
@@ -184,4 +188,111 @@ void main() {
       expect(provider.todayStats!.totalReceivedAmount, 800.0);
     });
   });
+
+  group('StatisticsProvider Employee Guard', () {
+    late MockAuthProvider mockAuthProvider;
+
+    setUp(() {
+      mockAuthProvider = MockAuthProvider();
+    });
+
+    test(
+        'fetchDashboardStats returns early without fetching stats when employee lacks viewDashboardStats permission',
+        () async {
+      final employeeNoStats = UserModel(
+        userId: 'emp1',
+        firebaseUid: 'uid1',
+        storeId: storeId,
+        role: UserRole.employee,
+        fullName: 'Emp No Stats',
+        isActive: true,
+        createdAt: DateTime.now(),
+        lastLogin: DateTime.now(),
+        permissions: UserPermissions(viewDashboardStats: false),
+      );
+
+      when(() => mockAuthProvider.currentUser).thenReturn(employeeNoStats);
+
+      reset(mockStatsRepo);
+
+      final prov = StatisticsProvider(
+        statsRepository: mockStatsRepo,
+        authProvider: mockAuthProvider,
+      );
+
+      prov.setStoreId(storeId);
+      await Future.delayed(Duration.zero);
+
+      verifyNever(() => mockStatsRepo.getStatsSummary(any()));
+      verifyNever(() => mockStatsRepo.fetchTodayStats(any()));
+    });
+
+    test('fetchDashboardStats proceeds when user is owner', () async {
+      final owner = UserModel(
+        userId: 'owner1',
+        firebaseUid: 'uid2',
+        storeId: storeId,
+        role: UserRole.owner,
+        fullName: 'Owner User',
+        isActive: true,
+        createdAt: DateTime.now(),
+        lastLogin: DateTime.now(),
+      );
+
+      when(() => mockAuthProvider.currentUser).thenReturn(owner);
+
+      reset(mockStatsRepo);
+      when(() => mockStatsRepo.getStatsSummary(storeId))
+          .thenAnswer((_) async => StatsSummaryModel.empty());
+      when(() => mockStatsRepo.fetchTodayStats(storeId))
+          .thenAnswer((_) async => DailyStatsModel.empty('2026-06-05'));
+
+      final prov = StatisticsProvider(
+        statsRepository: mockStatsRepo,
+        authProvider: mockAuthProvider,
+      );
+
+      prov.setStoreId(storeId);
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockStatsRepo.getStatsSummary(storeId)).called(1);
+    });
+
+    test(
+        'fetchDashboardStats proceeds when employee has viewDashboardStats permission',
+        () async {
+      final employeeWithStats = UserModel(
+        userId: 'emp2',
+        firebaseUid: 'uid3',
+        storeId: storeId,
+        role: UserRole.employee,
+        fullName: 'Emp With Stats',
+        isActive: true,
+        createdAt: DateTime.now(),
+        lastLogin: DateTime.now(),
+        permissions: UserPermissions(viewDashboardStats: true),
+      );
+
+      when(() => mockAuthProvider.currentUser).thenReturn(employeeWithStats);
+
+      reset(mockStatsRepo);
+      when(() => mockStatsRepo.getStatsSummary(storeId))
+          .thenAnswer((_) async => StatsSummaryModel.empty());
+      when(() => mockStatsRepo.fetchTodayStats(storeId))
+          .thenAnswer((_) async => DailyStatsModel.empty('2026-06-05'));
+
+      final prov = StatisticsProvider(
+        statsRepository: mockStatsRepo,
+        authProvider: mockAuthProvider,
+      );
+
+      prov.setStoreId(storeId);
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockStatsRepo.getStatsSummary(storeId)).called(1);
+    });
+  });
 }
+
+class MockAuthProvider extends Mock implements AuthProvider {}
+

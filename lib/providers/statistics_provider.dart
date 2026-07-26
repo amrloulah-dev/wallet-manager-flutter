@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
@@ -6,12 +7,14 @@ import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
 import '../core/utils/number_parser.dart';
 import '../core/enums/transaction_enums.dart';
+import 'auth_provider.dart';
 import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
 
 class StatisticsProvider extends BaseProvider {
   final StatsRepository _statsRepository;
+  AuthProvider? _authProvider;
 
   String? _storeId;
 
@@ -52,10 +55,12 @@ class StatisticsProvider extends BaseProvider {
 
   StatisticsProvider({
     required StatsRepository statsRepository,
-  }) : _statsRepository = statsRepository {
-    // ── Streams-Driven Sync (Phase 1) ──
-    // Manual AppEvents listener removed. Data sync is now handled by _summarySubscription
-    // and _todayStatsSubscription established in fetchDashboardStats().
+    AuthProvider? authProvider,
+  })  : _statsRepository = statsRepository,
+        _authProvider = authProvider;
+
+  void updateAuthProvider(AuthProvider authProvider) {
+    _authProvider = authProvider;
   }
 
   @override
@@ -81,6 +86,17 @@ class StatisticsProvider extends BaseProvider {
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
+    final user = _authProvider?.currentUser;
+    if (user != null &&
+        user.isEmployee &&
+        !user.hasPermission((p) => p.viewDashboardStats)) {
+      if (kDebugMode) {
+        debugPrint(
+            '🔒 [INIT RBAC] StatisticsProvider: Employee lacks viewDashboardStats permission, skipping fetch.');
+      }
+      return;
+    }
+
     if (kDebugMode) {
       debugPrint(
           '🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
@@ -138,6 +154,25 @@ class StatisticsProvider extends BaseProvider {
 
       _isLoading = false;
       safeNotify();
+    } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🔒 [INIT RBAC] StatisticsProvider: Employee lacks stats permission, showing empty stats.');
+        }
+        _dashboardSummary = StatsSummaryModel.empty();
+        _todayStats = DailyStatsModel.empty(
+            '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}');
+        _isLoading = false;
+        _errorMessage = null;
+        safeNotify();
+        return;
+      }
+      if (kDebugMode) {
+        debugPrint(
+            '❌ [INIT FATAL] StatisticsProvider: Fetching dashboard stats failed: $e');
+      }
+      setError('stats_error_summary_fetch', e, stack);
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint(

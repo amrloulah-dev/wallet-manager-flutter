@@ -116,11 +116,17 @@ class MyApp extends StatelessWidget {
             ..updateEmployeeProvider(employeeProvider),
         ),
         ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
-          create: (_) => StatisticsProvider(
+          create: (context) => StatisticsProvider(
             statsRepository: sl<StatsRepository>(),
+            authProvider: Provider.of<AuthProvider>(context, listen: false),
           ),
           update: (_, auth, previous) {
-            final p = previous!..setStoreId(auth.currentStoreId);
+            final p = (previous ??
+                StatisticsProvider(
+                    statsRepository: sl<StatsRepository>(),
+                    authProvider: auth))
+              ..updateAuthProvider(auth)
+              ..setStoreId(auth.currentStoreId);
             if (sl.isRegistered<StatisticsProvider>()) {
               sl.unregister<StatisticsProvider>();
             }
