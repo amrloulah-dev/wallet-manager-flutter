@@ -30,15 +30,15 @@
 
 ## Phase 2 — Eager Initialization Guards
 
-- [ ] Task: Write failing tests for `StatisticsProvider` employee guard
-    - [ ] Test that `fetchDashboardStats()` returns early without Firestore call when user is employee without `viewDashboardStats` permission
-    - [ ] Test that `fetchDashboardStats()` proceeds normally for owners
-    - [ ] Test that `fetchDashboardStats()` proceeds normally for employees with `viewDashboardStats` permission
+- [x] Task: Write failing tests for `StatisticsProvider` employee guard [92aa3f4]
+    - [x] Test that `fetchDashboardStats()` returns early without Firestore call when user is employee without `viewDashboardStats` permission
+    - [x] Test that `fetchDashboardStats()` proceeds normally for owners
+    - [x] Test that `fetchDashboardStats()` proceeds normally for employees with `viewDashboardStats` permission
 
-- [ ] Task: Implement `StatisticsProvider.fetchDashboardStats()` employee guard
-    - [ ] In `lib/providers/statistics_provider.dart`, add guard clause checking `_authProvider.currentUser`
-    - [ ] If user is employee and `!user.hasPermission((p) => p.viewDashboardStats)`, silently return
-    - [ ] Run tests and confirm they pass
+- [x] Task: Implement `StatisticsProvider.fetchDashboardStats()` employee guard [92aa3f4]
+    - [x] In `lib/providers/statistics_provider.dart`, add guard clause checking `_authProvider.currentUser`
+    - [x] If user is employee and `!user.hasPermission((p) => p.viewDashboardStats)`, silently return
+    - [x] Run tests and confirm they pass
 
 - [ ] Task: Write failing tests for `WalletProvider` employee guard on `resetLimitsForWallets()`
     - [ ] Test that `resetLimitsForWallets()` is not called when user is an employee
