@@ -701,7 +701,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinMustBe4Digits.
   ///
   /// In ar, this message translates to:
-  /// **'يجب أن يكون 4 أرقام'**
+  /// **'يجب أن يكون 6 أرقام'**
   String get pinMustBe4Digits;
 
   /// No description provided for @loginAction.
@@ -2579,7 +2579,7 @@ abstract class AppLocalizations {
   /// No description provided for @fourDigits.
   ///
   /// In ar, this message translates to:
-  /// **'4 أرقام'**
+  /// **'6 أرقام'**
   String get fourDigits;
 
   /// No description provided for @confirmPin.
@@ -3587,7 +3587,7 @@ abstract class AppLocalizations {
   /// No description provided for @employee_error_invalid_pin.
   ///
   /// In ar, this message translates to:
-  /// **'الرقم السري يجب أن يكون 4 أرقام'**
+  /// **'الرقم السري يجب أن يكون 6 أرقام'**
   String get employee_error_invalid_pin;
 
   /// No description provided for @employee_error_wrong_pin.

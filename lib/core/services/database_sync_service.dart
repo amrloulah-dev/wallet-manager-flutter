@@ -58,8 +58,10 @@ class DatabaseSyncService {
         _localStorage = localStorage,
         _subscriptionRepository =
             subscriptionRepository ?? sl<SubscriptionRepository>(),
-        _identityMigrationUseCase =
-            identityMigrationUseCase ?? sl<IdentityMigrationUseCase>();
+        _identityMigrationUseCase = identityMigrationUseCase ??
+            (sl.isRegistered<IdentityMigrationUseCase>()
+                ? sl<IdentityMigrationUseCase>()
+                : IdentityMigrationUseCase());
 
   bool _isSubExpired(StoreSubscription sub) =>
       sub.isExpiredAt(TimeService.now());

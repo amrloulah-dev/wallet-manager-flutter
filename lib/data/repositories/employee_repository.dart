@@ -321,8 +321,8 @@ class EmployeeRepository {
     required String userId,
     required String newPin,
   }) async {
-    if (newPin.length != 4) {
-      throw ValidationException('PIN must be 4 digits');
+    if (newPin.length != 6) {
+      throw ValidationException('PIN must be 6 digits');
     }
 
     try {

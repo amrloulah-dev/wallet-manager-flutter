@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:walletmanager/data/repositories/employee_repository.dart';
 import 'package:walletmanager/core/constants/firebase_constants.dart';
+import 'package:walletmanager/core/services/identity_service.dart';
 import 'package:walletmanager/core/utils/password_hasher.dart';
 import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
@@ -14,10 +16,21 @@ import 'package:walletmanager/core/errors/app_exceptions.dart';
 class MockPlatformSettingsProvider extends Mock
     implements PlatformSettingsProvider {}
 
+class MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
+class MockUserCredential extends Mock implements UserCredential {}
+
+class MockUser extends Mock implements User {}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late EmployeeRepository repository;
   late FakeFirebaseFirestore fakeFirestore;
   late MockPlatformSettingsProvider mockPlatformSettingsProvider;
+  late MockFirebaseAuth mockAuth;
+  late MockUserCredential mockUserCredential;
+  late MockUser mockUser;
 
   final defaultPermissions = UserPermissions(
     createTransaction: true,
@@ -39,6 +52,19 @@ void main() {
     fakeFirestore = FakeFirebaseFirestore();
     repository = EmployeeRepository(firestore: fakeFirestore);
     mockPlatformSettingsProvider = MockPlatformSettingsProvider();
+    mockAuth = MockFirebaseAuth();
+    mockUserCredential = MockUserCredential();
+    mockUser = MockUser();
+
+    IdentityService.authOverride = mockAuth;
+
+    when(() => mockAuth.createUserWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        )).thenAnswer((_) async => mockUserCredential);
+    when(() => mockUserCredential.user).thenReturn(mockUser);
+    when(() => mockUser.uid).thenReturn('auth_uid_mock');
+    when(() => mockUser.getIdToken()).thenAnswer((_) async => 'fake_token');
 
     final sl = GetIt.instance;
     if (sl.isRegistered<PlatformSettingsProvider>()) {
@@ -52,9 +78,13 @@ void main() {
     when(() => mockPlatformSettingsProvider.settings).thenReturn(settings);
   });
 
-  group('EmployeeRepository Atomic Stats Verification', () {
+  tearDown(() {
+    IdentityService.authOverride = null;
+  });
+
+  group('EmployeeRepository Atomic Stats & Deactivate Verification', () {
     test(
-        'deactivateEmployee should decrement totalEmployees only in stats summary doc, NOT store doc',
+        'deactivateEmployee should decrement totalEmployees in stats summary doc AND delete pin_locks doc',
         () async {
       final storeId = 's1';
       final userId = 'u1';
@@ -71,6 +101,15 @@ void main() {
         'totalEmployees': 10,
       });
 
+      final hashedPin = await PasswordHasher.hashPassword('123456');
+      final pinLockPath = FirebaseConstants.pinLockPath(storeId, hashedPin);
+
+      // Pre-set pin_lock doc
+      await fakeFirestore.doc(pinLockPath).set({
+        'userId': userId,
+        'createdAt': 'timestamp',
+      });
+
       await fakeFirestore
           .collection(FirebaseConstants.usersCollection)
           .doc(userId)
@@ -79,7 +118,7 @@ void main() {
         'storeId': storeId,
         'isActive': true,
         'role': 'employee',
-        'pin': await PasswordHasher.hashPassword('1234'),
+        'pin': hashedPin,
       });
 
       // Execute deactivation
@@ -88,11 +127,14 @@ void main() {
       // Verify final state
       final storeSnap = await fakeFirestore.doc(storePath).get();
       final statsSnap = await fakeFirestore.doc(statsPath).get();
+      final pinLockSnap = await fakeFirestore.doc(pinLockPath).get();
 
       // Store doc stats should NOT change
       expect(storeSnap.data()?['stats']?['totalEmployees'], 10);
       // Summary doc stats should decrement to 9
       expect(statsSnap.data()?['totalEmployees'], 9);
+      // pin_locks doc MUST be deleted to free up the seat lock
+      expect(pinLockSnap.exists, isFalse);
     });
 
     test('addEmployee enforces capacity limits from catalog (under limit)',
@@ -114,7 +156,7 @@ void main() {
         'storeId': storeId,
         'isActive': true,
         'role': 'employee',
-        'pin': await PasswordHasher.hashPassword('0000'),
+        'pin': await PasswordHasher.hashPassword('000000'),
       });
 
       // Mock catalog plan limit of 5 employees
@@ -174,7 +216,7 @@ void main() {
         storeId: storeId,
         fullName: 'New Employee',
         phone: '1234567890',
-        pin: '1234',
+        pin: '123456',
         permissions: defaultPermissions,
       );
 
@@ -201,7 +243,7 @@ void main() {
           'storeId': storeId,
           'isActive': true,
           'role': 'employee',
-          'pin': await PasswordHasher.hashPassword('000$i'),
+          'pin': await PasswordHasher.hashPassword('00000$i'),
         });
       }
 
@@ -263,7 +305,7 @@ void main() {
           storeId: storeId,
           fullName: 'New Employee',
           phone: '1234567890',
-          pin: '1234',
+          pin: '123456',
           permissions: defaultPermissions,
         ),
         throwsA(isA<ServerException>()),
@@ -290,7 +332,7 @@ void main() {
           'storeId': storeId,
           'isActive': true,
           'role': 'employee',
-          'pin': await PasswordHasher.hashPassword('000$i'),
+          'pin': await PasswordHasher.hashPassword('00000$i'),
         });
       }
 
@@ -351,7 +393,7 @@ void main() {
         storeId: storeId,
         fullName: 'New Employee',
         phone: '1234567890',
-        pin: '1234',
+        pin: '123456',
         permissions: defaultPermissions,
       );
 

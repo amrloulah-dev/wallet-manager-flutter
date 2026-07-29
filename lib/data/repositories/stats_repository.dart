@@ -46,6 +46,21 @@ class StatsRepository {
       } else {
         return DailyStatsModel.empty(todayDate);
       }
+    } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        AppErrorHandler.logSilentError(
+            'Employee lacks permission to read today stats: ${e.message}',
+            'StatsRepository.fetchTodayStats',
+            stackTrace: stack);
+        return DailyStatsModel.empty(DateHelper.getCurrentDateString());
+      }
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.fetchTodayStats',
+      );
+      return DailyStatsModel.empty(DateHelper.getCurrentDateString());
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,

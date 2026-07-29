@@ -71,7 +71,7 @@ void main() {
   });
 
   group('EmployeeProvider Identity Orchestration', () {
-    test('addEmployee calls provisionIdentity after success', () async {
+    test('addEmployee calls repository addEmployee after validation', () async {
       when(() => mockRepository.addEmployee(
             storeId: 'store-123',
             fullName: any(named: 'fullName'),
@@ -80,20 +80,24 @@ void main() {
             permissions: any(named: 'permissions'),
           )).thenAnswer((_) async => mockEmployee);
 
-      when(() => mockRepository.provisionIdentity(any()))
-          .thenAnswer((_) async {});
-
-      await employeeProvider.addEmployee(
+      final success = await employeeProvider.addEmployee(
         fullName: 'Test Employee',
         phone: '123456789',
-        pin: '1234',
+        pin: '123456',
         permissions: mockEmployee.permissions!,
       );
 
-      verify(() => mockRepository.provisionIdentity(mockEmployee)).called(1);
+      expect(success, isTrue);
+      verify(() => mockRepository.addEmployee(
+            storeId: 'store-123',
+            fullName: 'Test Employee',
+            phone: '123456789',
+            pin: '123456',
+            permissions: mockEmployee.permissions!,
+          )).called(1);
     });
 
-    test('addEmployee propagates gracefully if provisionIdentity throws',
+    test('addEmployee propagates gracefully if repository addEmployee throws',
         () async {
       when(() => mockRepository.addEmployee(
             storeId: 'store-123',
@@ -101,21 +105,17 @@ void main() {
             phone: any(named: 'phone'),
             pin: any(named: 'pin'),
             permissions: any(named: 'permissions'),
-          )).thenAnswer((_) async => mockEmployee);
+          )).thenThrow(Exception('Provisioning failed'));
 
-      when(() => mockRepository.provisionIdentity(any()))
-          .thenThrow(Exception('Provisioning failed'));
-
-      // Should not throw
-      await employeeProvider.addEmployee(
+      final result = await employeeProvider.addEmployee(
         fullName: 'Test Employee',
         phone: '123456789',
-        pin: '1234',
+        pin: '123456',
         permissions: mockEmployee.permissions!,
       );
 
-      // Verify provision was still called, even if it failed silently in background
-      verify(() => mockRepository.provisionIdentity(mockEmployee)).called(1);
+      expect(result, isFalse);
+      expect(employeeProvider.hasError, isTrue);
     });
 
     test('resetEmployeePIN calls syncCredential after success', () async {
@@ -127,11 +127,11 @@ void main() {
           .thenAnswer((_) async {});
 
       await employeeProvider.resetEmployeePIN(
-          userId: mockEmployee.userId, newPin: '4321');
+          userId: mockEmployee.userId, newPin: '654321');
 
       verify(() => mockRepository.resetEmployeePIN(
           userId: mockEmployee.userId, newPin: any(named: 'newPin'))).called(1);
-      verify(() => mockRepository.syncCredential(mockEmployee, '4321'))
+      verify(() => mockRepository.syncCredential(mockEmployee, '654321'))
           .called(1);
     });
 
@@ -167,7 +167,7 @@ void main() {
             storeId: 'store-123',
             fullName: 'New Employee',
             phone: '987654321',
-            pin: '1234',
+            pin: '123456',
             permissions: any(named: 'permissions'),
           )).thenAnswer((_) async => newEmp);
 
@@ -180,7 +180,7 @@ void main() {
       final result = await employeeProvider.addEmployee(
         fullName: 'New Employee',
         phone: '987654321',
-        pin: '1234',
+        pin: '123456',
         permissions: mockEmployee.permissions!,
       );
 

@@ -317,7 +317,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinLabel => 'رقم التعريف الشخصي (PIN)';
 
   @override
-  String get pinMustBe4Digits => 'يجب أن يكون 4 أرقام';
+  String get pinMustBe4Digits => 'يجب أن يكون 6 أرقام';
 
   @override
   String get loginAction => 'تسجيل الدخول';
@@ -1290,7 +1290,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pin => 'الرقم السري';
 
   @override
-  String get fourDigits => '4 أرقام';
+  String get fourDigits => '6 أرقام';
 
   @override
   String get confirmPin => 'تأكيد الرقم السري';
@@ -1837,7 +1837,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employee_error_create_failed => 'حدث خطأ أثناء إضافة الموظف';
 
   @override
-  String get employee_error_invalid_pin => 'الرقم السري يجب أن يكون 4 أرقام';
+  String get employee_error_invalid_pin => 'الرقم السري يجب أن يكون 6 أرقام';
 
   @override
   String get employee_error_wrong_pin => 'الرقم السري غير صحيح';

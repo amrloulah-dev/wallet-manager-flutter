@@ -240,7 +240,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           prefixIcon: const Icon(Icons.pin_outlined),
           obscureText: _obscurePin,
           keyboardType: TextInputType.number,
-          maxLength: 4,
+          maxLength: 6,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           suffixIcon: IconButton(
             icon: Icon(_obscurePin ? Icons.visibility_off : Icons.visibility),
@@ -260,7 +260,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           prefixIcon: const Icon(Icons.lock_outline),
           obscureText: _obscureConfirmPin,
           keyboardType: TextInputType.number,
-          maxLength: 4,
+          maxLength: 6,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           suffixIcon: IconButton(
             icon: Icon(

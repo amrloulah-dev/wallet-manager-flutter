@@ -276,7 +276,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                             ),
                             obscureText: _obscurePin,
                             keyboardType: TextInputType.number,
-                            maxLength: 4,
+                            maxLength: 6,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
                             ],
@@ -284,7 +284,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               if (val == null || val.isEmpty) {
                                 return l10n.requiredField;
                               }
-                              if (val.length != 4) return l10n.pinMustBe4Digits;
+                              if (val.length != 6) return l10n.pinMustBe4Digits;
                               return null;
                             },
                           ),

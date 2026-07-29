@@ -183,10 +183,10 @@ void main() {
       expect(optimisticTx.amount, 100.0);
 
       // Verify local wallet balance update was triggered
-      verify(() => mockWalletProvider.updateLocalWalletBalance(
-            walletId: walletId,
-            amount: 100.0,
-            isIncome: false,
+      verify(() => mockWalletProvider.updateLocalBalance(
+            walletId,
+            100.0,
+            TransactionType.debit,
             serviceFee: 0.0,
           )).called(1);
 
@@ -200,10 +200,10 @@ void main() {
         () async {
       when(() => mockTxRepo.createTransaction(any()))
           .thenThrow(Exception('Firestore write failed'));
-      when(() => mockWalletProvider.updateLocalWalletBalance(
-            walletId: any(named: 'walletId'),
-            amount: any(named: 'amount'),
-            isIncome: any(named: 'isIncome'),
+      when(() => mockWalletProvider.updateLocalBalance(
+            any(),
+            any(),
+            any(),
             serviceFee: any(named: 'serviceFee'),
           )).thenReturn(null);
 
@@ -224,10 +224,10 @@ void main() {
       expect(provider.transactions, isEmpty);
 
       // Balance rollback should be triggered via snapshot rollback
-      verify(() => mockWalletProvider.updateLocalWalletBalance(
-            walletId: walletId,
-            amount: 100.0,
-            isIncome: false,
+      verify(() => mockWalletProvider.updateLocalBalance(
+            walletId,
+            100.0,
+            TransactionType.debit,
             serviceFee: 0.0,
           )).called(1);
       verify(() => mockWalletProvider.rollbackWallet(any())).called(1);

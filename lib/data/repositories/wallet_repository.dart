@@ -406,6 +406,18 @@ class WalletRepository {
         if (walletsToResetInBatch > 0) {
           await batch.commit();
         }
+      } on FirebaseException catch (e, stack) {
+        if (e.code == 'permission-denied') {
+          AppErrorHandler.logSilentError(
+              'Employee lacks write permission for limit resets: ${e.message}',
+              'WalletRepository.resetLimitsForWallets',
+              stackTrace: stack);
+          return;
+        }
+        AppErrorHandler.handle(e,
+            stackTrace: stack,
+            operation: 'WalletRepository.resetLimitsForWallets');
+        throw ServerException('wallet_error_update_failed');
       } catch (e, stack) {
         AppErrorHandler.handle(e,
             stackTrace: stack,

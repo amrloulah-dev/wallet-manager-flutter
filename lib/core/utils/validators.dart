@@ -239,12 +239,9 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'يرجى إدخال الرقم السري';
     }
-    if (value.length != 4) {
-      return 'الرقم السري يجب أن يكون 4 أرقام';
-    }
-    final RegExp digitsOnly = RegExp(r'^[0-9]+$');
-    if (!digitsOnly.hasMatch(value)) {
-      return 'الرقم السري يجب أن يحتوي على أرقام فقط';
+    final RegExp pin6Digits = RegExp(r'^\d{6}$');
+    if (!pin6Digits.hasMatch(value)) {
+      return 'الرقم السري يجب أن يكون 6 أرقام';
     }
     return null;
   }

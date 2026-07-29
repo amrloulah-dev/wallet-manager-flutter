@@ -33,6 +33,7 @@ class MockDocumentReference extends Mock
     implements DocumentReference<Map<String, dynamic>> {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late MockFirebaseFirestore mockFirestore;
   late MockFirebaseService mockFirebaseService;
   late MockFirebaseAuth mockAuth;
@@ -72,7 +73,7 @@ void main() {
 
   group('Technical Debt - Dependency Injection', () {
     test('EmployeeRepository should use sl<FirebaseService>().firestore', () {
-      final repository = EmployeeRepository();
+      EmployeeRepository();
       // EmployeeRepository accesses firestore in constructor
       verify(() => mockFirebaseService.firestore).called(greaterThan(0));
     });
@@ -97,6 +98,7 @@ void main() {
       when(() => mockQuery.orderBy(any(), descending: any(named: 'descending')))
           .thenReturn(mockQuery);
       when(() => mockQuery.limit(any())).thenReturn(mockQuery);
+      when(() => mockQuery.get(any())).thenAnswer((_) async => mockSnapshot);
       when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.docs).thenReturn([]);
 

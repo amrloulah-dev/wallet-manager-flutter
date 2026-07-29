@@ -202,7 +202,7 @@ class EmployeeProvider extends BaseProvider {
     required String storeId,
     required String pin,
   }) async {
-    if (pin.length != 4 || !_isNumeric(pin)) {
+    if (pin.length != 6 || !_isNumeric(pin)) {
       setError('employee_error_invalid_pin');
       safeNotify();
       return null;
@@ -301,7 +301,7 @@ class EmployeeProvider extends BaseProvider {
     required String userId,
     required String newPin,
   }) async {
-    if (newPin.length != 4 || !_isNumeric(newPin)) {
+    if (newPin.length != 6 || !_isNumeric(newPin)) {
       setError('employee_error_invalid_pin');
       safeNotify();
       return false;

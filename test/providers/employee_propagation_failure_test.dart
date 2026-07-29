@@ -65,7 +65,7 @@ void main() {
           )).thenThrow(exception);
 
       await employeeProvider.resetEmployeePIN(
-          userId: 'user123', newPin: '1234');
+          userId: 'user123', newPin: '123456');
 
       expect(employeeProvider.lastError, equals(exception));
       expect(employeeProvider.lastStack, isNotNull);

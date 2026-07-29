@@ -13,7 +13,12 @@ class IdentityMigrationUseCase {
   final FirebaseFirestore _firestore;
 
   IdentityMigrationUseCase({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? sl<FirebaseService>().firestore;
+      : _firestore = firestore ??
+            (sl.isRegistered<FirebaseService>()
+                ? sl<FirebaseService>().firestore
+                : (sl.isRegistered<FirebaseFirestore>()
+                    ? sl<FirebaseFirestore>()
+                    : FirebaseFirestore.instance));
 
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection(FirebaseConstants.usersCollection);

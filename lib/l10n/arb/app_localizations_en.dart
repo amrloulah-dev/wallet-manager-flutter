@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinLabel => 'PIN';
 
   @override
-  String get pinMustBe4Digits => 'Must be 4 digits';
+  String get pinMustBe4Digits => 'Must be 6 digits';
 
   @override
   String get loginAction => 'Login';
@@ -1293,7 +1293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pin => 'PIN';
 
   @override
-  String get fourDigits => '4 digits';
+  String get fourDigits => '6 digits';
 
   @override
   String get confirmPin => 'Confirm PIN';
@@ -1849,7 +1849,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Error occurred while adding employee.';
 
   @override
-  String get employee_error_invalid_pin => 'PIN must be 4 digits.';
+  String get employee_error_invalid_pin => 'PIN must be 6 digits.';
 
   @override
   String get employee_error_wrong_pin => 'Incorrect PIN.';

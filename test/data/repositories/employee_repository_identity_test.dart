@@ -78,7 +78,7 @@ void main() {
       const storeId = 'store_id_1';
       const authUid = 'auth_uid_12345';
       const phone = '01000000000';
-      const pin = '1234';
+      const pin = '123456';
 
       // Set up store doc
       await fakeFirestore
@@ -124,12 +124,18 @@ void main() {
           .get();
       expect(pinLocksSnap.docs.isNotEmpty, isTrue);
       expect(pinLocksSnap.docs.first.data()['userId'], equals(authUid));
+
+      // Verify raw 6-digit PIN is passed directly as password to Firebase Auth
+      verify(() => mockAuth.createUserWithEmailAndPassword(
+            email: 'emp_${phone}_$storeId@store.com',
+            password: '123456',
+          )).called(1);
     });
 
     test('addEmployee fails when identity provisioning fails', () async {
       const storeId = 'store_id_1';
       const phone = '01000000000';
-      const pin = '1234';
+      const pin = '123456';
 
       await fakeFirestore
           .collection(FirebaseConstants.storesCollection)
