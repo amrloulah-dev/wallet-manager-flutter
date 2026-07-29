@@ -38,19 +38,19 @@ class UserPermissions {
 
   factory UserPermissions.defaultPermissions() {
     return UserPermissions(
-      createTransaction: false,
+      createTransaction: true,
       editTransaction: false,
-      viewAllTransactions: false,
-      viewDebts: false,
-      createDebt: false,
-      collectDebt: false,
+      viewAllTransactions: true,
+      viewDebts: true,
+      createDebt: true,
+      collectDebt: true,
       deleteDebt: false,
-      viewWallets: false,
-      viewWalletBalance: false,
+      viewWallets: true,
+      viewWalletBalance: true,
       createWallet: false,
-      addBalance: false,
+      addBalance: true,
       editWallet: false,
-      viewDashboardStats: false,
+      viewDashboardStats: true,
     );
   }
 

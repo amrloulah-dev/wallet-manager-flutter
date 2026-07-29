@@ -132,9 +132,10 @@ class UserModel {
       'lastLogin': lastLogin != null ? Timestamp.fromDate(lastLogin!) : null,
     };
 
-    if (isEmployee) {
-      map['permissions'] = permissions?.toMap();
-      map['stats'] = stats?.toMap();
+    if (isEmployee || role == UserRole.employee) {
+      map['permissions'] =
+          (permissions ?? UserPermissions.defaultPermissions()).toMap();
+      map['stats'] = (stats ?? UserStats()).toMap();
     }
 
     return map;
