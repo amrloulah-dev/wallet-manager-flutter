@@ -99,8 +99,9 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       }
 
       // 3. Login
-      final success =
-          await authProvider.loginAsEmployee(_selectedEmployee!, widget.store);
+      final success = await authProvider.loginAsEmployee(
+          _selectedEmployee!, widget.store,
+          rawPin: _pinController.text);
 
       if (success) {
         if (!mounted) return;

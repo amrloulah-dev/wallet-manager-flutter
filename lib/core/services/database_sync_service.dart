@@ -200,15 +200,20 @@ class DatabaseSyncService {
   }
 
   Future<AuthSessionResult> loginAsEmployee(
-      UserModel employee, StoreModel store) async {
+      UserModel employee, StoreModel store,
+      {String? rawPin}) async {
     if (!store.isActive) throw StoreInactiveException();
 
     bool identityAuthSuccess = false;
+    final pinToUse = (rawPin != null && rawPin.isNotEmpty)
+        ? rawPin
+        : (employee.pin ?? '');
+
     if (employee.firebaseUid != null && employee.firebaseUid!.isNotEmpty) {
       final uid = await IdentityService.authenticateEmployee(
         phone: employee.phone ?? '',
         storeId: store.storeId,
-        pin: employee.pin ?? '',
+        pin: pinToUse,
       );
 
       if (uid != null) {
@@ -221,7 +226,7 @@ class DatabaseSyncService {
     if (!identityAuthSuccess &&
         (employee.firebaseUid == null || employee.firebaseUid!.isEmpty)) {
       try {
-        final newUid = await _lazyProvision(employee);
+        final newUid = await _lazyProvision(employee, rawPin: pinToUse);
         await _userRepository
             .updateUser(employee.userId, {'firebaseUid': newUid});
         employee = employee.copyWith(firebaseUid: newUid);
@@ -476,10 +481,12 @@ class DatabaseSyncService {
     }
   }
 
-  Future<String> _lazyProvision(UserModel employee) async {
+  Future<String> _lazyProvision(UserModel employee, {String? rawPin}) async {
     final phone = employee.phone ?? '';
     final storeId = employee.storeId;
-    final pin = employee.pin ?? '';
+    final pin = (rawPin != null && rawPin.isNotEmpty)
+        ? rawPin
+        : (employee.pin ?? '');
 
     try {
       final uid = await IdentityService.provisionIdentity(

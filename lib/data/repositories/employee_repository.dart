@@ -476,14 +476,10 @@ class EmployeeRepository {
     try {
       if (employee.phone == null) return;
 
-      final hashedPin = newPin.length == 4
-          ? await PasswordHasher.hashPassword(newPin)
-          : newPin;
-
       await IdentityService.updateCredential(
         phone: employee.phone!,
         storeId: employee.storeId,
-        newPin: hashedPin,
+        newPin: newPin,
       );
 
       await _usersCollection.doc(employee.userId).update({

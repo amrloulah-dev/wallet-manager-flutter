@@ -265,13 +265,15 @@ class AuthProvider extends BaseProvider {
     }
   }
 
-  Future<bool> loginAsEmployee(UserModel employee, StoreModel store) async {
+  Future<bool> loginAsEmployee(UserModel employee, StoreModel store,
+      {String? rawPin}) async {
     _isAuthenticating = true;
     _isActionLoading = true;
     safeNotify();
     try {
-      final result =
-          await _databaseSyncService.loginAsEmployee(employee, store);
+      final result = await _databaseSyncService.loginAsEmployee(
+          employee, store,
+          rawPin: rawPin);
       _applySessionResult(result);
       return true;
     } catch (e, stack) {
