@@ -270,23 +270,15 @@ class UserRepository {
   /// Updates the last login timestamp for a user.
   Future<void> updateLastLogin(String userId) async {
     try {
-      await _usersCollection
-          .doc(userId)
-          .update({FirebaseConstants.lastLogin: FieldValue.serverTimestamp()});
-    } on FirebaseException catch (e, stack) {
-      if (e.code == 'permission-denied') {
-        // Graceful degradation: Employee cannot update their own document.
-        AppErrorHandler.logSilentError(
-            'updateLastLogin permission denied for $userId',
-            'UserRepository.updateLastLogin',
-            stackTrace: stack);
-        return;
-      }
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('user_error_fetch_failed', code: e.code);
+      await _firestore.collection('users').doc(userId).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+      });
     } catch (e, stack) {
-      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
-      throw ServerException('user_error_unexpected');
+      AppErrorHandler.logSilentError(
+        e.toString(),
+        'UserRepository.updateLastLogin',
+        stackTrace: stack,
+      );
     }
   }
 
@@ -339,7 +331,7 @@ class UserRepository {
 
   /// Updates an employee's PIN.
   Future<void> updateEmployeePin(String userId, String newPin) async {
-    final hashedPassword = await PasswordHasher.hashPassword(newPin);
+    final hashedPassword = PasswordHasher.hashPasswordBcrypt(newPin);
     await updateUser(userId, {FirebaseConstants.pin: hashedPassword});
   }
 

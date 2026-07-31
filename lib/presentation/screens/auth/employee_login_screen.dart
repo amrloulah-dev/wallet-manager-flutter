@@ -84,24 +84,25 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
       }
 
       // 1. Verify Store Password
+      final rawStorePassword = _storePasswordController.text.trim();
       if (!await PasswordHasher.verifyPassword(
-          _storePasswordController.text, widget.store.storePassword)) {
+          rawStorePassword, widget.store.storePassword)) {
         throw AuthException(l10n.storePasswordInvalid);
       }
 
       // 2. Verify Employee PIN
-      if (!await PasswordHasher.verifyPassword(
-          _pinController.text, _selectedEmployee!.pin!)) {
-        // Double check if legacy plain text match works (optional safety)
-        if (_selectedEmployee!.pin != _pinController.text) {
-          throw AuthException(l10n.pinInvalid);
-        }
+      final rawPin = _pinController.text.trim();
+      if (_selectedEmployee!.pin == null ||
+          (!await PasswordHasher.verifyPassword(
+                  rawPin, _selectedEmployee!.pin!) &&
+              _selectedEmployee!.pin != rawPin)) {
+        throw AuthException(l10n.pinInvalid);
       }
 
       // 3. Login
       final success = await authProvider.loginAsEmployee(
           _selectedEmployee!, widget.store,
-          rawPin: _pinController.text);
+          rawPin: rawPin);
 
       if (success) {
         if (!mounted) return;

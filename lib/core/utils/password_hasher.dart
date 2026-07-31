@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:bcrypt/bcrypt.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:convert/convert.dart';
 import 'package:flutter/foundation.dart';
@@ -26,6 +27,10 @@ class PasswordHasher {
   // ===========================
   // Hash Password
   // ===========================
+  /// Hashes a raw PIN using Bcrypt.
+  static String hashPasswordBcrypt(String rawPin) =>
+      BCrypt.hashpw(rawPin, BCrypt.gensalt());
+
   /// Hashes a password using PBKDF2 with a random salt.
   /// Returns a string in format "salt:hash" (hex encoded).
   static Future<String> hashPassword(String password) async {
@@ -78,10 +83,14 @@ class PasswordHasher {
   // ===========================
   // Verify Password
   // ===========================
-  /// Verifies an input password against a stored "salt:hash" string.
+  /// Verifies an input password against a stored hash string (Bcrypt or legacy "salt:hash").
   static Future<bool> verifyPassword(
       String inputPassword, String storedHash) async {
     try {
+      if (storedHash.startsWith('\$2a\$') || storedHash.startsWith('\$2b\$')) {
+        return BCrypt.checkpw(inputPassword, storedHash);
+      }
+
       final parts = storedHash.split(':');
       if (parts.length != 2) {
         return false;

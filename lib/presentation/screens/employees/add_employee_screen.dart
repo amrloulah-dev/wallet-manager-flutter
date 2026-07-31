@@ -54,6 +54,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   }
 
   Future<void> _submitForm() async {
+    if (_isSubmitting) return;
     final employeeProvider = context.read<EmployeeProvider>();
 
     // H007 (Tightened): Preemptive hard-stop paywall check — BEFORE form validation
@@ -69,6 +70,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     final phone = _phoneController.text.trim();
 
     setState(() => _isSubmitting = true);
+
+    debugPrint(
+        '🔍 [TRACE 1 - UI] Sending User: ${_fullNameController.text.trim()}, Permissions: ${_permissions.toMap()}');
 
     final success = await employeeProvider.addEmployee(
       fullName: _fullNameController.text.trim(),

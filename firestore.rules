@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ==========================================
-    // 1. دوال مساعدة أمنية (Security Helpers)
+    // 1. Core Security & Isolation Helpers
     // ==========================================
     
     function isAuthenticated() {
@@ -12,49 +12,50 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
+      return isAuthenticated() && request.auth.token.get('admin', false) == true;
     }
 
     function isStoreOwner(storeId) {
       return isAuthenticated() && request.auth.uid == storeId;
     }
 
-    // ضفنا دالة exists عشان لو اليوزر لسه جديد ومستنده مكملش، ميضربش كراش للنسخة القديمة
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isUserDocExists() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function isStoreEmployee(storeId) {
-      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return isAuthenticated() && exists(userPath) && get(userPath).data.storeId == storeId;
+      return isUserDocExists() && getUserData().get('storeId', '') == storeId && getUserData().get('isActive', false) == true;
     }
 
     function canAccessStore(storeId) {
       return isStoreOwner(storeId) || isStoreEmployee(storeId);
     }
 
-    // ضفنا دالة exists هنا برضه كحماية
     function hasPermission(permissionName) {
-      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return isAuthenticated() && exists(userPath) && (
-        get(userPath).data.role == 'owner' || 
-        (get(userPath).data.role == 'employee' && get(userPath).data.get('permissions', {}).get(permissionName, false) == true)
+      return isAuthenticated() && isUserDocExists() && (
+        getUserData().get('role', '') == 'owner' || 
+        (
+          getUserData().get('role', '') == 'employee' && 
+          getUserData().get('permissions', {}).get(permissionName, false) == true
+        )
       );
     }
 
     // ==========================================
-    // 2. قواعد لوحة تحكم الإدارة (Admin Panel Rules)
+    // 2. Admin & System Rules
     // ==========================================
     
     match /admin_stats/{document=**} {
       allow read, write: if isAdmin();
     }
     
-    // ==========================================
-    // 3. القواعد الأساسية لتطبيق الهاتف والإدارة
-    // ==========================================
-
     match /device_registrations/{deviceId} {
-      allow get: if isAuthenticated() && resource.data.ownerUid == request.auth.uid || isAdmin();
-      allow create: if isAuthenticated() && 
-                       request.resource.data.keys().hasAll(['deviceId', 'ownerUid']) && 
-                       request.resource.data.ownerUid == request.auth.uid || isAdmin();
+      allow get: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['deviceId', 'ownerUid']) && (request.resource.data.ownerUid == request.auth.uid || isAdmin());
       allow update, delete, list: if isAdmin(); 
     }
 
@@ -64,23 +65,30 @@ service cloud.firestore {
       allow create, delete: if isAdmin(); 
     }
 
+    // ==========================================
+    // 3. User Identity & Store Infrastructure
+    // ==========================================
+
     match /users/{userId} {
       allow get: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
-      allow update: if (isAuthenticated() && request.auth.uid == userId 
-                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'storeId', 'isActive'])) 
-                    || isAdmin();
-      allow get, delete: if (isAuthenticated() && isStoreOwner(resource.data.storeId)) || isAdmin();
+      allow get, delete: if (isAuthenticated() && resource.data.storeId != null && isStoreOwner(resource.data.storeId)) || isAdmin();
       allow list: if isAuthenticated() || isAdmin();
-      allow create, update: if (isAuthenticated() && isStoreOwner(request.resource.data.storeId)) || isAdmin();
-      allow create: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      allow create: if (isAuthenticated() && isStoreOwner(request.resource.data.storeId)) || (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      allow update: if isAdmin() 
+                    || (isAuthenticated() && isStoreOwner(resource.data.storeId))
+                    || (
+                         isAuthenticated() 
+                         && request.auth.uid == userId 
+                         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'storeId', 'isActive'])
+                             || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLogin', 'updatedAt']))
+                       );
     }
 
-   match /stores/{storeId} {
+    match /stores/{storeId} {
       allow read: if true;
       allow create, update: if isStoreOwner(storeId) || isAdmin();
       allow delete: if isAdmin();
 
-      // 🌟 التعديل السحري: ضفنا isStoreOwner في الأول عشان يعدي المالك فوراً
       match /stats/summary {
         allow read: if isStoreOwner(storeId) || (canAccessStore(storeId) && hasPermission('viewDashboardStats')) || isAdmin();
         allow write: if isStoreOwner(storeId) || (canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
@@ -90,34 +98,30 @@ service cloud.firestore {
         allow write: if isStoreOwner(storeId) || (canAccessStore(storeId) && (hasPermission('createTransaction') || hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
       }
       match /pin_locks/{hashedPin} {
-        allow read, write: if (isAuthenticated() && (isStoreOwner(storeId) || isStoreEmployee(storeId))) || isAdmin();
+        allow read, write: if (isAuthenticated() && canAccessStore(storeId)) || isAdmin();
       }
     }
 
     // ==========================================
-    // 4. العمليات المالية 
+    // 4. Financial Collections (Isolated by Tenant)
     // ==========================================
     
-    // 🌟 التعديل السحري: ضفنا isStoreOwner في الأول عشان يعدي المالك في المحافظ والمعاملات
     match /wallets/{walletId} {
-      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
-      allow list: if isAuthenticated() || isAdmin();
+      allow get, list: if canAccessStore(resource.data.storeId) || isAdmin();
       allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createWallet')) || isAdmin();
       allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && (hasPermission('editWallet') || hasPermission('addBalance'))) || isAdmin();
       allow delete: if isStoreOwner(resource.data.storeId) || isAdmin();
     }
 
     match /transactions/{transactionId} {
-      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
-      allow list: if isAuthenticated() || isAdmin();
+      allow get, list: if canAccessStore(resource.data.storeId) || isAdmin();
       allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createTransaction')) || isAdmin();
       allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && hasPermission('createTransaction')) || isAdmin();
       allow delete: if isAdmin(); 
     }
 
     match /debts/{debtId} {
-      allow get: if canAccessStore(resource.data.storeId) || isAdmin();
-      allow list: if isAuthenticated() || isAdmin();
+      allow get, list: if canAccessStore(resource.data.storeId) || isAdmin();
       allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createDebt')) || isAdmin();
       allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && (hasPermission('createDebt') || hasPermission('collectDebt'))) || isAdmin();
       allow delete: if isStoreOwner(resource.data.storeId) || isAdmin();
@@ -129,31 +133,23 @@ service cloud.firestore {
       allow list: if isAuthenticated() || isAdmin();
       allow update: if isAdmin(); 
     }
-    
+
     // ==========================================
-    // 5. مسارات الإعدادات والإحصائيات الجديدة
+    // 5. Configs & Global Metrics
     // ==========================================
 
     match /settings/{document=**} {
-      // فتحناها للكل عشان التطبيق يفتح بدون مشاكل
       allow read: if true; 
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow write: if isUserDocExists() && getUserData().get('role', '') == 'admin';
     }
     
     match /stats/{document=**} {
-      allow read, write: if request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read, write: if isUserDocExists() && getUserData().get('role', '') == 'admin';
     }
 
-    // السماح للموبايل يزود العداد براحته
-   match /stats/global {
-      allow read: if request.auth != null;
-      
-      // السماح بالإنشاء لأول مرة لو المستند مش موجود
-      allow create: if request.auth != null;
-      
-      // السماح بالتحديث فقط إذا كان التعديل هو زيادة العداد بـ 1
-      allow update: if request.auth != null 
-                    && request.resource.data.totalTransactions == resource.data.totalTransactions + 1;
+    match /stats/global {
+      allow read, create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.resource.data.totalTransactions == resource.data.totalTransactions + 1;
     }
   }
 }

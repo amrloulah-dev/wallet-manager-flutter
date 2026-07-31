@@ -39,35 +39,36 @@ class IdentityService {
   }
 
   static Future<String?> provisionIdentity({
-    required String phone,
-    required String storeId,
-    required String pin,
+    String? phone,
+    String? storeId,
+    String? pin,
+    String? email,
+    String? rawPin,
   }) async {
-    try {
-      await _ensureInitialized();
-      if (_secondaryApp == null && authOverride == null) return null;
+    final effectivePin = rawPin ?? pin ?? '';
+    final effectiveEmail = email ??
+        (phone != null && storeId != null
+            ? _generateEmail(phone, storeId)
+            : '');
 
-      final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
-
+    // Override path for mocktail unit tests
+    if (authOverride != null) {
       try {
-        final credential = await auth.createUserWithEmailAndPassword(
-          email: email,
-          password: pin,
+        final credential = await authOverride!.createUserWithEmailAndPassword(
+          email: effectiveEmail,
+          password: effectivePin,
         );
         final user = credential.user;
         if (user != null) {
-          // Enforce Report 1: M-2 - Mandate valid token
           final token = await user.getIdToken();
           if (token != null) return user.uid;
         }
         return null;
       } on FirebaseAuthException catch (e, stack) {
         if (e.code == 'email-already-in-use') {
-          // If already in use, attempt to sign in to get the UID and verify token
-          final credential = await auth.signInWithEmailAndPassword(
-            email: email,
-            password: pin,
+          final credential = await authOverride!.signInWithEmailAndPassword(
+            email: effectiveEmail,
+            password: effectivePin,
           );
           final user = credential.user;
           if (user != null) {
@@ -84,6 +85,48 @@ class IdentityService {
         );
         rethrow;
       }
+    }
+
+    // Production runtime path using Secondary Firebase App pattern
+    final appName = 'ProvisioningApp_${DateTime.now().millisecondsSinceEpoch}';
+    final tempApp = await Firebase.initializeApp(
+      name: appName,
+      options: Firebase.app().options,
+    );
+
+    try {
+      final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+      final userCredential = await tempAuth.createUserWithEmailAndPassword(
+        email: effectiveEmail,
+        password: effectivePin,
+      );
+      final user = userCredential.user;
+      if (user != null) {
+        final token = await user.getIdToken();
+        if (token != null) return user.uid;
+      }
+      return null;
+    } on FirebaseAuthException catch (e, stack) {
+      if (e.code == 'email-already-in-use') {
+        final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+        final credential = await tempAuth.signInWithEmailAndPassword(
+          email: effectiveEmail,
+          password: effectivePin,
+        );
+        final user = credential.user;
+        if (user != null) {
+          final token = await user.getIdToken();
+          if (token != null) return user.uid;
+        }
+        return null;
+      }
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'IdentityService.provisionIdentity',
+      );
+      rethrow;
     } catch (e, stack) {
       AppErrorHandler.handle(
         e,
@@ -92,6 +135,8 @@ class IdentityService {
         operation: 'IdentityService.provisionIdentity',
       );
       return null;
+    } finally {
+      await tempApp.delete(); // CRITICAL: Prevent memory leaks
     }
   }
 
@@ -160,13 +205,8 @@ class IdentityService {
     required String pin,
   }) async {
     try {
-      await _ensureInitialized();
-      if (_secondaryApp == null && authOverride == null) {
-        throw AuthException('auth_error_internal');
-      }
-
       final email = _generateEmail(phone, storeId);
-      final auth = authOverride ?? sl<FirebaseAuth>(param1: _secondaryApp!);
+      final auth = authOverride ?? FirebaseAuth.instance;
 
       final credential = await auth.signInWithEmailAndPassword(
         email: email,

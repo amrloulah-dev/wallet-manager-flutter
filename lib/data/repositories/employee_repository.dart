@@ -112,25 +112,35 @@ class EmployeeRepository {
     required String pin,
     required UserPermissions permissions,
   }) async {
-    final authUid = await IdentityService.provisionIdentity(
-      phone: phone,
-      storeId: storeId,
-      pin: pin,
-    );
+    String? authUid;
+    try {
+      authUid = await IdentityService.provisionIdentity(
+        phone: phone,
+        storeId: storeId,
+        pin: pin,
+      );
+    } catch (e) {
+      throw ServerException('employee_error_provisioning_failed');
+    }
 
     if (authUid == null || authUid.isEmpty) {
       throw ServerException('employee_error_provisioning_failed');
     }
 
     final newUserId = authUid;
-    final hashedPin = await PasswordHasher.hashPassword(pin);
+    final hashedPin = PasswordHasher.hashPasswordBcrypt(pin);
+
+    debugPrint(
+        '🔍 [TRACE 3 - REPO PRE-CLONE] User Permissions: ${permissions.toMap()}');
+
+    final authEmail = 'emp_${phone}_$storeId@store.com';
 
     final newUser = UserModel(
       userId: newUserId,
       storeId: storeId,
       role: UserRole.employee, // ENUM refactor
       fullName: fullName,
-      email: null,
+      email: authEmail,
       phone: phone,
       firebaseUid: authUid,
       pin: hashedPin,
@@ -140,6 +150,9 @@ class EmployeeRepository {
       permissions: permissions,
       stats: UserStats(),
     );
+
+    debugPrint(
+        '🔍 [TRACE 4 - REPO POST-CLONE] Cloned User Permissions: ${newUser.permissions?.toMap()}');
 
     // PIN uniqueness is enforced atomically via a deterministic pin-lock document
     // inside the transaction — eliminating the check-then-act race window.

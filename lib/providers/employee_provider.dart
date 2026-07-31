@@ -142,6 +142,8 @@ class EmployeeProvider extends BaseProvider {
     required String pin,
     required UserPermissions permissions,
   }) async {
+    debugPrint(
+        '🔍 [TRACE 2 - PROVIDER] Received User: $fullName, Permissions: ${permissions.toMap()}');
     _status = EmployeeProviderStatus.loading;
     _errorMessage = null;
     safeNotify();

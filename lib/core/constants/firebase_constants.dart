@@ -105,5 +105,5 @@ class FirebaseConstants {
       '${storePath(storeId)}/$pinLocksCollection';
 
   static String pinLockPath(String storeId, String hashedPin) =>
-      '${pinLocksSubcollection(storeId)}/$hashedPin';
+      '${pinLocksSubcollection(storeId)}/${Uri.encodeComponent(hashedPin)}';
 }

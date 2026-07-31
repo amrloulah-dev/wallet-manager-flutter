@@ -17,5 +17,14 @@ void main() {
       final hashed = await PasswordHasher.hashPassword(pin);
       expect(await PasswordHasher.verifyPassword(pin, hashed), isTrue);
     }, timeout: const Timeout(Duration(seconds: 60)));
+
+    test('hashPasswordBcrypt produces valid Bcrypt hash and verifyPassword verifies it', () async {
+      final pin = '123456';
+      final bcryptHash = PasswordHasher.hashPasswordBcrypt(pin);
+
+      expect(bcryptHash.startsWith(r'$2a$') || bcryptHash.startsWith(r'$2b$'), isTrue);
+      expect(await PasswordHasher.verifyPassword(pin, bcryptHash), isTrue);
+      expect(await PasswordHasher.verifyPassword('654321', bcryptHash), isFalse);
+    });
   });
 }

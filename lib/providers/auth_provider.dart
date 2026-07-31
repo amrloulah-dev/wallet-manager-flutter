@@ -271,6 +271,16 @@ class AuthProvider extends BaseProvider {
     _isActionLoading = true;
     safeNotify();
     try {
+      debugPrint('Local Check: raw=$rawPin, hash=${employee.pin}');
+      if (rawPin != null && rawPin.isNotEmpty) {
+        final isValidPin = employee.pin != null &&
+            (await PasswordHasher.verifyPassword(rawPin, employee.pin!) ||
+                employee.pin == rawPin);
+        if (!isValidPin) {
+          throw AuthException('الرقم السري غير صحيح');
+        }
+      }
+
       final result = await _databaseSyncService.loginAsEmployee(
           employee, store,
           rawPin: rawPin);

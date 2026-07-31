@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/user_enums.dart';
@@ -138,6 +139,9 @@ class UserModel {
       map['stats'] = (stats ?? UserStats()).toMap();
     }
 
+    debugPrint(
+        '🔍 [TRACE 6 - MODEL TO_FIRESTORE] Final Map Role: $role, HasPermissionsKey: ${map.containsKey('permissions')}, PermissionsData: ${map['permissions']}');
+
     return map;
   }
 
@@ -159,6 +163,8 @@ class UserModel {
     UserPermissions? permissions,
     UserStats? stats,
   }) {
+    debugPrint(
+        '🔍 [TRACE 5 - MODEL COPYWITH] Passed Permissions Arg: ${permissions?.toMap()}, Existing Permissions: ${this.permissions?.toMap()}');
     return UserModel(
       userId: userId ?? this.userId,
       storeId: storeId ?? this.storeId,
