@@ -144,14 +144,14 @@ class TransactionProvider extends BaseProvider {
 
   double get totalSent => _transactions
       .where((tx) => tx.transactionType == TransactionType.debit)
-      .fold(0.0, (sum, tx) => sum + tx.amount);
+      .fold(0.0, (acc, tx) => acc + tx.amount);
 
   double get totalReceived => _transactions
       .where((tx) => tx.transactionType == TransactionType.credit)
-      .fold(0.0, (sum, tx) => sum + tx.amount);
+      .fold(0.0, (acc, tx) => acc + tx.amount);
 
   double get totalCommission =>
-      _transactions.fold(0.0, (sum, tx) => sum + tx.commission);
+      _transactions.fold(0.0, (acc, tx) => acc + tx.commission);
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   bool get hasMore => _hasMore;
@@ -339,15 +339,18 @@ class TransactionProvider extends BaseProvider {
       _updateStatus(TransactionProviderStatus.loaded);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '🤫 [SILENT ERROR] TransactionProvider: permission-denied (likely native sign-out)');
+        }
         return;
       }
       if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
       }
-      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
+      if (kDebugMode) {
+        debugPrint('🔍 [STACK TRACE]: $stack');
+      }
       setError('transaction_error_fetch_failed', e, stack);
     } finally {
       safeNotify();
@@ -439,8 +442,10 @@ class TransactionProvider extends BaseProvider {
           const PlatformSettingsModel.defaults();
       final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
-      debugPrint(
-          '🔥 CURRENT TX LIMIT: ${dynamicLimits.maxPerTransaction} | LOADED FROM SETTINGS: ${settings.toJson()}');
+      if (kDebugMode) {
+        debugPrint(
+            '🔥 CURRENT TX LIMIT: ${dynamicLimits.maxPerTransaction} | LOADED FROM SETTINGS: ${settings.toJson()}');
+      }
 
       if (!isDeposit && amount > dynamicLimits.maxPerTransaction) {
         if (isInstaPay) {
@@ -580,8 +585,10 @@ class TransactionProvider extends BaseProvider {
           serviceFee: serviceFee,
         );
       } else {
-        debugPrint(
-            "CRITICAL UI BUG CAUGHT: _walletProvider is null inside TransactionProvider. ProxyProvider injection failed.");
+        if (kDebugMode) {
+          debugPrint(
+              "CRITICAL UI BUG CAUGHT: _walletProvider is null inside TransactionProvider. ProxyProvider injection failed.");
+        }
       }
 
       if (_hasFetchedInitial) {
@@ -679,12 +686,12 @@ class TransactionProvider extends BaseProvider {
         .length;
     _summary['totalSendAmount'] = todayTxs
         .where((tx) => tx.transactionType == TransactionType.debit)
-        .fold(0.0, (sum, tx) => sum + tx.amount);
+        .fold(0.0, (acc, tx) => acc + tx.amount);
     _summary['totalReceiveAmount'] = todayTxs
         .where((tx) => tx.transactionType == TransactionType.credit)
-        .fold(0.0, (sum, tx) => sum + tx.amount);
+        .fold(0.0, (acc, tx) => acc + tx.amount);
     _summary['totalCommission'] =
-        todayTxs.fold(0.0, (sum, tx) => sum + tx.commission);
+        todayTxs.fold(0.0, (acc, tx) => acc + tx.commission);
   }
 
   Future<void> fetchTodaySummary() async {

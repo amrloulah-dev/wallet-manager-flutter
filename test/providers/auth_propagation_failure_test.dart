@@ -161,6 +161,7 @@ void main() {
     test('loginAsEmployee propagates stack trace on error', () async {
       final exception = Exception('Employee login failed');
       final mockEmployee = MockUserModel();
+      when(() => mockEmployee.userId).thenReturn('emp123');
       final mockStore = MockStoreModel();
       when(() => mockDatabaseSyncService.loginAsEmployee(any(), any()))
           .thenThrow(exception);

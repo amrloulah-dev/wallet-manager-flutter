@@ -243,9 +243,10 @@ class DebtProvider extends BaseProvider {
       _updateStatus(DebtProviderStatus.loaded);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '🤫 [SILENT ERROR] DebtProvider: permission-denied (likely native sign-out)');
+        }
         return;
       }
       setError('debt_error_fetch_failed', e, stack);

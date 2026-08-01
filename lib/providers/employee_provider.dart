@@ -87,8 +87,10 @@ class EmployeeProvider extends BaseProvider {
   }
 
   Future<void> _fetchEmployees(String storeId) async {
-    debugPrint(
-        '🔍 [EmployeeProvider._fetchEmployees] Starting fetch for storeId: "$storeId"');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [EmployeeProvider._fetchEmployees] Starting fetch for storeId: "$storeId"');
+    }
     _updateStatus(EmployeeProviderStatus.loading);
     safeNotify();
 
@@ -101,8 +103,10 @@ class EmployeeProvider extends BaseProvider {
       _employees = employees;
       _recalculateSuspendedEmployees();
       _updateStatus(EmployeeProviderStatus.loaded);
-      debugPrint(
-          '🔍 [EmployeeProvider._fetchEmployees] Successfully loaded ${employees.length} employees for storeId: "$storeId"');
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [EmployeeProvider._fetchEmployees] Successfully loaded ${employees.length} employees for storeId: "$storeId"');
+      }
     } catch (error, stack) {
       _employees = [];
       AppErrorHandler.handle(
@@ -111,12 +115,14 @@ class EmployeeProvider extends BaseProvider {
         operation: 'EmployeeProvider._fetchEmployees',
       );
       if (error is FirebaseException) {
-        debugPrint(
-            '💥 [EmployeeProvider._fetchEmployees] FirebaseException: code="${error.code}", message="${error.message}"');
-        if (error.message != null &&
-            error.message!.contains('https://console.firebase.google.com')) {
+        if (kDebugMode) {
           debugPrint(
-              '🔗 [FIRESTORE INDEX REQUIRED] Create index here:\n${error.message}');
+              '💥 [EmployeeProvider._fetchEmployees] FirebaseException: code="${error.code}", message="${error.message}"');
+          if (error.message != null &&
+              error.message!.contains('https://console.firebase.google.com')) {
+            debugPrint(
+                '🔗 [FIRESTORE INDEX REQUIRED] Create index here:\n${error.message}');
+          }
         }
         if (error.code == 'permission-denied') {
           setError('employee_error_permission_denied', error, stack);
@@ -124,8 +130,10 @@ class EmployeeProvider extends BaseProvider {
           setError('employee_error_fetch_failed', error, stack);
         }
       } else {
-        debugPrint(
-            '💥 [EmployeeProvider._fetchEmployees] Caught fetch error for storeId: "$storeId": $error');
+        if (kDebugMode) {
+          debugPrint(
+              '💥 [EmployeeProvider._fetchEmployees] Caught fetch error for storeId: "$storeId": $error');
+        }
         setError('employee_error_fetch_failed', error, stack);
       }
     } finally {
@@ -142,8 +150,10 @@ class EmployeeProvider extends BaseProvider {
     required String pin,
     required UserPermissions permissions,
   }) async {
-    debugPrint(
-        '🔍 [TRACE 2 - PROVIDER] Received User: $fullName, Permissions: ${permissions.toMap()}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 2 - PROVIDER] Received User: $fullName, Permissions: ${permissions.toMap()}');
+    }
     _status = EmployeeProviderStatus.loading;
     _errorMessage = null;
     safeNotify();

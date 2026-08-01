@@ -70,8 +70,6 @@ class DummyStatisticsProvider extends ChangeNotifier
   @override
   StatsSummaryModel? get dashboardSummary => null;
   @override
-  DailyStatsModel? get today => null;
-  @override
   DailyStatsModel? get todayStats => null;
   @override
   String? get errorMessage => null;
@@ -87,8 +85,6 @@ class DummyWalletProvider extends ChangeNotifier implements WalletProvider {
   @override
   bool get isLoading => false;
   @override
-  List<WalletModel> get alertWallets => [];
-  @override
   List<WalletModel> get wallets => [];
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -102,8 +98,6 @@ class DummyTransactionProvider extends ChangeNotifier
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {}
   @override
   bool get isLoading => false;
-  @override
-  List<TransactionModel> get recentFive => [];
   @override
   List<TransactionModel> get transactions => [];
   @override

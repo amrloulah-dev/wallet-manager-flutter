@@ -79,8 +79,9 @@ class PlatformSettingsModel {
   });
 
   factory PlatformSettingsModel.fromJson(Map<String, dynamic>? json) {
-    if (json == null || json.isEmpty)
+    if (json == null || json.isEmpty) {
       return const PlatformSettingsModel.defaults();
+    }
 
     final limits = json['limits'] as Map<String, dynamic>? ?? {};
     final feeLimits = json['feeLimits'] as Map<String, dynamic>? ?? {};

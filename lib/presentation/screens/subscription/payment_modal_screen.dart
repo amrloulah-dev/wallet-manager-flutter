@@ -29,7 +29,7 @@ class PaymentModalScreen extends StatefulWidget {
 
 class _PaymentModalScreenState extends State<PaymentModalScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedMethod = 'vodafone_cash';
+  static const String _selectedMethod = 'instapay';
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
   bool _isLoading = false;
@@ -129,19 +129,37 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              Text(loc.paymentMethod,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                loc.paymentMethod,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildMethodSelector(
-                        'vodafone_cash', loc.vodafoneCash, Icons.phone_android),
-                    const SizedBox(width: 12),
-                    _buildMethodSelector(
-                        'instapay', loc.instaPay, Icons.account_balance),
-                  ],
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(context).primaryColor, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Theme.of(context).primaryColor.withAlpha(26),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.account_balance,
+                          color: Theme.of(context).primaryColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        loc.instaPay,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -155,9 +173,7 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _selectedMethod == 'vodafone_cash'
-                          ? loc.transferToNumber
-                          : loc.transferToAccount,
+                      loc.transferToAccount,
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -212,39 +228,6 @@ class _PaymentModalScreenState extends State<PaymentModalScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMethodSelector(String value, String label, IconData icon) {
-    final isSelected = _selectedMethod == value;
-    final color =
-        isSelected ? Theme.of(context).primaryColor : Colors.grey[400];
-
-    return InkWell(
-      onTap: () => setState(() => _selectedMethod = value),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: color!, width: 2),
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected ? color.withAlpha(26) : Colors.transparent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
         ),
       ),
     );

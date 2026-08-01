@@ -271,7 +271,9 @@ class AuthProvider extends BaseProvider {
     _isActionLoading = true;
     safeNotify();
     try {
-      debugPrint('Local Check: raw=$rawPin, hash=${employee.pin}');
+      if (kDebugMode) {
+        debugPrint('Local Check for employee: ${employee.userId}');
+      }
       if (rawPin != null && rawPin.isNotEmpty) {
         final isValidPin = employee.pin != null &&
             (await PasswordHasher.verifyPassword(rawPin, employee.pin!) ||

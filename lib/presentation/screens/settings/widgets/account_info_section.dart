@@ -8,6 +8,7 @@ import '../../../../l10n/arb/app_localizations.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/enums/subscription_enums.dart';
 import 'section_title.dart';
 
 class AccountInfoSection extends StatelessWidget {
@@ -127,6 +128,8 @@ class AccountInfoSection extends StatelessWidget {
         builder: (context, authProvider, subProvider, _) {
       final isTrial = authProvider.isTrial;
       final isExpired = subProvider.isExpired;
+      final isLifetime = subscription.planId == SubscriptionPlan.lifetime ||
+          subscription.endDate == null;
       final daysRemaining =
           isTrial ? authProvider.trialDaysRemaining : subProvider.daysRemaining;
       final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -214,13 +217,15 @@ class AccountInfoSection extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: (daysRemaining ?? 0) <= 7
+                        color: !isLifetime && (daysRemaining ?? 0) <= 7
                             ? AppColors.warning
                             : AppColors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '$daysRemaining ${AppLocalizations.of(context)!.day}',
+                        isLifetime
+                            ? '∞'
+                            : '${daysRemaining ?? 0} ${AppLocalizations.of(context)!.day}',
                         style: AppTextStyles.labelSmall
                             .copyWith(color: Colors.white),
                       ),
@@ -228,7 +233,7 @@ class AccountInfoSection extends StatelessWidget {
                   ],
                 ),
               ],
-              if (isExpired || (daysRemaining ?? 0) <= 7 || isTrial) ...[
+              if (isExpired || (!isLifetime && (daysRemaining ?? 0) <= 7) || isTrial) ...[
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

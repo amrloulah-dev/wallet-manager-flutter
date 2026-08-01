@@ -47,7 +47,7 @@ void main() {
       lifetimeCountLimit: 50,
       gracePeriodHours: 48,
       trialDays: 14,
-      plans: const {},
+      plans: {},
     );
 
     test('Vodafone same-network fee uses sameNetworkFee settings', () {

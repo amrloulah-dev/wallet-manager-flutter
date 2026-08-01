@@ -139,8 +139,10 @@ class UserModel {
       map['stats'] = (stats ?? UserStats()).toMap();
     }
 
-    debugPrint(
-        '🔍 [TRACE 6 - MODEL TO_FIRESTORE] Final Map Role: $role, HasPermissionsKey: ${map.containsKey('permissions')}, PermissionsData: ${map['permissions']}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 6 - MODEL TO_FIRESTORE] Final Map Role: $role, HasPermissionsKey: ${map.containsKey('permissions')}, PermissionsData: ${map['permissions']}');
+    }
 
     return map;
   }
@@ -163,8 +165,10 @@ class UserModel {
     UserPermissions? permissions,
     UserStats? stats,
   }) {
-    debugPrint(
-        '🔍 [TRACE 5 - MODEL COPYWITH] Passed Permissions Arg: ${permissions?.toMap()}, Existing Permissions: ${this.permissions?.toMap()}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 5 - MODEL COPYWITH] Passed Permissions Arg: ${permissions?.toMap()}, Existing Permissions: ${this.permissions?.toMap()}');
+    }
     return UserModel(
       userId: userId ?? this.userId,
       storeId: storeId ?? this.storeId,

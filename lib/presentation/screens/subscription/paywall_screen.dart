@@ -54,12 +54,18 @@ class PaywallScreen extends StatelessWidget {
 
     String getPlanPrice(String key, SubscriptionPlanModel plan) {
       final id = key.toLowerCase().replaceAll('_', '');
-      if (id == 'free') return loc.freePrice;
-      if (id == 'trial') return loc.trialPrice;
-      if (id == 'proyearly')
+      if (id == 'free') {
+        return loc.freePrice;
+      }
+      if (id == 'trial') {
+        return loc.trialPrice;
+      }
+      if (id == 'proyearly') {
         return loc.proYearlyPriceTemplate(plan.price.toString());
-      if (id == 'lifetime')
+      }
+      if (id == 'lifetime') {
         return loc.lifetimePriceTemplate(plan.price.toString());
+      }
       return '${plan.price} EGP';
     }
 
@@ -237,10 +243,32 @@ class PaywallScreen extends StatelessWidget {
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  style: TextButton.styleFrom(
+              ],
+            ),
+          ),
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () {
                     // Safely dismiss the Paywall to reveal the Dashboard underneath
@@ -255,13 +283,12 @@ class PaywallScreen extends StatelessWidget {
                     loc.continueWithCurrentPlan,
                     style: const TextStyle(
                       color: Colors.white,
-                      decoration: TextDecoration.underline,
                       fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
         );

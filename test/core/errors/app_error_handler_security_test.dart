@@ -8,10 +8,7 @@ class MockFirebaseCrashlytics extends Mock implements FirebaseCrashlytics {}
 
 void main() {
   group('AppErrorHandler Security Sanitization (Phase 11)', () {
-    late MockFirebaseCrashlytics mockCrashlytics;
-
     setUp(() {
-      mockCrashlytics = MockFirebaseCrashlytics();
       // We can't easily mock FirebaseCrashlytics.instance because it's a static getter.
       // But we can use the plugin's internal mechanism if it allows it.
       // Alternatively, we test the logDiagnostic output or the message passed to logError.

@@ -22,9 +22,6 @@ void main() {
 
   testWidgets('TransactionOverlayScreen builds correctly with Selectors',
       (WidgetTester tester) async {
-    final mockUseCase = MockOverlayUseCase();
-    final mockStorage = MockLocalStorageService();
-
     // We need to ensure LocalStorageService.instance is available or mocked
     // Since it's a singleton pattern in the code, this might be tricky.
 

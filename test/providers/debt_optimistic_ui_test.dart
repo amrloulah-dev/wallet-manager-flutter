@@ -69,8 +69,6 @@ void main() {
     final sl = GetIt.instance;
     await sl.reset();
     sl.registerLazySingleton<StatisticsProvider>(() => mockStatsProvider);
-    print(
-        'TEST_SETUP_REGISTERED: registered=${sl.isRegistered<StatisticsProvider>()} | typeHash=${(StatisticsProvider).hashCode}');
 
     when(() => mockAuth.currentStoreId).thenReturn(storeId);
     when(() => mockAuth.isOwner).thenReturn(true);

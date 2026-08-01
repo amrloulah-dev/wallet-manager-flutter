@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter/services.dart';
@@ -71,8 +72,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
     setState(() => _isSubmitting = true);
 
-    debugPrint(
-        '🔍 [TRACE 1 - UI] Sending User: ${_fullNameController.text.trim()}, Permissions: ${_permissions.toMap()}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 1 - UI] Sending User: ${_fullNameController.text.trim()}, Permissions: ${_permissions.toMap()}');
+    }
 
     final success = await employeeProvider.addEmployee(
       fullName: _fullNameController.text.trim(),

@@ -100,8 +100,8 @@ class ValidationException extends AppException {
 }
 
 class InstaPayLimitWarningException extends AppException {
-  InstaPayLimitWarningException([String message = 'instapay_limit_warning'])
-      : super(message, code: 'instapay_limit_warning');
+  InstaPayLimitWarningException([super.message = 'instapay_limit_warning'])
+      : super(code: 'instapay_limit_warning');
 }
 
 // ===========================

@@ -158,38 +158,52 @@ class StoreRepository {
   /// Finds a store associated with a specific owner email.
   Future<StoreModel?> getStoreByEmail(String email) async {
     try {
-      debugPrint(
-          '🔍 [StoreRepository.getStoreByEmail] Querying email: "$email"');
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [StoreRepository.getStoreByEmail] Querying email: "$email"');
+      }
       final querySnapshot = await _storesCollection
           .where(FirebaseConstants.ownerEmail, isEqualTo: email)
           .limit(1)
           .get(const GetOptions(source: Source.server))
           .timeout(const Duration(seconds: 10));
 
-      debugPrint(
-          '🔍 [StoreRepository.getStoreByEmail] Query completed. Docs count: ${querySnapshot.docs.length}');
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [StoreRepository.getStoreByEmail] Query completed. Docs count: ${querySnapshot.docs.length}');
+      }
       if (querySnapshot.docs.isNotEmpty) {
         final store = StoreModel.fromFirestore(querySnapshot.docs.first);
-        debugPrint(
-            '🔍 [StoreRepository.getStoreByEmail] Found storeId: "${store.storeId}" for email: "$email"');
+        if (kDebugMode) {
+          debugPrint(
+              '🔍 [StoreRepository.getStoreByEmail] Found storeId: "${store.storeId}" for email: "$email"');
+        }
         return store;
       }
-      debugPrint(
-          '⚠️ [StoreRepository.getStoreByEmail] No store found for email: "$email"');
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ [StoreRepository.getStoreByEmail] No store found for email: "$email"');
+      }
       return null;
     } on TimeoutException catch (e, stack) {
-      debugPrint('💥 [StoreRepository.getStoreByEmail] TimeoutException: $e');
+      if (kDebugMode) {
+        debugPrint('💥 [StoreRepository.getStoreByEmail] TimeoutException: $e');
+      }
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('error_network_timeout');
     } on FirebaseException catch (e, stack) {
-      debugPrint(
-          '💥 [StoreRepository.getStoreByEmail] FirebaseException: ${e.code} | ${e.message}');
+      if (kDebugMode) {
+        debugPrint(
+            '💥 [StoreRepository.getStoreByEmail] FirebaseException: ${e.code} | ${e.message}');
+      }
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('store_error_fetch_failed', code: e.code);
     } catch (e, stack) {
-      debugPrint('💥 [StoreRepository.getStoreByEmail] Unexpected error: $e');
+      if (kDebugMode) {
+        debugPrint('💥 [StoreRepository.getStoreByEmail] Unexpected error: $e');
+      }
       AppErrorHandler.handle(e,
           stackTrace: stack, operation: 'StoreRepository');
       throw ServerException('store_error_unexpected');

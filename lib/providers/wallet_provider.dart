@@ -191,8 +191,10 @@ class WalletProvider extends BaseProvider {
       _rebuildWalletMap();
       notifyListeners();
     } else {
-      debugPrint(
-          "CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
+      if (kDebugMode) {
+        debugPrint(
+            "CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
+      }
     }
   }
 
@@ -336,9 +338,10 @@ class WalletProvider extends BaseProvider {
       _cacheManager.cacheWallets(_wallets);
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '🤫 [SILENT ERROR] WalletProvider: permission-denied (likely native sign-out)');
+        }
         return;
       }
       setError('wallet_error_fetch_failed', e, stack);

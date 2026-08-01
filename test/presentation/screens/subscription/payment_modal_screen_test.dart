@@ -109,7 +109,7 @@ void main() {
 
       verify(() => mockSubscriptionProvider.submitSubscriptionRequest(
             planId: SubscriptionPlan.proYearly,
-            paymentMethod: 'vodafone_cash',
+            paymentMethod: 'instapay',
             receiptNumber: '01091264053',
             amount: 1200.0,
           )).called(1);

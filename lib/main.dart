@@ -33,20 +33,27 @@ void main() async {
       if (kDebugMode) debugPrint('✅ [INIT SUCCESS] Firebase initialized.');
 
       // Step 2: Setup Dependency Injection.
-      if (kDebugMode) debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
+      if (kDebugMode) {
+        debugPrint('⏳ [INIT DATA] Setting up Service Locator...');
+      }
       await setupServiceLocator();
       await sl<PlatformSettingsProvider>().initialize();
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('✅ [INIT SUCCESS] Service Locator & Settings ready.');
+      }
 
       // Step 3: Check and initialize SMS automation if enabled
       if (sl<LocalStorageService>().isSmsAutomationEnabled) {
-        if (kDebugMode) debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
+        if (kDebugMode) {
+          debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
+        }
         unawaited(SmsService().init());
       }
 
       // Step 4: Run the application IMMEDIATELY (Do not wait for heavy background services)
-      if (kDebugMode) debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
+      if (kDebugMode) {
+        debugPrint('🚀 [INIT SUCCESS] Running MyApp.');
+      }
       runApp(const MyApp());
 
       // Step 5: Configure the Guardian Isolate (background service).
@@ -76,15 +83,21 @@ void main() async {
       if (kDebugMode) {
         debugPrint('❌ [INIT FATAL] App initialization failed: $e');
       }
-      if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stackTrace');
+      if (kDebugMode) {
+        debugPrint('🔍 [STACK TRACE]: $stackTrace');
+      }
 
       AppErrorHandler.handle(e,
           severity: ErrorSeverity.critical,
           operation: 'app_initialization',
           stackTrace: stackTrace);
 
-      if (kDebugMode) debugPrint("🚨 INIT ERROR: $e");
-      if (kDebugMode) debugPrint("🚨 STACKTRACE: $stackTrace");
+      if (kDebugMode) {
+        debugPrint("🚨 INIT ERROR: $e");
+      }
+      if (kDebugMode) {
+        debugPrint("🚨 STACKTRACE: $stackTrace");
+      }
 
       final String systemLang = PlatformDispatcher.instance.locale.languageCode;
       String lang = systemLang == 'ar' ? 'ar' : 'en';

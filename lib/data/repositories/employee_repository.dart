@@ -30,8 +30,10 @@ class EmployeeRepository {
     int limit = 20,
   }) async {
     try {
-      debugPrint(
-          '🔍 [EmployeeRepository.getEmployeesByStoreId] Querying storeId: "$storeId", searchQuery: "$searchQuery", activeOnly: $activeOnly');
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [EmployeeRepository.getEmployeesByStoreId] Querying storeId: "$storeId", searchQuery: "$searchQuery", activeOnly: $activeOnly');
+      }
       Query query = _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.role,
@@ -50,23 +52,29 @@ class EmployeeRepository {
       }
 
       final snapshot = await query.limit(limit).get();
-      debugPrint(
-          '🔍 [EmployeeRepository.getEmployeesByStoreId] Query completed. Docs count: ${snapshot.docs.length}');
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [EmployeeRepository.getEmployeesByStoreId] Query completed. Docs count: ${snapshot.docs.length}');
+      }
       final employees =
           snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
       employees.sort(
           (a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
       return employees;
     } on FirebaseException catch (e, stack) {
-      debugPrint(
-          '💥 [EmployeeRepository.getEmployeesByStoreId] FirebaseException: code="${e.code}", message="${e.message}"');
+      if (kDebugMode) {
+        debugPrint(
+            '💥 [EmployeeRepository.getEmployeesByStoreId] FirebaseException: code="${e.code}", message="${e.message}"');
+      }
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'EmployeeRepository.getEmployeesByStoreId');
       rethrow;
     } catch (e, stack) {
-      debugPrint(
-          '💥 [EmployeeRepository.getEmployeesByStoreId] Unexpected error: $e');
+      if (kDebugMode) {
+        debugPrint(
+            '💥 [EmployeeRepository.getEmployeesByStoreId] Unexpected error: $e');
+      }
       AppErrorHandler.handle(e,
           stackTrace: stack,
           operation: 'EmployeeRepository.getEmployeesByStoreId');
@@ -130,8 +138,10 @@ class EmployeeRepository {
     final newUserId = authUid;
     final hashedPin = PasswordHasher.hashPasswordBcrypt(pin);
 
-    debugPrint(
-        '🔍 [TRACE 3 - REPO PRE-CLONE] User Permissions: ${permissions.toMap()}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 3 - REPO PRE-CLONE] User Permissions: ${permissions.toMap()}');
+    }
 
     final authEmail = 'emp_${phone}_$storeId@store.com';
 
@@ -151,8 +161,10 @@ class EmployeeRepository {
       stats: UserStats(),
     );
 
-    debugPrint(
-        '🔍 [TRACE 4 - REPO POST-CLONE] Cloned User Permissions: ${newUser.permissions?.toMap()}');
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 4 - REPO POST-CLONE] Cloned User Permissions: ${newUser.permissions?.toMap()}');
+    }
 
     // PIN uniqueness is enforced atomically via a deterministic pin-lock document
     // inside the transaction — eliminating the check-then-act race window.

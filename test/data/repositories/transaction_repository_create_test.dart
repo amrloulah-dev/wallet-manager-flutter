@@ -7,7 +7,6 @@ import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/core/enums/transaction_enums.dart';
-import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/di/service_locator.dart';
 import 'package:walletmanager/providers/platform_settings_provider.dart';
 import 'package:walletmanager/data/models/platform_settings_model.dart';
