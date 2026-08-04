@@ -149,4 +149,47 @@ void main() {
     expect(find.text('2'), findsOneWidget);
     expect(find.text('3'), findsNothing);
   });
+
+  testWidgets(
+      'DashboardQuickStats Total Commission card displays numeric value without currency symbol',
+      (WidgetTester tester) async {
+    final mockTxns = <TransactionModel>[];
+    final authProvider = MockAuthProvider();
+    final statsProvider = MockStatisticsProvider();
+    final txProvider = MockTransactionProvider(mockTxns);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+          ChangeNotifierProvider<StatisticsProvider>.value(
+              value: statsProvider),
+          ChangeNotifierProvider<TransactionProvider>.value(value: txProvider),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: CustomScrollView(
+              slivers: [
+                DashboardQuickStats(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // The 'Total Commission' card value should show '15' (from todayStats.totalCommission = 15.0) and NOT 'EGP 15'
+    expect(find.text('15'), findsOneWidget);
+    expect(find.text('EGP 15'), findsNothing);
+  });
 }
+

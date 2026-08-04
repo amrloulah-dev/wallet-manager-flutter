@@ -63,12 +63,15 @@ class OverlayUseCase {
     final walletType = WalletType.fromString(rawWalletType);
 
     final settings = sl<PlatformSettingsProvider>().settings;
-    final calculatedServiceFee = FeeCalculator.calculateTransactionFee(
-      amount: amount,
-      sourceWalletType: walletType.dbValue,
-      receiverPhone: sender,
-      settings: settings,
-    );
+    double calculatedServiceFee = 0.0;
+    if (transactionType == TransactionType.debit) {
+      calculatedServiceFee = FeeCalculator.calculateTransactionFee(
+        amount: amount,
+        sourceWalletType: walletType.dbValue,
+        receiverPhone: sender,
+        settings: settings,
+      );
+    }
 
     final newTransaction = TransactionModel(
       transactionId: txId,

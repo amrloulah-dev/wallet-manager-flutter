@@ -60,6 +60,29 @@ class OverlayProvider extends SafeChangeNotifier {
   double get commission => _commission;
   List<Map<String, dynamic>> get availableWallets => _availableWallets;
 
+  /// Service fee (network fee) calculated dynamically only for send (debit) transactions.
+  double get serviceFee {
+    if (_type != 'debit' || _selectedWalletId == null || _amount <= 0) {
+      return 0.0;
+    }
+    final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
+          (w) => w?['id'] == _selectedWalletId,
+          orElse: () => null,
+        );
+    if (match == null) return 0.0;
+    final rawWalletType = match['walletType']?.toString() ??
+        match['type']?.toString() ??
+        'vodafone_cash';
+    final walletType = WalletType.fromString(rawWalletType);
+    final settings = sl<PlatformSettingsProvider>().settings;
+    return FeeCalculator.calculateTransactionFee(
+      amount: _amount,
+      sourceWalletType: walletType.dbValue,
+      receiverPhone: _sender,
+      settings: settings,
+    );
+  }
+
   /// Guarded notification that respects the fetch shield.
   /// When [_blockAutoFetch] is true, notifications are suppressed
   /// to prevent unnecessary janky UI rebuilds during batch state mutations.
@@ -145,16 +168,9 @@ class OverlayProvider extends SafeChangeNotifier {
             'vodafone_cash';
         final walletType = WalletType.fromString(rawWalletType);
         final settings = sl<PlatformSettingsProvider>().settings;
-        _commission = FeeCalculator.calculateTransactionFee(
-          amount: _amount,
-          sourceWalletType: walletType.dbValue,
-          receiverPhone: _sender,
-          settings: settings,
-        );
         if (kDebugMode) {
           debugPrint('🔥 [TX_FLOW] [overlay_provider] -> ingestNewEvent: '
-              'auto-selected walletId=$passedId, walletType=${walletType.name}, '
-              'calculatedCommission=$_commission');
+              'auto-selected walletId=$passedId, walletType=${walletType.name}');
         }
 
         final wallet = WalletModel.fromWalletStatus(
@@ -219,33 +235,9 @@ class OverlayProvider extends SafeChangeNotifier {
           'new walletId=$walletId, current amount=$_amount');
     }
 
-    if (walletId != null && _amount > 0) {
-      final match = _availableWallets.cast<Map<String, dynamic>?>().firstWhere(
-            (w) => w?['id'] == walletId,
-            orElse: () => null,
-          );
-      if (match != null) {
-        final rawWalletType =
-            match['walletType']?.toString() ?? 'vodafone_cash';
-        final walletType = WalletType.fromString(rawWalletType);
-        final settings = sl<PlatformSettingsProvider>().settings;
-        _commission = FeeCalculator.calculateTransactionFee(
-          amount: _amount,
-          sourceWalletType: walletType.dbValue,
-          receiverPhone: _sender,
-          settings: settings,
-        );
-        if (kDebugMode) {
-          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-              'walletType=${walletType.name}, recalculatedCommission=$_commission');
-        }
-      }
-    } else {
-      _commission = 0.0;
-      if (kDebugMode) {
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
-            'walletId is null or amount=0, commission reset to 0.0');
-      }
+    if (kDebugMode) {
+      debugPrint('🔥 [TX_FLOW] [overlay_provider] -> setSelectedWallet: '
+          'walletId=$walletId, current amount=$_amount');
     }
 
     _guardedNotify();

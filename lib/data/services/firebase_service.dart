@@ -51,7 +51,8 @@ class FirebaseService {
   }
 
   /// Checks if the Firebase services have been initialized.
-  bool get isInitialized => _auth != null && _firestore != null;
+  bool get isInitialized =>
+      _firestore != null && (_auth != null || AppErrorHandler.isTestMode);
 
   // ===========================
   // Initialize Firebase
@@ -90,9 +91,8 @@ class FirebaseService {
 
   /// Initializes the service with a mock or fake Firestore instance for testing.
   @visibleForTesting
-  void initializeForTest(FirebaseFirestore firestore) {
+  void initializeForTest(FirebaseFirestore firestore, {FirebaseAuth? auth}) {
     _firestore = firestore;
-    // We don't initialize FirebaseAuth here as it's not needed for these tests.
-    // If it were, we would use a mock instance.
+    _auth = auth;
   }
 }

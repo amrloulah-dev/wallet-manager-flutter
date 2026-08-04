@@ -159,7 +159,8 @@ class DashboardQuickStats extends StatelessWidget {
                               title:
                                   '${AppLocalizations.of(context)!.totalCommission} ',
                               value: NumberFormatter.formatAmount(
-                                  provider.todayStats?.totalCommission),
+                                  provider.todayStats?.totalCommission,
+                                  showCurrency: false),
                               icon: Icons.attach_money,
                               color: Colors.orange.shade800,
                               onTap: () {
