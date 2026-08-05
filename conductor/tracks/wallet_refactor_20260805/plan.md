@@ -48,15 +48,15 @@
 
 ## Phase 3: Integration Flow Verification
 
-- [~] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle
-    - [ ] Create `test/data/repositories/wallet_legacy_migration_test.dart` (or add to existing)
-    - [ ] Test: Simulate end-to-end flow: create a legacy Firestore document (no `walletStatus`, no `sendLimits`/`receiveLimits`, no timestamps) → load via `WalletModel.fromFirestore` → verify `WalletProvider.needsDailyReset` evaluates `true` → call `resetLimitsForWallets` → read document back → assert timestamps now exist AND limit caps are untouched
-    - [ ] Test: Same flow with a new-format document → verify zero mutations occur beyond normal reset
-    - [ ] Run all tests and confirm full suite passes
+- [x] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle 3345194
+    - [x] Create `test/data/repositories/wallet_legacy_migration_test.dart` (or add to existing)
+    - [x] Test: Simulate end-to-end flow: create a legacy Firestore document (no `walletStatus`, no `sendLimits`/`receiveLimits`, no timestamps) → load via `WalletModel.fromFirestore` → verify `WalletProvider.needsDailyReset` evaluates `true` → call `resetLimitsForWallets` → read document back → assert timestamps now exist AND limit caps are untouched
+    - [x] Test: Same flow with a new-format document → verify zero mutations occur beyond normal reset
+    - [x] Run all tests and confirm full suite passes
 
-- [ ] Task: Run Static Analysis & Coverage
-    - [ ] Run `flutter analyze` and fix any warnings/errors
-    - [ ] Run `CI=true flutter test` and verify >80% coverage on modified files
-    - [ ] Run `dart format .` to ensure consistent formatting
+- [x] Task: Run Static Analysis & Coverage 3345194
+    - [x] Run `flutter analyze` and fix any warnings/errors
+    - [x] Run `CI=true flutter test` and verify >80% coverage on modified files
+    - [x] Run `dart format .` to ensure consistent formatting
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Integration Flow Verification' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 3: Integration Flow Verification' (Protocol in workflow.md)
