@@ -269,7 +269,9 @@ void main() {
       );
     });
 
-    test('daily reset payload uses dot-notation and does not overwrite limit caps or walletStatus', () async {
+    test(
+        'daily reset payload uses dot-notation and does not overwrite limit caps or walletStatus',
+        () async {
       final oldDate = DateTime.now().subtract(const Duration(days: 2));
       final today = DateTime.now();
       final wallet = WalletModel(
@@ -282,9 +284,15 @@ void main() {
         isActive: true,
         createdBy: 'u1',
         sendLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 500,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         receiveLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 300,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         stats: WalletStats(),
         lastDailyReset: oldDate,
         lastMonthlyReset: today, // Only daily reset needed
@@ -292,7 +300,8 @@ void main() {
 
       await mockRepository.resetLimitsForWallets([wallet]);
 
-      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      final captured =
+          verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
       expect(captured.length, equals(1));
       final Map<String, dynamic> payload = captured.single;
 
@@ -312,7 +321,9 @@ void main() {
       expect(payload.containsKey('sendLimits.monthlyLimit'), isFalse);
     });
 
-    test('monthly reset payload uses dot-notation and touches only monthly counters and reset timestamp', () async {
+    test(
+        'monthly reset payload uses dot-notation and touches only monthly counters and reset timestamp',
+        () async {
       final today = DateTime.now();
       final oldMonth = DateTime.now().subtract(const Duration(days: 40));
       final wallet = WalletModel(
@@ -325,9 +336,15 @@ void main() {
         isActive: true,
         createdBy: 'u1',
         sendLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 500,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         receiveLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 300,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         stats: WalletStats(),
         lastDailyReset: today,
         lastMonthlyReset: oldMonth, // Only monthly reset needed
@@ -335,7 +352,8 @@ void main() {
 
       await mockRepository.resetLimitsForWallets([wallet]);
 
-      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      final captured =
+          verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
       expect(captured.length, equals(1));
       final Map<String, dynamic> payload = captured.single;
 
@@ -349,7 +367,8 @@ void main() {
       expect(payload.containsKey('walletStatus'), isFalse);
     });
 
-    test('combined daily and monthly reset payload is strictly pinpoint', () async {
+    test('combined daily and monthly reset payload is strictly pinpoint',
+        () async {
       final wallet = WalletModel(
         walletId: 'w_null_ts',
         storeId: 's1',
@@ -360,9 +379,15 @@ void main() {
         isActive: true,
         createdBy: 'u1',
         sendLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 500,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         receiveLimits: WalletLimits(
-            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+            dailyLimit: 60000,
+            dailyUsed: 300,
+            monthlyLimit: 200000,
+            monthlyUsed: 1000),
         stats: WalletStats(),
         lastDailyReset: null, // Both daily and monthly reset needed (auto-heal)
         lastMonthlyReset: null,
@@ -370,7 +395,8 @@ void main() {
 
       await mockRepository.resetLimitsForWallets([wallet]);
 
-      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      final captured =
+          verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
       expect(captured.length, equals(1));
       final Map<String, dynamic> payload = captured.single;
 
@@ -384,4 +410,3 @@ void main() {
     });
   });
 }
-

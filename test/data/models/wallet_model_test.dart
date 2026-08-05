@@ -79,7 +79,8 @@ void main() {
       expect(model.lastDailyReset, isNull);
     });
 
-    test('missing lastMonthlyReset deserializes to lastMonthlyReset == null', () {
+    test('missing lastMonthlyReset deserializes to lastMonthlyReset == null',
+        () {
       final map = Map<String, dynamic>.from(validMap);
       // lastMonthlyReset is absent
       final model = WalletModel.fromMap(map, 'w1');
@@ -96,7 +97,8 @@ void main() {
       'createdBy': 'u1',
     };
 
-    test('completely missing walletStatus defaults to WalletStatus.inactive', () {
+    test('completely missing walletStatus defaults to WalletStatus.inactive',
+        () {
       final map = Map<String, dynamic>.from(baseLegacyMap);
       map['dailyLimit'] = 50000.0;
       map['monthlyLimit'] = 150000.0;
@@ -104,7 +106,8 @@ void main() {
       expect(model.walletStatus, equals(WalletStatus.inactive));
     });
 
-    test('missing sendLimits map reconstructs from legacy root-level fields', () {
+    test('missing sendLimits map reconstructs from legacy root-level fields',
+        () {
       final map = Map<String, dynamic>.from(baseLegacyMap);
       map['dailyLimit'] = 50000.0;
       map['monthlyLimit'] = 150000.0;
@@ -122,7 +125,9 @@ void main() {
       expect(model.sendLimits.monthlyUsed, equals(0.0));
     });
 
-    test('missing sendLimits AND missing root fields falls back to networkOldLimits', () {
+    test(
+        'missing sendLimits AND missing root fields falls back to networkOldLimits',
+        () {
       final map = Map<String, dynamic>.from(baseLegacyMap);
       map['receiveLimits'] = {
         'dailyLimit': 1000.0,
@@ -133,13 +138,17 @@ void main() {
 
       final model = WalletModel.fromMap(map, 'w1');
       const defaults = PlatformSettingsModel.defaults();
-      expect(model.sendLimits.dailyLimit, equals(defaults.networkOldLimits.dailySend));
+      expect(model.sendLimits.dailyLimit,
+          equals(defaults.networkOldLimits.dailySend));
       expect(model.sendLimits.dailyUsed, equals(0.0));
-      expect(model.sendLimits.monthlyLimit, equals(defaults.networkOldLimits.monthlySend));
+      expect(model.sendLimits.monthlyLimit,
+          equals(defaults.networkOldLimits.monthlySend));
       expect(model.sendLimits.monthlyUsed, equals(0.0));
     });
 
-    test('missing receiveLimits map reconstructs from legacy root fields or networkOldLimits', () {
+    test(
+        'missing receiveLimits map reconstructs from legacy root fields or networkOldLimits',
+        () {
       final map = Map<String, dynamic>.from(baseLegacyMap);
       map['sendLimits'] = {
         'dailyLimit': 1000.0,
@@ -150,13 +159,17 @@ void main() {
 
       final model = WalletModel.fromMap(map, 'w1');
       const defaults = PlatformSettingsModel.defaults();
-      expect(model.receiveLimits.dailyLimit, equals(defaults.networkOldLimits.dailyReceive));
+      expect(model.receiveLimits.dailyLimit,
+          equals(defaults.networkOldLimits.dailyReceive));
       expect(model.receiveLimits.dailyUsed, equals(0.0));
-      expect(model.receiveLimits.monthlyLimit, equals(defaults.networkOldLimits.monthlyReceive));
+      expect(model.receiveLimits.monthlyLimit,
+          equals(defaults.networkOldLimits.monthlyReceive));
       expect(model.receiveLimits.monthlyUsed, equals(0.0));
     });
 
-    test('missing lastDailyReset and lastMonthlyReset remain null (auto-heal trigger)', () {
+    test(
+        'missing lastDailyReset and lastMonthlyReset remain null (auto-heal trigger)',
+        () {
       final map = Map<String, dynamic>.from(baseLegacyMap);
       map['dailyLimit'] = 50000.0;
       map['monthlyLimit'] = 150000.0;

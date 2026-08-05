@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
 import '../../core/utils/number_parser.dart';
 import '../../core/enums/wallet_enums.dart';
-import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/amount_validator.dart';
 import '../../core/di/service_locator.dart';
 import '../../providers/platform_settings_provider.dart';
@@ -243,9 +242,10 @@ class WalletModel {
 
     final receiveLimitsMap =
         data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
-    final receiveLimits = (receiveLimitsMap != null && receiveLimitsMap.isNotEmpty)
-        ? WalletLimits.fromMap(receiveLimitsMap)
-        : _resolveLegacyReceiveLimits(data, resolvedSettings);
+    final receiveLimits =
+        (receiveLimitsMap != null && receiveLimitsMap.isNotEmpty)
+            ? WalletLimits.fromMap(receiveLimitsMap)
+            : _resolveLegacyReceiveLimits(data, resolvedSettings);
 
     return WalletModel(
       walletId: docId,
