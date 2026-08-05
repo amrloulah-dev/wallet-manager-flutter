@@ -371,6 +371,9 @@ class WalletRepository {
   }
 
   // 6️⃣ RESET Methods
+  /// Resets daily and monthly limit usage counters for a list of wallets.
+  /// AUDIT NOTE: Uses dot-notation pinpoint updates strictly (`sendLimits.dailyUsed`, etc.)
+  /// to ensure legacy document limit caps and status are never overwritten or corrupted.
   Future<void> resetLimitsForWallets(List<WalletModel> wallets) async {
     const int chunkSize = 450;
 
