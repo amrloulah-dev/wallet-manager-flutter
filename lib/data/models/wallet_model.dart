@@ -221,19 +221,26 @@ class WalletModel {
     // Phase 3: Boundary Guard
     AmountValidator.ensurePositiveOrZero(balance);
 
+    final rawStatus = data[FirebaseConstants.walletStatus] as String?;
+    final walletStatus = (rawStatus != null && rawStatus.isNotEmpty)
+        ? WalletStatus.fromString(rawStatus)
+        : WalletStatus.inactive;
+
+    final resolvedSettings = sl.isRegistered<PlatformSettingsProvider>()
+        ? sl<PlatformSettingsProvider>().settings
+        : const PlatformSettingsModel.defaults();
+
     final sendLimitsMap =
         data[FirebaseConstants.sendLimits] as Map<String, dynamic>?;
-    if (sendLimitsMap == null || sendLimitsMap.isEmpty) {
-      throw DomainException(
-          'Wallet $docId: sendLimits must be provided and non-empty');
-    }
+    final sendLimits = (sendLimitsMap != null && sendLimitsMap.isNotEmpty)
+        ? WalletLimits.fromMap(sendLimitsMap)
+        : _resolveLegacySendLimits(data, resolvedSettings);
 
     final receiveLimitsMap =
         data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
-    if (receiveLimitsMap == null || receiveLimitsMap.isEmpty) {
-      throw DomainException(
-          'Wallet $docId: receiveLimits must be provided and non-empty');
-    }
+    final receiveLimits = (receiveLimitsMap != null && receiveLimitsMap.isNotEmpty)
+        ? WalletLimits.fromMap(receiveLimitsMap)
+        : _resolveLegacyReceiveLimits(data, resolvedSettings);
 
     return WalletModel(
       walletId: docId,
@@ -241,8 +248,7 @@ class WalletModel {
       phoneNumber: data[FirebaseConstants.phoneNumber] as String? ?? '',
       walletType: WalletType.fromString(
           data[FirebaseConstants.walletType] as String? ?? ''),
-      walletStatus: WalletStatus.fromString(
-          data[FirebaseConstants.walletStatus] as String? ?? 'active'),
+      walletStatus: walletStatus,
       balance: balance,
       notes: data[FirebaseConstants.notes] as String?,
       isActive: data[FirebaseConstants.isActive] as bool? ?? true,
@@ -250,12 +256,52 @@ class WalletModel {
       createdAt: createdAt,
       createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
       updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
-      sendLimits: WalletLimits.fromMap(sendLimitsMap),
-      receiveLimits: WalletLimits.fromMap(receiveLimitsMap),
+      sendLimits: sendLimits,
+      receiveLimits: receiveLimits,
       lastDailyReset: lastDailyReset,
       lastMonthlyReset: lastMonthlyReset,
       stats: WalletStats.fromMap(
           data[FirebaseConstants.stats] as Map<String, dynamic>? ?? {}),
+    );
+  }
+
+  static WalletLimits _resolveLegacySendLimits(
+      Map<String, dynamic> data, PlatformSettingsModel settings) {
+    final rootDaily = data['dailyLimit'];
+    final rootMonthly = data['monthlyLimit'];
+
+    final dailyLimit = rootDaily != null
+        ? NumberParser.toDouble(rootDaily)
+        : settings.networkOldLimits.dailySend;
+    final monthlyLimit = rootMonthly != null
+        ? NumberParser.toDouble(rootMonthly)
+        : settings.networkOldLimits.monthlySend;
+
+    return WalletLimits(
+      dailyLimit: dailyLimit,
+      dailyUsed: 0.0,
+      monthlyLimit: monthlyLimit,
+      monthlyUsed: 0.0,
+    );
+  }
+
+  static WalletLimits _resolveLegacyReceiveLimits(
+      Map<String, dynamic> data, PlatformSettingsModel settings) {
+    final rootDaily = data['dailyLimit'];
+    final rootMonthly = data['monthlyLimit'];
+
+    final dailyLimit = rootDaily != null
+        ? NumberParser.toDouble(rootDaily)
+        : settings.networkOldLimits.dailyReceive;
+    final monthlyLimit = rootMonthly != null
+        ? NumberParser.toDouble(rootMonthly)
+        : settings.networkOldLimits.monthlyReceive;
+
+    return WalletLimits(
+      dailyLimit: dailyLimit,
+      dailyUsed: 0.0,
+      monthlyLimit: monthlyLimit,
+      monthlyUsed: 0.0,
     );
   }
 
