@@ -36,15 +36,15 @@
     - [x] Test: combined daily+monthly reset payload — assert union of both is still pinpoint-only
     - [x] Run tests and confirm they **FAIL** or **PASS** (they may already pass since the method appears compliant — this is acceptable for audit-type tasks)
 
-- [~] Task: Audit All `WalletRepository` Write Methods
-    - [ ] Review `createWallet` (line ~44 uses `toFirestore()` via `batch.set`) — this is correct for document creation, document finding
-    - [ ] Review `updateWallet` (line ~207 takes `Map<String, dynamic>`) — confirm callers pass pinpoint maps, not full `toMap()`/`toFirestore()` output
-    - [ ] Search for any other `.set()`, `.update()` calls in the file and verify their payloads
-    - [ ] Document audit findings as inline comments or in the spec
-    - [ ] Fix any confirmed full-document overwrite problems (if found)
-    - [ ] Run repository test suite to confirm no regressions
+- [x] Task: Audit All `WalletRepository` Write Methods 24ddf11
+    - [x] Review `createWallet` (line ~44 uses `toFirestore()` via `batch.set`) — this is correct for document creation, document finding
+    - [x] Review `updateWallet` (line ~207 takes `Map<String, dynamic>`) — confirm callers pass pinpoint maps, not full `toMap()`/`toFirestore()` output
+    - [x] Search for any other `.set()`, `.update()` calls in the file and verify their payloads
+    - [x] Document audit findings as inline comments or in the spec
+    - [x] Fix any confirmed full-document overwrite problems (if found)
+    - [x] Run repository test suite to confirm no regressions
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md)
 
 ## Phase 3: Integration Flow Verification
 
