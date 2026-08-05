@@ -46,7 +46,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md) 1a669b2
 
-## Phase 3: Integration Flow Verification
+## Phase 3: Integration Flow Verification [checkpoint: 900d42f]
 
 - [x] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle 3345194
     - [x] Create `test/data/repositories/wallet_legacy_migration_test.dart` (or add to existing)
@@ -59,4 +59,4 @@
     - [x] Run `CI=true flutter test` and verify >80% coverage on modified files
     - [x] Run `dart format .` to ensure consistent formatting
 
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Integration Flow Verification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Integration Flow Verification' (Protocol in workflow.md) 900d42f
