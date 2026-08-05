@@ -27,7 +27,7 @@
 
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md) a9ff695
 
-## Phase 2: Audit & Secure Repository Write Methods
+## Phase 2: Audit & Secure Repository Write Methods [checkpoint: 1a669b2]
 
 - [x] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification 2c80454
     - [x] In `test/data/repositories/wallet_repository_test.dart` (or a new file `wallet_repository_reset_test.dart`), add test group `'resetLimitsForWallets payload safety'`
@@ -44,11 +44,11 @@
     - [x] Fix any confirmed full-document overwrite problems (if found)
     - [x] Run repository test suite to confirm no regressions
 
-- [~] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md) 1a669b2
 
 ## Phase 3: Integration Flow Verification
 
-- [ ] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle
+- [~] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle
     - [ ] Create `test/data/repositories/wallet_legacy_migration_test.dart` (or add to existing)
     - [ ] Test: Simulate end-to-end flow: create a legacy Firestore document (no `walletStatus`, no `sendLimits`/`receiveLimits`, no timestamps) → load via `WalletModel.fromFirestore` → verify `WalletProvider.needsDailyReset` evaluates `true` → call `resetLimitsForWallets` → read document back → assert timestamps now exist AND limit caps are untouched
     - [ ] Test: Same flow with a new-format document → verify zero mutations occur beyond normal reset
