@@ -2,17 +2,17 @@
 
 ## Phase 1: Safe Legacy Deserialization — `WalletModel.fromMap`
 
-- [ ] Task: Write Failing Tests — Legacy Document Deserialization
-    - [ ] In `test/data/models/wallet_model_test.dart`, add a test group `'Legacy document deserialization'`
-    - [ ] Test: `fromMap` with completely missing `walletStatus` → asserts result has `WalletStatus.inactive` (not `active`/`new`)
-    - [ ] Test: `fromMap` with missing `sendLimits` map but present legacy root-level fields (`dailyLimit`, `monthlyLimit`) → asserts `WalletLimits` reconstructed from root fields with `0.0` usage
-    - [ ] Test: `fromMap` with missing `sendLimits` AND missing root-level fields → asserts fallback to `PlatformSettingsModel.networkOldLimits` defaults
-    - [ ] Test: `fromMap` with missing `receiveLimits` map → same fallback logic as sendLimits
-    - [ ] Test: `fromMap` with missing `lastDailyReset` and `lastMonthlyReset` → asserts timestamps are `null` (NOT `DateTime.now()`)
-    - [ ] Test: `fromMap` with complete new-format document (all fields present) → asserts zero-regression, all fields match input
-    - [ ] Run tests and confirm all new tests **FAIL** (Red Phase)
+- [x] Task: Write Failing Tests — Legacy Document Deserialization c96880c
+    - [x] In `test/data/models/wallet_model_test.dart`, add a test group `'Legacy document deserialization'`
+    - [x] Test: `fromMap` with completely missing `walletStatus` → asserts result has `WalletStatus.inactive` (not `active`/`new`)
+    - [x] Test: `fromMap` with missing `sendLimits` map but present legacy root-level fields (`dailyLimit`, `monthlyLimit`) → asserts `WalletLimits` reconstructed from root fields with `0.0` usage
+    - [x] Test: `fromMap` with missing `sendLimits` AND missing root-level fields → asserts fallback to `PlatformSettingsModel.networkOldLimits` defaults
+    - [x] Test: `fromMap` with missing `receiveLimits` map → same fallback logic as sendLimits
+    - [x] Test: `fromMap` with missing `lastDailyReset` and `lastMonthlyReset` → asserts timestamps are `null` (NOT `DateTime.now()`)
+    - [x] Test: `fromMap` with complete new-format document (all fields present) → asserts zero-regression, all fields match input
+    - [x] Run tests and confirm all new tests **FAIL** (Red Phase)
 
-- [ ] Task: Implement Legacy Fallbacks in `WalletModel.fromMap`
+- [~] Task: Implement Legacy Fallbacks in `WalletModel.fromMap`
     - [ ] In `lib/data/models/wallet_model.dart`, update line ~244-245: change `walletStatus` default from `'active'` to `'inactive'` (or the string value corresponding to `WalletStatus.inactive`/`old`)
     - [ ] Remove `DomainException` throw at lines ~226-229 for missing `sendLimits`; replace with fallback: read legacy root fields `data['dailyLimit']`/`data['monthlyLimit']`, else resolve from `PlatformSettingsModel.networkOldLimits`
     - [ ] Remove `DomainException` throw at lines ~233-236 for missing `receiveLimits`; same fallback logic
