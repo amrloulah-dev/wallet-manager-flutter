@@ -240,4 +240,148 @@ void main() {
       verify(() => mockCacheManager.clearWhere(any())).called(1);
     });
   });
+
+  group('resetLimitsForWallets payload safety', () {
+    late MockFirebaseFirestore mockFirestore;
+    late MockCollectionReference mockCollectionRef;
+    late MockDocumentReference mockDocRef;
+    late MockWriteBatch mockBatch;
+    late WalletRepository mockRepository;
+
+    setUp(() {
+      mockFirestore = MockFirebaseFirestore();
+      mockCollectionRef = MockCollectionReference();
+      mockDocRef = MockDocumentReference();
+      mockBatch = MockWriteBatch();
+
+      when(() => mockFirebaseService.firestore).thenReturn(mockFirestore);
+      when(() => mockFirestore.collection(any())).thenReturn(mockCollectionRef);
+      when(() => mockCollectionRef.doc(any())).thenReturn(mockDocRef);
+      when(() => mockFirestore.batch()).thenReturn(mockBatch);
+
+      when(() => mockBatch.commit()).thenAnswer((_) async {});
+      when(() => mockBatch.update(any(), captureAny())).thenReturn(null);
+
+      mockRepository = WalletRepository(
+        firebaseService: mockFirebaseService,
+        cacheManager: mockCacheManager,
+        statsRepository: MockStatsRepository(),
+      );
+    });
+
+    test('daily reset payload uses dot-notation and does not overwrite limit caps or walletStatus', () async {
+      final oldDate = DateTime.now().subtract(const Duration(days: 2));
+      final today = DateTime.now();
+      final wallet = WalletModel(
+        walletId: 'w_legacy',
+        storeId: 's1',
+        phoneNumber: '010',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.inactive,
+        balance: 500.0,
+        isActive: true,
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+        receiveLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+        stats: WalletStats(),
+        lastDailyReset: oldDate,
+        lastMonthlyReset: today, // Only daily reset needed
+      );
+
+      await mockRepository.resetLimitsForWallets([wallet]);
+
+      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      expect(captured.length, equals(1));
+      final Map<String, dynamic> payload = captured.single;
+
+      expect(payload.containsKey('sendLimits.dailyUsed'), isTrue);
+      expect(payload['sendLimits.dailyUsed'], equals(0.0));
+      expect(payload.containsKey('receiveLimits.dailyUsed'), isTrue);
+      expect(payload['receiveLimits.dailyUsed'], equals(0.0));
+      expect(payload.containsKey(FirebaseConstants.lastDailyReset), isTrue);
+
+      // Verify NO full-doc or cap overwrites
+      expect(payload.containsKey('dailyLimit'), isFalse);
+      expect(payload.containsKey('monthlyLimit'), isFalse);
+      expect(payload.containsKey('walletStatus'), isFalse);
+      expect(payload.containsKey('sendLimits'), isFalse);
+      expect(payload.containsKey('receiveLimits'), isFalse);
+      expect(payload.containsKey('sendLimits.dailyLimit'), isFalse);
+      expect(payload.containsKey('sendLimits.monthlyLimit'), isFalse);
+    });
+
+    test('monthly reset payload uses dot-notation and touches only monthly counters and reset timestamp', () async {
+      final today = DateTime.now();
+      final oldMonth = DateTime.now().subtract(const Duration(days: 40));
+      final wallet = WalletModel(
+        walletId: 'w_legacy',
+        storeId: 's1',
+        phoneNumber: '010',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.inactive,
+        balance: 500.0,
+        isActive: true,
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+        receiveLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+        stats: WalletStats(),
+        lastDailyReset: today,
+        lastMonthlyReset: oldMonth, // Only monthly reset needed
+      );
+
+      await mockRepository.resetLimitsForWallets([wallet]);
+
+      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      expect(captured.length, equals(1));
+      final Map<String, dynamic> payload = captured.single;
+
+      expect(payload.containsKey('sendLimits.monthlyUsed'), isTrue);
+      expect(payload['sendLimits.monthlyUsed'], equals(0.0));
+      expect(payload.containsKey('receiveLimits.monthlyUsed'), isTrue);
+      expect(payload['receiveLimits.monthlyUsed'], equals(0.0));
+      expect(payload.containsKey(FirebaseConstants.lastMonthlyReset), isTrue);
+
+      expect(payload.containsKey('sendLimits.dailyUsed'), isFalse);
+      expect(payload.containsKey('walletStatus'), isFalse);
+    });
+
+    test('combined daily and monthly reset payload is strictly pinpoint', () async {
+      final wallet = WalletModel(
+        walletId: 'w_null_ts',
+        storeId: 's1',
+        phoneNumber: '010',
+        walletType: WalletType.vodafoneCash,
+        walletStatus: WalletStatus.inactive,
+        balance: 500.0,
+        isActive: true,
+        createdBy: 'u1',
+        sendLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 500, monthlyLimit: 200000, monthlyUsed: 1000),
+        receiveLimits: WalletLimits(
+            dailyLimit: 60000, dailyUsed: 300, monthlyLimit: 200000, monthlyUsed: 1000),
+        stats: WalletStats(),
+        lastDailyReset: null, // Both daily and monthly reset needed (auto-heal)
+        lastMonthlyReset: null,
+      );
+
+      await mockRepository.resetLimitsForWallets([wallet]);
+
+      final captured = verify(() => mockBatch.update(mockDocRef, captureAny())).captured;
+      expect(captured.length, equals(1));
+      final Map<String, dynamic> payload = captured.single;
+
+      expect(payload.length, equals(6));
+      expect(payload['sendLimits.dailyUsed'], equals(0.0));
+      expect(payload['receiveLimits.dailyUsed'], equals(0.0));
+      expect(payload['sendLimits.monthlyUsed'], equals(0.0));
+      expect(payload['receiveLimits.monthlyUsed'], equals(0.0));
+      expect(payload.containsKey(FirebaseConstants.lastDailyReset), isTrue);
+      expect(payload.containsKey(FirebaseConstants.lastMonthlyReset), isTrue);
+    });
+  });
 }
+
