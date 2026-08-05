@@ -20,12 +20,12 @@
     - [x] Ensure NO hardcoded limit values (60000/200000) in `fromMap`; all fallbacks route through `PlatformSettingsModel.networkOldLimits`
     - [x] Run tests and confirm all tests **PASS** (Green Phase)
 
-- [~] Task: Refactor & Polish `fromMap` Implementation
-    - [ ] Extract the legacy fallback logic into a private helper method (e.g., `_buildLegacyLimits`) for readability
-    - [ ] Add inline documentation explaining the lazy migration strategy
-    - [ ] Run full model test suite to confirm no regressions
+- [x] Task: Refactor & Polish `fromMap` Implementation f16be0a
+    - [x] Extract the legacy fallback logic into a private helper method (e.g., `_buildLegacyLimits`) for readability
+    - [x] Add inline documentation explaining the lazy migration strategy
+    - [x] Run full model test suite to confirm no regressions
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md)
 
 ## Phase 2: Audit & Secure Repository Write Methods
 
