@@ -3,7 +3,8 @@ import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 void main() {
   group('InstaPayLimitWarningException Tests', () {
-    test('should extend AppException and have instapay_limit_warning message', () {
+    test('should extend AppException and have instapay_limit_warning message',
+        () {
       final exception = InstaPayLimitWarningException();
 
       expect(exception, isA<AppException>());

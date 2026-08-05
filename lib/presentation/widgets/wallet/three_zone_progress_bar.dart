@@ -25,7 +25,7 @@ class ThreeZoneProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Normalization & clamping to prevent division by zero or negative bounds
     final limit = monthlyLimit > 0 ? monthlyLimit : 1.0;
     final used = monthlyUsed.clamp(0.0, limit);
@@ -33,7 +33,7 @@ class ThreeZoneProgressBar extends StatelessWidget {
     final blocked = (limit - used - available).clamp(0.0, limit);
 
     final double usedPercentage = (used / limit) * 100;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -70,7 +70,7 @@ class ThreeZoneProgressBar extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final totalWidth = constraints.maxWidth;
-                
+
                 if (!isThreeZone) {
                   // Standard 2-zone rendering
                   final wUsed = (used / limit) * totalWidth;
@@ -98,10 +98,11 @@ class ThreeZoneProgressBar extends StatelessWidget {
 
                 // 3-Zone rendering with dynamic pending chunk
                 final wUsed = (used / limit) * totalWidth;
-                
+
                 // Segment Zone 2 (Available) into Pending and Remaining
                 final pendingVal = enteredAmount.clamp(0.0, available);
-                final remainingVal = (available - pendingVal).clamp(0.0, available);
+                final remainingVal =
+                    (available - pendingVal).clamp(0.0, available);
 
                 final wPending = (pendingVal / limit) * totalWidth;
                 final wRemaining = (remainingVal / limit) * totalWidth;
@@ -173,17 +174,20 @@ class ThreeZoneProgressBar extends StatelessWidget {
                 _buildLegendItem(
                   context,
                   color: AppColors.error,
-                  label: '${l10n.zoneUsedLabel}: ${NumberFormatter.formatAmount(used, showCurrency: false)}',
+                  label:
+                      '${l10n.zoneUsedLabel}: ${NumberFormatter.formatAmount(used, showCurrency: false)}',
                 ),
                 _buildLegendItem(
                   context,
                   color: AppColors.success,
-                  label: '${l10n.zoneAvailableLabel}: ${NumberFormatter.formatAmount(available, showCurrency: false)}',
+                  label:
+                      '${l10n.zoneAvailableLabel}: ${NumberFormatter.formatAmount(available, showCurrency: false)}',
                 ),
                 _buildLegendItem(
                   context,
                   color: Colors.grey,
-                  label: '${l10n.zoneBlockedLabel}: ${NumberFormatter.formatAmount(blocked, showCurrency: false)}',
+                  label:
+                      '${l10n.zoneBlockedLabel}: ${NumberFormatter.formatAmount(blocked, showCurrency: false)}',
                 ),
               ],
             ),
@@ -199,7 +203,8 @@ class ThreeZoneProgressBar extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(BuildContext context, {required Color color, required String label}) {
+  Widget _buildLegendItem(BuildContext context,
+      {required Color color, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

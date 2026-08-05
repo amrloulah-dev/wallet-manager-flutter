@@ -213,7 +213,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final Text currentBalanceText = tester.widget<Text>(find.text('الرصيد الحالي'));
+    final Text currentBalanceText =
+        tester.widget<Text>(find.text('الرصيد الحالي'));
     expect(currentBalanceText.overflow, equals(TextOverflow.ellipsis));
   });
 }

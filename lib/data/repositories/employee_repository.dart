@@ -58,8 +58,8 @@ class EmployeeRepository {
       }
       final employees =
           snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
-      employees.sort(
-          (a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
+      employees.sort((a, b) =>
+          a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
       return employees;
     } on FirebaseException catch (e, stack) {
       if (kDebugMode) {

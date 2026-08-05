@@ -234,7 +234,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
               : DialogType.noHeader,
           animType: AnimType.bottomSlide,
           title: 'تنبيه تجاوز الحدود',
-          desc: 'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها',
+          desc:
+              'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها',
           btnCancelText: 'إلغاء',
           btnOkText: 'تسجيل العملية',
           btnCancelOnPress: () {},

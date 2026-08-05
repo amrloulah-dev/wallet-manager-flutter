@@ -392,12 +392,15 @@ void main() {
         when(() => mockAuth.currentUser).thenReturn(testUser);
         when(() => mockAuth.isOwner).thenReturn(true);
         when(() => mockSettingsProvider.settings).thenReturn(customSettings);
-        when(() => mockTxRepo.createTransaction(any())).thenAnswer((_) async {});
+        when(() => mockTxRepo.createTransaction(any()))
+            .thenAnswer((_) async {});
       });
 
-      test('(a) Non-InstaPay wallet + Daily limit exceeded -> returns false and sets daily_send_limit error', () async {
-        when(() => mockWalletRepo.getWalletById('w_telecom', expectedStoreId: 's1'))
-            .thenAnswer((_) async => telecomWallet);
+      test(
+          '(a) Non-InstaPay wallet + Daily limit exceeded -> returns false and sets daily_send_limit error',
+          () async {
+        when(() => mockWalletRepo.getWalletById('w_telecom',
+            expectedStoreId: 's1')).thenAnswer((_) async => telecomWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
@@ -418,9 +421,11 @@ void main() {
         expect(provider.errorMessage, equals('wallet_error_daily_send_limit'));
       });
 
-      test('(b) InstaPay wallet + Daily limit exceeded + forceInstaPayBypass: false -> throws InstaPayLimitWarningException', () async {
-        when(() => mockWalletRepo.getWalletById('w_instapay', expectedStoreId: 's1'))
-            .thenAnswer((_) async => instapayWallet);
+      test(
+          '(b) InstaPay wallet + Daily limit exceeded + forceInstaPayBypass: false -> throws InstaPayLimitWarningException',
+          () async {
+        when(() => mockWalletRepo.getWalletById('w_instapay',
+            expectedStoreId: 's1')).thenAnswer((_) async => instapayWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
@@ -442,9 +447,11 @@ void main() {
         );
       });
 
-      test('(c) InstaPay wallet + Daily limit exceeded + forceInstaPayBypass: true -> succeeds and records with bypassedLimit: true', () async {
-        when(() => mockWalletRepo.getWalletById('w_instapay', expectedStoreId: 's1'))
-            .thenAnswer((_) async => instapayWallet);
+      test(
+          '(c) InstaPay wallet + Daily limit exceeded + forceInstaPayBypass: true -> succeeds and records with bypassedLimit: true',
+          () async {
+        when(() => mockWalletRepo.getWalletById('w_instapay',
+            expectedStoreId: 's1')).thenAnswer((_) async => instapayWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
@@ -463,14 +470,19 @@ void main() {
         );
 
         expect(result, isTrue);
-        
-        final capturedTx = verify(() => mockTxRepo.createTransaction(captureAny())).captured.first as TransactionModel;
+
+        final capturedTx =
+            verify(() => mockTxRepo.createTransaction(captureAny()))
+                .captured
+                .first as TransactionModel;
         expect(capturedTx.bypassedLimit, isTrue);
       });
 
-      test('(d) InstaPay wallet + Max Per Transaction exceeded -> returns false and sets instapay_limit error (no bypass allowed)', () async {
-        when(() => mockWalletRepo.getWalletById('w_instapay', expectedStoreId: 's1'))
-            .thenAnswer((_) async => instapayWallet);
+      test(
+          '(d) InstaPay wallet + Max Per Transaction exceeded -> returns false and sets instapay_limit error (no bypass allowed)',
+          () async {
+        when(() => mockWalletRepo.getWalletById('w_instapay',
+            expectedStoreId: 's1')).thenAnswer((_) async => instapayWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
@@ -493,7 +505,9 @@ void main() {
         expect(provider.errorMessage, equals('wallet_error_instapay_limit'));
       });
 
-      test('(e) InstaPay wallet + within all limits -> succeeds normally and records with bypassedLimit: false', () async {
+      test(
+          '(e) InstaPay wallet + within all limits -> succeeds normally and records with bypassedLimit: false',
+          () async {
         // Reset dailyUsed to 0 to be within limits
         final okInstapayWallet = instapayWallet.copyWith(
           sendLimits: WalletLimits(
@@ -503,8 +517,8 @@ void main() {
             monthlyUsed: 0,
           ),
         );
-        when(() => mockWalletRepo.getWalletById('w_instapay', expectedStoreId: 's1'))
-            .thenAnswer((_) async => okInstapayWallet);
+        when(() => mockWalletRepo.getWalletById('w_instapay',
+            expectedStoreId: 's1')).thenAnswer((_) async => okInstapayWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,
@@ -522,14 +536,19 @@ void main() {
         );
 
         expect(result, isTrue);
-        
-        final capturedTx = verify(() => mockTxRepo.createTransaction(captureAny())).captured.first as TransactionModel;
+
+        final capturedTx =
+            verify(() => mockTxRepo.createTransaction(captureAny()))
+                .captured
+                .first as TransactionModel;
         expect(capturedTx.bypassedLimit, isFalse);
       });
 
-      test('(f) Non-InstaPay wallet + Max Per Transaction exceeded -> returns false and sets telecom_limit error', () async {
-        when(() => mockWalletRepo.getWalletById('w_telecom', expectedStoreId: 's1'))
-            .thenAnswer((_) async => telecomWallet);
+      test(
+          '(f) Non-InstaPay wallet + Max Per Transaction exceeded -> returns false and sets telecom_limit error',
+          () async {
+        when(() => mockWalletRepo.getWalletById('w_telecom',
+            expectedStoreId: 's1')).thenAnswer((_) async => telecomWallet);
 
         final provider = TransactionProvider(
           transactionRepository: mockTxRepo,

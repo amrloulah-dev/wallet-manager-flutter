@@ -159,11 +159,10 @@ class IdentityMigrationUseCase {
         }
 
         // f. Update Pin Locks subcollection: userId == oldDocId
-        final pinLocksCollection = _firestore
-            .collection(FirebaseConstants.pinLocksSubcollection(currentStoreId));
-        final pinLocksSnapshot = await pinLocksCollection
-            .where('userId', isEqualTo: oldDocId)
-            .get();
+        final pinLocksCollection = _firestore.collection(
+            FirebaseConstants.pinLocksSubcollection(currentStoreId));
+        final pinLocksSnapshot =
+            await pinLocksCollection.where('userId', isEqualTo: oldDocId).get();
 
         for (final pinLockDoc in pinLocksSnapshot.docs) {
           await addOperation(

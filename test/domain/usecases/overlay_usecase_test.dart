@@ -13,8 +13,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/core/errors/app_error_handler.dart';
 
-class MockTransactionRepository extends Mock
-    implements TransactionRepository {}
+class MockTransactionRepository extends Mock implements TransactionRepository {}
 
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
@@ -67,8 +66,7 @@ void main() {
     sl.reset();
   });
 
-  test(
-      'execute() for credit (incoming) transaction sets serviceFee to 0.0',
+  test('execute() for credit (incoming) transaction sets serviceFee to 0.0',
       () async {
     final availableWallets = [
       {
@@ -87,7 +85,8 @@ void main() {
       type: 'credit',
       amount: 500.0,
       commission: 80.0,
-      sender: '01112345678', // Cross-network phone (Etisalat number to Vodafone wallet)
+      sender:
+          '01112345678', // Cross-network phone (Etisalat number to Vodafone wallet)
       availableWallets: availableWallets,
     );
 
@@ -126,7 +125,8 @@ void main() {
       type: 'debit',
       amount: 500.0,
       commission: 10.0,
-      sender: '01112345678', // Cross-network phone (Etisalat number from Vodafone wallet)
+      sender:
+          '01112345678', // Cross-network phone (Etisalat number from Vodafone wallet)
       availableWallets: availableWallets,
     );
 

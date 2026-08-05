@@ -160,8 +160,7 @@ class SubscriptionProvider extends BaseProvider {
         return;
       }
       AppErrorHandler.handle(e,
-          severity: ErrorSeverity.low,
-          operation: 'subscription_fetch_latest');
+          severity: ErrorSeverity.low, operation: 'subscription_fetch_latest');
     } catch (e, stack) {
       if (e is ServerException && e.code == 'permission-denied') {
         if (kDebugMode) {

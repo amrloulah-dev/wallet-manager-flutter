@@ -65,11 +65,13 @@ void main() {
       });
 
       test('fromMap should parse bypassedLimit from data', () {
-        final dataWithBypass = Map<String, dynamic>.from(baseData)..['bypassedLimit'] = true;
+        final dataWithBypass = Map<String, dynamic>.from(baseData)
+          ..['bypassedLimit'] = true;
         final tx = TransactionModel.fromMap(dataWithBypass, 'tx1');
         expect(tx.bypassedLimit, isTrue);
 
-        final dataWithoutBypass = Map<String, dynamic>.from(baseData)..['bypassedLimit'] = false;
+        final dataWithoutBypass = Map<String, dynamic>.from(baseData)
+          ..['bypassedLimit'] = false;
         final tx2 = TransactionModel.fromMap(dataWithoutBypass, 'tx1');
         expect(tx2.bypassedLimit, isFalse);
 

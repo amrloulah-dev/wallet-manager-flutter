@@ -233,7 +233,9 @@ class AccountInfoSection extends StatelessWidget {
                   ],
                 ),
               ],
-              if (isExpired || (!isLifetime && (daysRemaining ?? 0) <= 7) || isTrial) ...[
+              if (isExpired ||
+                  (!isLifetime && (daysRemaining ?? 0) <= 7) ||
+                  isTrial) ...[
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

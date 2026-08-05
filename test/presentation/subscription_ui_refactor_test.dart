@@ -20,8 +20,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
+
 class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
-class MockPlatformSettingsProvider extends Mock implements PlatformSettingsProvider {}
+
+class MockPlatformSettingsProvider extends Mock
+    implements PlatformSettingsProvider {}
+
 class MockSystemConfigProvider extends Mock implements SystemConfigProvider {}
 
 void main() {
@@ -73,10 +77,30 @@ void main() {
     when(() => mockPlatformSettingsProvider.settings).thenReturn(
       const PlatformSettingsModel(
         isRegistrationOpen: true,
-        instapayLimits: NetworkLimits(dailyReceive: 1, dailySend: 1, maxPerTransaction: 1, monthlyReceive: 1, monthlySend: 1),
-        networkCommercialLimits: NetworkLimits(dailyReceive: 1, dailySend: 1, maxPerTransaction: 1, monthlyReceive: 1, monthlySend: 1),
-        networkNewLimits: NetworkLimits(dailyReceive: 1, dailySend: 1, maxPerTransaction: 1, monthlyReceive: 1, monthlySend: 1),
-        networkOldLimits: NetworkLimits(dailyReceive: 1, dailySend: 1, maxPerTransaction: 1, monthlyReceive: 1, monthlySend: 1),
+        instapayLimits: NetworkLimits(
+            dailyReceive: 1,
+            dailySend: 1,
+            maxPerTransaction: 1,
+            monthlyReceive: 1,
+            monthlySend: 1),
+        networkCommercialLimits: NetworkLimits(
+            dailyReceive: 1,
+            dailySend: 1,
+            maxPerTransaction: 1,
+            monthlyReceive: 1,
+            monthlySend: 1),
+        networkNewLimits: NetworkLimits(
+            dailyReceive: 1,
+            dailySend: 1,
+            maxPerTransaction: 1,
+            monthlyReceive: 1,
+            monthlySend: 1),
+        networkOldLimits: NetworkLimits(
+            dailyReceive: 1,
+            dailySend: 1,
+            maxPerTransaction: 1,
+            monthlyReceive: 1,
+            monthlySend: 1),
         minCrossNetworkFee: 0,
         maxCrossNetworkFee: 0,
         minInstapayFee: 0,
@@ -109,9 +133,12 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: mockAuthProvider),
-        ChangeNotifierProvider<SubscriptionProvider>.value(value: mockSubscriptionProvider),
-        ChangeNotifierProvider<PlatformSettingsProvider>.value(value: mockPlatformSettingsProvider),
-        ChangeNotifierProvider<SystemConfigProvider>.value(value: mockSystemConfigProvider),
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: mockSubscriptionProvider),
+        ChangeNotifierProvider<PlatformSettingsProvider>.value(
+            value: mockPlatformSettingsProvider),
+        ChangeNotifierProvider<SystemConfigProvider>.value(
+            value: mockSystemConfigProvider),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -127,7 +154,8 @@ void main() {
     );
   }
 
-  testWidgets('AccountInfoSection displays ∞ symbol for lifetime subscription', (tester) async {
+  testWidgets('AccountInfoSection displays ∞ symbol for lifetime subscription',
+      (tester) async {
     await tester.pumpWidget(makeTestableWidget(const AccountInfoSection()));
     await tester.pumpAndSettle();
 
@@ -135,7 +163,9 @@ void main() {
     expect(find.textContaining('null'), findsNothing);
   });
 
-  testWidgets('PaywallScreen has sticky bottomNavigationBar with continue button', (tester) async {
+  testWidgets(
+      'PaywallScreen has sticky bottomNavigationBar with continue button',
+      (tester) async {
     await tester.pumpWidget(makeTestableWidget(const PaywallScreen()));
     await tester.pumpAndSettle();
 
@@ -145,7 +175,8 @@ void main() {
     expect(scaffold.bottomNavigationBar, isNotNull);
   });
 
-  testWidgets('PaymentModalScreen renders InstaPay without method selectors', (tester) async {
+  testWidgets('PaymentModalScreen renders InstaPay without method selectors',
+      (tester) async {
     await tester.pumpWidget(makeTestableWidget(
       const PaymentModalScreen(planId: SubscriptionPlan.lifetime),
     ));

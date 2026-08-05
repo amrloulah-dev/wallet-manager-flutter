@@ -1197,9 +1197,8 @@ void main() {
       );
 
       when(() => mockAuthProvider.currentStore).thenReturn(mockStore);
-      when(() => mockSubscriptionRepository
-              .getLatestSubscriptionRequest('test_store_rbac'))
-          .thenThrow(FirebaseException(
+      when(() => mockSubscriptionRepository.getLatestSubscriptionRequest(
+          'test_store_rbac')).thenThrow(FirebaseException(
         plugin: 'firestore',
         code: 'permission-denied',
         message: 'Permission denied',

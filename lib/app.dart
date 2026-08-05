@@ -123,8 +123,7 @@ class MyApp extends StatelessWidget {
           update: (_, auth, previous) {
             final p = (previous ??
                 StatisticsProvider(
-                    statsRepository: sl<StatsRepository>(),
-                    authProvider: auth))
+                    statsRepository: sl<StatsRepository>(), authProvider: auth))
               ..updateAuthProvider(auth)
               ..setStoreId(auth.currentStoreId);
             if (sl.isRegistered<StatisticsProvider>()) {

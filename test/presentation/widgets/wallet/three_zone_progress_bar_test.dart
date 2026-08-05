@@ -24,7 +24,8 @@ void main() {
   }
 
   group('ThreeZoneProgressBar Widget Tests', () {
-    testWidgets('renders 3 zones for telecom Receive transaction', (tester) async {
+    testWidgets('renders 3 zones for telecom Receive transaction',
+        (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           const ThreeZoneProgressBar(
@@ -41,12 +42,13 @@ void main() {
 
       // Verify that all 3 zones are rendered.
       expect(find.byType(ThreeZoneProgressBar), findsOneWidget);
-      
+
       final rowFinder = find.byType(Row);
       expect(rowFinder, findsWidgets);
     });
 
-    testWidgets('renders standard 2-zone progress bar for non-three-zone mode', (tester) async {
+    testWidgets('renders standard 2-zone progress bar for non-three-zone mode',
+        (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           const ThreeZoneProgressBar(

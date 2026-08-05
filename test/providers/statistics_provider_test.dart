@@ -295,4 +295,3 @@ void main() {
 }
 
 class MockAuthProvider extends Mock implements AuthProvider {}
-

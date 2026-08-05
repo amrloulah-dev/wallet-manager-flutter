@@ -56,8 +56,8 @@ void main() {
       when(() => mockAuthProvider.ensureUserLoaded())
           .thenAnswer((_) async => owner);
 
-      final result = await walletUseCase
-          .validatePermission((p) => p.createTransaction);
+      final result =
+          await walletUseCase.validatePermission((p) => p.createTransaction);
       expect(result, equals(owner));
     });
 

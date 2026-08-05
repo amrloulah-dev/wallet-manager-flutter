@@ -55,7 +55,8 @@ class TransactionFeeCalculator {
       return TransactionCalculationResult(
         serviceFee: 0.0,
         totalAmount: amount + commission, // No service fee for deposits
-        willExceedLimits: false, // Deposits never exceed operational send/receive limits
+        willExceedLimits:
+            false, // Deposits never exceed operational send/receive limits
         newDailyUsed: 0.0,
         newMonthlyUsed: 0.0,
         dailyLimit: 0.0,

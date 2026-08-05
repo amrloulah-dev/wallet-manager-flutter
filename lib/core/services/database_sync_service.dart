@@ -205,9 +205,8 @@ class DatabaseSyncService {
     if (!store.isActive) throw StoreInactiveException();
 
     bool identityAuthSuccess = false;
-    final pinToUse = (rawPin != null && rawPin.isNotEmpty)
-        ? rawPin
-        : (employee.pin ?? '');
+    final pinToUse =
+        (rawPin != null && rawPin.isNotEmpty) ? rawPin : (employee.pin ?? '');
 
     if (employee.firebaseUid != null && employee.firebaseUid!.isNotEmpty) {
       final uid = await IdentityService.authenticateEmployee(
@@ -484,9 +483,8 @@ class DatabaseSyncService {
   Future<String> _lazyProvision(UserModel employee, {String? rawPin}) async {
     final phone = employee.phone ?? '';
     final storeId = employee.storeId;
-    final pin = (rawPin != null && rawPin.isNotEmpty)
-        ? rawPin
-        : (employee.pin ?? '');
+    final pin =
+        (rawPin != null && rawPin.isNotEmpty) ? rawPin : (employee.pin ?? '');
 
     try {
       final uid = await IdentityService.provisionIdentity(

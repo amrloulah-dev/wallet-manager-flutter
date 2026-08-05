@@ -283,8 +283,7 @@ class AuthProvider extends BaseProvider {
         }
       }
 
-      final result = await _databaseSyncService.loginAsEmployee(
-          employee, store,
+      final result = await _databaseSyncService.loginAsEmployee(employee, store,
           rawPin: rawPin);
       _applySessionResult(result);
       return true;

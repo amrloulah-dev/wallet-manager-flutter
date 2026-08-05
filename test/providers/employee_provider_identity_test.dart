@@ -271,12 +271,15 @@ void main() {
       expect(employeeProvider.isEmployeeFrozen(e3), isFalse);
     });
 
-    test('_fetchEmployees unlocks loading status and sets error on permission-denied', () async {
-      when(() => mockRepository.getEmployeesByStoreId(
+    test(
+        '_fetchEmployees unlocks loading status and sets error on permission-denied',
+        () async {
+      when(() =>
+          mockRepository.getEmployeesByStoreId(
               storeId: 'store-denied',
               searchQuery: any(named: 'searchQuery'),
-              activeOnly: any(named: 'activeOnly')))
-          .thenThrow(FirebaseException(plugin: 'firestore', code: 'permission-denied'));
+              activeOnly: any(named: 'activeOnly'))).thenThrow(
+          FirebaseException(plugin: 'firestore', code: 'permission-denied'));
 
       employeeProvider.setStoreId('store-denied');
       await Future.delayed(Duration.zero);

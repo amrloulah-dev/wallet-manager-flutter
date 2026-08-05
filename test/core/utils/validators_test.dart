@@ -10,13 +10,17 @@ void main() {
 
     test('returns error when pin is not exactly 6 digits', () {
       expect(Validators.validatePin('1234'), 'الرقم السري يجب أن يكون 6 أرقام');
-      expect(Validators.validatePin('12345'), 'الرقم السري يجب أن يكون 6 أرقام');
-      expect(Validators.validatePin('1234567'), 'الرقم السري يجب أن يكون 6 أرقام');
+      expect(
+          Validators.validatePin('12345'), 'الرقم السري يجب أن يكون 6 أرقام');
+      expect(
+          Validators.validatePin('1234567'), 'الرقم السري يجب أن يكون 6 أرقام');
     });
 
     test('returns error when pin contains non-digit characters', () {
-      expect(Validators.validatePin('12345a'), 'الرقم السري يجب أن يكون 6 أرقام');
-      expect(Validators.validatePin('abcdef'), 'الرقم السري يجب أن يكون 6 أرقام');
+      expect(
+          Validators.validatePin('12345a'), 'الرقم السري يجب أن يكون 6 أرقام');
+      expect(
+          Validators.validatePin('abcdef'), 'الرقم السري يجب أن يكون 6 أرقام');
     });
 
     test('returns null for valid 6-digit pin', () {

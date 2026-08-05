@@ -110,10 +110,7 @@ void main() {
       });
 
       // 4. Create debt with createdBy / markedPaidBy / lastUpdatedBy == oldDocId
-      await fakeFirestore
-          .collection(FirebaseConstants.debts)
-          .doc('d1')
-          .set({
+      await fakeFirestore.collection(FirebaseConstants.debts).doc('d1').set({
         'storeId': storeId,
         'createdBy': oldDocId,
         'markedPaidBy': oldDocId,

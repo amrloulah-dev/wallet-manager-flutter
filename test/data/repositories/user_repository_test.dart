@@ -92,8 +92,7 @@ void main() {
       final mockDocSnapshot = MockQueryDocumentSnapshot();
 
       when(() => mockUsersCollection.where(FirebaseConstants.firebaseUidField,
-              isEqualTo: 'emp123'))
-          .thenReturn(mockQuery);
+          isEqualTo: 'emp123')).thenReturn(mockQuery);
       when(() => mockQuery.limit(1)).thenReturn(mockQueryLimit);
       when(() => mockQueryLimit.get()).thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.docs).thenReturn([mockDocSnapshot]);
@@ -129,8 +128,7 @@ void main() {
       final mockSnapshot = MockQuerySnapshot();
 
       when(() => mockUsersCollection.where(FirebaseConstants.firebaseUidField,
-              isEqualTo: 'emp999'))
-          .thenReturn(mockQuery);
+          isEqualTo: 'emp999')).thenReturn(mockQuery);
       when(() => mockQuery.limit(1)).thenReturn(mockQueryLimit);
       when(() => mockQueryLimit.get()).thenAnswer((_) async => mockSnapshot);
       when(() => mockSnapshot.docs).thenReturn([]);
@@ -176,4 +174,3 @@ class MockQuerySnapshot extends Mock
 
 class MockQueryDocumentSnapshot extends Mock
     implements QueryDocumentSnapshot<Map<String, dynamic>> {}
-

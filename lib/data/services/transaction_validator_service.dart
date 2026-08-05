@@ -111,7 +111,8 @@ class TransactionValidatorService {
         final dynamicLimits =
             validationWallet.getDynamicNetworkLimits(settings);
 
-        if (!transaction.isDeposit && transaction.amount > dynamicLimits.maxPerTransaction) {
+        if (!transaction.isDeposit &&
+            transaction.amount > dynamicLimits.maxPerTransaction) {
           if (isInstaPay) {
             throw ValidationException(
                 'wallet_error_instapay_limit:${NumberFormatter.formatAmount(dynamicLimits.maxPerTransaction)}');

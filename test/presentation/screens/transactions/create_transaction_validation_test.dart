@@ -289,7 +289,8 @@ void main() {
     expect(find.text('يتجاوز الحد اليومي'), findsNothing);
   });
 
-  testWidgets('InstaPay warning warning dialog shows on InstaPayLimitWarningException',
+  testWidgets(
+      'InstaPay warning warning dialog shows on InstaPayLimitWarningException',
       (tester) async {
     // Stub the first invocation to throw warning exception, second to return true
     int callCount = 0;
@@ -306,7 +307,8 @@ void main() {
           forceInstaPayBypass: any(named: 'forceInstaPayBypass'),
         )).thenAnswer((invocation) async {
       callCount++;
-      final isBypass = invocation.namedArguments[#forceInstaPayBypass] as bool? ?? false;
+      final isBypass =
+          invocation.namedArguments[#forceInstaPayBypass] as bool? ?? false;
       if (!isBypass) {
         throw InstaPayLimitWarningException();
       }
@@ -340,8 +342,7 @@ void main() {
     // Enter phone number
     final phoneFieldFinder = find.widgetWithText(CustomTextField, 'رقم الهاتف');
     await tester.enterText(
-        find.descendant(
-            of: phoneFieldFinder, matching: find.byType(TextField)),
+        find.descendant(of: phoneFieldFinder, matching: find.byType(TextField)),
         '01012345678');
     await tester.pumpAndSettle();
 

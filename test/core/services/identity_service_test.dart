@@ -52,7 +52,9 @@ void main() {
           )).called(1);
     });
 
-    test('provisionIdentity returns existing UID on duplicate email with raw PIN', () async {
+    test(
+        'provisionIdentity returns existing UID on duplicate email with raw PIN',
+        () async {
       when(() => mockAuth.createUserWithEmailAndPassword(
             email: 'emp_123456789_store123@store.com',
             password: '123456',
@@ -78,8 +80,7 @@ void main() {
 
     test('updateCredential changes password with raw PIN', () async {
       when(() => mockAuth.currentUser).thenReturn(mockUser);
-      when(() => mockUser.updatePassword('654321'))
-          .thenAnswer((_) async {});
+      when(() => mockUser.updatePassword('654321')).thenAnswer((_) async {});
 
       final success = await IdentityService.updateCredential(
         phone: '123456789',
@@ -104,7 +105,8 @@ void main() {
       verify(() => mockUser.delete()).called(1);
     });
 
-    test('authenticateEmployee authenticates using raw 6-digit PIN directly', () async {
+    test('authenticateEmployee authenticates using raw 6-digit PIN directly',
+        () async {
       when(() => mockAuth.signInWithEmailAndPassword(
             email: 'emp_123456789_store123@store.com',
             password: '123456',
@@ -123,7 +125,9 @@ void main() {
           )).called(1);
     });
 
-    test('authenticateEmployee throws AuthException on invalid credentials without fallback', () async {
+    test(
+        'authenticateEmployee throws AuthException on invalid credentials without fallback',
+        () async {
       when(() => mockAuth.signInWithEmailAndPassword(
             email: 'emp_123456789_store123@store.com',
             password: '123456',

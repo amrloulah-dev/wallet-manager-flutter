@@ -192,4 +192,3 @@ void main() {
     expect(find.text('EGP 15'), findsNothing);
   });
 }
-
