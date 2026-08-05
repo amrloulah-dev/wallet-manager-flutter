@@ -221,6 +221,11 @@ class WalletModel {
     // Phase 3: Boundary Guard
     AmountValidator.ensurePositiveOrZero(balance);
 
+    // Lazy Migration Fallbacks:
+    // 1. Missing walletStatus defaults to WalletStatus.inactive (never active/new).
+    // 2. Missing sendLimits/receiveLimits reconstruct from legacy root fields or networkOldLimits.
+    // 3. Null lastDailyReset/lastMonthlyReset are intentionally preserved so WalletProvider.needsDailyReset
+    //    triggers a silent auto-heal limit reset via pinpoint serverTimestamp updates in Firestore.
     final rawStatus = data[FirebaseConstants.walletStatus] as String?;
     final walletStatus = (rawStatus != null && rawStatus.isNotEmpty)
         ? WalletStatus.fromString(rawStatus)
