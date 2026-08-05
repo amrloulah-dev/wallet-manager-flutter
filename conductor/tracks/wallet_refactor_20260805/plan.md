@@ -1,6 +1,6 @@
 # Implementation Plan: Backward Compatibility Migration & Fix Destructive Limit Reset Bug
 
-## Phase 1: Safe Legacy Deserialization — `WalletModel.fromMap`
+## Phase 1: Safe Legacy Deserialization — `WalletModel.fromMap` [checkpoint: a9ff695]
 
 - [x] Task: Write Failing Tests — Legacy Document Deserialization c96880c
     - [x] In `test/data/models/wallet_model_test.dart`, add a test group `'Legacy document deserialization'`
@@ -25,11 +25,11 @@
     - [x] Add inline documentation explaining the lazy migration strategy
     - [x] Run full model test suite to confirm no regressions
 
-- [~] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md) a9ff695
 
 ## Phase 2: Audit & Secure Repository Write Methods
 
-- [ ] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification
+- [~] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification
     - [ ] In `test/data/repositories/wallet_repository_test.dart` (or a new file `wallet_repository_reset_test.dart`), add test group `'resetLimitsForWallets payload safety'`
     - [ ] Test: daily reset payload contains ONLY `sendLimits.dailyUsed`, `receiveLimits.dailyUsed`, `lastDailyReset` — asserts NO `dailyLimit`, `monthlyLimit`, `walletStatus`, or root-level limit fields
     - [ ] Test: monthly reset payload contains ONLY `sendLimits.monthlyUsed`, `receiveLimits.monthlyUsed`, `lastMonthlyReset` — same safety assertions
