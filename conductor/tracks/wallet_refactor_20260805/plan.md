@@ -1,0 +1,62 @@
+# Implementation Plan: Backward Compatibility Migration & Fix Destructive Limit Reset Bug
+
+## Phase 1: Safe Legacy Deserialization — `WalletModel.fromMap`
+
+- [ ] Task: Write Failing Tests — Legacy Document Deserialization
+    - [ ] In `test/data/models/wallet_model_test.dart`, add a test group `'Legacy document deserialization'`
+    - [ ] Test: `fromMap` with completely missing `walletStatus` → asserts result has `WalletStatus.inactive` (not `active`/`new`)
+    - [ ] Test: `fromMap` with missing `sendLimits` map but present legacy root-level fields (`dailyLimit`, `monthlyLimit`) → asserts `WalletLimits` reconstructed from root fields with `0.0` usage
+    - [ ] Test: `fromMap` with missing `sendLimits` AND missing root-level fields → asserts fallback to `PlatformSettingsModel.networkOldLimits` defaults
+    - [ ] Test: `fromMap` with missing `receiveLimits` map → same fallback logic as sendLimits
+    - [ ] Test: `fromMap` with missing `lastDailyReset` and `lastMonthlyReset` → asserts timestamps are `null` (NOT `DateTime.now()`)
+    - [ ] Test: `fromMap` with complete new-format document (all fields present) → asserts zero-regression, all fields match input
+    - [ ] Run tests and confirm all new tests **FAIL** (Red Phase)
+
+- [ ] Task: Implement Legacy Fallbacks in `WalletModel.fromMap`
+    - [ ] In `lib/data/models/wallet_model.dart`, update line ~244-245: change `walletStatus` default from `'active'` to `'inactive'` (or the string value corresponding to `WalletStatus.inactive`/`old`)
+    - [ ] Remove `DomainException` throw at lines ~226-229 for missing `sendLimits`; replace with fallback: read legacy root fields `data['dailyLimit']`/`data['monthlyLimit']`, else resolve from `PlatformSettingsModel.networkOldLimits`
+    - [ ] Remove `DomainException` throw at lines ~233-236 for missing `receiveLimits`; same fallback logic
+    - [ ] Verify `lastDailyReset` and `lastMonthlyReset` parse safely as `null` when missing (current code at lines ~215-218 already does this — confirm no regression)
+    - [ ] Ensure NO hardcoded limit values (60000/200000) in `fromMap`; all fallbacks route through `PlatformSettingsModel.networkOldLimits`
+    - [ ] Run tests and confirm all tests **PASS** (Green Phase)
+
+- [ ] Task: Refactor & Polish `fromMap` Implementation
+    - [ ] Extract the legacy fallback logic into a private helper method (e.g., `_buildLegacyLimits`) for readability
+    - [ ] Add inline documentation explaining the lazy migration strategy
+    - [ ] Run full model test suite to confirm no regressions
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Safe Legacy Deserialization' (Protocol in workflow.md)
+
+## Phase 2: Audit & Secure Repository Write Methods
+
+- [ ] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification
+    - [ ] In `test/data/repositories/wallet_repository_test.dart` (or a new file `wallet_repository_reset_test.dart`), add test group `'resetLimitsForWallets payload safety'`
+    - [ ] Test: daily reset payload contains ONLY `sendLimits.dailyUsed`, `receiveLimits.dailyUsed`, `lastDailyReset` — asserts NO `dailyLimit`, `monthlyLimit`, `walletStatus`, or root-level limit fields
+    - [ ] Test: monthly reset payload contains ONLY `sendLimits.monthlyUsed`, `receiveLimits.monthlyUsed`, `lastMonthlyReset` — same safety assertions
+    - [ ] Test: combined daily+monthly reset payload — assert union of both is still pinpoint-only
+    - [ ] Run tests and confirm they **FAIL** or **PASS** (they may already pass since the method appears compliant — this is acceptable for audit-type tasks)
+
+- [ ] Task: Audit All `WalletRepository` Write Methods
+    - [ ] Review `createWallet` (line ~44 uses `toFirestore()` via `batch.set`) — this is correct for document creation, document finding
+    - [ ] Review `updateWallet` (line ~207 takes `Map<String, dynamic>`) — confirm callers pass pinpoint maps, not full `toMap()`/`toFirestore()` output
+    - [ ] Search for any other `.set()`, `.update()` calls in the file and verify their payloads
+    - [ ] Document audit findings as inline comments or in the spec
+    - [ ] Fix any confirmed full-document overwrite problems (if found)
+    - [ ] Run repository test suite to confirm no regressions
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Audit & Secure Repository Write Methods' (Protocol in workflow.md)
+
+## Phase 3: Integration Flow Verification
+
+- [ ] Task: Write Integration-Level Test — Legacy Wallet Auto-Heal Cycle
+    - [ ] Create `test/data/repositories/wallet_legacy_migration_test.dart` (or add to existing)
+    - [ ] Test: Simulate end-to-end flow: create a legacy Firestore document (no `walletStatus`, no `sendLimits`/`receiveLimits`, no timestamps) → load via `WalletModel.fromFirestore` → verify `WalletProvider.needsDailyReset` evaluates `true` → call `resetLimitsForWallets` → read document back → assert timestamps now exist AND limit caps are untouched
+    - [ ] Test: Same flow with a new-format document → verify zero mutations occur beyond normal reset
+    - [ ] Run all tests and confirm full suite passes
+
+- [ ] Task: Run Static Analysis & Coverage
+    - [ ] Run `flutter analyze` and fix any warnings/errors
+    - [ ] Run `CI=true flutter test` and verify >80% coverage on modified files
+    - [ ] Run `dart format .` to ensure consistent formatting
+
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Integration Flow Verification' (Protocol in workflow.md)
