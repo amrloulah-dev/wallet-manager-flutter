@@ -70,7 +70,7 @@
 
 ---
 
-- [ ] **Track: Backward Compatibility Migration & Fix Destructive Limit Reset Bug**
+- [x] **Track: Backward Compatibility Migration & Fix Destructive Limit Reset Bug**
 *Link: [./tracks/wallet_refactor_20260805/](./tracks/wallet_refactor_20260805/)*
 
 
