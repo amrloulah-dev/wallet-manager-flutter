@@ -29,14 +29,14 @@
 
 ## Phase 2: Audit & Secure Repository Write Methods
 
-- [~] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification
-    - [ ] In `test/data/repositories/wallet_repository_test.dart` (or a new file `wallet_repository_reset_test.dart`), add test group `'resetLimitsForWallets payload safety'`
-    - [ ] Test: daily reset payload contains ONLY `sendLimits.dailyUsed`, `receiveLimits.dailyUsed`, `lastDailyReset` — asserts NO `dailyLimit`, `monthlyLimit`, `walletStatus`, or root-level limit fields
-    - [ ] Test: monthly reset payload contains ONLY `sendLimits.monthlyUsed`, `receiveLimits.monthlyUsed`, `lastMonthlyReset` — same safety assertions
-    - [ ] Test: combined daily+monthly reset payload — assert union of both is still pinpoint-only
-    - [ ] Run tests and confirm they **FAIL** or **PASS** (they may already pass since the method appears compliant — this is acceptable for audit-type tasks)
+- [x] Task: Write Failing Tests — `resetLimitsForWallets` Payload Verification 2c80454
+    - [x] In `test/data/repositories/wallet_repository_test.dart` (or a new file `wallet_repository_reset_test.dart`), add test group `'resetLimitsForWallets payload safety'`
+    - [x] Test: daily reset payload contains ONLY `sendLimits.dailyUsed`, `receiveLimits.dailyUsed`, `lastDailyReset` — asserts NO `dailyLimit`, `monthlyLimit`, `walletStatus`, or root-level limit fields
+    - [x] Test: monthly reset payload contains ONLY `sendLimits.monthlyUsed`, `receiveLimits.monthlyUsed`, `lastMonthlyReset` — same safety assertions
+    - [x] Test: combined daily+monthly reset payload — assert union of both is still pinpoint-only
+    - [x] Run tests and confirm they **FAIL** or **PASS** (they may already pass since the method appears compliant — this is acceptable for audit-type tasks)
 
-- [ ] Task: Audit All `WalletRepository` Write Methods
+- [~] Task: Audit All `WalletRepository` Write Methods
     - [ ] Review `createWallet` (line ~44 uses `toFirestore()` via `batch.set`) — this is correct for document creation, document finding
     - [ ] Review `updateWallet` (line ~207 takes `Map<String, dynamic>`) — confirm callers pass pinpoint maps, not full `toMap()`/`toFirestore()` output
     - [ ] Search for any other `.set()`, `.update()` calls in the file and verify their payloads
