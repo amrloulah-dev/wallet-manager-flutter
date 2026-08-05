@@ -12,15 +12,15 @@
     - [x] Test: `fromMap` with complete new-format document (all fields present) → asserts zero-regression, all fields match input
     - [x] Run tests and confirm all new tests **FAIL** (Red Phase)
 
-- [~] Task: Implement Legacy Fallbacks in `WalletModel.fromMap`
-    - [ ] In `lib/data/models/wallet_model.dart`, update line ~244-245: change `walletStatus` default from `'active'` to `'inactive'` (or the string value corresponding to `WalletStatus.inactive`/`old`)
-    - [ ] Remove `DomainException` throw at lines ~226-229 for missing `sendLimits`; replace with fallback: read legacy root fields `data['dailyLimit']`/`data['monthlyLimit']`, else resolve from `PlatformSettingsModel.networkOldLimits`
-    - [ ] Remove `DomainException` throw at lines ~233-236 for missing `receiveLimits`; same fallback logic
-    - [ ] Verify `lastDailyReset` and `lastMonthlyReset` parse safely as `null` when missing (current code at lines ~215-218 already does this — confirm no regression)
-    - [ ] Ensure NO hardcoded limit values (60000/200000) in `fromMap`; all fallbacks route through `PlatformSettingsModel.networkOldLimits`
-    - [ ] Run tests and confirm all tests **PASS** (Green Phase)
+- [x] Task: Implement Legacy Fallbacks in `WalletModel.fromMap` e3a1164
+    - [x] In `lib/data/models/wallet_model.dart`, update line ~244-245: change `walletStatus` default from `'active'` to `'inactive'` (or the string value corresponding to `WalletStatus.inactive`/`old`)
+    - [x] Remove `DomainException` throw at lines ~226-229 for missing `sendLimits`; replace with fallback: read legacy root fields `data['dailyLimit']`/`data['monthlyLimit']`, else resolve from `PlatformSettingsModel.networkOldLimits`
+    - [x] Remove `DomainException` throw at lines ~233-236 for missing `receiveLimits`; same fallback logic
+    - [x] Verify `lastDailyReset` and `lastMonthlyReset` parse safely as `null` when missing (current code at lines ~215-218 already does this — confirm no regression)
+    - [x] Ensure NO hardcoded limit values (60000/200000) in `fromMap`; all fallbacks route through `PlatformSettingsModel.networkOldLimits`
+    - [x] Run tests and confirm all tests **PASS** (Green Phase)
 
-- [ ] Task: Refactor & Polish `fromMap` Implementation
+- [~] Task: Refactor & Polish `fromMap` Implementation
     - [ ] Extract the legacy fallback logic into a private helper method (e.g., `_buildLegacyLimits`) for readability
     - [ ] Add inline documentation explaining the lazy migration strategy
     - [ ] Run full model test suite to confirm no regressions
