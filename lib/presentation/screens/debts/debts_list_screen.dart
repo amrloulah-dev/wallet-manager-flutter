@@ -204,9 +204,10 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
                 key: ValueKey(
                     '${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
                 debt: debt,
-                onTap: PermissionHelper.canMarkDebtPaid(context)
-                    ? () => _showPartialPaymentSheet(context, debt)
-                    : null,
+                onPartialPayment:
+                    debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
+                        ? () => _showPartialPaymentSheet(context, debt)
+                        : null,
                 onMarkPaid:
                     debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
                         ? () => _showMarkPaidDialog(debt)

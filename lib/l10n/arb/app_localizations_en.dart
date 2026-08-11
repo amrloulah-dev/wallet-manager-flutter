@@ -2274,4 +2274,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zoneBlockedLabel => 'Blocked by Balance';
+
+  @override
+  String get fullSettlement => 'Full Settlement';
+
+  @override
+  String get partialPayment => 'Partial Payment';
 }

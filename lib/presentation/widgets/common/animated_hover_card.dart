@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AnimatedHoverCard extends StatefulWidget {
   final Widget child;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double initialElevation;
   final double highlightedElevation;
   final double scale;
@@ -12,7 +12,7 @@ class AnimatedHoverCard extends StatefulWidget {
   const AnimatedHoverCard({
     super.key,
     required this.child,
-    required this.onTap,
+    this.onTap,
     this.initialElevation = 2.0,
     this.highlightedElevation = 8.0,
     this.scale = 0.98,
@@ -42,11 +42,13 @@ class _AnimatedHoverCardState extends State<AnimatedHoverCard> {
         shape: RoundedRectangleBorder(borderRadius: widget.borderRadius),
         child: InkWell(
           onTap: widget.onTap,
-          onHighlightChanged: (isHighlighted) {
-            setState(() {
-              _isHighlighted = isHighlighted;
-            });
-          },
+          onHighlightChanged: widget.onTap == null
+              ? null
+              : (isHighlighted) {
+                  setState(() {
+                    _isHighlighted = isHighlighted;
+                  });
+                },
           borderRadius: widget.borderRadius,
           child: widget.child,
         ),

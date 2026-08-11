@@ -927,5 +927,7 @@
   "maxButtonLabel": "الحد الأقصى",
   "zoneUsedLabel": "مستخدم",
   "zoneAvailableLabel": "متاح",
-  "zoneBlockedLabel": "محجوز بالرصيد"
+  "zoneBlockedLabel": "محجوز بالرصيد",
+  "fullSettlement": "تسديد كامل",
+  "partialPayment": "دفع جزئي"
 }

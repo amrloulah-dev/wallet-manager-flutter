@@ -2256,4 +2256,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get zoneBlockedLabel => 'محجوز بالرصيد';
+
+  @override
+  String get fullSettlement => 'تسديد كامل';
+
+  @override
+  String get partialPayment => 'دفع جزئي';
 }

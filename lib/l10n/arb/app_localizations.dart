@@ -4225,6 +4225,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'محجوز بالرصيد'**
   String get zoneBlockedLabel;
+
+  /// No description provided for @fullSettlement.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسديد كامل'**
+  String get fullSettlement;
+
+  /// No description provided for @partialPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفع جزئي'**
+  String get partialPayment;
 }
 
 class _AppLocalizationsDelegate

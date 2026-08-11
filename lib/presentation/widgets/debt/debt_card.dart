@@ -15,18 +15,26 @@ class DebtCard extends StatelessWidget {
   final DebtModel debt;
   final VoidCallback? onTap;
   final VoidCallback? onMarkPaid;
+  final VoidCallback? onPartialPayment;
+  final VoidCallback? onEdit;
 
   const DebtCard({
     super.key,
     required this.debt,
     this.onTap,
     this.onMarkPaid,
+    this.onPartialPayment,
+    this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectivePartialPayment = onPartialPayment ?? onEdit ?? onTap;
+    final showActions = debt.isOpen &&
+        (onMarkPaid != null || effectivePartialPayment != null);
+
     return AnimatedHoverCard(
-      onTap: onTap ?? () {},
+      onTap: null,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -56,10 +64,10 @@ class DebtCard extends StatelessWidget {
               _buildNotesSection(context),
             ],
 
-            // 6️⃣ Mark as Paid Button
-            if (onMarkPaid != null && debt.isOpen) ...[
+            // 6️⃣ Action Buttons Row (Full Settlement & Partial Payment)
+            if (showActions) ...[
               const SizedBox(height: 16),
-              _buildMarkAsPaidButton(context),
+              _buildActionButtons(context, effectivePartialPayment),
             ],
           ],
         ),
@@ -256,23 +264,57 @@ class DebtCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMarkAsPaidButton(BuildContext context) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    VoidCallback? effectivePartialPayment,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onMarkPaid,
-        icon: const Icon(Icons.check_circle_outline, size: 18),
-        label: Text(l10n.payDebt),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.success,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+
+    return Row(
+      children: [
+        if (onMarkPaid != null)
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: onMarkPaid,
+              icon: const Icon(Icons.check_circle_outline, size: 18),
+              label: Text(
+                l10n.fullSettlement,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        if (onMarkPaid != null && effectivePartialPayment != null)
+          const SizedBox(width: 8.0),
+        if (effectivePartialPayment != null)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: effectivePartialPayment,
+              icon: const Icon(Icons.payments_outlined, size: 18),
+              label: Text(
+                l10n.partialPayment,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

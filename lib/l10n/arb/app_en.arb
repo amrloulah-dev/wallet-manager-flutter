@@ -934,5 +934,7 @@
   "maxButtonLabel": "Max",
   "zoneUsedLabel": "Used",
   "zoneAvailableLabel": "Available",
-  "zoneBlockedLabel": "Blocked by Balance"
+  "zoneBlockedLabel": "Blocked by Balance",
+  "fullSettlement": "Full Settlement",
+  "partialPayment": "Partial Payment"
 }
