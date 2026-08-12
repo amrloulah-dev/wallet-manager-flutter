@@ -75,6 +75,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
 
         final String nowStr = data['transactionDate']?.toString() ??
             DateTime.now().toIso8601String();
+        final serviceFee = NumberParser.toDouble(data['serviceFee']);
         final tx = TransactionModel(
           transactionId: data['transactionId']?.toString() ?? '',
           storeId: data['storeId']?.toString() ?? '',
@@ -85,7 +86,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
           customerName: data['customerName']?.toString(),
           amount: NumberParser.toDouble(data['amount']),
           commission: NumberParser.toDouble(data['commission']),
-          serviceFee: 0.0,
+          serviceFee: serviceFee,
           paymentStatus: PaymentStatus.fromString(
               data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
           transactionDate: DateTime.parse(nowStr),
@@ -104,11 +105,11 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         final type =
             data['type']?.toString(); // 'debit' = send, 'credit' = receive
         if (walletId != null && amount > 0 && type != null) {
-          final isSend = type == 'debit';
-          context.read<WalletProvider>().applyLocalDeduction(
+          context.read<WalletProvider>().updateLocalBalance(
                 walletId,
                 amount,
-                isSend,
+                type,
+                serviceFee: serviceFee,
               );
         }
       }

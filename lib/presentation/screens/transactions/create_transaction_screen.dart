@@ -25,6 +25,8 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/three_zone_progress_bar.dart';
+import '../../../core/utils/number_parser.dart';
+import '../../../core/sms_automation/models/parsed_sms_dto.dart' hide TransactionType;
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/enums/transaction_enums.dart';
 
@@ -68,11 +70,43 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         walletProvider.fetchInitialWallets();
       }
 
-      // Pre-select wallet if ID is passed
-      final arguments = ModalRoute.of(context)?.settings.arguments as String?;
-      if (arguments != null) {
+      // Pre-select wallet / pre-fill fields if arguments passed
+      final arguments = ModalRoute.of(context)?.settings.arguments;
+      if (arguments is String) {
         setState(() {
           _selectedWalletId = arguments;
+        });
+      } else if (arguments is Map<String, dynamic>) {
+        setState(() {
+          if (arguments['walletId'] != null) {
+            _selectedWalletId = arguments['walletId'].toString();
+          }
+          if (arguments['amount'] != null) {
+            final netAmt = NumberParser.toDouble(arguments['amount']);
+            if (netAmt > 0) {
+              _amountController.text = netAmt.toString();
+            }
+          }
+          if (arguments['sender'] != null || arguments['customerPhone'] != null) {
+            _customerPhoneController.text =
+                (arguments['sender'] ?? arguments['customerPhone']).toString();
+          }
+          if (arguments['type'] != null) {
+            final t = arguments['type'].toString();
+            _transactionType = t == 'debit'
+                ? TransactionType.debit
+                : TransactionType.credit;
+          }
+        });
+      } else if (arguments is ParsedSmsDto) {
+        setState(() {
+          _amountController.text = arguments.amount.toString();
+          if (arguments.counterpartyNumber != null) {
+            _customerPhoneController.text = arguments.counterpartyNumber!;
+          }
+          _transactionType = arguments.type.name == 'debit'
+              ? TransactionType.debit
+              : TransactionType.credit;
         });
       }
     });

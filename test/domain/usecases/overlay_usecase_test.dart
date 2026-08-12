@@ -143,5 +143,18 @@ void main() {
             'Debit transactions must compute service fee (500 * 0.005 = 2.5)');
     expect(result.totalDeduction, 502.5,
         reason: 'Vault totalDeduction for debit includes amount + serviceFee');
+
+    final capturedVaultData =
+        verify(() => mockStorage.saveToVault(captureAny()))
+            .captured
+            .first as Map<String, dynamic>;
+
+    expect(capturedVaultData['amount'], 500.0,
+        reason:
+            'Vault amount MUST store net transaction amount, not total deduction');
+    expect(capturedVaultData['serviceFee'], 2.5,
+        reason: 'Vault serviceFee MUST store calculated service fee');
+    expect(capturedVaultData['totalDeduction'], 502.5,
+        reason: 'Vault totalDeduction MUST store amount + serviceFee');
   });
 }

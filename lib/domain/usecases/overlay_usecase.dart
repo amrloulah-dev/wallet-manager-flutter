@@ -100,7 +100,9 @@ class OverlayUseCase {
 
     final txData = {
       'transactionId': txId,
-      'amount': totalDeductionForVault,
+      'amount': newTransaction.amount,
+      'serviceFee': newTransaction.serviceFee,
+      'totalDeduction': totalDeductionForVault,
       'commission': commission,
       'type': type,
       'walletId': selectedWalletId,
