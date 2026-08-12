@@ -204,63 +204,12 @@ void main() {
     await tester.tap(saveBtnFinder);
     await tester.pumpAndSettle();
 
-    // Verify updateWallet called with correct carrier type and status
+    // Verify updateWallet called with correct carrier type
     verify(() => mockWalletProvider.updateWallet(
           'w1',
           {
             'walletType': 'vodafoneCash',
-            'walletStatus': 'active',
             'notes': 'Preserve carrier test',
-          },
-        )).called(1);
-  });
-
-  testWidgets(
-      'WalletFormScreen allows editing walletStatus when editing an existing wallet',
-      (WidgetTester tester) async {
-    final editWallet = WalletModel(
-      walletId: 'w1',
-      phoneNumber: '01012345678',
-      walletType: WalletType.vodafoneCash,
-      walletStatus: WalletStatus.active,
-      balance: 1000,
-      storeId: 'store_123',
-      createdBy: 'user_123',
-      sendLimits: WalletLimits(dailyLimit: 30000, monthlyLimit: 100000),
-      receiveLimits: WalletLimits(dailyLimit: 30000, monthlyLimit: 100000),
-      stats: WalletStats(),
-    );
-
-    when(() => mockWalletProvider.updateWallet(any(), any()))
-        .thenAnswer((_) async => true);
-
-    await tester.pumpWidget(buildTestableWidget(
-        locale: const Locale('en'), walletToEdit: editWallet));
-    await tester.pumpAndSettle();
-
-    // Tap status dropdown
-    final statusDropdownFinder =
-        find.byType(DropdownButtonFormField<WalletStatus>);
-    await tester.tap(statusDropdownFinder);
-    await tester.pumpAndSettle();
-
-    // Select "Old" (inactive) status
-    await tester.tap(find.text('Old').last);
-    await tester.pumpAndSettle();
-
-    // Save changes
-    final saveBtnFinder = find.byType(ElevatedButton);
-    await tester.ensureVisible(saveBtnFinder);
-    await tester.tap(saveBtnFinder);
-    await tester.pumpAndSettle();
-
-    // Verify updateWallet called with updated status 'inactive'
-    verify(() => mockWalletProvider.updateWallet(
-          'w1',
-          {
-            'walletType': 'vodafoneCash',
-            'walletStatus': 'inactive',
-            'notes': '',
           },
         )).called(1);
   });

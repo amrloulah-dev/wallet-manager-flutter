@@ -182,8 +182,8 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       // Update logic
       final data = {
         'walletType': _selectedWalletType!.name,
-        'walletStatus': _selectedWalletStatus!.name,
         'notes': _notesController.text,
+        // Wallet status and phone number are not editable in this version
       };
       success =
           await walletProvider.updateWallet(_walletToEdit!.walletId, data);
@@ -340,11 +340,13 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       itemLabelBuilder: (WalletStatus key) => statusDisplayNames[key]!,
 
       // 3. الحفاظ على منطق وضع التعديل كما هو بالضبط
-      onChanged: (value) {
-        setState(() {
-          _selectedWalletStatus = value;
-        });
-      },
+      onChanged: _isEditMode
+          ? null // تعطيل القائمة لو إحنا في وضع التعديل
+          : (value) {
+              setState(() {
+                _selectedWalletStatus = value;
+              });
+            },
 
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.pleaseSelectWalletStatus
