@@ -826,16 +826,12 @@ class TransactionProvider extends BaseProvider {
       _summary.addAll(oldSummary);
     }
 
-    final walletProvider = sl.isRegistered<WalletProvider>()
-        ? sl<WalletProvider>()
-        : _walletProvider;
+    final walletProvider = _walletProvider;
     if (walletProvider != null && oldWalletSnapshot != null) {
       walletProvider.rollbackWallet(oldWalletSnapshot);
     }
 
-    final sProvider = sl.isRegistered<StatisticsProvider>()
-        ? sl<StatisticsProvider>()
-        : statsProvider;
+    final sProvider = statsProvider;
     if (sProvider != null) {
       sProvider.rollbackStats(oldStatsSummary, oldStatsToday);
     }

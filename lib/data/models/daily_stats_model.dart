@@ -14,6 +14,8 @@ class DailyStatsModel {
   final double totalOpenAmount;
   final int paidDebtsCount;
   final double totalPaidAmount;
+  final double totalServiceFee;
+  final double totalAmount;
 
   DailyStatsModel({
     required this.date,
@@ -27,6 +29,8 @@ class DailyStatsModel {
     this.totalOpenAmount = 0.0,
     this.paidDebtsCount = 0,
     this.totalPaidAmount = 0.0,
+    this.totalServiceFee = 0.0,
+    this.totalAmount = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -42,6 +46,8 @@ class DailyStatsModel {
       'totalOpenAmount': totalOpenAmount,
       'paidDebtsCount': paidDebtsCount,
       'totalPaidAmount': totalPaidAmount,
+      'totalServiceFee': totalServiceFee,
+      'totalAmount': totalAmount,
     };
   }
 
@@ -58,6 +64,8 @@ class DailyStatsModel {
       totalOpenAmount: NumberParser.toDouble(map['totalOpenAmount']),
       paidDebtsCount: NumberParser.toInt(map['paidDebtsCount']),
       totalPaidAmount: NumberParser.toDouble(map['totalPaidAmount']),
+      totalServiceFee: NumberParser.toDouble(map['totalServiceFee']),
+      totalAmount: NumberParser.toDouble(map['totalAmount']),
     );
   }
 
@@ -74,6 +82,8 @@ class DailyStatsModel {
       totalOpenAmount: 0.0,
       paidDebtsCount: 0,
       totalPaidAmount: 0.0,
+      totalServiceFee: 0.0,
+      totalAmount: 0.0,
     );
   }
 
@@ -89,6 +99,8 @@ class DailyStatsModel {
     double? totalOpenAmount,
     int? paidDebtsCount,
     double? totalPaidAmount,
+    double? totalServiceFee,
+    double? totalAmount,
   }) {
     return DailyStatsModel(
       date: date ?? this.date,
@@ -102,6 +114,8 @@ class DailyStatsModel {
       totalOpenAmount: totalOpenAmount ?? this.totalOpenAmount,
       paidDebtsCount: paidDebtsCount ?? this.paidDebtsCount,
       totalPaidAmount: totalPaidAmount ?? this.totalPaidAmount,
+      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
+      totalAmount: totalAmount ?? this.totalAmount,
     );
   }
 }

@@ -182,8 +182,31 @@ class WalletProvider extends BaseProvider {
           ? oldWallet.balance + totalChange
           : oldWallet.balance - totalChange;
 
+      // Optimistically adjust send/receive limits to prevent
+      // double-spending race conditions between consecutive transactions.
+      WalletLimits? updatedSendLimits;
+      WalletLimits? updatedReceiveLimits;
+
+      if (!isIncome) {
+        // Send (debit): increment sendLimits usage
+        updatedSendLimits = oldWallet.sendLimits.copyWith(
+          dailyUsed: oldWallet.sendLimits.dailyUsed + amount,
+          monthlyUsed: oldWallet.sendLimits.monthlyUsed + amount,
+        );
+      } else {
+        // Receive (credit): increment receiveLimits usage
+        updatedReceiveLimits = oldWallet.receiveLimits.copyWith(
+          dailyUsed: oldWallet.receiveLimits.dailyUsed + amount,
+          monthlyUsed: oldWallet.receiveLimits.monthlyUsed + amount,
+        );
+      }
+
       // Create a brand new instance using copyWith
-      _wallets[index] = oldWallet.copyWith(balance: newBalance);
+      _wallets[index] = oldWallet.copyWith(
+        balance: newBalance,
+        sendLimits: updatedSendLimits,
+        receiveLimits: updatedReceiveLimits,
+      );
 
       // Crucial: Update map reference
       _walletMap[walletId] = _wallets[index];

@@ -109,7 +109,16 @@ service cloud.firestore {
     match /wallets/{walletId} {
       allow get, list: if canAccessStore(resource.data.storeId) || isAdmin();
       allow create: if isStoreOwner(request.resource.data.storeId) || (canAccessStore(request.resource.data.storeId) && hasPermission('createWallet')) || isAdmin();
-      allow update: if isStoreOwner(resource.data.storeId) || (canAccessStore(resource.data.storeId) && request.resource.data.storeId == resource.data.storeId && (hasPermission('editWallet') || hasPermission('addBalance'))) || isAdmin();
+      allow update: if isStoreOwner(resource.data.get('storeId', '')) || 
+                   isStoreOwner(request.resource.data.storeId) || 
+                   (canAccessStore(resource.data.get('storeId', '')) && 
+                    request.resource.data.storeId == resource.data.get('storeId', '') && 
+                    (hasPermission('editWallet') || 
+                     hasPermission('addBalance') || 
+                     hasPermission('createTransaction') || 
+                     hasPermission('createDebt') || 
+                     hasPermission('collectDebt'))) || 
+                   isAdmin();
       allow delete: if isStoreOwner(resource.data.storeId) || isAdmin();
     }
 
@@ -147,9 +156,12 @@ service cloud.firestore {
       allow read, write: if isUserDocExists() && getUserData().get('role', '') == 'admin';
     }
 
+    // Note: The wildcard match /stats/{document=**} above also matches /stats/global,
+    // but Firestore evaluates BOTH match blocks independently. A request succeeds if
+    // ANY matching rule grants access, so this specific rule effectively overrides
+    // the admin-only wildcard for the /stats/global document.
     match /stats/global {
-      allow read, create: if isAuthenticated();
-      allow update: if isAuthenticated() && request.resource.data.totalTransactions == resource.data.totalTransactions + 1;
+      allow read, write: if request.auth != null;
     }
   }
 }

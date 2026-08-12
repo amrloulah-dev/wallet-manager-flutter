@@ -60,6 +60,13 @@ class StatsSummaryModel {
 
   final DateTime? lastUpdated;
 
+  // Today metrics (populated by backend FieldValue.increment)
+  final double totalCommissionToday;
+  final double totalServiceFeeToday;
+  final double totalSentAmountToday;
+  final double totalReceivedAmountToday;
+  final int totalTransactionsToday;
+
   StatsSummaryModel({
     this.totalWallets = 0,
     this.activeWallets = 0,
@@ -75,6 +82,11 @@ class StatsSummaryModel {
     this.totalOpenAmount = 0.0,
     this.totalPaidAmount = 0.0,
     this.lastUpdated,
+    this.totalCommissionToday = 0.0,
+    this.totalServiceFeeToday = 0.0,
+    this.totalSentAmountToday = 0.0,
+    this.totalReceivedAmountToday = 0.0,
+    this.totalTransactionsToday = 0,
   });
 
   factory StatsSummaryModel.fromMap(Map<String, dynamic> data) {
@@ -94,6 +106,11 @@ class StatsSummaryModel {
       totalPaidAmount: NumberParser.toDouble(data['totalPaidAmount']),
       // Phase 3: No more silent fallback to DateTime.now()
       lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate(),
+      totalCommissionToday: NumberParser.toDouble(data['totalCommissionToday']),
+      totalServiceFeeToday: NumberParser.toDouble(data['totalServiceFeeToday']),
+      totalSentAmountToday: NumberParser.toDouble(data['totalSentAmountToday']),
+      totalReceivedAmountToday: NumberParser.toDouble(data['totalReceivedAmountToday']),
+      totalTransactionsToday: NumberParser.toInt(data['totalTransactionsToday']),
     );
   }
 
@@ -114,6 +131,11 @@ class StatsSummaryModel {
       'totalPaidAmount': totalPaidAmount,
       'lastUpdated':
           lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'totalCommissionToday': totalCommissionToday,
+      'totalServiceFeeToday': totalServiceFeeToday,
+      'totalSentAmountToday': totalSentAmountToday,
+      'totalReceivedAmountToday': totalReceivedAmountToday,
+      'totalTransactionsToday': totalTransactionsToday,
     };
   }
 
@@ -132,6 +154,11 @@ class StatsSummaryModel {
     double? totalOpenAmount,
     double? totalPaidAmount,
     DateTime? lastUpdated,
+    double? totalCommissionToday,
+    double? totalServiceFeeToday,
+    double? totalSentAmountToday,
+    double? totalReceivedAmountToday,
+    int? totalTransactionsToday,
   }) {
     return StatsSummaryModel(
       totalWallets: totalWallets ?? this.totalWallets,
@@ -148,6 +175,11 @@ class StatsSummaryModel {
       totalOpenAmount: totalOpenAmount ?? this.totalOpenAmount,
       totalPaidAmount: totalPaidAmount ?? this.totalPaidAmount,
       lastUpdated: lastUpdated ?? this.lastUpdated,
+      totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
+      totalServiceFeeToday: totalServiceFeeToday ?? this.totalServiceFeeToday,
+      totalSentAmountToday: totalSentAmountToday ?? this.totalSentAmountToday,
+      totalReceivedAmountToday: totalReceivedAmountToday ?? this.totalReceivedAmountToday,
+      totalTransactionsToday: totalTransactionsToday ?? this.totalTransactionsToday,
     );
   }
 
@@ -168,7 +200,12 @@ class StatsSummaryModel {
         other.paidDebtsCount == paidDebtsCount &&
         other.totalOpenAmount == totalOpenAmount &&
         other.totalPaidAmount == totalPaidAmount &&
-        other.lastUpdated == lastUpdated;
+        other.lastUpdated == lastUpdated &&
+        other.totalCommissionToday == totalCommissionToday &&
+        other.totalServiceFeeToday == totalServiceFeeToday &&
+        other.totalSentAmountToday == totalSentAmountToday &&
+        other.totalReceivedAmountToday == totalReceivedAmountToday &&
+        other.totalTransactionsToday == totalTransactionsToday;
   }
 
   @override
@@ -186,7 +223,12 @@ class StatsSummaryModel {
       paidDebtsCount.hashCode ^
       totalOpenAmount.hashCode ^
       totalPaidAmount.hashCode ^
-      lastUpdated.hashCode;
+      lastUpdated.hashCode ^
+      totalCommissionToday.hashCode ^
+      totalServiceFeeToday.hashCode ^
+      totalSentAmountToday.hashCode ^
+      totalReceivedAmountToday.hashCode ^
+      totalTransactionsToday.hashCode;
 
   factory StatsSummaryModel.empty() {
     return StatsSummaryModel(
@@ -204,6 +246,11 @@ class StatsSummaryModel {
       totalOpenAmount: 0.0,
       totalPaidAmount: 0.0,
       lastUpdated: null,
+      totalCommissionToday: 0.0,
+      totalServiceFeeToday: 0.0,
+      totalSentAmountToday: 0.0,
+      totalReceivedAmountToday: 0.0,
+      totalTransactionsToday: 0,
     );
   }
 }
