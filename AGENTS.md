@@ -70,6 +70,9 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - **Overlay Vault-First Initialization**: `TransactionOverlayScreen` MUST read from the Vault (`readFromVault()`) upon mounting as the primary source of truth, rather than relying 100% on transient `overlayListener` stream events.
 - **Stream Event Filtering**: `overlayListener` MUST filter out self-emitted broadcast actions (e.g. `event['action'] == 'local_deduct'`) to prevent stream self-pollution.
 - **Ephemeral Vault Cleanup**: `clearVault()` MUST be called immediately after vault ingestion on overlay boot, as well as during teardown (`submitTransaction()` and `close()`), preventing stale data bleed across SMS sessions.
+- **Dynamic Service Lifecycle**: UI toggles controlling background service status MUST invoke dynamic controllers (`startBackgroundMonitoring()` / `stopBackgroundMonitoring()`) in `onChanged` handlers immediately after persisting storage state.
+- **Cold-Boot Configuration Guard**: `startBackgroundMonitoring()` MUST verify configuration status (`_isConfigured`) and execute `initializeBackgroundService()` if invoked before cold boot initialization completes.
+- **Toggle Debouncing & Rollback**: Toggle UI handlers MUST use an async lock (`_isToggling`) to prevent rapid tap collisions and execute full state rollbacks (reverting `SharedPreferences` + UI switch) if dynamic service start fails.
 
 ## Firestore
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)
