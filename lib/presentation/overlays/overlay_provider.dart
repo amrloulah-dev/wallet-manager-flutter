@@ -312,6 +312,7 @@ class OverlayProvider extends SafeChangeNotifier {
             'closing overlay window ...');
       }
       await FlutterOverlayWindow.closeOverlay();
+      await _localStorageService.clearVault();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,

@@ -67,7 +67,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
       // This replaces the orphan 'pending_overlay_tx' SharedPreferences key.
       await _storage.reloadDisk();
 
-      final data = _storage.readFromVault();
+      final data = await _storage.readFromVault();
       if (data == null) return;
 
       if (mounted) {

@@ -66,12 +66,23 @@ class _OverlayContentState extends State<_OverlayContent> {
     super.initState();
     _commissionFocusNode = FocusNode();
     _commissionController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _provider = context.read<OverlayProvider>();
 
+      // 1. Force disk reload and read fresh payload from Vault (SSOT)
+      final vaultData = await LocalStorageService.instance.readFromVault();
+      if (vaultData != null) {
+        _provider.ingestNewEvent(vaultData);
+        await LocalStorageService.instance.clearVault();
+      }
+
+      // 2. Setup stream listener AFTER checking the vault
       _overlaySubscription =
           FlutterOverlayWindow.overlayListener.listen((event) {
         if (event != null && event is Map) {
+          // 🛡️ Filter out internal broadcast actions to prevent stale state overrides
+          if (event['action'] == 'local_deduct') return;
+
           _provider.ingestNewEvent(event);
         }
       }, onError: (error) {

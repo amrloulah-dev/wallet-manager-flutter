@@ -66,6 +66,10 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 ## Background Services
 - **SMS Monitor**: `flutter_background_service` + `another_telephony`; parses transaction SMS and shows overlay
 - **Overlay Window**: `flutter_overlay_window`; entry via `overlayMain()`, uses `IsolateNameServer` to communicate with main isolate
+- **Vault SSOT & Disk Synchronization**: `readFromVault()` MUST be `async` and execute `await reloadDisk()` before reading `SharedPreferences` to ensure multi-isolate disk cache sync.
+- **Overlay Vault-First Initialization**: `TransactionOverlayScreen` MUST read from the Vault (`readFromVault()`) upon mounting as the primary source of truth, rather than relying 100% on transient `overlayListener` stream events.
+- **Stream Event Filtering**: `overlayListener` MUST filter out self-emitted broadcast actions (e.g. `event['action'] == 'local_deduct'`) to prevent stream self-pollution.
+- **Ephemeral Vault Cleanup**: `clearVault()` MUST be called immediately after vault ingestion on overlay boot, as well as during teardown (`submitTransaction()` and `close()`), preventing stale data bleed across SMS sessions.
 
 ## Firestore
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)

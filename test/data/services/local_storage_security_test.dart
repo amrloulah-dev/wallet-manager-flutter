@@ -94,7 +94,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('pending_overlay_data'), isTrue);
 
-      final readData = storage.readFromVault();
+      final readData = await storage.readFromVault();
       expect(readData?['txId'], '123');
 
       await storage.clearVault();

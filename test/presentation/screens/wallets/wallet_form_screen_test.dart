@@ -204,13 +204,67 @@ void main() {
     await tester.tap(saveBtnFinder);
     await tester.pumpAndSettle();
 
-    // Verify updateWallet called with correct carrier type
+    // Verify updateWallet called with correct carrier type and status
     verify(() => mockWalletProvider.updateWallet(
           'w1',
           {
             'walletType': 'vodafoneCash',
+            'walletStatus': 'active',
             'notes': 'Preserve carrier test',
           },
         )).called(1);
   });
+
+  testWidgets(
+      'WalletFormScreen allows selecting a new wallet status in edit mode and submits updated walletStatus',
+      (WidgetTester tester) async {
+    final editWallet = WalletModel(
+      walletId: 'w2',
+      phoneNumber: '01012345678',
+      walletType: WalletType.vodafoneCash,
+      walletStatus: WalletStatus.active,
+      balance: 1000,
+      storeId: 'store_123',
+      createdBy: 'user_123',
+      sendLimits: WalletLimits(dailyLimit: 30000, monthlyLimit: 100000),
+      receiveLimits: WalletLimits(dailyLimit: 30000, monthlyLimit: 100000),
+      stats: WalletStats(),
+    );
+
+    when(() => mockWalletProvider.updateWallet(any(), any()))
+        .thenAnswer((_) async => true);
+
+    await tester.pumpWidget(buildTestableWidget(
+        locale: const Locale('en'), walletToEdit: editWallet));
+    await tester.pumpAndSettle();
+
+    // Find the status dropdown field and open it
+    final statusDropdownFinder =
+        find.byType(DropdownButtonFormField<WalletStatus>);
+    expect(statusDropdownFinder, findsOneWidget);
+
+    await tester.tap(statusDropdownFinder);
+    await tester.pumpAndSettle();
+
+    // Select "Old" (inactive) status from dropdown
+    await tester.tap(find.text('Old').last);
+    await tester.pumpAndSettle();
+
+    // Save changes
+    final saveBtnFinder = find.byType(ElevatedButton);
+    await tester.ensureVisible(saveBtnFinder);
+    await tester.tap(saveBtnFinder);
+    await tester.pumpAndSettle();
+
+    // Verify updateWallet called with updated walletStatus 'inactive'
+    verify(() => mockWalletProvider.updateWallet(
+          'w2',
+          {
+            'walletType': 'vodafoneCash',
+            'walletStatus': 'inactive',
+            'notes': '',
+          },
+        )).called(1);
+  });
 }
+

@@ -38,7 +38,7 @@ void main() {
       // Verify it uses the correct key
       expect(prefs.containsKey('pending_overlay_data'), isTrue);
 
-      final readData = storage.readFromVault();
+      final readData = await storage.readFromVault();
       expect(readData?['amount'], 100.0);
     });
 
@@ -47,7 +47,7 @@ void main() {
       await prefs.setString('pending_overlay_tx', 'stale_data');
 
       // storage.readFromVault() should NOT read from pending_overlay_tx
-      expect(storage.readFromVault(), isNull);
+      expect(await storage.readFromVault(), isNull);
     });
 
     test('should migrate languageCode to app_locale on initialization',

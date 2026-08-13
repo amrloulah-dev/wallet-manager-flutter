@@ -513,7 +513,9 @@ class LocalStorageService {
   }
 
   /// Reads the last pending transaction written by the background service.
-  Map<String, dynamic>? readFromVault() {
+  /// Automatically calls [reloadDisk] to ensure multi-isolate disk synchronization.
+  Future<Map<String, dynamic>?> readFromVault() async {
+    await reloadDisk();
     final String? raw = _prefs?.getString(_kPendingOverlayData);
     if (raw == null) return null;
     try {
