@@ -25,6 +25,10 @@ import 'package:walletmanager/data/services/local_storage_service.dart';
 // and is shared with the Main Isolate's foreground handler.
 // ============================================================
 
+/// Whether [initializeBackgroundService] has already been called.
+/// Used by [startBackgroundMonitoring] to ensure `configure()` ran first.
+bool _isConfigured = false;
+
 /// Call this once from `main()` to configure the background service.
 /// It does NOT start the service — `autoStart: true` handles that.
 Future<void> initializeBackgroundService() async {
@@ -66,6 +70,36 @@ Future<void> initializeBackgroundService() async {
       foregroundServiceNotificationId: 9999,
     ),
   );
+
+  _isConfigured = true;
+}
+
+/// Dynamically starts the background monitoring service.
+/// Ensures [initializeBackgroundService] has been called first so that
+/// `FlutterBackgroundService.configure()` is guaranteed to have run.
+///
+/// Safe to call from the UI thread at any time.
+Future<void> startBackgroundMonitoring() async {
+  if (!_isConfigured) {
+    await initializeBackgroundService();
+  }
+  final service = FlutterBackgroundService();
+  final isRunning = await service.isRunning();
+  if (!isRunning) {
+    await service.startService();
+  }
+}
+
+/// Dynamically stops the background monitoring service by sending
+/// the `'stop'` event that the Guardian Isolate is already listening for.
+///
+/// Safe to call from the UI thread at any time.
+Future<void> stopBackgroundMonitoring() async {
+  final service = FlutterBackgroundService();
+  final isRunning = await service.isRunning();
+  if (isRunning) {
+    service.invoke('stop');
+  }
 }
 
 /// iOS background stub — not used, but required by the API.

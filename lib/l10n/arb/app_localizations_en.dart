@@ -1624,6 +1624,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSavedWallets => 'No saved wallets';
 
   @override
+  String get smsMonitoringActivated => 'SMS monitoring activated ✓';
+
+  @override
+  String get smsServiceStartFailed => 'Failed to start SMS service';
+
+  @override
   String get trialDaysRemainingLabel => 'Trial Days Remaining';
 
   @override

@@ -608,6 +608,8 @@
   "sim1Label": "SIM 1",
   "sim2Label": "SIM 2",
   "noSavedWallets": "No saved wallets",
+  "smsMonitoringActivated": "SMS monitoring activated ✓",
+  "smsServiceStartFailed": "Failed to start SMS service",
   "dateAdded": "Date Added",
   "manageEmployeesTitle": "Manage Employees",
   "expiryDateValue": "Expiry Date: {date}",

@@ -3170,6 +3170,18 @@ abstract class AppLocalizations {
   /// **'لا توجد محافظ محفوظة'**
   String get noSavedWallets;
 
+  /// No description provided for @smsMonitoringActivated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل مراقبة الرسائل ✓'**
+  String get smsMonitoringActivated;
+
+  /// No description provided for @smsServiceStartFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تشغيل خدمة الرسائل'**
+  String get smsServiceStartFailed;
+
   /// No description provided for @trialDaysRemainingLabel.
   ///
   /// In ar, this message translates to:

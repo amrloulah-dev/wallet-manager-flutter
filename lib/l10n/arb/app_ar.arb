@@ -648,6 +648,8 @@
   "sim1Label": "شريحة 1",
   "sim2Label": "شريحة 2",
   "noSavedWallets": "لا توجد محافظ محفوظة",
+  "smsMonitoringActivated": "تم تفعيل مراقبة الرسائل ✓",
+  "smsServiceStartFailed": "فشل تشغيل خدمة الرسائل",
   "trialDaysRemainingLabel": "أيام الفترة التجريبية المتبقية",
   "logoutButton": "تسجيل الخروج",
   "instaPay": "انستا باي",

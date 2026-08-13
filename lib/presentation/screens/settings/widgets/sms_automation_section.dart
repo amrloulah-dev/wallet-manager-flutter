@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/services/sms_service.dart';
+import '../../../../core/services/background_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/toast_utils.dart';
@@ -24,6 +25,7 @@ class SmsAutomationSection extends StatefulWidget {
 class _SmsAutomationSectionState extends State<SmsAutomationSection> {
   final LocalStorageService _storage = LocalStorageService();
   bool _isEnabled = false;
+  bool _isToggling = false;
   List<Map<String, dynamic>> _availableWallets = [];
   SimWalletConfig? _sim1Config;
   SimWalletConfig? _sim2Config;
@@ -56,7 +58,11 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
   }
 
   Future<void> _toggleSmsAutomation(bool value) async {
+    if (_isToggling) return;
+    setState(() => _isToggling = true);
+
     if (value) {
+      // ── ENABLE PATH ──────────────────────────────────────────
       try {
         // Use init() as the single entry point for all required permissions
         final success = await SmsService().init();
@@ -74,31 +80,41 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
           return;
         }
 
-        // Enable Logic
+        // Persist state BEFORE starting service so onStart guard passes
         await _storage.setSmsAutomationEnabled(true);
         setState(() {
           _isEnabled = true;
         });
+
+        // Instant Dynamic Start
+        await startBackgroundMonitoring();
+
+        if (mounted) {
+          ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.smsMonitoringActivated,
+          );
+        }
       } catch (e, stack) {
         AppErrorHandler.handle(
           e,
           stackTrace: stack,
-          operation: 'toggle_sms_automation',
+          operation: 'toggle_sms_automation_enable',
         );
+        // Full rollback: revert storage + UI
+        await _storage.setSmsAutomationEnabled(false);
         if (mounted) {
-          ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
-          // Revert switch if failed
           setState(() {
             _isEnabled = false;
           });
+          ToastUtils.showError(
+            AppLocalizations.of(context)!.smsServiceStartFailed,
+          );
         }
       } finally {
-        if (mounted) {
-          // Cleanup or consistency checks
-        }
+        if (mounted) setState(() => _isToggling = false);
       }
     } else {
-      // Disable
+      // ── DISABLE PATH ─────────────────────────────────────────
       try {
         await _storage.setSmsAutomationEnabled(false);
         if (mounted) {
@@ -106,10 +122,17 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
             _isEnabled = false;
           });
         }
+
+        // Instant Dynamic Stop
+        await stopBackgroundMonitoring();
+      } catch (e, stack) {
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          operation: 'toggle_sms_automation_disable',
+        );
       } finally {
-        if (mounted) {
-          // Consistency
-        }
+        if (mounted) setState(() => _isToggling = false);
       }
     }
   }
@@ -199,7 +222,9 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
                     ),
                     value: _isEnabled,
                     activeThumbColor: AppColors.primary,
-                    onChanged: isExpired ? null : _toggleSmsAutomation,
+                    onChanged: (isExpired || _isToggling)
+                        ? null
+                        : _toggleSmsAutomation,
                   ),
                 ),
               ),

@@ -1619,6 +1619,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noSavedWallets => 'لا توجد محافظ محفوظة';
 
   @override
+  String get smsMonitoringActivated => 'تم تفعيل مراقبة الرسائل ✓';
+
+  @override
+  String get smsServiceStartFailed => 'فشل تشغيل خدمة الرسائل';
+
+  @override
   String get trialDaysRemainingLabel => 'أيام الفترة التجريبية المتبقية';
 
   @override
