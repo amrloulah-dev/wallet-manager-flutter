@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
@@ -70,8 +69,6 @@ class WalletProvider extends BaseProvider {
   WalletType? _filterByType; // ENUM refactor
   WalletStatus? _filterByStatus; // ENUM refactor
 
-  StreamSubscription? _overlayDataSubscription;
-
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
 
@@ -99,46 +96,7 @@ class WalletProvider extends BaseProvider {
             transactionRepository ?? sl<TransactionRepository>(),
         _cacheManager = cacheManager ?? sl<WalletCacheManager>(),
         _walletUseCase = walletUseCase ?? sl<WalletUseCase>(),
-        _currentStoreId = storeId {
-    _overlayDataSubscription?.cancel();
-    _overlayDataSubscription = null;
-    try {
-      _overlayDataSubscription =
-          FlutterOverlayWindow.overlayListener.listen((event) {
-        if (kDebugMode) {
-          debugPrint('🔥 [TX_FLOW] [wallet_provider] -> overlayListener: '
-              'event received=$event');
-        }
-
-        if (event is Map && event['action'] == 'local_deduct') {
-          final walletId = event['walletId']?.toString();
-          final deduction = NumberParser.toDouble(event['amount']);
-          final isSend = event['isSend'] == true;
-
-          if (walletId == null) return;
-
-          final index = _wallets.indexWhere((w) => w.walletId == walletId);
-          if (index != -1) {
-            final oldWallet = _wallets[index];
-            final newBalance = isSend
-                ? oldWallet.balance - deduction
-                : oldWallet.balance + deduction;
-
-            _wallets[index] = oldWallet.copyWith(balance: newBalance);
-            _rebuildWalletMap();
-            _activateFetchShield(); // Block stale Firestore read for 5 s
-            safeNotify();
-          }
-        }
-      }, onError: (error) {
-        AppErrorHandler.handle(error,
-            operation: 'WalletProvider.overlayListener');
-      });
-    } catch (e, stack) {
-      AppErrorHandler.handle(e,
-          operation: 'wallet_overlay_listener', stackTrace: stack);
-    }
-  }
+        _currentStoreId = storeId;
 
   void applyLocalDeduction(String walletId, double deduction, bool isSend) {
     if (isDisposed) return;
@@ -239,7 +197,6 @@ class WalletProvider extends BaseProvider {
 
   @override
   void dispose() {
-    _overlayDataSubscription?.cancel();
     _fetchShieldTimer?.cancel();
     super.dispose();
   }
@@ -726,8 +683,6 @@ class WalletProvider extends BaseProvider {
 
   void clearAndCancel() {
     _currentStoreId = null;
-    _overlayDataSubscription?.cancel();
-    _overlayDataSubscription = null;
     _fetchShieldTimer?.cancel();
     _fetchShieldActive = false;
     _wallets = [];

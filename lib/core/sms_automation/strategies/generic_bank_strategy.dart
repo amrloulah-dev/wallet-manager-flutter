@@ -25,78 +25,101 @@ class GenericBankStrategy extends SmsParserStrategy {
       return true;
     }
 
-    final upperSender = sender.toUpperCase();
-    return BankConstants.supportedBankSenders.contains(upperSender) ||
+    final upperSender = sender.toUpperCase().trim();
+    if (BankConstants.supportedBankSenders.contains(upperSender) ||
         upperSender.contains("IPN") ||
-        upperSender.contains("INSTAPAY");
+        upperSender.contains("INSTAPAY")) {
+      return true;
+    }
+
+    // Arabic aggregator / bank sender names
+    final trimmed = sender.trim();
+    if (trimmed.contains("انستاباي") ||
+        trimmed.contains("إنستاباي") ||
+        trimmed.contains("انستا باي") ||
+        trimmed.contains("إنستا باي")) {
+      return true;
+    }
+
+    return false;
   }
 
   @override
   ParsedSmsDto? parse(String normalizedBody) {
-    // Keywords Check: Must contain "amount" AND ("sent" OR "received")
-    if (!normalizedBody.contains('amount')) return null;
-    if (!normalizedBody.contains('sent') &&
-        !normalizedBody.contains('received')) {
-      return null;
-    }
+    // ── Receive (Credit / Deposit / Incoming Transfer) ──
+    final creditAccountRegex = RegExp(
+      r'(?:تحويل).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+).*?(?:لحسابكم|لحسابك|في حسابكم|في حسابك|الي حسابك|إلى حسابك|الي حسابكم|إلى حسابكم)',
+      caseSensitive: false,
+    );
+    final creditArabicRegex = RegExp(
+      r'(?:استلام|ايداع|إيداع|اضافة|إضافة|وارد).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+)',
+      caseSensitive: false,
+    );
+    final creditEnglishRegex = RegExp(
+      r'(?:transfer received|received|deposit|credited).*?(?:amount of egp|amount of|amount)\s*(?<amount>[\d\.,]+)',
+      caseSensitive: false,
+    );
 
-    // Receive (Deposit)
-    // Pattern: transfer received.*?amount of egp\s*(?<amount>[\d\.,]+)
-    if (normalizedBody.contains('received')) {
-      final receiveRegex =
-          RegExp(r'transfer received.*?amount of egp\s*(?<amount>[\d\.,]+)');
-      final match = receiveRegex.firstMatch(normalizedBody);
-      if (match != null) {
-        final rawAmount = match.namedGroup('amount');
-        if (rawAmount != null) {
-          final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
-          final amount = double.tryParse(sanitizedAmountStr);
+    final creditMatch = creditAccountRegex.firstMatch(normalizedBody) ??
+        creditArabicRegex.firstMatch(normalizedBody) ??
+        creditEnglishRegex.firstMatch(normalizedBody);
 
-          if (amount != null) {
-            return ParsedSmsDto(
-              amount: amount,
-              type: TransactionType.credit,
-              counterpartyNumber:
-                  null, // IPN doesn't show number often in this format
-              serviceProvider: 'IPN/Bank',
-              originalBody: normalizedBody,
-            );
-          } else {
-            AppErrorHandler.logSilentError(
-              'Failed to parse bank credit amount: $rawAmount',
-              'GenericBankStrategy_Receive',
-            );
-          }
+    if (creditMatch != null) {
+      final rawAmount = creditMatch.namedGroup('amount');
+      if (rawAmount != null) {
+        final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+        final amount = double.tryParse(sanitizedAmountStr);
+
+        if (amount != null) {
+          return ParsedSmsDto(
+            amount: amount,
+            type: TransactionType.credit,
+            counterpartyNumber:
+                null, // IPN/Bank doesn't show number often in this format
+            serviceProvider: 'IPN/Bank',
+            originalBody: normalizedBody,
+          );
+        } else {
+          AppErrorHandler.logSilentError(
+            'Failed to parse bank credit amount: $rawAmount',
+            'GenericBankStrategy_Receive',
+          );
         }
       }
     }
 
-    // Send (Transfer)
-    // Pattern: transfer sent.*?amount of egp\s*(?<amount>[\d\.,]+)
-    if (normalizedBody.contains('sent')) {
-      final sendRegex =
-          RegExp(r'transfer sent.*?amount of egp\s*(?<amount>[\d\.,]+)');
-      final match = sendRegex.firstMatch(normalizedBody);
-      if (match != null) {
-        final rawAmount = match.namedGroup('amount');
-        if (rawAmount != null) {
-          final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
-          final amount = double.tryParse(sanitizedAmountStr);
+    // ── Send (Debit / Transfer / Outgoing Payment / Deduction) ──
+    final debitArabicRegex = RegExp(
+      r'(?:ارسال|إرسال|خصم|دفع|تحويل).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+)',
+      caseSensitive: false,
+    );
+    final debitEnglishRegex = RegExp(
+      r'(?:transfer sent|sent|debit|debited|payment|transferred).*?(?:amount of egp|amount of|amount)\s*(?<amount>[\d\.,]+)',
+      caseSensitive: false,
+    );
 
-          if (amount != null) {
-            return ParsedSmsDto(
-              amount: amount,
-              type: TransactionType.debit,
-              counterpartyNumber: null,
-              serviceProvider: 'IPN/Bank',
-              originalBody: normalizedBody,
-            );
-          } else {
-            AppErrorHandler.logSilentError(
-              'Failed to parse bank debit amount: $rawAmount',
-              'GenericBankStrategy_Send',
-            );
-          }
+    final debitMatch = debitArabicRegex.firstMatch(normalizedBody) ??
+        debitEnglishRegex.firstMatch(normalizedBody);
+
+    if (debitMatch != null) {
+      final rawAmount = debitMatch.namedGroup('amount');
+      if (rawAmount != null) {
+        final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
+        final amount = double.tryParse(sanitizedAmountStr);
+
+        if (amount != null) {
+          return ParsedSmsDto(
+            amount: amount,
+            type: TransactionType.debit,
+            counterpartyNumber: null,
+            serviceProvider: 'IPN/Bank',
+            originalBody: normalizedBody,
+          );
+        } else {
+          AppErrorHandler.logSilentError(
+            'Failed to parse bank debit amount: $rawAmount',
+            'GenericBankStrategy_Send',
+          );
         }
       }
     }

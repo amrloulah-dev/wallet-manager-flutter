@@ -261,7 +261,7 @@ class OverlayProvider extends SafeChangeNotifier {
     _guardedNotify();
 
     try {
-      final result = await _overlayUseCase.execute(
+      await _overlayUseCase.execute(
         storeId: _cachedStoreId!,
         userId: _cachedUserId!,
         userName: _cachedUserName ?? 'Unknown',
@@ -289,30 +289,15 @@ class OverlayProvider extends SafeChangeNotifier {
         }
       }
 
-      if (kDebugMode) {
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-            'shareData(local_deduct) → walletId=$_selectedWalletId, '
-            'deduction=${result.totalDeduction}, isSend=${result.isSend}');
-      }
-
       _isLoading = false;
       _commission = 0.0;
       _guardedNotify();
-
-      FlutterOverlayWindow.shareData({
-        "action": "local_deduct",
-        "walletId": _selectedWalletId,
-        "amount": result.totalDeduction,
-        "isSend": result.isSend,
-        "blockAutoFetch": true,
-      });
 
       if (kDebugMode) {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
             'closing overlay window ...');
       }
       await FlutterOverlayWindow.closeOverlay();
-      await _localStorageService.clearVault();
     } catch (e, stack) {
       AppErrorHandler.handle(e,
           stackTrace: stack,

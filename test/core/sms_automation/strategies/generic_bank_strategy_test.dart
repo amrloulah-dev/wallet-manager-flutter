@@ -25,6 +25,22 @@ void main() {
       expect(result!.amount, 1000.0);
     });
 
+    test('should parse Arabic deposit (Receive / Credit)', () {
+      const body = 'تم تحويل مبلغ 1500.50 ج.م لحسابكم';
+      final result = strategy.parse(body);
+      expect(result, isNotNull);
+      expect(result!.amount, 1500.50);
+      expect(result.type.name, 'credit');
+    });
+
+    test('should parse Arabic send / transfer (Debit)', () {
+      const body = 'تم خصم مبلغ 250.75 ج.م من حسابكم';
+      final result = strategy.parse(body);
+      expect(result, isNotNull);
+      expect(result!.amount, 250.75);
+      expect(result.type.name, 'debit');
+    });
+
     test('should return null on invalid amount format silently', () {
       const body = 'transfer received amount of egp invalid';
       final result = strategy.parse(body);
@@ -38,6 +54,10 @@ void main() {
     });
     test('should return true for INSTAPAY sender', () {
       expect(strategy.canParse('INSTAPAY'), isTrue);
+    });
+    test('should return true for Arabic InstaPay sender', () {
+      expect(strategy.canParse('انستاباي'), isTrue);
+      expect(strategy.canParse('إنستاباي'), isTrue);
     });
   });
 }

@@ -98,6 +98,52 @@ void main() {
     test('should parse from IPN triggers', () {
       expect(strategy.canParse('IPN'), isTrue);
       expect(strategy.canParse('InstaPay'), isTrue);
+      expect(strategy.canParse('انستاباي'), isTrue);
+      expect(strategy.canParse('إنستاباي'), isTrue);
+    });
+
+    test('should parse Arabic bank deposit (Credit)', () {
+      const body = 'تم تحويل مبلغ 1500.50 ج.م لحسابكم';
+      final normalizedInfo = TextNormalizer.normalize(body);
+      final result = strategy.parse(normalizedInfo);
+
+      expect(result, isNotNull);
+      expect(result!.amount, 1500.50);
+      expect(result.type, TransactionType.credit);
+      expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse Arabic bank deposit via deposit keyword (Credit)', () {
+      const body = 'تم ايداع مبلغ 3000 جنيه في حسابكم';
+      final normalizedInfo = TextNormalizer.normalize(body);
+      final result = strategy.parse(normalizedInfo);
+
+      expect(result, isNotNull);
+      expect(result!.amount, 3000.0);
+      expect(result.type, TransactionType.credit);
+      expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse Arabic bank deduction (Debit)', () {
+      const body = 'تم خصم مبلغ 450.00 ج.م من حسابكم';
+      final normalizedInfo = TextNormalizer.normalize(body);
+      final result = strategy.parse(normalizedInfo);
+
+      expect(result, isNotNull);
+      expect(result!.amount, 450.0);
+      expect(result.type, TransactionType.debit);
+      expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse Arabic bank transfer out (Debit)', () {
+      const body = 'تم تحويل مبلغ 800 ج.م من حسابكم';
+      final normalizedInfo = TextNormalizer.normalize(body);
+      final result = strategy.parse(normalizedInfo);
+
+      expect(result, isNotNull);
+      expect(result!.amount, 800.0);
+      expect(result.type, TransactionType.debit);
+      expect(result.serviceProvider, 'IPN/Bank');
     });
   });
 
@@ -126,6 +172,37 @@ void main() {
       expect(result, isNotNull);
       expect(result!.amount, 5000.0);
       expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse Arabic Bank message via Engine (Credit)', () {
+      final result =
+          engine.parse('BM', 'تم تحويل مبلغ 1500.50 ج.م لحسابكم');
+      expect(result, isNotNull);
+      expect(result!.amount, 1500.50);
+      expect(result.type, TransactionType.credit);
+      expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse Arabic Bank message via Engine (Debit)', () {
+      final result =
+          engine.parse('NBE', 'تم خصم مبلغ 600.00 ج.م من حسابكم');
+      expect(result, isNotNull);
+      expect(result!.amount, 600.0);
+      expect(result.type, TransactionType.debit);
+      expect(result.serviceProvider, 'IPN/Bank');
+    });
+
+    test('should parse forwarded/test telecom message from mobile sender as Vodafone Cash with counterparty', () {
+      final result = engine.parse(
+        '01091264053',
+        'محول من 01234567890 مبلغ 2500',
+      );
+
+      expect(result, isNotNull);
+      expect(result!.amount, 2500.0);
+      expect(result.counterpartyNumber, '01234567890');
+      expect(result.type, TransactionType.credit);
+      expect(result.serviceProvider, 'Vodafone Cash');
     });
 
     test('should return null for unknown sender', () {
