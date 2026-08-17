@@ -4,19 +4,24 @@ import '../../../../core/theme/app_text_styles.dart'; // تأكد من مسار 
 
 class CustomDropdown<T> extends StatelessWidget {
   final T? value;
-  final List<T> itemsList; // نمرر الداتا الأصلية هنا
-  final String Function(T) itemLabelBuilder; // دالة لاستخراج النص من الـ Data
+  final List<T> itemsList;
+  final String Function(T)? itemLabelBuilder;
+  final Widget Function(BuildContext, T)? itemWidgetBuilder;
+  final Widget Function(BuildContext, T)? selectedItemWidgetBuilder;
   final ValueChanged<T?>? onChanged;
   final String? hint;
   final String? Function(T?)? validator;
   final Color? fillColor;
   final Widget? prefixIcon;
   final String? labelText;
+  final EdgeInsetsGeometry? contentPadding;
 
   const CustomDropdown({
     super.key,
     required this.itemsList,
-    required this.itemLabelBuilder,
+    this.itemLabelBuilder,
+    this.itemWidgetBuilder,
+    this.selectedItemWidgetBuilder,
     this.value,
     this.onChanged,
     this.hint,
@@ -24,7 +29,9 @@ class CustomDropdown<T> extends StatelessWidget {
     this.fillColor,
     this.prefixIcon,
     this.labelText,
-  });
+    this.contentPadding,
+  }) : assert(itemLabelBuilder != null || itemWidgetBuilder != null,
+            'Either itemLabelBuilder or itemWidgetBuilder must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +48,8 @@ class CustomDropdown<T> extends StatelessWidget {
           // 1. شكل الحقل من الخارج (نفس الألوان والشفافية)
           decoration: InputDecoration(
             isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: contentPadding ??
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             filled: true,
             fillColor: fillColor ?? AppColors.primary.withAlpha(13),
             hintText: hint,
@@ -77,39 +84,55 @@ class CustomDropdown<T> extends StatelessWidget {
           items: itemsList.map((T item) {
             return DropdownMenuItem<T>(
               value: item,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(13),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withAlpha(77),
-                      width: 1,
+              child: itemWidgetBuilder != null
+                  ? itemWidgetBuilder!(context, item)
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(13),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.primary.withAlpha(77),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          itemLabelBuilder!(item),
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    itemLabelBuilder(item), // استدعاء النص هنا
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
             );
           }).toList(),
 
           // 3. شكل العنصر بعد اختياره والحقل مغلق (نص فقط ومحاذاة لليمين)
           selectedItemBuilder: (BuildContext context) {
             return itemsList.map((T item) {
+              if (selectedItemWidgetBuilder != null) {
+                return Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: selectedItemWidgetBuilder!(context, item),
+                );
+              }
+              if (itemWidgetBuilder != null) {
+                return Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: itemWidgetBuilder!(context, item),
+                );
+              }
               return Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: Text(
-                  itemLabelBuilder(item),
+                  itemLabelBuilder != null
+                      ? itemLabelBuilder!(item)
+                      : item.toString(),
                   style: AppTextStyles.bodyLarge.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary(context),

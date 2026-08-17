@@ -28,6 +28,7 @@ class WalletCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final providerColor =
         isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
@@ -50,6 +51,9 @@ class WalletCard extends StatelessWidget {
             ? 'red'
             : (sendDailyPercentage >= 70 ? 'yellow' : 'green'));
 
+    final isSuspended = wallet.walletStatus == WalletStatus.suspended;
+    final statusColor = isSuspended ? AppColors.error : AppColors.success;
+
     return Transform.scale(
       scale: 0.90,
       child: InkWell(
@@ -60,14 +64,20 @@ class WalletCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: AppColors.surface(context),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : AppColors.divider(context),
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.4)
+                    : AppColors.shadow.withOpacity(0.08),
+                blurRadius: isDark ? 24 : 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -88,24 +98,23 @@ class WalletCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: wallet.walletStatus == WalletStatus.suspended
-                                ? Colors.red.shade900.withOpacity(0.3)
-                                : Colors.green.shade900.withOpacity(0.3),
+                            color: statusColor.withOpacity(isDark ? 0.2 : 0.12),
                             borderRadius: BorderRadius.circular(100),
                             border: Border.all(
                               color:
-                                  wallet.walletStatus == WalletStatus.suspended
-                                      ? Colors.red.withOpacity(0.2)
-                                      : Colors.green.withOpacity(0.2),
+                                  statusColor.withOpacity(isDark ? 0.35 : 0.25),
                             ),
                           ),
                           child: Text(
                             l10n.getWalletStatusName(wallet.walletStatus),
                             style: TextStyle(
-                              color:
-                                  wallet.walletStatus == WalletStatus.suspended
-                                      ? Colors.red.shade400
-                                      : Colors.green.shade400,
+                              color: isDark
+                                  ? (isSuspended
+                                      ? Colors.red.shade300
+                                      : Colors.green.shade300)
+                                  : (isSuspended
+                                      ? Colors.red.shade700
+                                      : Colors.green.shade700),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -118,8 +127,8 @@ class WalletCard extends StatelessWidget {
                           child: Text(
                             NumberFormatter.formatPhoneNumber(
                                 wallet.phoneNumber),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: AppColors.textPrimary(context),
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.2,
@@ -131,7 +140,7 @@ class WalletCard extends StatelessWidget {
                         Text(
                           l10n.getWalletTypeName(wallet.walletType),
                           style: TextStyle(
-                            color: Colors.grey.shade400,
+                            color: AppColors.textSecondary(context),
                             fontSize: 14,
                           ),
                         ),
@@ -142,9 +151,11 @@ class WalletCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: providerColor.withOpacity(0.1),
+                      color: providerColor.withOpacity(isDark ? 0.18 : 0.1),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: providerColor.withOpacity(0.1)),
+                      border: Border.all(
+                          color:
+                              providerColor.withOpacity(isDark ? 0.28 : 0.18)),
                     ),
                     child: Icon(
                       wallet.walletTypeIcon,
@@ -155,7 +166,7 @@ class WalletCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              Divider(color: Colors.white.withOpacity(0.05), height: 1),
+              Divider(color: AppColors.divider(context), height: 1),
               const SizedBox(height: 20),
 
               // Limits Section
@@ -177,15 +188,22 @@ class WalletCard extends StatelessWidget {
                 warningLevel: isFrozen ? 'grey' : 'green',
               ),
               const SizedBox(height: 20),
-              Divider(color: Colors.white.withOpacity(0.05), height: 1),
+              Divider(color: AppColors.divider(context), height: 1),
               const SizedBox(height: 20),
 
               // Balance Section
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : AppColors.scaffoldBg(context),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.04)
+                        : AppColors.divider(context).withOpacity(0.6),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -196,12 +214,15 @@ class WalletCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.2),
+                              color: AppColors.primary
+                                  .withOpacity(isDark ? 0.2 : 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.credit_card,
-                              color: Colors.blue.shade400,
+                              color: isDark
+                                  ? Colors.blue.shade300
+                                  : AppColors.primary,
                               size: 20,
                             ),
                           ),
@@ -211,7 +232,7 @@ class WalletCard extends StatelessWidget {
                               l10n.currentBalance,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.grey.shade300,
+                                color: AppColors.textSecondary(context),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
                               ),
@@ -225,7 +246,11 @@ class WalletCard extends StatelessWidget {
                           showCurrency: true),
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: isFrozen ? Colors.grey : Colors.blue.shade400,
+                        color: isFrozen
+                            ? Colors.grey
+                            : (isDark
+                                ? Colors.blue.shade300
+                                : AppColors.primary),
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
@@ -248,21 +273,23 @@ class WalletCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
+                              color: AppColors.error
+                                  .withOpacity(isDark ? 0.15 : 0.08),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: Colors.red.withOpacity(0.2)),
+                                  color: AppColors.error
+                                      .withOpacity(isDark ? 0.3 : 0.2)),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.delete_outline,
-                                    size: 20, color: Colors.red),
+                                    size: 20, color: AppColors.error),
                                 const SizedBox(width: 8),
                                 Text(
                                   l10n.delete,
                                   style: const TextStyle(
-                                      color: Colors.red,
+                                      color: AppColors.error,
                                       fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -282,15 +309,17 @@ class WalletCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               color: isFrozen
-                                  ? Colors.grey.withOpacity(0.2)
-                                  : Colors.blue.shade600,
+                                  ? (isDark
+                                      ? Colors.white.withOpacity(0.08)
+                                      : Colors.grey.shade200)
+                                  : AppColors.primary,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: isFrozen
                                   ? null
                                   : [
                                       BoxShadow(
-                                        color: Colors.blue.shade600
-                                            .withOpacity(0.2),
+                                        color:
+                                            AppColors.primary.withOpacity(0.25),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       )
@@ -299,13 +328,18 @@ class WalletCard extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.edit_outlined,
-                                    size: 20, color: Colors.white),
+                                Icon(Icons.edit_outlined,
+                                    size: 20,
+                                    color: isFrozen
+                                        ? AppColors.textSecondary(context)
+                                        : Colors.white),
                                 const SizedBox(width: 8),
                                 Text(
                                   l10n.edit,
-                                  style: const TextStyle(
-                                      color: Colors.white,
+                                  style: TextStyle(
+                                      color: isFrozen
+                                          ? AppColors.textSecondary(context)
+                                          : Colors.white,
                                       fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -352,7 +386,7 @@ class WalletCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade300,
+                color: AppColors.textSecondary(context),
                 fontSize: 14,
               ),
             ),
@@ -362,7 +396,7 @@ class WalletCard extends StatelessWidget {
         Container(
           height: 8,
           decoration: BoxDecoration(
-            color: const Color(0xFF2A2A2A),
+            color: AppColors.divider(context),
             borderRadius: BorderRadius.circular(4),
           ),
           child: ClipRRect(
@@ -384,7 +418,7 @@ class WalletCard extends StatelessWidget {
               Text(
                 '${NumberFormatter.formatAmount(used, showCurrency: false)} / ${NumberFormatter.formatAmount(limit)} EGP',
                 style: TextStyle(
-                  color: Colors.grey.shade500,
+                  color: AppColors.textSecondary(context),
                   fontSize: 10,
                   fontFamily: 'monospace',
                 ),

@@ -11,6 +11,8 @@ import 'package:walletmanager/presentation/overlays/overlay_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/presentation/utils/wallet_extensions.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -21,8 +23,11 @@ class TransactionOverlayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storage = sl.isRegistered<LocalStorageService>()
+        ? sl<LocalStorageService>()
+        : LocalStorageService.instance;
     // Determine language from local storage
-    final languageCode = LocalStorageService.instance.languageCode ?? 'ar';
+    final languageCode = storage.languageCode ?? 'ar';
 
     return ChangeNotifierProvider(
       create: (_) => OverlayProvider(),
@@ -68,12 +73,15 @@ class _OverlayContentState extends State<_OverlayContent> {
     _commissionController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _provider = context.read<OverlayProvider>();
+      final storage = sl.isRegistered<LocalStorageService>()
+          ? sl<LocalStorageService>()
+          : LocalStorageService.instance;
 
       // 1. Force disk reload and read fresh payload from Vault (SSOT)
-      final vaultData = await LocalStorageService.instance.readFromVault();
+      final vaultData = await storage.readFromVault();
       if (vaultData != null) {
         _provider.ingestNewEvent(vaultData);
-        await LocalStorageService.instance.clearVault();
+        await storage.clearVault();
       }
 
       // 2. Setup stream listener AFTER checking the vault
@@ -119,7 +127,7 @@ class _OverlayContentState extends State<_OverlayContent> {
         backgroundColor: const Color(0x00000000),
         body: Center(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
+            margin: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -135,7 +143,8 @@ class _OverlayContentState extends State<_OverlayContent> {
             child: Material(
               color: Colors.transparent,
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0, vertical: 16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -371,17 +380,41 @@ class _WalletDropdownWidget extends StatelessWidget {
       builder: (context, data, _) => CustomDropdown<String>(
         value: data.selectedId,
         labelText: l10n.selectWallet,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         prefixIcon: const Icon(
           Icons.account_balance_wallet,
+          size: 20,
         ),
         itemsList:
             data.wallets.map((wallet) => wallet['id'].toString()).toList(),
+        itemWidgetBuilder: (context, String id) {
+          final wallet = data.wallets.firstWhere(
+            (w) => w['id']?.toString() == id,
+            orElse: () => <String, dynamic>{},
+          );
+          return _buildWalletDropdownItem(context, wallet, l10n);
+        },
+        selectedItemWidgetBuilder: (context, String id) {
+          final wallet = data.wallets.firstWhere(
+            (w) => w['id']?.toString() == id,
+            orElse: () => <String, dynamic>{},
+          );
+          return _buildWalletSelectedItem(context, wallet, l10n);
+        },
         itemLabelBuilder: (String id) {
           final wallet = data.wallets.firstWhere(
-            (w) => w['id'] == id,
+            (w) => w['id']?.toString() == id,
             orElse: () => {'name': l10n.unknown},
           );
-          String label = wallet['name'] ?? l10n.unknown;
+          final rawType = wallet['walletType']?.toString() ??
+              wallet['type']?.toString() ??
+              'other';
+          final visuals = WalletProviderVisuals.fromRawType(rawType, l10n);
+          final phone = wallet['phone']?.toString() ??
+              wallet['phoneNumber']?.toString() ??
+              wallet['name']?.toString() ??
+              l10n.unknown;
+          String label = '$phone (${visuals.label})';
           if (wallet['isFrozen'] == true) {
             label += ' ${l10n.walletIsFrozenShort}';
           }
@@ -390,7 +423,7 @@ class _WalletDropdownWidget extends StatelessWidget {
         onChanged: (val) {
           if (val != null) {
             final wallet = data.wallets.firstWhere(
-              (w) => w['id'] == val,
+              (w) => w['id']?.toString() == val,
               orElse: () => {'isFrozen': false},
             );
             if (wallet['isFrozen'] == true) {
@@ -409,6 +442,168 @@ class _WalletDropdownWidget extends StatelessWidget {
           }
           context.read<OverlayProvider>().setSelectedWallet(val);
         },
+      ),
+    );
+  }
+
+  Widget _buildWalletDropdownItem(
+    BuildContext context,
+    Map<String, dynamic> wallet,
+    AppLocalizations l10n,
+  ) {
+    final rawType = wallet['walletType']?.toString() ??
+        wallet['type']?.toString() ??
+        'other';
+    final visuals = WalletProviderVisuals.fromRawType(rawType, l10n);
+    final phoneNumber = wallet['phone']?.toString() ??
+        wallet['phoneNumber']?.toString() ??
+        wallet['name']?.toString() ??
+        '';
+    final isFrozen = wallet['isFrozen'] == true;
+
+    final providerColor = isFrozen ? Colors.grey : visuals.color;
+    final providerIcon = visuals.icon;
+    final providerLabel = isFrozen
+        ? '${visuals.label} (${l10n.walletIsFrozenShort})'
+        : visuals.label;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          // 1. Leading Provider Icon with subtle background tint
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: providerColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(providerIcon, size: 18, color: providerColor),
+          ),
+          const SizedBox(width: 10),
+
+          // 2. Phone Number (Guarded with LTR Unicode marker)
+          Expanded(
+            child: Text(
+              '\u200E$phoneNumber\u200E',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isFrozen ? Colors.grey : null,
+                  ),
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // 3. Trailing Provider Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: providerColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  Border.all(color: providerColor.withOpacity(0.2), width: 0.8),
+            ),
+            child: Text(
+              providerLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: providerColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWalletSelectedItem(
+    BuildContext context,
+    Map<String, dynamic> wallet,
+    AppLocalizations l10n,
+  ) {
+    final rawType = wallet['walletType']?.toString() ??
+        wallet['type']?.toString() ??
+        'other';
+    final visuals = WalletProviderVisuals.fromRawType(rawType, l10n);
+    final phoneNumber = wallet['phone']?.toString() ??
+        wallet['phoneNumber']?.toString() ??
+        wallet['name']?.toString() ??
+        '';
+    final isFrozen = wallet['isFrozen'] == true;
+
+    final providerColor = isFrozen ? Colors.grey : visuals.color;
+    final providerIcon = visuals.icon;
+    final providerLabel = isFrozen
+        ? '${visuals.label} (${l10n.walletIsFrozenShort})'
+        : visuals.label;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          // 1. Compact Leading Provider Icon
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: providerColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(providerIcon, size: 15, color: providerColor),
+          ),
+          const SizedBox(width: 4),
+
+          // 2. Phone Number (Guarded with LTR Unicode marker)
+          Expanded(
+            flex: 3,
+            child: Text(
+              '\u200E$phoneNumber\u200E',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: isFrozen ? Colors.grey : null,
+                  ),
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          const SizedBox(width: 4),
+
+          // 3. Compact Trailing Provider Badge
+          Flexible(
+            flex: 2,
+            fit: FlexFit.loose,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: providerColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                    color: providerColor.withOpacity(0.2), width: 0.8),
+              ),
+              child: Text(
+                providerLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: providerColor,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

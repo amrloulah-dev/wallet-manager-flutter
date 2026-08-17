@@ -56,10 +56,11 @@ void main() {
     );
   });
 
-  Widget buildTestableWidget(Widget child) {
+  Widget buildTestableWidget(Widget child, {ThemeData? theme}) {
     return ChangeNotifierProvider<PlatformSettingsProvider>.value(
       value: mockSettingsProvider,
       child: MaterialApp(
+        theme: theme,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -216,5 +217,47 @@ void main() {
     final Text currentBalanceText =
         tester.widget<Text>(find.text('الرصيد الحالي'));
     expect(currentBalanceText.overflow, equals(TextOverflow.ellipsis));
+  });
+
+  testWidgets('WalletCard adapts text colors to light theme', (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        WalletCard(
+          wallet: activeWallet,
+          isFrozen: false,
+          onTap: () {},
+          onEdit: () {},
+          onDelete: () {},
+        ),
+        theme: ThemeData.light(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final phoneWidget = tester.widget<Text>(
+      find.text(NumberFormatter.formatPhoneNumber(activeWallet.phoneNumber)),
+    );
+    expect(phoneWidget.style?.color, equals(const Color(0xFF1A1A1A)));
+  });
+
+  testWidgets('WalletCard adapts text colors to dark theme', (tester) async {
+    await tester.pumpWidget(
+      buildTestableWidget(
+        WalletCard(
+          wallet: activeWallet,
+          isFrozen: false,
+          onTap: () {},
+          onEdit: () {},
+          onDelete: () {},
+        ),
+        theme: ThemeData.dark(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final phoneWidget = tester.widget<Text>(
+      find.text(NumberFormatter.formatPhoneNumber(activeWallet.phoneNumber)),
+    );
+    expect(phoneWidget.style?.color, equals(const Color(0xFFEAEAEA)));
   });
 }

@@ -81,3 +81,68 @@ extension WalletLocalization on AppLocalizations {
     }
   }
 }
+
+/// Visual identity mapping helper for [WalletType].
+class WalletProviderVisuals {
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  const WalletProviderVisuals({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  factory WalletProviderVisuals.fromWalletType(
+    WalletType type, [
+    AppLocalizations? l10n,
+  ]) {
+    switch (type) {
+      case WalletType.instaPay:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_rounded,
+          color: const Color(0xFF5C2D91),
+          label: l10n?.getWalletTypeName(type) ?? 'إنستاباي',
+        );
+      case WalletType.vodafoneCash:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.red,
+          label: l10n?.getWalletTypeName(type) ?? 'فودافون كاش',
+        );
+      case WalletType.orangeCash:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.orange,
+          label: l10n?.getWalletTypeName(type) ?? 'أورانج كاش',
+        );
+      case WalletType.etisalatCash:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.green,
+          label: l10n?.getWalletTypeName(type) ?? 'اتصالات كاش',
+        );
+      case WalletType.wePay:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.purple,
+          label: l10n?.getWalletTypeName(type) ?? 'وي باي',
+        );
+      case WalletType.other:
+        return WalletProviderVisuals(
+          icon: Icons.account_balance_wallet_outlined,
+          color: Colors.blueGrey,
+          label: l10n?.getWalletTypeName(type) ?? 'أخرى',
+        );
+    }
+  }
+
+  factory WalletProviderVisuals.fromRawType(
+    String? rawType, [
+    AppLocalizations? l10n,
+  ]) {
+    final type = WalletType.fromString(rawType ?? 'other');
+    return WalletProviderVisuals.fromWalletType(type, l10n);
+  }
+}

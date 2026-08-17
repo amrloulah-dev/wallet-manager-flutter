@@ -470,7 +470,9 @@ class LocalStorageService {
         'id': w.walletId,
         'name': w.phoneNumber,
         'phone': w.phoneNumber,
+        'phoneNumber': w.phoneNumber,
         'type': w.walletType.name,
+        'walletType': w.walletType.name,
         'isFrozen': w.isFrozen,
       };
     }).toList();
@@ -515,6 +517,9 @@ class LocalStorageService {
   /// Reads the last pending transaction written by the background service.
   /// Automatically calls [reloadDisk] to ensure multi-isolate disk synchronization.
   Future<Map<String, dynamic>?> readFromVault() async {
+    if (_prefs == null) {
+      await initialize();
+    }
     await reloadDisk();
     final String? raw = _prefs?.getString(_kPendingOverlayData);
     if (raw == null) return null;
@@ -527,8 +532,10 @@ class LocalStorageService {
 
   /// Clears the vault after the overlay has consumed the data.
   Future<void> clearVault() async {
-    _ensureInitialized();
-    await _prefs!.remove(_kPendingOverlayData);
+    if (_prefs == null) {
+      await initialize();
+    }
+    await _prefs?.remove(_kPendingOverlayData);
   }
 
   // ===========================
