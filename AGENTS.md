@@ -63,6 +63,10 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - Access strings: `AppLocalizations.of(context)!`
 - Regenerate after editing `.arb`: `flutter gen-l10n`
 
+## UI & Theming Rules
+1. **Dynamic Theme Compliance** — Never hardcode static theme colors (e.g., `Colors.black`, `Colors.white`, `Colors.grey.shade900`, `0xFF1E1E1E`). All backgrounds, borders, dividers, and text colors MUST dynamically resolve via `ThemeData` and `AppColors` tokens (e.g., `AppColors.surface(context)`, `AppColors.textPrimary(context)`, `AppColors.textSecondary(context)`, `AppColors.divider(context)`).
+2. **Unicode LTR Phone Number Guarding** — All displayed phone numbers in RTL/Arabic interfaces MUST be wrapped in LTR Unicode markers (`'\u200E${phone}\u200E'`) and specify `textDirection: TextDirection.ltr` to avoid number reversal and punctuation misplacement.
+
 ## Background Services
 - **SMS Monitor**: `flutter_background_service` + `another_telephony`; parses transaction SMS and shows overlay
 - **Overlay Window**: `flutter_overlay_window`; entry via `overlayMain()`, uses `IsolateNameServer` to communicate with main isolate
@@ -73,6 +77,11 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - **Dynamic Service Lifecycle**: UI toggles controlling background service status MUST invoke dynamic controllers (`startBackgroundMonitoring()` / `stopBackgroundMonitoring()`) in `onChanged` handlers immediately after persisting storage state.
 - **Cold-Boot Configuration Guard**: `startBackgroundMonitoring()` MUST verify configuration status (`_isConfigured`) and execute `initializeBackgroundService()` if invoked before cold boot initialization completes.
 - **Toggle Debouncing & Rollback**: Toggle UI handlers MUST use an async lock (`_isToggling`) to prevent rapid tap collisions and execute full state rollbacks (reverting `SharedPreferences` + UI switch) if dynamic service start fails.
+- **Multi-Isolate Cache Key Symmetry**: When caching lite models in `LocalStorageService` for consumption by background/overlay isolates (e.g., `cacheWalletLiteList`), always serialize both primary and alias property keys (e.g., `'walletType'` and `'type'`, `'phone'` and `'phoneNumber'`) to guarantee robust cross-isolate deserialization.
+- **Overlay Dropdown Responsiveness & Selected State Flex Density**: In constrained windows (e.g., `TransactionOverlayScreen`):
+  - Differentiate between dropdown popup items (`itemWidgetBuilder`) and closed selected item views (`selectedItemWidgetBuilder`).
+  - Dropdown content padding must use compact insets (`contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6)`).
+  - Allocate priority flex to phone numbers (`Expanded(flex: 3, ...)` with `softWrap: false`) and wrap secondary badges with `Flexible(flex: 2, fit: FlexFit.loose, ...)`.
 
 ## Firestore
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)
