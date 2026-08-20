@@ -321,6 +321,9 @@ class WalletRepository {
 
         final wallet = WalletModel.fromFirestore(walletSnap);
 
+        // Idempotency check: No-op if wallet is already in the requested state
+        if (wallet.isActive == isActive) return;
+
         // Perform Stats update FIRST (because it has a internal READ)
         // We must call it before any writes in this transaction
         await _statsRepository.updateStatsOnWalletChange(
