@@ -1,0 +1,8 @@
+{
+  "track_id": "data_drift_stats_20260820",
+  "type": "bugfix",
+  "status": "new",
+  "created_at": "2026-08-20T17:33:00+03:00",
+  "updated_at": "2026-08-20T17:33:00+03:00",
+  "description": "Data Drift & Stats Aggregation Patch: synchronize totalBalance in Firestore transaction pipeline, enforce wallet deactivation idempotency, and align optimistic UI math."
+}
