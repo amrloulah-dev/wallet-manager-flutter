@@ -62,6 +62,10 @@ class TransactionValidatorService {
           throw NotFoundException('wallet_error_not_found');
         }
 
+        final statsSummaryRef = _firestore
+            .doc(FirebaseConstants.statsSummaryPath(transaction.storeId));
+        final summarySnap = await tx.get(statsSummaryRef);
+
         var wallet = WalletModel.fromFirestore(walletSnap);
 
         // Bug B-004: Prevent transactions on logically deleted/inactive wallets
@@ -259,9 +263,6 @@ class TransactionValidatorService {
         tx.update(walletRef, walletUpdateData);
 
         // Update Store Stats Summary Document
-        final statsSummaryRef = _firestore
-            .doc(FirebaseConstants.statsSummaryPath(transaction.storeId));
-
         final Map<String, dynamic> summaryUpdates = {
           FirebaseConstants.totalTransactions: FieldValue.increment(1),
           FirebaseConstants.totalTransactionsToday: FieldValue.increment(1),
@@ -273,6 +274,7 @@ class TransactionValidatorService {
               FieldValue.increment(transaction.serviceFee),
           FirebaseConstants.totalServiceFeeToday:
               FieldValue.increment(transaction.serviceFee),
+          FirebaseConstants.totalBalance: FieldValue.increment(balanceChange),
           'lastUpdated': FieldValue.serverTimestamp(),
         };
 
@@ -290,7 +292,11 @@ class TransactionValidatorService {
               FieldValue.increment(transaction.amount);
         }
 
-        tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
+        if (summarySnap.exists) {
+          tx.update(statsSummaryRef, summaryUpdates);
+        } else {
+          tx.set(statsSummaryRef, summaryUpdates, SetOptions(merge: true));
+        }
 
         // Update Daily Stats Document
         final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
