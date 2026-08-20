@@ -114,11 +114,10 @@ void main() {
       expect(map['lastUpdated'], isA<Timestamp>());
       expect((map['lastUpdated'] as Timestamp).toDate(), lastUpdated);
 
-      // Verify that the removed fields are NOT present in the map
-      expect(map.containsKey('totalCommissionToday'), isFalse);
-      expect(map.containsKey('totalTransactionsToday'), isFalse);
+      expect(map['totalCommissionToday'], 0.0);
+      expect(map['totalTransactionsToday'], 0);
       expect(map.containsKey('totalServiceFee'), isFalse);
-      expect(map.containsKey('totalServiceFeeToday'), isFalse);
+      expect(map['totalServiceFeeToday'], 0.0);
     });
 
     test('copyWith should correctly clone and modify selected fields', () {

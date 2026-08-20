@@ -73,6 +73,8 @@ void main() {
       );
 
       when(() => mockLocalStorageService.clearVault()).thenAnswer((_) async {});
+      when(() => mockLocalStorageService.dequeueOverlayData())
+          .thenAnswer((_) async => null);
 
       await provider.close();
 

@@ -78,9 +78,8 @@ void main() {
       expect(map['paidDebtsCount'], 1);
       expect(map['totalPaidAmount'], 50.0);
 
-      // Verify that removed fields are not present
-      expect(map.containsKey('totalAmount'), isFalse);
-      expect(map.containsKey('totalServiceFee'), isFalse);
+      expect(map['totalAmount'], 0.0);
+      expect(map['totalServiceFee'], 0.0);
     });
 
     test('copyWith should correctly clone and modify selected fields', () {
