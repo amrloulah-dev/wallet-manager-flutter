@@ -158,6 +158,118 @@ void main() {
       final statsSnap = await fakeFirestore.doc(statsPath).get();
       expect(statsSnap.data()?['totalBalance'], 120.0);
     });
+
+    test('setWalletActiveStatus deactivates active wallet and updates stats',
+        () async {
+      // Setup initial state
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
+        'walletId': walletId,
+        'storeId': storeId,
+        'balance': 500.0,
+        'isActive': true,
+        'phoneNumber': '123',
+        'walletType': 'vodafoneCash',
+        'createdAt': Timestamp.now(),
+        'lastDailyReset': Timestamp.now(),
+        'lastMonthlyReset': Timestamp.now(),
+        'sendLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
+      });
+
+      final statsPath = FirebaseConstants.statsSummaryPath(storeId);
+      await fakeFirestore.doc(statsPath).set({
+        'totalBalance': 1500.0,
+        'totalWallets': 3,
+        'activeWallets': 3,
+      });
+
+      // 1. Deactivate active wallet
+      await repository.setWalletActiveStatus(walletId, false);
+
+      var walletSnap = await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .get();
+      expect(walletSnap.data()?['isActive'], isFalse);
+
+      var statsSnap = await fakeFirestore.doc(statsPath).get();
+      expect(statsSnap.data()?['totalBalance'], 1000.0);
+      expect(statsSnap.data()?['totalWallets'], 2);
+      expect(statsSnap.data()?['activeWallets'], 2);
+
+      // 2. IDEMPOTENCY TEST: Deactivating again should be a NO-OP (no double decrement)
+      await repository.setWalletActiveStatus(walletId, false);
+
+      walletSnap = await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .get();
+      expect(walletSnap.data()?['isActive'], isFalse);
+
+      statsSnap = await fakeFirestore.doc(statsPath).get();
+      // Should remain exactly 1000.0, 2, 2 (NOT 500.0, 1, 1)
+      expect(statsSnap.data()?['totalBalance'], 1000.0);
+      expect(statsSnap.data()?['totalWallets'], 2);
+      expect(statsSnap.data()?['activeWallets'], 2);
+    });
+
+    test('setWalletActiveStatus activating already active wallet is idempotent',
+        () async {
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
+        'walletId': walletId,
+        'storeId': storeId,
+        'balance': 300.0,
+        'isActive': true,
+        'phoneNumber': '123',
+        'walletType': 'vodafoneCash',
+        'createdAt': Timestamp.now(),
+        'lastDailyReset': Timestamp.now(),
+        'lastMonthlyReset': Timestamp.now(),
+        'sendLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 1000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 5000.0,
+          'monthlyUsed': 0.0
+        },
+      });
+
+      final statsPath = FirebaseConstants.statsSummaryPath(storeId);
+      await fakeFirestore.doc(statsPath).set({
+        'totalBalance': 800.0,
+        'totalWallets': 2,
+        'activeWallets': 2,
+      });
+
+      // Calling activate on already active wallet should be a NO-OP
+      await repository.setWalletActiveStatus(walletId, true);
+
+      final statsSnap = await fakeFirestore.doc(statsPath).get();
+      expect(statsSnap.data()?['totalBalance'], 800.0);
+      expect(statsSnap.data()?['totalWallets'], 2);
+      expect(statsSnap.data()?['activeWallets'], 2);
+    });
   });
 
   group('WalletRepository.createWallet with mock WriteBatch', () {
