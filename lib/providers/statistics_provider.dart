@@ -254,6 +254,7 @@ class StatisticsProvider extends BaseProvider {
 
     final double amount = NumberParser.toDouble(txData['amount']);
     final double commission = NumberParser.toDouble(txData['commission']);
+    final double serviceFee = NumberParser.toDouble(txData['serviceFee']);
 
     // 1. Update Dashboard Summary
     double newTotalReceived = summary.totalReceivedAmount;
@@ -269,7 +270,7 @@ class StatisticsProvider extends BaseProvider {
     } else if (type == 'debit') {
       newTotalSent += amount;
       newSendCount += 1;
-      newTotalBalance -= amount;
+      newTotalBalance -= (amount + serviceFee);
     }
 
     _dashboardSummary = summary.copyWith(
@@ -355,23 +356,25 @@ class StatisticsProvider extends BaseProvider {
   }
 
   void applyTransactionLocally(double amount, bool isIncome,
-      {double commission = 0.0}) {
+      {double commission = 0.0, double serviceFee = 0.0}) {
     if (isDisposed) return;
     addTransactionOptimistically({
       'amount': amount,
       'commission': commission,
+      'serviceFee': serviceFee,
       'type': isIncome ? 'credit' : 'debit',
     });
   }
 
   void updateLocalStats(double amount, dynamic type,
-      {double commission = 0.0}) {
+      {double commission = 0.0, double serviceFee = 0.0}) {
     if (isDisposed) return;
     final TransactionType t = type is String
         ? TransactionType.fromString(type)
         : (type is TransactionType ? type : TransactionType.credit);
     final isIncome = t == TransactionType.credit;
-    applyTransactionLocally(amount, isIncome, commission: commission);
+    applyTransactionLocally(amount, isIncome,
+        commission: commission, serviceFee: serviceFee);
     notifyListeners();
   }
 

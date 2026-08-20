@@ -598,11 +598,11 @@ class TransactionProvider extends BaseProvider {
       }
 
       if (sl.isRegistered<StatisticsProvider>()) {
-        sl<StatisticsProvider>()
-            .updateLocalStats(amount, transactionType, commission: commission);
+        sl<StatisticsProvider>().updateLocalStats(amount, transactionType,
+            commission: commission, serviceFee: serviceFee);
       } else if (statsProvider != null) {
         statsProvider.applyTransactionLocally(amount, newTransaction.isIncome,
-            commission: commission);
+            commission: commission, serviceFee: serviceFee);
       }
 
       safeNotify();
