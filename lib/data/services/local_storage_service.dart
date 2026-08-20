@@ -502,27 +502,181 @@ class LocalStorageService {
   }
 
   // ===========================
-  // Vault (Background → Overlay Data Bridge)
+  // Vault Queue (Background → Overlay Data Bridge)
   // ===========================
   static const String _kPendingOverlayData = 'pending_overlay_data';
+  static const String _kCompletedTxSync = 'completed_tx_sync';
   static const String _kPersistentDeviceId = 'persistent_device_id';
+  static const int _kMaxOverlayQueueSize = 5;
 
-  /// Saves transaction data from the background isolate so the
-  /// overlay can read it even if [FlutterOverlayWindow.shareData] fails.
-  Future<void> saveToVault(Map<String, dynamic> data) async {
+  /// Appends incoming parsed SMS transaction data to the FIFO queue.
+  /// Drops the oldest item if the queue exceeds [_kMaxOverlayQueueSize] (5).
+  Future<void> enqueueOverlayData(Map<String, dynamic> data) async {
     _ensureInitialized();
-    await _prefs!.setString(_kPendingOverlayData, json.encode(data));
+    await reloadDisk();
+
+    List<Map<String, dynamic>> queue = [];
+    final String? raw = _prefs?.getString(_kPendingOverlayData);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is List) {
+          queue = decoded
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
+        } else if (decoded is Map) {
+          // Migration/fallback if a legacy single object was present
+          queue.add(Map<String, dynamic>.from(decoded));
+        }
+      } catch (e, stack) {
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          severity: ErrorSeverity.low,
+          operation: 'LocalStorageService.enqueueOverlayData_decode',
+        );
+      }
+    }
+
+    queue.add(data);
+
+    // Enforce max capacity by evicting oldest (head) items
+    while (queue.length > _kMaxOverlayQueueSize) {
+      queue.removeAt(0);
+    }
+
+    await _prefs!.setString(_kPendingOverlayData, json.encode(queue));
   }
 
-  /// Reads the last pending transaction written by the background service.
-  /// Automatically calls [reloadDisk] to ensure multi-isolate disk synchronization.
-  Future<Map<String, dynamic>?> readFromVault() async {
+  /// Dequeues and returns the first (oldest) pending transaction in FIFO order.
+  /// Removes it from disk immediately upon consumption.
+  Future<Map<String, dynamic>?> dequeueOverlayData() async {
     if (_prefs == null) {
       await initialize();
     }
     await reloadDisk();
+
     final String? raw = _prefs?.getString(_kPendingOverlayData);
-    if (raw == null) return null;
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is List) {
+        final queue = decoded
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+
+        if (queue.isEmpty) {
+          await _prefs!.remove(_kPendingOverlayData);
+          return null;
+        }
+
+        final first = queue.removeAt(0);
+
+        if (queue.isEmpty) {
+          await _prefs!.remove(_kPendingOverlayData);
+        } else {
+          await _prefs!.setString(_kPendingOverlayData, json.encode(queue));
+        }
+
+        return first;
+      } else if (decoded is Map) {
+        // Legacy single object: consume and remove
+        await _prefs!.remove(_kPendingOverlayData);
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'LocalStorageService.dequeueOverlayData',
+      );
+    }
+    return null;
+  }
+
+  /// Returns the current number of queued SMS payloads pending display in the overlay.
+  Future<int> getOverlayQueueLength() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await reloadDisk();
+
+    final String? raw = _prefs?.getString(_kPendingOverlayData);
+    if (raw == null || raw.isEmpty) return 0;
+
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is List) {
+        return decoded.length;
+      } else if (decoded is Map) {
+        return 1;
+      }
+    } catch (_) {}
+    return 0;
+  }
+
+  /// Peeks at the next item in the FIFO queue without removing it.
+  Future<Map<String, dynamic>?> peekOverlayData() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await reloadDisk();
+
+    final String? raw = _prefs?.getString(_kPendingOverlayData);
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is List && decoded.isNotEmpty) {
+        return Map<String, dynamic>.from(decoded.first);
+      } else if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Saves transaction data from the background isolate (delegates to queue).
+  Future<void> saveToVault(Map<String, dynamic> data) async {
+    await enqueueOverlayData(data);
+  }
+
+  /// Reads the pending transaction written by the background service (delegates to dequeue).
+  Future<Map<String, dynamic>?> readFromVault() async {
+    return dequeueOverlayData();
+  }
+
+  /// Clears the entire SMS pending overlay vault queue.
+  Future<void> clearVault() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await _prefs?.remove(_kPendingOverlayData);
+  }
+
+  // ===========================
+  // Completed Transaction IPC Sync (Overlay -> Main App)
+  // ===========================
+
+  /// Saves a completed transaction payload submitted by the overlay
+  /// for the Main App's GlobalOverlayListener to ingest into memory.
+  Future<void> saveCompletedTxSync(Map<String, dynamic> txData) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kCompletedTxSync, json.encode(txData));
+  }
+
+  /// Reads the completed transaction sync payload for the Main App.
+  Future<Map<String, dynamic>?> readCompletedTxSync() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await reloadDisk();
+    final String? raw = _prefs?.getString(_kCompletedTxSync);
+    if (raw == null || raw.isEmpty) return null;
     try {
       return Map<String, dynamic>.from(json.decode(raw));
     } catch (_) {
@@ -530,12 +684,12 @@ class LocalStorageService {
     }
   }
 
-  /// Clears the vault after the overlay has consumed the data.
-  Future<void> clearVault() async {
+  /// Clears the completed transaction sync key after the Main App has consumed it.
+  Future<void> clearCompletedTxSync() async {
     if (_prefs == null) {
       await initialize();
     }
-    await _prefs?.remove(_kPendingOverlayData);
+    await _prefs?.remove(_kCompletedTxSync);
   }
 
   // ===========================

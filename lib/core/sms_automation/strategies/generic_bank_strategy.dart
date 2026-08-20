@@ -18,10 +18,9 @@ class GenericBankStrategy extends SmsParserStrategy {
           .substring(1); // remove leading 0 -> becomes 10xxxxxxxxx
     }
 
-    // 2. Test Number Check (Replace with your actual test number or just allow specific length)
-    // Checking if it looks like a personal mobile number (10 digits after cleaning)
-    // This allows ANY mobile number to act as a "Bank" for testing purposes.
-    if (normalizedSender.length == 10) {
+    // 2. Egyptian mobile number check (+201..., 01..., 1...)
+    if (normalizedSender.length == 10 &&
+        RegExp(r'^1[0125]\d{8}$').hasMatch(normalizedSender)) {
       return true;
     }
 
@@ -46,26 +45,49 @@ class GenericBankStrategy extends SmsParserStrategy {
 
   @override
   ParsedSmsDto? parse(String normalizedBody) {
+    // Try to extract counterparty phone number if present in body
+    String? counterpartyNumber;
+    final phoneMatch = RegExp(r'01[0125]\d{8}').firstMatch(normalizedBody);
+    if (phoneMatch != null) {
+      counterpartyNumber = phoneMatch.group(0);
+    }
+
     // ── Receive (Credit / Deposit / Incoming Transfer) ──
+    // 1. Account destination: e.g. "تم تحويل مبلغ 1500.50 ج.م لحسابكم"
     final creditAccountRegex = RegExp(
-      r'(?:تحويل).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+).*?(?:لحسابكم|لحسابك|في حسابكم|في حسابك|الي حسابك|إلى حسابك|الي حسابكم|إلى حسابكم)',
+      r'(?:تحويل)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?).*?(?:لحسابكم|لحسابك|في حسابكم|في حسابك|الي حسابك|إلى حسابك|الي حسابكم|إلى حسابكم)',
       caseSensitive: false,
     );
+
+    // 2. Transfer from specific number: e.g. "تم تحويل من 01012345678 مبلغ 400.00" or "محول من 01234567890 مبلغ 2500"
+    final creditFromNumberRegex = RegExp(
+      r'(?:تحويل من|محول من|من)\s*(?:رقم)?\s*(?<number>01[0125]\d{8})(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
+      caseSensitive: false,
+    );
+
+    // 3. Deposit / Addition / Inward keywords: e.g. "تم ايداع مبلغ 3000" or "تم اضافة مبلغ 1200"
     final creditArabicRegex = RegExp(
-      r'(?:استلام|ايداع|إيداع|اضافة|إضافة|وارد).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+)',
+      r'(?:استلام|ايداع|إيداع|تم ايداع|تم إيداع|اضافة|إضافة|تم اضافة|تم إضافة|وارد|وصلك|وصل)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
       caseSensitive: false,
     );
+
+    // 4. English Receive: e.g. "Transfer Received. Amount of EGP 5000.00"
     final creditEnglishRegex = RegExp(
-      r'(?:transfer received|received|deposit|credited).*?(?:amount of egp|amount of|amount)\s*(?<amount>[\d\.,]+)',
+      r'(?:transfer received|received|deposit|credited)(?:(?!balance).)*?(?:amount of egp|amount of|amount|egp|le|\:)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
       caseSensitive: false,
     );
 
     final creditMatch = creditAccountRegex.firstMatch(normalizedBody) ??
+        creditFromNumberRegex.firstMatch(normalizedBody) ??
         creditArabicRegex.firstMatch(normalizedBody) ??
         creditEnglishRegex.firstMatch(normalizedBody);
 
     if (creditMatch != null) {
       final rawAmount = creditMatch.namedGroup('amount');
+      String? matchedNumber;
+      try {
+        matchedNumber = creditMatch.namedGroup('number');
+      } catch (_) {}
       if (rawAmount != null) {
         final sanitizedAmountStr = rawAmount.replaceAll(',', '').trim();
         final amount = double.tryParse(sanitizedAmountStr);
@@ -74,8 +96,7 @@ class GenericBankStrategy extends SmsParserStrategy {
           return ParsedSmsDto(
             amount: amount,
             type: TransactionType.credit,
-            counterpartyNumber:
-                null, // IPN/Bank doesn't show number often in this format
+            counterpartyNumber: matchedNumber ?? counterpartyNumber,
             serviceProvider: 'IPN/Bank',
             originalBody: normalizedBody,
           );
@@ -89,16 +110,33 @@ class GenericBankStrategy extends SmsParserStrategy {
     }
 
     // ── Send (Debit / Transfer / Outgoing Payment / Deduction) ──
+    // 1. Deduction / Payment keywords: e.g. "تم خصم مبلغ 450.00 ج.م من حسابكم"
     final debitArabicRegex = RegExp(
-      r'(?:ارسال|إرسال|خصم|دفع|تحويل).*?(?:مبلغ|بمبلغ)\s*(?<amount>[\d\.,]+)',
+      r'(?:ارسال|إرسال|خصم|تم خصم|دفع|تم دفع|سحب|تم سحب)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
       caseSensitive: false,
     );
+
+    // 2. Transfer out of account: e.g. "تم تحويل مبلغ 800 ج.م من حسابكم"
+    final debitAccountRegex = RegExp(
+      r'(?:تحويل)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?).*?(?:من حسابكم|من حسابك|من كارت|من بطاقة)',
+      caseSensitive: false,
+    );
+
+    // 3. Transfer to destination: e.g. "تم تحويل مبلغ 500 إلى 010..."
+    final debitToRegex = RegExp(
+      r'(?:تحويل الى|تحويل إلي|تحويل الي|تحويل إلى|تحويل ل)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ|بمبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
+      caseSensitive: false,
+    );
+
+    // 4. English Send: e.g. "Transfer Sent. Amount of EGP 123.45"
     final debitEnglishRegex = RegExp(
-      r'(?:transfer sent|sent|debit|debited|payment|transferred).*?(?:amount of egp|amount of|amount)\s*(?<amount>[\d\.,]+)',
+      r'(?:transfer sent|sent|debit|debited|payment|transferred)(?:(?!balance).)*?(?:amount of egp|amount of|amount|egp|le|\:)?\s*(?<amount>\d+(?:[\.,]\d+)?)',
       caseSensitive: false,
     );
 
     final debitMatch = debitArabicRegex.firstMatch(normalizedBody) ??
+        debitAccountRegex.firstMatch(normalizedBody) ??
+        debitToRegex.firstMatch(normalizedBody) ??
         debitEnglishRegex.firstMatch(normalizedBody);
 
     if (debitMatch != null) {
@@ -111,7 +149,7 @@ class GenericBankStrategy extends SmsParserStrategy {
           return ParsedSmsDto(
             amount: amount,
             type: TransactionType.debit,
-            counterpartyNumber: null,
+            counterpartyNumber: counterpartyNumber,
             serviceProvider: 'IPN/Bank',
             originalBody: normalizedBody,
           );

@@ -83,7 +83,8 @@ void main() {
           .thenReturn(const PlatformSettingsModel.defaults());
       when(() => mockTxRepo.generateId()).thenReturn('tx_200_test');
       when(() => mockTxRepo.createTransaction(any())).thenAnswer((_) async {});
-      when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
+      when(() => mockStorage.saveCompletedTxSync(any()))
+          .thenAnswer((_) async {});
 
       final overlayUseCase = OverlayUseCase(
         transactionRepository: mockTxRepo,
@@ -113,9 +114,10 @@ void main() {
 
       expect(result.totalDeduction, 502.5);
 
-      final capturedVaultMap = verify(() => mockStorage.saveToVault(captureAny()))
-          .captured
-          .first as Map<String, dynamic>;
+      final capturedVaultMap =
+          verify(() => mockStorage.saveCompletedTxSync(captureAny()))
+              .captured
+              .first as Map<String, dynamic>;
 
       expect(capturedVaultMap['amount'], 500.0,
           reason: 'Vault amount field MUST store net principal amount (500 EGP)');

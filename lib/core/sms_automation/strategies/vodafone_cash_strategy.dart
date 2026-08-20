@@ -21,19 +21,6 @@ class VodafoneCashStrategy extends SmsParserStrategy {
       return true;
     }
 
-    // Check Egyptian mobile number format (+201..., 201..., 01..., 1...)
-    String digitsOnly = sender.replaceAll(RegExp(r'[^\d]'), '');
-    if (digitsOnly.startsWith('20')) {
-      digitsOnly = digitsOnly.substring(2);
-    }
-    if (digitsOnly.startsWith('0')) {
-      digitsOnly = digitsOnly.substring(1);
-    }
-    if (digitsOnly.length == 10 &&
-        RegExp(r'^1[0125]\d{8}$').hasMatch(digitsOnly)) {
-      return true;
-    }
-
     return false;
   }
 
@@ -49,14 +36,14 @@ class VodafoneCashStrategy extends SmsParserStrategy {
     // --- Receive (Credit / Deposit) ---
     // 1. Amount before Number: e.g. "تم استلام مبلغ 1000 جنيه من رقم 01012345678" or "وصلك 500 من 01012345678"
     final arabicReceiveAmountFirst = RegExp(
-        r'(?:استلام|ارسال|تحويل|ايداع|وصل|وصلك).*?(?:مبلغ)?\s*(?<amount>[\d\.,]+)\s*(?:جنيه|ج\.م)?.*?(?:محول من رقم|محول من|من رقم|منه|من)\s*(?<number>01[0125]\d{8})');
+        r'(?:استلام|وصل|وصلك|ايداع|تم ايداع|تحويل من)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)\s*(?:جنيه|ج\.م)?.*?(?:محول من رقم|محول من|من رقم|منه|من)\s*(?<number>01[0125]\d{8})');
 
     // 2. Number before Amount: e.g. "محول من 01234567890 مبلغ 2500" or "من 01012345678 مبلغ 100"
     final arabicReceiveNumberFirst = RegExp(
-        r'(?:محول من رقم|محول من|من رقم|من)\s*(?<number>01[0125]\d{8}).*?(?:مبلغ)?\s*(?<amount>[\d\.,]+)');
+        r'(?:محول من رقم|محول من|من رقم|من)\s*(?<number>01[0125]\d{8})(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)');
 
     final englishReceiveRegex = RegExp(
-        r'(?:received).*?(?<amount>[\d\.,]+)\s*(?:egp|le)?.*?(?:from)\s*(?<number>01[0125]\d{8})');
+        r'(?:received)(?:(?!balance).)*?(?<amount>\d+(?:[\.,]\d+)?)\s*(?:egp|le)?.*?(?:from)\s*(?<number>01[0125]\d{8})');
 
     final receiveMatch = arabicReceiveAmountFirst.firstMatch(normalizedBody) ??
         arabicReceiveNumberFirst.firstMatch(normalizedBody) ??
@@ -89,14 +76,14 @@ class VodafoneCashStrategy extends SmsParserStrategy {
     // --- Send (Debit / Transfer / Payment) ---
     // 1. Amount before Number: e.g. "تم تحويل مبلغ 50.50 جنيه إلى 01012345678" or "ارسال 200 ل 01012345678"
     final arabicSendAmountFirst = RegExp(
-        r'(?:ارسال|تحويل|دفع).*?(?:مبلغ)?\s*(?<amount>[\d\.,]+)\s*(?:جنيه|ج\.م)?.*?(?:إلى رقم|الى رقم|الي رقم|إلي رقم|لرقم|محول إلى|محول الى|محول الي|إضافة إلى|اضافة الى|اضافة الي|إلى|الى|الي|إلي|ل)\s*(?<number>01[0125]\d{8})');
+        r'(?:ارسال|تم ارسال|تحويل الى|تحويل إلي|تحويل الي|تحويل ل|تم تحويل|دفع)(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)\s*(?:جنيه|ج\.م)?.*?(?:إلى رقم|الى رقم|الي رقم|إلي رقم|لرقم|محول إلى|محول الى|محول الي|إضافة إلى|اضافة الى|اضافة الي|إلى|الى|الي|إلي|ل)\s*(?<number>01[0125]\d{8})');
 
     // 2. Number before Amount: e.g. "إلى 01012345678 مبلغ 50.50"
     final arabicSendNumberFirst = RegExp(
-        r'(?:إلى رقم|الى رقم|الي رقم|إلي رقم|لرقم|محول إلى|محول الى|محول الي|إضافة إلى|اضافة الى|اضافة الي|إلى|الى|الي|إلي|ل)\s*(?<number>01[0125]\d{8}).*?(?:مبلغ)?\s*(?<amount>[\d\.,]+)');
+        r'(?:إلى رقم|الى رقم|الي رقم|إلي رقم|لرقم|محول إلى|محول الى|محول الي|إضافة إلى|اضافة الى|اضافة الي|إلى|الى|الي|إلي|ل)\s*(?<number>01[0125]\d{8})(?:(?!رصيد|رصيدك|متاح).)*?(?:مبلغ)?\s*(?<amount>\d+(?:[\.,]\d+)?)');
 
     final englishSendRegex = RegExp(
-        r'(?:sent|send|transfer|transferred|paid).*?(?<amount>[\d\.,]+)\s*(?:egp|le)?.*?(?:to)\s*(?<number>01[0125]\d{8})');
+        r'(?:sent|send|transfer|transferred|paid)(?:(?!balance).)*?(?<amount>\d+(?:[\.,]\d+)?)\s*(?:egp|le)?.*?(?:to)\s*(?<number>01[0125]\d{8})');
 
     final sendMatch = arabicSendAmountFirst.firstMatch(normalizedBody) ??
         arabicSendNumberFirst.firstMatch(normalizedBody) ??

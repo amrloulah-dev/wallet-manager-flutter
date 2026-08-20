@@ -249,10 +249,10 @@ Future<void> handleIncomingSms(
       'provider': dto.serviceProvider,
     };
 
-    // ── Save to Vault (SharedPreferences) ───────────────────
-    // This ensures the overlay can read the data even if the
-    // shareData call fails or the overlay restarts.
-    await storage.saveToVault(overlayArgs);
+    // ── Save to Vault Queue (SharedPreferences) ─────────────
+    // This ensures the overlay can read the data via FIFO queue even if
+    // the shareData call fails or multiple SMS arrive simultaneously.
+    await storage.enqueueOverlayData(overlayArgs);
 
     // ── Phase 2: Wake Screen via High-Priority Notification ─
     // If the device is sleeping/locked, SYSTEM_ALERT_WINDOW

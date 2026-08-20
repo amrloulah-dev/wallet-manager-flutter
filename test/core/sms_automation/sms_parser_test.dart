@@ -19,9 +19,13 @@ void main() {
       expect(TextNormalizer.normalize('١٢٣٤٥٦٧٨٩٠'), '1234567890');
     });
 
-    test('should remove commas from numbers', () {
+    test('should remove commas from numbers and convert decimal commas', () {
       expect(TextNormalizer.normalize('1,000'), '1000');
       expect(TextNormalizer.normalize('10,000.50'), '10000.50');
+      expect(TextNormalizer.normalize('١٠,٥٠'), '10.50');
+      expect(TextNormalizer.normalize('10,50'), '10.50');
+      expect(TextNormalizer.normalize('10,5'), '10.5');
+      expect(TextNormalizer.normalize('1,500,50'), '1500.50');
     });
 
     test('should convert to lowercase', () {
@@ -192,7 +196,7 @@ void main() {
       expect(result.serviceProvider, 'IPN/Bank');
     });
 
-    test('should parse forwarded/test telecom message from mobile sender as Vodafone Cash with counterparty', () {
+    test('should parse forwarded/test message from mobile sender as GenericBank with counterparty', () {
       final result = engine.parse(
         '01091264053',
         'محول من 01234567890 مبلغ 2500',
@@ -202,7 +206,7 @@ void main() {
       expect(result!.amount, 2500.0);
       expect(result.counterpartyNumber, '01234567890');
       expect(result.type, TransactionType.credit);
-      expect(result.serviceProvider, 'Vodafone Cash');
+      expect(result.serviceProvider, 'IPN/Bank');
     });
 
     test('should return null for unknown sender', () {

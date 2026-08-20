@@ -51,6 +51,22 @@ void main() {
       final result = strategy.parse(body);
       expect(result, isNull);
     });
+
+    test('should ignore balance keyword and capture transaction amount', () {
+      const body = 'تم تحويل مبلغ 50.50 جنيه إلى 01012345678 رصيدك الحالي 1500.00 جنيه';
+      final result = strategy.parse(body);
+      expect(result, isNotNull);
+      expect(result!.amount, 50.50);
+      expect(result.type.name, 'debit');
+    });
+
+    test('should ignore balance keyword on receive and capture transaction amount', () {
+      const body = 'تم استلام مبلغ 300.00 جنيه من 01012345678 رصيدك 2500 جنيه';
+      final result = strategy.parse(body);
+      expect(result, isNotNull);
+      expect(result!.amount, 300.00);
+      expect(result.type.name, 'credit');
+    });
   });
 
   group('canParse', () {
@@ -59,12 +75,13 @@ void main() {
       expect(strategy.canParse('Vodafone'), isTrue);
       expect(strategy.canParse('فودافون'), isTrue);
       expect(strategy.canParse('فودافونكاش'), isTrue);
+      expect(strategy.canParse('فودافون كاش'), isTrue);
     });
 
-    test('should return true for valid Egyptian mobile numbers', () {
-      expect(strategy.canParse('01091264053'), isTrue);
-      expect(strategy.canParse('+201012345678'), isTrue);
-      expect(strategy.canParse('201112345678'), isTrue);
+    test('should return false for personal mobile numbers (routed to GenericBankStrategy)', () {
+      expect(strategy.canParse('01091264053'), isFalse);
+      expect(strategy.canParse('+201012345678'), isFalse);
+      expect(strategy.canParse('201112345678'), isFalse);
     });
   });
 }

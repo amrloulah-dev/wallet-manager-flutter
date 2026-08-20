@@ -24,11 +24,16 @@ class TextNormalizer {
     // Convert Arabic/Eastern numerals to English/Western numerals
     text = _convertArabicNumeralsToEnglish(text);
 
-    // 4. Clean Thousands Separators
-    // Remove commas ONLY if they act as a thousands separator
-    // (followed by exactly 3 digits). This preserves decimal numbers like 100,50.
-    // The lookahead (?=\d{3}(?!\d)) ensures the comma is followed by exactly 3 digits.
-    text = text.replaceAll(RegExp(r',(?=\d{3}(?!\d))'), '');
+    // 4. Protect & Convert Decimal Commas
+    // Convert comma to period ONLY when it acts as a decimal separator
+    // (i.e. followed by exactly 1 or 2 digits not followed by another digit).
+    // e.g. "10,50" -> "10.50", "5,5" -> "5.5", "1,500,50" -> "1,500.50"
+    text = text.replaceAll(RegExp(r',(?=\d{1,2}(?!\d))'), '.');
+
+    // 5. Clean Thousands Separators
+    // Remove surviving commas that act as thousands separators (followed by 3 digits).
+    // e.g. "1,000" -> "1000", "1,500.50" -> "1500.50", "1,000,000" -> "1000000"
+    text = text.replaceAll(RegExp(r',(?=\d{3})'), '');
 
     return text;
   }

@@ -63,11 +63,11 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
 
   Future<void> _fetchAndApplyData() async {
     try {
-      // Use LocalStorageService as the single source of truth for vault data.
-      // This replaces the orphan 'pending_overlay_tx' SharedPreferences key.
+      // Read from the isolated Completed Transaction IPC key.
+      // This ensures we never collide with or consume the SMS pending queue.
       await _storage.reloadDisk();
 
-      final data = await _storage.readFromVault();
+      final data = await _storage.readCompletedTxSync();
       if (data == null) return;
 
       if (mounted) {
@@ -114,7 +114,7 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
         }
       }
 
-      await _storage.clearVault();
+      await _storage.clearCompletedTxSync();
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');

@@ -114,8 +114,8 @@ class OverlayUseCase {
       'blockAutoFetch': true,
     };
 
-    // Unified vault storage via LocalStorageService
-    await _localStorage.saveToVault(txData);
+    // Isolated IPC sync storage via LocalStorageService
+    await _localStorage.saveCompletedTxSync(txData);
 
     return TransactionResult(
       txId: txId,

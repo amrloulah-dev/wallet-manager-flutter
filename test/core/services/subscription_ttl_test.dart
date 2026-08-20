@@ -41,6 +41,7 @@ void main() {
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
     when(() => mockStorage.isSubLifetime).thenReturn(true);
     when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
+    when(() => mockStorage.enqueueOverlayData(any())).thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
     when(() => mockStorage.clearVault()).thenAnswer((_) async {});
     when(() => mockStorage.cacheWalletLiteList(any())).thenAnswer((_) async {});

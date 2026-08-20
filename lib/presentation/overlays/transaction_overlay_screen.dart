@@ -77,20 +77,23 @@ class _OverlayContentState extends State<_OverlayContent> {
           ? sl<LocalStorageService>()
           : LocalStorageService.instance;
 
-      // 1. Force disk reload and read fresh payload from Vault (SSOT)
-      final vaultData = await storage.readFromVault();
+      // 1. Force disk reload and dequeue fresh payload from FIFO Queue (SSOT)
+      final vaultData = await storage.dequeueOverlayData();
       if (vaultData != null) {
-        _provider.ingestNewEvent(vaultData);
-        await storage.clearVault();
+        final remaining = await storage.getOverlayQueueLength();
+        _provider.updateQueueCount(remaining);
+        await _provider.ingestNewEvent(vaultData);
       }
 
       // 2. Setup stream listener AFTER checking the vault
       _overlaySubscription =
-          FlutterOverlayWindow.overlayListener.listen((event) {
+          FlutterOverlayWindow.overlayListener.listen((event) async {
         if (event != null && event is Map) {
           // 🛡️ Filter out internal broadcast actions to prevent stale state overrides
           if (event['action'] == 'local_deduct') return;
 
+          final remaining = await storage.getOverlayQueueLength();
+          _provider.updateQueueCount(remaining);
           _provider.ingestNewEvent(event);
         }
       }, onError: (error) {
@@ -278,6 +281,33 @@ class _HeaderWidget extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
+            ),
+            const SizedBox(width: 8),
+            Selector<OverlayProvider, int>(
+              selector: (_, p) => p.queueCount,
+              builder: (context, queueCount, _) {
+                if (queueCount <= 0) return const SizedBox.shrink();
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '+$queueCount',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

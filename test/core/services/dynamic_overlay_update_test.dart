@@ -42,6 +42,7 @@ void main() {
     when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(true);
     when(() => mockStorage.getSimMappings()).thenReturn([]);
     when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
+    when(() => mockStorage.enqueueOverlayData(any())).thenAnswer((_) async {});
 
     when(() => mockNotifications.initialize(any()))
         .thenAnswer((_) async => true);

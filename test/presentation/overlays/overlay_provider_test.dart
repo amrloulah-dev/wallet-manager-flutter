@@ -89,6 +89,9 @@ void main() {
     when(() => mockStorage.getCachedWalletLiteList()).thenReturn([
       {'id': 'w1', 'walletType': 'instapay'}
     ]);
+    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => null);
+    when(() => mockStorage.getOverlayQueueLength()).thenAnswer((_) async => 0);
+    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
 
