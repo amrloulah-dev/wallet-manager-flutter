@@ -1,10 +1,10 @@
 # Implementation Plan: Data Drift & Stats Aggregation Patch
 
-## Phase 1: Transaction Pipeline Total Balance Patch (FR-1)
+## Phase 1: Transaction Pipeline Total Balance Patch (FR-1) [checkpoint: 2e0a2c0]
 - [x] Task 1.1: Write failing unit tests for `TransactionValidatorService` verifying `totalBalance` increment/decrement in `stores/{storeId}/stats/summary` during send, receive, and deposit transactions (Red Phase). [d112819]
 - [x] Task 1.2: Inject `FirebaseConstants.totalBalance: FieldValue.increment(balanceChange)` into `summaryUpdates` in `TransactionValidatorService.validateAndSave` (Green Phase). [66d2268]
 - [x] Task 1.3: Run test suite to verify tests pass and refactor if needed. [66d2268]
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [2e0a2c0]
 
 ## Phase 2: Wallet Deactivation Idempotency Guard (FR-2)
 - [ ] Task 2.1: Write failing unit tests for `WalletRepository.setWalletActiveStatus` testing that duplicate calls with identical status do not re-apply stats increments/decrements (Red Phase).
