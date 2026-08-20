@@ -6,11 +6,11 @@
 - [x] Task 1.3: Run test suite to verify tests pass and refactor if needed. [66d2268]
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [2e0a2c0]
 
-## Phase 2: Wallet Deactivation Idempotency Guard (FR-2)
+## Phase 2: Wallet Deactivation Idempotency Guard (FR-2) [checkpoint: 68e97e0]
 - [x] Task 2.1: Write failing unit tests for `WalletRepository.setWalletActiveStatus` testing that duplicate calls with identical status do not re-apply stats increments/decrements (Red Phase). [0d2376c]
 - [x] Task 2.2: Implement `if (wallet.isActive == isActive) return;` guard in `WalletRepository.setWalletActiveStatus` before `_statsRepository.updateStatsOnWalletChange` (Green Phase). [afe143f]
 - [x] Task 2.3: Run test suite to verify tests pass and refactor if needed. [afe143f]
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [68e97e0]
 
 ## Phase 3: Optimistic UI Service Fee Parity (FR-3)
 - [ ] Task 3.1: Write failing unit tests for `StatisticsProvider` verifying that optimistic debit transaction deductions correctly subtract `amount + serviceFee` from `totalBalance` (Red Phase).
