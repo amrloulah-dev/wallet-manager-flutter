@@ -23,6 +23,20 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
 
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch dashboard stats on initial screen mount if not present in memory
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final provider = context.read<StatisticsProvider>();
+        if (provider.dashboardSummary == null) {
+          provider.fetchDashboardStats();
+        }
+      }
+    });
+  }
+
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final initialDate = (isStartDate ? _startDate : _endDate) ?? DateTime.now();
     final firstDate = DateTime(2020);
@@ -79,6 +93,21 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       _endDate = null;
     });
     context.read<StatisticsProvider>().clearFilteredStats();
+  }
+
+  /// On-demand manual network refresh handler for RefreshIndicator
+  Future<void> _refreshStats() async {
+    final provider = context.read<StatisticsProvider>();
+    if (provider.mode == StatsMode.filtered && _startDate != null) {
+      final localStartDate = _startDate!;
+      var localEndDate = _endDate ?? localStartDate;
+      localEndDate = DateTime(localEndDate.year, localEndDate.month,
+          localEndDate.day, 23, 59, 59);
+      await provider.fetchFilteredStats(
+          DateTimeRange(start: localStartDate, end: localEndDate));
+    } else {
+      await provider.fetchDashboardStats(forceRefresh: true);
+    }
   }
 
   @override
@@ -238,54 +267,76 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
   Widget _buildEmptyState({bool isCustom = false}) {
     final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.bar_chart_outlined,
-              size: 80, color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Text(isCustom ? l10n.noDataInRange : l10n.noStatsToShow),
-        ],
+    return RefreshIndicator(
+      onRefresh: _refreshStats,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_outlined,
+                      size: 80, color: AppColors.textSecondary(context)),
+                  const SizedBox(height: 16),
+                  Text(isCustom ? l10n.noDataInRange : l10n.noStatsToShow),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildStatistics(BuildContext context, StatsSummaryModel stats) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildBalanceSection(context, stats),
-          const SizedBox(height: 20),
-          _buildTransactionsSection(context, stats),
-          const SizedBox(height: 20),
-          _buildAmountsSection(context, stats),
-          const SizedBox(height: 20),
-          _buildCommissionSection(context, stats),
-          const SizedBox(height: 20),
-          _buildDebtsSection(context, stats),
-        ],
+    return RefreshIndicator(
+      onRefresh: _refreshStats,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildBalanceSection(context),
+            const SizedBox(height: 20),
+            _buildTransactionsSection(context, stats),
+            const SizedBox(height: 20),
+            _buildAmountsSection(context, stats),
+            const SizedBox(height: 20),
+            _buildCommissionSection(context, stats),
+            const SizedBox(height: 20),
+            _buildDebtsSection(context, stats),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBalanceSection(BuildContext context, StatsSummaryModel stats) {
+  /// Reactive Total Balance Card: Wrapped in a fine-grained Selector
+  /// to reactively re-render whenever provider.dashboardSummary.totalBalance changes
+  /// in RAM (optimistic updates, overlay submissions, or network syncs).
+  Widget _buildBalanceSection(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final totalBalance = stats.totalBalance;
 
-    return _buildStatCard(
-      context: context,
-      icon: Icons.account_balance_wallet_outlined,
-      title: l10n.balance,
-      color: Colors.teal,
-      children: [
-        StatItemWidget(
-          label: l10n.totalWalletBalance,
-          value: NumberFormatter.formatAmount(totalBalance),
-        ),
-      ],
+    return Selector<StatisticsProvider, double>(
+      selector: (_, provider) => provider.dashboardSummary?.totalBalance ?? 0.0,
+      builder: (context, totalBalance, child) {
+        return _buildStatCard(
+          context: context,
+          icon: Icons.account_balance_wallet_outlined,
+          title: l10n.balance,
+          color: Colors.teal,
+          children: [
+            StatItemWidget(
+              label: l10n.totalWalletBalance,
+              value: NumberFormatter.formatAmount(totalBalance),
+            ),
+          ],
+        );
+      },
     );
   }
 
