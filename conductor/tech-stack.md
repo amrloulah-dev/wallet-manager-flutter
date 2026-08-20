@@ -7,14 +7,16 @@
 - **Firebase:** Comprehensive backend suite, using O(1) Firestore lookups for authentication. Uses WriteBatch for non-reading atomic operations (e.g., wallet creation) to bypass transaction ordering constraints.
     - **Authentication:** Managing owner (Google/Email) and employee (PIN) logins.
     - **Cloud Firestore:** Scalable NoSQL database. Optimized for $O(1)$ aggregate queries via a centralized `stats/summary` architecture to minimize billing and latency.
+        - **Atomic Stats Aggregation Pipeline:** `stores/{storeId}/stats/summary` documents maintain real-time aggregates (`totalBalance`, `totalTransactions`, `totalCommission`, `totalServiceFee`, `totalSentAmount`, `totalReceivedAmount`) updated atomically using `FieldValue.increment()` inside `_firestore.runTransaction` closures (`TransactionValidatorService`), guaranteeing strict parity between individual wallet balances and aggregated store metrics.
     - **Analytics & Performance:** Monitoring user behavior and app health.
 
 ## State Management
 - **Provider:** Primary state management solution.
     - `SafeChangeNotifier` (Custom): Base class with microtask-wrapped `safeNotify()` and disposal guards.
-    - `Selector`: For granular, field-level rebuild optimization.
+    - `Selector`: For granular, field-level rebuild optimization (e.g., dedicated `Selector<StatisticsProvider, double>` for reactive total balance displays across statistics screens).
     - `ProxyProvider`: For cross-provider dependencies.
     - `context.read<T>()`: For action-only provider access.
+    - **Optimistic RAM Math Parity:** Providers (`WalletProvider`, `StatisticsProvider`) compute debit deductions identically using `(amount + serviceFee)`, ensuring 100% mathematical parity across in-memory state trees prior to Firestore server synchronization.
 
 ## Dependency Injection
 - **GetIt:** For centralized service and repository registration and decoupled access.
@@ -47,8 +49,9 @@
     - **Firestore Rule Fortification:** Role-based write restrictions and multi-layer read-access denials for sensitive collections like `license_keys`.
     - **Leaked Data Prevention:** Global `kDebugMode` guards for all `debugPrint` calls to prevent sensitive data leakage in release builds.
 - **Data Integrity:** Centralized `NumberParser` utility for safe numeric parsing and null-safety from dynamic sources, and safe on-read (lazy) legacy wallet deserialization fallbacks in `WalletModel.fromMap` (`WalletStatus.inactive` default, `networkOldLimits` resolution, and null timestamp preservation for silent auto-heal limit resets).
+    - **Repository Idempotency Guards:** Strict status-equality checks (e.g. `WalletRepository.setWalletActiveStatus` checking `if (wallet.isActive == isActive) return;`) preventing double-counting or data drift on redundant state change requests.
 - **Background State TTL:** Strict 24-hour Time-to-Live (TTL) enforcement for subscription and critical metadata in the background isolate, triggering user re-validation via actionable notifications if data becomes stale.
 - **Financial Integrity:** Epsilon-aware balance sufficiency checks (0.01 EGP tolerance), atomic Firestore transactions and FieldValue.increment() for all wallet, balance, and stat counter updates, and $O(1)$ aggregate synchronization. Includes a "Zero-Unbounded-Read" guarantee by utilizing Firestore Aggregate Queries and cursor-based pagination for all list operations.
 - **Domain Fortification:** Type-safe Enums for all statuses/types and centralized `AmountValidator` guards.
 - **Reactive Resilience:** Error-aware Stream pipelines, stateless repository pagination, and transparent exception propagation from providers to the UI layer. Includes explicit `finally` blocks in all async UI flows to guarantee state reset (e.g., `isLoading = false`) and prevent infinite loading states, and a fatal error failsafe via `runZonedGuarded` in `main.dart` ensuring all uncaught exceptions are reported to Crashlytics before termination.
-- **Performance Optimization:** Efficient document batching (450-item chunks) to bypass Firestore's 500-operation limit during bulk resets. Includes a "Zero-Unbounded-Read" guarantee for statistical operations by utilizing Firestore Aggregate Queries (count/sum) instead of full collection fetches. **Flat Sliver-Driven Layouts** (CustomScrollView) globally replace nested ListViews and shrinkWrap to eliminate layout overhead and OOM crashes on low-end devices. **ThemeData Caching** and **Granular Selectors** minimize object allocation and redundant rebuilds in high-frequency UIs like the transaction overlay.
+- **Performance Optimization:** Efficient document batching (450-item chunks) to bypass Firestore's 500-operation limit during bulk resets. Includes a "Zero-Unbounded-Read" guarantee for statistical operations by utilizing Firestore Aggregate Queries (count/sum) instead of full collection fetches. **Flat Sliver-Driven Layouts** (CustomScrollView) globally replace nested ListViews and shrinkWrap to eliminate layout overhead and OOM crashes on low-end devices. **ThemeData Caching** and **Granular Selectors** minimize object allocation and redundant rebuilds in high-frequency UIs like the transaction overlay and dashboard statistics.
