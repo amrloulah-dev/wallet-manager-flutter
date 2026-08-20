@@ -213,5 +213,123 @@ void main() {
       expect(data?['sendCount'], 1);
       expect(data?['totalSentAmount'], 300.0);
     });
+
+    test(
+        'validateAndSave updates totalBalance in stores/{storeId}/stats/summary for Send, Receive, and Deposit',
+        () async {
+      final storeId = 's_stats_test';
+      final walletId = 'w_stats_test';
+      final initialBalance = 1000.0;
+      final initialTotalBalance = 2500.0;
+
+      // Seed stats/summary
+      await fakeFirestore
+          .doc(FirebaseConstants.statsSummaryPath(storeId))
+          .set({
+        FirebaseConstants.totalBalance: initialTotalBalance,
+        'totalWallets': 2,
+        'activeWallets': 2,
+      });
+
+      // Seed wallet
+      await fakeFirestore
+          .collection(FirebaseConstants.walletsCollection)
+          .doc(walletId)
+          .set({
+        'walletId': walletId,
+        'storeId': storeId,
+        'balance': initialBalance,
+        'isActive': true,
+        'walletType': 'vodafoneCash',
+        'sendLimits': {
+          'dailyLimit': 5000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 20000.0,
+          'monthlyUsed': 0.0
+        },
+        'receiveLimits': {
+          'dailyLimit': 5000.0,
+          'dailyUsed': 0.0,
+          'monthlyLimit': 20000.0,
+          'monthlyUsed': 0.0
+        },
+        'createdAt': Timestamp.now(),
+        'lastDailyReset': Timestamp.now(),
+        'lastMonthlyReset': Timestamp.now(),
+        'stats': {'totalTransactions': 0}
+      });
+
+      // 1. Test Send (Debit): deduction = amount (200) + serviceFee (10) = 210
+      final sendTx = TransactionModel(
+        transactionId: 'tx_send_1',
+        walletId: walletId,
+        transactionType: TransactionType.debit,
+        amount: 200.0,
+        commission: 5.0,
+        serviceFee: 10.0,
+        storeId: storeId,
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        customerPhone: '010',
+        paymentStatus: PaymentStatus.paid,
+      );
+
+      await service.validateAndSave(
+          sendTx, const PlatformSettingsModel.defaults());
+
+      var summarySnap = await fakeFirestore
+          .doc(FirebaseConstants.statsSummaryPath(storeId))
+          .get();
+      // Expected totalBalance: 2500.0 - 210.0 = 2290.0
+      expect(summarySnap.data()?[FirebaseConstants.totalBalance], 2290.0);
+
+      // 2. Test Receive (Credit): addition = amount (300)
+      final receiveTx = TransactionModel(
+        transactionId: 'tx_recv_1',
+        walletId: walletId,
+        transactionType: TransactionType.credit,
+        amount: 300.0,
+        commission: 15.0,
+        serviceFee: 0.0,
+        storeId: storeId,
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        customerPhone: '010',
+        paymentStatus: PaymentStatus.paid,
+      );
+
+      await service.validateAndSave(
+          receiveTx, const PlatformSettingsModel.defaults());
+
+      summarySnap = await fakeFirestore
+          .doc(FirebaseConstants.statsSummaryPath(storeId))
+          .get();
+      // Expected totalBalance: 2290.0 + 300.0 = 2590.0
+      expect(summarySnap.data()?[FirebaseConstants.totalBalance], 2590.0);
+
+      // 3. Test Deposit: addition = amount (500)
+      final depositTx = TransactionModel(
+        transactionId: 'tx_dep_1',
+        walletId: walletId,
+        transactionType: TransactionType.deposit,
+        amount: 500.0,
+        commission: 0.0,
+        serviceFee: 0.0,
+        storeId: storeId,
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        customerPhone: '010',
+        paymentStatus: PaymentStatus.paid,
+      );
+
+      await service.validateAndSave(
+          depositTx, const PlatformSettingsModel.defaults());
+
+      summarySnap = await fakeFirestore
+          .doc(FirebaseConstants.statsSummaryPath(storeId))
+          .get();
+      // Expected totalBalance: 2590.0 + 500.0 = 3090.0
+      expect(summarySnap.data()?[FirebaseConstants.totalBalance], 3090.0);
+    });
   });
 }
