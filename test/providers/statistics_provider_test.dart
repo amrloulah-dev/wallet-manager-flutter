@@ -187,6 +187,71 @@ void main() {
       expect(provider.todayStats!.receiveCount, 2);
       expect(provider.todayStats!.totalReceivedAmount, 800.0);
     });
+
+    test(
+        'addTransactionOptimistically with debit and serviceFee should deduct (amount + serviceFee) from totalBalance',
+        () {
+      final summaryBefore = StatsSummaryModel.empty().copyWith(
+        totalTransactions: 10,
+        totalCommission: 50.0,
+        totalSentAmount: 1000.0,
+        sendCount: 3,
+        totalBalance: 2000.0,
+      );
+      final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
+        totalTransactions: 5,
+        totalCommission: 10.0,
+        sendCount: 2,
+        totalSentAmount: 800.0,
+      );
+
+      provider.rollbackStats(summaryBefore, todayBefore);
+
+      // Debit: amount = 300.0, serviceFee = 15.0, commission = 10.0
+      provider.addTransactionOptimistically({
+        'amount': 300.0,
+        'commission': 10.0,
+        'serviceFee': 15.0,
+        'type': 'debit',
+      });
+
+      // Total balance must be: 2000.0 - (300.0 + 15.0) = 1685.0
+      expect(provider.dashboardSummary!.totalBalance, 1685.0);
+      expect(provider.dashboardSummary!.totalTransactions, 11);
+      expect(provider.dashboardSummary!.totalCommission, 60.0);
+      expect(provider.dashboardSummary!.totalSentAmount, 1300.0);
+      expect(provider.dashboardSummary!.sendCount, 4);
+    });
+
+    test(
+        'updateLocalStats with debit and serviceFee should deduct (amount + serviceFee) from totalBalance',
+        () {
+      final summaryBefore = StatsSummaryModel.empty().copyWith(
+        totalTransactions: 10,
+        totalCommission: 50.0,
+        totalSentAmount: 1000.0,
+        sendCount: 3,
+        totalBalance: 2000.0,
+      );
+      final todayBefore = DailyStatsModel.empty('2026-06-05').copyWith(
+        totalTransactions: 5,
+        totalCommission: 10.0,
+        sendCount: 2,
+        totalSentAmount: 800.0,
+      );
+
+      provider.rollbackStats(summaryBefore, todayBefore);
+
+      provider.updateLocalStats(
+        300.0,
+        'debit',
+        commission: 10.0,
+        serviceFee: 15.0,
+      );
+
+      // Total balance must be: 2000.0 - (300.0 + 15.0) = 1685.0
+      expect(provider.dashboardSummary!.totalBalance, 1685.0);
+    });
   });
 
   group('StatisticsProvider Employee Guard', () {
