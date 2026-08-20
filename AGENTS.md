@@ -35,6 +35,8 @@ Read `.specify/memory/constitution.md` — these are non-negotiable:
 5. **Safe rollbacks** — Capture previous state before optimistic mutation; on Firestore failure, revert + `safeNotify()` + show error
 6. **Fetch shield** — After background isolate injects state, block auto-fetch for ~5s to prevent stale overwrite
 7. **Composite `ValueKey`** — Use `ValueKey('${model.id}_${model.balance}')` on mutable list items (e.g., `WalletCard`)
+8. **Optimistic Math Parity** — All providers (`WalletProvider`, `StatisticsProvider`) MUST apply identical formulas for financial mutations (e.g., deducting `amount + serviceFee` for debits), guaranteeing 100% RAM parity before Firestore confirmation.
+9. **Fine-Grained Live Financial Selectors** — Live liquid metrics (`totalBalance`) MUST be bound using dedicated `Selector<StatisticsProvider, double>` subscribing directly to `dashboardSummary.totalBalance`, rather than date-filtered snapshots or static widget state.
 
 ## Custom Base Class
 All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
@@ -87,6 +89,9 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)
 - Indexes: `firestore.indexes.json`
 - Collections: `stores/`, `stores/{id}/stats/`, `stores/{id}/daily_stats/`, `wallets/`, `transactions/`, `debts/`, `users/`, `device_registrations/`, `license_keys/`
+- **Atomic Stats Aggregation**: In Firestore transaction closures (`TransactionValidatorService.validateAndSave`), aggregate documents (`stores/{storeId}/stats/summary`) MUST atomically update `totalBalance` via `FieldValue.increment(balanceChange)` alongside transaction and volume counters.
+- **Read-Before-Write Phase Ordering**: In all `_firestore.runTransaction` blocks, all document reads (`tx.get(statsSummaryRef)`) MUST precede all mutations (`tx.update` / `tx.set(..., SetOptions(merge: true))`).
+- **Repository Status Idempotency**: Methods toggling entity status with attached stats side-effects (e.g., `WalletRepository.setWalletActiveStatus`) MUST verify current status (`if (entity.isActive == isActive) return;`) before executing balance/counter adjustments.
 
 ## Analysis Notes
 - Config: `analysis_options.yaml`
