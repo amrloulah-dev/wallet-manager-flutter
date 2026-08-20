@@ -75,5 +75,5 @@
 
 ---
 
-- [ ] **Track: Data Drift & Stats Aggregation Patch**
+- [~] **Track: Data Drift & Stats Aggregation Patch**
 *Link: [./tracks/data_drift_stats_20260820/](./tracks/data_drift_stats_20260820/)*
