@@ -40,18 +40,25 @@ void main() {
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
     when(() => mockStorage.isSubLifetime).thenReturn(true);
-    when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
-    when(() => mockStorage.enqueueOverlayData(any())).thenAnswer((_) async {});
+    when(() => mockStorage.saveCurrentActiveSms(any())).thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
-    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
     when(() => mockStorage.cacheWalletLiteList(any())).thenAnswer((_) async {});
-    when(() => mockStorage.isSmsProcessed(any())).thenAnswer((_) async => false);
-    when(() => mockStorage.cacheSmsFingerprint(any())).thenAnswer((_) async {});
 
     when(() => mockNotifications.initialize(any()))
         .thenAnswer((_) async => true);
     when(() => mockNotifications.show(any(), any(), any(), any()))
         .thenAnswer((_) async {});
+
+    const channel = MethodChannel('x-slayer/overlay_channel');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (methodCall) async {
+      if (methodCall.method == 'checkPermission') return true;
+      if (methodCall.method == 'isPermissionGranted') return true;
+      if (methodCall.method == 'isActive') return false;
+      if (methodCall.method == 'showOverlay') return true;
+      if (methodCall.method == 'shareData') return true;
+      return null;
+    });
   });
 
   group('Subscription TTL Validation', () {
@@ -185,9 +192,10 @@ void main() {
       ]);
 
       // Mock Overlay permissions
-      const channel = MethodChannel('x-slayer/flutter_overlay_window');
+      const channel = MethodChannel('x-slayer/overlay_channel');
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (methodCall) async {
+        if (methodCall.method == 'checkPermission') return true;
         if (methodCall.method == 'isPermissionGranted') return true;
         if (methodCall.method == 'isActive') return false;
         if (methodCall.method == 'showOverlay') return true;

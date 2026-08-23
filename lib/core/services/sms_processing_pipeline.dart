@@ -141,22 +141,6 @@ Future<void> handleIncomingSms(
       return;
     }
 
-    // ── Gate 0: SMS Deduplication (Idempotency Key) ──────────
-    final DateTime msgTime = message.date != null && message.date! > 0
-        ? DateTime.fromMillisecondsSinceEpoch(message.date!)
-        : DateTime.now();
-    final int timestampToMinute = msgTime.millisecondsSinceEpoch ~/ 60000;
-    final String fingerprint = '${address}_${body}_$timestampToMinute';
-
-    if (await storage.isSmsProcessed(fingerprint)) {
-      if (kDebugMode) {
-        debugPrint(
-            '🛡️ [SMS_DEDUP] Duplicate SMS broadcast detected ($fingerprint). Dropping message.');
-      }
-      return;
-    }
-    await storage.cacheSmsFingerprint(fingerprint);
-
     // ── Guard: Feature flag ─────────────────────────────────
     if (!storage.isSmsAutomationEnabled) return;
 
@@ -198,10 +182,8 @@ Future<void> handleIncomingSms(
       'provider': dto.serviceProvider,
     };
 
-    // ── Save to Vault Queue (SharedPreferences) ─────────────
-    // This ensures the overlay can read the data via FIFO queue even if
-    // the shareData call fails or multiple SMS arrive simultaneously.
-    await storage.enqueueOverlayData(overlayArgs);
+    // ── Save Current Active SMS (Single-Item / Instant-Kill) ─
+    await storage.saveCurrentActiveSms(overlayArgs);
 
     // ── Phase 2: Wake Screen via High-Priority Notification ─
     // If the device is sleeping/locked, SYSTEM_ALERT_WINDOW
