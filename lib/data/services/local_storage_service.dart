@@ -458,6 +458,45 @@ class LocalStorageService {
   }
 
   // ===========================
+  // SMS Deduplication (Idempotency Cache)
+  // ===========================
+  static const String _kRecentSmsFingerprints = 'recent_sms_fingerprints';
+  static const int _kMaxSmsFingerprints = 10;
+
+  /// Checks if the SMS fingerprint has already been processed within the recent cache.
+  /// Calls [reloadDisk] to ensure cross-isolate multi-process synchronization.
+  Future<bool> isSmsProcessed(String fingerprint) async {
+    _ensureInitialized();
+    await reloadDisk();
+    final List<String> fingerprints =
+        _prefs?.getStringList(_kRecentSmsFingerprints) ?? [];
+    return fingerprints.contains(fingerprint);
+  }
+
+  /// Caches a processed SMS fingerprint, enforcing a max FIFO capacity of 10 items.
+  Future<void> cacheSmsFingerprint(String fingerprint) async {
+    _ensureInitialized();
+    await reloadDisk();
+    final List<String> fingerprints =
+        _prefs!.getStringList(_kRecentSmsFingerprints) ?? [];
+
+    if (!fingerprints.contains(fingerprint)) {
+      fingerprints.add(fingerprint);
+      while (fingerprints.length > _kMaxSmsFingerprints) {
+        fingerprints.removeAt(0); // Evict oldest (FIFO)
+      }
+      await _prefs!.setStringList(_kRecentSmsFingerprints, fingerprints);
+    }
+  }
+
+  /// Retrieves the list of currently cached SMS fingerprints.
+  Future<List<String>> getRecentSmsFingerprints() async {
+    _ensureInitialized();
+    await reloadDisk();
+    return _prefs?.getStringList(_kRecentSmsFingerprints) ?? [];
+  }
+
+  // ===========================
   // Wallet Lite Cache (For Overlay)
   // ===========================
   static const String _kWalletLiteCache = 'wallet_lite_cache';

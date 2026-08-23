@@ -132,6 +132,31 @@ Future<void> handleIncomingSms(
   LocalStorageService storage,
 ) async {
   try {
+    final String? body = message.body;
+    final String? address = message.address;
+    if (body == null ||
+        address == null ||
+        body.trim().isEmpty ||
+        address.trim().isEmpty) {
+      return;
+    }
+
+    // ── Gate 0: SMS Deduplication (Idempotency Key) ──────────
+    final DateTime msgTime = message.date != null && message.date! > 0
+        ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+        : DateTime.now();
+    final int timestampToMinute = msgTime.millisecondsSinceEpoch ~/ 60000;
+    final String fingerprint = '${address}_${body}_$timestampToMinute';
+
+    if (await storage.isSmsProcessed(fingerprint)) {
+      if (kDebugMode) {
+        debugPrint(
+            '🛡️ [SMS_DEDUP] Duplicate SMS broadcast detected ($fingerprint). Dropping message.');
+      }
+      return;
+    }
+    await storage.cacheSmsFingerprint(fingerprint);
+
     // ── Guard: Feature flag ─────────────────────────────────
     if (!storage.isSmsAutomationEnabled) return;
 
@@ -159,92 +184,16 @@ Future<void> handleIncomingSms(
       return;
     }
 
-    final String? body = message.body;
-    final String? address = message.address;
-    if (body == null || address == null) return;
-
     // ── Parse ───────────────────────────────────────────────
     final parser = SmsParserEngine();
     final ParsedSmsDto? dto = parser.parse(address, body);
     if (dto == null) return; // Not a transaction SMS
 
-    // ── Match SIM → Wallet ──────────────────────────────────
-    final mappings = storage.getSimMappings();
-    String? matchedWalletId;
-
-    if (mappings.isNotEmpty) {
-      try {
-        // 1. Standard Matching (For compliant Android devices)
-        if (message.subscriptionId != null &&
-            message.subscriptionId.toString().isNotEmpty) {
-          final subIdStr = message.subscriptionId.toString().trim();
-          final match = mappings
-              .where((c) => c.subscriptionId?.trim() == subIdStr)
-              .firstOrNull;
-          if (match != null) matchedWalletId = match.walletId;
-        }
-
-        // Safely check slot, since it's missing on some OS versions for another_telephony
-        String? slotStr;
-        try {
-          slotStr = (message as dynamic).slot?.toString();
-        } catch (e, stack) {
-          // Log failure to AppErrorHandler instead of silent swallowing
-          AppErrorHandler.logSilentError(
-            'Failed dynamic slot access: $e',
-            'SmsProcessingPipeline_SlotAccess',
-            stackTrace: stack,
-          );
-        }
-
-        if (matchedWalletId == null &&
-            slotStr != null &&
-            slotStr != "null" &&
-            slotStr != "NOT_ACCESSIBLE_ON_THIS_OS_PLATFORM") {
-          final match = mappings
-              .where((c) =>
-                  c.simSlotIndex.toString() == slotStr ||
-                  (c.simSlotIndex - 1).toString() == slotStr)
-              .firstOrNull;
-          if (match != null) matchedWalletId = match.walletId;
-        }
-
-        // Fallback: match by serviceProvider inferred from the SMS content
-        if (matchedWalletId == null && dto.serviceProvider.isNotEmpty) {
-          final match = mappings
-              .where((c) =>
-                  c.serviceProvider.toLowerCase() ==
-                  dto.serviceProvider.toLowerCase())
-              .firstOrNull;
-          if (match != null) matchedWalletId = match.walletId;
-        }
-
-        // 2. SMART FALLBACK (For restrictive OEMs like Huawei/Xiaomi)
-        if (matchedWalletId == null) {
-          final uniqueWallets = mappings.map((m) => m.walletId).toSet();
-          if (uniqueWallets.length == 1) {
-            // User mapped all SIMs to the same wallet, or only has 1 mapping. Safe to auto-select!
-            matchedWalletId = uniqueWallets.first;
-            if (kDebugMode) {
-              debugPrint(
-                  "🧠 SMART FALLBACK: OS hid SIM info, but unique wallet found -> $matchedWalletId");
-            }
-          }
-        }
-      } catch (e, stack) {
-        AppErrorHandler.logSilentError(
-          e.toString(),
-          'SmsProcessingPipeline_Matching',
-          stackTrace: stack,
-        );
-      }
-    }
-
-    // ── Build overlay arguments ─────────────────────────────
+    // ── Build overlay arguments (Decoupled from SIM slot) ───
     final Map<String, dynamic> overlayArgs = {
       'amount': dto.amount,
       'sender': dto.counterpartyNumber ?? dto.serviceProvider,
-      'walletId': matchedWalletId,
+      'walletId': null,
       'type': dto.type == TransactionType.credit ? 'credit' : 'debit',
       'provider': dto.serviceProvider,
     };

@@ -56,7 +56,7 @@ void main() {
         () async {
       final message = SmsMessage.fromMap({
         'address': 'Vodafone',
-        'body': 'تم تحويل 100 جنيه لرقم 01012345678',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
       }, [
         SmsColumn.ADDRESS,
         SmsColumn.BODY
@@ -108,7 +108,7 @@ void main() {
         () async {
       final message = SmsMessage.fromMap({
         'address': 'Vodafone',
-        'body': 'تم تحويل 100 جنيه لرقم 01012345678',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
       }, [
         SmsColumn.ADDRESS,
         SmsColumn.BODY

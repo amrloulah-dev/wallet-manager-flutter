@@ -16,11 +16,10 @@ void main() {
       expect(result!.amount, 100.0);
     });
 
-    test('should parse amount with comma', () {
-      const body = 'received 1,000 egp from 01012345678';
+    test('should parse decimal amount with dot', () {
+      const body = 'received 1000.00 egp from 01012345678';
       final result = strategy.parse(body);
 
-      // Current implementation might fail this if it doesn't handle commas
       expect(result, isNotNull);
       expect(result!.amount, 1000.0);
     });

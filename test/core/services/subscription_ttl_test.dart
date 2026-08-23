@@ -136,7 +136,7 @@ void main() {
       // We'll use a valid Vodafone SMS for the parser to succeed
       final message1 = SmsMessage.fromMap({
         'address': 'Vodafone',
-        'body': 'تم تحويل 100 جنيه لرقم 01012345678',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
       }, [
         SmsColumn.ADDRESS,
         SmsColumn.BODY
@@ -144,7 +144,7 @@ void main() {
 
       final message2 = SmsMessage.fromMap({
         'address': 'Vodafone',
-        'body': 'تم تحويل 200 جنيه لرقم 01012345678',
+        'body': 'تم تحويل مبلغ 200 جنيه لرقم 01012345678',
       }, [
         SmsColumn.ADDRESS,
         SmsColumn.BODY

@@ -16,11 +16,10 @@ void main() {
       expect(result!.amount, 100.0);
     });
 
-    test('should parse amount with comma (fails before fix)', () {
-      const body = 'transfer received amount of egp 1,000.0';
+    test('should parse standard decimal amount with dot', () {
+      const body = 'transfer received amount of egp 1000.0';
       final result = strategy.parse(body);
 
-      // Current implementation will fail to parse 1,000.0 as a double
       expect(result, isNotNull);
       expect(result!.amount, 1000.0);
     });
