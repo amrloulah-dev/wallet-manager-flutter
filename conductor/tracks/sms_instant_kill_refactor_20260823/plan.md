@@ -82,15 +82,15 @@
 
 > **Goal:** Rewrite `OverlayProvider` and `TransactionOverlayScreen` to use the Instant-Kill pattern with zero queue logic.
 
-- [~] Task 3.1: Write Failing Tests for Overlay Provider
-  - [ ] Update `overlay_provider_test.dart`: replace all queue/vault mocks with `saveCurrentActiveSms`/`readCurrentActiveSms`/`clearCurrentActiveSms` stubs
-  - [ ] Add test: `submitTransaction()` calls `clearCurrentActiveSms()` before fire-and-forget write
-  - [ ] Add test: `submitTransaction()` calls `closeOverlay()` — no dequeue attempt
-  - [ ] Add test: `close()` calls `clearCurrentActiveSms()` then `closeOverlay()`
-  - [ ] Add test: `dismissAll()` calls `clearCurrentActiveSms()` then `closeOverlay()`
-  - [ ] Run tests — confirm they **fail** (Red phase)
+- [x] Task 3.1: Write Failing Tests for Overlay Provider (80c97b4)
+  - [x] Update `overlay_provider_test.dart`: replace all queue/vault mocks with `saveCurrentActiveSms`/`readCurrentActiveSms`/`clearCurrentActiveSms` stubs
+  - [x] Add test: `submitTransaction()` calls `clearCurrentActiveSms()` before fire-and-forget write
+  - [x] Add test: `submitTransaction()` calls `closeOverlay()` — no dequeue attempt
+  - [x] Add test: `close()` calls `clearCurrentActiveSms()` then `closeOverlay()`
+  - [x] Add test: `dismissAll()` calls `clearCurrentActiveSms()` then `closeOverlay()`
+  - [x] Run tests — confirm they **fail** (Red phase)
 
-- [ ] Task 3.2: Rewrite OverlayProvider
+- [~] Task 3.2: Rewrite OverlayProvider
   - [ ] Remove `_queueCount` field and `updateQueueCount()` method
   - [ ] Remove `queueCount` getter (and its `Selector` usage downstream)
   - [ ] Rewrite `submitTransaction()`:
