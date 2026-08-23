@@ -64,10 +64,8 @@ void main() {
     when(() => mockStorage.languageCode).thenReturn('en');
     when(() => mockStorage.initialize()).thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
-    when(() => mockStorage.readFromVault()).thenAnswer((_) async => null);
-    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => null);
-    when(() => mockStorage.getOverlayQueueLength()).thenAnswer((_) async => 0);
-    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
+    when(() => mockStorage.readCurrentActiveSms()).thenReturn(null);
+    when(() => mockStorage.clearCurrentActiveSms()).thenAnswer((_) async {});
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
     when(() => mockStorage.getCachedWalletLiteList()).thenReturn([

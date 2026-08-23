@@ -49,8 +49,6 @@ class OverlayProvider extends SafeChangeNotifier {
   String? _cachedUserName;
   UserRole? _cachedUserRole;
 
-  int _queueCount = 0;
-
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -61,12 +59,6 @@ class OverlayProvider extends SafeChangeNotifier {
   String? get selectedWalletId => _selectedWalletId;
   double get commission => _commission;
   List<Map<String, dynamic>> get availableWallets => _availableWallets;
-  int get queueCount => _queueCount;
-
-  void updateQueueCount(int count) {
-    _queueCount = count;
-    _guardedNotify();
-  }
 
   /// Service fee (network fee) calculated dynamically only for send (debit) transactions.
   double get serviceFee {
@@ -269,6 +261,10 @@ class OverlayProvider extends SafeChangeNotifier {
     _guardedNotify();
 
     try {
+      // 1. Instant-Kill: purge active SMS cache key immediately
+      await _localStorageService.clearCurrentActiveSms();
+
+      // 2. Fire-and-Forget / Asynchronous write via OverlayUseCase
       await _overlayUseCase.execute(
         storeId: _cachedStoreId!,
         userId: _cachedUserId!,
@@ -282,6 +278,7 @@ class OverlayProvider extends SafeChangeNotifier {
         availableWallets: _availableWallets,
       );
 
+      // 3. Send IPC update ping to main app isolate
       final SendPort? sendPort =
           IsolateNameServer.lookupPortByName('main_app_port');
       if (sendPort != null) {
@@ -301,25 +298,10 @@ class OverlayProvider extends SafeChangeNotifier {
       _commission = 0.0;
       _errorMessage = null;
 
-      // ── Check FIFO Queue for remaining SMS transactions ───────
-      final nextItem = await _localStorageService.dequeueOverlayData();
-      if (nextItem != null) {
-        _queueCount = await _localStorageService.getOverlayQueueLength();
-        if (kDebugMode) {
-          debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-              'Auto-advancing to next queued SMS. Remaining in queue: $_queueCount');
-        }
-        await ingestNewEvent(nextItem);
-        return;
-      }
-
-      _queueCount = 0;
-      await _localStorageService.clearVault();
-      _guardedNotify();
-
+      // 4. Instant-Kill: close overlay immediately without queue checks
       if (kDebugMode) {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
-            'Queue drained. Closing overlay window ...');
+            'Transaction submitted. Closing overlay window ...');
       }
       await FlutterOverlayWindow.closeOverlay();
     } catch (e, stack) {
@@ -347,31 +329,15 @@ class OverlayProvider extends SafeChangeNotifier {
     super.dispose();
   }
 
-  /// Skips the current SMS event and advances to the next queued item if available.
-  /// If the queue is empty, clears the vault and closes the overlay.
+  /// Closes the overlay window and purges the current active SMS.
   Future<void> close() async {
-    final nextItem = await _localStorageService.dequeueOverlayData();
-    if (nextItem != null) {
-      _queueCount = await _localStorageService.getOverlayQueueLength();
-      _commission = 0.0;
-      _errorMessage = null;
-      if (kDebugMode) {
-        debugPrint('🔥 [TX_FLOW] [overlay_provider] -> close (skip): '
-            'Skipping to next queued SMS. Remaining in queue: $_queueCount');
-      }
-      await ingestNewEvent(nextItem);
-      return;
-    }
-
-    _queueCount = 0;
-    await _localStorageService.clearVault();
+    await _localStorageService.clearCurrentActiveSms();
     await FlutterOverlayWindow.closeOverlay();
   }
 
-  /// Force-dismisses the overlay and purges all remaining queued SMS items.
+  /// Force-dismisses the overlay and purges the current active SMS.
   Future<void> dismissAll() async {
-    _queueCount = 0;
-    await _localStorageService.clearVault();
+    await _localStorageService.clearCurrentActiveSms();
     await FlutterOverlayWindow.closeOverlay();
   }
 }

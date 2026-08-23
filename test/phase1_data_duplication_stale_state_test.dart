@@ -66,19 +66,17 @@ void main() {
   });
 
   group('Phase 1: Data Duplication & Stale State Fixes', () {
-    test('closing overlay clears vault', () async {
+    test('closing overlay clears active SMS cache', () async {
       final provider = OverlayProvider(
         overlayUseCase: mockOverlayUseCase,
         localStorageService: mockLocalStorageService,
       );
 
-      when(() => mockLocalStorageService.clearVault()).thenAnswer((_) async {});
-      when(() => mockLocalStorageService.dequeueOverlayData())
-          .thenAnswer((_) async => null);
+      when(() => mockLocalStorageService.clearCurrentActiveSms()).thenAnswer((_) async {});
 
       await provider.close();
 
-      verify(() => mockLocalStorageService.clearVault()).called(1);
+      verify(() => mockLocalStorageService.clearCurrentActiveSms()).called(1);
     });
 
     test('SmsService.init() does NOT register listener (should fail initially)',
