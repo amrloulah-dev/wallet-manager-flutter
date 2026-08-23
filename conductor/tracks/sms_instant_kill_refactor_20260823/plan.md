@@ -52,14 +52,14 @@
 
 > **Goal:** Remove fingerprint deduplication from the SMS pipeline and rewire vault writes to the single-key API.
 
-- [~] Task 2.1: Write Failing Tests for Pipeline Changes
-  - [ ] Update `sms_processing_pipeline_test.dart`: remove/replace mocks for `isSmsProcessed`, `cacheSmsFingerprint`, `enqueueOverlayData`
-  - [ ] Add test: incoming SMS calls `saveCurrentActiveSms()` with correct `overlayArgs`
-  - [ ] Add test: duplicate SMS is NOT blocked (no fingerprint check — pipeline processes it)
-  - [ ] Add test: second SMS call overwrites previous `saveCurrentActiveSms()` data
-  - [ ] Run tests — confirm they **fail** (Red phase)
+- [x] Task 2.1: Write Failing Tests for Pipeline Changes (38bad84)
+  - [x] Update `sms_processing_pipeline_test.dart`: remove/replace mocks for `isSmsProcessed`, `cacheSmsFingerprint`, `enqueueOverlayData`
+  - [x] Add test: incoming SMS calls `saveCurrentActiveSms()` with correct `overlayArgs`
+  - [x] Add test: duplicate SMS is NOT blocked (no fingerprint check — pipeline processes it)
+  - [x] Add test: second SMS call overwrites previous `saveCurrentActiveSms()` data
+  - [x] Run tests — confirm they **fail** (Red phase)
 
-- [ ] Task 2.2: Remove Gate 0 & Rewire Storage Call
+- [~] Task 2.2: Remove Gate 0 & Rewire Storage Call
   - [ ] Delete the entire Gate 0 block (lines 144–158): fingerprint construction, `isSmsProcessed()` check, `cacheSmsFingerprint()` call
   - [ ] Replace `await storage.enqueueOverlayData(overlayArgs)` (line 204) with `await storage.saveCurrentActiveSms(overlayArgs)`
   - [ ] Remove any remaining imports/references to fingerprint methods
