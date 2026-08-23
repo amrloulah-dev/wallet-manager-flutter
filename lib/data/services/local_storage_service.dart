@@ -541,6 +541,45 @@ class LocalStorageService {
   }
 
   // ===========================
+  // Current Active SMS (Single-Item / Instant-Kill)
+  // ===========================
+  static const String _kCurrentActiveSms = 'current_active_sms';
+
+  /// Saves the current active SMS transaction data, overwriting any previous entry.
+  Future<void> saveCurrentActiveSms(Map<String, dynamic> data) async {
+    _ensureInitialized();
+    await _prefs!.setString(_kCurrentActiveSms, json.encode(data));
+  }
+
+  /// Reads the current active SMS transaction data synchronously.
+  Map<String, dynamic>? readCurrentActiveSms() {
+    final String? raw = _prefs?.getString(_kCurrentActiveSms);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'LocalStorageService.readCurrentActiveSms',
+      );
+    }
+    return null;
+  }
+
+  /// Instantly deletes the current active SMS transaction data.
+  Future<void> clearCurrentActiveSms() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await _prefs?.remove(_kCurrentActiveSms);
+  }
+
+  // ===========================
   // Vault Queue (Background → Overlay Data Bridge)
   // ===========================
   static const String _kPendingOverlayData = 'pending_overlay_data';
