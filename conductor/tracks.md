@@ -72,3 +72,8 @@
 
 - [x] **Track: Backward Compatibility Migration & Fix Destructive Limit Reset Bug**
 *Link: [./tracks/wallet_refactor_20260805/](./tracks/wallet_refactor_20260805/)*
+
+---
+
+- [ ] **Track: Single-Item / Instant-Kill SMS Processing Pivot (Remove Queue & Fingerprints)**
+*Link: [./tracks/sms_instant_kill_refactor_20260823/index.md](./tracks/sms_instant_kill_refactor_20260823/index.md)*
