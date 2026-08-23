@@ -17,14 +17,14 @@
   - [x] Test overwrite behavior: calling `save()` twice replaces the first value entirely
   - [x] Run tests — confirm they **fail** (Red phase)
 
-- [~] Task 1.2: Implement New Single-Key Methods
-  - [ ] Add constant `_kCurrentActiveSms = 'current_active_sms'` to `LocalStorageService`
-  - [ ] Implement `Future<void> saveCurrentActiveSms(Map<String, dynamic> data)` — `jsonEncode` + `setString`
-  - [ ] Implement `Map<String, dynamic>? readCurrentActiveSms()` — `getString` + `jsonDecode`, return `null` on missing/error
-  - [ ] Implement `Future<void> clearCurrentActiveSms()` — `remove(_kCurrentActiveSms)`
-  - [ ] Run tests — confirm they **pass** (Green phase)
+- [x] Task 1.2: Implement New Single-Key Methods (0939054)
+  - [x] Add constant `_kCurrentActiveSms = 'current_active_sms'` to `LocalStorageService`
+  - [x] Implement `Future<void> saveCurrentActiveSms(Map<String, dynamic> data)` — `jsonEncode` + `setString`
+  - [x] Implement `Map<String, dynamic>? readCurrentActiveSms()` — `getString` + `jsonDecode`, return `null` on missing/error
+  - [x] Implement `Future<void> clearCurrentActiveSms()` — `remove(_kCurrentActiveSms)`
+  - [x] Run tests — confirm they **pass** (Green phase)
 
-- [ ] Task 1.3: Delete Queue Methods & Constants
+- [~] Task 1.3: Delete Queue Methods & Constants
   - [ ] Delete `enqueueOverlayData()` (lines 553–589)
   - [ ] Delete `dequeueOverlayData()` (lines 593–638)
   - [ ] Delete `getOverlayQueueLength()` (lines 641–659)
