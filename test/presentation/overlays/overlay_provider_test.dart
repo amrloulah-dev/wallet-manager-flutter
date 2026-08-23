@@ -11,6 +11,8 @@ class MockOverlayUseCase extends Mock implements OverlayUseCase {}
 class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test(
       'OverlayProvider.notifyListeners() should propagate errors even if _blockAutoFetch is true',
       () async {
@@ -27,14 +29,10 @@ void main() {
       notificationCount++;
     });
 
-    // Simulate ingestNewEvent setting an error while _blockAutoFetch is active
-    // We can't directly set _blockAutoFetch, so we simulate the flow in ingestNewEvent
-
     when(() => mockStorage.initialize()).thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
     when(() => mockStorage.userRole).thenReturn(UserRole.owner);
     when(() => mockStorage.clearSession()).thenAnswer((_) async {});
-    // ingestNewEvent sets _blockAutoFetch = true
 
     final data = {
       'amount': -100.0, // Trigger validation error (negative amount)
@@ -51,20 +49,23 @@ void main() {
 
     await provider.ingestNewEvent(data);
 
-    // After ingestNewEvent, _errorMessage should be set and UI should be notified
     expect(provider.errorMessage, isNotNull);
     expect(notificationCount, greaterThan(0),
         reason: 'UI should be notified of the error');
   });
 
   testWidgets(
-      'OverlayProvider.submitTransaction() should reset commission to 0.0 on success',
+      'OverlayProvider.submitTransaction() should clearCurrentActiveSms, reset commission to 0.0, and close overlay immediately (Instant-Kill)',
       (tester) async {
+    int closeOverlayCount = 0;
     const channel = MethodChannel('x-slayer/overlay_channel');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (methodCall) async {
-      if (methodCall.method == 'closeOverlay' ||
-          methodCall.method == 'shareData') {
+      if (methodCall.method == 'closeOverlay') {
+        closeOverlayCount++;
+        return true;
+      }
+      if (methodCall.method == 'shareData') {
         return true;
       }
       return null;
@@ -78,20 +79,17 @@ void main() {
       localStorageService: mockStorage,
     );
 
-    // Setup initial data so submission doesn't fail early
     when(() => mockStorage.initialize()).thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
     when(() => mockStorage.userId).thenReturn('user_123');
     when(() => mockStorage.storeId).thenReturn('store_123');
     when(() => mockStorage.userName).thenReturn('Test User');
     when(() => mockStorage.userRole).thenReturn(UserRole.owner);
+    when(() => mockStorage.clearCurrentActiveSms()).thenAnswer((_) async {});
 
     when(() => mockStorage.getCachedWalletLiteList()).thenReturn([
       {'id': 'w1', 'walletType': 'instapay'}
     ]);
-    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => null);
-    when(() => mockStorage.getOverlayQueueLength()).thenAnswer((_) async => 0);
-    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
 
@@ -105,7 +103,6 @@ void main() {
     provider.setCommission('10.0');
     expect(provider.commission, 10.0);
 
-    // Mock execute call
     when(() => mockUseCase.execute(
           storeId: any(named: 'storeId'),
           userId: any(named: 'userId'),
@@ -123,17 +120,15 @@ void main() {
           isSend: false,
         ));
 
-    // Submit transaction
     await provider.submitTransaction();
 
-    // Verify commission is reset to 0.0
     expect(provider.commission, 0.0);
-    // Verify clearVault is called when queue is empty
-    verify(() => mockStorage.clearVault()).called(1);
+    verify(() => mockStorage.clearCurrentActiveSms()).called(1);
+    expect(closeOverlayCount, 1);
   });
 
   testWidgets(
-      'OverlayProvider.close() should clearVault and closeOverlay when queue is empty',
+      'OverlayProvider.close() should clearCurrentActiveSms and close overlay immediately',
       (tester) async {
     int closeOverlayCount = 0;
     const channel = MethodChannel('x-slayer/overlay_channel');
@@ -154,21 +149,27 @@ void main() {
       localStorageService: mockStorage,
     );
 
-    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => null);
-    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
+    when(() => mockStorage.clearCurrentActiveSms()).thenAnswer((_) async {});
 
     await provider.close();
 
-    verify(() => mockStorage.clearVault()).called(1);
+    verify(() => mockStorage.clearCurrentActiveSms()).called(1);
     expect(closeOverlayCount, 1);
   });
 
   testWidgets(
-      'OverlayProvider.close() should advance to next item when queue has remaining items',
+      'OverlayProvider.dismissAll() should clearCurrentActiveSms and close overlay immediately',
       (tester) async {
+    int closeOverlayCount = 0;
     const channel = MethodChannel('x-slayer/overlay_channel');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (methodCall) async => true);
+        .setMockMethodCallHandler(channel, (methodCall) async {
+      if (methodCall.method == 'closeOverlay') {
+        closeOverlayCount++;
+        return true;
+      }
+      return null;
+    });
 
     final mockUseCase = MockOverlayUseCase();
     final mockStorage = MockLocalStorageService();
@@ -178,27 +179,11 @@ void main() {
       localStorageService: mockStorage,
     );
 
-    when(() => mockStorage.initialize()).thenAnswer((_) async {});
-    when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
-    when(() => mockStorage.userRole).thenReturn(UserRole.owner);
-    when(() => mockStorage.getCachedWalletLiteList()).thenReturn([]);
-    when(() => mockStorage.subIsSuspended).thenReturn(false);
-    when(() => mockStorage.subSmsEnabled).thenReturn(true);
+    when(() => mockStorage.clearCurrentActiveSms()).thenAnswer((_) async {});
 
-    final nextPayload = {
-      'amount': 200.0,
-      'type': 'credit',
-      'sender': '01011111111',
-      'walletId': null,
-    };
+    await provider.dismissAll();
 
-    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => nextPayload);
-    when(() => mockStorage.getOverlayQueueLength()).thenAnswer((_) async => 1);
-
-    await provider.close();
-
-    verifyNever(() => mockStorage.clearVault());
-    expect(provider.amount, 200.0);
-    expect(provider.sender, '01011111111');
+    verify(() => mockStorage.clearCurrentActiveSms()).called(1);
+    expect(closeOverlayCount, 1);
   });
 }
