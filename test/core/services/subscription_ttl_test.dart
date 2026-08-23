@@ -45,6 +45,8 @@ void main() {
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
     when(() => mockStorage.clearVault()).thenAnswer((_) async {});
     when(() => mockStorage.cacheWalletLiteList(any())).thenAnswer((_) async {});
+    when(() => mockStorage.isSmsProcessed(any())).thenAnswer((_) async => false);
+    when(() => mockStorage.cacheSmsFingerprint(any())).thenAnswer((_) async {});
 
     when(() => mockNotifications.initialize(any()))
         .thenAnswer((_) async => true);
@@ -59,7 +61,15 @@ void main() {
       // Setup: Subscription sync is NOT fresh (>24h)
       when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(false);
 
-      final message = SmsMessage.fromMap({}, []); // Dummy message
+      final message = SmsMessage.fromMap({
+        'address': 'Vodafone',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
+        'date': '1700000000000',
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
 
       await handleIncomingSms(message, mockStorage);
 
@@ -86,8 +96,24 @@ void main() {
         () async {
       when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(false);
 
-      final message1 = SmsMessage.fromMap({}, []);
-      final message2 = SmsMessage.fromMap({}, []);
+      final message1 = SmsMessage.fromMap({
+        'address': 'Vodafone',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
+        'date': '1700000000000',
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
+      final message2 = SmsMessage.fromMap({
+        'address': 'Vodafone',
+        'body': 'تم تحويل مبلغ 200 جنيه لرقم 01012345678',
+        'date': '1700000060000',
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
 
       await handleIncomingSms(message1, mockStorage);
       await Future.delayed(const Duration(milliseconds: 1)); // Ensure unique ID
@@ -108,7 +134,15 @@ void main() {
       // Setup: Subscription sync IS fresh
       when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(true);
 
-      final message = SmsMessage.fromMap({}, []);
+      final message = SmsMessage.fromMap({
+        'address': 'Vodafone',
+        'body': 'تم تحويل مبلغ 100 جنيه لرقم 01012345678',
+        'date': '1700000000000',
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
 
       await handleIncomingSms(message, mockStorage);
 

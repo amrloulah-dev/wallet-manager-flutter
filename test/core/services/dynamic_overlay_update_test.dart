@@ -43,6 +43,8 @@ void main() {
     when(() => mockStorage.getSimMappings()).thenReturn([]);
     when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
     when(() => mockStorage.enqueueOverlayData(any())).thenAnswer((_) async {});
+    when(() => mockStorage.isSmsProcessed(any())).thenAnswer((_) async => false);
+    when(() => mockStorage.cacheSmsFingerprint(any())).thenAnswer((_) async {});
 
     when(() => mockNotifications.initialize(any()))
         .thenAnswer((_) async => true);
