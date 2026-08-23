@@ -78,5 +78,12 @@ void main() {
       expect(sl.isRegistered<FirebaseFirestore>(), isTrue);
       expect(sl.isRegistered<FirebaseAuth>(), isTrue);
     });
+
+    test('should be idempotent and not throw when setupServiceLocator is called multiple times', () async {
+      expect(() => setupServiceLocator(), returnsNormally);
+      await setupServiceLocator();
+      expect(sl.isRegistered<LocalStorageService>(), isTrue);
+      expect(sl.isRegistered<FirebaseFirestore>(), isTrue);
+    });
   });
 }

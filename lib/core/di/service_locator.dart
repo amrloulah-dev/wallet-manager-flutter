@@ -31,6 +31,12 @@ import '../../core/utils/cache_manager.dart';
 final GetIt sl = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
+  // ── 0. Idempotency Guard ──────────────────────────────────
+  if (sl.isRegistered<LocalStorageService>() ||
+      sl.isRegistered<FirebaseFirestore>()) {
+    return; // Already initialized in this isolate/memory space
+  }
+
   // ── 1. External Services ──────────────────────────────────
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerFactoryParam<FirebaseAuth, FirebaseApp?, void>(
