@@ -6,7 +6,7 @@
 
 ---
 
-## Phase 1: Storage Layer — Single-Key API
+## Phase 1: Storage Layer — Single-Key API [checkpoint: 83d4898]
 
 > **Goal:** Remove all queue/fingerprint infrastructure from `LocalStorageService` and replace with 3 atomic single-key methods.
 
@@ -24,27 +24,27 @@
   - [x] Implement `Future<void> clearCurrentActiveSms()` — `remove(_kCurrentActiveSms)`
   - [x] Run tests — confirm they **pass** (Green phase)
 
-- [~] Task 1.3: Delete Queue Methods & Constants
-  - [ ] Delete `enqueueOverlayData()` (lines 553–589)
-  - [ ] Delete `dequeueOverlayData()` (lines 593–638)
-  - [ ] Delete `getOverlayQueueLength()` (lines 641–659)
-  - [ ] Delete `peekOverlayData()` (lines 662–680)
-  - [ ] Delete `saveToVault()` (lines 683–685)
-  - [ ] Delete `readFromVault()` (lines 688–690)
-  - [ ] Delete `clearVault()` (lines 693–698)
-  - [ ] Delete constants: `_kPendingOverlayData`, `_kCompletedTxSync`, `_kMaxOverlayQueueSize`
+- [x] Task 1.3: Delete Queue Methods & Constants (76560b2)
+  - [x] Delete `enqueueOverlayData()` (lines 553–589)
+  - [x] Delete `dequeueOverlayData()` (lines 593–638)
+  - [x] Delete `getOverlayQueueLength()` (lines 641–659)
+  - [x] Delete `peekOverlayData()` (lines 662–680)
+  - [x] Delete `saveToVault()` (lines 683–685)
+  - [x] Delete `readFromVault()` (lines 688–690)
+  - [x] Delete `clearVault()` (lines 693–698)
+  - [x] Delete constants: `_kPendingOverlayData`, `_kCompletedTxSync`, `_kMaxOverlayQueueSize`
 
-- [ ] Task 1.4: Delete Fingerprint Methods & Constants
-  - [ ] Delete `isSmsProcessed()` (lines 468–474)
-  - [ ] Delete `cacheSmsFingerprint()` (lines 477–490)
-  - [ ] Delete `getRecentSmsFingerprints()` (lines 493–497)
-  - [ ] Delete constants: `_kRecentSmsFingerprints`, `_kMaxSmsFingerprints`
+- [x] Task 1.4: Delete Fingerprint Methods & Constants (76560b2)
+  - [x] Delete `isSmsProcessed()` (lines 468–474)
+  - [x] Delete `cacheSmsFingerprint()` (lines 477–490)
+  - [x] Delete `getRecentSmsFingerprints()` (lines 493–497)
+  - [x] Delete constants: `_kRecentSmsFingerprints`, `_kMaxSmsFingerprints`
 
-- [ ] Task 1.5: Verify Storage Layer Compiles
-  - [ ] Run `flutter analyze` on `lib/data/services/local_storage_service.dart` — expect downstream errors in callers only, no errors in the file itself
-  - [ ] Run storage-specific tests — confirm all pass
+- [x] Task 1.5: Verify Storage Layer Compiles (76560b2)
+  - [x] Run `flutter analyze` on `lib/data/services/local_storage_service.dart` — expect downstream errors in callers only, no errors in the file itself
+  - [x] Run storage-specific tests — confirm all pass
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ---
 
@@ -52,7 +52,7 @@
 
 > **Goal:** Remove fingerprint deduplication from the SMS pipeline and rewire vault writes to the single-key API.
 
-- [ ] Task 2.1: Write Failing Tests for Pipeline Changes
+- [~] Task 2.1: Write Failing Tests for Pipeline Changes
   - [ ] Update `sms_processing_pipeline_test.dart`: remove/replace mocks for `isSmsProcessed`, `cacheSmsFingerprint`, `enqueueOverlayData`
   - [ ] Add test: incoming SMS calls `saveCurrentActiveSms()` with correct `overlayArgs`
   - [ ] Add test: duplicate SMS is NOT blocked (no fingerprint check — pipeline processes it)
