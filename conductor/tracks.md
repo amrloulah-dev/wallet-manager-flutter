@@ -75,5 +75,5 @@
 
 ---
 
-- [~] **Track: Single-Item / Instant-Kill SMS Processing Pivot (Remove Queue & Fingerprints)**
+- [x] **Track: Single-Item / Instant-Kill SMS Processing Pivot (Remove Queue & Fingerprints)**
 *Link: [./tracks/sms_instant_kill_refactor_20260823/index.md](./tracks/sms_instant_kill_refactor_20260823/index.md)*
