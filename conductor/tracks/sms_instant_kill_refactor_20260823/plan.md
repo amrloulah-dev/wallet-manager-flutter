@@ -125,25 +125,25 @@
 
 ---
 
-## Phase 4: Test Suite Cleanup & Final Verification
+## Phase 4: Test Suite Cleanup & Final Verification [checkpoint: f423fd3]
 
 > **Goal:** Ensure all remaining test files compile and pass, and the full project is clean.
 
-- [~] Task 4.1: Update Remaining Test Files
-  - [ ] Update `unified_keys_test.dart`: replace `saveToVault`/`readFromVault` with new API methods
-  - [ ] Update `sms_queue_and_key_separation_test.dart`: remove queue-specific tests, add single-key overwrite tests
-  - [ ] Update `local_storage_security_test.dart`: replace `saveToVault`/`readFromVault`/`clearVault` mocks
-  - [ ] Update `overlay_usecase_test.dart`: replace `saveToVault` mock
-  - [ ] Update `phase4_tech_debt_test.dart`: replace `saveToVault` mock
+- [x] Task 4.1: Update Remaining Test Files (197054d)
+  - [x] Update `unified_keys_test.dart`: replace `saveToVault`/`readFromVault` with new API methods
+  - [x] Update `sms_queue_and_key_separation_test.dart`: remove queue-specific tests, add single-key overwrite tests
+  - [x] Update `local_storage_security_test.dart`: replace `saveToVault`/`readFromVault`/`clearVault` mocks
+  - [x] Update `overlay_usecase_test.dart`: replace `saveToVault` mock
+  - [x] Update `phase4_tech_debt_test.dart`: replace `saveToVault` mock
 
-- [ ] Task 4.2: Full Project Verification
-  - [ ] Run `flutter analyze` — zero errors
-  - [ ] Run `CI=true flutter test` — all tests pass
-  - [ ] Verify SMS parsing engine files are **completely unmodified** (`git diff` check)
+- [x] Task 4.2: Full Project Verification (197054d)
+  - [x] Run `flutter analyze` — zero errors
+  - [x] Run `CI=true flutter test` — all tests pass
+  - [x] Verify SMS parsing engine files are **completely unmodified** (`git diff` check)
 
-- [ ] Task 4.3: Update Tech Stack Documentation
-  - [ ] Update `conductor/tech-stack.md` Local Storage section: replace "Unified Vault Architecture" queue description with Single-Item architecture
-  - [ ] Update `conductor/tech-stack.md` Background Architecture section: replace "Single-Isolate Guardian" queue references with single-key overwrite model
-  - [ ] Add dated note documenting the architectural pivot
+- [x] Task 4.3: Update Tech Stack Documentation (197054d)
+  - [x] Update `conductor/tech-stack.md` Local Storage section: replace "Unified Vault Architecture" queue description with Single-Item architecture
+  - [x] Update `conductor/tech-stack.md` Background Architecture section: replace "Single-Isolate Guardian" queue references with single-key overwrite model
+  - [x] Add dated note documenting the architectural pivot
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
