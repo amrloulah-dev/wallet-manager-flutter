@@ -128,5 +128,77 @@ void main() {
 
     // Verify commission is reset to 0.0
     expect(provider.commission, 0.0);
+    // Verify clearVault is called when queue is empty
+    verify(() => mockStorage.clearVault()).called(1);
+  });
+
+  testWidgets(
+      'OverlayProvider.close() should clearVault and closeOverlay when queue is empty',
+      (tester) async {
+    int closeOverlayCount = 0;
+    const channel = MethodChannel('x-slayer/overlay_channel');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (methodCall) async {
+      if (methodCall.method == 'closeOverlay') {
+        closeOverlayCount++;
+        return true;
+      }
+      return null;
+    });
+
+    final mockUseCase = MockOverlayUseCase();
+    final mockStorage = MockLocalStorageService();
+
+    final provider = OverlayProvider(
+      overlayUseCase: mockUseCase,
+      localStorageService: mockStorage,
+    );
+
+    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => null);
+    when(() => mockStorage.clearVault()).thenAnswer((_) async {});
+
+    await provider.close();
+
+    verify(() => mockStorage.clearVault()).called(1);
+    expect(closeOverlayCount, 1);
+  });
+
+  testWidgets(
+      'OverlayProvider.close() should advance to next item when queue has remaining items',
+      (tester) async {
+    const channel = MethodChannel('x-slayer/overlay_channel');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (methodCall) async => true);
+
+    final mockUseCase = MockOverlayUseCase();
+    final mockStorage = MockLocalStorageService();
+
+    final provider = OverlayProvider(
+      overlayUseCase: mockUseCase,
+      localStorageService: mockStorage,
+    );
+
+    when(() => mockStorage.initialize()).thenAnswer((_) async {});
+    when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
+    when(() => mockStorage.userRole).thenReturn(UserRole.owner);
+    when(() => mockStorage.getCachedWalletLiteList()).thenReturn([]);
+    when(() => mockStorage.subIsSuspended).thenReturn(false);
+    when(() => mockStorage.subSmsEnabled).thenReturn(true);
+
+    final nextPayload = {
+      'amount': 200.0,
+      'type': 'credit',
+      'sender': '01011111111',
+      'walletId': null,
+    };
+
+    when(() => mockStorage.dequeueOverlayData()).thenAnswer((_) async => nextPayload);
+    when(() => mockStorage.getOverlayQueueLength()).thenAnswer((_) async => 1);
+
+    await provider.close();
+
+    verifyNever(() => mockStorage.clearVault());
+    expect(provider.amount, 200.0);
+    expect(provider.sender, '01011111111');
   });
 }

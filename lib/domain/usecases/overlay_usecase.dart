@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 import 'package:walletmanager/data/services/firebase_service.dart';
 import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
@@ -93,7 +95,18 @@ class OverlayUseCase {
       notes: 'Automated via SMS',
     );
 
-    await _transactionRepository.createTransaction(newTransaction);
+    // Fire-and-forget: perform Firestore write asynchronously without blocking the overlay UI
+    unawaited(
+      _transactionRepository.createTransaction(newTransaction).catchError(
+        (e, stack) {
+          AppErrorHandler.handle(
+            e,
+            stackTrace: stack,
+            operation: 'OverlayUseCase.createTransaction_background',
+          );
+        },
+      ),
+    );
 
     final totalDeductionForVault =
         newTransaction.amount + newTransaction.serviceFee;

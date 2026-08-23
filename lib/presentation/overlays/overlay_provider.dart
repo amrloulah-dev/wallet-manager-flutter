@@ -314,6 +314,7 @@ class OverlayProvider extends SafeChangeNotifier {
       }
 
       _queueCount = 0;
+      await _localStorageService.clearVault();
       _guardedNotify();
 
       if (kDebugMode) {

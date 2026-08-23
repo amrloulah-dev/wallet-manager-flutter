@@ -64,7 +64,6 @@ class _OverlayContentState extends State<_OverlayContent> {
   late FocusNode _commissionFocusNode;
   late TextEditingController _commissionController;
   StreamSubscription? _overlaySubscription;
-  Timer? _focusTimer;
 
   @override
   void initState() {
@@ -102,18 +101,15 @@ class _OverlayContentState extends State<_OverlayContent> {
         }
       });
 
-      _focusTimer = Timer(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _commissionFocusNode.requestFocus();
-        }
-      });
+      if (mounted) {
+        _commissionFocusNode.requestFocus();
+      }
     });
   }
 
   @override
   void dispose() {
     _overlaySubscription?.cancel();
-    _focusTimer?.cancel();
     _commissionFocusNode.dispose();
     _commissionController.dispose();
     super.dispose();
