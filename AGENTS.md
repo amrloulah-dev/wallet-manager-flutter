@@ -48,6 +48,7 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - Access via `sl<Type>()`
 - Call `await setupServiceLocator()` before running app
 - Repositories/services registered as lazy singletons
+- **Idempotency Guard**: `setupServiceLocator()` MUST check `if (sl.isRegistered<LocalStorageService>() || sl.isRegistered<FirebaseFirestore>()) return;` at entry to prevent duplicate registration crashes across multi-isolate environments and repeated test setups.
 
 ## Entry Points
 - `lib/main.dart:main()` — Primary app entry; initializes Firebase, DI, SMS service, background service
@@ -69,13 +70,16 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 1. **Dynamic Theme Compliance** — Never hardcode static theme colors (e.g., `Colors.black`, `Colors.white`, `Colors.grey.shade900`, `0xFF1E1E1E`). All backgrounds, borders, dividers, and text colors MUST dynamically resolve via `ThemeData` and `AppColors` tokens (e.g., `AppColors.surface(context)`, `AppColors.textPrimary(context)`, `AppColors.textSecondary(context)`, `AppColors.divider(context)`).
 2. **Unicode LTR Phone Number Guarding** — All displayed phone numbers in RTL/Arabic interfaces MUST be wrapped in LTR Unicode markers (`'\u200E${phone}\u200E'`) and specify `textDirection: TextDirection.ltr` to avoid number reversal and punctuation misplacement.
 
-## Background Services
+## Background Services & Overlay
 - **SMS Monitor**: `flutter_background_service` + `another_telephony`; parses transaction SMS and shows overlay
 - **Overlay Window**: `flutter_overlay_window`; entry via `overlayMain()`, uses `IsolateNameServer` to communicate with main isolate
-- **Vault SSOT & Disk Synchronization**: `readFromVault()` MUST be `async` and execute `await reloadDisk()` before reading `SharedPreferences` to ensure multi-isolate disk cache sync.
-- **Overlay Vault-First Initialization**: `TransactionOverlayScreen` MUST read from the Vault (`readFromVault()`) upon mounting as the primary source of truth, rather than relying 100% on transient `overlayListener` stream events.
+- **Single-Item Active SMS (SSOT)**: Incoming SMS overwrites a single cache key (`current_active_sms`) via `saveCurrentActiveSms(overlayArgs)`. There are NO queues, lists, or fingerprint deduplication caches.
+- **Decoupled SIM Routing**: Do not attempt fragile SIM slot / subscription ID matching in SMS handlers; overlay transaction payloads MUST pass `walletId: null` to allow manual selection by the user in the UI dropdown.
+- **Overlay Single-Item Initialization**: `TransactionOverlayScreen` reads from `readCurrentActiveSms()` upon mounting as the primary source of truth, while listening to `overlayListener` for live incoming SMS overwrites.
+- **Overlay Instant Focus**: Never use artificial timers (e.g. `Timer(Duration(ms: 300), ...)`) for TextField focus; always bind focus requests immediately inside `WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) focusNode.requestFocus(); })`.
+- **Overlay Fire-and-Forget Network Writes**: `OverlayUseCase.execute` MUST dispatch Firestore writes asynchronously via `unawaited(...)` with `.catchError(...)` logging to `AppErrorHandler`, immediately saving IPC sync state and returning to guarantee instantaneous overlay dismissal without UI freeze.
+- **Instant-Kill Cache Purge**: In `OverlayProvider`, whenever a transaction is submitted, closed, or dismissed, explicitly call `await _localStorageService.clearCurrentActiveSms()` immediately before closing the window, preventing duplicate renders or ghost transactions.
 - **Stream Event Filtering**: `overlayListener` MUST filter out self-emitted broadcast actions (e.g. `event['action'] == 'local_deduct'`) to prevent stream self-pollution.
-- **Ephemeral Vault Cleanup**: `clearVault()` MUST be called immediately after vault ingestion on overlay boot, as well as during teardown (`submitTransaction()` and `close()`), preventing stale data bleed across SMS sessions.
 - **Dynamic Service Lifecycle**: UI toggles controlling background service status MUST invoke dynamic controllers (`startBackgroundMonitoring()` / `stopBackgroundMonitoring()`) in `onChanged` handlers immediately after persisting storage state.
 - **Cold-Boot Configuration Guard**: `startBackgroundMonitoring()` MUST verify configuration status (`_isConfigured`) and execute `initializeBackgroundService()` if invoked before cold boot initialization completes.
 - **Toggle Debouncing & Rollback**: Toggle UI handlers MUST use an async lock (`_isToggling`) to prevent rapid tap collisions and execute full state rollbacks (reverting `SharedPreferences` + UI switch) if dynamic service start fails.
@@ -84,6 +88,11 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
   - Differentiate between dropdown popup items (`itemWidgetBuilder`) and closed selected item views (`selectedItemWidgetBuilder`).
   - Dropdown content padding must use compact insets (`contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6)`).
   - Allocate priority flex to phone numbers (`Expanded(flex: 3, ...)` with `softWrap: false`) and wrap secondary badges with `Flexible(flex: 2, fit: FlexFit.loose, ...)`.
+
+## SMS Parsing Architecture
+1. **Strict Anchor-Based Amount Extraction**: Never extract the first arbitrary number. Require explicit linguistic anchors (`مبلغ`, `بمبلغ`, `خصم`, `amount of`, etc.).
+2. **Arabic Number & Decimal Normalization**: Preserve exact decimal separators (`.` vs `,`) and convert Hindi digits (`٠-٩`) before amount parsing.
+3. **Counterparty Extraction & Fallback**: Prioritize prefixed phone number matching (`01[0125]\d{8}` following prefixes like `من`, `إلى`, `رقم`), falling back to standalone 11-digit mobile numbers. If no phone number is present, fallback counterparty is strictly `'IPN/Bank'`.
 
 ## Firestore
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)

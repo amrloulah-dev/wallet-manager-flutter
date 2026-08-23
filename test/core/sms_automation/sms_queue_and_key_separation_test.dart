@@ -28,64 +28,42 @@ void main() {
     await storage.initialize(secureStorage: mockSecureStorage);
   });
 
-  group('LocalStorageService FIFO Queue (pending_overlay_data)', () {
-    test('should enqueue and dequeue items in FIFO order', () async {
-      final item1 = {'amount': 100.0, 'sender': '01011111111', 'type': 'credit'};
-      final item2 = {'amount': 250.0, 'sender': '01022222222', 'type': 'debit'};
+  group('LocalStorageService Single-Item Active SMS (current_active_sms)', () {
+    test('should save and read active SMS data correctly', () async {
+      final item = {'amount': 100.0, 'sender': '01011111111', 'type': 'credit'};
 
-      await storage.enqueueOverlayData(item1);
-      await storage.enqueueOverlayData(item2);
+      await storage.saveCurrentActiveSms(item);
 
-      expect(await storage.getOverlayQueueLength(), 2);
-
-      final dequeued1 = await storage.dequeueOverlayData();
-      expect(dequeued1, isNotNull);
-      expect(dequeued1!['amount'], 100.0);
-      expect(dequeued1['sender'], '01011111111');
-
-      expect(await storage.getOverlayQueueLength(), 1);
-
-      final dequeued2 = await storage.dequeueOverlayData();
-      expect(dequeued2, isNotNull);
-      expect(dequeued2!['amount'], 250.0);
-      expect(dequeued2['sender'], '01022222222');
-
-      expect(await storage.getOverlayQueueLength(), 0);
-
-      final dequeued3 = await storage.dequeueOverlayData();
-      expect(dequeued3, isNull);
+      final readData = storage.readCurrentActiveSms();
+      expect(readData, isNotNull);
+      expect(readData!['amount'], 100.0);
+      expect(readData['sender'], '01011111111');
     });
 
-    test('should cap queue at maximum 5 items and drop oldest on overflow', () async {
-      for (int i = 1; i <= 6; i++) {
-        await storage.enqueueOverlayData({'id': i, 'amount': i * 10.0});
-      }
+    test('should overwrite active SMS completely when new SMS arrives (Single-Item / No Queue)', () async {
+      await storage.saveCurrentActiveSms({'id': 1, 'amount': 10.0});
+      await storage.saveCurrentActiveSms({'id': 2, 'amount': 20.0});
 
-      expect(await storage.getOverlayQueueLength(), 5);
-
-      // Oldest item (id: 1) should have been dropped; first dequeued should be id: 2
-      final first = await storage.dequeueOverlayData();
-      expect(first, isNotNull);
-      expect(first!['id'], 2);
+      final active = storage.readCurrentActiveSms();
+      expect(active, isNotNull);
+      expect(active!['id'], 2);
+      expect(active['amount'], 20.0);
     });
 
-    test('clearVault should drain the entire queue', () async {
-      await storage.enqueueOverlayData({'amount': 50.0});
-      await storage.enqueueOverlayData({'amount': 75.0});
+    test('clearCurrentActiveSms should purge the active SMS', () async {
+      await storage.saveCurrentActiveSms({'amount': 50.0});
+      expect(storage.readCurrentActiveSms(), isNotNull);
 
-      expect(await storage.getOverlayQueueLength(), 2);
+      await storage.clearCurrentActiveSms();
 
-      await storage.clearVault();
-
-      expect(await storage.getOverlayQueueLength(), 0);
-      expect(await storage.dequeueOverlayData(), isNull);
+      expect(storage.readCurrentActiveSms(), isNull);
     });
   });
 
   group('Completed Transaction IPC Sync Key Separation', () {
-    test('saveCompletedTxSync should write to completed_tx_sync and not mutate the SMS queue', () async {
+    test('saveCompletedTxSync should write to completed_tx_sync and not mutate active SMS', () async {
       final smsData = {'amount': 100.0, 'sender': '01000000000', 'type': 'credit'};
-      await storage.enqueueOverlayData(smsData);
+      await storage.saveCurrentActiveSms(smsData);
 
       final txSyncData = {
         'transactionId': 'tx_123',
@@ -95,22 +73,18 @@ void main() {
       };
       await storage.saveCompletedTxSync(txSyncData);
 
-      // SMS queue must remain intact with exactly 1 item
-      expect(await storage.getOverlayQueueLength(), 1);
+      // Active SMS must remain intact
+      expect(storage.readCurrentActiveSms()?['amount'], 100.0);
 
       // Completed sync read should return the txSyncData
       final readTx = await storage.readCompletedTxSync();
       expect(readTx, isNotNull);
       expect(readTx!['transactionId'], 'tx_123');
 
-      // Clearing completed sync must not clear the SMS queue
+      // Clearing completed sync must not clear the active SMS
       await storage.clearCompletedTxSync();
       expect(await storage.readCompletedTxSync(), isNull);
-      expect(await storage.getOverlayQueueLength(), 1);
-
-      final dequeuedSms = await storage.dequeueOverlayData();
-      expect(dequeuedSms, isNotNull);
-      expect(dequeuedSms!['sender'], '01000000000');
+      expect(storage.readCurrentActiveSms()?['sender'], '01000000000');
     });
   });
 }

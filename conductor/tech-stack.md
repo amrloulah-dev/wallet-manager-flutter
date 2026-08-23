@@ -24,7 +24,7 @@
     - Provides a unified `FirebaseService` for managed access to Firestore and Auth instances.
 
 ## Local Storage
-- **Unified Vault Architecture:** Centralized `LocalStorageService` acting as the single source of truth for all disk I/O, abstracting `SharedPreferences` (non-sensitive) and `flutter_secure_storage` (sensitive data) and providing safe data persistence for both UI and background isolates.
+- **Single-Item / Instant-Kill SMS Architecture:** Centralized `LocalStorageService` acting as the single source of truth for all disk I/O, abstracting `SharedPreferences` (non-sensitive) and `flutter_secure_storage` (sensitive data). Stores a single active SMS payload under `current_active_sms` with zero queuing or deduplication caches. New SMS overwrites directly, and submission/cancellation instantly purges the key and closes the overlay.
 
 ## Background Architecture & OS Resilience
 - **Single-Isolate Guardian:** Persistent background service (`flutter_background_service`) acting as the single source of truth for SMS automation to prevent data duplication.

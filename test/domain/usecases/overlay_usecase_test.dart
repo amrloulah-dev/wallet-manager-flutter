@@ -54,7 +54,6 @@ void main() {
 
     when(() => mockTxRepo.generateId()).thenReturn('generated_tx_123');
     when(() => mockTxRepo.createTransaction(any())).thenAnswer((_) async {});
-    when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
     when(() => mockStorage.saveCompletedTxSync(any())).thenAnswer((_) async {});
 
     overlayUseCase = OverlayUseCase(

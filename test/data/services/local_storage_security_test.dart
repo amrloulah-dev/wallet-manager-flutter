@@ -86,19 +86,19 @@ void main() {
       expect(prefs.containsKey('userRole'), isFalse);
     });
 
-    test('Vault data should be cleared after consumption (Ephemeral Pattern)',
+    test('Active SMS data should be cleared after consumption (Instant-Kill Pattern)',
         () async {
       final testData = {'txId': '123', 'amount': 100.0};
-      await storage.saveToVault(testData);
+      await storage.saveCurrentActiveSms(testData);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.containsKey('pending_overlay_data'), isTrue);
+      expect(prefs.containsKey('current_active_sms'), isTrue);
 
-      final readData = await storage.readFromVault();
+      final readData = storage.readCurrentActiveSms();
       expect(readData?['txId'], '123');
 
-      await storage.clearVault();
-      expect(prefs.containsKey('pending_overlay_data'), isFalse);
+      await storage.clearCurrentActiveSms();
+      expect(prefs.containsKey('current_active_sms'), isFalse);
     });
   });
 }

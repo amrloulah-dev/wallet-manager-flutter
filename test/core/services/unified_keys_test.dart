@@ -30,15 +30,15 @@ void main() {
       await storage.initialize(secureStorage: mockSecureStorage);
     });
 
-    test('should save and read from unified vault key', () async {
+    test('should save and read from current active SMS key', () async {
       final data = {'amount': 100.0, 'sender': '123'};
-      await storage.saveToVault(data);
+      await storage.saveCurrentActiveSms(data);
 
       final prefs = await SharedPreferences.getInstance();
       // Verify it uses the correct key
-      expect(prefs.containsKey('pending_overlay_data'), isTrue);
+      expect(prefs.containsKey('current_active_sms'), isTrue);
 
-      final readData = await storage.readFromVault();
+      final readData = storage.readCurrentActiveSms();
       expect(readData?['amount'], 100.0);
     });
 
@@ -46,8 +46,8 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('pending_overlay_tx', 'stale_data');
 
-      // storage.readFromVault() should NOT read from pending_overlay_tx
-      expect(await storage.readFromVault(), isNull);
+      // storage.readCurrentActiveSms() should NOT read from pending_overlay_tx
+      expect(storage.readCurrentActiveSms(), isNull);
     });
 
     test('should migrate languageCode to app_locale on initialization',

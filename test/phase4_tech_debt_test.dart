@@ -64,7 +64,7 @@ void main() {
       when(() => mockStorage.isSubLifetime).thenReturn(true);
       when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(true);
       when(() => mockStorage.getSimMappings()).thenReturn([]);
-      when(() => mockStorage.saveToVault(any())).thenAnswer((_) async {});
+      when(() => mockStorage.saveCurrentActiveSms(any())).thenAnswer((_) async {});
       when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
 
       // This is a sanity check test for the pipeline
