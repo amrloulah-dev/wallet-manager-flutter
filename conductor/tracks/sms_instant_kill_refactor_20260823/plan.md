@@ -10,14 +10,14 @@
 
 > **Goal:** Remove all queue/fingerprint infrastructure from `LocalStorageService` and replace with 3 atomic single-key methods.
 
-- [ ] Task 1.1: Write Failing Tests for New Storage API
-  - [ ] Create/update test for `saveCurrentActiveSms()` — writes a Map, verify key `'current_active_sms'` contains the JSON payload
-  - [ ] Create/update test for `readCurrentActiveSms()` — reads back the Map, returns `null` when empty
-  - [ ] Create/update test for `clearCurrentActiveSms()` — clears the key, subsequent read returns `null`
-  - [ ] Test overwrite behavior: calling `save()` twice replaces the first value entirely
-  - [ ] Run tests — confirm they **fail** (Red phase)
+- [x] Task 1.1: Write Failing Tests for New Storage API (da683a7)
+  - [x] Create/update test for `saveCurrentActiveSms()` — writes a Map, verify key `'current_active_sms'` contains the JSON payload
+  - [x] Create/update test for `readCurrentActiveSms()` — reads back the Map, returns `null` when empty
+  - [x] Create/update test for `clearCurrentActiveSms()` — clears the key, subsequent read returns `null`
+  - [x] Test overwrite behavior: calling `save()` twice replaces the first value entirely
+  - [x] Run tests — confirm they **fail** (Red phase)
 
-- [ ] Task 1.2: Implement New Single-Key Methods
+- [~] Task 1.2: Implement New Single-Key Methods
   - [ ] Add constant `_kCurrentActiveSms = 'current_active_sms'` to `LocalStorageService`
   - [ ] Implement `Future<void> saveCurrentActiveSms(Map<String, dynamic> data)` — `jsonEncode` + `setString`
   - [ ] Implement `Map<String, dynamic>? readCurrentActiveSms()` — `getString` + `jsonDecode`, return `null` on missing/error
