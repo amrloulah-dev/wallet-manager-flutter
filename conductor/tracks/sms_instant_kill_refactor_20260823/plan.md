@@ -48,7 +48,7 @@
 
 ---
 
-## Phase 2: Pipeline Layer — Gate 0 Removal & Single-Key Write
+## Phase 2: Pipeline Layer — Gate 0 Removal & Single-Key Write [checkpoint: 1d4e56d]
 
 > **Goal:** Remove fingerprint deduplication from the SMS pipeline and rewire vault writes to the single-key API.
 
@@ -59,22 +59,22 @@
   - [x] Add test: second SMS call overwrites previous `saveCurrentActiveSms()` data
   - [x] Run tests — confirm they **fail** (Red phase)
 
-- [~] Task 2.2: Remove Gate 0 & Rewire Storage Call
-  - [ ] Delete the entire Gate 0 block (lines 144–158): fingerprint construction, `isSmsProcessed()` check, `cacheSmsFingerprint()` call
-  - [ ] Replace `await storage.enqueueOverlayData(overlayArgs)` (line 204) with `await storage.saveCurrentActiveSms(overlayArgs)`
-  - [ ] Remove any remaining imports/references to fingerprint methods
-  - [ ] Run tests — confirm they **pass** (Green phase)
+- [x] Task 2.2: Remove Gate 0 & Rewire Storage Call (57eb9ae)
+  - [x] Delete the entire Gate 0 block (lines 144–158): fingerprint construction, `isSmsProcessed()` check, `cacheSmsFingerprint()` call
+  - [x] Replace `await storage.enqueueOverlayData(overlayArgs)` (line 204) with `await storage.saveCurrentActiveSms(overlayArgs)`
+  - [x] Remove any remaining imports/references to fingerprint methods
+  - [x] Run tests — confirm they **pass** (Green phase)
 
-- [ ] Task 2.3: Update Related Pipeline Tests
-  - [ ] Update `dynamic_overlay_update_test.dart`: remove fingerprint mocks, use `saveCurrentActiveSms` stubs
-  - [ ] Update `subscription_ttl_test.dart`: remove fingerprint/vault mocks, use new API stubs
-  - [ ] Run all pipeline tests — confirm pass
+- [x] Task 2.3: Update Related Pipeline Tests (57eb9ae)
+  - [x] Update `dynamic_overlay_update_test.dart`: remove fingerprint mocks, use `saveCurrentActiveSms` stubs
+  - [x] Update `subscription_ttl_test.dart`: remove fingerprint/vault mocks, use new API stubs
+  - [x] Run all pipeline tests — confirm pass
 
-- [ ] Task 2.4: Verify Pipeline Compiles End-to-End
-  - [ ] Run `flutter analyze` on `lib/core/services/sms_processing_pipeline.dart`
-  - [ ] Run full pipeline test suite
+- [x] Task 2.4: Verify Pipeline Compiles End-to-End (57eb9ae)
+  - [x] Run `flutter analyze` on `lib/core/services/sms_processing_pipeline.dart`
+  - [x] Run full pipeline test suite
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ---
 
@@ -82,7 +82,7 @@
 
 > **Goal:** Rewrite `OverlayProvider` and `TransactionOverlayScreen` to use the Instant-Kill pattern with zero queue logic.
 
-- [ ] Task 3.1: Write Failing Tests for Overlay Provider
+- [~] Task 3.1: Write Failing Tests for Overlay Provider
   - [ ] Update `overlay_provider_test.dart`: replace all queue/vault mocks with `saveCurrentActiveSms`/`readCurrentActiveSms`/`clearCurrentActiveSms` stubs
   - [ ] Add test: `submitTransaction()` calls `clearCurrentActiveSms()` before fire-and-forget write
   - [ ] Add test: `submitTransaction()` calls `closeOverlay()` — no dequeue attempt
