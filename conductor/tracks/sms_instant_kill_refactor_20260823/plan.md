@@ -78,7 +78,7 @@
 
 ---
 
-## Phase 3: Overlay Lifecycle — Instant-Kill Rewrite
+## Phase 3: Overlay Lifecycle — Instant-Kill Rewrite [checkpoint: 1be45b6]
 
 > **Goal:** Rewrite `OverlayProvider` and `TransactionOverlayScreen` to use the Instant-Kill pattern with zero queue logic.
 
@@ -90,38 +90,38 @@
   - [x] Add test: `dismissAll()` calls `clearCurrentActiveSms()` then `closeOverlay()`
   - [x] Run tests — confirm they **fail** (Red phase)
 
-- [~] Task 3.2: Rewrite OverlayProvider
-  - [ ] Remove `_queueCount` field and `updateQueueCount()` method
-  - [ ] Remove `queueCount` getter (and its `Selector` usage downstream)
-  - [ ] Rewrite `submitTransaction()`:
+- [x] Task 3.2: Rewrite OverlayProvider (e695f13)
+  - [x] Remove `_queueCount` field and `updateQueueCount()` method
+  - [x] Remove `queueCount` getter (and its `Selector` usage downstream)
+  - [x] Rewrite `submitTransaction()`:
     1. Validate wallet + auth (unchanged)
     2. `await _localStorageService.clearCurrentActiveSms()`
     3. `unawaited(_overlayUseCase.execute(...))`
     4. IPC `'update_ui'` via `IsolateNameServer`
     5. `await FlutterOverlayWindow.closeOverlay()`
-  - [ ] Rewrite `close()`: clear key → close overlay
-  - [ ] Rewrite `dismissAll()`: clear key → close overlay
-  - [ ] Remove all `dequeueOverlayData` / `getOverlayQueueLength` / `clearVault` calls
-  - [ ] Run tests — confirm they **pass** (Green phase)
+  - [x] Rewrite `close()`: clear key → close overlay
+  - [x] Rewrite `dismissAll()`: clear key → close overlay
+  - [x] Remove all `dequeueOverlayData` / `getOverlayQueueLength` / `clearVault` calls
+  - [x] Run tests — confirm they **pass** (Green phase)
 
-- [ ] Task 3.3: Rewrite TransactionOverlayScreen Initialization
-  - [ ] Replace `dequeueOverlayData()` with `readCurrentActiveSms()` in `initState`
-  - [ ] Remove `getOverlayQueueLength()` calls
-  - [ ] Remove `updateQueueCount()` calls
-  - [ ] Remove queue count badge widget (the `Selector<OverlayProvider, int>` block, lines ~282–307)
-  - [ ] Keep `overlayListener` stream with self-event filter for live SMS updates
-  - [ ] Keep instant focus via `addPostFrameCallback`
+- [x] Task 3.3: Rewrite TransactionOverlayScreen Initialization (e695f13)
+  - [x] Replace `dequeueOverlayData()` with `readCurrentActiveSms()` in `initState`
+  - [x] Remove `getOverlayQueueLength()` calls
+  - [x] Remove `updateQueueCount()` calls
+  - [x] Remove queue count badge widget (the `Selector<OverlayProvider, int>` block, lines ~282–307)
+  - [x] Keep `overlayListener` stream with self-event filter for live SMS updates
+  - [x] Keep instant focus via `addPostFrameCallback`
 
-- [ ] Task 3.4: Update Overlay-Related Tests
-  - [ ] Update `transaction_overlay_commission_clear_test.dart`: replace vault/queue mocks with new single-key stubs
-  - [ ] Update `phase1_data_duplication_stale_state_test.dart`: replace `dequeueOverlayData`/`clearVault` mocks
-  - [ ] Run all overlay tests — confirm pass
+- [x] Task 3.4: Update Overlay-Related Tests (e695f13)
+  - [x] Update `transaction_overlay_commission_clear_test.dart`: replace vault/queue mocks with new single-key stubs
+  - [x] Update `phase1_data_duplication_stale_state_test.dart`: replace `dequeueOverlayData`/`clearVault` mocks
+  - [x] Run all overlay tests — confirm pass
 
-- [ ] Task 3.5: Verify Overlay Layer Compiles End-to-End
-  - [ ] Run `flutter analyze` on overlay files
-  - [ ] Run full overlay test suite
+- [x] Task 3.5: Verify Overlay Layer Compiles End-to-End (e695f13)
+  - [x] Run `flutter analyze` on overlay files
+  - [x] Run full overlay test suite
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ---
 
@@ -129,7 +129,7 @@
 
 > **Goal:** Ensure all remaining test files compile and pass, and the full project is clean.
 
-- [ ] Task 4.1: Update Remaining Test Files
+- [~] Task 4.1: Update Remaining Test Files
   - [ ] Update `unified_keys_test.dart`: replace `saveToVault`/`readFromVault` with new API methods
   - [ ] Update `sms_queue_and_key_separation_test.dart`: remove queue-specific tests, add single-key overwrite tests
   - [ ] Update `local_storage_security_test.dart`: replace `saveToVault`/`readFromVault`/`clearVault` mocks
