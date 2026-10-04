@@ -1,8 +1,0 @@
-{
-  "track_id": "ui_logic_bugfixes_20260613",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-06-13T02:48:00+03:00",
-  "updated_at": "2026-06-13T02:48:00+03:00",
-  "description": "Fix 3 UI/Logic edge cases: transaction creator name, wallet card RTL/scale/badge, and employee limit validation"
-}

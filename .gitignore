@@ -48,3 +48,20 @@ app.*.map.json
 google-services.json
 GoogleService-Info.plist
 firebase_options.dart
+
+# Documentation & Reports
+docs/
+add_logic.md
+engineering_report_part1.md
+engineering_report_part2.md
+PRD.md
+stats_aggregation_audit_report.md
+wallet_refactor.md
+
+# Agent & Workflow configs
+conductor/
+.antigravitycli/
+.agent/
+.agents/skills/
+AGENTS.md
+GEMINI.md

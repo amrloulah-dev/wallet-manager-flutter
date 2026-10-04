@@ -1,8 +1,0 @@
-{
-  "track_id": "security_blueprint_20260513",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-05-13T00:00:00Z",
-  "updated_at": "2026-05-13T00:00:00Z",
-  "description": "Targeted Security Remediation covering Privilege Escalation Prevention (Secure Storage), Cryptographic Upgrade (Password Hasher), and PII & Exception Sanitization."
-}

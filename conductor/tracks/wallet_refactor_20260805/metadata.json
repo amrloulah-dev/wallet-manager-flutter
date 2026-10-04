@@ -1,8 +1,0 @@
-{
-  "track_id": "wallet_refactor_20260805",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-08-05T02:15:43Z",
-  "updated_at": "2026-08-05T02:15:43Z",
-  "description": "Backward Compatibility Migration & Fix Destructive Limit Reset Bug"
-}

@@ -1,8 +1,0 @@
-{
-  "track_id": "schema_refactor_20260612",
-  "type": "refactor",
-  "status": "new",
-  "created_at": "2026-06-12T15:39:00Z",
-  "updated_at": "2026-06-12T15:39:00Z",
-  "description": "Firebase Schema Refactor & Data Source Decoupling — strip dead fields from StatsSummaryModel/DailyStatsModel, fix repository aggregation, rewrite provider logic, correct UI data routing"
-}

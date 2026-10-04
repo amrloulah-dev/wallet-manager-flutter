@@ -1,8 +1,0 @@
-{
-  "track_id": "wallet_creation_refactor_20260526",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-05-26T16:54:00+03:00",
-  "updated_at": "2026-05-26T16:54:00+03:00",
-  "description": "Refactor WalletRepository.createWallet from runTransaction to WriteBatch to fix wallet_error_create_failed caused by illegal async calls inside runTransaction"
-}

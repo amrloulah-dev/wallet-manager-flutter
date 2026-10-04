@@ -1,8 +1,0 @@
-{
-  "track_id": "final_polish_bugfixes_20260712",
-  "type": "bugfix",
-  "status": "new",
-  "created_at": "2026-07-12T17:49:00Z",
-  "updated_at": "2026-07-12T17:49:00Z",
-  "description": "Final Polish & Bug Squashing — 6 targeted fixes: dashboard transfer counter, localization enforcement, overlay commission reset, wallet status labels, carrier prefix validation, and persistent payment dialog."
-}

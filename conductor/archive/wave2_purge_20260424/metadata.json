@@ -1,8 +1,0 @@
-{
-  "track_id": "wave2_purge_20260424",
-  "type": "refactor",
-  "status": "new",
-  "created_at": "2026-04-24T00:00:00Z",
-  "updated_at": "2026-04-24T00:00:00Z",
-  "description": "Wave 2: Presentation Layer & State Bloat Purge"
-}

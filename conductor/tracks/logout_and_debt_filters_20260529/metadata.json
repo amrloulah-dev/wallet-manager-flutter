@@ -1,8 +1,0 @@
-{
-  "track_id": "logout_and_debt_filters_20260529",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-05-29T06:20:00+03:00",
-  "updated_at": "2026-05-29T06:20:00+03:00",
-  "description": "Fix infinite loading screen on logout and enable dynamic debt filtering (type and status) in Firestore queries."
-}
