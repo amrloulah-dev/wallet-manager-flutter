@@ -128,6 +128,10 @@ class OverlayProvider extends SafeChangeNotifier {
     _blockAutoFetch = true;
 
     try {
+      if (_amount <= 0) {
+        throw ArgumentError('Amount must be positive: $_amount');
+      }
+
       if (!_isStorageInitialized) {
         await _localStorageService.initialize();
         _isStorageInitialized = true;
@@ -244,6 +248,11 @@ class OverlayProvider extends SafeChangeNotifier {
   }
 
   Future<void> submitTransaction() async {
+    // 🛡️ Guard against double-tap race conditions
+    if (_isLoading) return;
+
+    _errorMessage = null;
+
     if (_selectedWalletId == null) {
       _errorMessage = 'pleaseSelectWallet';
       _guardedNotify();
@@ -257,14 +266,10 @@ class OverlayProvider extends SafeChangeNotifier {
     }
 
     _isLoading = true;
-    _errorMessage = null;
     _guardedNotify();
 
     try {
-      // 1. Instant-Kill: purge active SMS cache key immediately
-      await _localStorageService.clearCurrentActiveSms();
-
-      // 2. Fire-and-Forget / Asynchronous write via OverlayUseCase
+      // 1. Await write via OverlayUseCase (confirms Firestore commit and saves sync buffer)
       await _overlayUseCase.execute(
         storeId: _cachedStoreId!,
         userId: _cachedUserId!,
@@ -277,6 +282,9 @@ class OverlayProvider extends SafeChangeNotifier {
         sender: _sender,
         availableWallets: _availableWallets,
       );
+
+      // 2. Instant-Kill: purge active SMS cache key ONLY after write succeeds
+      await _localStorageService.clearCurrentActiveSms();
 
       // 3. Send IPC update ping to main app isolate
       final SendPort? sendPort =
@@ -294,11 +302,10 @@ class OverlayProvider extends SafeChangeNotifier {
         }
       }
 
-      _isLoading = false;
       _commission = 0.0;
       _errorMessage = null;
 
-      // 4. Instant-Kill: close overlay immediately without queue checks
+      // 4. Close overlay window only after full success
       if (kDebugMode) {
         debugPrint('🔥 [TX_FLOW] [overlay_provider] -> submitTransaction: '
             'Transaction submitted. Closing overlay window ...');

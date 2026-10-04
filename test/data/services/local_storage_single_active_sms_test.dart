@@ -47,7 +47,7 @@ void main() {
     });
 
     test('readCurrentActiveSms returns decoded Map or null when empty', () async {
-      expect(storage.readCurrentActiveSms(), isNull);
+      expect(await storage.readCurrentActiveSms(), isNull);
 
       final payload = {
         'amount': 200.0,
@@ -56,7 +56,7 @@ void main() {
       };
       await storage.saveCurrentActiveSms(payload);
 
-      final readData = storage.readCurrentActiveSms();
+      final readData = await storage.readCurrentActiveSms();
       expect(readData, isNotNull);
       expect(readData?['amount'], 200.0);
       expect(readData?['sender'], '01123456789');
@@ -66,13 +66,13 @@ void main() {
     test('clearCurrentActiveSms deletes the key and subsequent read returns null', () async {
       final payload = {'amount': 300.0};
       await storage.saveCurrentActiveSms(payload);
-      expect(storage.readCurrentActiveSms(), isNotNull);
+      expect(await storage.readCurrentActiveSms(), isNotNull);
 
       await storage.clearCurrentActiveSms();
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('current_active_sms'), isFalse);
-      expect(storage.readCurrentActiveSms(), isNull);
+      expect(await storage.readCurrentActiveSms(), isNull);
     });
 
     test('saveCurrentActiveSms overwrites previous payload completely (Single-Item / No Queue)', () async {
@@ -86,10 +86,10 @@ void main() {
       };
 
       await storage.saveCurrentActiveSms(firstPayload);
-      expect(storage.readCurrentActiveSms()?['amount'], 100.0);
+      expect((await storage.readCurrentActiveSms())?['amount'], 100.0);
 
       await storage.saveCurrentActiveSms(secondPayload);
-      final active = storage.readCurrentActiveSms();
+      final active = await storage.readCurrentActiveSms();
       expect(active?['amount'], 500.0);
       expect(active?['sender'], '01000000002');
     });

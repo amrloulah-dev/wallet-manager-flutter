@@ -94,31 +94,38 @@ class LocalStorageService {
   }
 
   /// Loads sensitive data from secure storage into memory cache.
-  ///
-  /// Applies the standard Android Keystore auto-recovery pattern:
-  /// if the underlying cipher is corrupt (NullPointerException surfaced as a
-  /// [PlatformException]), we wipe all broken keys with [deleteAll] and retry
-  /// once so the app can boot cleanly. The user's session will be cleared,
-  /// which is the accepted trade-off for this class of hardware failure.
+  /// Hardened against panic wipes: on transient PlatformException,
+  /// retries once after a short backoff (150ms). If it still fails,
+  /// preserves existing in-memory state without deleting credentials or pepper.
   Future<void> _loadSecureCache() async {
     try {
       await _doLoadSecureCache();
-    } on PlatformException catch (e, stack) {
+    } on PlatformException catch (e) {
       if (kDebugMode) {
         debugPrint(
-            '⚠️ [SecureStorage] Keystore corrupted — wiping and retrying. '
+            '⚠️ [SecureStorage] Transient keystore failure — retrying after backoff. '
             'Error: $e');
       }
+      // Non-destructive recovery: wait briefly to allow transient lock to release
+      await Future.delayed(const Duration(milliseconds: 150));
+      try {
+        await _doLoadSecureCache();
+      } catch (retryError, retryStack) {
+        AppErrorHandler.handle(
+          retryError,
+          stackTrace: retryStack,
+          severity: ErrorSeverity.medium,
+          operation: 'LocalStorageService._loadSecureCache.retry',
+        );
+        // Fail-safe: retain current in-memory cache without wiping keystore/pepper.
+      }
+    } catch (e, stack) {
       AppErrorHandler.handle(
         e,
         stackTrace: stack,
         severity: ErrorSeverity.medium,
-        operation: 'LocalStorageService._loadSecureCache.recovery',
+        operation: 'LocalStorageService._loadSecureCache.fallback',
       );
-      // Wipe all broken entries so the cipher can be reconstructed cleanly.
-      await _secureStorage!.deleteAll();
-      // Retry with a clean keystore — values will be null (no session).
-      await _doLoadSecureCache();
     }
   }
 
@@ -361,6 +368,24 @@ class LocalStorageService {
     return _prefs?.getBool(_kSubIsSuspended) ?? false;
   }
 
+  /// Returns true if the user's subscription is currently active (not suspended,
+  /// SMS feature flag enabled by plan, and either lifetime or within end date).
+  bool get isSubscriptionActive {
+    if (subIsSuspended) return false;
+    if (!subSmsEnabled) return false;
+    if (isSubLifetime) return true;
+    final endMs = subEndDateMs;
+    if (endMs != null &&
+        DateTime.now().isAfter(DateTime.fromMillisecondsSinceEpoch(endMs))) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Convenience check whether SMS background automation is both user-enabled
+  /// and backed by an active, unexpired subscription.
+  bool get isSmsEligible => isSmsAutomationEnabled && isSubscriptionActive;
+
   // Subscription sync timestamp for 24h TTL check
   static const String _kSubLastSyncMs = 'sub_last_sync_ms';
 
@@ -513,8 +538,13 @@ class LocalStorageService {
     await _prefs!.setString(_kCurrentActiveSms, json.encode(data));
   }
 
-  /// Reads the current active SMS transaction data synchronously.
-  Map<String, dynamic>? readCurrentActiveSms() {
+  /// Reads the current active SMS transaction data asynchronously after reloading from disk.
+  /// Crucial for the Overlay Isolate to observe data written by the Background Isolate.
+  Future<Map<String, dynamic>?> readCurrentActiveSms() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await reloadDisk();
     final String? raw = _prefs?.getString(_kCurrentActiveSms);
     if (raw == null || raw.isEmpty) return null;
     try {
@@ -547,29 +577,76 @@ class LocalStorageService {
   static const String _kCompletedTxSync = 'completed_tx_sync';
   static const String _kPersistentDeviceId = 'persistent_device_id';
 
-  /// Saves a completed transaction payload submitted by the overlay
+  /// Saves a completed transaction payload into the multi-item sync buffer
   /// for the Main App's GlobalOverlayListener to ingest into memory.
   Future<void> saveCompletedTxSync(Map<String, dynamic> txData) async {
-    _ensureInitialized();
-    await _prefs!.setString(_kCompletedTxSync, json.encode(txData));
+    if (_prefs == null) {
+      await initialize();
+    }
+    // Cross-isolate freshness: reload disk before reading current buffer
+    await reloadDisk();
+
+    final List<Map<String, dynamic>> buffer = [];
+    final String? raw = _prefs?.getString(_kCompletedTxSync);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is List) {
+          buffer.addAll(decoded
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e)));
+        } else if (decoded is Map) {
+          // Backward compatibility with legacy single-item sync format
+          buffer.add(Map<String, dynamic>.from(decoded));
+        }
+      } catch (e, stack) {
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          severity: ErrorSeverity.low,
+          operation: 'LocalStorageService.saveCompletedTxSync.parse',
+        );
+      }
+    }
+
+    buffer.add(txData);
+    await _prefs!.setString(_kCompletedTxSync, json.encode(buffer));
   }
 
-  /// Reads the completed transaction sync payload for the Main App.
-  Future<Map<String, dynamic>?> readCompletedTxSync() async {
+  /// Reads the completed transaction sync buffer for the Main App.
+  /// Returns a list of transaction payloads (empty if none).
+  /// Gracefully normalizes any legacy single Map payload into a 1-element list.
+  Future<List<Map<String, dynamic>>> readCompletedTxSync() async {
     if (_prefs == null) {
       await initialize();
     }
     await reloadDisk();
     final String? raw = _prefs?.getString(_kCompletedTxSync);
-    if (raw == null || raw.isEmpty) return null;
+    if (raw == null || raw.isEmpty) return [];
+
     try {
-      return Map<String, dynamic>.from(json.decode(raw));
-    } catch (_) {
-      return null;
+      final decoded = json.decode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } else if (decoded is Map) {
+        // Backward compatibility with legacy single-item sync format
+        return [Map<String, dynamic>.from(decoded)];
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'LocalStorageService.readCompletedTxSync.parse',
+      );
     }
+    return [];
   }
 
-  /// Clears the completed transaction sync key after the Main App has consumed it.
+  /// Clears the completed transaction sync buffer after the Main App has consumed it.
   Future<void> clearCompletedTxSync() async {
     if (_prefs == null) {
       await initialize();
@@ -621,4 +698,93 @@ class LocalStorageService {
     await _prefs!.remove(_kPlatformSettingsJson);
     await _prefs!.remove(_kPlatformSettingsFetchTime);
   }
+
+  // ===========================
+  // [TEMP DIAGNOSTIC] Rejected SMS Ring-Buffer Logger
+  // ===========================
+  static const String _kRejectedSmsLogs = 'temp_rejected_sms_logs';
+
+  /// [TEMP DIAGNOSTIC] Logs an unparsed or rejected SMS to a local ring buffer.
+  /// Retains the newest 50 entries, dropping the oldest when the limit is exceeded.
+  Future<void> logRejectedSms({
+    required String sender,
+    required String rawBody,
+    required String reason,
+    String? failureStep,
+  }) async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await reloadDisk();
+
+    final List<Map<String, dynamic>> buffer = [];
+    final String? raw = _prefs?.getString(_kRejectedSmsLogs);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is List) {
+          buffer.addAll(
+            decoded
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e)),
+          );
+        }
+      } catch (e, stack) {
+        AppErrorHandler.handle(
+          e,
+          stackTrace: stack,
+          severity: ErrorSeverity.low,
+          operation: 'LocalStorageService.logRejectedSms.parse',
+        );
+      }
+    }
+
+    final entry = <String, dynamic>{
+      'timestamp': DateTime.now().toIso8601String(),
+      'sender': sender,
+      'reason': reason,
+      if (failureStep != null) 'failureStep': failureStep,
+      'rawBody': rawBody,
+    };
+
+    buffer.insert(0, entry);
+    if (buffer.length > 50) {
+      buffer.removeRange(50, buffer.length);
+    }
+
+    await _prefs?.setString(_kRejectedSmsLogs, json.encode(buffer));
+  }
+
+  /// [TEMP DIAGNOSTIC] Retrieves all logged rejected SMS items.
+  List<Map<String, dynamic>> getRejectedSmsLogs() {
+    final String? raw = _prefs?.getString(_kRejectedSmsLogs);
+    if (raw == null || raw.isEmpty) return [];
+
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'LocalStorageService.getRejectedSmsLogs.parse',
+      );
+    }
+    return [];
+  }
+
+  /// [TEMP DIAGNOSTIC] Clears all logged rejected SMS items.
+  Future<void> clearRejectedSmsLogs() async {
+    if (_prefs == null) {
+      await initialize();
+    }
+    await _prefs?.remove(_kRejectedSmsLogs);
+  }
 }
+

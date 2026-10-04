@@ -43,11 +43,16 @@ class GenericBankStrategy extends SmsParserStrategy {
   }
 
   @override
-  ParsedSmsDto? parse(String normalizedBody) {
+  ParsedSmsDto? parse(
+    String normalizedBody, [
+    String? sender,
+    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+  ]) {
     return SmsParserStrategy.parseStrict(
       normalizedBody: normalizedBody,
       defaultProvider: 'IPN/Bank',
       strategyTag: 'GenericBankStrategy',
+      onDiagnostic: onDiagnostic, // [TEMP DIAGNOSTIC]
     );
   }
 }

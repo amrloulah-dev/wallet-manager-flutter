@@ -42,8 +42,9 @@ void main() async {
         debugPrint('✅ [INIT SUCCESS] Service Locator & Settings ready.');
       }
 
-      // Step 3: Check and initialize SMS automation if enabled
-      if (sl<LocalStorageService>().isSmsAutomationEnabled) {
+      // Step 3: Check and initialize SMS automation if enabled and subscription active
+      final storage = sl<LocalStorageService>();
+      if (storage.isSmsEligible) {
         if (kDebugMode) {
           debugPrint('⏳ [INIT DATA] Initializing SMS Service...');
         }
@@ -60,6 +61,14 @@ void main() async {
       // التشغيل المتأخر: ننتظر 3 ثواني حتى يستقر التطبيق وتفتح الشاشة للمستخدم
       Future.delayed(const Duration(seconds: 3), () async {
         try {
+          final storage = sl<LocalStorageService>();
+          if (!storage.isSmsEligible) {
+            if (kDebugMode) {
+              debugPrint(
+                  'ℹ️ [BACKGROUND] SMS background service skipped (automation disabled or subscription inactive).');
+            }
+            return;
+          }
           if (kDebugMode) {
             debugPrint(
                 '⏳ [BACKGROUND] Starting Background Service silently...');

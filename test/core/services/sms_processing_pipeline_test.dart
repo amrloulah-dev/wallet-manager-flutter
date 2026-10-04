@@ -35,6 +35,7 @@ void main() {
       mockNotifications = MockFlutterLocalNotificationsPlugin();
 
       setNotificationsPlugin(mockNotifications);
+      clockNow = () => DateTime(2026, 8, 23, 7, 0);
 
       when(() => mockStorage.isSmsAutomationEnabled).thenReturn(true);
       when(() => mockStorage.subIsSuspended).thenReturn(false);
@@ -42,6 +43,12 @@ void main() {
       when(() => mockStorage.isSubLifetime).thenReturn(true);
       when(() => mockStorage.isSubscriptionSyncFresh).thenReturn(true);
       when(() => mockStorage.saveCurrentActiveSms(any())).thenAnswer((_) async {});
+      when(() => mockStorage.logRejectedSms(
+            sender: any(named: 'sender'),
+            rawBody: any(named: 'rawBody'),
+            reason: any(named: 'reason'),
+            failureStep: any(named: 'failureStep'),
+          )).thenAnswer((_) async {});
       when(() => mockNotifications.initialize(any())).thenAnswer((_) async => true);
       when(() => mockNotifications.show(any(), any(), any(), any())).thenAnswer((_) async {});
 
@@ -55,6 +62,10 @@ void main() {
         if (methodCall.method == 'shareData') return true;
         return null;
       });
+    });
+
+    tearDown(() {
+      clockNow = DateTime.now;
     });
 
     test('handleIncomingSms saves single-item payload with walletId = null via saveCurrentActiveSms', () async {
@@ -130,6 +141,105 @@ void main() {
       expect(captured.length, 2);
       expect((captured[0] as Map)['amount'], 100.0);
       expect((captured[1] as Map)['amount'], 200.0);
+    });
+
+    test('handleIncomingSms fires wake-up notification with fullScreenIntent and max priority', () async {
+      final message = SmsMessage.fromMap({
+        'address': 'VF-Cash',
+        'body': 'تم استلام مبلغ 500 جنيه من رقم 01012345678',
+        'date': DateTime.now().millisecondsSinceEpoch.toString(),
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
+
+      await handleIncomingSms(message, mockStorage);
+
+      final captured = verify(() => mockNotifications.show(
+            any(),
+            any(),
+            any(),
+            captureAny(),
+          )).captured;
+
+      expect(captured, isNotEmpty);
+      final details = captured.first as NotificationDetails;
+      final androidDetails = details.android;
+      expect(androidDetails, isNotNull);
+      expect(androidDetails!.fullScreenIntent, isTrue,
+          reason: 'Notification must have fullScreenIntent: true to wake screen from sleep');
+      expect(androidDetails.priority, Priority.max,
+          reason: 'Notification priority must be Priority.max');
+    });
+
+    test('handleIncomingSms logs STALE_SMS when message is older than 24 hours [TEMP DIAGNOSTIC]', () async {
+      final oldDateMs = DateTime(2026, 8, 20, 6, 0).millisecondsSinceEpoch;
+      final message = SmsMessage.fromMap({
+        'address': 'VF-Cash',
+        'body': 'تم استلام مبلغ 500 جنيه من رقم 01012345678',
+        'date': oldDateMs.toString(),
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
+
+      await handleIncomingSms(message, mockStorage);
+
+      verify(() => mockStorage.logRejectedSms(
+            sender: 'VF-Cash',
+            rawBody: any(named: 'rawBody'),
+            reason: 'STALE_SMS',
+            failureStep: 'MESSAGE_OLDER_THAN_24H',
+          )).called(1);
+      verifyNever(() => mockStorage.saveCurrentActiveSms(any()));
+    });
+
+    test('handleIncomingSms logs SUBSCRIPTION_INACTIVE when SMS automation disabled [TEMP DIAGNOSTIC]', () async {
+      when(() => mockStorage.isSmsAutomationEnabled).thenReturn(false);
+
+      final message = SmsMessage.fromMap({
+        'address': 'VF-Cash',
+        'body': 'تم استلام مبلغ 500 جنيه من رقم 01012345678',
+        'date': DateTime(2026, 8, 23, 6, 30).millisecondsSinceEpoch.toString(),
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
+
+      await handleIncomingSms(message, mockStorage);
+
+      verify(() => mockStorage.logRejectedSms(
+            sender: 'VF-Cash',
+            rawBody: any(named: 'rawBody'),
+            reason: 'SUBSCRIPTION_INACTIVE',
+            failureStep: 'FEATURE_DISABLED',
+          )).called(1);
+      verifyNever(() => mockStorage.saveCurrentActiveSms(any()));
+    });
+
+    test('handleIncomingSms logs parser rejection when SMS cannot be parsed [TEMP DIAGNOSTIC]', () async {
+      final message = SmsMessage.fromMap({
+        'address': 'VF-Cash',
+        'body': 'رسالة بدون مبلغ مالي',
+        'date': DateTime(2026, 8, 23, 6, 30).millisecondsSinceEpoch.toString(),
+      }, [
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ]);
+
+      await handleIncomingSms(message, mockStorage);
+
+      verify(() => mockStorage.logRejectedSms(
+            sender: 'VF-Cash',
+            rawBody: any(named: 'rawBody'),
+            reason: 'AMOUNT_NOT_FOUND',
+            failureStep: any(named: 'failureStep'),
+          )).called(1);
+      verifyNever(() => mockStorage.saveCurrentActiveSms(any()));
     });
   });
 }

@@ -63,58 +63,65 @@ class _GlobalOverlayListenerState extends State<GlobalOverlayListener>
 
   Future<void> _fetchAndApplyData() async {
     try {
-      // Read from the isolated Completed Transaction IPC key.
+      // Read from the isolated Completed Transaction IPC buffer.
       // This ensures we never collide with or consume the SMS pending queue.
       await _storage.reloadDisk();
 
-      final data = await _storage.readCompletedTxSync();
-      if (data == null) return;
+      final List<Map<String, dynamic>> batch =
+          await _storage.readCompletedTxSync();
+      if (batch.isEmpty) return;
 
-      if (mounted) {
-        context.read<StatisticsProvider>().addTransactionOptimistically(data);
+      try {
+        if (mounted) {
+          for (final data in batch) {
+            context
+                .read<StatisticsProvider>()
+                .addTransactionOptimistically(data);
 
-        final String nowStr = data['transactionDate']?.toString() ??
-            DateTime.now().toIso8601String();
-        final serviceFee = NumberParser.toDouble(data['serviceFee']);
-        final tx = TransactionModel(
-          transactionId: data['transactionId']?.toString() ?? '',
-          storeId: data['storeId']?.toString() ?? '',
-          walletId: data['walletId']?.toString() ?? '',
-          transactionType: TransactionType.fromString(
-              data['type']?.toString() ?? 'debit'), // ENUM refactor
-          customerPhone: data['sender']?.toString(),
-          customerName: data['customerName']?.toString(),
-          amount: NumberParser.toDouble(data['amount']),
-          commission: NumberParser.toDouble(data['commission']),
-          serviceFee: serviceFee,
-          paymentStatus: PaymentStatus.fromString(
-              data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
-          transactionDate: DateTime.parse(nowStr),
-          createdAt: DateTime.parse(nowStr),
-          createdBy: 'SMS Auto',
-        );
+            final String nowStr = data['transactionDate']?.toString() ??
+                DateTime.now().toIso8601String();
+            final serviceFee = NumberParser.toDouble(data['serviceFee']);
+            final tx = TransactionModel(
+              transactionId: data['transactionId']?.toString() ?? '',
+              storeId: data['storeId']?.toString() ?? '',
+              walletId: data['walletId']?.toString() ?? '',
+              transactionType: TransactionType.fromString(
+                  data['type']?.toString() ?? 'debit'), // ENUM refactor
+              customerPhone: data['sender']?.toString(),
+              customerName: data['customerName']?.toString(),
+              amount: NumberParser.toDouble(data['amount']),
+              commission: NumberParser.toDouble(data['commission']),
+              serviceFee: serviceFee,
+              paymentStatus: PaymentStatus.fromString(
+                  data['paymentStatus']?.toString() ?? 'paid'), // ENUM refactor
+              transactionDate: DateTime.parse(nowStr),
+              createdAt: DateTime.parse(nowStr),
+              createdBy: 'SMS Auto',
+            );
 
-        context.read<TransactionProvider>().insertTransactionLocally(tx);
+            context.read<TransactionProvider>().insertTransactionLocally(tx);
 
-        // ── Zero-cost local wallet mutation ──
-        // Apply the balance deduction directly to RAM.
-        // NEVER call refresh() / fetchInitialWallets() here:
-        // Firestore cache lag would overwrite our correct optimistic balance.
-        final walletId = data['walletId']?.toString();
-        final amount = NumberParser.toDouble(data['amount']);
-        final type =
-            data['type']?.toString(); // 'debit' = send, 'credit' = receive
-        if (walletId != null && amount > 0 && type != null) {
-          context.read<WalletProvider>().updateLocalBalance(
-                walletId,
-                amount,
-                type,
-                serviceFee: serviceFee,
-              );
+            // ── Zero-cost local wallet mutation ──
+            // Apply the balance deduction directly to RAM.
+            // NEVER call refresh() / fetchInitialWallets() here:
+            // Firestore cache lag would overwrite our correct optimistic balance.
+            final walletId = data['walletId']?.toString();
+            final amount = NumberParser.toDouble(data['amount']);
+            final type =
+                data['type']?.toString(); // 'debit' = send, 'credit' = receive
+            if (walletId != null && amount > 0 && type != null) {
+              context.read<WalletProvider>().updateLocalBalance(
+                    walletId,
+                    amount,
+                    type,
+                    serviceFee: serviceFee,
+                  );
+            }
+          }
         }
+      } finally {
+        await _storage.clearCompletedTxSync();
       }
-
-      await _storage.clearCompletedTxSync();
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint('⚠️ [GlobalOverlayListener] _fetchAndApplyData error: $e');

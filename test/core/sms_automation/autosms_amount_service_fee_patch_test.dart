@@ -199,6 +199,8 @@ void main() {
           reason: '1000 - (200 + 1) = 799 EGP balance');
       expect(updatedWallet.sendLimits.dailyUsed, 200.0,
           reason: 'Daily used limit MUST increase by net amount 200 EGP, not total deduction');
+      expect(provider.isFetchShieldActive, isTrue,
+          reason: 'updateLocalBalance MUST activate fetch shield for 5s to prevent stale overwrite');
     });
   });
 }

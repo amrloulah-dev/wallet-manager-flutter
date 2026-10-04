@@ -77,7 +77,7 @@ class _OverlayContentState extends State<_OverlayContent> {
           : LocalStorageService.instance;
 
       // 1. Read current active SMS from storage (Single-Item SSOT)
-      final activeData = storage.readCurrentActiveSms();
+      final activeData = await storage.readCurrentActiveSms();
       if (activeData != null) {
         await _provider.ingestNewEvent(activeData);
       }

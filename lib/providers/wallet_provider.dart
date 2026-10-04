@@ -72,6 +72,9 @@ class WalletProvider extends BaseProvider {
   Timer? _fetchShieldTimer;
   bool _fetchShieldActive = false;
 
+  @visibleForTesting
+  bool get isFetchShieldActive => _fetchShieldActive;
+
   void _activateFetchShield() {
     _fetchShieldActive = true;
     _fetchShieldTimer?.cancel();
@@ -169,8 +172,9 @@ class WalletProvider extends BaseProvider {
       // Crucial: Update map reference
       _walletMap[walletId] = _wallets[index];
 
+      _activateFetchShield();
       _rebuildWalletMap();
-      notifyListeners();
+      safeNotify();
     } else {
       if (kDebugMode) {
         debugPrint(

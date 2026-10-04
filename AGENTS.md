@@ -59,6 +59,9 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 - Firestore: `fake_cloud_firestore` (avoids emulator)
 - Run single test: `flutter test test/path/to/file_test.dart`
 - Tests mirror structure: `test/core/`, `test/domain/`, `test/data/`, `test/presentation/`, `test/providers/`
+- **Platform Channel Mocking in Widget Tests**:
+  - `FlutterSecureStorage`: Always inject a mocked `FlutterSecureStorage` into `LocalStorageService.instance.initialize(secureStorage: mockSecureStorage)` in test `setUp()`. Un-mocked calls hang indefinitely awaiting native platform responses.
+  - `Clipboard.setData`: Tests asserting clipboard actions must intercept `SystemChannels.platform` using `TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler` and pump (`await tester.pump(const Duration(milliseconds: 100))`) to allow asynchronous platform calls to resolve before asserting SnackBar or toast visibility.
 
 ## Localization
 - Languages: Arabic (`ar`), English (`en`)
@@ -69,6 +72,7 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 ## UI & Theming Rules
 1. **Dynamic Theme Compliance** — Never hardcode static theme colors (e.g., `Colors.black`, `Colors.white`, `Colors.grey.shade900`, `0xFF1E1E1E`). All backgrounds, borders, dividers, and text colors MUST dynamically resolve via `ThemeData` and `AppColors` tokens (e.g., `AppColors.surface(context)`, `AppColors.textPrimary(context)`, `AppColors.textSecondary(context)`, `AppColors.divider(context)`).
 2. **Unicode LTR Phone Number Guarding** — All displayed phone numbers in RTL/Arabic interfaces MUST be wrapped in LTR Unicode markers (`'\u200E${phone}\u200E'`) and specify `textDirection: TextDirection.ltr` to avoid number reversal and punctuation misplacement.
+3. **State Method BuildContext Scope** — In `State<T>` widgets, private helper methods (e.g., `Widget _buildCard()`) MUST NOT declare a `BuildContext context` parameter. Declaring a local `context` parameter shadows `State.context`, which triggers `use_build_context_synchronously` analyzer errors across asynchronous gaps even when guarded by `if (!mounted) return;`. Rely directly on `State.context`.
 
 ## Background Services & Overlay
 - **SMS Monitor**: `flutter_background_service` + `another_telephony`; parses transaction SMS and shows overlay
@@ -93,6 +97,13 @@ All providers extend `SafeChangeNotifier` (not `ChangeNotifier`):
 1. **Strict Anchor-Based Amount Extraction**: Never extract the first arbitrary number. Require explicit linguistic anchors (`مبلغ`, `بمبلغ`, `خصم`, `amount of`, etc.).
 2. **Arabic Number & Decimal Normalization**: Preserve exact decimal separators (`.` vs `,`) and convert Hindi digits (`٠-٩`) before amount parsing.
 3. **Counterparty Extraction & Fallback**: Prioritize prefixed phone number matching (`01[0125]\d{8}` following prefixes like `من`, `إلى`, `رقم`), falling back to standalone 11-digit mobile numbers. If no phone number is present, fallback counterparty is strictly `'IPN/Bank'`.
+4. **Arabic Normalization & Preposition Equivalence**:
+   - `TextNormalizer.normalize` strips diacritics and maps `[أإآ] -> ا` and `ى -> ي`, unifying `إلى`, `الى`, `إلي`, and `الي` to `الي`.
+   - All directional and preposition regular expressions MUST support all four forms `(?:إلى|الى|الي|إلي)` (as well as particle prefixes `(?:لـ|ل\s+|لرقم)`) to ensure robustness across both raw and normalized SMS text.
+   - Outbound debit / transfer pattern matchers MUST recognize all send verbs, including `(?:ارسال|إرسال|أرسلت|ارسلت)` alongside `(?:تحويل|خصم|سحب|دفع)`.
+
+## Temporary Diagnostics & Telemetry
+- **Excision Tagging**: All temporary diagnostic telemetry, ring-buffer loggers, and test UI components deployed for field validation MUST be tagged with `// [TEMP DIAGNOSTIC]` across all modified files (storage services, pipelines, strategies, presentation widgets) to allow fast and safe search-and-excise once validation goals are achieved.
 
 ## Firestore
 - Rules: `firestore.rules` (enforces owner/employee access per `storeId`)

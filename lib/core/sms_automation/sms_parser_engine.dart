@@ -4,7 +4,7 @@ import '../errors/app_error_handler.dart';
 import '../errors/error_severity.dart';
 import 'models/parsed_sms_dto.dart';
 import 'strategies/sms_parser_strategy.dart';
-import 'strategies/vodafone_cash_strategy.dart';
+import 'strategies/egyptian_telco_wallet_strategy.dart';
 import 'strategies/generic_bank_strategy.dart';
 
 class SmsParserEngine {
@@ -48,7 +48,7 @@ class SmsParserEngine {
   SmsParserEngine({List<SmsParserStrategy>? strategies})
       : _strategies = strategies ??
             [
-              VodafoneCashStrategy(),
+              EgyptianTelcoWalletStrategy(),
               GenericBankStrategy(),
             ];
 
@@ -102,11 +102,30 @@ class SmsParserEngine {
   /// 2. If sender is unrecognized, fail-fast and return null immediately.
   /// 3. Normalize body.
   /// 4. Delegate parsing strictly to strategies matching the sender via canParse().
+  // [TEMP DIAGNOSTIC]
+  SmsRejectionInfo? _lastRejection;
+
+  /// [TEMP DIAGNOSTIC] Last recorded rejection information from the latest parse invocation.
+  SmsRejectionInfo? get lastRejection => _lastRejection;
+
+  /// Parses an SMS message using a fail-fast approach.
+  ///
+  /// Steps:
+  /// 1. Normalize sender and validate against authorized sender criteria.
+  /// 2. If sender is unrecognized, fail-fast and return null immediately.
+  /// 3. Normalize body.
+  /// 4. Delegate parsing strictly to strategies matching the sender via canParse().
   ParsedSmsDto? parse(String sender, String body) {
+    _lastRejection = null;
     final normalizedSender = sender.trim();
 
     // 1. Fail-Fast Guard: Validate sender identity before heavy parsing
     if (!isValidSender(normalizedSender)) {
+      // [TEMP DIAGNOSTIC]
+      _lastRejection = const SmsRejectionInfo(
+        reason: 'UNKNOWN_SENDER',
+        failureStep: 'SENDER_VALIDATION_FAILED',
+      );
       return null;
     }
 
@@ -114,11 +133,24 @@ class SmsParserEngine {
     final normalizedBody = TextNormalizer.normalize(body);
 
     // 3. Delegate strictly to matching strategies
+    bool matchedAnyStrategy = false;
     for (final strategy in _strategies) {
       if (strategy.canParse(normalizedSender)) {
+        matchedAnyStrategy = true;
         try {
-          final result = strategy.parse(normalizedBody);
+          final result = strategy.parse(
+            normalizedBody,
+            normalizedSender,
+            (reason, step) {
+              // [TEMP DIAGNOSTIC]
+              _lastRejection = SmsRejectionInfo(
+                reason: reason,
+                failureStep: step,
+              );
+            },
+          );
           if (result != null) {
+            _lastRejection = null;
             return result;
           }
         } catch (e, stack) {
@@ -130,6 +162,14 @@ class SmsParserEngine {
           );
         }
       }
+    }
+
+    if (!matchedAnyStrategy) {
+      // [TEMP DIAGNOSTIC]
+      _lastRejection = const SmsRejectionInfo(
+        reason: 'UNKNOWN_SENDER',
+        failureStep: 'NO_MATCHING_STRATEGY',
+      );
     }
 
     // 4. Return null if parsing fails or message is irrelevant

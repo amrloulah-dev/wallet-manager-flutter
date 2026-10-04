@@ -1,21 +1,33 @@
 import '../../errors/app_error_handler.dart';
 import '../models/parsed_sms_dto.dart';
 
+// [TEMP DIAGNOSTIC]
+class SmsRejectionInfo {
+  final String reason;
+  final String failureStep;
+  const SmsRejectionInfo({required this.reason, required this.failureStep});
+}
+
 abstract class SmsParserStrategy {
   /// Returns true if this strategy can handle the given sender.
   bool canParse(String sender);
 
   /// Parses the message body and returns a DTO.
   /// Returns null if parsing fails or keywords are missing.
-  ParsedSmsDto? parse(String normalizedBody);
+  ParsedSmsDto? parse(
+    String normalizedBody, [
+    String? sender,
+    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+  ]);
 
   // ── Strict Extraction Helpers ─────────────────────────────
 
   /// Strict anchor-based amount regex.
+  /// Strict anchor-based amount regex.
   /// Only matches amounts immediately following designated linguistic anchors.
   /// Accepts strictly English decimal dot (.) notation (\d+(?:\.\d+)?).
   static final RegExp amountAnchorRegex = RegExp(
-    r'(?:مبلغ|بمبلغ|خصم|amount\s+of\s+(?:egp|le)?|amount\s*:\s*|amount\s+|received\s+|sent\s+)\s*(?<amount>\d+(?:\.\d+)?)',
+    r'(?:مبلغ|بمبلغ|بقيمة|بقيمه|قيمة|قيمه|خصم|amount\s+of\s+(?:egp|le)?|amount\s*:\s*|amount\s+|received\s+|sent\s+)\s*(?<amount>\d+(?:\.\d+)?)',
     caseSensitive: false,
   );
 
@@ -28,6 +40,25 @@ abstract class SmsParserStrategy {
   /// Standalone fallback Egyptian mobile phone regex.
   static final RegExp standalonePhoneRegex = RegExp(r'01[0125]\d{8}');
 
+  /// Strips fee, service charge, and commission clauses from SMS body as noise.
+  /// The app calculates all fees and commissions internally and automatically.
+  static final RegExp feeClauseRegex = RegExp(
+    r'(?:'
+    // Arabic: [تم خصم / خصم / بخصم] X [جنيه/جم] رسوم/مصاريف/عمولة [الخدمة/تحويل/ادارية]
+    r'(?:تم\s+خصم|خصم|بخصم)?\s*[\d.]+\s*(?:جنيه|جم|egp|le)?\s*(?:رسوم|مصاريف|عمول[ةه])(?:\s*(?:الخدم[ةه]|خدم[ةه]|إداري[ةه]|اداري[ةه]|تحويل))*'
+    r'|'
+    // Arabic: رسوم/مصاريف/عمولة [الخدمة/تحويل/ادارية] [:] X [جنيه/جم]
+    r'(?:رسوم|مصاريف|عمول[ةه])(?:\s*(?:الخدم[ةه]|خدم[ةه]|إداري[ةه]|اداري[ةه]|تحويل))?\s*(?:هي|:)?\s*[\d.]+\s*(?:جنيه|جم|egp|le)?'
+    r'|'
+    // English: [service] fee / fees / commission [of / :] X [egp / le] [was debited / debited / deducted]
+    r'(?:service\s+fee|fee|fees|commission)\s*(?:of|:)?\s*[\d.]+\s*(?:egp|le)?(?:\s*(?:was|is)?\s*(?:debited|deducted))?'
+    r'|'
+    // English: [debited / deducted] X [egp] [as] fee / service fee / commission
+    r'(?:debited|deducted)\s*[\d.]+\s*(?:egp|le)?\s*(?:as\s+)?(?:fee|service\s+fee|commission)'
+    r')',
+    caseSensitive: false,
+  );
+
   // ── Compound Context Regexes & Keywords ────────────────────
 
   static final List<RegExp> _debitCompoundRegexes = [
@@ -35,7 +66,9 @@ abstract class SmsParserStrategy {
     RegExp(r'sent', caseSensitive: false),
     RegExp(r'تنفيذ\s+تحويل\s+من', caseSensitive: false),
     RegExp(r'من\s+(?:بطاقة|بطاقه|كارت|كارتك|كارتكم|بطاقتك|بطاقتكم|حسابكم|حسابك)', caseSensitive: false),
-    RegExp(r'تحويل.*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)', caseSensitive: false),
+    RegExp(r'تحويل.*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))', caseSensitive: false),
+    RegExp(r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت).*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))', caseSensitive: false),
+    RegExp(r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت)\s+مبلغ', caseSensitive: false),
     RegExp(r'دفع', caseSensitive: false),
     RegExp(r'سحب', caseSensitive: false),
     RegExp(r'paid', caseSensitive: false),
@@ -51,28 +84,46 @@ abstract class SmsParserStrategy {
     RegExp(r'received', caseSensitive: false),
     RegExp(r'ايداع|إيداع', caseSensitive: false),
     RegExp(r'وارد', caseSensitive: false),
-    RegExp(r'تحويل.*?(?:لبطاقتكم|لبطاقتك|لحسابكم|لحسابك|في\s+حسابكم|في\s+حسابك|الي\s+حسابك|الى\s+حسابك|الي\s+حسابكم|الى\s+حسابكم)', caseSensitive: false),
-    RegExp(r'(?:محول|تحويل)\s+من', caseSensitive: false),
+    RegExp(r'تحويل.*?(?:لبطاقتكم|لبطاقتك|لحسابكم|لحسابك|في\s+حسابكم|في\s+حسابك|الي\s+حسابك|الى\s+حسابك|الي\s+حسابكم|الى\s+حسابكم|في\s+محفظتك|في\s+محفظتكم|الي\s+محفظتك|الى\s+محفظتك|الي\s+محفظتكم|الى\s+محفظتكم)', caseSensitive: false),
+    RegExp(r'(?:محول|تحويل|مرسل|ارسال|إرسال)\s+من', caseSensitive: false),
     RegExp(r'وصلك|وصل', caseSensitive: false),
     RegExp(r'credited', caseSensitive: false),
     RegExp(r'deposit', caseSensitive: false),
     RegExp(r'transfer\s+received', caseSensitive: false),
   ];
 
+  static final RegExp _strongCreditAnchor = RegExp(
+    r'(?:تم\s+استلام|استلام|تم\s+ايداع|إيداع|ايداع|تم\s+اضافة|إضافة|اضافة|وارد|وصلك|received|credited|deposit)',
+    caseSensitive: false,
+  );
+
+  static final RegExp _strongDebitAnchor = RegExp(
+    r'(?:تم\s+ارسال|تم\s+إرسال|ارسال|إرسال|أرسلت|ارسلت|تم\s+سحب|سحب|تم\s+دفع|دفع|تنفيذ\s+تحويل\s+من|من\s+(?:بطاقة|بطاقه|كارت|كارتك|كارتكم|بطاقتك|بطاقتكم|حسابكم|حسابك)|paid|debited|sent|transfer\s+sent)',
+    caseSensitive: false,
+  );
+
   /// Parses a normalized SMS body using strict anchor-based extraction and compound context.
   static ParsedSmsDto? parseStrict({
     required String normalizedBody,
     required String defaultProvider,
     required String strategyTag,
+    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
   }) {
-    // 1. Amount Extraction (Anchor-Based ONLY)
-    final amountMatch = amountAnchorRegex.firstMatch(normalizedBody);
+    // 0. Fee Clause Stripping (Fees treated as noise per system architecture)
+    final sanitizedBody = normalizedBody.replaceAll(feeClauseRegex, ' ');
+
+    // 1. Amount Extraction (Anchor-Based ONLY on sanitized body)
+    final amountMatch = amountAnchorRegex.firstMatch(sanitizedBody);
     if (amountMatch == null) {
+      // [TEMP DIAGNOSTIC]
+      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Regex anchor missing in: $normalizedBody');
       return null;
     }
 
     final rawAmountStr = amountMatch.namedGroup('amount');
     if (rawAmountStr == null) {
+      // [TEMP DIAGNOSTIC]
+      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Amount named group missing in: $normalizedBody');
       return null;
     }
 
@@ -82,17 +133,37 @@ abstract class SmsParserStrategy {
         'Failed to parse numeric amount: $rawAmountStr',
         '$strategyTag:parseStrict',
       );
+      // [TEMP DIAGNOSTIC]
+      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Invalid numeric amount "$rawAmountStr" in: $normalizedBody');
       return null;
     }
 
-    // 2. Transaction Type Resolution (Compound Context)
-    final isDebit =
-        _debitCompoundRegexes.any((r) => r.hasMatch(normalizedBody));
-    final isCredit =
-        _creditCompoundRegexes.any((r) => r.hasMatch(normalizedBody));
+    // 2. Transaction Type Resolution (Compound Context with Action Anchor Precedence)
+    bool isDebit =
+        _debitCompoundRegexes.any((r) => r.hasMatch(sanitizedBody));
+    bool isCredit =
+        _creditCompoundRegexes.any((r) => r.hasMatch(sanitizedBody));
 
-    // Fail-fast if type is ambiguous or contradictory
+    if (isDebit && isCredit) {
+      final hasStrongCredit = _strongCreditAnchor.hasMatch(sanitizedBody);
+      final hasStrongDebit = _strongDebitAnchor.hasMatch(sanitizedBody);
+
+      if (hasStrongCredit && !hasStrongDebit) {
+        isDebit = false;
+      } else if (hasStrongDebit && !hasStrongCredit) {
+        isCredit = false;
+      } else {
+        // True contradiction or ambiguity
+        // [TEMP DIAGNOSTIC]
+        onDiagnostic?.call('TYPE_UNRESOLVED', 'Conflicting debit and credit indicators in: $sanitizedBody');
+        return null;
+      }
+    }
+
+    // Fail-fast if neither matches or still ambiguous
     if (isDebit == isCredit) {
+      // [TEMP DIAGNOSTIC]
+      onDiagnostic?.call('TYPE_UNRESOLVED', 'No debit/credit context found in: $sanitizedBody');
       return null;
     }
 
@@ -101,12 +172,12 @@ abstract class SmsParserStrategy {
 
     // 3. Counterparty Phone & Source/Provider Routing
     String? counterpartyNumber;
-    final prefixedMatch = prefixedPhoneRegex.firstMatch(normalizedBody);
+    final prefixedMatch = prefixedPhoneRegex.firstMatch(sanitizedBody);
     if (prefixedMatch != null) {
       counterpartyNumber = prefixedMatch.namedGroup('number');
     }
     if (counterpartyNumber == null || counterpartyNumber.isEmpty) {
-      final fallbackMatch = standalonePhoneRegex.firstMatch(normalizedBody);
+      final fallbackMatch = standalonePhoneRegex.firstMatch(sanitizedBody);
       if (fallbackMatch != null) {
         counterpartyNumber = fallbackMatch.group(0);
       }

@@ -45,6 +45,11 @@ void setNotificationsPlugin(FlutterLocalNotificationsPlugin plugin) {
   _notificationsInitialized = true;
 }
 
+/// [TEMP DIAGNOSTIC] Allows mocking DateTime.now for test determinism
+@visibleForTesting
+DateTime Function() clockNow = DateTime.now;
+
+
 /// Initializes the local notifications plugin (idempotent).
 Future<void> _ensureNotificationsInitialized() async {
   if (_notificationsInitialized) return;
@@ -70,7 +75,8 @@ Future<void> _showWakeUpNotification(double amount) async {
     _kChannelName,
     channelDescription: _kChannelDesc,
     importance: Importance.max,
-    priority: Priority.high,
+    priority: Priority.max,
+    fullScreenIntent: true,
     category: AndroidNotificationCategory.alarm,
     visibility: fln.NotificationVisibility.public,
     playSound: true,
@@ -142,21 +148,57 @@ Future<void> handleIncomingSms(
     }
 
     // ── Guard: Feature flag ─────────────────────────────────
-    if (!storage.isSmsAutomationEnabled) return;
+    if (!storage.isSmsAutomationEnabled) {
+      // [TEMP DIAGNOSTIC]
+      await storage.logRejectedSms(
+        sender: address,
+        rawBody: body,
+        reason: 'SUBSCRIPTION_INACTIVE',
+        failureStep: 'FEATURE_DISABLED',
+      );
+      return;
+    }
 
     // ── Guard: Subscription Limits ───────────────────────────
     final isSuspended = storage.subIsSuspended;
-    if (isSuspended) return;
+    if (isSuspended) {
+      // [TEMP DIAGNOSTIC]
+      await storage.logRejectedSms(
+        sender: address,
+        rawBody: body,
+        reason: 'SUBSCRIPTION_INACTIVE',
+        failureStep: 'SUBSCRIPTION_SUSPENDED',
+      );
+      return;
+    }
 
     final smsEnabled = storage.subSmsEnabled;
-    if (!smsEnabled) return;
+    if (!smsEnabled) {
+      // [TEMP DIAGNOSTIC]
+      await storage.logRejectedSms(
+        sender: address,
+        rawBody: body,
+        reason: 'SUBSCRIPTION_INACTIVE',
+        failureStep: 'SMS_DISABLED',
+      );
+      return;
+    }
 
     final isLifetime = storage.isSubLifetime;
     if (!isLifetime) {
       final endDateMs = storage.subEndDateMs;
       if (endDateMs != null) {
         final endDate = DateTime.fromMillisecondsSinceEpoch(endDateMs);
-        if (DateTime.now().isAfter(endDate)) return;
+        if (clockNow().isAfter(endDate)) {
+          // [TEMP DIAGNOSTIC]
+          await storage.logRejectedSms(
+            sender: address,
+            rawBody: body,
+            reason: 'SUBSCRIPTION_INACTIVE',
+            failureStep: 'SUBSCRIPTION_EXPIRED',
+          );
+          return;
+        }
       }
     }
 
@@ -164,14 +206,48 @@ Future<void> handleIncomingSms(
     // If the main app hasn't synced subscription data in >24 hours,
     // block processing and notify the user to open the app.
     if (!storage.isSubscriptionSyncFresh) {
+      // [TEMP DIAGNOSTIC]
+      await storage.logRejectedSms(
+        sender: address,
+        rawBody: body,
+        reason: 'SUBSCRIPTION_INACTIVE',
+        failureStep: 'SYNC_STALE_24H',
+      );
       await _showStaleSyncNotification();
       return;
+    }
+
+    // ── Guard: Stale Message (>24h) ──────────────────────────
+    if (message.date != null) {
+      final messageDate = DateTime.fromMillisecondsSinceEpoch(message.date!);
+      if (clockNow().difference(messageDate).inHours > 24) {
+        // [TEMP DIAGNOSTIC]
+        await storage.logRejectedSms(
+          sender: address,
+          rawBody: body,
+          reason: 'STALE_SMS',
+          failureStep: 'MESSAGE_OLDER_THAN_24H',
+        );
+        return;
+      }
     }
 
     // ── Parse ───────────────────────────────────────────────
     final parser = SmsParserEngine();
     final ParsedSmsDto? dto = parser.parse(address, body);
-    if (dto == null) return; // Not a transaction SMS
+    if (dto == null) {
+      // [TEMP DIAGNOSTIC]
+      final rejection = parser.lastRejection;
+      if (rejection != null) {
+        await storage.logRejectedSms(
+          sender: address,
+          rawBody: body,
+          reason: rejection.reason,
+          failureStep: rejection.failureStep,
+        );
+      }
+      return; // Not a transaction SMS
+    }
 
     // ── Build overlay arguments (Decoupled from SIM slot) ───
     final Map<String, dynamic> overlayArgs = {

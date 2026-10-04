@@ -34,7 +34,7 @@ void main() {
 
       await storage.saveCurrentActiveSms(item);
 
-      final readData = storage.readCurrentActiveSms();
+      final readData = await storage.readCurrentActiveSms();
       expect(readData, isNotNull);
       expect(readData!['amount'], 100.0);
       expect(readData['sender'], '01011111111');
@@ -44,7 +44,7 @@ void main() {
       await storage.saveCurrentActiveSms({'id': 1, 'amount': 10.0});
       await storage.saveCurrentActiveSms({'id': 2, 'amount': 20.0});
 
-      final active = storage.readCurrentActiveSms();
+      final active = await storage.readCurrentActiveSms();
       expect(active, isNotNull);
       expect(active!['id'], 2);
       expect(active['amount'], 20.0);
@@ -52,39 +52,64 @@ void main() {
 
     test('clearCurrentActiveSms should purge the active SMS', () async {
       await storage.saveCurrentActiveSms({'amount': 50.0});
-      expect(storage.readCurrentActiveSms(), isNotNull);
+      expect(await storage.readCurrentActiveSms(), isNotNull);
 
       await storage.clearCurrentActiveSms();
 
-      expect(storage.readCurrentActiveSms(), isNull);
+      expect(await storage.readCurrentActiveSms(), isNull);
     });
   });
 
-  group('Completed Transaction IPC Sync Key Separation', () {
+  group('Completed Transaction IPC Sync Key Separation & Multi-Item Buffer', () {
     test('saveCompletedTxSync should write to completed_tx_sync and not mutate active SMS', () async {
       final smsData = {'amount': 100.0, 'sender': '01000000000', 'type': 'credit'};
       await storage.saveCurrentActiveSms(smsData);
 
-      final txSyncData = {
+      final txSyncData1 = {
         'transactionId': 'tx_123',
         'amount': 100.0,
         'walletId': 'wallet_abc',
         'type': 'credit',
       };
-      await storage.saveCompletedTxSync(txSyncData);
+      await storage.saveCompletedTxSync(txSyncData1);
 
       // Active SMS must remain intact
-      expect(storage.readCurrentActiveSms()?['amount'], 100.0);
+      expect((await storage.readCurrentActiveSms())?['amount'], 100.0);
 
-      // Completed sync read should return the txSyncData
-      final readTx = await storage.readCompletedTxSync();
-      expect(readTx, isNotNull);
-      expect(readTx!['transactionId'], 'tx_123');
+      // Completed sync read should return the list with txSyncData1
+      final readTxList1 = await storage.readCompletedTxSync();
+      expect(readTxList1, hasLength(1));
+      expect(readTxList1.first['transactionId'], 'tx_123');
 
-      // Clearing completed sync must not clear the active SMS
+      // Multi-item buffer: second transaction must append, not overwrite
+      final txSyncData2 = {
+        'transactionId': 'tx_456',
+        'amount': 250.0,
+        'walletId': 'wallet_def',
+        'type': 'debit',
+      };
+      await storage.saveCompletedTxSync(txSyncData2);
+
+      final readTxList2 = await storage.readCompletedTxSync();
+      expect(readTxList2, hasLength(2));
+      expect(readTxList2[0]['transactionId'], 'tx_123');
+      expect(readTxList2[1]['transactionId'], 'tx_456');
+
+      // Clearing completed sync must return empty list and not clear the active SMS
       await storage.clearCompletedTxSync();
-      expect(await storage.readCompletedTxSync(), isNull);
-      expect(storage.readCurrentActiveSms()?['sender'], '01000000000');
+      expect(await storage.readCompletedTxSync(), isEmpty);
+      expect((await storage.readCurrentActiveSms())?['sender'], '01000000000');
+    });
+
+    test('readCompletedTxSync should handle legacy single Map backward compatibility', () async {
+      final prefs = await SharedPreferences.getInstance();
+      // Simulate legacy single Map JSON in storage
+      await prefs.setString('completed_tx_sync', '{"transactionId":"legacy_tx","amount":50.0}');
+
+      final readTxList = await storage.readCompletedTxSync();
+      expect(readTxList, hasLength(1));
+      expect(readTxList.first['transactionId'], 'legacy_tx');
+      expect(readTxList.first['amount'], 50.0);
     });
   });
 }

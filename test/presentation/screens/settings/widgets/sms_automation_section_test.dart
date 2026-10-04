@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/presentation/screens/settings/widgets/sms_automation_section.dart';
@@ -10,6 +11,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MockAuthProvider extends Mock implements AuthProvider {}
 
@@ -17,25 +22,58 @@ class MockSubscriptionProvider extends Mock implements SubscriptionProvider {}
 
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
+class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+
 class FakeRoute extends Fake implements Route<dynamic> {}
 
 void main() {
   late MockAuthProvider mockAuthProvider;
   late MockSubscriptionProvider mockSubscriptionProvider;
   late MockNavigatorObserver mockNavigatorObserver;
+  late MockFlutterSecureStorage mockSecureStorage;
+  String? lastCopiedText;
 
   setUpAll(() {
     registerFallbackValue(FakeRoute());
   });
 
-  setUp(() {
+  setUp(() async {
+    lastCopiedText = null;
+    SharedPreferences.setMockInitialValues({});
+    LocalStorageService.reset();
+
+    mockSecureStorage = MockFlutterSecureStorage();
+    when(() => mockSecureStorage.read(key: any(named: 'key')))
+        .thenAnswer((_) async => null);
+    when(() => mockSecureStorage.write(
+          key: any(named: 'key'),
+          value: any(named: 'value'),
+        )).thenAnswer((_) async => {});
+
+    await LocalStorageService.instance
+        .initialize(secureStorage: mockSecureStorage);
+
     mockAuthProvider = MockAuthProvider();
     mockSubscriptionProvider = MockSubscriptionProvider();
     mockNavigatorObserver = MockNavigatorObserver();
 
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') {
+        lastCopiedText = (call.arguments as Map)['text'] as String?;
+        return null;
+      }
+      return null;
+    });
+
     when(() => mockAuthProvider.isOwner).thenReturn(true);
     when(() => mockAuthProvider.isEmployee).thenReturn(false);
     when(() => mockSubscriptionProvider.isExpired).thenReturn(false);
+  });
+
+
+  tearDown(() {
+    LocalStorageService.reset();
   });
 
   Widget buildTestableWidget() {
@@ -114,5 +152,58 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Paywall'), findsOneWidget); // Routed correctly
     });
+
+    testWidgets('Diagnostic card renders with (0 messages) and empty copy shows SnackBar [TEMP DIAGNOSTIC]',
+        (tester) async {
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('سجل الرسائل المرفوضة (Diagnostic Logs)'), findsOneWidget);
+      expect(find.text('(0 messages)'), findsOneWidget);
+
+      // Tap copy when empty
+      await tester.tap(find.text('نسخ السجل'));
+      await tester.pump();
+
+      expect(find.text('لا توجد رسائل مرفوضة حالياً'), findsOneWidget);
+    });
+
+    testWidgets('Diagnostic card displays count, copies logs, and clears logs [TEMP DIAGNOSTIC]',
+        (tester) async {
+      final storage = LocalStorageService.instance;
+      await storage.initialize();
+      await storage.logRejectedSms(
+        sender: '01012345678',
+        rawBody: 'Raw test body',
+        reason: 'AMOUNT_NOT_FOUND',
+        failureStep: 'REGEX_FAILED',
+      );
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('(1 messages)'), findsOneWidget);
+
+      // Tap copy when populated
+      await tester.tap(find.text('نسخ السجل'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('تم نسخ سجل الرسائل المرفوضة بنجاح'), findsOneWidget);
+      expect(lastCopiedText, isNotNull);
+      expect(lastCopiedText, contains('"reason": "AMOUNT_NOT_FOUND"'));
+      expect(lastCopiedText, contains('"sender": "01012345678"'));
+
+
+
+      // Tap clear
+      await tester.tap(find.text('مسح'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('(0 messages)'), findsOneWidget);
+      expect(storage.getRejectedSmsLogs(), isEmpty);
+    });
   });
 }
+

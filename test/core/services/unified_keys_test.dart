@@ -38,7 +38,7 @@ void main() {
       // Verify it uses the correct key
       expect(prefs.containsKey('current_active_sms'), isTrue);
 
-      final readData = storage.readCurrentActiveSms();
+      final readData = await storage.readCurrentActiveSms();
       expect(readData?['amount'], 100.0);
     });
 
@@ -47,7 +47,7 @@ void main() {
       await prefs.setString('pending_overlay_tx', 'stale_data');
 
       // storage.readCurrentActiveSms() should NOT read from pending_overlay_tx
-      expect(storage.readCurrentActiveSms(), isNull);
+      expect(await storage.readCurrentActiveSms(), isNull);
     });
 
     test('should migrate languageCode to app_locale on initialization',

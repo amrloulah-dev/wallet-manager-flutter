@@ -94,7 +94,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('current_active_sms'), isTrue);
 
-      final readData = storage.readCurrentActiveSms();
+      final readData = await storage.readCurrentActiveSms();
       expect(readData?['txId'], '123');
 
       await storage.clearCurrentActiveSms();
