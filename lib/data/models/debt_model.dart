@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../../core/constants/firebase_constants.dart';
-import '../../core/utils/date_helper.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/utils/amount_validator.dart';
+import '../../core/enums/debt_enums.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class DebtModel {
   // Identity
@@ -14,23 +15,23 @@ class DebtModel {
   final String customerPhone;
 
   // Debt Details
-  final String debtType; // 'transaction' | 'store_sale'
-  final double amountDue; // المبلغ المستحق (المتبقي)
-  final double totalAmount; // إجمالي مبلغ الدين الأصلي
+  final DebtType debtType; // ENUM refactor
+  final double amountDue;
+  final double totalAmount;
   final String? notes;
 
   // Status
-  final String debtStatus; // 'open' | 'paid'
+  final DebtStatus debtStatus; // ENUM refactor
 
   // Dates
-  final Timestamp debtDate; // تاريخ إنشاء الدين
-  final Timestamp? paidDate; // تاريخ التسديد (null if open)
+  final DateTime? debtDate; // Made nullable
+  final DateTime? paidDate;
 
   // Tracking
-  final String createdBy; // userId who created
-  final Timestamp createdAt;
-  final String? markedPaidBy; // userId who marked as paid
-  final Timestamp? updatedAt;
+  final String createdBy;
+  final DateTime? createdAt; // Made nullable
+  final String? markedPaidBy;
+  final DateTime? updatedAt;
   final String? lastUpdatedBy;
 
   final String customerNameNormalized;
@@ -44,11 +45,11 @@ class DebtModel {
     required this.amountDue,
     required this.totalAmount,
     this.notes,
-    this.debtStatus = 'open',
-    required this.debtDate,
+    this.debtStatus = DebtStatus.open,
+    this.debtDate,
     this.paidDate,
     required this.createdBy,
-    required this.createdAt,
+    this.createdAt,
     this.markedPaidBy,
     this.updatedAt,
     this.lastUpdatedBy,
@@ -60,33 +61,45 @@ class DebtModel {
     }
     final data = doc.data() as Map<String, dynamic>;
 
-    final status = data['debtStatus'] ?? 'open';
-    final amountDue = (data['amountDue'] as num?)?.toDouble() ?? 0.0;
+    final statusStr = data['debtStatus'] as String? ?? 'open';
+    final debtStatus = DebtStatus.fromString(statusStr);
 
-    // Fallback for old data where totalAmount didn't exist
-    double totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
-    if (totalAmount == 0.0 && status == 'open') {
-      // If it's open, the total is at least the current due amount
-      totalAmount = amountDue;
+    final typeStr = data['debtType'] as String? ?? 'store_sale';
+    final debtType = DebtType.fromString(typeStr);
+
+    final amountDue = NumberParser.toDouble(data['amountDue']);
+    final totalAmount = NumberParser.toDouble(data['totalAmount']);
+
+    // VALIDATION: Ensure amounts are positive (P1-8 FIX)
+    AmountValidator.ensurePositiveOrZero(amountDue); // Allow 0 for paid debts
+    AmountValidator.ensurePositive(totalAmount);
+
+    final debtDate = (data['debtDate'] as Timestamp?)?.toDate();
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+    if (debtDate == null || createdAt == null) {
+      throw NotFoundException(
+        'Debt document ${doc.id} missing required timestamps (debtDate or createdAt)',
+      );
     }
 
     return DebtModel(
       debtId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      customerName: data['customerName'] ?? '',
-      customerPhone: data['customerPhone'] ?? '',
-      debtType: data['debtType'] ?? 'store_sale',
+      storeId: data[FirebaseConstants.storeId] as String? ?? '',
+      customerName: data['customerName'] as String? ?? '',
+      customerPhone: data['customerPhone'] as String? ?? '',
+      debtType: debtType,
       amountDue: amountDue,
       totalAmount: totalAmount,
-      notes: data[FirebaseConstants.notes],
-      debtStatus: status,
-      debtDate: data['debtDate'] ?? Timestamp.now(),
-      paidDate: data['paidDate'],
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
-      markedPaidBy: data['markedPaidBy'],
-      updatedAt: data['updatedAt'],
-      lastUpdatedBy: data['lastUpdatedBy'],
+      notes: data[FirebaseConstants.notes] as String?,
+      debtStatus: debtStatus,
+      debtDate: debtDate,
+      paidDate: (data['paidDate'] as Timestamp?)?.toDate(),
+      createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
+      createdAt: createdAt,
+      markedPaidBy: data['markedPaidBy'] as String?,
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      lastUpdatedBy: data['lastUpdatedBy'] as String?,
     );
   }
 
@@ -96,17 +109,18 @@ class DebtModel {
       'customerName': customerName,
       'customerNameNormalized': customerNameNormalized,
       'customerPhone': customerPhone,
-      'debtType': debtType,
+      'debtType': debtType.name,
       'amountDue': amountDue,
       'totalAmount': totalAmount,
       FirebaseConstants.notes: notes,
-      'debtStatus': debtStatus,
-      'debtDate': debtDate,
-      'paidDate': paidDate,
+      'debtStatus': debtStatus.name,
+      'debtDate': debtDate != null ? Timestamp.fromDate(debtDate!) : null,
+      'paidDate': paidDate != null ? Timestamp.fromDate(paidDate!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.createdAt: createdAt,
+      FirebaseConstants.createdAt:
+          createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'markedPaidBy': markedPaidBy,
-      'updatedAt': updatedAt,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'lastUpdatedBy': lastUpdatedBy,
     };
   }
@@ -116,17 +130,17 @@ class DebtModel {
     String? storeId,
     String? customerName,
     String? customerPhone,
-    String? debtType,
+    DebtType? debtType,
     double? amountDue,
     double? totalAmount,
     String? notes,
-    String? debtStatus,
-    Timestamp? debtDate,
-    Timestamp? paidDate,
+    DebtStatus? debtStatus,
+    DateTime? debtDate,
+    DateTime? paidDate,
     String? createdBy,
-    Timestamp? createdAt,
+    DateTime? createdAt,
     String? markedPaidBy,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     String? lastUpdatedBy,
   }) {
     return DebtModel(
@@ -150,29 +164,13 @@ class DebtModel {
   }
 
   // Getters
-  bool get isOpen => debtStatus == 'open';
-  bool get isPaid => debtStatus == 'paid';
+  bool get isOpen => debtStatus == DebtStatus.open;
+  bool get isPaid => debtStatus == DebtStatus.paid;
 
-  bool get isTransactionDebt => debtType == 'transaction';
-  bool get isStoreSaleDebt => debtType == 'store_sale';
-
-  String get debtTypeDisplay =>
-      isTransactionDebt ? 'معاملة محفظة' : 'بيع من المحل';
-  String get debtStatusDisplay => isOpen ? 'مفتوح' : 'مسدد';
-
-  IconData get debtTypeIcon =>
-      isTransactionDebt ? Icons.swap_horiz : Icons.shopping_cart;
-
-  Color get statusColor => isOpen ? AppColors.error : AppColors.success;
-
-  int get daysSinceCreated =>
-      DateTime.now().difference(debtDate.toDate()).inDays;
-  String get formattedDebtDate => DateHelper.formatTimestamp(debtDate);
-  String get formattedPaidDate =>
-      paidDate != null ? DateHelper.formatTimestamp(paidDate!) : '';
-  String get relativeDebtDate => DateHelper.getRelativeTime(debtDate.toDate());
+  bool get isTransactionDebt => debtType == DebtType.transaction;
+  bool get isStoreSaleDebt => debtType == DebtType.storeSale;
 
   @override
   String toString() =>
-      'DebtModel(id: $debtId, customer: $customerName, amountDue: $amountDue, totalAmount: $totalAmount)';
+      'DebtModel(id: $debtId, customer: [SENSITIVE], amountDue: [SENSITIVE], totalAmount: [SENSITIVE])';
 }

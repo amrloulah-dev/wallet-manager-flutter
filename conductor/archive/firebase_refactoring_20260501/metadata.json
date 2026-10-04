@@ -1,0 +1,8 @@
+{
+  "track_id": "firebase_refactoring_20260501",
+  "type": "refactor",
+  "status": "new",
+  "created_at": "2026-05-01T00:00:00Z",
+  "updated_at": "2026-05-01T00:00:00Z",
+  "description": "Refactor specific repositories and providers in Wallet Manager to fix financial race conditions, prevent billing explosions, and resolve architectural issues based on the Phase 4 blueprint."
+}

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:walletmanager/presentation/widgets/wallet/wallet_limit_bar.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/constants/route_constants.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../../providers/platform_settings_provider.dart';
+import '../../utils/wallet_extensions.dart';
+import '../../../l10n/arb/app_localizations.dart';
+import '../../../core/enums/wallet_enums.dart';
 
-class WalletCard extends StatefulWidget {
+class WalletCard extends StatelessWidget {
   final WalletModel wallet;
+  final bool isFrozen;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -14,234 +19,446 @@ class WalletCard extends StatefulWidget {
   const WalletCard({
     super.key,
     required this.wallet,
+    required this.isFrozen,
     required this.onTap,
     this.onEdit,
     this.onDelete,
   });
 
   @override
-  State<WalletCard> createState() => _WalletCardState();
-}
-
-class _WalletCardState extends State<WalletCard> {
-  bool _isHighlighted = false;
-
-  @override
   Widget build(BuildContext context) {
-    final elevation = _isHighlighted ? 8.0 : 2.0;
-    final scale = _isHighlighted ? 0.98 : 1.0;
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final providerColor =
+        isFrozen ? Colors.grey : _getProviderColor(wallet.walletType);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      transform: Matrix4.identity()..scale(scale, scale),
-      child: Card(
-        elevation: elevation,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: widget.onTap,
-          onHighlightChanged: (isHighlighted) {
-            setState(() {
-              _isHighlighted = isHighlighted;
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildLimits(),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildStats(context),
-                if (widget.onEdit != null || widget.onDelete != null) ...[
-                  const SizedBox(height: 12),
-                  _buildActions(),
-                ]
-              ],
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+
+    final double sendDailyPercentage = dynamicLimits.dailySend > 0
+        ? (wallet.sendLimits.dailyUsed / dynamicLimits.dailySend * 100)
+            .clamp(0.0, 100.0)
+        : 0.0;
+    final double receiveDailyPercentage = dynamicLimits.dailyReceive > 0
+        ? (wallet.receiveLimits.dailyUsed / dynamicLimits.dailyReceive * 100)
+            .clamp(0.0, 100.0)
+        : 0.0;
+
+    final String sendDailyWarningLevel = isFrozen
+        ? 'grey'
+        : (sendDailyPercentage >= 90
+            ? 'red'
+            : (sendDailyPercentage >= 70 ? 'yellow' : 'green'));
+
+    final isSuspended = wallet.walletStatus == WalletStatus.suspended;
+    final statusColor = isSuspended ? AppColors.error : AppColors.success;
+
+    return Transform.scale(
+      scale: 0.90,
+      child: InkWell(
+        onTap: isFrozen
+            ? () => Navigator.pushNamed(context, RouteConstants.upgradeScreen)
+            : onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : AppColors.divider(context),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.4)
+                    : AppColors.shadow.withOpacity(0.08),
+                blurRadius: isDark ? 24 : 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(isDark ? 0.2 : 0.12),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color:
+                                  statusColor.withOpacity(isDark ? 0.35 : 0.25),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.getWalletStatusName(wallet.walletStatus),
+                            style: TextStyle(
+                              color: isDark
+                                  ? (isSuspended
+                                      ? Colors.red.shade300
+                                      : Colors.green.shade300)
+                                  : (isSuspended
+                                      ? Colors.red.shade700
+                                      : Colors.green.shade700),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Phone Number (enforced LTR format directionally)
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            NumberFormatter.formatPhoneNumber(
+                                wallet.phoneNumber),
+                            style: TextStyle(
+                              color: AppColors.textPrimary(context),
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Provider Type
+                        Text(
+                          l10n.getWalletTypeName(wallet.walletType),
+                          style: TextStyle(
+                            color: AppColors.textSecondary(context),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Provider Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: providerColor.withOpacity(isDark ? 0.18 : 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color:
+                              providerColor.withOpacity(isDark ? 0.28 : 0.18)),
+                    ),
+                    child: Icon(
+                      wallet.walletTypeIcon,
+                      color: providerColor,
+                      size: 32,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Divider(color: AppColors.divider(context), height: 1),
+              const SizedBox(height: 20),
+
+              // Limits Section
+              _buildLimitBar(
+                context: context,
+                label: l10n.sendDaily,
+                used: wallet.getLimits().dailyUsed,
+                limit: dynamicLimits.dailySend,
+                percentage: sendDailyPercentage,
+                warningLevel: sendDailyWarningLevel,
+              ),
+              const SizedBox(height: 16),
+              _buildLimitBar(
+                context: context,
+                label: l10n.receiveDaily,
+                used: wallet.getReceiveLimits().dailyUsed,
+                limit: dynamicLimits.dailyReceive,
+                percentage: receiveDailyPercentage,
+                warningLevel: isFrozen ? 'grey' : 'green',
+              ),
+              const SizedBox(height: 20),
+              Divider(color: AppColors.divider(context), height: 1),
+              const SizedBox(height: 20),
+
+              // Balance Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : AppColors.scaffoldBg(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.04)
+                        : AppColors.divider(context).withOpacity(0.6),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary
+                                  .withOpacity(isDark ? 0.2 : 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.credit_card,
+                              color: isDark
+                                  ? Colors.blue.shade300
+                                  : AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              l10n.currentBalance,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.textSecondary(context),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      NumberFormatter.formatAmount(wallet.balance,
+                          showCurrency: true),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isFrozen
+                            ? Colors.grey
+                            : (isDark
+                                ? Colors.blue.shade300
+                                : AppColors.primary),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action Buttons
+              if (onEdit != null || onDelete != null) ...[
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    if (onDelete != null)
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: isFrozen ? null : onDelete,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.error
+                                  .withOpacity(isDark ? 0.15 : 0.08),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: AppColors.error
+                                      .withOpacity(isDark ? 0.3 : 0.2)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.delete_outline,
+                                    size: 20, color: AppColors.error),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.delete,
+                                  style: const TextStyle(
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (onDelete != null && onEdit != null)
+                      const SizedBox(width: 16),
+                    if (onEdit != null)
+                      Expanded(
+                        flex: 2,
+                        child: InkWell(
+                          onTap: isFrozen ? null : onEdit,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isFrozen
+                                  ? (isDark
+                                      ? Colors.white.withOpacity(0.08)
+                                      : Colors.grey.shade200)
+                                  : AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: isFrozen
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color:
+                                            AppColors.primary.withOpacity(0.25),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit_outlined,
+                                    size: 20,
+                                    color: isFrozen
+                                        ? AppColors.textSecondary(context)
+                                        : Colors.white),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.edit,
+                                  style: TextStyle(
+                                      color: isFrozen
+                                          ? AppColors.textSecondary(context)
+                                          : Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Icon(widget.wallet.walletTypeIcon, size: 32, color: AppColors.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                NumberFormatter.formatPhoneNumber(widget.wallet.phoneNumber),
-                style: AppTextStyles.h3,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.wallet.walletTypeDisplayName,
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textSecondary(context)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: (widget.wallet.walletStatus == 'new'
-                    ? AppColors.warning
-                    : AppColors.success)
-                .withAlpha((0.15 * 255).round()),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            widget.wallet.walletStatusDisplayName,
-            style: AppTextStyles.labelSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: widget.wallet.walletStatus == 'new'
-                  ? AppColors.warning
-                  : AppColors.success,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLimits() {
-    final sendLimits = widget.wallet.getLimits();
+  Widget _buildLimitBar({
+    required BuildContext context,
+    required String label,
+    required double used,
+    required double limit,
+    required double percentage,
+    required String warningLevel,
+  }) {
+    final int displayPercentage = percentage.clamp(0.0, 100.0).toInt();
+    final double progressValue = (percentage / 100).clamp(0.0, 1.0);
+    final Color barColor = _getColorForWarningLevel(warningLevel);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WalletLimitBar(
-          label: 'إرسال يومي',
-          used: sendLimits.dailyUsed,
-          limit: sendLimits.dailyLimit,
-          percentage: sendLimits.dailyPercentage,
-          warningLevel: widget.wallet.sendDailyWarningLevel,
-        ),
-        const SizedBox(height: 8),
-        WalletLimitBar(
-          label: 'استقبال يومي',
-          used: widget.wallet.receiveLimits.dailyLimit > 0
-              ? (widget.wallet.receiveLimits.dailyLimit -
-                  widget.wallet.availableToReceiveDaily)
-              : 0.0,
-          limit: widget.wallet.receiveLimits.dailyLimit,
-          percentage: widget.wallet.receiveLimits.dailyLimit > 0
-              ? (1.0 -
-                      (widget.wallet.availableToReceiveDaily /
-                          widget.wallet.receiveLimits.dailyLimit)) *
-                  100
-              : 0,
-          warningLevel:
-              'green', // This should be calculated in the model ideally
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStats(BuildContext context) {
-    return Column(
-      children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.account_balance_wallet_outlined,
-                    size: 16, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text('الرصيد الحالي', style: AppTextStyles.bodySmall),
-              ],
+            Text(
+              '$displayPercentage%',
+              style: TextStyle(
+                color: barColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             Text(
-              NumberFormatter.formatAmount(widget.wallet.balance),
-              style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary, fontWeight: FontWeight.bold),
+              label,
+              style: TextStyle(
+                color: AppColors.textSecondary(context),
+                fontSize: 14,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.swap_horiz,
-                    size: 16, color: AppColors.textSecondary(context)),
-                const SizedBox(width: 4),
-                Text(
-                  'معاملات: ${NumberFormatter.formatNumber(widget.wallet.stats.totalTransactions)}',
-                  style: AppTextStyles.bodySmall,
-                ),
-              ],
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: AppColors.divider(context),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progressValue,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation(barColor),
+              minHeight: 8,
             ),
-            Row(
-              children: [
-                Icon(Icons.attach_money,
-                    size: 16, color: AppColors.textSecondary(context)),
-                const SizedBox(width: 4),
-                Text(
-                  'عمولة: ${NumberFormatter.formatAmount(widget.wallet.stats.totalCommission)}',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.success),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                '${NumberFormatter.formatAmount(used, showCurrency: false)} / ${NumberFormatter.formatAmount(limit)} EGP',
+                style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 10,
+                  fontFamily: 'monospace',
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        if (widget.onEdit != null)
-          ElevatedButton.icon(
-            onPressed: widget.onEdit,
-            icon:
-                const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
-            label: const Text(
-              'تعديل',
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-          ),
-        SizedBox(
-          width: 15,
-        ),
-        if (widget.onDelete != null)
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            onPressed: widget.onDelete,
-            icon:
-                const Icon(Icons.delete_outline, size: 18, color: Colors.white),
-            label: const Text(
-              'حذف',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-      ],
-    );
+  Color _getColorForWarningLevel(String level) {
+    switch (level) {
+      case 'grey':
+        return Colors.grey;
+      case 'green':
+        return AppColors.success;
+      case 'yellow':
+        return AppColors.warning;
+      case 'red':
+        return AppColors.error;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  Color _getProviderColor(WalletType type) {
+    switch (type) {
+      case WalletType.vodafoneCash:
+        return Colors.red;
+      case WalletType.instaPay:
+        return Colors.blue;
+      case WalletType.orangeCash:
+        return Colors.orange;
+      case WalletType.etisalatCash:
+        return Colors.green;
+      case WalletType.wePay:
+        return Colors.purple;
+      case WalletType.other:
+        return AppColors.primary;
+    }
   }
 }

@@ -1,5 +1,6 @@
 {
   "@@locale": "ar",
+  "error_network_timeout": "انتهى وقت الاتصال، يرجى التحقق من الإنترنت",
   "contactUs": "تواصل معنا",
   "whatsapp": "واتساب",
   "email": "البريد الإلكتروني",
@@ -26,9 +27,11 @@
   "contactToRenew": "تواصل معنا لتجديد الترخيص",
   "appSettings": "إعدادات التطبيق",
   "theme": "المظهر",
-  "license": "الترخيص",
+  "license": "الاشتراكات",
+  "subscriptionPlans": "باقات الاشتراك",
   "notAvailable": "غير متوفر",
   "logout": "تسجيل الخروج",
+  "login": "تسجيل الدخول",
   "logoutConfirmation": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
   "exit": "خروج",
   "logoutFailed": "فشل تسجيل الخروج",
@@ -49,7 +52,7 @@
   "loginWithGoogle": "تسجيل الدخول عبر جوجل",
   "noAccountLinked": "لا يوجد حساب مرتبط بهذا البريد. يرجى إكمال التسجيل.",
   "licenseKeyError": "خطأ: مفتاح الترخيص غير متوفر. يرجى الرجوع والتحقق منه.",
-  "activationFailed": "تم إنشاء الحساب ولكن فشل تفعيل مفتاح الترخيص. يرجى التواصل مع الدعم الفني.",
+  "activationFailed": "فشل التفعيل",
   "loginSuccess": "تم تسجيل الدخول بنجاح!",
   "createAccount": "إنشاء حساب جديد",
   "step1StoreInfo": "الخطوة 1: معلومات المحل",
@@ -88,8 +91,27 @@
   "pinInvalid": "الرقم السري غير صحيح",
   "welcome": "مرحباً",
   "wrongGoogleAccount": "يرجى تسجيل الدخول بحساب جوجل الخاص بالمتجر.",
-  "unexpectedError": "حدث خطأ غير متوقع.",
-  "contactToRenewBtn": "تواصل للتجديد",
+  "unexpectedError": "حدث خطأ غير متوقع",
+  "loggingIn": "جاري تسجيل الدخول...",
+  "employeeLoginSubtitle": "تسجيل دخول الموظفين",
+  "enterStorePassword": "أدخل كلمة مرور المتجر",
+  "requiredField": "مطلوب",
+  "selectEmployee": "اختر الموظف",
+  "selectEmployeeHint": "اضغط للاختيار",
+  "pleaseSelectEmployee": "يرجى اختيار الموظف",
+  "pinLabel": "رقم التعريف الشخصي (PIN)",
+  "pinMustBe4Digits": "يجب أن يكون 6 أرقام",
+  "loginAction": "تسجيل الدخول",
+  "createStoreSubtitle": "قم بإنشاء متجرك الجديد وابدأ فترتك التجريبية",
+  "ownerData": "بيانات المالك",
+  "ownerNameLabel": "اسم المالك",
+  "accountPassword": "كلمة مرور الحساب",
+  "registerWithGoogle": "تسجيل باستخدام Google",
+  "createAccountAction": "إنشاء الحساب",
+  "authError": "خطأ في المصادقة",
+  "pleaseSelectTransactionType": "يرجى اختيار نوع المعاملة",
+  "edit": "تعديل",
+  "payDebt": "تسديد الدين",
   "areYouOwner": "هل أنت مالك المتجر؟ تسجيل الدخول من هنا",
   "verify": "تحقق",
   "licenseExpired": "الترخيص منتهي",
@@ -106,6 +128,7 @@
   "debts": "الديون",
   "statistics": "الإحصائيات",
   "manageEmployees": "إدارة الموظفين",
+  "mySubscription": "اشتراكي",
   "errorLoadingStats": "لا يمكن تحميل الإحصائيات",
   "totalWallets": "إجمالي المحافظ",
   "totalTransactions": "إجمالي المعاملات",
@@ -167,6 +190,7 @@
   "addNewWallet": "إضافة محفظة جديدة",
   "phoneNumber": "رقم الموبايل",
   "phonePlaceholder": "01xxxxxxxxx",
+  "amountPlaceholder": "0.00",
   "initialBalance": "الرصيد المبدئي",
   "walletType": "نوع المحفظة",
   "selectWalletType": "اختر نوع المحفظة",
@@ -188,14 +212,12 @@
   "walletUpdatedSuccessfully": "تم تعديل المحفظة بنجاح",
   "walletAddedSuccessfully": "تم إضافة المحفظة بنجاح",
   "vodafoneCash": "فودافون كاش",
-  "instapay": "إنستاباي",
   "orangeCash": "أورانج كاش",
   "etisalatCash": "اتصالات كاش",
   "wePay": "WE Pay",
   "other": "أخرى",
   "noWalletSelected": "لم يتم تحديد محفظة.",
   "walletDetails": "تفاصيل المحفظة",
-  "edit": "تعديل",
   "loadingWalletData": "جاري تحميل بيانات المحفظة...",
   "errorLoadingData": "حدث خطأ أثناء تحميل البيانات.",
   "walletNotFound": "لم يتم العثور على المحفظة المطلوبة.",
@@ -233,5 +255,681 @@
   "transactionFees": "رسوم المعاملة",
   "totalDeduction": "إجمالي الخصم",
   "calculatingFees": "جاري حساب الرسوم...",
-  "accessDenied": "تم رفض الوصول"
+  "accessDenied": "تم رفض الوصول",
+  "frozen": "مُجمد",
+  "sendDaily": "إرسال يومي",
+  "receiveDaily": "استقبال يومي",
+  "debt": "دين",
+  "amountDue": "المبلغ المستحق:",
+  "deleteDebt": "حذف الدين",
+  "deleteDebtConfirmation": "هل أنت متأكد من حذف هذا الدين؟ لا يمكن التراجع عن هذا الإجراء.",
+  "dailySummary": "ملخص اليوم",
+  "sendAmount": "مبلغ الإرسال",
+  "receiveAmount": "مبلغ الاستقبال",
+  "transactionType": "نوع المعاملة",
+  "amount": "المبلغ",
+  "commission": "العمولة",
+  "loadingDetails": "جاري تحميل التفاصيل...",
+  "transactionNotFound": "لم يتم العور على المعاملة",
+  "retry": "إعادة المحاولة",
+  "totalAmount": "إجمالي المبلغ",
+  "totalCommissionLabel": "إجمالي العمولة",
+  "lastTransaction": "آخر معاملة",
+  "debtSummary": "ملخص الديون",
+  "totalDebts": "إجمالي الديون",
+  "paidDebts": "ديون مسددة",
+  "totalPaidAmount": "إجمالي المبلغ المسدد",
+  "generalStats": "الإحصائيات العامة",
+  "startDate": "تاريخ البداية",
+  "endDate": "تاريخ النهاية",
+  "applyFilter": "تطبيق الفلتر",
+  "clearFilter": "مسح الفلتر",
+  "filterDateError": "تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية",
+  "noDataInRange": "لا توجد بيانات في هذا النطاق الزمني.",
+  "noStatsToShow": "لا توجد إحصائيات لعرضها.",
+  "balance": "الرصيد",
+  "totalWalletBalance": "إجمالي الرصيد في المحافظ",
+  "sendTransactions": "معاملات الإرسال",
+  "receiveTransactions": "معاملات الاستقبال",
+  "amounts": "المبالغ",
+  "totalAmountCombined": "المبلغ الإجمالي",
+  "averageCommission": "متوسط العمولة للمعاملة",
+  "openDebtsLabel": "الديون المفتوحة",
+  "paidDebtsLabel": "الديون المسددة",
+  "transactionDetails": "تفاصيل المعاملة",
+  "total": "الإجمالي",
+  "customerDetails": "بيانات العميل",
+  "name": "الاسم",
+  "usedWallet": "المحفظة المستخدمة",
+  "walletNotFoundDetails": "لا يمكن العثور على تفاصيل المحفظة.",
+  "walletNumber": "رقم المحفظة",
+  "timeAndDate": "الوقت والتاريخ",
+  "date": "التاريخ",
+  "time": "الوقت",
+  "since": "منذ",
+  "transactionIsDebt": "هذه المعاملة دين",
+  "debtWarningMessage": "لم يتم دفع المبلغ من قبل العميل وقت إنشاء المعاملة.",
+  "recordedNotes": "الملاحظات المسجلة",
+  "transactionIdLabel": "معرف المعاملة",
+  "createdBy": "تم إنشاؤها بواسطة",
+  "unknown": "غير معروف",
+  "ownerRoleSuffix": " (المالك)",
+  "employeeRoleSuffix": " (موظف)",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "forgotPasswordMessage": "نسيت كلمة المرور؟",
+  "comingSoon": "قريباً",
+  "orLabel": "أو",
+  "continueWithGoogle": "المتابعة باستخدام Google",
+  "enterStoreEmailMessage": "أدخل البريد الإلكتروني للمتجر لتسجيل الدخول كموظف",
+  "storeEmail": "بريد المتجر الإلكتروني",
+  "findStore": "البحث عن المتجر",
+  "noAccountYet": "ليس لديك حساب؟",
+  "createStoreNew": "إنشاء متجر جديد",
+  "todayTransactions": "معاملات اليوم",
+  "all": "الكل",
+  "errorLoadingTransactionsGeneric": "حدث خطأ أثناء تحميل المعاملات.",
+  "noTransactionsTodayEmpty": "لا توجد معاملات اليوم",
+  "noTransactionsWithFilter": "لا توجد معاملات بهذا الفلتر",
+  "startAddingTransaction": "ابدأ بإضافة معاملة جديدة",
+  "transactionCreatedSuccess": "تم إنشاء المعاملة بنجاح",
+  "transactionCreationFailed": "فشل إنشاء المعاملة",
+  "ok": "حسناً",
+  "noWalletsAvailableAddFirst": "لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.",
+  "selectWalletForTransaction": "اختر المحفظة لإجراء المعاملة",
+  "customerPhone": "رقم موبايل العميل",
+  "customerNameOptional": "اسم العميل (اختياري)",
+  "enterClientName": "أدخل اسم العميل",
+  "amountAndCommission": "المبلغ والعمولة",
+  "amountLabel": "المبلغ",
+  "commissionLabel": "العمولة",
+  "invalidValue": "قيمة غير صالحة",
+  "totalLabel": "الإجمالي",
+  "reviewWalletLimits": "مراجعة حدود المحفظة",
+  "dailyLimitAfterTransaction": "الحد اليومي (بعد المعاملة)",
+  "monthlyLimitAfterTransaction": "الحد الشهري (بعد المعاملة)",
+  "walletLimitWarning": "تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.",
+  "additionalTransactionDetails": "أي تفاصيل إضافية عن المعاملة",
+  "createTransactionButton": "إنشاء المعاملة",
+  "transactionCreateFailed": "فشل إنشاء المعاملة",
+  "errorTitle": "خطأ",
+  "okButton": "حسناً",
+  "debtsTitle": "الديون",
+  "addDebt": "إضافة دين",
+  "settleDebt": "تسديد الدين",
+  "settleDebtConfirmation": "هل أنت متأكد أنك تريد تسجيل هذا الدين كـ \"مسدد\"؟",
+  "confirmSettlement": "تأكيد التسديد",
+  "userNotRegistered": "خطأ: المستخدم غير مسجل",
+  "debtSettlementFailed": "فشل تسديد الدين",
+  "debtSettledSuccess": "تم تسديد الدين بنجاح",
+  "errorLoadingDebts": "حدث خطأ أثناء تحميل الديون.",
+  "noDebtsRecorded": "لا توجد ديون مسجلة",
+  "debtsWillAppearHere": "سيتم عرض الديون المفتوحة والمسددة هنا.",
+  "addNewDebt": "إضافة دين جديد",
+  "allWithCount": "الكل ({count})",
+  "@allWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openWithCount": "مفتوح ({count})",
+  "@openWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paidWithCount": "مسدد ({count})",
+  "@paidWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financialTransfers": "تحويلات مالية",
+  "storeSales": "مبيعات محل",
+  "addDebtTitle": "إضافة دين جديد",
+  "customerName": "اسم العميل",
+  "enterFullCustomerName": "أدخل اسم العميل بالكامل",
+  "debtType": "نوع الدين",
+  "walletTransaction": "معاملة محفظة",
+  "walletTransactionSubtitle": "دين ناتج عن معاملة إرسال لم يتم دفعها",
+  "storeSale": "بيع من المحل",
+  "storeSaleSubtitle": "دين ناتج عن عملية بيع آجلة من المحل",
+  "amountDueTitle": "المبلغ المستحق",
+  "debtWillBeAdded": "سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.",
+  "additionalDebtDetails": "أي تفاصيل إضافية عن الدين",
+  "addDebtAction": "إضافة الدين",
+  "debtAddedSuccess": "تم إضافة الدين بنجاح",
+  "employeePermissions": "صلاحيات الموظف",
+  "defineEmployeeActions": "حدد ما يمكن للموظف القيام به",
+  "financialTransactionsSection": "المعاملات المالية",
+  "createNewTransaction": "إنشاء معاملة جديدة",
+  "viewAllTransactions": "عرض جميع المعاملات",
+  "debtsSection": "الديون",
+  "viewDebtsList": "عرض قائمة الديون",
+  "addNewDebtPermission": "إضافة دين جديد",
+  "collectDebt": "تحصيل دين (دفع جزئي/كلي)",
+  "deleteDebtPermission": "حذف دين",
+  "walletsSection": "المحافظ",
+  "viewWalletsList": "عرض قائمة المحافظ",
+  "addNewWalletPermission": "إضافة محفظة جديدة",
+  "addBalanceToWalletPermission": "شحن رصيد للمحفظة",
+  "editWalletData": "تعديل بيانات المحفظة",
+  "viewWalletBalance": "عرض رصيد المحافظ",
+  "dashboardSection": "لوحة التحكم",
+  "viewStatsCharts": "عرض الإحصائيات (المخططات)",
+  "editDebt": "تعديل الدين",
+  "paymentMode": "دفعة",
+  "additionMode": "إضافة",
+  "currentAmount": "المبلغ الحالي",
+  "pleaseEnterAmount": "يرجى إدخل المبلغ",
+  "invalidAmount": "مبلغ غير صحيح",
+  "amountMustBePositive": "المبلغ يجب أن يكون أكبر من صفر",
+  "paymentExceedsDebt": "المبلغ المدفوع أكبر من الدين",
+  "newAmount": "المبلغ الجديد:",
+  "saveEdit": "حفظ التعديل",
+  "debtUpdatedSuccess": "تم تحديث الدين بنجاح",
+  "debtUpdateFailed": "فشل تحديث الدين",
+  "retryAction": "إعادة المحاولة",
+  "noPermissionWallets": "ليس لديك صلاحية لعرض المحافظ",
+  "noPermissionTransactions": "ليس لديك صلاحية لعرض المعاملات",
+  "noPermissionDebts": "ليس لديك صلاحية لعرض الديون",
+  "noPermissionStats": "ليس لديك صلاحية لعرض الإحصائيات",
+  "deactivateEmployeeAccount": "تعطيل حساب الموظف",
+  "deactivateEmployeeConfirmation": "هل أنت متأكد أنك تريد تعطيل حساب {name}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.",
+  "@deactivateEmployeeConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deactivate": "تعطيل",
+  "employeeDeactivated": "تم تعطيل حساب الموظف",
+  "deactivationFailed": "فشل تعطيل الحساب",
+  "loadingEmployees": "جاري تحميل الموظفين...",
+  "errorLoadingEmployees": "حدث خطأ أثناء تحميل الموظفين",
+  "noEmployees": "لا يوجد موظفين",
+  "startAddingEmployees": "ابدأ بإضافة موظف جديد لإدارة صلاحياته.",
+  "addEmployee": "إضافة موظف",
+  "permissionsUpdatedSuccess": "تم تحديث الصلاحيات بنجاح",
+  "employeeDetails": "تفاصيل الموظف",
+  "editPermissions": "تعديل الصلاحيات",
+  "inactive": "معطل",
+  "employeeAddedSuccess": "تمت إضافة الموظف بنجاح",
+  "addNewEmployee": "إضافة موظف جديد",
+  "currentEmployeesCount": "الموظفين الحاليين: {current} / {max}",
+  "@currentEmployeesCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "limitReached": "تم الوصول للحد الأقصى",
+  "employeeLoginInfo": "سيستخدم الموظف رقم الهاتف والرقم السري لتسجيل الدخول.",
+  "fullName": "الاسم الكامل",
+  "enterEmployeeName": "أدخل اسم الموظف",
+  "employeePinTitle": "الرقم السري للموظف (PIN)",
+  "pin": "الرقم السري",
+  "fourDigits": "6 أرقام",
+  "confirmPin": "تأكيد الرقم السري",
+  "reenterPin": "أعد إدخال الرقم السري",
+  "pinsDoNotMatch": "الرقمان غير متطابقان",
+  "subscriptionDetails": "تفاصيل الاشتراك",
+  "currentUsage": "الاستهلاك الحالي",
+  "employeeAccounts": "حسابات الموظفين",
+  "upgradeSubscription": "ترقية الاشتراك",
+  "currentPlan": "الباقة الحالية",
+  "suspended": "معلق",
+  "freePlan": "مجاني",
+  "proYearlyPlan": "برو (سنوي)",
+  "lifetimeVipPlan": "مدى الحياة VIP",
+  "trialPlan": "تجريبي",
+  "upgradeAccount": "ترقية الحساب",
+  "unlockStoreCapabilities": "فتح إمكانيات متجرك",
+  "paywallSubtitle": "توقف عن إدخال البيانات يدويا. قم بأتمتة التدفق النقدي الخاص بك بأمان مع الميزات المتقدمة.",
+  "proYearlyTitle": "باقة برو السنوية",
+  "proYearlyPrice": "1200 جنيه / سنة",
+  "proYearlyPriceTemplate": "{price} جنيه / سنة",
+  "@proYearlyPriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "proFeature1": "قراءة المعاملات تلقائياً",
+  "proFeature2": "إدارة مرنة حتى 50 محفظة",
+  "proFeature3": "بناء فريق عمل حتى 20 موظف",
+  "proFeature4": "دعم فني مخصص",
+  "lifetimeTitle": "باقة مدى الحياة VIP",
+  "lifetimePrice": "2500 جنيه فقط مرة واحدة",
+  "lifetimePriceTemplate": "{price} جنيه فقط مرة واحدة",
+  "@lifetimePriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "freePrice": "مجاناً",
+  "trialPrice": "فترة تجريبية مجاناً",
+  "freeFeature1": "تسجيل المعاملات يدوياً فقط",
+  "freeFeature2": "حتى {count} محافظ",
+  "@freeFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature3": "حتى {count} موظفين",
+  "@freeFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature4": "دعم مجتمعي",
+  "trialFeature1": "قراءة المعاملات تلقائياً (فترة تجريبية)",
+  "trialFeature2": "حتى {count} محافظ",
+  "@trialFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature3": "حتى {count} موظفين",
+  "@trialFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature4": "دعم فني مخصص خلال الفترة التجريبية",
+  "lifetimeFeature1": "قراءة المعاملات تلقائياً",
+  "lifetimeFeature2": "عدد لا نهائي من المحافظ",
+  "lifetimeFeature3": "عدد لا نهائي من الموظفين",
+  "lifetimeFeature4": "أولوية الدعم الفني VIP",
+  "mostPopular": "الأكثر طلباً",
+  "remainingSeats": "{count} مقاعد متبقية",
+  "@remainingSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "soldOut": "نفدت الكمية",
+  "subscribeNow": "اشترك الآن",
+  "termsAgreement": "بمتابعة العملية أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا.",
+  "paymentDetails": "تفاصيل الدفع",
+  "selectedPlan": "الاشتراك المختار: {plan}",
+  "@selectedPlan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentMethod": "طريقة الدفع",
+  "transferToNumber": "يرجى تحويل المبلغ إلى الرقم: 01091264053",
+  "transferToAccount": "يرجى تحويل المبلغ إلى الرقم: 01091264053",
+  "receiptNumber": "رقم الهاتف الذي تم التحويل منه",
+  "fieldRequired": "هذا الحقل مطلوب",
+  "subscriptionRequestSent": "تم إرسال طلب الاشتراك بنجاح. يرجى الانتظار للمراجعة.",
+  "errorOccurred": "حدث خطأ:",
+  "lifetimePlan": "مدى الحياة",
+  "accountSuspended": "تم إيقاف حسابك",
+  "accountSuspendedMessage": "لقد تم تعليق حسابك من قبل الإدارة. يرجى التواصل مع فريق الدعم الفني لحل هذه المشكلة واستعادة وصولك إلى النظام.",
+  "contactingSupportTeam": "جاري الاتصال بالدعم الفني...",
+  "contactSupport": "تواصل مع الدعم الفني",
+  "subscriptionActivatedMessage": "لقد تم تفعيل اشتراكك بنجاح. يمكنك الآن الاستمتاع بكافة الميزات الاحترافية.",
+  "continueButton": "متابعة",
+  "continueWithFreePlan": "المتابعة بالخطة المجانية",
+  "continueWithCurrentPlan": "متابعة بالخطة الحالية",
+  "subscriptionUnderReview": "يتم الآن مراجعة طلب الاشتراك الخاص بك.",
+  "subscriptionRejected": "تم رفض طلب الاشتراك الأخير. يرجى مراجعة الدعم.",
+  "subscriptionExpiredMessage": "انتهت صلاحية اشتراكك. قم بالترقية للاستمرار.",
+  "trialEndingSoon": "باقي {daysLeft} يوم على انتهاء الفترة التجريبية. قم بالترقية الآن.",
+  "@trialEndingSoon": {
+    "placeholders": {
+      "daysLeft": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeToFullVersionTitle": "الترقية للنسخة الكاملة",
+  "getActivationKey": "للحصول على مفتاح التفعيل، يرجى التواصل معنا",
+  "contactViaWhatsapp": "تواصل عبر واتساب",
+  "contactViaEmail": "تواصل عبر البريد الإلكتروني",
+  "activateSubscription": "تفعيل الاشتراك",
+  "activationKey": "مفتاح التفعيل",
+  "enterActivationKeyHere": "أدخل مفتاح التفعيل هنا",
+  "pleaseEnterActivationKey": "الرجاء إدخال مفتاح التفعيل",
+  "activate": "تفعيل",
+  "subscriptionActivatedSuccessfully": "تم تفعيل الاشتراك بنجاح!",
+  "fullVersionActivated": "النسخة الكاملة مفعلة",
+  "daysRemainingCount": "{count} يوم",
+  "@daysRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renewSubscription": "تجديد الاشتراك",
+  "renewWhatsappMessage": "مرحباً، أرغب في تجديد اشتراكي في تطبيق مدير المحفظة.",
+  "activationWhatsappMessage": "مرحباً، أرغب في الحصول على مفتاح تفعيل لتطبيق مدير المحفظة.",
+  "failedOpenWhatsApp": "فشل فتح واتساب",
+  "activationEmailSubject": "طلب تفعيل النسخة الكاملة",
+  "activationEmailBody": "مرحباً، أود الاستفسار عن كيفية الترقية للنسخة الكاملة.",
+  "failedOpenEmail": "فشل فتح البريد الإلكتروني",
+  "newTransactionTitle": "معاملة جديدة",
+  "noWalletsAvailableMessage": "لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.",
+  "selectWalletHint": "اختر المحفظة لإجراء المعاملة",
+  "password": "كلمة المرور",
+  "smsPermissionRequired": "مطلوب صلاحية رسائل SMS",
+  "automationAndMessages": "الأتمتة والرسائل",
+  "enableAutoSmsReading": "تفعيل القراءة التلقائية للرسائل",
+  "autoDetectTransactions": "اكتشاف المعاملات تلقائياً من الإشعارات",
+  "linkSimToWallet": "ربط الشريحة بالمحفظة",
+  "sim1Label": "شريحة 1",
+  "sim2Label": "شريحة 2",
+  "noSavedWallets": "لا توجد محافظ محفوظة",
+  "smsMonitoringActivated": "تم تفعيل مراقبة الرسائل ✓",
+  "smsServiceStartFailed": "فشل تشغيل خدمة الرسائل",
+  "trialDaysRemainingLabel": "أيام الفترة التجريبية المتبقية",
+  "logoutButton": "تسجيل الخروج",
+  "instaPay": "انستا باي",
+  "confirmPayment": "تأكيد الدفع",
+  "paymentConfirmedSuccess": "تم تأكيد الدفع بنجاح",
+  "unavailable": "غير متوفر",
+  "send": "إرسال",
+  "receive": "استلام",
+  "clientData": "بيانات العميل",
+  "clientPhoneNumber": "رقم الهاتف",
+  "clientNameOptional": "اسم العميل (اختياري)",
+  "pressBackAgainToExit": "اضغط مرة أخرى للخروج",
+  "ownerOnlyFeature": "هذه الميزة للمالك فقط",
+  "expiryDateValue": "تاريخ الانتهاء: {date}",
+  "@expiryDateValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionExpiredRenew": "انتهى اشتراكك. الرجاء التجديد.",
+  "hide": "إخفاء",
+  "addEmployeeAction": "إضافة موظف",
+  "dateAdded": "تاريخ الإضافة",
+  "manageEmployeesTitle": "إدارة الموظفين",
+  "activeEmployees": "الموظفين النشطين",
+  "inactiveEmployees": "الموظفين غير النشطين",
+  "noPermissionCreateTransaction": "لا توجد صلاحية لإنشاء معاملة",
+  "noPermissionCreateWallet": "لا توجد صلاحية لإنشاء محفظة",
+  "noPermissionCreateDebt": "لا توجد صلاحية لإنشاء دين",
+  "noPermissionViewStats": "لا توجد صلاحية لعرض الإحصائيات",
+  "noPermissionViewTransactionDetails": "لا توجد صلاحية لعرض تفاصيل المعاملة",
+  "trialPeriod": "فترة تجريبية",
+  "trialDaysRemaining": "أيام الفترة التجريبية المتبقية",
+  "upgradeFullVersion": "ترقية للنسخة الكاملة",
+  "openDebt": "دين مفتوح",
+  "paidDebt": "دين مدفوع",
+  "deposit": "إيداع",
+  "paid": "مدفوع",
+  "transactionExceedsLimitWarning": "تحذير: هذه المعاملة ستتجاوز الحد المسموح به.",
+  "googleLoginError": "خطأ في تسجيل الدخول بحساب جوجل",
+  "storeInfo": "معلومات المتجر",
+  "pendingSubscriptionReview": "مراجعة الاشتراك قيد الانتظار",
+  "rejectedSubscriptionRequest": "تم رفض طلب الاشتراك",
+  "auth_error_account_not_found": "لا يوجد حساب مرتبط بهذا البريد الإلكتروني.",
+  "auth_error_invalid_email": "البريد الإلكتروني غير صحيح.",
+  "auth_error_too_many_requests": "محاولات كثيرة جداً. يرجى المحاولة لاحقاً.",
+  "auth_error_invalid_credentials": "كلمة المرور أو رقم الجوال غير صحيح.",
+  "auth_error_session_expired": "فشلت عملية المصادقة، يرجى تسجيل الدخول مجدداً.",
+  "auth_error_store_not_found": "المتجر غير موجود.",
+  "auth_error_user_not_found": "المستخدم غير موجود أو ليس مالكاً.",
+  "auth_error_email_already_in_use": "البريد الإلكتروني مستخدم بالفعل.",
+  "auth_error_login_failed": "فشل تسجيل الدخول.",
+  "auth_error_employee_login_failed": "فشل تسجيل دخول الموظف.",
+  "auth_error_store_lookup_failed": "حدث خطأ أثناء البحث عن المتجر.",
+  "auth_error_reset_failed": "حدث خطأ أثناء إرسال البريد الإلكتروني.",
+  "auth_error_unexpected": "حدث خطأ غير متوقع.",
+  "auth_error_store_not_active": "لا يوجد متجر نشط",
+  "auth_error_invalid_key": "المفتاح غير صحيح",
+  "auth_error_key_already_used": "المفتاح مستخدم من قبل",
+  "auth_error_logout_failed": "حدث خطأ أثناء تسجيل الخروج",
+  "auth_error_update_failed": "فشل تحديث البيانات.",
+  "auth_error_invalid_store_password": "كلمة سر المتجر غير صحيحة.",
+  "debt_error_fetch_failed": "فشل في جلب الديون.",
+  "debt_error_fetch_more_failed": "فشل في جلب المزيد من الديون.",
+  "debt_error_create_failed": "فشل في إنشاء الدين.",
+  "debt_error_add_amount_failed": "فشل في إضافة المبلغ إلى الدين.",
+  "debt_error_update_failed": "فشل في تحديث الدين.",
+  "debt_error_settle_failed": "فشل في تسديد الدين.",
+  "debt_error_delete_failed": "فشل في حذف الدين.",
+  "debt_error_auth_required": "يجب تسجيل الدخول أولاً.",
+  "employee_error_fetch_failed": "فشل جلب الموظفين.",
+  "employee_error_no_store": "لم يتم تعيين المتجر",
+  "employee_error_limit_reached": "تم الوصول للحد الأقصى للموظفين",
+  "employee_error_create_failed": "حدث خطأ أثناء إضافة الموظف",
+  "employee_error_invalid_pin": "الرقم السري يجب أن يكون 6 أرقام",
+  "employee_error_wrong_pin": "الرقم السري غير صحيح",
+  "employee_error_account_frozen": "هذا الحساب مجمد بسبب تجاوز الحد المسموح في باقتك",
+  "employee_error_pin_check_failed": "حدث خطأ أثناء التحقق من الرقم السري",
+  "employee_error_update_perms_failed": "فشل تحديث الصلاحيات.",
+  "transaction_error_fetch_failed": "فشل في جلب المعاملات.",
+  "transaction_error_fetch_more_failed": "فشل في جلب المزيد من المعاملات.",
+  "transaction_error_details_fetch": "فشل في جلب تفاصيل المعاملة.",
+  "auth_operation_failed": "فشلت العملية.",
+  "wallet_error_fetch_failed": "حدث خطأ في جلب المحافظ.",
+  "wallet_error_fetch_more_failed": "حدث خطأ في جلب المزيد من المحافظ.",
+  "stats_error_summary_fetch": "حدث خطأ في جلب ملخص الإحصائيات.",
+  "stats_error_today_fetch": "حدث خطأ في جلب إحصائيات اليوم.",
+  "stats_error_filtered_fetch": "فشل جلب الإحصائيات المفلترة.",
+  "stats_error_init_failed": "فشل تهيئة الإحصائيات.",
+  "wallet_error_create_failed": "فشل في إنشاء المحفظة.",
+  "wallet_error_update_failed": "فشل في تحديث المحفظة.",
+  "wallet_error_delete_failed": "فشل في حذف المحفظة.",
+  "wallet_error_balance_update_failed": "فشل في تحديث الرصيد.",
+  "wallet_error_balance_topup_failed": "حدث خطأ غير متوقع أثناء شحن الرصيد.",
+  "wallet_error_limit_reached": "تم الوصول للحد الأقصى للمحافظ.",
+  "wallet_error_frozen": "هذه المحفظة مجمدة بسبب تجاوز الحد المسموح في باقتك الحالية.",
+  "wallet_error_subscription_unresolved": "تعذر التحقق من حالة الاشتراك. يرجى المحاولة لاحقاً.",
+  "overlay_error_amount_limit_instapay": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})",
+  "@overlay_error_amount_limit_instapay": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "overlay_error_amount_limit_telecom": "المبلغ يتخطى الحد الأقصى للمعاملة الواحدة ({limit})",
+  "@overlay_error_amount_limit_telecom": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "sendLink": "إرسال الرابط",
+  "passwordResetEmailSent": "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.",
+  "weakPasswordException": "كلمة المرور ضعيفة جداً.",
+  "contactToRenewBtn": "تواصل للتجديد",
+  "enterCustomerName": "أدخل اسم العميل",
+  "createTransaction": "إنشاء معاملة",
+  "continueBtn": "متابعة",
+  "overlayConnectionError": "❌ خطأ في الاتصال",
+  "overlayCompleteFromApp": "يرجى إتمام المعاملة من التطبيق الأساسي.",
+  "close": "إغلاق",
+  "currencySymbol": "ج",
+  "relativeJustNow": "الآن",
+  "relativeMinutesAgo": "{count, plural, =1{منذ دقيقة} =2{منذ دقيقتين} few{منذ {count} دقائق} other{منذ {count} دقيقة}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeHoursAgo": "{count, plural, =1{منذ ساعة} =2{منذ ساعتين} few{منذ {count} ساعات} other{منذ {count} ساعة}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDaysAgo": "{count, plural, =1{أمس} =2{منذ يومين} other{منذ {count} أيام}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeWeeksAgo": "{count, plural, =1{منذ أسبوع} =2{منذ أسبوعين} other{منذ {count} أسابيع}}",
+  "@relativeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeMonthsAgo": "{count, plural, =1{منذ شهر} =2{منذ شهرين} other{منذ {count} أشهر}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeYearsAgo": "{count, plural, =1{منذ سنة} =2{منذ سنتين} other{منذ {count} سنوات}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_error_not_found": "المحفظة غير موجودة.",
+  "wallet_error_inactive": "لا يمكن إجراء معاملة: المحفظة غير مفعلة أو تم حذفها.",
+  "wallet_error_instapay_limit": "الحد الأقصى للمعاملة الواحدة لإنستاباي هو {limit} جنيه.",
+  "@wallet_error_instapay_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_telecom_limit": "الحد الأقصى للمعاملة الواحدة للمحافظ الإلكترونية هو {limit} جنيه.",
+  "@wallet_error_telecom_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_insufficient_balance": "المبلغ المراد إرساله (مع العمولة) أكبر من الرصيد المتاح.",
+  "wallet_error_instapay_daily_limit": "تم تجاوز الحد اليومي لمحفظة InstaPay ({limit} جنيه).",
+  "@wallet_error_instapay_daily_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_daily_send_limit": "تم تجاوز الحد اليومي للإرسال لهذه المحفظة.",
+  "wallet_error_monthly_send_limit": "تم تجاوز الحد الشهري للإرسال لهذه المحفظة.",
+  "wallet_error_daily_receive_limit": "تم تجاوز الحد اليومي للاستقبال لهذه المحفظة.",
+  "wallet_error_monthly_receive_limit": "تم تجاوز الحد الشهري للاستقبال لهذه المحفظة.",
+  "wallet_error_transaction_failed": "حدث خطأ غير متوقع أثناء حفظ المعاملة.",
+  "battery_optimization_warning": "قد تنخفض موثوقية العمل في الخلفية بدون استثناء تحسين البطارية.",
+  "auth_error_google_sign_in": "فشل تسجيل الدخول باستخدام جوجل.",
+  "auth_error_sign_out_failed": "فشل تسجيل الخروج.",
+  "migration_error_recalculate_failed": "فشل إعادة حساب الإحصائيات.",
+  "migration_error_unexpected": "حدث خطأ غير متوقع أثناء إعادة حساب الإحصائيات.",
+  "wallet_type_vodafone_cash": "فودافون كاش",
+  "wallet_type_insta_pay": "إنستاباي",
+  "wallet_type_orange_cash": "أورانج كاش",
+  "wallet_type_etisalat_cash": "اتصالات كاش",
+  "wallet_type_we_pay": "وي باي",
+  "wallet_type_other": "أخرى",
+  "wallet_status_active": "نشطة",
+  "wallet_status_inactive": "غير نشطة",
+  "wallet_status_suspended": "معلقة",
+  "carrier_mismatch_vodafone": "رقم محفظة فودافون كاش يجب أن يبدأ بـ 010",
+  "carrier_mismatch_etisalat": "رقم محفظة اتصالات كاش يجب أن يبدأ بـ 011",
+  "carrier_mismatch_orange": "رقم محفظة أورانج كاش يجب أن يبدأ بـ 012",
+  "carrier_mismatch_we": "رقم محفظة وي باي يجب أن يبدأ بـ 015",
+  "warning": "تنبيه",
+  "confirmAnyway": "تأكيد على أي حال",
+  "carrier_mismatch_warning": "رقم الموبايل لا يتطابق مع شبكة المحفظة المختارة.",
+  "paidAmountEgp": "المبلغ المدفوع (جنيه)",
+  "overlay_error_load_failed": "حدث خطأ أثناء تحميل البيانات",
+  "overlay_error_submit_failed": "حدث خطأ أثناء تنفيذ المعاملة",
+  "debt_error_create_failed": "حدث خطأ أثناء إنشاء الدين",
+  "debt_error_fetch_failed": "حدث خطأ أثناء جلب بيانات الدين",
+  "debt_error_payment_failed": "حدث خطأ أثناء معالجة الدفعة",
+  "debt_error_partial_add_failed": "حدث خطأ أثناء إضافة دين جزئي",
+  "debt_error_update_failed": "حدث خطأ أثناء تحديث الدين",
+  "debt_error_delete_failed": "حدث خطأ أثناء حذف الدين",
+  "transaction_error_create_failed": "حدث خطأ أثناء إنشاء المعاملة",
+  "transaction_error_fetch_failed": "حدث خطأ أثناء جلب بيانات المعاملة",
+  "transaction_error_update_failed": "حدث خطأ أثناء تحديث المعاملة",
+  "transaction_error_delete_failed": "حدث خطأ أثناء حذف المعاملة",
+  "wallet_error_status_update_failed": "حدث خطأ أثناء تحديث حالة المحفظة",
+  "auth_error_must_login_first": "يجب تسجيل الدخول أولاً",
+  "auth_error_store_already_exists": "هذا الحساب يمتلك متجرًا بالفعل",
+  "auth_error_employee_fetch_failed": "حدث خطأ أثناء جلب بيانات الموظف",
+  "auth_error_store_not_found": "لم يتم العثور على المتجر المرتبط بهذا الموظف",
+  "error_unexpected": "حدث خطأ غير متوقع",
+  "subscriptionExpired": "انتهت صلاحية اشتراكك!",
+  "subscriptionExpiresToday": "ينتهي اشتراكك اليوم!",
+  "trialEndingSoonDays": "متبقي {days} أيام على انتهاء الفترة التجريبية. قم بالترقية الآن!",
+  "@trialEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proEndingSoonDays": "اشتراكك السنوي ينتهي خلال {days} أيام. جدد الآن!",
+  "@proEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeRequiredToEnableSms": "هذه الميزة تتطلب ترقية الحساب",
+  "requestUpgradeFromOwner": "برجاء طلب ترقية الباقة من مالك المتجر",
+  "employeeLoginBlockedSubscriptionExpired": "لا يمكن تسجيل الدخول كموظف لأن اشتراك المتجر منتهي.",
+  "walletsLimitExceededFree": "لقد وصلت للحد الأقصى من المحافظ (محفظتين). يرجى ترقية اشتراكك لإضافة المزيد.",
+  "walletIsFrozen": "هذه المحفظة مجمدة. يرجى ترقية الباقة لاستخدامها.",
+  "walletIsFrozenShort": "(مجمدة)",
+  "refreshPlatformSettings": "تحديث إعدادات المنصة",
+  "platformSettingsRefreshed": "تم تحديث إعدادات المنصة بنجاح",
+  "platformSettingsRefreshFailed": "فشل تحديث إعدادات المنصة",
+  "exceedsDailyLimit": "يتجاوز الحد اليومي",
+  "exceedsMonthlyLimitOrCapacity": "يتجاوز الحد الشهري أو سعة المحفظة",
+  "maxButtonLabel": "الحد الأقصى",
+  "zoneUsedLabel": "مستخدم",
+  "zoneAvailableLabel": "متاح",
+  "zoneBlockedLabel": "محجوز بالرصيد",
+  "fullSettlement": "تسديد كامل",
+  "partialPayment": "دفع جزئي"
 }

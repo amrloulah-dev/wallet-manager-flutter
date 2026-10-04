@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../services/firebase_service.dart';
 import '../services/google_sign_in_service.dart';
+import '../../domain/entities/auth_user.dart';
 
 /// A repository to handle all authentication-related operations.
 class AuthRepository {
@@ -35,47 +37,74 @@ class AuthRepository {
       }
 
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithGoogle');
       switch (e.code) {
         case 'account-exists-with-different-credential':
-          throw AuthException(
-              'هذا الحساب موجود بالفعل ولكن بطريقة تسجيل دخول مختلفة.');
+          throw AuthException('auth_error_account_exists_different_credential');
         case 'invalid-credential':
           throw InvalidCredentialsException();
         case 'operation-not-allowed':
-          throw AuthException('تسجيل الدخول باستخدام جوجل غير مفعل حاليًا.');
+          throw AuthException('auth_error_google_disabled');
         case 'user-disabled':
-          throw AuthException('تم تعطيل هذا الحساب.');
+          throw AuthException('auth_error_user_disabled');
         case 'user-not-found':
           throw UserNotFoundException();
         default:
-          throw AuthException(
-              'حدث خطأ غير معروف أثناء تسجيل الدخول: ${e.message}');
+          throw AuthException('auth_error_unknown_signin_error');
       }
-    } catch (e) {
-      throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.toString()}');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithGoogle');
+      throw AuthException('auth_error_signin_failed');
+    }
+  }
+
+  /// Sends a password reset email.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'sendPasswordResetEmail');
+      switch (e.code) {
+        case 'user-not-found':
+          throw UserNotFoundException();
+        case 'invalid-email':
+          throw AuthException('auth_error_invalid_email');
+        default:
+          throw AuthException('auth_error_reset_failed');
+      }
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'sendPasswordResetEmail');
+      throw AuthException('auth_error_unexpected');
     }
   }
 
   /// Signs out the current user from both Google and Firebase.
   Future<void> signOut() async {
     try {
-      // 1. الخروج من فايربيس (ده الأهم وده بيشتغل في أي مكان)
+      // 1. Sign out from Firebase (Universal)
       await _auth.signOut();
 
-      // 2. محاولة الخروج من جوجل (لو متاح)
+      // 2. Attempt to sign out from Google (Optional)
       try {
         final googleSignIn = GoogleSignIn();
         if (await googleSignIn.isSignedIn()) {
           await googleSignIn.signOut();
-          await googleSignIn.disconnect(); // اختياري حسب الحاجة
+          await googleSignIn.disconnect();
         }
-      } catch (e) {
-        // لو الجهاز هواوي أو مفيهوش خدمات جوجل، هنتجاهل الخطأ ده
+      } catch (e, stack) {
+        // Ignore errors if Google services are missing (e.g., Huawei)
+        AppErrorHandler.logSilentError(e.toString(), 'google_sign_out_failed',
+            stackTrace: stack);
       }
-    } catch (e) {
-      // لو الخروج من فايربيس نفسه فشل، دي مشكلة حقيقية
-      throw AuthException('فشل تسجيل الخروج: $e');
+    } catch (e, stack) {
+      // Firebase sign-out failure is a critical session issue
+      await AppErrorHandler.handle(e, stackTrace: stack, operation: 'signOut');
+      throw AuthException('auth_error_signout_failed');
     }
   }
   // ===========================
@@ -90,21 +119,25 @@ class AuthRepository {
         password: password,
       );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithEmail');
       switch (e.code) {
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           throw InvalidCredentialsException();
         case 'user-disabled':
-          throw AuthException('تم تعطيل هذا الحساب.');
+          throw AuthException('auth_error_user_disabled');
         case 'invalid-email':
-          throw AuthException('البريد الإلكتروني غير صحيح.');
+          throw AuthException('auth_error_invalid_email');
         default:
-          throw AuthException('حدث خطأ أثناء تسجيل الدخول: ${e.message}');
+          throw AuthException('auth_error_signin_failed');
       }
-    } catch (e) {
-      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInWithEmail');
+      throw AuthException('auth_error_unexpected');
     }
   }
 
@@ -117,21 +150,41 @@ class AuthRepository {
         password: password,
       );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'createUserWithEmail');
       switch (e.code) {
         case 'email-already-in-use':
-          throw AuthException('البريد الإلكتروني مستخدم بالفعل.');
+          throw AuthException('auth_error_email_already_in_use');
         case 'invalid-email':
-          throw AuthException('البريد الإلكتروني غير صحيح.');
+          throw AuthException('auth_error_invalid_email');
         case 'weak-password':
-          throw AuthException('كلمة المرور ضعيفة جداً.');
+          throw AuthException('auth_error_weak_password');
         case 'operation-not-allowed':
-          throw AuthException('تسجيل الدخول بالبريد الإلكتروني غير مفعل.');
+          throw AuthException('auth_error_email_signin_disabled');
         default:
-          throw AuthException('حدث خطأ أثناء إنشاء الحساب: ${e.message}');
+          throw AuthException('auth_error_signup_failed');
       }
-    } catch (e) {
-      throw AuthException('حدث خطأ غير متوقع: ${e.toString()}');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'createUserWithEmail');
+      throw AuthException('auth_error_unexpected');
+    }
+  }
+
+  /// Signs in anonymously to establish a temporary auth session.
+  Future<UserCredential> signInAnonymously() async {
+    try {
+      final userCredential = await _auth.signInAnonymously();
+      return userCredential;
+    } on FirebaseAuthException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInAnonymously');
+      throw AuthException('auth_error_anonymous_failed');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'signInAnonymously');
+      throw AuthException('auth_error_unexpected');
     }
   }
 
@@ -139,14 +192,25 @@ class AuthRepository {
   // User State Methods
   // ===========================
 
-  /// Returns the current Firebase [User] object, or null if not signed in.
-  User? getCurrentUser() {
-    return _auth.currentUser;
+  /// Maps a Firebase User to our domain AuthUser
+  AuthUser? _mapUser(User? user) {
+    if (user == null) return null;
+    return AuthUser(
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+    );
+  }
+
+  /// Returns the current Firebase [User] object, mapped to [AuthUser], or null if not signed in.
+  AuthUser? getCurrentUser() {
+    return _mapUser(_auth.currentUser);
   }
 
   /// A stream that notifies about changes to the user's sign-in state.
-  Stream<User?> authStateChanges() {
-    return _auth.authStateChanges();
+  Stream<AuthUser?> authStateChanges() {
+    return _auth.authStateChanges().map(_mapUser);
   }
 
   /// Returns true if a user is currently signed in.
@@ -180,8 +244,10 @@ class AuthRepository {
   Future<void> reloadUser() async {
     try {
       await _auth.currentUser?.reload();
-    } catch (e) {
-      throw AuthException('فشل في تحديث بيانات المستخدم: \${e.toString()}');
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'reloadUser');
+      throw AuthException('auth_error_reload_failed');
     }
   }
 }

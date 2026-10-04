@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/errors/app_exceptions.dart';
 
 /// A singleton service to handle Google Sign-In and Firebase authentication.
 class GoogleSignInService {
@@ -17,7 +20,7 @@ class GoogleSignInService {
     scopes: ['email'],
   );
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = sl<FirebaseAuth>();
 
   // ===========================
   // Sign In with Google
@@ -50,8 +53,21 @@ class GoogleSignInService {
       final userCredential = await _auth.signInWithCredential(credential);
 
       return userCredential;
-    } catch (e) {
-      rethrow;
+    } on FirebaseAuthException catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'GoogleSignInService.signInWithGoogle',
+      );
+      throw AuthException('auth_error_google_sign_in', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'GoogleSignInService.signInWithGoogle',
+      );
+      if (e is AppException) rethrow;
+      throw AuthException('auth_error_unexpected');
     }
   }
 
@@ -59,18 +75,24 @@ class GoogleSignInService {
   // Sign Out
   // ===========================
   /// Signs the current user out from both Google and Firebase.
-  /// Signs the current user out from both Google and Firebase.
-  // ===========================
-// Sign Out
-// ===========================
-  /// Signs the current user out from both Google and Firebase.
   Future<void> signOut() async {
     try {
       await _auth.signOut();
       await _googleSignIn.signOut();
-    } catch (e) {
-      // Error is propagated to be handled by the AuthProvider
-      rethrow;
+    } on FirebaseAuthException catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'GoogleSignInService.signOut',
+      );
+      throw AuthException('auth_error_sign_out_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'GoogleSignInService.signOut',
+      );
+      throw AuthException('auth_error_unexpected');
     }
   }
 

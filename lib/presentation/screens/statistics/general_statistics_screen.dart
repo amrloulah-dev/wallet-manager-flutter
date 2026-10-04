@@ -9,6 +9,7 @@ import '../../../providers/statistics_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class GeneralStatisticsScreen extends StatefulWidget {
   const GeneralStatisticsScreen({super.key});
@@ -21,6 +22,20 @@ class GeneralStatisticsScreen extends StatefulWidget {
 class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch dashboard stats on initial screen mount if not present in memory
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final provider = context.read<StatisticsProvider>();
+        if (provider.dashboardSummary == null) {
+          provider.fetchDashboardStats();
+        }
+      }
+    });
+  }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final initialDate = (isStartDate ? _startDate : _endDate) ?? DateTime.now();
@@ -49,6 +64,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   void _applyFilter() {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.read<StatisticsProvider>();
     final localStartDate = _startDate;
 
@@ -57,8 +73,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
       if (localEndDate.isBefore(localStartDate)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية')),
+          SnackBar(content: Text(l10n.filterDateError)),
         );
         return;
       }
@@ -80,186 +95,271 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     context.read<StatisticsProvider>().clearFilteredStats();
   }
 
+  /// On-demand manual network refresh handler for RefreshIndicator
+  Future<void> _refreshStats() async {
+    final provider = context.read<StatisticsProvider>();
+    if (provider.mode == StatsMode.filtered && _startDate != null) {
+      final localStartDate = _startDate!;
+      var localEndDate = _endDate ?? localStartDate;
+      localEndDate = DateTime(localEndDate.year, localEndDate.month,
+          localEndDate.day, 23, 59, 59);
+      await provider.fetchFilteredStats(
+          DateTimeRange(start: localStartDate, end: localEndDate));
+    } else {
+      await provider.fetchDashboardStats(forceRefresh: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإحصائيات العامة'),
+        title: Text(l10n.generalStats),
         centerTitle: true,
       ),
-      body: Consumer<StatisticsProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              _buildDateFilter(provider),
-              const Divider(height: 1),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildDateFilter(),
+          const Divider(height: 1),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildContent(StatisticsProvider provider) {
-    if (provider.isLoading) {
-      return const LoadingIndicator(message: 'جاري تحميل الإحصائيات...');
-    }
-    if (provider.errorMessage != null) {
-      return CustomErrorWidget(message: provider.errorMessage!);
-    }
+  Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
+    return Selector<StatisticsProvider, bool>(
+      selector: (context, provider) => provider.isLoading,
+      builder: (context, isLoading, child) {
+        if (isLoading) {
+          return LoadingIndicator(message: l10n.loadingWalletData);
+        }
 
-    if (provider.mode == StatsMode.filtered) {
-      if (provider.filteredStats != null) {
-        return _buildStatistics(
-            context, StatsSummaryModel.fromMap(provider.filteredStats!));
-      } else {
-        return _buildEmptyState(isCustom: true);
-      }
-    } else {
-      // Dashboard mode
-      if (provider.dashboardSummary != null) {
-        return _buildStatistics(context, provider.dashboardSummary!);
-      } else {
-        return _buildEmptyState();
-      }
-    }
+        return Selector<StatisticsProvider, String?>(
+          selector: (context, provider) => provider.errorMessage,
+          builder: (context, errorMessage, child) {
+            if (errorMessage != null) {
+              final l10n = AppLocalizations.of(context)!;
+              String displayMessage;
+
+              // Resolve localization keys
+              switch (errorMessage) {
+                case 'stats_error_summary_fetch':
+                  displayMessage = l10n.stats_error_summary_fetch;
+                  break;
+                case 'stats_error_today_fetch':
+                  displayMessage = l10n.stats_error_today_fetch;
+                  break;
+                case 'stats_error_filtered_fetch':
+                  displayMessage = l10n.stats_error_filtered_fetch;
+                  break;
+                case 'stats_error_init_failed':
+                  displayMessage = l10n.stats_error_init_failed;
+                  break;
+                default:
+                  displayMessage = errorMessage;
+              }
+
+              return CustomErrorWidget(message: displayMessage);
+            }
+
+            return Selector<StatisticsProvider, StatsMode>(
+              selector: (context, provider) => provider.mode,
+              builder: (context, mode, child) {
+                if (mode == StatsMode.filtered) {
+                  return Selector<StatisticsProvider, Map<String, dynamic>?>(
+                    selector: (context, provider) => provider.filteredStats,
+                    builder: (context, filteredStats, child) {
+                      if (filteredStats != null) {
+                        return _buildStatistics(
+                            context, StatsSummaryModel.fromMap(filteredStats));
+                      } else {
+                        return _buildEmptyState(isCustom: true);
+                      }
+                    },
+                  );
+                } else {
+                  // Dashboard mode
+                  return Selector<StatisticsProvider, StatsSummaryModel?>(
+                    selector: (context, provider) => provider.dashboardSummary,
+                    builder: (context, dashboardSummary, child) {
+                      if (dashboardSummary != null) {
+                        return _buildStatistics(context, dashboardSummary);
+                      } else {
+                        return _buildEmptyState();
+                      }
+                    },
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
-  Widget _buildDateFilter(StatisticsProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Row(
+  Widget _buildDateFilter() {
+    final l10n = AppLocalizations.of(context)!;
+    return Selector<StatisticsProvider, StatsMode>(
+      selector: (context, provider) => provider.mode,
+      builder: (context, mode, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(_startDate == null
-                      ? 'تاريخ البداية'
-                      : DateHelper.formatDateTime(_startDate!)),
-                  onPressed: () => _selectDate(context, true),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(_endDate == null
-                      ? 'تاريخ النهاية'
-                      : DateHelper.formatDateTime(_endDate!)),
-                  onPressed: () => _selectDate(context, false),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'تطبيق الفلتر',
-                  onPressed: _startDate == null ? null : _applyFilter,
-                  size: ButtonSize.small,
-                ),
-              ),
-              if (provider.mode == StatsMode.filtered) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomButton(
-                    text: 'مسح الفلتر',
-                    onPressed: _clearFilter,
-                    type: ButtonType.outlined,
-                    size: ButtonSize.small,
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(_startDate == null
+                          ? l10n.startDate
+                          : DateHelper.formatDateTime(_startDate!)),
+                      onPressed: () => _selectDate(context, true),
+                    ),
                   ),
-                ),
-              ]
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(_endDate == null
+                          ? l10n.endDate
+                          : DateHelper.formatDateTime(_endDate!)),
+                      onPressed: () => _selectDate(context, false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: l10n.applyFilter,
+                      onPressed: _startDate == null ? null : _applyFilter,
+                      size: ButtonSize.small,
+                    ),
+                  ),
+                  if (mode == StatsMode.filtered) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomButton(
+                        text: l10n.clearFilter,
+                        onPressed: _clearFilter,
+                        type: ButtonType.outlined,
+                        size: ButtonSize.small,
+                      ),
+                    ),
+                  ]
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildEmptyState({bool isCustom = false}) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.bar_chart_outlined,
-              size: 80, color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Text(isCustom
-              ? 'لا توجد بيانات في هذا النطاق الزمني.'
-              : 'لا توجد إحصائيات لعرضها.'),
-        ],
+    final l10n = AppLocalizations.of(context)!;
+    return RefreshIndicator(
+      onRefresh: _refreshStats,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_outlined,
+                      size: 80, color: AppColors.textSecondary(context)),
+                  const SizedBox(height: 16),
+                  Text(isCustom ? l10n.noDataInRange : l10n.noStatsToShow),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildStatistics(BuildContext context, StatsSummaryModel stats) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildBalanceSection(context, stats),
-          const SizedBox(height: 20),
-          _buildTransactionsSection(context, stats),
-          const SizedBox(height: 20),
-          _buildAmountsSection(context, stats),
-          const SizedBox(height: 20),
-          _buildCommissionSection(context, stats),
-          const SizedBox(height: 20),
-          _buildDebtsSection(context, stats),
-        ],
+    return RefreshIndicator(
+      onRefresh: _refreshStats,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildBalanceSection(context),
+            const SizedBox(height: 20),
+            _buildTransactionsSection(context, stats),
+            const SizedBox(height: 20),
+            _buildAmountsSection(context, stats),
+            const SizedBox(height: 20),
+            _buildCommissionSection(context, stats),
+            const SizedBox(height: 20),
+            _buildDebtsSection(context, stats),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBalanceSection(BuildContext context, StatsSummaryModel stats) {
-    final totalBalance = stats.totalBalance;
+  /// Reactive Total Balance Card: Wrapped in a fine-grained Selector
+  /// to reactively re-render whenever provider.dashboardSummary.totalBalance changes
+  /// in RAM (optimistic updates, overlay submissions, or network syncs).
+  Widget _buildBalanceSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
 
-    return _buildStatCard(
-      context: context,
-      icon: Icons.account_balance_wallet_outlined,
-      title: 'الرصيد',
-      color: Colors.teal,
-      children: [
-        _StatItem(
+    return Selector<StatisticsProvider, double>(
+      selector: (_, provider) => provider.dashboardSummary?.totalBalance ?? 0.0,
+      builder: (context, totalBalance, child) {
+        return _buildStatCard(
           context: context,
-          label: 'إجمالي الرصيد في المحافظ',
-          value: NumberFormatter.formatAmount(totalBalance),
-        ),
-      ],
+          icon: Icons.account_balance_wallet_outlined,
+          title: l10n.balance,
+          color: Colors.teal,
+          children: [
+            StatItemWidget(
+              label: l10n.totalWalletBalance,
+              value: NumberFormatter.formatAmount(totalBalance),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildTransactionsSection(
       BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.swap_horiz,
-      title: 'المعاملات',
+      title: l10n.transactions,
       color: Colors.blueGrey,
       children: [
-        _StatItem(
-          context: context,
-          label: 'إجمالي المعاملات',
+        StatItemWidget(
+          label: l10n.totalTransactions,
           value: NumberFormatter.formatNumber(stats.totalTransactions),
         ),
-        _StatItem(
-          context: context,
-          label: 'معاملات الإرسال',
+        StatItemWidget(
+          label: l10n.sendTransactions,
           value: NumberFormatter.formatNumber(stats.sendCount),
           valueColor: AppColors.send,
         ),
-        _StatItem(
-          context: context,
-          label: 'معاملات الاستقبال',
+        StatItemWidget(
+          label: l10n.receiveTransactions,
           value: NumberFormatter.formatNumber(stats.receiveCount),
           valueColor: AppColors.receive,
         ),
@@ -268,28 +368,26 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildAmountsSection(BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.monetization_on_outlined,
-      title: 'المبالغ',
+      title: l10n.amounts,
       color: Colors.purple,
       children: [
-        _StatItem(
-          context: context,
-          label: 'إجمالي مبلغ الإرسال',
+        StatItemWidget(
+          label: l10n.sendAmount,
           value: NumberFormatter.formatAmount(stats.totalSentAmount),
           valueColor: AppColors.send,
         ),
-        _StatItem(
-          context: context,
-          label: 'إجمالي مبلغ الاستقبال',
+        StatItemWidget(
+          label: l10n.receiveAmount,
           value: NumberFormatter.formatAmount(stats.totalReceivedAmount),
           valueColor: AppColors.receive,
         ),
         const Divider(height: 10),
-        _StatItem(
-          context: context,
-          label: 'المبلغ الإجمالي',
+        StatItemWidget(
+          label: l10n.totalAmountCombined,
           value: NumberFormatter.formatAmount(
               stats.totalSentAmount + stats.totalReceivedAmount),
         ),
@@ -299,6 +397,7 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
 
   Widget _buildCommissionSection(
       BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     final totalCommission = stats.totalCommission;
     final totalTransactions = stats.totalTransactions;
     final averageCommission =
@@ -306,17 +405,15 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
     return _buildStatCard(
       context: context,
       icon: Icons.attach_money,
-      title: 'العمولات',
+      title: l10n.commission,
       color: AppColors.success,
       children: [
-        _StatItem(
-          context: context,
-          label: 'إجمالي العمولات',
+        StatItemWidget(
+          label: l10n.totalCommissionLabel,
           value: NumberFormatter.formatAmount(totalCommission),
         ),
-        _StatItem(
-          context: context,
-          label: 'متوسط العمولة للمعاملة',
+        StatItemWidget(
+          label: l10n.averageCommission,
           value: NumberFormatter.formatAmount(averageCommission),
         ),
       ],
@@ -324,21 +421,20 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
   }
 
   Widget _buildDebtsSection(BuildContext context, StatsSummaryModel stats) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildStatCard(
       context: context,
       icon: Icons.credit_card_off_outlined,
-      title: 'الديون',
+      title: l10n.debts,
       color: AppColors.error,
       children: [
-        _StatItem(
-          context: context,
-          label: 'الديون المفتوحة',
+        StatItemWidget(
+          label: l10n.openDebtsLabel,
           value: NumberFormatter.formatNumber(stats.openDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalOpenAmount),
         ),
-        _StatItem(
-          context: context,
-          label: 'الديون المسددة',
+        StatItemWidget(
+          label: l10n.paidDebtsLabel,
           value: NumberFormatter.formatNumber(stats.paidDebtsCount),
           subtitle: NumberFormatter.formatAmount(stats.totalPaidAmount),
           valueColor: AppColors.success,
@@ -376,31 +472,53 @@ class _GeneralStatisticsScreenState extends State<GeneralStatisticsScreen> {
       ),
     );
   }
+}
 
-  Widget _StatItem({
-    required BuildContext context,
-    required String label,
-    required String value,
-    String? subtitle,
-    Color? valueColor,
-  }) {
+class StatItemWidget extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? subtitle;
+  final Color? valueColor;
+
+  const StatItemWidget({
+    super.key,
+    required this.label,
+    required this.value,
+    this.subtitle,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.bodyLarge),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(subtitle,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.bodyLarge,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
                     style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.textSecondary(context))),
+                        .copyWith(color: AppColors.textSecondary(context)),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
+          const SizedBox(width: 12),
           Text(
             value,
             style: AppTextStyles.h3

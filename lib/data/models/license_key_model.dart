@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class LicenseKeyModel {
   final String keyId;
   final String licenseKey;
   final bool isUsed;
   final String? usedBy;
-  final Timestamp? usedAt;
-  final Timestamp createdAt;
+  final DateTime? usedAt;
+  final DateTime createdAt;
   final int expiryMonths;
 
   LicenseKeyModel({
@@ -26,9 +28,11 @@ class LicenseKeyModel {
       licenseKey: data['licenseKey'] ?? '',
       isUsed: data['isUsed'] ?? false,
       usedBy: data['usedBy'],
-      usedAt: data['usedAt'],
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      expiryMonths: data['expiryMonths'] ?? 12,
+      usedAt: (data['usedAt'] as Timestamp?)?.toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'LicenseKey document missing required field: createdAt')),
+      expiryMonths: NumberParser.toInt(data['expiryMonths'], 12),
     );
   }
 
@@ -38,8 +42,8 @@ class LicenseKeyModel {
       'licenseKey': licenseKey,
       'isUsed': isUsed,
       'usedBy': usedBy,
-      'usedAt': usedAt,
-      'createdAt': createdAt,
+      'usedAt': usedAt != null ? Timestamp.fromDate(usedAt!) : null,
+      'createdAt': Timestamp.fromDate(createdAt),
       'expiryMonths': expiryMonths,
     };
   }

@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walletmanager/core/enums/subscription_enums.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/store_model.dart';
 import '../models/stats_summary_model.dart';
 import '../services/firebase_service.dart';
-import 'package:uuid/uuid.dart';
+import '../../services/time_service.dart';
 
 /// Repository for all Firestore operations related to the 'stores' collection.
 class StoreRepository {
@@ -32,49 +36,69 @@ class StoreRepository {
   /// **NOTE:** This method now enforces a "Trial Mode" for all new stores.
   /// It overwrites any license information passed in the [store] object with
   /// a generated trial license.
-  Future<void> createStore(StoreModel store) async {
+  Future<void> createStore(StoreModel store,
+      {bool isEligibleForTrial = true, WriteBatch? batch}) async {
     try {
-      final batch = _firestore.batch();
+      final activeBatch = batch ?? _firestore.batch();
 
-      // --- Generate Trial License ---
-      final trialLicense = StoreLicense(
-        licenseKey:
-            "TRIAL-MODE-${const Uuid().v4().substring(0, 8).toUpperCase()}",
-        licenseType: "trial",
-        status: "active",
-        startDate: DateTime.now(),
-        expiryDate: DateTime.now().add(const Duration(days: 10)),
-        lastCheck: DateTime.now(),
-        autoRenew: false,
-      );
+      // --- Generate Subscription based on trial eligibility ---
+      final StoreSubscription subscription;
+      if (isEligibleForTrial) {
+        // H001: Trial tier gets generous limits
+        subscription = StoreSubscription(
+          planId: SubscriptionPlan.trial, // ENUM refactor
+          status: SubscriptionStatus.active,
+          endDate: DateTime.now().add(const Duration(days: 14)),
+          trialConsumed: false,
+        );
+      } else {
+        // H002: Device-ineligible users land on Free tier directly
+        subscription = StoreSubscription(
+          planId: SubscriptionPlan.free, // ENUM refactor
+          status: SubscriptionStatus.active,
+          endDate: null,
+          trialConsumed: true,
+        );
+      }
 
       final storeWithTrial = store.copyWith(
-        license: trialLicense,
-        activeLicenseKey: trialLicense.licenseKey,
-        licenseKeyId: "TRIAL",
+        subscription: subscription,
       );
       // -----------------------------
 
+      final storeData = storeWithTrial.toFirestore();
+      storeData[FirebaseConstants.createdAt] = FieldValue.serverTimestamp();
+      storeData[FirebaseConstants.updatedAt] = FieldValue.serverTimestamp();
+
       // 1. Set Store Document
-      batch.set(_storesCollection.doc(storeWithTrial.storeId),
-          storeWithTrial.toFirestore());
+      activeBatch.set(_storesCollection.doc(storeWithTrial.storeId), storeData);
 
       // 2. Initialize Stats Document
       // Note: We use the same sub-collection path structure as found in StatsRepository:
       // stores/{storeId}/stats/summary
       final statsRef = _storesCollection
           .doc(storeWithTrial.storeId)
-          .collection('stats')
-          .doc('summary');
+          .collection(FirebaseConstants.statsCollection)
+          .doc(FirebaseConstants.summaryDoc);
 
       final initialStats = StatsSummaryModel.empty();
-      batch.set(statsRef, initialStats.toMap());
-      // Commit all changes atomically
-      await batch.commit();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المحل: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المحل.');
+      final statsData = initialStats.toMap();
+      statsData['lastUpdated'] = FieldValue.serverTimestamp();
+
+      activeBatch.set(statsRef, statsData);
+
+      // Commit all changes atomically only if we created the batch
+      if (batch == null) {
+        await activeBatch.commit();
+      }
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.createStore');
+      throw ServerException('store_error_create_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.createStore');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -85,16 +109,26 @@ class StoreRepository {
   /// Fetches a single store by its document ID.
   Future<StoreModel?> getStoreById(String storeId) async {
     try {
-      final doc = await _storesCollection.doc(storeId).get();
+      final doc = await _storesCollection
+          .doc(storeId)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
       if (doc.exists) {
         return StoreModel.fromFirestore(doc);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المحل: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      throw ServerException('error_network_timeout');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      throw ServerException('store_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreById');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -110,31 +144,69 @@ class StoreRepository {
         return StoreModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المحل: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
+      throw ServerException('store_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoreByOwnerId');
+      throw ServerException('store_error_unexpected');
     }
   }
 
   /// Finds a store associated with a specific owner email.
   Future<StoreModel?> getStoreByEmail(String email) async {
     try {
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [StoreRepository.getStoreByEmail] Querying email: "$email"');
+      }
       final querySnapshot = await _storesCollection
           .where(FirebaseConstants.ownerEmail, isEqualTo: email)
           .limit(1)
-          .get();
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
 
+      if (kDebugMode) {
+        debugPrint(
+            '🔍 [StoreRepository.getStoreByEmail] Query completed. Docs count: ${querySnapshot.docs.length}');
+      }
       if (querySnapshot.docs.isNotEmpty) {
-        return StoreModel.fromFirestore(querySnapshot.docs.first);
+        final store = StoreModel.fromFirestore(querySnapshot.docs.first);
+        if (kDebugMode) {
+          debugPrint(
+              '🔍 [StoreRepository.getStoreByEmail] Found storeId: "${store.storeId}" for email: "$email"');
+        }
+        return store;
+      }
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ [StoreRepository.getStoreByEmail] No store found for email: "$email"');
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المحل: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on TimeoutException catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('💥 [StoreRepository.getStoreByEmail] TimeoutException: $e');
+      }
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('error_network_timeout');
+    } on FirebaseException catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint(
+            '💥 [StoreRepository.getStoreByEmail] FirebaseException: ${e.code} | ${e.message}');
+      }
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('💥 [StoreRepository.getStoreByEmail] Unexpected error: $e');
+      }
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -143,7 +215,9 @@ class StoreRepository {
     try {
       final doc = await _storesCollection.doc(storeId).get();
       return doc.exists;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.storeExists');
       return false;
     }
   }
@@ -160,11 +234,14 @@ class StoreRepository {
         FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _storesCollection.doc(storeId).update(updateData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث بيانات المحل: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_update_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -187,41 +264,6 @@ class StoreRepository {
     await updateStore(storeId, data);
   }
 
-  /// Updates the statistics for a specific store.
-  Future<void> updateStoreStats({
-    required String storeId,
-    int? totalWallets,
-    int? activeWallets,
-    int? totalTransactionsToday,
-    double? totalCommissionToday,
-  }) async {
-    try {
-      final Map<String, dynamic> statsData = {
-        FirebaseConstants.statsLastUpdated: FieldValue.serverTimestamp(),
-      };
-      if (totalWallets != null) {
-        statsData[FirebaseConstants.totalWallets] = totalWallets;
-      }
-      if (activeWallets != null) {
-        statsData[FirebaseConstants.activeWallets] = activeWallets;
-      }
-      if (totalTransactionsToday != null) {
-        statsData[FirebaseConstants.totalTransactionsToday] =
-            totalTransactionsToday;
-      }
-      if (totalCommissionToday != null) {
-        statsData[FirebaseConstants.totalCommissionToday] =
-            totalCommissionToday;
-      }
-      await _storesCollection.doc(storeId).update(statsData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث إحصائيات المحل: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
-    }
-  }
-
   // ===========================
   // Password Methods
   // ===========================
@@ -231,48 +273,61 @@ class StoreRepository {
     try {
       final store = await getStoreById(storeId);
       if (store == null) {
-        throw NotFoundException('المحل');
+        throw NotFoundException('store');
       }
-      return PasswordHasher.verifyPassword(password, store.storePassword);
-    } catch (e) {
+      return await PasswordHasher.verifyPassword(password, store.storePassword);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.verifyStorePassword');
       rethrow; // Rethrow the original exception (e.g., NotFoundException)
     }
   }
 
   /// Updates the store's password.
   Future<void> updateStorePassword(String storeId, String newPassword) async {
-    final hashedPassword = PasswordHasher.hashPassword(newPassword);
+    final hashedPassword = await PasswordHasher.hashPassword(newPassword);
     await updateStore(
         storeId, {FirebaseConstants.storePassword: hashedPassword});
   }
 
   // ===========================
-  // License Methods
+  // Subscription Methods
   // ===========================
 
-  /// Checks if the store's current license is active and not expired.
-  Future<bool> isLicenseValid(String storeId) async {
+  /// Checks if the store's current subscription is active and not expired.
+  Future<bool> isSubscriptionValid(String storeId) async {
     try {
       final store = await getStoreById(storeId);
       if (store == null) return false;
-      return store.license.status == 'active' && !store.license.isExpired;
-    } catch (e) {
+      // T058: Pure POJO — time resolved here rather than inside StoreSubscription
+      return store.subscription.status == SubscriptionStatus.active &&
+          !store.subscription.isExpiredAt(TimeService.now());
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.isSubscriptionValid');
       return false;
     }
   }
 
-  /// Updates the status of a store's license.
-  Future<void> updateLicenseStatus(String storeId, String status) async {
+  /// Updates the status of a store's subscription.
+  Future<void> updateSubscriptionStatus(
+      String storeId, SubscriptionStatus status) async {
     try {
       await _storesCollection.doc(storeId).update({
-        FirebaseConstants.licenseStatus: status,
-        FirebaseConstants.licenseLastCheck: FieldValue.serverTimestamp(),
+        'subscription.status': status.name,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       });
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث حالة الرخصصة: ${e.message}',
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRepository.updateSubscriptionStatus');
+      throw ServerException('store_error_update_subscription_failed',
           code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'StoreRepository.updateSubscriptionStatus');
+      throw ServerException('store_error_unexpected');
     }
   }
 
@@ -286,19 +341,36 @@ class StoreRepository {
         return StoreModel.fromFirestore(snapshot);
       }
       return null;
-    }).handleError((error) {
-      // Optionally, you could yield an error state object here.
+    }).handleError((error, stack) {
+      AppErrorHandler.handle(error,
+          stackTrace: stack, operation: 'StoreRepository.watchStore');
+      throw error;
     });
   }
 
+  @Deprecated(
+      'Use getStoreByEmail for O(1) lookup. This method is insecure and will be removed.')
   Future<List<StoreModel>> getStoresByPassword(String password) async {
-    final hashedPassword = PasswordHasher.hashPassword(password);
-    final querySnapshot = await _storesCollection
-        .where(FirebaseConstants.storePassword, isEqualTo: hashedPassword)
-        .limit(1)
-        .get();
-    return querySnapshot.docs
-        .map((doc) => StoreModel.fromFirestore(doc))
-        .toList();
+    try {
+      // WARNING: This is inefficient and only works for small store counts.
+      // Salted hashes cannot be queried directly in Firestore.
+      final querySnapshot = await _storesCollection
+          .limit(100) // Limit to prevent OOM
+          .get();
+
+      final List<StoreModel> matchingStores = [];
+      for (final doc in querySnapshot.docs) {
+        final store = StoreModel.fromFirestore(doc);
+        if (await PasswordHasher.verifyPassword(
+            password, store.storePassword)) {
+          matchingStores.add(store);
+        }
+      }
+      return matchingStores;
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'StoreRepository.getStoresByPassword');
+      throw ServerException('store_error_fetch_failed');
+    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/dialog_utils.dart';
 import 'package:walletmanager/core/utils/permission_helper.dart';
@@ -15,6 +16,7 @@ import '../../widgets/debt/debt_summary_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../../core/enums/debt_enums.dart';
 
 class DebtsListScreen extends StatefulWidget {
   const DebtsListScreen({super.key});
@@ -64,12 +66,14 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   }
 
   Future<void> _showMarkPaidDialog(DebtModel debt) async {
-    final bool? confirmed = await DialogUtils.showConfirmDialog(
+    final confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تسديد الدين',
-      message: 'هل أنت متأكد أنك تريد تسجيل هذا الدين كـ "مسدد"؟',
-      confirmText: 'تأكيد التسديد',
+      title: AppLocalizations.of(context)!.settleDebt,
+      message: AppLocalizations.of(context)!.settleDebtConfirmation,
+      confirmText: AppLocalizations.of(context)!.confirmSettlement,
     );
+
+    if (!mounted) return;
 
     if (confirmed == true) {
       final debtProvider = context.read<DebtProvider>();
@@ -77,17 +81,21 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
       final currentUserId = authProvider.currentUserId;
 
       if (currentUserId == null) {
-        ToastUtils.showError('خطأ: المستخدم غير مسجل');
+        ToastUtils.showError(AppLocalizations.of(context)!.userNotRegistered);
         return;
       }
 
       final success = await debtProvider.payPartialDebt(
           debt.debtId, debt.amountDue, currentUserId);
 
-      if (mounted && !success) {
-        ToastUtils.showError(debtProvider.errorMessage ?? 'فشل تسديد الدين');
+      if (!mounted) return;
+
+      if (!success) {
+        ToastUtils.showError(debtProvider.errorMessage ??
+            AppLocalizations.of(context)!.debtSettlementFailed);
       } else {
-        ToastUtils.showSuccess('تم تسديد الدين بنجاح');
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.debtSettledSuccess);
       }
     }
   }
@@ -103,9 +111,8 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface(bottomSheetContext),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
             ),
           ),
           child: PartialPaymentBottomSheet(debt: debt),
@@ -118,157 +125,192 @@ class _DebtsListScreenState extends State<DebtsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الديون'),
+        title: Text(AppLocalizations.of(context)!.debtsTitle),
       ),
-      body: Consumer<DebtProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              _buildSummarySection(provider),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildSummarySection(),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddDebt(context),
         icon: const Icon(Icons.add),
-        label: const Text('إضافة دين'),
+        label: Text(AppLocalizations.of(context)!.addDebt),
         foregroundColor: Colors.white,
         backgroundColor: AppColors.primary,
       ),
     );
   }
 
-  Widget _buildSummarySection(DebtProvider provider) {
+  Widget _buildSummarySection() {
     return Column(
       children: [
-        _buildTypeSegmentControl(provider),
+        _buildTypeSegmentControl(),
         const DebtSummaryCard(),
-        _buildFilterTabs(context, provider.summary, provider),
+        _buildFilterTabs(context),
       ],
     );
   }
 
-  Widget _buildContent(DebtProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 5, itemHeight: 120);
-    }
+  Widget _buildContent() {
+    return Consumer<DebtProvider>(
+      builder: (context, provider, child) {
+        final isLoading = provider.isLoading;
+        final hasError = provider.errorMessage != null;
+        final errorMessage = provider.errorMessage;
+        final debts = provider.debts;
+        final isLoadingMore = provider.isLoadingMore;
 
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الديون.',
-        onRetry: provider.fetchInitialDebts,
-      );
-    }
+        if (isLoading) {
+          return const SkeletonList(itemCount: 5, itemHeight: 120);
+        }
 
-    if (provider.debts.isEmpty) {
-      return EmptyStateWidget(
-        message: 'لا توجد ديون مسجلة',
-        description: 'سيتم عرض الديون المفتوحة والمسددة هنا.',
-        icon: Icons.credit_card_off_outlined,
-        actionText: 'إضافة دين جديد',
-        onAction: () => _navigateToAddDebt(context),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialDebts,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 80), // For FAB
-        itemCount: provider.debts.length + (provider.isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == provider.debts.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final debt = provider.debts[index];
-          return DebtCard(
-            key: ValueKey(debt.debtId),
-            debt: debt,
-            onTap: PermissionHelper.canMarkDebtPaid(context)
-                ? () => _showPartialPaymentSheet(context, debt)
-                : null,
-            onMarkPaid: debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
-                ? () => _showMarkPaidDialog(debt)
-                : null,
+        if (hasError) {
+          return CustomErrorWidget(
+            message:
+                errorMessage ?? AppLocalizations.of(context)!.errorLoadingDebts,
+            onRetry: provider.fetchInitialDebts,
           );
-        },
-      ),
+        }
+
+        if (debts.isEmpty) {
+          return EmptyStateWidget(
+            message: AppLocalizations.of(context)!.noDebtsRecorded,
+            description: AppLocalizations.of(context)!.debtsWillAppearHere,
+            icon: Icons.credit_card_off_outlined,
+            actionText: AppLocalizations.of(context)!.addNewDebt,
+            onAction: () => _navigateToAddDebt(context),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: provider.fetchInitialDebts,
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(bottom: 80),
+            itemCount: debts.length + (isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == debts.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final debt = debts[index];
+              return DebtCard(
+                key: ValueKey(
+                    '${debt.debtId}_${debt.amountDue}_${debt.debtStatus}'),
+                debt: debt,
+                onPartialPayment:
+                    debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
+                        ? () => _showPartialPaymentSheet(context, debt)
+                        : null,
+                onMarkPaid:
+                    debt.isOpen && PermissionHelper.canMarkDebtPaid(context)
+                        ? () => _showMarkPaidDialog(debt)
+                        : null,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildFilterTabs(BuildContext context, Map<String, dynamic> summary,
-      DebtProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FilterChip(
-              label: 'الكل (${summary['totalDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'all',
-              onTap: () => provider.setFilter('all'),
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _FilterChip(
-              label: 'مفتوح (${summary['openDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'open',
-              onTap: () => provider.setFilter('open'),
-              color: AppColors.error,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _FilterChip(
-              label: 'مسدد (${summary['paidDebtsCount'] ?? 0})',
-              isSelected: provider.currentFilter == 'paid',
-              onTap: () => provider.setFilter('paid'),
-              color: AppColors.success,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildFilterTabs(BuildContext context) {
+    return Selector<DebtProvider, String>(
+      selector: (context, provider) => provider.currentFilter,
+      builder: (context, currentFilter, child) {
+        return Selector<DebtProvider, Map<String, dynamic>>(
+          selector: (context, provider) => provider.summary,
+          builder: (context, summary, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FilterChip(
+                      label: AppLocalizations.of(context)!
+                          .allWithCount(summary['totalDebtsCount'] ?? 0),
+                      isSelected: currentFilter == 'all',
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('all'),
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterChip(
+                      label: AppLocalizations.of(context)!
+                          .openWithCount(summary['openDebtsCount'] ?? 0),
+                      isSelected: currentFilter == 'open',
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('open'),
+                      color: AppColors.error,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterChip(
+                      label: AppLocalizations.of(context)!
+                          .paidWithCount(summary['paidDebtsCount'] ?? 0),
+                      isSelected: currentFilter == 'paid',
+                      onTap: () =>
+                          context.read<DebtProvider>().setFilter('paid'),
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildTypeSegmentControl(DebtProvider provider) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.divider(context)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _TypeTab(
-              label: 'تحويلات مالية',
-              isSelected: provider.currentDebtType == 'transaction',
-              onTap: () => provider.setDebtType('transaction'),
-              icon: Icons.swap_horiz,
-            ),
+  Widget _buildTypeSegmentControl() {
+    return Selector<DebtProvider, DebtType>(
+      // ENUM refactor
+      selector: (context, provider) => provider.currentDebtType,
+      builder: (context, currentDebtType, child) {
+        return Container(
+          margin: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 0),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.divider(context)),
           ),
-          Expanded(
-            child: _TypeTab(
-              label: 'مبيعات محل',
-              isSelected: provider.currentDebtType == 'store_sale',
-              onTap: () => provider.setDebtType('store_sale'),
-              icon: Icons.storefront_outlined,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _TypeTab(
+                  label: AppLocalizations.of(context)!.financialTransfers,
+                  isSelected: currentDebtType == DebtType.transaction,
+                  onTap: () => context
+                      .read<DebtProvider>()
+                      .setDebtType(DebtType.transaction),
+                  icon: Icons.swap_horiz,
+                ),
+              ),
+              Expanded(
+                child: _TypeTab(
+                  label: AppLocalizations.of(context)!.storeSales,
+                  isSelected: currentDebtType == DebtType.storeSale,
+                  onTap: () => context
+                      .read<DebtProvider>()
+                      .setDebtType(DebtType.storeSale),
+                  icon: Icons.storefront_outlined,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -345,9 +387,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withAlpha((0.1 * 255).round())
-              : Colors.transparent,
+          color: isSelected ? color.withAlpha(26) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

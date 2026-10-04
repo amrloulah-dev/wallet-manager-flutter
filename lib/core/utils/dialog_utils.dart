@@ -228,7 +228,7 @@ class _DialogContent extends StatelessWidget {
       children: [
         Container(
           margin: const EdgeInsets.only(top: 40),
-          padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 60, 20, 20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
@@ -330,7 +330,7 @@ class _DialogHeaderState extends State<_DialogHeader>
           ),
           boxShadow: [
             BoxShadow(
-              color: Color.fromARGB((0.15 * 255).round(), 0, 0, 0),
+              color: Color.fromARGB(38, 0, 0, 0),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),

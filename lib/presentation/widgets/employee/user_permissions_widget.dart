@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../data/models/user_permissions.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -38,26 +39,27 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('صلاحيات الموظف', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.employeePermissions,
+            style: AppTextStyles.h3),
         const SizedBox(height: 8),
         Text(
-          'حدد ما يمكن للموظف القيام به',
+          AppLocalizations.of(context)!.defineEmployeeActions,
           style: AppTextStyles.bodySmall
               .copyWith(color: AppColors.textSecondary(context)),
         ),
         const SizedBox(height: 16),
         _buildSection(
-          title: 'المعاملات المالية',
+          title: AppLocalizations.of(context)!.financialTransactionsSection,
           icon: Icons.receipt_long_outlined,
           children: [
             _buildSwitch(
-              'إنشاء معاملة جديدة',
+              AppLocalizations.of(context)!.createNewTransaction,
               _permissions.createTransaction,
               (val) => _updatePermission(
                   _permissions.copyWith(createTransaction: val)),
             ),
             _buildSwitch(
-              'عرض جميع المعاملات',
+              AppLocalizations.of(context)!.viewAllTransactions,
               _permissions.viewAllTransactions,
               (val) => _updatePermission(
                   _permissions.copyWith(viewAllTransactions: val)),
@@ -65,28 +67,28 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
           ],
         ),
         _buildSection(
-          title: 'الديون',
+          title: AppLocalizations.of(context)!.debtsSection,
           icon: Icons.money_off_outlined,
           children: [
             _buildSwitch(
-              'عرض قائمة الديون',
+              AppLocalizations.of(context)!.viewDebtsList,
               _permissions.viewDebts,
               (val) => _updatePermission(_permissions.copyWith(viewDebts: val)),
             ),
             _buildSwitch(
-              'إضافة دين جديد',
+              AppLocalizations.of(context)!.addNewDebtPermission,
               _permissions.createDebt,
               (val) =>
                   _updatePermission(_permissions.copyWith(createDebt: val)),
             ),
             _buildSwitch(
-              'تحصيل دين (دفع جزئي/كلي)',
+              AppLocalizations.of(context)!.collectDebt,
               _permissions.collectDebt,
               (val) =>
                   _updatePermission(_permissions.copyWith(collectDebt: val)),
             ),
             _buildSwitch(
-              'حذف دين',
+              AppLocalizations.of(context)!.deleteDebtPermission,
               _permissions.deleteDebt,
               (val) =>
                   _updatePermission(_permissions.copyWith(deleteDebt: val)),
@@ -94,35 +96,35 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
           ],
         ),
         _buildSection(
-          title: 'المحافظ',
+          title: AppLocalizations.of(context)!.walletsSection,
           icon: Icons.account_balance_wallet_outlined,
           children: [
             _buildSwitch(
-              'عرض قائمة المحافظ',
+              AppLocalizations.of(context)!.viewWalletsList,
               _permissions.viewWallets,
               (val) =>
                   _updatePermission(_permissions.copyWith(viewWallets: val)),
             ),
             _buildSwitch(
-              'إضافة محفظة جديدة',
+              AppLocalizations.of(context)!.addNewWalletPermission,
               _permissions.createWallet,
               (val) =>
                   _updatePermission(_permissions.copyWith(createWallet: val)),
             ),
             _buildSwitch(
-              'شحن رصيد للمحفظة',
+              AppLocalizations.of(context)!.addBalanceToWalletPermission,
               _permissions.addBalance,
               (val) =>
                   _updatePermission(_permissions.copyWith(addBalance: val)),
             ),
             _buildSwitch(
-              'تعديل بيانات المحفظة',
+              AppLocalizations.of(context)!.editWalletData,
               _permissions.editWallet,
               (val) =>
                   _updatePermission(_permissions.copyWith(editWallet: val)),
             ),
             _buildSwitch(
-              'عرض رصيد المحافظ',
+              AppLocalizations.of(context)!.viewWalletBalance,
               _permissions.viewWalletBalance,
               (val) => _updatePermission(
                   _permissions.copyWith(viewWalletBalance: val)),
@@ -130,11 +132,11 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
           ],
         ),
         _buildSection(
-          title: 'لوحة التحكم',
+          title: AppLocalizations.of(context)!.dashboardSection,
           icon: Icons.dashboard_outlined,
           children: [
             _buildSwitch(
-              'عرض الإحصائيات (المخططات)',
+              AppLocalizations.of(context)!.viewStatsCharts,
               _permissions.viewDashboardStats,
               (val) => _updatePermission(
                   _permissions.copyWith(viewDashboardStats: val)),
@@ -178,7 +180,7 @@ class _UserPermissionsWidgetState extends State<UserPermissionsWidget> {
       title: Text(title, style: AppTextStyles.bodyMedium),
       value: value,
       onChanged: onChanged,
-      activeColor: AppColors.primary,
+      activeThumbColor: AppColors.primary,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       dense: true,
     );

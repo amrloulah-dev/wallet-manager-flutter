@@ -7,14 +7,16 @@ import '../../../core/utils/number_formatter.dart';
 import '../../../core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/wallet_provider.dart';
+import '../../../providers/platform_settings_provider.dart';
 import '../../../data/models/wallet_model.dart';
-import '../../../data/repositories/wallet_repository.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
 import '../../widgets/wallet/wallet_stats_card.dart';
-import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/error_widget.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../../core/enums/wallet_enums.dart';
 
 class WalletDetailsScreen extends StatefulWidget {
   const WalletDetailsScreen({super.key});
@@ -42,11 +44,9 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       );
     }
 
-    return StreamBuilder<WalletModel?>(
-      stream: WalletRepository().watchWallet(_walletId!),
-      builder: (context, snapshot) {
-        final wallet = snapshot.data;
-
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_walletId!],
+      builder: (context, wallet, child) {
         return Scaffold(
           appBar: AppBar(
             title: Text(AppLocalizations.of(context)!.walletDetails),
@@ -66,29 +66,13 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
                   ]
                 : [],
           ),
-          body: _buildBody(context, snapshot),
+          body: _buildBody(context, wallet),
         );
       },
     );
   }
 
-  Widget _buildBody(
-      BuildContext context, AsyncSnapshot<WalletModel?> snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting &&
-        !snapshot.hasData) {
-      return LoadingIndicator(
-          message: AppLocalizations.of(context)!.loadingWalletData);
-    }
-
-    if (snapshot.hasError) {
-      return CustomErrorWidget(
-        message: AppLocalizations.of(context)!.errorLoadingData,
-        onRetry: () => setState(() {}),
-      );
-    }
-
-    final wallet = snapshot.data;
-
+  Widget _buildBody(BuildContext context, WalletModel? wallet) {
     if (wallet == null) {
       return CustomErrorWidget(
         message: AppLocalizations.of(context)!.walletNotFound,
@@ -184,24 +168,29 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
               context: context,
               icon: Icons.account_balance_wallet_outlined,
               label: AppLocalizations.of(context)!.walletType,
-              value: wallet.walletTypeDisplayName,
+              value: AppLocalizations.of(context)!
+                  .getWalletTypeName(wallet.walletType),
             ),
             const SizedBox(height: 16),
             _buildInfoRow(
               context: context,
               icon: Icons.label_outline,
               label: AppLocalizations.of(context)!.walletStatus,
-              value: wallet.walletStatusDisplayName,
-              valueColor: wallet.walletStatus == 'new'
-                  ? AppColors.newWallet
-                  : AppColors.oldWallet,
+              value: AppLocalizations.of(context)!
+                  .getWalletStatusName(wallet.walletStatus),
+              valueColor: wallet.walletStatus ==
+                      WalletStatus
+                          .suspended // ENUM refactor (placeholder check)
+                  ? AppColors.error
+                  : AppColors.primary,
             ),
             const SizedBox(height: 16),
             _buildInfoRow(
               context: context,
               icon: Icons.calendar_today_outlined,
               label: AppLocalizations.of(context)!.addedDate,
-              value: DateHelper.formatTimestamp(wallet.createdAt),
+              value:
+                  DateHelper.formatDateTime(wallet.createdAt ?? DateTime.now()),
             ),
             if (wallet.notes != null && wallet.notes!.isNotEmpty) ...[
               const Divider(height: 24),
@@ -258,13 +247,39 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, right: 8.0),
+      padding: const EdgeInsetsDirectional.only(bottom: 8.0, end: 8.0),
       child: Text(title, style: AppTextStyles.h3),
     );
   }
 
   Widget _buildSendLimitsCard(WalletModel wallet) {
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
     final limits = wallet.getLimits();
+
+    final double sendDailyPercentage = dynamicLimits.dailySend > 0
+        ? (limits.dailyUsed / dynamicLimits.dailySend * 100).clamp(0.0, 100.0)
+        : 0.0;
+    final double sendMonthlyPercentage = dynamicLimits.monthlySend > 0
+        ? (limits.monthlyUsed / dynamicLimits.monthlySend * 100)
+            .clamp(0.0, 100.0)
+        : 0.0;
+
+    String getWarningLevel(double percentage) {
+      if (percentage >= 90) return 'red';
+      if (percentage >= 70) return 'yellow';
+      return 'green';
+    }
+
+    final dailySendWarningLevel = getWarningLevel(sendDailyPercentage);
+    final monthlySendWarningLevel = getWarningLevel(sendMonthlyPercentage);
+
+    final bool isDailyLimitReached =
+        limits.dailyUsed >= dynamicLimits.dailySend;
+    final bool isMonthlyLimitReached =
+        limits.monthlyUsed >= dynamicLimits.monthlySend;
+
     return Card(
       elevation: 1,
       child: Padding(
@@ -274,19 +289,19 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             WalletLimitBar(
               label: AppLocalizations.of(context)!.dailyLimitSimple,
               used: limits.dailyUsed,
-              limit: limits.dailyLimit,
-              percentage: limits.dailyPercentage,
-              warningLevel: wallet.sendDailyWarningLevel,
+              limit: dynamicLimits.dailySend,
+              percentage: sendDailyPercentage,
+              warningLevel: dailySendWarningLevel,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
               label: AppLocalizations.of(context)!.monthlyLimitSimple,
               used: limits.monthlyUsed,
-              limit: limits.monthlyLimit,
-              percentage: limits.monthlyPercentage,
-              warningLevel: wallet.sendMonthlyWarningLevel,
+              limit: dynamicLimits.monthlySend,
+              percentage: sendMonthlyPercentage,
+              warningLevel: monthlySendWarningLevel,
             ),
-            if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
+            if (isDailyLimitReached || isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
                   AppLocalizations.of(context)!.sendLimitReachedMessage),
@@ -298,37 +313,34 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   Widget _buildReceiveLimitsCard(WalletModel wallet) {
-    // Limits
+    final settings =
+        Provider.of<PlatformSettingsProvider>(context, listen: false).settings;
+    final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
     final limits = wallet.getReceiveLimits();
 
-    // Logic for receive limits warning (could be moved to model later)
+    final double receiveDailyPercentage = dynamicLimits.dailyReceive > 0
+        ? (limits.dailyUsed / dynamicLimits.dailyReceive * 100)
+            .clamp(0.0, 100.0)
+        : 0.0;
+    final double receiveMonthlyPercentage = dynamicLimits.monthlyReceive > 0
+        ? (limits.monthlyUsed / dynamicLimits.monthlyReceive * 100)
+            .clamp(0.0, 100.0)
+        : 0.0;
+
     String getWarningLevel(double percentage) {
       if (percentage >= 90) return 'red';
       if (percentage >= 70) return 'yellow';
       return 'green';
     }
 
-    final isInstaPay = wallet.walletType == 'instapay';
+    final dailyReceiveWarningLevel = getWarningLevel(receiveDailyPercentage);
+    final monthlyReceiveWarningLevel =
+        getWarningLevel(receiveMonthlyPercentage);
 
-    // Daily Logic
-    double dailyPercentage = limits.dailyPercentage;
-
-    // Monthly Logic
-    double monthlyPercentage = limits.monthlyPercentage;
-
-    bool isCapacityRestricting = false;
-    if (!isInstaPay) {
-      double monthlyLimit = limits.monthlyLimit;
-      double monthlyUsed = limits.monthlyUsed;
-      double flowRemaining = monthlyLimit - monthlyUsed;
-      
-      if (wallet.availableToReceiveMonthly < flowRemaining) {
-        isCapacityRestricting = true;
-      }
-    }
-
-    final dailyReceiveWarningLevel = getWarningLevel(dailyPercentage);
-    final monthlyReceiveWarningLevel = getWarningLevel(monthlyPercentage);
+    final bool isDailyLimitReached =
+        limits.dailyUsed >= dynamicLimits.dailyReceive;
+    final bool isMonthlyLimitReached =
+        limits.monthlyUsed >= dynamicLimits.monthlyReceive;
 
     return Card(
       elevation: 1,
@@ -339,26 +351,19 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
             WalletLimitBar(
               label: AppLocalizations.of(context)!.dailyLimitSimple,
               used: limits.dailyUsed,
-              limit: limits.dailyLimit,
-              percentage: dailyPercentage,
+              limit: dynamicLimits.dailyReceive,
+              percentage: receiveDailyPercentage,
               warningLevel: dailyReceiveWarningLevel,
             ),
             const SizedBox(height: 20),
             WalletLimitBar(
               label: AppLocalizations.of(context)!.monthlyLimitSimple,
               used: limits.monthlyUsed,
-              limit: limits.monthlyLimit,
-              percentage: monthlyPercentage,
+              limit: dynamicLimits.monthlyReceive,
+              percentage: receiveMonthlyPercentage,
               warningLevel: monthlyReceiveWarningLevel,
             ),
-            if (isCapacityRestricting) ...[
-              const SizedBox(height: 16),
-              Text(
-                '⚠️ تنبيه: نظراً لرصيد المحفظة الحالي، أقصى مبلغ يمكنك استقباله الآن هو ${NumberFormatter.formatAmount(wallet.availableToReceiveMonthly)}',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
-              ),
-            ],
-            if (limits.isDailyLimitReached || limits.isMonthlyLimitReached) ...[
+            if (isDailyLimitReached || isMonthlyLimitReached) ...[
               const SizedBox(height: 16),
               _buildLimitReachedWarning(
                   AppLocalizations.of(context)!.receiveLimitReachedMessage),
@@ -373,7 +378,7 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.error.withAlpha((0.1 * 255).round()),
+        color: AppColors.error.withAlpha(26),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -393,15 +398,18 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
   }
 
   void _navigateToEditWallet(BuildContext context, WalletModel wallet) {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     Navigator.pushNamed(context, RouteConstants.walletForm, arguments: wallet);
   }
 
-  void _navigateToCreateTransaction(BuildContext context, WalletModel wallet) {
-    Navigator.pushNamed(context, RouteConstants.createTransaction,
-        arguments: wallet.walletId);
-  }
-
   void _showDeleteDialog(WalletModel wallet) async {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
       title: AppLocalizations.of(context)!.confirmDeletion,
@@ -411,8 +419,11 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       type: DialogType.danger,
     );
 
+    if (!mounted) return;
+
     if (confirmed == true) {
       final walletProvider = context.read<WalletProvider>();
+      final localizations = AppLocalizations.of(context)!;
       final navigator = Navigator.of(context);
 
       final success = await walletProvider.deleteWallet(wallet.walletId);
@@ -420,12 +431,11 @@ class _WalletDetailsScreenState extends State<WalletDetailsScreen> {
       if (!mounted) return;
 
       if (success) {
-        ToastUtils.showSuccess(
-            AppLocalizations.of(context)!.walletDeletedSuccessfully);
+        ToastUtils.showSuccess(localizations.walletDeletedSuccessfully);
         navigator.pop(); // Go back from details screen
       } else {
-        ToastUtils.showError(walletProvider.errorMessage ??
-            AppLocalizations.of(context)!.walletDeletionFailed);
+        ToastUtils.showError(
+            walletProvider.errorMessage ?? localizations.walletDeletionFailed);
       }
     }
   }

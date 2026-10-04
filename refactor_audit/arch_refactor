@@ -1,0 +1,83 @@
+# 🛠️ Master Execution Plan: Architectural Refactoring & Domain-Driven Design (Phase 1)
+
+**SYSTEM DIRECTIVE:**
+Act as an Elite Flutter Software Architect. Your task is to execute the following architectural refactoring plan to decouple Business Logic from Firebase SDKs, implement Clean Architecture, and eliminate technical debt.
+
+**CRITICAL RULES FOR EXECUTION:**
+1. **NO UI MODIFICATIONS:** Do NOT modify the presentation layer until explicitly instructed. You are only rebuilding the core.
+2. **STRICT DEPENDENCY FLOW:** All dependencies must point INWARD toward the Domain layer.
+3. **ZERO SDK LEAKAGE:** Firebase SDKs must be strictly confined to the `lib/data/` directory.
+
+---
+
+## 🏗️ Phase 1: Foundation & Infrastructure (Base Layer)
+*Target: Eliminate code duplication (DRY) and centralize global state access.*
+
+**1. Create `BaseProvider` (`lib/providers/base_provider.dart`):**
+* Create an abstract class `BaseProvider` extending `ChangeNotifier`.
+* Add `bool _isDisposed = false;` (Override `dispose()` to set it to true).
+* Extract `void safeNotify()`: Checks `!_isDisposed && hasListeners` before calling `notifyListeners()`.
+* Extract `void setError(String errorCode, [dynamic error, StackTrace? stack])` for centralized error logging.
+
+**2. Global Provider Cleanup:**
+* Refactor all existing providers (`WalletProvider`, `TransactionProvider`, etc.) to `extend BaseProvider`.
+* Delete their local `_safeNotify` and `_setError` methods to remove duplication.
+
+**3. Firebase DI Registration (`lib/core/di/service_locator.dart`):**
+* Register `FirebaseFirestore.instance` and `FirebaseAuth.instance` as singletons via `GetIt`.
+
+---
+
+## 🏛️ Phase 2: Domain Layer Creation (The Contracts)
+*Target: Define "What" the system does, independent of "How" it does it (Firebase).*
+
+**1. Directory Structure:**
+* Create `lib/domain/repositories/` and `lib/domain/entities/`.
+
+**2. Abstract Repository Interfaces:**
+* Define abstract classes for: `IAuthRepository`, `IWalletRepository`, `ITransactionRepository`, `ISubscriptionRepository`, and `IEmployeeRepository`.
+* **Rule:** These interfaces must NEVER import `cloud_firestore` or `firebase_auth`. Use Domain Entities or standard Dart types.
+
+**3. Standardized Result Wrapper:**
+* Implement a standard `Result<T>` or `Failure` pattern for all repository return types to unify error handling.
+
+---
+
+## 💾 Phase 3: Data Layer Refactor (Implementation)
+*Target: Connect the Contracts to Firebase and enforce Dependency Injection.*
+
+**1. Constructor Injection:**
+* Refactor every concrete repository in `lib/data/repositories/` to require `FirebaseFirestore` (and `FirebaseAuth` if needed) via its constructor.
+* Remove all `FirebaseFirestore.instance` hardcoded calls inside their methods.
+
+**2. Interface Implementation:**
+* Ensure every repository uses the `implements` keyword (e.g., `class FirebaseWalletRepository implements IWalletRepository`).
+
+**3. DI Mapping (`service_locator.dart`):**
+* Bind the Interfaces to their Firebase Implementations. 
+  *Example: `sl.registerLazySingleton<IWalletRepository>(() => FirebaseWalletRepository(firestore: sl()));`*
+* Update Provider constructors to require the Interface, not the concrete class.
+
+---
+
+## ⚡ Phase 4: Logic Decomposition (Breaking the God Class)
+*Target: Separate responsibilities in the bloated `AuthProvider`.*
+
+**1. Service Extraction:**
+* Create standalone service classes: `LicenseKeyService`, `DeviceVerificationService`, and `StoreRegistrationService`.
+
+**2. AuthProvider Refactor:**
+* Inject the new services into `AuthProvider`.
+* Delegate logic to these services, reducing `AuthProvider` to a simple UI orchestrator.
+* Remove all `import 'package:cloud_firestore/cloud_firestore.dart';` from the provider layer.
+
+---
+
+## ✅ Verification Gates
+Ensure the following checks pass after execution:
+* **Static Analysis:** `flutter analyze` must return zero errors.
+* **Architecture Integrity:** `grep -r "cloud_firestore" lib/providers/` must return 0 results.
+* **DI Integrity:** No manual instantiation of repositories (e.g., `WalletRepository()`). All must use `sl<IWalletRepository>()`.
+* **DRY Check:** Only one definition of `safeNotify` exists in the entire project (`BaseProvider`).
+
+**END YOUR RESPONSE WITH:** "Phase 1 Execution Plan loaded and understood. Ready to execute step-by-step."

@@ -1,12 +1,18 @@
 import 'package:intl/intl.dart';
+import 'currency_formatter.dart';
 
 class NumberFormatter {
+  /// Configures the locale used by all formatting methods.
+  /// Should be called once during app initialization.
+  static void setLocale(String locale) {
+    // No-op: Enforce en_US for number formatting
+  }
+
   // ===========================
   // Format Number with Commas (1000 → 1,000)
   // ===========================
   /// Formats a number with thousand separators.
   /// Handles null by returning '0'.
-  /// Uses 'en_US' locale for standard comma separators.
   static String formatNumber(num? number) {
     if (number == null) {
       return '0';
@@ -19,11 +25,10 @@ class NumberFormatter {
   // Format Amount with Currency (5000 → 5,000 ج)
   // ===========================
   /// Formats a number as a currency amount and optionally adds a currency symbol.
-  /// Defaults to 'ج' for the currency symbol.
   static String formatAmount(num? amount,
-      {bool showCurrency = true, String currencySymbol = 'ج'}) {
-    final formatted = formatNumber(amount ?? 0);
-    return formatted; // Temporarily remove currency symbol
+      {bool showCurrency = true, String? currencySymbol}) {
+    return CurrencyFormatter.formatAmount(amount,
+        showCurrency: showCurrency, currencySymbol: currencySymbol);
   }
 
   // ===========================
@@ -46,12 +51,17 @@ class NumberFormatter {
   /// It removes common currency symbols, commas, and whitespace.
   /// Returns 0.0 if the input is null, empty, or invalid.
   static double parseAmount(String? text) {
-    if (text == null || text.trim().isEmpty) {
-      return 0.0;
+    return CurrencyFormatter.parseAmount(text);
+  }
+
+  static String _convertArabicToEnglishDigits(String input) {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    var result = input;
+    for (var i = 0; i < 10; i++) {
+      result = result.replaceAll(arabicDigits[i], englishDigits[i]);
     }
-    // Remove currency symbols (ج, EGP), commas, and whitespace.
-    final cleanedText = text.replaceAll(RegExp(r'[ج,EGP\s]'), '');
-    return double.tryParse(cleanedText) ?? 0.0;
+    return result;
   }
 
   // ===========================
@@ -63,10 +73,11 @@ class NumberFormatter {
     if (phone == null) {
       return '';
     }
-    // Format pattern: 0XXX XXX XXXX
-    if (phone.length == 11) {
-      return '${phone.substring(7)} ${phone.substring(4, 7)} ${phone.substring(0, 4)}';
+    final normalized =
+        _convertArabicToEnglishDigits(phone).replaceAll(RegExp(r'\D'), '');
+    if (normalized.length == 11) {
+      return '\u200E${normalized.substring(0, 4)} ${normalized.substring(4, 7)} ${normalized.substring(7)}\u200E';
     }
-    return phone;
+    return '\u200E$phone\u200E';
   }
 }

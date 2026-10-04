@@ -2,16 +2,18 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/routes/navigation_service.dart';
 
 class ToastUtils {
   static void showSuccess(String message) {
     final context = NavigationService.navigatorKey.currentContext;
     if (context == null) return;
+    final translated = ErrorTranslator.getLocalizedString(context, message);
     BotToast.showCustomText(
       toastBuilder: (cancelFunc) => _buildToast(
         context: context,
-        message: message,
+        message: translated,
         icon: Icons.check_circle_outline,
         color: AppColors.success,
       ),
@@ -23,10 +25,11 @@ class ToastUtils {
   static void showError(String message) {
     final context = NavigationService.navigatorKey.currentContext;
     if (context == null) return;
+    final translated = ErrorTranslator.getLocalizedString(context, message);
     BotToast.showCustomText(
       toastBuilder: (cancelFunc) => _buildToast(
         context: context,
-        message: message,
+        message: translated,
         icon: Icons.error_outline,
         color: AppColors.error,
       ),
@@ -38,10 +41,11 @@ class ToastUtils {
   static void showInfo(String message) {
     final context = NavigationService.navigatorKey.currentContext;
     if (context == null) return;
+    final translated = ErrorTranslator.getLocalizedString(context, message);
     BotToast.showCustomText(
       toastBuilder: (cancelFunc) => _buildToast(
         context: context,
-        message: message,
+        message: translated,
         icon: Icons.info_outline,
         color: AppColors.info,
       ),
@@ -53,10 +57,11 @@ class ToastUtils {
   static void showWarning(String message) {
     final context = NavigationService.navigatorKey.currentContext;
     if (context == null) return;
+    final translated = ErrorTranslator.getLocalizedString(context, message);
     BotToast.showCustomText(
       toastBuilder: (cancelFunc) => _buildToast(
         context: context,
-        message: message,
+        message: translated,
         icon: Icons.warning_amber_outlined,
         color: AppColors.warning,
       ),
@@ -120,9 +125,9 @@ class ToastUtils {
               width: 5,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
+                borderRadius: const BorderRadiusDirectional.only(
+                  topEnd: Radius.circular(12),
+                  bottomEnd: Radius.circular(12),
                 ),
               ),
             ),

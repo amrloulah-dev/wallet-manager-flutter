@@ -78,7 +78,6 @@ class WalletLimitBar extends StatelessWidget {
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary(context),
           ),
-          textDirection: TextDirection.ltr,
         ),
       ],
     );
@@ -86,6 +85,8 @@ class WalletLimitBar extends StatelessWidget {
 
   Color _getColorForWarningLevel(String level) {
     switch (level) {
+      case 'grey':
+        return Colors.grey;
       case 'green':
         return AppColors.success;
       case 'yellow':

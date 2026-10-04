@@ -1,19 +1,10 @@
-import 'package:walletmanager/data/repositories/stats_repository.dart';
-import 'package:walletmanager/data/repositories/wallet_repository.dart';
-import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:walletmanager/data/repositories/employee_repository.dart';
-import 'package:walletmanager/providers/auth_provider.dart';
-import 'package:walletmanager/providers/debt_provider.dart';
-import 'package:walletmanager/providers/employee_provider.dart';
-import 'package:walletmanager/providers/statistics_provider.dart';
-import 'package:walletmanager/providers/transaction_provider.dart';
-import 'package:walletmanager/providers/wallet_provider.dart';
+import 'package:walletmanager/core/utils/permission_helper.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/data/models/store_model.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../core/constants/route_constants.dart';
-import '../presentation/screens/auth/login_landing_screen.dart';
+import '../app.dart';
 import '../presentation/screens/auth/store_registration_screen.dart';
 import '../presentation/screens/auth/employee_login_screen.dart';
 import '../presentation/screens/home/main_dashboard_screen.dart';
@@ -28,219 +19,94 @@ import '../presentation/screens/debts/add_debt_screen.dart';
 import '../presentation/screens/debts/debts_list_screen.dart';
 import '../presentation/screens/statistics/general_statistics_screen.dart';
 import '../presentation/screens/settings/settings_screen.dart';
-import '../presentation/screens/settings/upgrade_screen.dart';
+import '../presentation/screens/subscription/paywall_screen.dart';
 import '../presentation/screens/employees/add_employee_screen.dart';
 import '../presentation/screens/employees/manage_employees_screen.dart';
+import '../presentation/screens/subscription/subscription_details_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case RouteConstants.loginLanding:
-        return _buildRoute(const LoginLandingScreen(), settings);
+        return _buildRoute(const AuthCheckWrapper(), settings);
 
       case RouteConstants.storeRegistration:
         return _buildRoute(const StoreRegistrationScreen(), settings);
 
       case RouteConstants.employeeLogin:
         final store = settings.arguments as StoreModel;
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository()),
-            update: (_, auth, previous) =>
-                previous!..setStoreId(auth.currentStoreId),
-            child: EmployeeLoginScreen(store: store),
-          ),
-          settings,
-        );
+        return _buildRoute(EmployeeLoginScreen(store: store), settings);
 
-      case RouteConstants.ownerDashboard:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-                create: (context) => DebtProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? DebtProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
-                create: (_) => StatisticsProvider(
-                  walletRepository: WalletRepository(),
-                  transactionRepository: TransactionRepository(),
-                  debtRepository: DebtRepository(),
-                  statsRepository: StatsRepository(),
-                ),
-                update: (_, auth, previous) =>
-                    previous!..setStoreId(auth.currentStoreId),
-              ),
-            ],
-            child: const MainDashboardScreen(),
-          ),
-          settings,
-        );
+      case RouteConstants.mainDashboard:
+        return _buildRoute(const MainDashboardScreen(), settings);
 
       case RouteConstants.walletsList:
       case RouteConstants.walletForm:
       case RouteConstants.walletDetails:
       case RouteConstants.addBalance:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-            create: (context) => WalletProvider(
-                authProvider:
-                    Provider.of<AuthProvider>(context, listen: false)),
-            update: (_, auth, prev) =>
-                (prev ?? WalletProvider(authProvider: auth))
-                  ..updateAuthState(auth),
-            child: _getPageForWalletRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForWalletRoute(settings), settings);
 
       case RouteConstants.createTransaction:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-            ],
-            child: const CreateTransactionScreen(),
-          ),
-          settings,
-        );
+        return _buildRoute(const CreateTransactionScreen(), settings);
 
       case RouteConstants.todayTransactions:
       case RouteConstants.transactionDetails:
-        return _buildRoute(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProxyProvider<AuthProvider, WalletProvider>(
-                create: (context) => WalletProvider(
-                    authProvider:
-                        Provider.of<AuthProvider>(context, listen: false)),
-                update: (_, auth, prev) =>
-                    (prev ?? WalletProvider(authProvider: auth))
-                      ..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
-                create: (_) => TransactionProvider(),
-                update: (_, auth, prev) => prev!..updateAuthState(auth),
-              ),
-              ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-                create: (_) =>
-                    EmployeeProvider(employeeRepository: EmployeeRepository()),
-                update: (_, auth, prev) =>
-                    prev!..setStoreId(auth.currentStoreId),
-              ),
-            ],
-            child: _getPageForTransactionRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForTransactionRoute(settings), settings);
 
       case RouteConstants.debtsList:
       case RouteConstants.addDebt:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, DebtProvider>(
-            create: (context) => DebtProvider(
-                authProvider:
-                    Provider.of<AuthProvider>(context, listen: false)),
-            update: (_, auth, prev) =>
-                (prev ?? DebtProvider(authProvider: auth))
-                  ..updateAuthState(auth),
-            child: _getPageForDebtRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForDebtRoute(settings), settings);
 
       case RouteConstants.generalStatistics:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, StatisticsProvider>(
-            create: (_) => StatisticsProvider(
-              walletRepository: WalletRepository(),
-              transactionRepository: TransactionRepository(),
-              debtRepository: DebtRepository(),
-              statsRepository: StatsRepository(),
-            ),
-            update: (_, auth, previous) =>
-                previous!..setStoreId(auth.currentStoreId),
-            child: const GeneralStatisticsScreen(),
-          ),
-          settings,
-        );
+        return _buildRoute(const GeneralStatisticsScreen(), settings);
 
       case RouteConstants.settings:
         return _buildRoute(const SettingsScreen(), settings);
 
       case RouteConstants.upgradeScreen:
-        final isTrial = settings.arguments as bool? ?? false;
-        return _buildRoute(UpgradeScreen(isTrial: isTrial), settings);
+        // H005: Route to new PaywallScreen instead of legacy UpgradeScreen
+        return _buildRoute(const PaywallScreen(), settings);
+
+      case RouteConstants.subscriptionDetails:
+        return _buildRoute(const SubscriptionDetailsScreen(), settings);
 
       case RouteConstants.addEmployee:
       case RouteConstants.manageEmployees:
-        return _buildRoute(
-          ChangeNotifierProxyProvider<AuthProvider, EmployeeProvider>(
-            create: (_) =>
-                EmployeeProvider(employeeRepository: EmployeeRepository()),
-            update: (_, auth, prev) => prev!..setStoreId(auth.currentStoreId),
-            child: _getPageForEmployeeRoute(settings),
-          ),
-          settings,
-        );
+        return _buildRoute(_getPageForEmployeeRoute(settings), settings);
 
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(
-              title: const Text('خطأ'),
-              centerTitle: true,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'الصفحة المطلوبة غير موجودة.',
-                    style: TextStyle(fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(_);
-                    },
-                    child: const Text('الرجوع'),
-                  ),
-                ],
+          builder: (ctx) {
+            final l10n = AppLocalizations.of(ctx)!;
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(l10n.error),
+                centerTitle: true,
               ),
-            ),
-          ),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.pageNotFound,
+                      style: const TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(l10n.back),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
     }
   }
@@ -296,7 +162,33 @@ class AppRouter {
   static Route<dynamic> _buildRoute(Widget page, RouteSettings settings) {
     return PageRouteBuilder(
       settings: settings,
-      pageBuilder: (context, animation, secondaryAnimation) => page,
+      pageBuilder: (context, animation, secondaryAnimation) {
+        final routeName = settings.name ?? '';
+
+        // 1. Define Public Routes that DO NOT require permissions
+        final isPublicRoute = routeName == RouteConstants.loginLanding ||
+            routeName == RouteConstants.storeRegistration;
+
+        // 2. Enforce Security Guard ONLY for private routes
+        if (!isPublicRoute &&
+            !PermissionHelper.canAccessScreen(context, routeName)) {
+          // If denied, redirect to Dashboard on next frame and show message
+          final msg =
+              AppLocalizations.of(context)?.accessDenied ?? 'Access Denied';
+          Future.microtask(() {
+            if (!context.mounted) return;
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              RouteConstants.mainDashboard,
+              (route) => false,
+            );
+            ToastUtils.showInfo(msg);
+          });
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+
+        return page;
+      },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;

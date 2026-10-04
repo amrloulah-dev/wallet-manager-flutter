@@ -1,0 +1,8 @@
+{
+  "id": "sms_instant_kill_refactor_20260823",
+  "type": "Refactor",
+  "status": "new",
+  "description": "Complete Architectural Pivot to Single-Item / Instant-Kill SMS Processing (Remove Queue & Fingerprints)",
+  "created_at": "2026-08-23T21:09:16+03:00",
+  "updated_at": "2026-08-23T21:20:00+03:00"
+}

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../data/services/local_storage_service.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
+import 'base_provider.dart';
 
-class ThemeProvider extends ChangeNotifier {
+class ThemeProvider extends BaseProvider {
   final LocalStorageService _localStorage;
   ThemeMode _themeMode = ThemeMode.system;
 
   ThemeProvider({LocalStorageService? localStorage})
       : _localStorage = localStorage ?? LocalStorageService() {
-    _loadThemeMode();
+    Future.microtask(() => _loadThemeMode());
   }
 
   ThemeMode get themeMode => _themeMode;
@@ -27,14 +30,14 @@ class ThemeProvider extends ChangeNotifier {
     }
   }
 
-  String get themeModeDisplay {
+  String get themeModeKey {
     switch (_themeMode) {
       case ThemeMode.light:
-        return 'فاتح';
+        return 'theme_light';
       case ThemeMode.dark:
-        return 'غامق';
+        return 'theme_dark';
       case ThemeMode.system:
-        return 'حسب النظام';
+        return 'theme_system';
     }
   }
 
@@ -53,17 +56,21 @@ class ThemeProvider extends ChangeNotifier {
           _themeMode = ThemeMode.system;
           break;
       }
-      notifyListeners();
-    } catch (e) {
+      safeNotify();
+    } catch (e, stack) {
       _themeMode = ThemeMode.system;
-      // Optionally log the error
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.low,
+          operation: 'load_theme_mode',
+          stackTrace: stack);
+      safeNotify();
     }
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     if (mode == _themeMode) return;
     _themeMode = mode;
-    notifyListeners();
+    safeNotify();
     await _localStorage.saveThemeMode(themeModeString);
   }
 

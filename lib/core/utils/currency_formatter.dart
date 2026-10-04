@@ -1,0 +1,51 @@
+import 'package:intl/intl.dart';
+
+/// A utility class for formatting currency and amounts.
+class CurrencyFormatter {
+  /// Configures the locale used by all formatting methods.
+  /// Should be called once during app initialization.
+  static void setLocale(String locale) {
+    // No-op: Enforce en_US for currency formatting
+  }
+
+  /// Formats a number as a currency amount with thousand separators.
+  static String formatAmount(num? amount,
+      {bool showCurrency = false, String? currencySymbol}) {
+    if (amount == null) {
+      return '0';
+    }
+
+    final formatter = NumberFormat('#,##0.##', 'en_US');
+    final formatted = formatter.format(amount);
+
+    if (showCurrency) {
+      final symbol = currencySymbol ?? 'EGP';
+      if (symbol == 'EGP') {
+        return 'EGP $formatted';
+      } else {
+        return '$formatted $symbol';
+      }
+    } else {
+      return formatted;
+    }
+  }
+
+  /// Parses a string containing a formatted amount into a double.
+  /// Removes common currency symbols, commas, and whitespace.
+  static double parseAmount(String? text) {
+    if (text == null || text.trim().isEmpty) {
+      return 0.0;
+    }
+    // Remove common currency symbols (ج.م., EGP, $, etc.), commas, and whitespace.
+    // Replace anything that is not a digit or a dot with an empty string.
+    var cleanedText = text.replaceAll(RegExp(r'[^\d.]'), '');
+
+    // If there are multiple dots (e.g. from "ج.م."), keep only the first one or the one before the decimal part
+    // Actually, it's safer to remove trailing dots.
+    while (cleanedText.endsWith('.')) {
+      cleanedText = cleanedText.substring(0, cleanedText.length - 1);
+    }
+
+    return double.tryParse(cleanedText) ?? 0.0;
+  }
+}

@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../../core/enums/subscription_enums.dart';
+import '../../core/errors/app_error_handler.dart';
 
 // ===========================
 // Main Store Model
@@ -17,15 +20,12 @@ class StoreModel {
   final bool isActive;
   final bool isSuspended;
 
-  final Timestamp createdAt;
-  final Timestamp? updatedAt;
+  final DateTime? createdAt; // Made nullable
+  final DateTime? updatedAt;
 
-  final StoreLicense license;
+  final StoreSubscription subscription;
   final StoreSettings settings;
-  final StoreStats stats;
-
-  final String activeLicenseKey;
-  final String licenseKeyId;
+  final Map<String, dynamic>? legacyData;
 
   StoreModel({
     required this.storeId,
@@ -37,13 +37,11 @@ class StoreModel {
     this.ownerPhoto,
     this.isActive = true,
     this.isSuspended = false,
-    required this.createdAt,
+    this.createdAt,
     this.updatedAt,
-    required this.license,
+    required this.subscription,
     required this.settings,
-    required this.stats,
-    required this.activeLicenseKey,
-    required this.licenseKeyId,
+    this.legacyData,
   });
 
   /// Creates a StoreModel from a Firestore document snapshot.
@@ -53,29 +51,57 @@ class StoreModel {
     }
     final data = doc.data() as Map<String, dynamic>;
 
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    if (createdAt == null) {
+      AppErrorHandler.handle(
+        'Missing createdAt in Store document: ${doc.id}',
+        operation: 'StoreModel.fromFirestore',
+      );
+    }
+
     return StoreModel(
       storeId: doc.id,
-      storeName: data['storeName'] ?? '',
-      storePassword: data['storePassword'] ?? '',
-      ownerId: data['ownerId'] ?? '',
-      ownerName: data['ownerName'] ?? '',
-      ownerEmail: data['ownerEmail'] ?? '',
-      ownerPhoto: data['ownerPhoto'],
-      isActive: data['isActive'] ?? true,
-      isSuspended: data['isSuspended'] ?? false,
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      updatedAt: data['updatedAt'],
-      license: StoreLicense.fromMap(data['license'] ?? {}),
-      settings: StoreSettings.fromMap(data['settings'] ?? {}),
-      stats: StoreStats.fromMap(data['stats'] ?? {}),
-      activeLicenseKey: data['activeLicenseKey'] ?? '',
-      licenseKeyId: data['licenseKeyId'] ?? '',
+      storeName: data['storeName'] as String? ?? '',
+      storePassword: data['storePassword'] as String? ?? '',
+      ownerId: data['ownerId'] as String? ?? '',
+      ownerName: data['ownerName'] as String? ?? '',
+      ownerEmail: data['ownerEmail'] as String? ?? '',
+      ownerPhoto: data['ownerPhoto'] as String?,
+      isActive: data['isActive'] as bool? ?? true,
+      isSuspended: data['isSuspended'] as bool? ?? false,
+      createdAt: createdAt,
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      subscription: data['subscription'] is Map<String, dynamic>
+          ? StoreSubscription.fromMap(
+              data['subscription'] as Map<String, dynamic>)
+          : _withMigrationWarning(), // FR-17 legacy migration
+      settings: data['settings'] is Map<String, dynamic>
+          ? StoreSettings.fromMap(data['settings'] as Map<String, dynamic>)
+          : StoreSettings(),
+      legacyData: data['legacyData'] is Map<String, dynamic>
+          ? data['legacyData'] as Map<String, dynamic>
+          : {
+              if (data.containsKey('licenseKey'))
+                'licenseKey': data['licenseKey'],
+              if (data.containsKey('licenseKeyId'))
+                'licenseKeyId': data['licenseKeyId'],
+              if (data.containsKey('activeLicenseKey'))
+                'activeLicenseKey': data['activeLicenseKey'],
+            },
     );
+  }
+
+  static StoreSubscription _withMigrationWarning() {
+    if (kDebugMode) {
+      debugPrint(
+          '⚠️ [MIGRATION] Store using legacy lifetime subscription (migration needed)');
+    }
+    return StoreSubscription.migratedLifetime();
   }
 
   /// Converts the StoreModel instance to a map for Firestore.
   Map<String, dynamic> toFirestore() {
-    return {
+    final map = {
       'storeName': storeName,
       'storePassword': storePassword,
       'ownerId': ownerId,
@@ -84,14 +110,30 @@ class StoreModel {
       'ownerPhoto': ownerPhoto,
       'isActive': isActive,
       'isSuspended': isSuspended,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt ?? FieldValue.serverTimestamp(),
-      'license': license.toMap(),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'updatedAt': updatedAt != null
+          ? Timestamp.fromDate(updatedAt!)
+          : FieldValue.serverTimestamp(),
+      'subscription': subscription.toMap(),
       'settings': settings.toMap(),
-      'stats': stats.toMap(),
-      'activeLicenseKey': activeLicenseKey,
-      'licenseKeyId': licenseKeyId,
+      if (legacyData != null && legacyData!.isNotEmpty)
+        'legacyData': legacyData,
     };
+
+    // Preserve legacy fields at root if they were stored in legacyData
+    if (legacyData != null) {
+      if (legacyData!.containsKey('licenseKey')) {
+        map['licenseKey'] = legacyData!['licenseKey'];
+      }
+      if (legacyData!.containsKey('licenseKeyId')) {
+        map['licenseKeyId'] = legacyData!['licenseKeyId'];
+      }
+      if (legacyData!.containsKey('activeLicenseKey')) {
+        map['activeLicenseKey'] = legacyData!['activeLicenseKey'];
+      }
+    }
+
+    return map;
   }
 
   /// Creates a copy of the instance with updated fields.
@@ -105,13 +147,11 @@ class StoreModel {
     String? ownerPhoto,
     bool? isActive,
     bool? isSuspended,
-    Timestamp? createdAt,
-    Timestamp? updatedAt,
-    StoreLicense? license,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    StoreSubscription? subscription,
     StoreSettings? settings,
-    StoreStats? stats,
-    String? activeLicenseKey,
-    String? licenseKeyId,
+    Map<String, dynamic>? legacyData,
   }) {
     return StoreModel(
       storeId: storeId ?? this.storeId,
@@ -125,119 +165,131 @@ class StoreModel {
       isSuspended: isSuspended ?? this.isSuspended,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      license: license ?? this.license,
+      subscription: subscription ?? this.subscription,
       settings: settings ?? this.settings,
-      stats: stats ?? this.stats,
-      activeLicenseKey: activeLicenseKey ?? this.activeLicenseKey,
-      licenseKeyId: licenseKeyId ?? this.licenseKeyId,
+      legacyData: legacyData ?? this.legacyData,
     );
   }
 
   @override
   String toString() {
-    return 'StoreModel(storeId: $storeId, storeName: $storeName, owner: $ownerName)';
+    if (kDebugMode) {
+      return 'StoreModel(storeId: $storeId, storeName: $storeName, owner: $ownerName, planId: ${subscription.planId})';
+    }
+    return 'StoreModel(id: ${storeId.length > 4 ? storeId.substring(0, 4) : storeId}...)';
   }
 }
 
 // ===========================
-// Nested: Store License
+// Nested: Store Subscription
 // ===========================
 
-class StoreLicense {
-  final String licenseKey;
-  final String licenseType; // e.g., 'trial', 'premium', 'enterprise'
-  final String status; // e.g., 'active', 'expired', 'suspended'
-  final DateTime startDate;
-  final DateTime expiryDate;
-  final bool autoRenew;
-  final DateTime lastCheck;
+class StoreSubscription {
+  final SubscriptionPlan planId; // ENUM refactor
+  final SubscriptionStatus status; // ENUM refactor
+  final DateTime? endDate; // null for lifetime
+  final bool trialConsumed; // true if trial was used
+  final DateTime? pendingRequestDate;
 
-  StoreLicense({
-    required this.licenseKey,
-    required this.licenseType,
+  StoreSubscription({
+    required this.planId,
     required this.status,
-    required this.startDate,
-    required this.expiryDate,
-    this.autoRenew = false,
-    required this.lastCheck,
+    this.endDate,
+    required this.trialConsumed,
+    this.pendingRequestDate,
   });
 
-  bool get isExpired => DateTime.now().isAfter(expiryDate);
-  int get daysRemaining {
-    if (isExpired) return 0;
-    return expiryDate.difference(DateTime.now()).inDays;
+  /// T058: Pure POJO — accepts a pre-resolved server timestamp from SubscriptionProvider.
+  /// Never call TimeService directly from within this model.
+  bool isExpiredAt(DateTime serverNow) {
+    if (planId == SubscriptionPlan.lifetime) return false;
+    if (endDate == null) return false;
+
+    // T026/T044: 48-hour grace period anchored to pendingRequestDate
+    if (pendingRequestDate != null) {
+      final graceEnd = pendingRequestDate!.add(const Duration(hours: 48));
+      if (serverNow.isBefore(graceEnd)) return false;
+    }
+
+    return serverNow.isAfter(endDate!);
   }
 
-  factory StoreLicense.fromMap(Map<String, dynamic> map) {
-    return StoreLicense(
-      licenseKey: map['licenseKey'] ?? '',
-      licenseType: map['licenseType'] ?? 'trial',
-      status: map['status'] ?? 'inactive',
-      startDate: map['startDate'] != null
-          ? (map['startDate'] as Timestamp).toDate()
-          : DateTime.now(),
-      expiryDate: map['expiryDate'] != null
-          ? (map['expiryDate'] as Timestamp).toDate()
-          : DateTime.now(),
-      autoRenew: map['autoRenew'] ?? false,
-      lastCheck: map['lastCheck'] != null
-          ? (map['lastCheck'] as Timestamp).toDate()
-          : DateTime.now(),
+  /// T058: Days remaining computed from a pre-resolved server timestamp.
+  int? daysRemainingAt(DateTime serverNow) {
+    if (endDate == null) return null; // Lifetime — no end date
+    final endDateOnly = DateTime(endDate!.year, endDate!.month, endDate!.day);
+    final serverNowOnly =
+        DateTime(serverNow.year, serverNow.month, serverNow.day);
+    return endDateOnly.difference(serverNowOnly).inDays;
+  }
+
+  factory StoreSubscription.migratedLifetime() {
+    return StoreSubscription(
+      planId: SubscriptionPlan.lifetime,
+      status: SubscriptionStatus.active,
+      endDate: null,
+      trialConsumed: true,
+      pendingRequestDate: null,
+    );
+  }
+
+  factory StoreSubscription.fromMap(Map<String, dynamic> map) {
+    return StoreSubscription(
+      planId: SubscriptionPlan.fromString(map['planId'] as String? ?? 'free'),
+      status:
+          SubscriptionStatus.fromString(map['status'] as String? ?? 'active'),
+      endDate: map['endDate'] != null
+          ? (map['endDate'] as Timestamp).toDate()
+          : null,
+      trialConsumed: map['trialConsumed'] as bool? ?? false,
+      pendingRequestDate: map['pendingRequestDate'] != null
+          ? (map['pendingRequestDate'] as Timestamp).toDate()
+          : null,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'licenseKey': licenseKey,
-      'licenseType': licenseType,
-      'status': status,
-      'startDate': Timestamp.fromDate(startDate),
-      'expiryDate': Timestamp.fromDate(expiryDate),
-      'autoRenew': autoRenew,
-      'lastCheck': Timestamp.fromDate(lastCheck),
+      'planId': planId.name,
+      'status': status.name,
+      'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
+      'trialConsumed': trialConsumed,
+      'pendingRequestDate': pendingRequestDate != null
+          ? Timestamp.fromDate(pendingRequestDate!)
+          : null,
     };
   }
 
-  StoreLicense copyWith({
-    String? licenseKey,
-    String? licenseType,
-    String? status,
-    DateTime? startDate,
-    DateTime? expiryDate,
-    bool? autoRenew,
-    DateTime? lastCheck,
+  StoreSubscription copyWith({
+    SubscriptionPlan? planId,
+    SubscriptionStatus? status,
+    DateTime? endDate,
+    bool? trialConsumed,
+    DateTime? pendingRequestDate,
   }) {
-    return StoreLicense(
-      licenseKey: licenseKey ?? this.licenseKey,
-      licenseType: licenseType ?? this.licenseType,
+    return StoreSubscription(
+      planId: planId ?? this.planId,
       status: status ?? this.status,
-      startDate: startDate ?? this.startDate,
-      expiryDate: expiryDate ?? this.expiryDate,
-      autoRenew: autoRenew ?? this.autoRenew,
-      lastCheck: lastCheck ?? this.lastCheck,
+      endDate: endDate ?? this.endDate,
+      trialConsumed: trialConsumed ?? this.trialConsumed,
+      pendingRequestDate: pendingRequestDate ?? this.pendingRequestDate,
     );
   }
 }
 
-// ===========================
-// Nested: Store Settings
-// ===========================
-
 class StoreSettings {
   final String currency;
   final String timezone;
-  final int maxEmployees;
 
-  StoreSettings(
-      {this.currency = 'EGP',
-      this.timezone = 'Africa/Cairo',
-      this.maxEmployees = 5});
+  StoreSettings({
+    this.currency = 'EGP',
+    this.timezone = 'Africa/Cairo',
+  });
 
   factory StoreSettings.fromMap(Map<String, dynamic> map) {
     return StoreSettings(
-      currency: map['currency'] ?? 'EGP',
-      timezone: map['timezone'] ?? 'Africa/Cairo',
-      maxEmployees: map['maxEmployees'] ?? 5,
+      currency: map['currency'] as String? ?? 'EGP',
+      timezone: map['timezone'] as String? ?? 'Africa/Cairo',
     );
   }
 
@@ -245,73 +297,13 @@ class StoreSettings {
     return {
       'currency': currency,
       'timezone': timezone,
-      'maxEmployees': maxEmployees,
     };
   }
 
-  StoreSettings copyWith(
-      {String? currency, String? timezone, int? maxEmployees}) {
+  StoreSettings copyWith({String? currency, String? timezone}) {
     return StoreSettings(
       currency: currency ?? this.currency,
       timezone: timezone ?? this.timezone,
-      maxEmployees: maxEmployees ?? this.maxEmployees,
-    );
-  }
-}
-
-// ===========================
-// Nested: Store Stats
-// ===========================
-
-class StoreStats {
-  final int totalWallets;
-  final int activeWallets;
-  final int totalTransactionsToday;
-  final double totalCommissionToday;
-  final Timestamp lastUpdated;
-
-  StoreStats({
-    this.totalWallets = 0,
-    this.activeWallets = 0,
-    this.totalTransactionsToday = 0,
-    this.totalCommissionToday = 0.0,
-    required this.lastUpdated,
-  });
-
-  factory StoreStats.fromMap(Map<String, dynamic> map) {
-    return StoreStats(
-      totalWallets: map['totalWallets'] ?? 0,
-      activeWallets: map['activeWallets'] ?? 0,
-      totalTransactionsToday: map['totalTransactionsToday'] ?? 0,
-      totalCommissionToday: (map['totalCommissionToday'] ?? 0.0).toDouble(),
-      lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'totalWallets': totalWallets,
-      'activeWallets': activeWallets,
-      'totalTransactionsToday': totalTransactionsToday,
-      'totalCommissionToday': totalCommissionToday,
-      'lastUpdated': lastUpdated,
-    };
-  }
-
-  StoreStats copyWith({
-    int? totalWallets,
-    int? activeWallets,
-    int? totalTransactionsToday,
-    double? totalCommissionToday,
-    Timestamp? lastUpdated,
-  }) {
-    return StoreStats(
-      totalWallets: totalWallets ?? this.totalWallets,
-      activeWallets: activeWallets ?? this.activeWallets,
-      totalTransactionsToday:
-          totalTransactionsToday ?? this.totalTransactionsToday,
-      totalCommissionToday: totalCommissionToday ?? this.totalCommissionToday,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
 }

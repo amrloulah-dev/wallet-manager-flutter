@@ -154,18 +154,17 @@ class _CustomButtonState extends State<CustomButton>
     return ButtonStyle(
       backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.disabled)) {
-          return effectiveBackgroundColor.withAlpha((0.5 * 255).round());
+          return effectiveBackgroundColor.withAlpha(128);
         }
         return effectiveBackgroundColor;
       }),
       foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.disabled)) {
-          return effectiveTextColor.withAlpha((0.7 * 255).round());
+          return effectiveTextColor.withAlpha(179);
         }
         return effectiveTextColor;
       }),
-      overlayColor: WidgetStateProperty.all(
-          effectiveTextColor.withAlpha((0.1 * 255).round())),
+      overlayColor: WidgetStateProperty.all(effectiveTextColor.withAlpha(26)),
       shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(effectiveBorderRadius),

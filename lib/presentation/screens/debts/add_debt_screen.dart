@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -9,9 +10,10 @@ import '../../../providers/debt_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../../core/enums/debt_enums.dart';
 
 class AddDebtScreen extends StatefulWidget {
-  final String? initialDebtType;
+  final DebtType? initialDebtType; // ENUM refactor
   const AddDebtScreen({super.key, this.initialDebtType});
 
   @override
@@ -25,14 +27,12 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  String _debtType = 'transaction'; // 'transaction' | 'store_sale'
+  late DebtType _debtType; // ENUM refactor
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialDebtType != null) {
-      _debtType = widget.initialDebtType!;
-    }
+    _debtType = widget.initialDebtType ?? DebtType.transaction;
   }
 
   @override
@@ -48,15 +48,13 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     final debtProvider = context.read<DebtProvider>();
     final authProvider = context.read<AuthProvider>();
 
-    debtProvider.clearError();
-
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     final currentUserId = authProvider.currentUserId;
     if (currentUserId == null) {
-      ToastUtils.showError('خطأ في المصادقة، يرجى تسجيل الدخول مرة أخرى');
+      ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
       return;
     }
 
@@ -70,7 +68,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     );
 
     if (success && mounted) {
-      ToastUtils.showSuccess('تم إضافة الدين بنجاح');
+      ToastUtils.showSuccess(AppLocalizations.of(context)!.debtAddedSuccess);
       Navigator.pop(context, true);
     }
   }
@@ -78,7 +76,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('إضافة دين جديد')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.addDebtTitle)),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -108,19 +106,21 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('بيانات العميل', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.customerDetails,
+            style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _customerNameController,
-          labelText: 'اسم العميل',
-          hintText: 'أدخل اسم العميل بالكامل',
-          validator: (val) => Validators.validateRequired(val, 'اسم العميل'),
+          labelText: AppLocalizations.of(context)!.customerName,
+          hintText: AppLocalizations.of(context)!.enterFullCustomerName,
+          validator: (val) => Validators.validateRequired(
+              val, AppLocalizations.of(context)!.customerName),
           prefixIcon: const Icon(Icons.person_outline),
         ),
         const SizedBox(height: 16),
         CustomTextField(
           controller: _customerPhoneController,
-          labelText: 'رقم موبايل العميل',
+          labelText: AppLocalizations.of(context)!.customerPhone,
           hintText: '01xxxxxxxxx',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -136,19 +136,19 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('نوع الدين', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.debtType, style: AppTextStyles.h3),
         const SizedBox(height: 12),
         _buildDebtTypeTile(
-          title: 'معاملة محفظة',
-          subtitle: 'دين ناتج عن معاملة إرسال لم يتم دفعها',
-          value: 'transaction',
+          title: AppLocalizations.of(context)!.walletTransaction,
+          subtitle: AppLocalizations.of(context)!.walletTransactionSubtitle,
+          value: DebtType.transaction,
           icon: Icons.swap_horiz,
         ),
         const SizedBox(height: 8),
         _buildDebtTypeTile(
-          title: 'بيع من المحل',
-          subtitle: 'دين ناتج عن عملية بيع آجلة من المحل',
-          value: 'store_sale',
+          title: AppLocalizations.of(context)!.storeSale,
+          subtitle: AppLocalizations.of(context)!.storeSaleSubtitle,
+          value: DebtType.storeSale,
           icon: Icons.storefront_outlined,
         ),
       ],
@@ -158,14 +158,14 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   Widget _buildDebtTypeTile({
     required String title,
     required String subtitle,
-    required String value,
+    required DebtType value,
     required IconData icon,
   }) {
     final isSelected = _debtType == value;
     return Card(
       elevation: 0,
       color: isSelected
-          ? AppColors.primary.withAlpha((0.05 * 255).round())
+          ? AppColors.primary.withAlpha(13)
           : AppColors.surface(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -174,7 +174,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
           width: isSelected ? 1.5 : 1,
         ),
       ),
-      child: RadioListTile<String>(
+      child: RadioListTile<DebtType>(
         value: value,
         groupValue: _debtType,
         onChanged: (val) => setState(() => _debtType = val!),
@@ -190,11 +190,12 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المبلغ المستحق', style: AppTextStyles.h3),
+        Text(AppLocalizations.of(context)!.amountDueTitle,
+            style: AppTextStyles.h3),
         const SizedBox(height: 12),
         CustomTextField(
           controller: _amountController,
-          labelText: 'المبلغ',
+          labelText: AppLocalizations.of(context)!.amount,
           hintText: '0.00',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -205,7 +206,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.info.withAlpha((0.1 * 255).round()),
+            color: AppColors.info.withAlpha(26),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -214,7 +215,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'سيتم إضافة هذا الدين إلى قائمة الديون المفتوحة.',
+                  AppLocalizations.of(context)!.debtWillBeAdded,
                   style:
                       AppTextStyles.bodySmall.copyWith(color: AppColors.info),
                 ),
@@ -229,8 +230,8 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   Widget _buildNotesSection() {
     return CustomTextField(
       controller: _notesController,
-      labelText: 'ملاحظات (اختياري)',
-      hintText: 'أي تفاصيل إضافية عن الدين',
+      labelText: AppLocalizations.of(context)!.notesOptional,
+      hintText: AppLocalizations.of(context)!.additionalDebtDetails,
       maxLines: 3,
       maxLength: 200,
       validator: (value) => Validators.validateNotes(value, maxLength: 200),
@@ -239,17 +240,21 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   }
 
   Widget _buildCreateButton() {
-    return Consumer<DebtProvider>(
-      builder: (context, provider, child) {
+    return Selector<DebtProvider, ({bool isCreating, String? errorMessage})>(
+      selector: (_, provider) => (
+        isCreating: provider.isCreating,
+        errorMessage: provider.errorMessage,
+      ),
+      builder: (context, data, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (provider.hasError && provider.errorMessage != null)
+            if (data.errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha((0.1 * 255).round()),
+                  color: AppColors.error.withAlpha(26),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -258,7 +263,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        provider.errorMessage!,
+                        data.errorMessage!,
                         style: AppTextStyles.bodyMedium
                             .copyWith(color: AppColors.error),
                       ),
@@ -267,9 +272,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 ),
               ),
             CustomButton(
-              text: 'إضافة الدين',
+              text: AppLocalizations.of(context)!.addDebtAction,
               onPressed: _handleCreate,
-              isLoading: provider.isCreating,
+              isLoading: data.isCreating,
               size: ButtonSize.large,
             ),
           ],

@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/route_constants.dart';
+import '../../../data/models/transaction_model.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../widgets/transaction/transaction_card.dart';
 import '../../widgets/transaction/transaction_summary_card.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../../core/enums/transaction_enums.dart';
 
 class TodayTransactionsScreen extends StatefulWidget {
   const TodayTransactionsScreen({super.key});
@@ -64,14 +66,15 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('معاملات اليوم'),
+        title: Text(AppLocalizations.of(context)!.todayTransactions),
         actions: [
           Consumer<TransactionProvider>(
             builder: (context, provider, _) {
-              return PopupMenuButton<String?>(
+              return PopupMenuButton<TransactionType?>(
+                // ENUM refactor
                 icon: const Icon(Icons.filter_list),
-                onSelected: (String? value) {
-                  provider.setFilter(value);
+                onSelected: (TransactionType? value) {
+                  provider.setFilterType(value);
                 },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
@@ -79,40 +82,45 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
                 color: AppColors.surface(context),
                 elevation: 4,
                 itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<String?>>[
-                  _buildFilterMenuItem(null, 'الكل', provider.filterType,
+                    <PopupMenuEntry<TransactionType?>>[
+                  _buildFilterMenuItem(null, AppLocalizations.of(context)!.all,
+                      provider.filterType,
                       icon: Icons.clear_all),
                   const PopupMenuDivider(),
-                  _buildFilterMenuItem('send', 'إرسال', provider.filterType,
+                  _buildFilterMenuItem(TransactionType.debit,
+                      AppLocalizations.of(context)!.send, provider.filterType,
                       icon: Icons.arrow_upward, color: AppColors.send),
                   _buildFilterMenuItem(
-                      'receive', 'استقبال', provider.filterType,
-                      icon: Icons.arrow_downward, color: AppColors.receive),
+                      TransactionType.credit,
+                      AppLocalizations.of(context)!.receive,
+                      provider.filterType,
+                      icon: Icons.arrow_downward,
+                      color: AppColors.receive),
                 ],
               );
             },
           ),
         ],
       ),
-      body: Consumer<TransactionProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              TransactionSummaryCard(
-                totalTransactions: provider.summary['totalTransactions'] ?? 0,
-                sendCount: provider.summary['sendCount'] ?? 0,
-                receiveCount: provider.summary['receiveCount'] ?? 0,
-                totalSendAmount: provider.summary['totalSendAmount'] ?? 0.0,
-                totalReceiveAmount:
-                    provider.summary['totalReceiveAmount'] ?? 0.0,
-                totalCommission: provider.summary['totalCommission'] ?? 0.0,
-              ),
-              Expanded(
-                child: _buildContent(provider),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          Selector<TransactionProvider, Map<String, dynamic>>(
+            selector: (context, provider) => provider.summary,
+            builder: (context, summary, child) {
+              return TransactionSummaryCard(
+                totalTransactions: summary['totalTransactions'] ?? 0,
+                sendCount: summary['sendCount'] ?? 0,
+                receiveCount: summary['receiveCount'] ?? 0,
+                totalSendAmount: summary['totalSendAmount'] ?? 0.0,
+                totalReceiveAmount: summary['totalReceiveAmount'] ?? 0.0,
+                totalCommission: summary['totalCommission'] ?? 0.0,
+              );
+            },
+          ),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateTransaction(context),
@@ -126,10 +134,10 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
     );
   }
 
-  PopupMenuItem<String?> _buildFilterMenuItem(
-      String? value, String text, String? groupValue,
+  PopupMenuItem<TransactionType?> _buildFilterMenuItem(
+      TransactionType? value, String text, TransactionType? groupValue,
       {IconData? icon, Color? color}) {
-    return PopupMenuItem<String?>(
+    return PopupMenuItem<TransactionType?>(
       value: value,
       child: Row(
         children: [
@@ -156,52 +164,87 @@ class _TodayTransactionsScreenState extends State<TodayTransactionsScreen> {
     );
   }
 
-  Widget _buildContent(TransactionProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 5, itemHeight: 80);
-    }
-
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل المعاملات.',
-        onRetry: provider.fetchInitialTransactions,
-      );
-    }
-
-    if (provider.transactions.isEmpty) {
-      return EmptyStateWidget(
-        message: provider.filterType == null
-            ? 'لا توجد معاملات اليوم'
-            : 'لا توجد معاملات بهذا الفلتر',
-        description: 'ابدأ بإضافة معاملة جديدة',
-        icon: Icons.receipt_long_outlined,
-        actionText: 'معاملة جديدة',
-        onAction: () => _navigateToCreateTransaction(context),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialTransactions,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 80), // For FAB
-        itemCount:
-            provider.transactions.length + (provider.isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == provider.transactions.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final transaction = provider.transactions[index];
-          return TransactionCard(
-            transaction: transaction,
-            onTap: () => _navigateToTransactionDetails(
-                context, transaction.transactionId),
-          );
-        },
+  Widget _buildContent() {
+    return Selector<TransactionProvider,
+        (TransactionProviderStatus, String?, TransactionType?, bool)>(
+      selector: (context, provider) => (
+        provider.status,
+        provider.errorMessage,
+        provider.filterType,
+        provider.hasMore
       ),
+      builder: (context, state, child) {
+        final status = state.$1;
+        final errorMessage = state.$2;
+        final filterType = state.$3;
+        final isLoading = status == TransactionProviderStatus.loading;
+        final hasError = status == TransactionProviderStatus.error;
+        final isLoadingMore = status == TransactionProviderStatus.loadingMore;
+
+        if (isLoading) {
+          return const SkeletonList(itemCount: 5, itemHeight: 80);
+        }
+
+        if (hasError) {
+          return CustomErrorWidget(
+            message: errorMessage ??
+                AppLocalizations.of(context)!.errorLoadingTransactionsGeneric,
+            onRetry:
+                context.read<TransactionProvider>().fetchInitialTransactions,
+          );
+        }
+
+        return Selector<TransactionProvider, List<TransactionModel>>(
+          selector: (context, provider) => provider.transactions,
+          builder: (context, transactions, child) {
+            final filteredTransactions = transactions
+                .where((tx) =>
+                    tx.transactionType == TransactionType.debit ||
+                    tx.transactionType == TransactionType.credit)
+                .toList();
+
+            if (filteredTransactions.isEmpty) {
+              return EmptyStateWidget(
+                message: filterType == null
+                    ? AppLocalizations.of(context)!.noTransactionsTodayEmpty
+                    : AppLocalizations.of(context)!.noTransactionsWithFilter,
+                description:
+                    AppLocalizations.of(context)!.startAddingTransaction,
+                icon: Icons.receipt_long_outlined,
+                actionText: AppLocalizations.of(context)!.newTransaction,
+                onAction: () => _navigateToCreateTransaction(context),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh:
+                  context.read<TransactionProvider>().fetchInitialTransactions,
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: 80), // For FAB
+                itemCount:
+                    filteredTransactions.length + (isLoadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == filteredTransactions.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  final transaction = filteredTransactions[index];
+                  return TransactionCard(
+                    key: ValueKey(
+                        '${transaction.transactionId}_${transaction.amount}_${transaction.paymentStatus}'),
+                    transaction: transaction,
+                    onTap: () => _navigateToTransactionDetails(
+                        context, transaction.transactionId),
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -1,21 +1,20 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
-import 'package:walletmanager/data/repositories/debt_repository.dart';
 import 'package:walletmanager/data/repositories/stats_repository.dart';
-import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/providers/app_events.dart';
-import 'package:walletmanager/data/repositories/wallet_repository.dart';
+import '../core/utils/number_parser.dart';
+import '../core/enums/transaction_enums.dart';
+import 'auth_provider.dart';
+import 'base_provider.dart';
 
 enum StatsMode { dashboard, filtered }
 
-class StatisticsProvider extends ChangeNotifier {
-  final WalletRepository _walletRepository;
-  final TransactionRepository _transactionRepository;
-  final DebtRepository _debtRepository;
+class StatisticsProvider extends BaseProvider {
   final StatsRepository _statsRepository;
+  AuthProvider? _authProvider;
 
   String? _storeId;
 
@@ -33,11 +32,16 @@ class StatisticsProvider extends ChangeNotifier {
   StatsSummaryModel? _cachedSummary;
   DateTime? _cacheTimestamp;
 
-  StreamSubscription? _debtsChangedSubscription;
-  StreamSubscription? _walletsChangedSubscription;
-  StreamSubscription? _transactionsChangedSubscription;
-  StreamSubscription? _statsRefreshSubscription;
-  bool _isDisposed = false;
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
+  }
 
   // Getters
   StatsMode get mode => _mode;
@@ -47,66 +51,70 @@ class StatisticsProvider extends ChangeNotifier {
   DailyStatsModel? get todayStats => _todayStats;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get hasError => _errorMessage != null;
 
   StatisticsProvider({
-    required WalletRepository walletRepository,
-    required TransactionRepository transactionRepository,
-    required DebtRepository debtRepository,
     required StatsRepository statsRepository,
-  })  : _walletRepository = walletRepository,
-        _transactionRepository = transactionRepository,
-        _debtRepository = debtRepository,
-        _statsRepository = statsRepository {
-    _debtsChangedSubscription = appEvents.onDebtsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _walletsChangedSubscription = appEvents.onWalletsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _transactionsChangedSubscription =
-        appEvents.onTransactionsChanged.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
-    _statsRefreshSubscription = appEvents.onStatsRefresh.listen((_) {
-      if (_storeId != null) {
-        fetchDashboardStats(forceRefresh: true);
-      }
-    });
+    AuthProvider? authProvider,
+  })  : _statsRepository = statsRepository,
+        _authProvider = authProvider;
+
+  void updateAuthProvider(AuthProvider authProvider) {
+    _authProvider = authProvider;
   }
 
   @override
   void dispose() {
-    _isDisposed = true;
-    _debtsChangedSubscription?.cancel();
-    _walletsChangedSubscription?.cancel();
-    _transactionsChangedSubscription?.cancel();
-    _statsRefreshSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
   void setStoreId(String? storeId) {
     if (_storeId != storeId) {
       _storeId = storeId;
-      if (storeId != null) {
+      if (storeId != null && storeId.isNotEmpty) {
         fetchDashboardStats();
       } else {
         _dashboardSummary = null;
         _todayStats = null;
         _cachedSummary = null;
         _cacheTimestamp = null;
-        notifyListeners();
+        _isLoading = false;
+        safeNotify();
       }
     }
   }
 
   Future<void> fetchDashboardStats({bool forceRefresh = false}) async {
-    if (_storeId == null) return;
+    final user = _authProvider?.currentUser;
+    if (user != null &&
+        user.isEmployee &&
+        !user.hasPermission((p) => p.viewDashboardStats)) {
+      if (kDebugMode) {
+        debugPrint(
+            '🔒 [INIT RBAC] StatisticsProvider: Employee lacks viewDashboardStats permission, skipping fetch.');
+      }
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+          '🚀 [INIT START] StatisticsProvider: fetchDashboardStats(forceRefresh: $forceRefresh)');
+    }
+    if (_storeId == null) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [INIT ABORT] StatisticsProvider: No storeId');
+      }
+      return;
+    }
+
+    if (!forceRefresh && _fetchShieldActive) {
+      if (kDebugMode) {
+        debugPrint(
+            '🛡️ [INIT SHIELD] StatisticsProvider: Fetch shield active, skipping.');
+      }
+      return; // Abort the fetch
+    }
 
     final now = DateTime.now();
     if (!forceRefresh &&
@@ -114,37 +122,63 @@ class StatisticsProvider extends ChangeNotifier {
         _cacheTimestamp != null &&
         now.difference(_cacheTimestamp!).inMinutes < 2) {
       if (_dashboardSummary == null) {
+        if (kDebugMode) {
+          debugPrint(
+              '✅ [INIT CACHE] StatisticsProvider: Using cached dashboard summary.');
+        }
         _dashboardSummary = _cachedSummary;
-        notifyListeners();
+        safeNotify();
       }
       return;
     }
 
     _isLoading = true;
-    notifyListeners();
+    _errorMessage = null;
+    safeNotify();
+
+    _activateFetchShield();
+
+    if (kDebugMode) {
+      debugPrint(
+          '⏳ [INIT DATA] StatisticsProvider: Fetching stats via Futures...');
+    }
 
     try {
-      final results = await Future.wait([
-        _statsRepository.getStatsSummary(_storeId!),
-        _statsRepository.fetchTodayStats(_storeId!),
-      ]);
-
-      final summary = results[0] as StatsSummaryModel;
-      final daily = results[1] as DailyStatsModel;
-
+      final summary = await _statsRepository.getStatsSummary(_storeId!);
       _dashboardSummary = summary;
-      _todayStats = daily;
-
       _cachedSummary = summary;
-      _cacheTimestamp = now;
+      _cacheTimestamp = DateTime.now();
+
+      final today = await _statsRepository.fetchTodayStats(_storeId!);
+      _todayStats = today;
+
       _isLoading = false;
-      _errorMessage = null;
-      notifyListeners();
-    } catch (e) {
-      _dashboardSummary = null;
-      _isLoading = false;
-      _errorMessage = "Failed to load dashboard stats.";
-      notifyListeners();
+      safeNotify();
+    } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🔒 [INIT RBAC] StatisticsProvider: Employee lacks stats permission, showing empty stats.');
+        }
+        _dashboardSummary = StatsSummaryModel.empty();
+        _todayStats = DailyStatsModel.empty(
+            '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}');
+        _isLoading = false;
+        _errorMessage = null;
+        safeNotify();
+        return;
+      }
+      if (kDebugMode) {
+        debugPrint(
+            '❌ [INIT FATAL] StatisticsProvider: Fetching dashboard stats failed: $e');
+      }
+      setError('stats_error_summary_fetch', e, stack);
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint(
+            '❌ [INIT FATAL] StatisticsProvider: Fetching dashboard stats failed: $e');
+      }
+      setError('stats_error_summary_fetch', e, stack);
     }
   }
 
@@ -154,40 +188,44 @@ class StatisticsProvider extends ChangeNotifier {
     _mode = StatsMode.filtered;
     _errorMessage = null;
     _filteredStats = null;
-    notifyListeners();
+    safeNotify();
 
     try {
       if (_storeId == null) throw Exception("Store ID not found");
 
-      final startDate = DateHelper.getStartOfDay(dateRange.start);
-      final endDate = DateHelper.getEndOfDay(dateRange.end);
+      // Query daily stats rollup for range
+      final aggregated = await _statsRepository.getStatsByDateRange(
+          _storeId!, dateRange.start, dateRange.end);
 
-      final List<dynamic> results = await Future.wait([
-        _transactionRepository.getTransactionAggregates(_storeId!,
-            startDate: startDate, endDate: endDate),
-        _debtRepository.getDebtAggregates(_storeId!,
-            startDate: startDate, endDate: endDate),
-        _walletRepository.getTotalBalance(_storeId!),
-        _walletRepository.getWalletsCount(_storeId!),
-      ]);
+      // Include current total balance and total wallets as point-in-time metrics
+      final totalBalance = _dashboardSummary?.totalBalance ?? 0.0;
+      final totalWallets = _dashboardSummary?.totalWallets ?? 0;
 
-      final transactionSummary = results[0];
-      final debtSummary = results[1];
-      final totalBalance = results[2];
-      final walletsCount = results[3];
+      final openDebts = NumberParser.toInt(aggregated['openDebtsCount']);
+      final paidDebts = NumberParser.toInt(aggregated['paidDebtsCount']);
 
       _filteredStats = {
         'totalBalance': totalBalance,
-        'totalWallets': walletsCount,
-        ...transactionSummary as Map<String, dynamic>,
-        ...debtSummary as Map<String, dynamic>,
+        'totalWallets': totalWallets,
+        'totalTransactions': NumberParser.toInt(aggregated['transactionCount']),
+        'totalCommission': NumberParser.toDouble(aggregated['totalCommission']),
+        'sendCount': NumberParser.toInt(aggregated['sendCount']),
+        'totalSentAmount': NumberParser.toDouble(aggregated['totalSentAmount']),
+        'receiveCount': NumberParser.toInt(aggregated['receiveCount']),
+        'totalReceivedAmount':
+            NumberParser.toDouble(aggregated['totalReceivedAmount']),
+        'openDebtsCount': openDebts,
+        'totalOpenAmount': NumberParser.toDouble(aggregated['totalOpenAmount']),
+        'paidDebtsCount': paidDebts,
+        'totalPaidAmount': NumberParser.toDouble(aggregated['totalPaidAmount']),
+        'totalDebtsCount': openDebts + paidDebts,
       };
-    } catch (e) {
-      _errorMessage = "Failed to fetch filtered statistics.";
+    } catch (e, stack) {
+      setError("stats_error_filtered_fetch", e, stack);
       _filteredStats = null;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      safeNotify();
     }
   }
 
@@ -196,12 +234,196 @@ class StatisticsProvider extends ChangeNotifier {
     _filteredStats = null;
     _filteredDateRange = null;
     _errorMessage = null;
-    notifyListeners();
+    safeNotify();
   }
 
   Future<void> refreshDashboardStats() async {
     if (_storeId != null) {
       await fetchDashboardStats(forceRefresh: true);
     }
+  }
+
+  void addTransactionOptimistically(Map<String, dynamic> txData) {
+    if (_dashboardSummary == null || _todayStats == null) return;
+
+    final String? type = txData['type'] as String?;
+    if (type != 'credit' && type != 'debit') return;
+
+    final summary = _dashboardSummary!;
+    final today = _todayStats!;
+
+    final double amount = NumberParser.toDouble(txData['amount']);
+    final double commission = NumberParser.toDouble(txData['commission']);
+    final double serviceFee = NumberParser.toDouble(txData['serviceFee']);
+
+    // 1. Update Dashboard Summary
+    double newTotalReceived = summary.totalReceivedAmount;
+    double newTotalSent = summary.totalSentAmount;
+    int newReceiveCount = summary.receiveCount;
+    int newSendCount = summary.sendCount;
+    double newTotalBalance = summary.totalBalance;
+
+    if (type == 'credit') {
+      newTotalReceived += amount;
+      newReceiveCount += 1;
+      newTotalBalance += amount;
+    } else if (type == 'debit') {
+      newTotalSent += amount;
+      newSendCount += 1;
+      newTotalBalance -= (amount + serviceFee);
+    }
+
+    _dashboardSummary = summary.copyWith(
+      totalTransactions: summary.totalTransactions + 1,
+      totalCommission: summary.totalCommission + commission,
+      totalReceivedAmount: newTotalReceived,
+      totalSentAmount: newTotalSent,
+      receiveCount: newReceiveCount,
+      sendCount: newSendCount,
+      totalBalance: newTotalBalance,
+    );
+
+    // 2. Update Today Stats
+    int newTodayReceiveCount = today.receiveCount;
+    int newTodaySendCount = today.sendCount;
+    double newTodayReceivedAmount = today.totalReceivedAmount;
+    double newTodaySentAmount = today.totalSentAmount;
+
+    if (type == 'credit') {
+      newTodayReceiveCount += 1;
+      newTodayReceivedAmount += amount;
+    } else if (type == 'debit') {
+      newTodaySendCount += 1;
+      newTodaySentAmount += amount;
+    }
+
+    _todayStats = today.copyWith(
+      totalTransactions: today.totalTransactions + 1,
+      totalCommission: today.totalCommission + commission,
+      receiveCount: newTodayReceiveCount,
+      sendCount: newTodaySendCount,
+      totalReceivedAmount: newTodayReceivedAmount,
+      totalSentAmount: newTodaySentAmount,
+    );
+
+    safeNotify();
+  }
+
+  void addDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      openDebtsCount: summary.openDebtsCount + 1,
+      totalOpenAmount: summary.totalOpenAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void settleDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      openDebtsCount:
+          summary.openDebtsCount > 0 ? summary.openDebtsCount - 1 : 0,
+      totalOpenAmount: summary.totalOpenAmount >= amount
+          ? summary.totalOpenAmount - amount
+          : 0.0,
+      paidDebtsCount: summary.paidDebtsCount + 1,
+      totalPaidAmount: summary.totalPaidAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void payPartialDebtOptimistically({required double amount}) {
+    if (_dashboardSummary == null) return;
+    final summary = _dashboardSummary!;
+    _dashboardSummary = summary.copyWith(
+      totalOpenAmount: summary.totalOpenAmount >= amount
+          ? summary.totalOpenAmount - amount
+          : 0.0,
+      totalPaidAmount: summary.totalPaidAmount + amount,
+    );
+    safeNotify();
+  }
+
+  void rollbackStats(StatsSummaryModel? oldSummary, DailyStatsModel? oldToday) {
+    if (oldSummary == null || oldToday == null) {
+      return;
+    }
+    _dashboardSummary = oldSummary;
+    _todayStats = oldToday;
+    safeNotify();
+  }
+
+  void applyTransactionLocally(double amount, bool isIncome,
+      {double commission = 0.0, double serviceFee = 0.0}) {
+    if (isDisposed) return;
+    addTransactionOptimistically({
+      'amount': amount,
+      'commission': commission,
+      'serviceFee': serviceFee,
+      'type': isIncome ? 'credit' : 'debit',
+    });
+  }
+
+  void updateLocalStats(double amount, dynamic type,
+      {double commission = 0.0, double serviceFee = 0.0}) {
+    if (isDisposed) return;
+    final TransactionType t = type is String
+        ? TransactionType.fromString(type)
+        : (type is TransactionType ? type : TransactionType.credit);
+    final isIncome = t == TransactionType.credit;
+    applyTransactionLocally(amount, isIncome,
+        commission: commission, serviceFee: serviceFee);
+    notifyListeners();
+  }
+
+  @override
+  void safeNotify() {
+    if (!isDisposed && hasListeners) {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'stats_operation']) {
+    if (kDebugMode) {
+      if (kDebugMode) debugPrint('💥 [STATS ERROR] $errorCode | Error: $error');
+      if (stack != null) {
+        if (kDebugMode) debugPrint('🔍 [STACK TRACE]: $stack');
+      }
+    }
+
+    if (isDisposed) return;
+    _errorMessage = errorCode;
+    _isLoading = false;
+
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+
+    safeNotify();
+  }
+
+  void clearAndCancel() {
+    _storeId = null;
+    _fetchShieldTimer?.cancel();
+    _dashboardSummary = null;
+    _todayStats = null;
+    _cachedSummary = null;
+    _cacheTimestamp = null;
+    _isLoading = false;
+    _errorMessage = null;
+    _filteredStats = null;
+    _filteredDateRange = null;
+    safeNotify();
   }
 }

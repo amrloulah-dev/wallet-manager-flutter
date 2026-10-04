@@ -11,8 +11,8 @@ class RouteConstants {
   // ===========================
   // Home
   // ===========================
-  static const String ownerDashboard =
-      '/owner-dashboard'; // Main dashboard for store owners
+  static const String mainDashboard =
+      '/main-dashboard'; // Main dashboard for store owners and employees
 
   // ===========================
   // Wallets
@@ -59,5 +59,6 @@ class RouteConstants {
   // ===========================
   static const String totalBalance = '/total-balance';
   static const String upgradeScreen = '/upgrade-screen';
+  static const String subscriptionDetails = '/subscription-details';
   static const String licenseExpired = '/license-expired';
 }

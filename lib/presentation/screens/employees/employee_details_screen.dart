@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/data/models/user_model.dart';
 import 'package:walletmanager/data/models/user_permissions.dart';
@@ -40,18 +42,19 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             _employee.userId,
             newPermissions,
           );
+
+          if (!context.mounted) return;
+
           if (success) {
             setState(() {
               _employee = _employee.copyWith(permissions: newPermissions);
             });
-            if (mounted) {
-              ToastUtils.showSuccess('تم تحديث الصلاحيات بنجاح');
-              Navigator.pop(context);
-            }
+            ToastUtils.showSuccess(
+                AppLocalizations.of(context)!.permissionsUpdatedSuccess);
+            Navigator.pop(context);
           } else {
-            if (mounted) {
-              ToastUtils.showError(provider.errorMessage ?? 'حدث خطأ ما');
-            }
+            ToastUtils.showError(provider.errorMessage ??
+                AppLocalizations.of(context)!.unexpectedError);
           }
         },
       ),
@@ -62,7 +65,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الموظف'),
+        title: Text(AppLocalizations.of(context)!.employeeDetails),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -74,7 +77,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             _buildInfoCard(),
             const SizedBox(height: 24),
             CustomButton(
-              text: 'تعديل الصلاحيات',
+              text: AppLocalizations.of(context)!.editPermissions,
               onPressed: _showEditPermissionsSheet,
               icon: const Icon(Icons.security),
               backgroundColor: AppColors.primary,
@@ -109,7 +112,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            _employee.isActive ? 'نشط' : 'معطل',
+            _employee.isActive
+                ? AppLocalizations.of(context)!.active
+                : AppLocalizations.of(context)!.inactive,
             style: AppTextStyles.labelMedium.copyWith(
               color: _employee.isActive ? AppColors.success : AppColors.error,
             ),
@@ -136,14 +141,16 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.phone, 'رقم الهاتف', _employee.phone ?? '-'),
+          _buildInfoRow(Icons.phone, AppLocalizations.of(context)!.phoneNumber,
+              _employee.phone ?? '-'),
           const Divider(height: 32),
           _buildInfoRow(Icons.pin, 'PIN', '****'),
           const Divider(height: 32),
           _buildInfoRow(
             Icons.calendar_today,
-            'تاريخ الإضافة',
-            _employee.createdAt.toDate().toString().split(' ')[0],
+            AppLocalizations.of(context)!.dateAdded,
+            DateHelper.formatDateTime(_employee.createdAt ?? DateTime.now(),
+                locale: Localizations.localeOf(context).languageCode),
           ),
         ],
       ),
@@ -215,7 +222,8 @@ class _EditPermissionsSheetState extends State<_EditPermissionsSheet> {
             padding: const EdgeInsets.all(24),
             child: Row(
               children: [
-                Text('تعديل الصلاحيات', style: AppTextStyles.h3),
+                Text(AppLocalizations.of(context)!.editPermissions,
+                    style: AppTextStyles.h3),
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -252,11 +260,14 @@ class _EditPermissionsSheetState extends State<_EditPermissionsSheet> {
                 // So we can use provider.isLoading if we want, OR just pass a loading state.
                 // A simplier approach:
                 return CustomButton(
-                  text: 'حفظ التغييرات',
+                  text: AppLocalizations.of(context)!.saveChanges,
                   onPressed: () async {
                     setState(() => _isLoading = true);
-                    await widget.onSave(_currentPermissions);
-                    if (mounted) setState(() => _isLoading = false);
+                    try {
+                      await widget.onSave(_currentPermissions);
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
+                    }
                   },
                   isLoading: _isLoading,
                 );

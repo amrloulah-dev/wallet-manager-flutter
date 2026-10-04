@@ -7,13 +7,14 @@ import '../../../core/utils/dialog_utils.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../l10n/arb/app_localizations.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../data/models/user_model.dart';
+import '../../../data/models/store_model.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  Future<void> _showLogoutDialog(BuildContext context) async {
+  void _showLogoutDialog(BuildContext context) {
     final currentContext = context;
-    final authProvider = currentContext.read<AuthProvider>();
 
     DialogUtils.showConfirmDialog(
       currentContext,
@@ -22,192 +23,212 @@ class AppDrawer extends StatelessWidget {
       confirmText: AppLocalizations.of(currentContext)!.exit,
       type: DialogType.danger,
       onConfirm: () async {
-        try {
-          await authProvider.logout();
-          if (!currentContext.mounted) return;
-          Navigator.of(currentContext).pushNamedAndRemoveUntil(
-            RouteConstants.loginLanding,
-            (route) => false,
-          );
-        } catch (e) {
-          if (currentContext.mounted) {
-            ToastUtils.showError(
-                '${AppLocalizations.of(currentContext)!.logoutFailed}: $e');
-          }
-        }
+        final auth = currentContext.read<AuthProvider>();
+        auth.logout(currentContext);
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.currentUser;
-    final store = authProvider.currentStore;
-    final avatarLetter = user?.fullName.isNotEmpty == true
-        ? user!.fullName[0].toUpperCase()
-        : 'U';
-
-    return Drawer(
-      elevation: 2,
-      backgroundColor: AppColors.surface(context),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor:
-                        AppColors.primary.withAlpha((0.1 * 255).round()),
-                    child: Text(
-                      avatarLetter,
-                      style:
-                          AppTextStyles.h1.copyWith(color: AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.fullName ?? AppLocalizations.of(context)!.user,
-                    style: AppTextStyles.h3
-                        .copyWith(color: AppColors.textPrimary(context)),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    store?.storeName ?? AppLocalizations.of(context)!.storeName,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary(context)),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, indent: 16, endIndent: 16),
-
-            // Menu Items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(8.0),
-                children: [
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.home,
-                    icon: Icons.dashboard_outlined,
-                    isSelected: true, // Current screen
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.wallets,
-                    icon: Icons.account_balance_wallet_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      final user = context.read<AuthProvider>().currentUser;
-                      if (user != null &&
-                          user.hasPermission((p) => p.viewWallets)) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.walletsList);
-                      } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض المحافظ');
-                      }
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.transactions,
-                    icon: Icons.receipt_long_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      final user = context.read<AuthProvider>().currentUser;
-                      if (user != null &&
-                          user.hasPermission((p) => p.viewAllTransactions)) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.todayTransactions);
-                      } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض المعاملات');
-                      }
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.debts,
-                    icon: Icons.credit_card_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      final user = context.read<AuthProvider>().currentUser;
-                      if (user != null &&
-                          user.hasPermission((p) => p.viewDebts)) {
-                        Navigator.pushNamed(context, RouteConstants.debtsList);
-                      } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض الديون');
-                      }
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.statistics,
-                    icon: Icons.bar_chart_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      final user = context.read<AuthProvider>().currentUser;
-                      if (user != null &&
-                          user.hasPermission((p) => p.viewDashboardStats)) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.generalStatistics);
-                      } else {
-                        ToastUtils.showError('ليس لديك صلاحية لعرض الإحصائيات');
-                      }
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.manageEmployees,
-                    icon: Icons.people_alt_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (authProvider.isOwner) {
-                        Navigator.pushNamed(
-                            context, RouteConstants.manageEmployees);
-                      } else {
-                        ToastUtils.showError('هذه الخاصية للمالك فقط');
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // Footer Items
-            const Divider(height: 1, indent: 16, endIndent: 16),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.settings,
-                    icon: Icons.settings_outlined,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, RouteConstants.settings);
-                    },
-                  ),
-                  _DrawerMenuTile(
-                    title: AppLocalizations.of(context)!.logout,
-                    icon: Icons.logout,
-                    iconColor: AppColors.error,
-                    textColor: AppColors.error,
-                    onTap: () {
-                      _showLogoutDialog(context);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    return Selector<AuthProvider,
+        ({UserModel? user, StoreModel? store, bool isOwner})>(
+      selector: (_, provider) => (
+        user: provider.currentUser,
+        store: provider.currentStore,
+        isOwner: provider.isOwner
       ),
+      builder: (context, data, child) {
+        final user = data.user;
+        final store = data.store;
+        final isOwner = data.isOwner;
+        final avatarLetter = user?.fullName.isNotEmpty == true
+            ? user!.fullName[0].toUpperCase()
+            : 'U';
+
+        return Drawer(
+          elevation: 2,
+          backgroundColor: AppColors.surface(context),
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsetsDirectional.fromSTEB(20, 30, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundColor: AppColors.primary.withAlpha(26),
+                        child: Text(
+                          avatarLetter,
+                          style: AppTextStyles.h1
+                              .copyWith(color: AppColors.primary),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        user?.fullName ?? AppLocalizations.of(context)!.user,
+                        style: AppTextStyles.h3
+                            .copyWith(color: AppColors.textPrimary(context)),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        store?.storeName ??
+                            AppLocalizations.of(context)!.storeName,
+                        style: AppTextStyles.bodyMedium
+                            .copyWith(color: AppColors.textSecondary(context)),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // Menu Items
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(8.0),
+                    children: [
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.home,
+                        icon: Icons.dashboard_outlined,
+                        isSelected: true, // Current screen
+                        onTap: () => Navigator.pop(context),
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.wallets,
+                        icon: Icons.account_balance_wallet_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          final user = context.read<AuthProvider>().currentUser;
+                          if (user != null &&
+                              user.hasPermission((p) => p.viewWallets)) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.walletsList);
+                          } else {
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionWallets);
+                          }
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.transactions,
+                        icon: Icons.receipt_long_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          final user = context.read<AuthProvider>().currentUser;
+                          if (user != null &&
+                              user.hasPermission(
+                                  (p) => p.viewAllTransactions)) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.todayTransactions);
+                          } else {
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionTransactions);
+                          }
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.debts,
+                        icon: Icons.credit_card_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          final user = context.read<AuthProvider>().currentUser;
+                          if (user != null &&
+                              user.hasPermission((p) => p.viewDebts)) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.debtsList);
+                          } else {
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionDebts);
+                          }
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.statistics,
+                        icon: Icons.bar_chart_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          final user = context.read<AuthProvider>().currentUser;
+                          if (user != null &&
+                              user.hasPermission((p) => p.viewDashboardStats)) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.generalStatistics);
+                          } else {
+                            ToastUtils.showError(AppLocalizations.of(context)!
+                                .noPermissionStats);
+                          }
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.manageEmployees,
+                        icon: Icons.people_alt_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (isOwner) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.manageEmployees);
+                          } else {
+                            ToastUtils.showError(
+                                AppLocalizations.of(context)!.ownerOnlyFeature);
+                          }
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.mySubscription,
+                        icon: Icons.card_membership_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (isOwner) {
+                            Navigator.pushNamed(
+                                context, RouteConstants.subscriptionDetails);
+                          } else {
+                            ToastUtils.showError(
+                                AppLocalizations.of(context)!.ownerOnlyFeature);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Footer Items
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.settings,
+                        icon: Icons.settings_outlined,
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, RouteConstants.settings);
+                        },
+                      ),
+                      _DrawerMenuTile(
+                        title: AppLocalizations.of(context)!.logout,
+                        icon: Icons.logout,
+                        iconColor: AppColors.error,
+                        textColor: AppColors.error,
+                        onTap: () {
+                          _showLogoutDialog(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -250,9 +271,9 @@ class _DrawerMenuTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       selected: isSelected,
-      selectedTileColor: AppColors.primary.withAlpha((0.1 * 255).round()),
-      hoverColor: AppColors.primary.withAlpha((0.05 * 255).round()),
-      splashColor: AppColors.primary.withAlpha((0.1 * 255).round()),
+      selectedTileColor: AppColors.primary.withAlpha(26),
+      hoverColor: AppColors.primary.withAlpha(13),
+      splashColor: AppColors.primary.withAlpha(26),
     );
   }
 }

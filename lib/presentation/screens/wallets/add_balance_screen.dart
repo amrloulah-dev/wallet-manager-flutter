@@ -9,6 +9,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
@@ -25,8 +26,19 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
 
-  WalletModel? _selectedWallet;
+  String? _selectedWalletId;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final walletProvider = context.read<WalletProvider>();
+      if (walletProvider.wallets.isEmpty) {
+        walletProvider.fetchInitialWallets();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -38,7 +50,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-    if (_selectedWallet == null) {
+    if (_selectedWalletId == null) {
       ToastUtils.showError(
           AppLocalizations.of(context)!.pleaseSelectWalletFirst);
       return;
@@ -58,7 +70,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     }
 
     final success = await walletProvider.addBalanceToWallet(
-      _selectedWallet!.walletId,
+      _selectedWalletId!,
       amount,
       currentUserId,
     );
@@ -94,7 +106,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
               children: [
                 _buildWalletSelection(),
                 const SizedBox(height: 24),
-                if (_selectedWallet != null) ...[
+                if (_selectedWalletId != null) ...[
                   _buildWalletInfoCard(),
                   const SizedBox(height: 24),
                   _buildAmountField(),
@@ -119,85 +131,67 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
           return Text(AppLocalizations.of(context)!.noWalletsAvailable);
         }
         return CustomDropdown<WalletModel>(
-          value: _selectedWallet,
-          labelText: AppLocalizations.of(context)!.selectWallet,
-          prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-              color: AppColors.primary),
+          value: _selectedWalletId != null
+              ? walletProvider.walletMap[_selectedWalletId!]
+              : null,
+          labelText:
+              AppLocalizations.of(context)!.selectWallet, // حافظنا على الترجمة
+          prefixIcon: const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: AppColors.primary,
+          ), // حافظنا على الأيقونة
           hint: AppLocalizations.of(context)!.selectWalletToAddBalance,
-          items: walletProvider.wallets.map((WalletModel wallet) {
-            return DropdownMenuItem<WalletModel>(
-              value: wallet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-          selectedItemBuilder: (BuildContext context) {
-            return walletProvider.wallets.map((WalletModel wallet) {
-              return Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-              );
-            }).toList();
+          fillColor: AppColors.primary.withAlpha(13),
+
+          // 1. تمرير قائمة المحافظ مباشرة
+          itemsList: walletProvider.wallets,
+
+          // 2. استخراج النص (نفس الفورمات الخاص بك بالضبط)
+          itemLabelBuilder: (WalletModel wallet) {
+            return '${AppLocalizations.of(context)!.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
           },
+
           onChanged: (wallet) {
             setState(() {
-              _selectedWallet = wallet;
+              _selectedWalletId = wallet?.walletId;
             });
           },
+
           validator: (value) => value == null
-              ? AppLocalizations.of(context)!.pleaseSelectWallet
+              ? AppLocalizations.of(context)!
+                  .pleaseSelectWallet // حافظنا على رسالة الخطأ المترجمة
               : null,
-          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
         );
       },
     );
   }
 
   Widget _buildWalletInfoCard() {
-    if (_selectedWallet == null) return const SizedBox.shrink();
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppLocalizations.of(context)!.selectedWalletDetails,
-                style: AppTextStyles.h3),
-            const Divider(height: 20),
-            _buildInfoRow(AppLocalizations.of(context)!.currentBalanceLabel,
-                NumberFormatter.formatAmount(_selectedWallet!.balance)),
-          ],
-        ),
-      ),
+    if (_selectedWalletId == null) return const SizedBox.shrink();
+
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_selectedWalletId!],
+      builder: (context, wallet, child) {
+        if (wallet == null) return const SizedBox.shrink();
+        return Card(
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppLocalizations.of(context)!.selectedWalletDetails,
+                    style: AppTextStyles.h3),
+                const Divider(height: 20),
+                _buildInfoRow(AppLocalizations.of(context)!.currentBalanceLabel,
+                    NumberFormatter.formatAmount(wallet.balance)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -217,7 +211,7 @@ class _AddBalanceScreenState extends State<AddBalanceScreen> {
     return CustomTextField(
       controller: _amountController,
       labelText: AppLocalizations.of(context)!.amountToAdd,
-      hintText: '0.00',
+      hintText: AppLocalizations.of(context)!.amountPlaceholder,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))

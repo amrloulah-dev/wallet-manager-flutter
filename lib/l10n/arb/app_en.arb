@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+  "error_network_timeout": "Connection timed out. Please check your internet.",
   "contactUs": "Contact Us",
   "whatsapp": "WhatsApp",
   "email": "Email",
@@ -16,7 +17,7 @@
   "employee": "Employee",
   "storeName": "Store Name",
   "creationDate": "Creation Date",
-  "licenseInfo": "License Info",
+  "licenseInfo": "License Information",
   "expired": "Expired",
   "active": "Active",
   "licenseKey": "License Key",
@@ -26,9 +27,11 @@
   "contactToRenew": "Contact us to renew license",
   "appSettings": "App Settings",
   "theme": "Theme",
-  "license": "License",
+  "license": "Subscriptions",
+  "subscriptionPlans": "Subscription Plans",
   "notAvailable": "Not Available",
   "logout": "Logout",
+  "login": "Login",
   "logoutConfirmation": "Are you sure you want to logout?",
   "exit": "Exit",
   "logoutFailed": "Logout failed",
@@ -49,7 +52,7 @@
   "loginWithGoogle": "Login with Google",
   "noAccountLinked": "No account linked to this email. Please complete registration.",
   "licenseKeyError": "Error: License key not available. Please go back and check it.",
-  "activationFailed": "Account created but license activation failed. Please contact support.",
+  "activationFailed": "Activation failed",
   "loginSuccess": "Logged in successfully!",
   "createAccount": "Create New Account",
   "step1StoreInfo": "Step 1: Store Info",
@@ -88,7 +91,8 @@
   "pinInvalid": "Incorrect PIN",
   "welcome": "Welcome",
   "wrongGoogleAccount": "Please login with the store's Google account.",
-  "unexpectedError": "Unexpected error occurred.",
+  "unexpectedError": "An unexpected error occurred",
+  "loggingIn": "Logging in...",
   "contactToRenewBtn": "Contact to Renew",
   "areYouOwner": "Are you the store owner? Login here",
   "verify": "Verify",
@@ -106,6 +110,7 @@
   "debts": "Debts",
   "statistics": "Statistics",
   "manageEmployees": "Manage Employees",
+  "mySubscription": "My Subscription",
   "errorLoadingStats": "Cannot load statistics",
   "totalWallets": "Total Wallets",
   "totalTransactions": "Total Transactions",
@@ -167,6 +172,7 @@
   "addNewWallet": "Add New Wallet",
   "phoneNumber": "Phone Number",
   "phonePlaceholder": "01xxxxxxxxx",
+  "amountPlaceholder": "0.00",
   "initialBalance": "Initial Balance",
   "walletType": "Wallet Type",
   "selectWalletType": "Select Wallet Type",
@@ -178,17 +184,17 @@
   "walletLimits": "Wallet Limits",
   "dailyLimit": "Transaction Limit (Send/Receive)",
   "monthlyLimit": "Monthly Limit (Send/Receive)",
-  "notesOptional": "Notes (Optional)",
+  "notesOptional": "Notes (optional)",
   "notesPlaceholder": "Any additional details about the wallet",
   "saveChanges": "Save Changes",
   "addWalletAction": "Add Wallet",
   "pleaseSelectWalletType": "Please select wallet type",
   "pleaseSelectWalletStatus": "Please select wallet status",
-  "authErrorRelogin": "Authentication error, please login again",
+  "authErrorRelogin": "Authentication error, please log in again",
   "walletUpdatedSuccessfully": "Wallet updated successfully",
   "walletAddedSuccessfully": "Wallet added successfully",
   "vodafoneCash": "Vodafone Cash",
-  "instapay": "InstaPay",
+  "instaPay": "InstaPay",
   "orangeCash": "Orange Cash",
   "etisalatCash": "Etisalat Cash",
   "wePay": "WE Pay",
@@ -233,5 +239,704 @@
   "transactionFees": "Transaction Fees",
   "totalDeduction": "Total Deduction",
   "calculatingFees": "Calculating fees...",
-  "accessDenied": "Access Denied"
+  "accessDenied": "Access Denied",
+  "frozen": "Frozen",
+  "sendDaily": "Daily Send",
+  "receiveDaily": "Daily Receive",
+  "debt": "Debt",
+  "payDebt": "Pay Debt",
+  "amountDue": "Amount Due:",
+  "deleteDebt": "Delete Debt",
+  "deleteDebtConfirmation": "Are you sure you want to delete this debt? This action cannot be undone.",
+  "dailySummary": "Daily Summary",
+  "send": "Send",
+  "receive": "Receive",
+  "sendAmount": "Send Amount",
+  "receiveAmount": "Receive Amount",
+  "transactionType": "Transaction Type",
+  "amount": "Amount",
+  "commission": "Commission",
+  "loadingDetails": "Loading details...",
+  "transactionNotFound": "Transaction not found",
+  "retry": "Retry",
+  "totalAmount": "Total Amount",
+  "totalCommissionLabel": "Total Commission",
+  "lastTransaction": "Last Transaction",
+  "debtSummary": "Debt Summary",
+  "totalDebts": "Total Debts",
+  "paidDebts": "Paid Debts",
+  "totalPaidAmount": "Total Paid Amount",
+  "generalStats": "General Statistics",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "applyFilter": "Apply Filter",
+  "clearFilter": "Clear Filter",
+  "filterDateError": "End date cannot be before start date",
+  "noDataInRange": "No data found in this date range.",
+  "noStatsToShow": "No statistics to show.",
+  "balance": "Balance",
+  "totalWalletBalance": "Total Balance in Wallets",
+  "sendTransactions": "Send Transactions",
+  "receiveTransactions": "Receive Transactions",
+  "amounts": "Amounts",
+  "totalAmountCombined": "Total Amount",
+  "averageCommission": "Average Commission per Transaction",
+  "openDebtsLabel": "Open Debts",
+  "paidDebtsLabel": "Paid Debts",
+  "transactionDetails": "Transaction Details",
+  "total": "Total",
+  "customerDetails": "Customer Details",
+  "name": "Name",
+  "usedWallet": "Used Wallet",
+  "walletNotFoundDetails": "Wallet details cannot be found.",
+  "walletNumber": "Wallet Number",
+  "timeAndDate": "Time and Date",
+  "date": "Date",
+  "time": "Time",
+  "since": "Since",
+  "transactionIsDebt": "This transaction is a debt",
+  "debtWarningMessage": "The amount was not paid by the customer at the time of transaction creation.",
+  "recordedNotes": "Recorded Notes",
+  "transactionIdLabel": "Transaction ID",
+  "createdBy": "Created by",
+  "unknown": "Unknown",
+  "ownerRoleSuffix": " (Owner)",
+  "employeeRoleSuffix": " (Employee)",
+  "forgotPassword": "Forgot Password?",
+  "forgotPasswordMessage": "Forgot Password?",
+  "comingSoon": "Coming Soon",
+  "orLabel": "Or",
+  "continueWithGoogle": "Continue with Google",
+  "enterStoreEmailMessage": "Enter store email to login as employee",
+  "storeEmail": "Store Email",
+  "findStore": "Find Store",
+  "noAccountYet": "Don't have an account?",
+  "createStoreNew": "Create New Store",
+  "todayTransactions": "Today's Transactions",
+  "all": "All",
+  "errorLoadingTransactionsGeneric": "Error loading transactions.",
+  "noTransactionsTodayEmpty": "No transactions today",
+  "noTransactionsWithFilter": "No transactions with this filter",
+  "startAddingTransaction": "Start by adding a new transaction",
+  "transactionCreatedSuccess": "Transaction created successfully",
+  "transactionCreationFailed": "Failed to create transaction",
+  "ok": "OK",
+  "noWalletsAvailableAddFirst": "No wallets available. Please add a wallet first.",
+  "selectWalletForTransaction": "Select wallet for transaction",
+  "pleaseSelectTransactionType": "Please select a transaction type",
+  "customerPhone": "Customer Phone Number",
+  "customerNameOptional": "Customer Name (Optional)",
+  "enterCustomerName": "Enter customer name",
+  "amountAndCommission": "Amount & Commission",
+  "invalidValue": "Invalid value",
+  "reviewWalletLimits": "Review Wallet Limits",
+  "dailyLimitAfterTransaction": "Daily Limit (after transaction)",
+  "monthlyLimitAfterTransaction": "Monthly Limit (after transaction)",
+  "transactionExceedsLimitWarning": "Warning: This transaction exceeds limit.",
+  "additionalTransactionDetails": "Any additional transaction details",
+  "createTransaction": "Create Transaction",
+  "debtsTitle": "Debts",
+  "addDebt": "Add Debt",
+  "settleDebt": "Settle Debt",
+  "settleDebtConfirmation": "Are you sure you want to mark this debt as \"settled\"?",
+  "confirmSettlement": "Confirm Settlement",
+  "userNotRegistered": "Error: User not registered",
+  "debtSettlementFailed": "Failed to settle debt",
+  "debtSettledSuccess": "Debt settled successfully",
+  "errorLoadingDebts": "Error loading debts.",
+  "noDebtsRecorded": "No debts recorded",
+  "debtsWillAppearHere": "Open and settled debts will appear here.",
+  "addNewDebt": "Add New Debt",
+  "allWithCount": "All ({count})",
+  "@allWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openWithCount": "Open ({count})",
+  "@openWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paidWithCount": "Paid ({count})",
+  "@paidWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financialTransfers": "Financial Transfers",
+  "storeSales": "Store Sales",
+  "addDebtTitle": "Add New Debt",
+  "customerName": "Customer Name",
+  "enterFullCustomerName": "Enter full customer name",
+  "debtType": "Debt Type",
+  "walletTransaction": "Wallet Transaction",
+  "walletTransactionSubtitle": "Debt from an unpaid send transaction",
+  "storeSale": "Store Sale",
+  "storeSaleSubtitle": "Debt from a deferred store sale",
+  "amountDueTitle": "Amount Due",
+  "debtWillBeAdded": "This debt will be added to the open debts list.",
+  "additionalDebtDetails": "Any additional debt details",
+  "addDebtAction": "Add Debt",
+  "debtAddedSuccess": "Debt added successfully",
+  "employeePermissions": "Employee Permissions",
+  "defineEmployeeActions": "Define what the employee can do",
+  "financialTransactionsSection": "Financial Transactions",
+  "createNewTransaction": "Create New Transaction",
+  "viewAllTransactions": "View All Transactions",
+  "debtsSection": "Debts",
+  "viewDebtsList": "View Debts List",
+  "addNewDebtPermission": "Add New Debt",
+  "collectDebt": "Collect Debt (Partial/Full Payment)",
+  "deleteDebtPermission": "Delete Debt",
+  "walletsSection": "Wallets",
+  "viewWalletsList": "View Wallets List",
+  "addNewWalletPermission": "Add New Wallet",
+  "addBalanceToWalletPermission": "Add Balance to Wallet",
+  "editWalletData": "Edit Wallet Data",
+  "viewWalletBalance": "View Wallet Balance",
+  "dashboardSection": "Dashboard",
+  "viewStatsCharts": "View Statistics (Charts)",
+  "editDebt": "Edit Debt",
+  "paymentMode": "Payment",
+  "additionMode": "Addition",
+  "currentAmount": "Current Amount",
+  "pleaseEnterAmount": "Please enter amount",
+  "invalidAmount": "Invalid amount",
+  "amountMustBePositive": "Amount must be greater than zero",
+  "paymentExceedsDebt": "Payment exceeds debt amount",
+  "newAmount": "New Amount:",
+  "saveEdit": "Save Edit",
+  "debtUpdatedSuccess": "Debt updated successfully",
+  "debtUpdateFailed": "Failed to update debt",
+  "retryAction": "Retry",
+  "noPermissionWallets": "You don't have permission to view wallets",
+  "noPermissionTransactions": "You don't have permission to view transactions",
+  "noPermissionDebts": "You don't have permission to view debts",
+  "noPermissionStats": "You don't have permission to view statistics",
+  "ownerOnlyFeature": "This feature is for owner only",
+  "deactivateEmployeeAccount": "Deactivate Employee Account",
+  "deactivateEmployeeConfirmation": "Are you sure you want to deactivate {name}'s account?\n\nThey will no longer be able to log in.",
+  "@deactivateEmployeeConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deactivate": "Deactivate",
+  "employeeDeactivated": "Employee account deactivated",
+  "deactivationFailed": "Failed to deactivate account",
+  "loadingEmployees": "Loading employees...",
+  "errorLoadingEmployees": "Error loading employees",
+  "noEmployees": "No employees",
+  "startAddingEmployees": "Start by adding a new employee to manage permissions.",
+  "addEmployee": "Add Employee",
+  "activeEmployees": "Active Employees",
+  "inactiveEmployees": "Inactive Employees",
+  "permissionsUpdatedSuccess": "Permissions updated successfully",
+  "employeeDetails": "Employee Details",
+  "editPermissions": "Edit Permissions",
+  "inactive": "Inactive",
+  "employeeAddedSuccess": "Employee added successfully",
+  "addNewEmployee": "Add New Employee",
+  "currentEmployeesCount": "Current Employees: {current} / {max}",
+  "@currentEmployeesCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "limitReached": "Limit Reached",
+  "employeeLoginInfo": "The employee will use their phone number and PIN to log in.",
+  "fullName": "Full Name",
+  "enterEmployeeName": "Enter employee name",
+  "employeePinTitle": "Employee PIN",
+  "pin": "PIN",
+  "fourDigits": "6 digits",
+  "confirmPin": "Confirm PIN",
+  "reenterPin": "Re-enter PIN",
+  "pinsDoNotMatch": "PINs do not match",
+  "addEmployeeAction": "Add Employee",
+  "subscriptionDetails": "Subscription Details",
+  "currentUsage": "Current Usage",
+  "employeeAccounts": "Employee Accounts",
+  "upgradeSubscription": "Upgrade Subscription",
+  "currentPlan": "Current Plan",
+  "suspended": "Suspended",
+  "freePlan": "Free",
+  "proYearlyPlan": "Pro (Yearly)",
+  "lifetimeVipPlan": "Lifetime VIP",
+  "trialPlan": "Trial",
+  "upgradeAccount": "Upgrade Account",
+  "unlockStoreCapabilities": "Unlock your store's capabilities",
+  "paywallSubtitle": "Stop entering data manually. Automate your cash flow securely with advanced features.",
+  "proYearlyTitle": "Pro Yearly Plan",
+  "proYearlyPrice": "1200 EGP / year",
+  "proYearlyPriceTemplate": "{price} EGP / year",
+  "@proYearlyPriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "proFeature1": "Auto-sync transactions",
+  "proFeature2": "Flexible management of up to 50 wallets",
+  "proFeature3": "Build a team of up to 20 employees",
+  "proFeature4": "Dedicated technical support",
+  "lifetimeTitle": "Lifetime VIP Plan",
+  "lifetimePrice": "2500 EGP one-time only",
+  "lifetimePriceTemplate": "{price} EGP one-time only",
+  "@lifetimePriceTemplate": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "freePrice": "Free",
+  "trialPrice": "Free Trial",
+  "freeFeature1": "Manual transaction logging only",
+  "freeFeature2": "Up to {count} wallets",
+  "@freeFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature3": "Up to {count} employees",
+  "@freeFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "freeFeature4": "Community support",
+  "trialFeature1": "Auto-sync transactions (trial)",
+  "trialFeature2": "Up to {count} wallets",
+  "@trialFeature2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature3": "Up to {count} employees",
+  "@trialFeature3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFeature4": "Dedicated support during trial",
+  "lifetimeFeature1": "Auto-sync transactions",
+  "lifetimeFeature2": "Unlimited wallets",
+  "lifetimeFeature3": "Unlimited employees",
+  "lifetimeFeature4": "VIP priority support",
+  "mostPopular": "Most Popular",
+  "remainingSeats": "{count} seats remaining",
+  "@remainingSeats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "soldOut": "Sold Out",
+  "subscribeNow": "Subscribe Now",
+  "termsAgreement": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+  "paymentDetails": "Payment Details",
+  "selectedPlan": "Selected Plan: {plan}",
+  "@selectedPlan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentMethod": "Payment Method",
+  "transferToNumber": "Please transfer the amount to: 01091264053",
+  "transferToAccount": "Please transfer the amount to: 01091264053",
+  "receiptNumber": "The phone number you transferred from",
+  "fieldRequired": "This field is required",
+  "confirmPayment": "Confirm Payment",
+  "subscriptionRequestSent": "Subscription request sent successfully. Please wait for review.",
+  "errorOccurred": "Error occurred:",
+  "lifetimePlan": "Lifetime",
+  "accountSuspended": "Your account has been suspended",
+  "accountSuspendedMessage": "Your account has been suspended by the administration. Please contact the support team to resolve this issue and restore your access.",
+  "contactingSupportTeam": "Contacting support team...",
+  "contactSupport": "Contact Support",
+  "paymentConfirmedSuccess": "Payment confirmed successfully",
+  "subscriptionActivatedMessage": "Your subscription has been activated. You can now enjoy all premium features.",
+  "continueBtn": "Continue",
+  "subscriptionUnderReview": "Your subscription request is being reviewed.",
+  "subscriptionRejected": "Your last subscription request was rejected. Please contact support.",
+  "subscriptionExpiredMessage": "Your subscription has expired. Upgrade to continue.",
+  "trialDaysRemaining": "Trial days remaining",
+  "@trialDaysRemaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "hide": "Hide",
+  "trialPeriod": "Trial Period",
+  "trialDaysRemainingLabel": "Trial Days Remaining",
+  "upgradeFullVersion": "Upgrade to full version",
+  "automationAndMessages": "Automation and Messages",
+  "enableAutoSmsReading": "Enable Auto SMS Reading",
+  "autoDetectTransactions": "Auto detect transactions from notifications",
+  "smsPermissionRequired": "SMS Permission Required",
+  "linkSimToWallet": "Link SIM to Wallet",
+  "sim1Label": "SIM 1",
+  "sim2Label": "SIM 2",
+  "noSavedWallets": "No saved wallets",
+  "smsMonitoringActivated": "SMS monitoring activated ✓",
+  "smsServiceStartFailed": "Failed to start SMS service",
+  "dateAdded": "Date Added",
+  "manageEmployeesTitle": "Manage Employees",
+  "expiryDateValue": "Expiry Date: {date}",
+  "@expiryDateValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "unavailable": "Unavailable",
+  "logoutButton": "Logout",
+  "continueButton": "Continue",
+  "continueWithFreePlan": "Continue with Free Plan",
+  "continueWithCurrentPlan": "Continue with Current Plan",
+  "pressBackAgainToExit": "Press back again to exit",
+  "noPermissionCreateTransaction": "No permission to create transaction",
+  "noPermissionCreateWallet": "No permission to create wallet",
+  "noPermissionCreateDebt": "No permission to create debt",
+  "noPermissionViewStats": "No permission to view stats",
+  "noPermissionViewTransactionDetails": "No permission to view transaction details",
+  "pendingSubscriptionReview": "Subscription review pending",
+  "rejectedSubscriptionRequest": "Subscription request rejected",
+  "subscriptionExpiredRenew": "Subscription expired. Renew.",
+  "trialEndingSoon": "{daysLeft} days remaining in your trial. Upgrade now.",
+  "@trialEndingSoon": {
+    "placeholders": {
+      "daysLeft": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeToFullVersionTitle": "Upgrade to Full Version",
+  "getActivationKey": "To get an activation key, please contact us",
+  "contactViaWhatsapp": "Contact via WhatsApp",
+  "contactViaEmail": "Contact via Email",
+  "activateSubscription": "Activate Subscription",
+  "activationKey": "Activation Key",
+  "enterActivationKeyHere": "Enter activation key here",
+  "pleaseEnterActivationKey": "Please enter the activation key",
+  "activate": "Activate",
+  "subscriptionActivatedSuccessfully": "Subscription activated successfully!",
+  "fullVersionActivated": "Full Version Activated",
+  "daysRemainingCount": "{count} days",
+  "@daysRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renewSubscription": "Renew Subscription",
+  "renewWhatsappMessage": "Hello, I would like to renew my WalletManager subscription.",
+  "activationWhatsappMessage": "Hello, I would like to get an activation key for WalletManager.",
+  "failedOpenWhatsApp": "Failed to open WhatsApp",
+  "activationEmailSubject": "Full Version Activation Request",
+  "activationEmailBody": "Hello, I would like to inquire about upgrading to the full version.",
+  "failedOpenEmail": "Failed to open email",
+  "newTransactionTitle": "New Transaction",
+  "noWalletsAvailableMessage": "No wallets available. Please add a wallet first.",
+  "selectWalletHint": "Select wallet for this transaction",
+  "clientData": "Client Data",
+  "clientPhoneNumber": "Phone Number",
+  "clientNameOptional": "Client Name (Optional)",
+  "enterClientName": "Enter client name",
+  "amountLabel": "Amount",
+  "commissionLabel": "Commission",
+  "totalLabel": "Total",
+  "walletLimitWarning": "Warning: This transaction will exceed the wallet's allowed limit.",
+  "createTransactionButton": "Create Transaction",
+  "transactionCreateFailed": "Transaction creation failed",
+  "errorTitle": "Error",
+  "okButton": "OK",
+  "openDebt": "Open Debt",
+  "paidDebt": "Paid Debt",
+  "deposit": "Deposit",
+  "paid": "Paid",
+  "googleLoginError": "Google Login Error",
+  "storeInfo": "Store Info",
+  "auth_error_account_not_found": "No account associated with this email.",
+  "auth_error_invalid_email": "Invalid email address.",
+  "auth_error_too_many_requests": "Too many attempts. Please try again later.",
+  "auth_error_invalid_credentials": "Invalid password or phone number.",
+  "auth_error_session_expired": "Authentication failed, please login again.",
+  "auth_error_store_not_found": "Store not found.",
+  "auth_error_user_not_found": "User not found or not an owner.",
+  "auth_error_email_already_in_use": "Email already in use.",
+  "auth_error_login_failed": "Login failed.",
+  "auth_error_employee_login_failed": "Employee login failed.",
+  "auth_error_store_lookup_failed": "Error occurred during store lookup.",
+  "auth_error_reset_failed": "Error occurred while sending reset email.",
+  "auth_error_unexpected": "An unexpected error occurred.",
+  "auth_error_store_not_active": "No active store found.",
+  "auth_error_invalid_key": "Invalid key.",
+  "auth_error_key_already_used": "Key has already been used.",
+  "auth_error_logout_failed": "Error occurred during logout.",
+  "auth_error_update_failed": "Failed to update data.",
+  "auth_error_invalid_store_password": "Store password is incorrect.",
+  "debt_error_fetch_failed": "Failed to fetch debts.",
+  "debt_error_fetch_more_failed": "Failed to fetch more debts.",
+  "debt_error_create_failed": "Failed to create debt.",
+  "debt_error_add_amount_failed": "Failed to add amount to debt.",
+  "debt_error_update_failed": "Failed to update debt.",
+  "debt_error_settle_failed": "Failed to settle debt.",
+  "debt_error_delete_failed": "Failed to delete debt.",
+  "debt_error_auth_required": "Please login first.",
+  "employee_error_fetch_failed": "Failed to fetch employees.",
+  "employee_error_no_store": "Store not set.",
+  "employee_error_limit_reached": "Employee limit reached.",
+  "employee_error_create_failed": "Error occurred while adding employee.",
+  "employee_error_invalid_pin": "PIN must be 6 digits.",
+  "employee_error_wrong_pin": "Incorrect PIN.",
+  "employee_error_account_frozen": "This account is frozen due to plan limits.",
+  "employee_error_pin_check_failed": "Error occurred during PIN verification.",
+  "employee_error_update_perms_failed": "Failed to update permissions.",
+  "transaction_error_fetch_failed": "Failed to fetch transactions.",
+  "transaction_error_fetch_more_failed": "Failed to fetch more transactions.",
+  "transaction_error_details_fetch": "Failed to fetch transaction details.",
+  "auth_operation_failed": "Operation failed.",
+  "wallet_error_fetch_failed": "Error fetching wallets.",
+  "wallet_error_fetch_more_failed": "Error fetching more wallets.",
+  "stats_error_summary_fetch": "Error fetching statistics summary.",
+  "stats_error_today_fetch": "Error fetching today's statistics.",
+  "stats_error_filtered_fetch": "Failed to fetch filtered statistics.",
+  "stats_error_init_failed": "Statistics initialization failed.",
+  "wallet_error_create_failed": "Failed to create wallet.",
+  "wallet_error_update_failed": "Failed to update wallet.",
+  "wallet_error_delete_failed": "Failed to delete wallet.",
+  "wallet_error_balance_update_failed": "Failed to update balance.",
+  "wallet_error_balance_topup_failed": "An unexpected error occurred during top-up.",
+  "wallet_error_limit_reached": "Wallet limit reached.",
+  "wallet_error_frozen": "This wallet is frozen due to exceeding your current plan limit.",
+  "wallet_error_subscription_unresolved": "Could not verify subscription status. Please try again later.",
+  "overlay_error_amount_limit_instapay": "Amount exceeds the maximum limit for a single transaction ({limit})",
+  "@overlay_error_amount_limit_instapay": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "overlay_error_amount_limit_telecom": "Amount exceeds the maximum limit for a single transaction ({limit})",
+  "@overlay_error_amount_limit_telecom": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "sendLink": "Send Link",
+  "passwordResetEmailSent": "Reset link has been sent to your email.",
+  "weakPasswordException": "The password is too weak.",
+  "employeeLoginSubtitle": "Employee Login",
+  "enterStorePassword": "Enter store password",
+  "requiredField": "Required",
+  "selectEmployee": "Select Employee",
+  "selectEmployeeHint": "Tap to select",
+  "pleaseSelectEmployee": "Please select an employee",
+  "pinLabel": "PIN",
+  "pinMustBe4Digits": "Must be 6 digits",
+  "loginAction": "Login",
+  "createStoreSubtitle": "Create your new store and start your trial period",
+  "ownerData": "Owner Data",
+  "ownerNameLabel": "Owner Name",
+  "accountPassword": "Account Password",
+  "registerWithGoogle": "Register with Google",
+  "createAccountAction": "Create Account",
+  "authError": "Authentication Error",
+  "password": "Password",
+  "overlayConnectionError": "❌ Connection Error",
+  "overlayCompleteFromApp": "Please complete the transaction from the main app.",
+  "close": "Close",
+  "currencySymbol": "EGP",
+  "relativeJustNow": "Just now",
+  "relativeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDaysAgo": "{count, plural, =1{Yesterday} other{{count} days ago}}",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
+  "@relativeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
+  "@relativeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
+  "@relativeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_error_not_found": "Wallet not found.",
+  "wallet_error_inactive": "Cannot perform transaction: Wallet is inactive or deleted.",
+  "wallet_error_instapay_limit": "Maximum limit per InstaPay transaction is {limit} EGP.",
+  "@wallet_error_instapay_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_telecom_limit": "Maximum limit per mobile wallet transaction is {limit} EGP.",
+  "@wallet_error_telecom_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_insufficient_balance": "Amount to send (with commission) exceeds available balance.",
+  "wallet_error_instapay_daily_limit": "Daily limit for InstaPay wallet exceeded ({limit} EGP).",
+  "@wallet_error_instapay_daily_limit": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_error_daily_send_limit": "Daily sending limit exceeded for this wallet.",
+  "wallet_error_monthly_send_limit": "Monthly sending limit exceeded for this wallet.",
+  "wallet_error_daily_receive_limit": "Daily receiving limit exceeded for this wallet.",
+  "wallet_error_monthly_receive_limit": "Monthly receiving limit exceeded for this wallet.",
+  "wallet_error_transaction_failed": "An unexpected error occurred while saving the transaction.",
+  "battery_optimization_warning": "Background reliability may be reduced without battery optimization exemption.",
+  "auth_error_google_sign_in": "Failed to sign in with Google.",
+  "auth_error_sign_out_failed": "Failed to sign out.",
+  "migration_error_recalculate_failed": "Failed to recalculate statistics.",
+  "migration_error_unexpected": "An unexpected error occurred while recalculating statistics.",
+  "wallet_type_vodafone_cash": "Vodafone Cash",
+  "wallet_type_insta_pay": "InstaPay",
+  "wallet_type_orange_cash": "Orange Cash",
+  "wallet_type_etisalat_cash": "Etisalat Cash",
+  "wallet_type_we_pay": "WE Pay",
+  "wallet_type_other": "Other",
+  "wallet_status_active": "Active",
+  "wallet_status_inactive": "Inactive",
+  "wallet_status_suspended": "Suspended",
+  "carrier_mismatch_vodafone": "Vodafone Cash number must start with 010",
+  "carrier_mismatch_etisalat": "Etisalat Cash number must start with 011",
+  "carrier_mismatch_orange": "Orange Cash number must start with 012",
+  "carrier_mismatch_we": "WE Pay number must start with 015",
+  "warning": "Warning",
+  "confirmAnyway": "Confirm Anyway",
+  "carrier_mismatch_warning": "The phone number prefix does not match the selected network.",
+  "paidAmountEgp": "Paid Amount (EGP)",
+  "overlay_error_load_failed": "An error occurred while loading data",
+  "overlay_error_submit_failed": "An error occurred while processing the transaction",
+  "debt_error_create_failed": "An error occurred while creating the debt",
+  "debt_error_fetch_failed": "An error occurred while fetching debt data",
+  "debt_error_payment_failed": "An error occurred while processing the payment",
+  "debt_error_partial_add_failed": "An error occurred while adding partial debt",
+  "debt_error_update_failed": "An error occurred while updating the debt",
+  "debt_error_delete_failed": "An error occurred while deleting the debt",
+  "transaction_error_create_failed": "An error occurred while creating the transaction",
+  "transaction_error_fetch_failed": "An error occurred while fetching transaction data",
+  "transaction_error_update_failed": "An error occurred while updating the transaction",
+  "transaction_error_delete_failed": "An error occurred while deleting the transaction",
+  "wallet_error_status_update_failed": "An error occurred while updating wallet status",
+  "auth_error_must_login_first": "You must sign in first",
+  "auth_error_store_already_exists": "This account already has a store",
+  "auth_error_employee_fetch_failed": "An error occurred while fetching employee data",
+  "auth_error_store_not_found": "The store associated with this employee could not be found",
+  "error_unexpected": "An unexpected error occurred",
+  "subscriptionExpired": "Your subscription has expired!",
+  "subscriptionExpiresToday": "Your subscription expires today!",
+  "trialEndingSoonDays": "Only {days} days left on your trial. Upgrade now!",
+  "@trialEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "proEndingSoonDays": "Your annual subscription expires in {days} days. Renew now!",
+  "@proEndingSoonDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeRequiredToEnableSms": "This feature requires a plan upgrade",
+  "requestUpgradeFromOwner": "Please request a plan upgrade from the store owner",
+  "employeeLoginBlockedSubscriptionExpired": "Cannot login as employee because the store's subscription has expired.",
+  "walletsLimitExceededFree": "You have reached the maximum number of wallets (2 wallets). Please upgrade your subscription to add more.",
+  "walletIsFrozen": "This wallet is frozen. Please upgrade your plan to use it.",
+  "walletIsFrozenShort": "(Frozen)",
+  "refreshPlatformSettings": "Refresh Platform Settings",
+  "platformSettingsRefreshed": "Platform settings refreshed successfully",
+  "platformSettingsRefreshFailed": "Failed to refresh platform settings",
+  "exceedsDailyLimit": "Exceeds daily limit",
+  "exceedsMonthlyLimitOrCapacity": "Exceeds monthly limit or wallet capacity",
+  "maxButtonLabel": "Max",
+  "zoneUsedLabel": "Used",
+  "zoneAvailableLabel": "Available",
+  "zoneBlockedLabel": "Blocked by Balance",
+  "fullSettlement": "Full Settlement",
+  "partialPayment": "Partial Payment"
 }

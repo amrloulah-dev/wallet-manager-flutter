@@ -1,23 +1,26 @@
+import 'package:intl/intl.dart';
+import 'package:walletmanager/core/enums/debt_enums.dart';
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:walletmanager/data/models/daily_stats_model.dart';
 import 'package:walletmanager/data/models/debt_model.dart';
 import 'package:walletmanager/data/models/stats_summary_model.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
+import 'package:walletmanager/core/constants/firebase_constants.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
+import 'package:walletmanager/core/errors/error_severity.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:walletmanager/data/services/firebase_service.dart';
 
 class StatsRepository {
   final FirebaseFirestore _firestore;
 
   StatsRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? sl<FirebaseService>().firestore;
 
   DocumentReference _getSummaryDocRef(String storeId) {
-    return _firestore
-        .collection('stores')
-        .doc(storeId)
-        .collection('stats')
-        .doc('summary');
+    return _firestore.doc(FirebaseConstants.statsSummaryPath(storeId));
   }
 
   Future<StatsSummaryModel> getStatsSummary(String storeId) async {
@@ -33,11 +36,8 @@ class StatsRepository {
   Future<DailyStatsModel> fetchTodayStats(String storeId) async {
     try {
       final todayDate = DateHelper.getCurrentDateString();
-      final docRef = _firestore
-          .collection('stores')
-          .doc(storeId)
-          .collection('daily_stats')
-          .doc(todayDate);
+      final docRef =
+          _firestore.doc(FirebaseConstants.dailyStatsPath(storeId, todayDate));
 
       final doc = await docRef.get();
       if (doc.exists) {
@@ -46,9 +46,45 @@ class StatsRepository {
       } else {
         return DailyStatsModel.empty(todayDate);
       }
-    } catch (e) {
+    } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        AppErrorHandler.logSilentError(
+            'Employee lacks permission to read today stats: ${e.message}',
+            'StatsRepository.fetchTodayStats',
+            stackTrace: stack);
+        return DailyStatsModel.empty(DateHelper.getCurrentDateString());
+      }
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.fetchTodayStats',
+      );
+      return DailyStatsModel.empty(DateHelper.getCurrentDateString());
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.fetchTodayStats',
+      );
       return DailyStatsModel.empty(DateHelper.getCurrentDateString());
     }
+  }
+
+  Stream<DailyStatsModel> watchTodayStats(String storeId) {
+    final todayDate = DateHelper.getCurrentDateString();
+    return _firestore
+        .doc(FirebaseConstants.dailyStatsPath(storeId, todayDate))
+        .snapshots()
+        .map((doc) {
+      if (doc.exists) {
+        return DailyStatsModel.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
+      } else {
+        return DailyStatsModel.empty(todayDate);
+      }
+    });
   }
 
   Stream<StatsSummaryModel> watchStatsSummary(String storeId) {
@@ -57,8 +93,6 @@ class StatsRepository {
         final data = doc.data() as Map<String, dynamic>;
         return StatsSummaryModel.fromMap(data);
       } else {
-        // If it doesn't exist, we'll initialize it and the stream will get the new data.
-        initializeStats(storeId);
         return StatsSummaryModel.empty();
       }
     });
@@ -66,36 +100,63 @@ class StatsRepository {
 
   Future<StatsSummaryModel> initializeStats(String storeId) async {
     final summary = StatsSummaryModel.empty();
-    await _getSummaryDocRef(storeId).set(summary.toMap());
+    await _getSummaryDocRef(storeId)
+        .set(summary.toMap(), SetOptions(merge: true));
     return summary;
   }
 
-  Future<void> updateStatsOnTransactionCreate(
-      String storeId, TransactionModel tx) async {
+  Future<void> incrementOpenDebtStats(String storeId, double amount,
+      {Transaction? firestoreTransaction}) async {
+    AmountValidator.ensurePositive(amount);
     final docRef = _getSummaryDocRef(storeId);
     final Map<String, dynamic> updates = {
-      'totalTransactions': FieldValue.increment(1),
-      'totalCommission': FieldValue.increment(tx.commission),
-      'lastUpdated': FieldValue.serverTimestamp(),
-    };
-
-    if (tx.isSend) {
-      updates['sendCount'] = FieldValue.increment(1);
-      updates['totalSentAmount'] = FieldValue.increment(tx.amount);
-    } else if (tx.isReceive) {
-      updates['receiveCount'] = FieldValue.increment(1);
-      updates['totalReceivedAmount'] = FieldValue.increment(tx.amount);
-    }
-    await docRef.update(updates);
-  }
-
-  Future<void> incrementOpenDebtStats(String storeId, double amount) async {
-    final docRef = _getSummaryDocRef(storeId);
-    await docRef.update({
       'openDebtsCount': FieldValue.increment(1),
       'totalOpenAmount': FieldValue.increment(amount),
       'lastUpdated': FieldValue.serverTimestamp(),
-    });
+    };
+
+    final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+        storeId, DateHelper.getCurrentDateString()));
+    final Map<String, dynamic> dailyUpdates = {
+      'openDebtsCount': FieldValue.increment(1),
+      'totalOpenAmount': FieldValue.increment(amount),
+    };
+
+    if (firestoreTransaction != null) {
+      firestoreTransaction.update(docRef, updates);
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+    } else {
+      await docRef.update(updates);
+      await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> decrementOpenDebtStats(String storeId, double amount,
+      {Transaction? firestoreTransaction}) async {
+    AmountValidator.ensurePositive(amount);
+    final docRef = _getSummaryDocRef(storeId);
+    final Map<String, dynamic> updates = {
+      'openDebtsCount': FieldValue.increment(-1),
+      'totalOpenAmount': FieldValue.increment(-amount),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    };
+
+    final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+        storeId, DateHelper.getCurrentDateString()));
+    final Map<String, dynamic> dailyUpdates = {
+      'openDebtsCount': FieldValue.increment(-1),
+      'totalOpenAmount': FieldValue.increment(-amount),
+    };
+
+    if (firestoreTransaction != null) {
+      firestoreTransaction.update(docRef, updates);
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
+    } else {
+      await docRef.update(updates);
+      await dailyStatsRef.set(dailyUpdates, SetOptions(merge: true));
+    }
   }
 
   @visibleForTesting
@@ -106,139 +167,185 @@ class StatsRepository {
     required DebtModel newDebt,
   }) async {
     final summaryRef = _getSummaryDocRef(storeId);
-    final Map<String, FieldValue> updates = {
+
+    // --- Read operations first ---
+    final summarySnap = await firestoreTransaction.get(summaryRef);
+    int currentOpenDebts = 0;
+    int currentPaidDebts = 0;
+
+    if (summarySnap.exists) {
+      final data = summarySnap.data() as Map<String, dynamic>;
+      currentOpenDebts = (data['openDebtsCount'] as int?) ?? 0;
+      currentPaidDebts = (data['paidDebtsCount'] as int?) ?? 0;
+    }
+
+    final Map<String, dynamic> updates = {
       'lastUpdated': FieldValue.serverTimestamp(),
     };
+
+    final Map<String, dynamic> dailyUpdates = {};
 
     if (oldDebt == null) {
       // --- Handle Creation ---
       updates['openDebtsCount'] = FieldValue.increment(1);
       updates['totalOpenAmount'] = FieldValue.increment(newDebt.amountDue);
+
+      dailyUpdates['openDebtsCount'] = FieldValue.increment(1);
+      dailyUpdates['totalOpenAmount'] = FieldValue.increment(newDebt.amountDue);
     } else {
       // --- Handle Update ---
-      final wasPaid = oldDebt.debtStatus == 'paid';
-      final isNowPaid = newDebt.debtStatus == 'paid';
-      final wasOpen = oldDebt.debtStatus == 'open';
-      final isNowOpen = newDebt.debtStatus == 'open';
+      final wasPaid = oldDebt.debtStatus == DebtStatus.paid; // ENUM refactor
+      final isNowPaid = newDebt.debtStatus == DebtStatus.paid; // ENUM refactor
+      final wasOpen = oldDebt.debtStatus == DebtStatus.open; // ENUM refactor
+      final isNowOpen = newDebt.debtStatus == DebtStatus.open; // ENUM refactor
 
       final amountChange = newDebt.amountDue - oldDebt.amountDue;
 
       // --- Handle Amount Changes ---
       if (amountChange.abs() > 0.001) {
         updates['totalOpenAmount'] = FieldValue.increment(amountChange);
+        dailyUpdates['totalOpenAmount'] = FieldValue.increment(amountChange);
 
         if (amountChange < 0) {
           // Payment
           updates['totalPaidAmount'] = FieldValue.increment(-amountChange);
+          dailyUpdates['totalPaidAmount'] = FieldValue.increment(-amountChange);
         }
       }
 
       // --- Handle Status Changes ---
       if (wasOpen && isNowPaid) {
         // Open -> Paid (Full Payment)
-        updates['openDebtsCount'] = FieldValue.increment(-1);
+        updates['openDebtsCount'] =
+            currentOpenDebts > 0 ? currentOpenDebts - 1 : 0;
         updates['paidDebtsCount'] = FieldValue.increment(1);
+
+        dailyUpdates['openDebtsCount'] = FieldValue.increment(-1);
+        dailyUpdates['paidDebtsCount'] = FieldValue.increment(1);
       } else if (wasPaid && isNowOpen) {
         // Paid -> Open (Re-opening a paid debt)
         updates['openDebtsCount'] = FieldValue.increment(1);
-        updates['paidDebtsCount'] = FieldValue.increment(-1);
+        updates['paidDebtsCount'] =
+            currentPaidDebts > 0 ? currentPaidDebts - 1 : 0;
+
+        dailyUpdates['openDebtsCount'] = FieldValue.increment(1);
+        dailyUpdates['paidDebtsCount'] = FieldValue.increment(-1);
       }
     }
 
     if (updates.length > 1) {
       // more than just lastUpdated
-      final summaryDoc = await firestoreTransaction.get(summaryRef);
+      firestoreTransaction.set(summaryRef, updates, SetOptions(merge: true));
+    }
 
-      if (!summaryDoc.exists) {
-        final initialStats = StatsSummaryModel.empty();
-        final initialMap = initialStats.toMap();
-
-        // Apply increments manually to the initial map
-        updates.forEach((key, value) {
-          if (value.toString().contains('Increment')) {
-            // This is a bit of a hack to get the increment value.
-            // A better solution would be to not use FieldValue here, but this keeps the logic consistent.
-            final incrementValue = double.tryParse(
-                    value.toString().split('(').last.split(')').first) ??
-                0.0;
-            if (initialMap[key] is int) {
-              initialMap[key] =
-                  (initialMap[key] as int) + incrementValue.toInt();
-            } else if (initialMap[key] is double) {
-              initialMap[key] = (initialMap[key] as double) + incrementValue;
-            }
-          }
-        });
-        initialMap['lastUpdated'] = FieldValue.serverTimestamp();
-        firestoreTransaction.set(summaryRef, initialMap..remove('lastUpdated'));
-      } else {
-        firestoreTransaction.update(summaryRef, updates);
-      }
+    if (dailyUpdates.isNotEmpty) {
+      final dailyStatsRef = _firestore.doc(FirebaseConstants.dailyStatsPath(
+          storeId, DateHelper.getCurrentDateString()));
+      firestoreTransaction.set(
+          dailyStatsRef, dailyUpdates, SetOptions(merge: true));
     }
   }
 
   Future<void> updateStatsOnWalletChange(String storeId,
-      {int countChange = 0, double balanceChange = 0.0}) async {
-    if (countChange == 0 && balanceChange == 0.0) return;
+      {int countChange = 0,
+      int activeCountChange = 0,
+      double balanceChange = 0.0,
+      Transaction? firestoreTransaction,
+      WriteBatch? batch}) async {
+    assert(batch == null || firestoreTransaction == null,
+        'Cannot provide both batch and firestoreTransaction');
 
-    final docRef = _getSummaryDocRef(storeId);
-    final Map<String, dynamic> updates = {
+    if (countChange == 0 && activeCountChange == 0 && balanceChange == 0.0) {
+      return;
+    }
+
+    final Map<String, dynamic> summaryUpdates = {
       'lastUpdated': FieldValue.serverTimestamp(),
     };
+
     if (countChange != 0) {
-      updates['totalWallets'] = FieldValue.increment(countChange);
+      summaryUpdates['totalWallets'] = FieldValue.increment(countChange);
     }
+
+    if (activeCountChange != 0) {
+      summaryUpdates['activeWallets'] = FieldValue.increment(activeCountChange);
+    }
+
     if (balanceChange != 0.0) {
-      updates['totalBalance'] = FieldValue.increment(balanceChange);
+      summaryUpdates['totalBalance'] = FieldValue.increment(balanceChange);
     }
-    await docRef.update(updates);
-  }
 
-  Future<void> reconcileStatsFromDebts(String storeId) async {
-    try {
-      // 1. Get all debt documents for the store
-      final debtQuery =
-          _firestore.collection('debts').where('storeId', isEqualTo: storeId);
-      final debtSnapshot = await debtQuery.get();
+    final summaryRef = _getSummaryDocRef(storeId);
 
-      // 2. Compute authoritative values
-      int openDebtsCount = 0;
-      double totalOpenAmount = 0.0;
-      int paidDebtsCount = 0;
-      // totalPaidAmount is a write-only accumulator based on payments.
-      // It cannot be derived from the debt collection alone.
-      // The safest action is to leave it as is or reset it if it's known to be corrupt.
-      // For this fix, we will recalculate what we can and leave paid amount.
-      // A more advanced reconciliation could use transaction logs.
-
-      for (final doc in debtSnapshot.docs) {
-        final debt = DebtModel.fromFirestore(doc);
-        if (debt.debtStatus == 'open') {
-          openDebtsCount++;
-          totalOpenAmount += debt.amountDue;
-        } else if (debt.debtStatus == 'paid') {
-          paidDebtsCount++;
+    if (batch != null) {
+      batch.set(summaryRef, summaryUpdates, SetOptions(merge: true));
+    } else {
+      Future<void> updateLogic(Transaction transaction) async {
+        final summarySnap = await transaction.get(summaryRef);
+        if (summarySnap.exists) {
+          transaction.update(summaryRef, summaryUpdates);
+        } else {
+          transaction.set(summaryRef, summaryUpdates, SetOptions(merge: true));
         }
       }
 
-      final summaryRef = _getSummaryDocRef(storeId);
-      final currentSummaryDoc = await summaryRef.get();
-      final currentSummary = currentSummaryDoc.exists
-          ? StatsSummaryModel.fromMap(
-              currentSummaryDoc.data()! as Map<String, dynamic>)
-          : StatsSummaryModel.empty();
+      if (firestoreTransaction != null) {
+        await updateLogic(firestoreTransaction);
+      } else {
+        await _firestore.runTransaction((transaction) async {
+          await updateLogic(transaction);
+        });
+      }
+    }
+  }
 
-      // 4. Atomically write the new values
-      final reconciledStats = {
-        'openDebtsCount': openDebtsCount,
-        'totalOpenAmount': totalOpenAmount,
-        'paidDebtsCount': paidDebtsCount,
-        'lastUpdated': FieldValue.serverTimestamp(),
+  /// Queries daily_stats collection where document ID is between start and end date
+  /// and aggregates all flow numeric metrics (excluding point-in-time metrics).
+  Future<Map<String, dynamic>> getStatsByDateRange(
+      String storeId, DateTime start, DateTime end) async {
+    try {
+      final startStr = DateFormat('yyyy-MM-dd').format(start);
+      final endStr = DateFormat('yyyy-MM-dd').format(end);
+
+      final snapshot = await _firestore
+          .collection(FirebaseConstants.dailyStatsSubcollection(storeId))
+          .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
+          .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
+          .get();
+
+      final Map<String, dynamic> aggregation = {};
+      final validKeys = {
+        'transactionCount',
+        'totalCommission',
+        'sendCount',
+        'receiveCount',
+        'totalSentAmount',
+        'totalReceivedAmount',
+        'openDebtsCount',
+        'totalOpenAmount',
+        'paidDebtsCount',
+        'totalPaidAmount',
       };
 
-      await summaryRef.update(reconciledStats);
-    } catch (e) {
-      rethrow;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        data.forEach((key, value) {
+          if (validKeys.contains(key) && value is num) {
+            final num current = aggregation[key] ?? 0;
+            aggregation[key] = current + value;
+          }
+        });
+      }
+
+      return aggregation;
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        severity: ErrorSeverity.low,
+        operation: 'StatsRepository.getStatsByDateRange',
+      );
+      return {};
     }
   }
 }

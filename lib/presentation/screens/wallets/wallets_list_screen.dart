@@ -6,13 +6,13 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../data/models/wallet_model.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/utils/dialog_utils.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../../core/utils/debouncer.dart';
 import 'package:walletmanager/presentation/widgets/common/skeleton_list.dart';
 import '../../widgets/wallet/wallet_card.dart';
-import '../../widgets/common/add_close_animated_icon.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class WalletsListScreen extends StatefulWidget {
@@ -22,23 +22,14 @@ class WalletsListScreen extends StatefulWidget {
   State<WalletsListScreen> createState() => _WalletsListScreenState();
 }
 
-class _WalletsListScreenState extends State<WalletsListScreen>
-    with TickerProviderStateMixin {
+class _WalletsListScreenState extends State<WalletsListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final _debouncer = Debouncer(delay: const Duration(milliseconds: 500));
   final _scrollController = ScrollController();
-  final bool _showFilters = false;
-
-  late AnimationController _fabAnimationController;
-  bool isFabMenuOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _fabAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
 
     // Add listener for pagination
     _scrollController.addListener(_onScroll);
@@ -55,7 +46,6 @@ class _WalletsListScreenState extends State<WalletsListScreen>
     _debouncer.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _fabAnimationController.dispose();
     super.dispose();
   }
 
@@ -66,26 +56,15 @@ class _WalletsListScreenState extends State<WalletsListScreen>
     }
   }
 
-  void _toggleFabMenu() {
-    setState(() {
-      isFabMenuOpen = !isFabMenuOpen;
-      if (isFabMenuOpen) {
-        _fabAnimationController.forward();
-      } else {
-        _fabAnimationController.reverse();
-      }
-    });
-  }
-
   void _navigateToAddWallet() {
     Navigator.pushNamed(context, RouteConstants.walletForm);
   }
 
-  void _navigateToAddBalance() {
-    Navigator.pushNamed(context, RouteConstants.addBalance);
-  }
-
   void _navigateToEditWallet(WalletModel wallet) {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     Navigator.pushNamed(context, RouteConstants.walletForm, arguments: wallet);
   }
 
@@ -95,6 +74,10 @@ class _WalletsListScreenState extends State<WalletsListScreen>
   }
 
   void _showDeleteDialog(WalletModel wallet) async {
+    if (context.read<AuthProvider>().isSubscriptionExpired) {
+      ToastUtils.showError(AppLocalizations.of(context)!.subscriptionExpired);
+      return;
+    }
     final walletProvider = context.read<WalletProvider>();
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
@@ -126,133 +109,103 @@ class _WalletsListScreenState extends State<WalletsListScreen>
         title: Text(AppLocalizations.of(context)!.wallets),
         centerTitle: true,
       ),
-      body: Consumer<WalletProvider>(
-        builder: (context, provider, child) {
-          return Column(
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        label: Text(AppLocalizations.of(context)!.addWallet),
+        icon: const Icon(Icons.add),
+        onPressed: _navigateToAddWallet,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Consumer<WalletProvider>(
+      builder: (context, provider, child) {
+        final isLoading = provider.isLoading;
+        final hasError = provider.hasError;
+        final errorMessage = provider.errorMessage;
+        final isLoadingMore = provider.isLoadingMore;
+
+        if (isLoading) {
+          return const SkeletonList(itemCount: 4, itemHeight: 150);
+        }
+
+        if (hasError) {
+          return CustomErrorWidget(
+            message: errorMessage ??
+                AppLocalizations.of(context)!.somethingWentWrong,
+            onRetry: () => provider.fetchInitialWallets(forceRefresh: true),
+          );
+        }
+
+        final wallets = provider.wallets;
+        final filteredWallets = wallets.where((wallet) {
+          final search = _searchController.text.toLowerCase();
+          if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
+            return false;
+          }
+          return true;
+        }).toList();
+
+        if (filteredWallets.isEmpty) {
+          return EmptyStateWidget(
+            message: AppLocalizations.of(context)!.noWalletsYet,
+            description: AppLocalizations.of(context)!.startAddingWallets,
+            icon: Icons.wallet_outlined,
+            actionText: AppLocalizations.of(context)!.addWallet,
+            onAction: _navigateToAddWallet,
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => provider.refresh(),
+          child: Column(
             children: [
-              _buildSearchBar(provider),
+              _SummaryCard(wallets: filteredWallets),
               Expanded(
-                child: _buildContent(provider),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount: filteredWallets.length + (isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == filteredWallets.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final wallet = filteredWallets[index];
+                    return WalletCard(
+                      key: ValueKey(
+                          '${wallet.walletId}_${wallet.balance}_${provider.isWalletFrozenSync(wallet.walletId)}'),
+                      wallet: wallet,
+                      isFrozen: provider.isWalletFrozenSync(wallet.walletId),
+                      onTap: () => _navigateToWalletDetails(wallet.walletId),
+                      onEdit: () => _navigateToEditWallet(wallet),
+                      onDelete: () => _showDeleteDialog(wallet),
+                    );
+                  },
+                ),
               ),
             ],
-          );
-        },
-      ),
-      floatingActionButton: _buildSpeedDialFab(),
-    );
-  }
-
-  Widget _buildContent(WalletProvider provider) {
-    if (provider.isLoading) {
-      return const SkeletonList(itemCount: 4, itemHeight: 150);
-    }
-
-    if (provider.hasError) {
-      return CustomErrorWidget(
-        message: provider.errorMessage ??
-            AppLocalizations.of(context)!.somethingWentWrong,
-        onRetry: provider.fetchInitialWallets,
-      );
-    }
-
-    final wallets = provider.wallets.where((wallet) {
-      final search = _searchController.text.toLowerCase();
-      if (search.isNotEmpty && !wallet.phoneNumber.contains(search)) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    if (wallets.isEmpty) {
-      return EmptyStateWidget(
-        message: AppLocalizations.of(context)!.noWalletsYet,
-        description: AppLocalizations.of(context)!.startAddingWallets,
-        icon: Icons.wallet_outlined,
-        actionText: AppLocalizations.of(context)!.addWallet,
-        onAction: _navigateToAddWallet,
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: provider.fetchInitialWallets,
-      child: Column(
-        children: [
-          _buildSummaryCard(wallets),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 80), // Space for FAB
-              itemCount: wallets.length + (provider.isLoadingMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == wallets.length) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                final wallet = wallets[index];
-                return WalletCard(
-                  wallet: wallet,
-                  onTap: () => _navigateToWalletDetails(wallet.walletId),
-                  onEdit: () => _navigateToEditWallet(wallet),
-                  onDelete: () => _showDeleteDialog(wallet),
-                );
-              },
-            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildSpeedDialFab() {
-    return SizedBox(
-      height: 250.0,
-      width: 250.0,
-      child: Stack(
-        alignment: Alignment.bottomLeft,
-        children: [
-          ..._buildFabOptions(),
-          FloatingActionButton(
-            onPressed: _toggleFabMenu,
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            tooltip: AppLocalizations.of(context)!.addWallet,
-            child: AddCloseAnimatedIcon(
-              progress: _fabAnimationController,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildFabOptions() {
-    final options = <Widget>[
-      _FabOption(
-        label: AppLocalizations.of(context)!.addBalance,
-        icon: Icons.add_card_outlined,
-        onPressed: _navigateToAddBalance,
-        animation: _fabAnimationController,
-        translation: const Offset(0, -65),
-      ),
-      _FabOption(
-        label: AppLocalizations.of(context)!.addWallet,
-        icon: Icons.account_balance_wallet_outlined,
-        onPressed: _navigateToAddWallet,
-        animation: _fabAnimationController,
-        translation: const Offset(0, -130),
-      ),
-    ];
-
-    return options;
-  }
-
-  Widget _buildSearchBar(WalletProvider provider) {
+  Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
       child: TextField(
         controller: _searchController,
         keyboardType: TextInputType.phone,
@@ -277,13 +230,21 @@ class _WalletsListScreenState extends State<WalletsListScreen>
       ),
     );
   }
+}
 
-  Widget _buildSummaryCard(List<WalletModel> wallets) {
+class _SummaryCard extends StatelessWidget {
+  final List<WalletModel> wallets;
+
+  const _SummaryCard({required this.wallets});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withAlpha((0.1 * 255).round()),
+        color: AppColors.primary.withAlpha(26),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -291,12 +252,12 @@ class _WalletsListScreenState extends State<WalletsListScreen>
         children: [
           _SummaryItem(
             icon: Icons.wallet,
-            label: AppLocalizations.of(context)!.totalWallets,
+            label: l10n.totalWallets,
             value: wallets.length.toString(),
           ),
           _SummaryItem(
             icon: Icons.check_circle_outline,
-            label: AppLocalizations.of(context)!.activeWallets,
+            label: l10n.activeWallets,
             value: wallets.where((w) => w.isActive).length.toString(),
           ),
         ],
@@ -326,64 +287,6 @@ class _SummaryItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(value, style: AppTextStyles.h3.copyWith(color: AppColors.primary)),
       ],
-    );
-  }
-}
-
-class _FabOption extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Animation<double> animation;
-  final Offset translation;
-
-  const _FabOption({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    required this.animation,
-    required this.translation,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(
-            translation.dx * animation.value,
-            translation.dy * animation.value,
-          ),
-          child: Opacity(
-            opacity: animation.value,
-            child: child,
-          ),
-        );
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Card(
-            elevation: 4,
-            color: AppColors.primary,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(label,
-                  style: AppTextStyles.labelMedium
-                      .copyWith(color: AppColors.surface(context))),
-            ),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton.small(
-            onPressed: onPressed,
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.surface(context),
-            heroTag: null,
-            child: Icon(icon),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,33 +1,37 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../../core/constants/firebase_constants.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/date_helper.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/enums/transaction_enums.dart';
+import '../../core/errors/app_exceptions.dart';
+import '../../core/utils/amount_validator.dart';
 
 class TransactionModel {
   final String transactionId;
   final String storeId;
   final String walletId;
-  final String transactionType; // 'send' | 'receive' | 'deposit'
+  final TransactionType transactionType; // ENUM refactor
   final String? customerPhone;
   final String? customerName;
   final double amount;
   final double commission;
   final double serviceFee; // Fee charged by the network/service
-  final String paymentStatus; // 'paid' | 'debt'
+  final PaymentStatus paymentStatus; // ENUM refactor
   final String? debtId;
   final String? notes;
-  final Timestamp transactionDate;
-  final Timestamp createdAt;
+  final DateTime? transactionDate; // Made nullable
+  final DateTime? createdAt; // Made nullable
   final String createdBy;
   final String? createdById;
   final String? createdByName;
   final String? creatorRole;
-  final Timestamp? updatedAt;
+  final DateTime? updatedAt;
   final String? updatedBy;
   final bool isDeleted;
-  final Timestamp? deletedAt;
+  final DateTime? deletedAt;
   final String? deletedBy;
+  final bool bypassedLimit;
+
+  bool get isIncome => transactionType == TransactionType.credit;
 
   TransactionModel({
     required this.transactionId,
@@ -39,11 +43,11 @@ class TransactionModel {
     required this.amount,
     this.commission = 0.0,
     this.serviceFee = 0.0,
-    this.paymentStatus = 'paid',
+    this.paymentStatus = PaymentStatus.paid,
     this.debtId,
     this.notes,
-    required this.transactionDate,
-    required this.createdAt,
+    this.transactionDate,
+    this.createdAt,
     required this.createdBy,
     this.createdById,
     this.createdByName,
@@ -53,34 +57,59 @@ class TransactionModel {
     this.isDeleted = false,
     this.deletedAt,
     this.deletedBy,
+    this.bypassedLimit = false,
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    return TransactionModel.fromMap(data, doc.id);
+  }
+
+  factory TransactionModel.fromMap(Map<String, dynamic> data, String docId) {
+    final transactionDate = (data['transactionDate'] as Timestamp?)?.toDate();
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+    if (transactionDate == null || createdAt == null) {
+      throw NotFoundException(
+          'Transaction document $docId missing required timestamps (transactionDate or createdAt)');
+    }
+
+    final amount = NumberParser.toDouble(data['amount']);
+    final commission = NumberParser.toDouble(data['commission']);
+    final serviceFee = NumberParser.toDouble(data['serviceFee']);
+
+    // Phase 3: Domain Model Purity Guards
+    AmountValidator.ensurePositive(amount);
+    AmountValidator.ensurePositiveOrZero(commission);
+    AmountValidator.ensurePositiveOrZero(serviceFee);
+
     return TransactionModel(
-      transactionId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      walletId: data[FirebaseConstants.walletId] ?? '',
-      transactionType: data['transactionType'] ?? 'send',
-      customerPhone: data['customerPhone'],
-      customerName: data['customerName'],
-      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-      commission: (data['commission'] as num?)?.toDouble() ?? 0.0,
-      serviceFee: (data['serviceFee'] as num?)?.toDouble() ?? 0.0,
-      paymentStatus: data['paymentStatus'] ?? 'paid',
-      debtId: data['debtId'],
-      notes: data[FirebaseConstants.notes],
-      transactionDate: data['transactionDate'] ?? Timestamp.now(),
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      createdById: data['createdById'],
-      createdByName: data['createdByName'],
-      creatorRole: data['creatorRole'],
-      updatedAt: data[FirebaseConstants.updatedAt],
-      updatedBy: data['updatedBy'],
-      isDeleted: data['isDeleted'] ?? false,
-      deletedAt: data['deletedAt'],
-      deletedBy: data['deletedBy'],
+      transactionId: docId,
+      storeId: data[FirebaseConstants.storeId] as String? ?? '',
+      walletId: data[FirebaseConstants.walletId] as String? ?? '',
+      transactionType: TransactionType.fromString(
+          data['transactionType'] as String? ?? 'send'),
+      customerPhone: data['customerPhone'] as String?,
+      customerName: data['customerName'] as String?,
+      amount: amount,
+      commission: commission,
+      serviceFee: serviceFee,
+      paymentStatus:
+          PaymentStatus.fromString(data['paymentStatus'] as String? ?? 'paid'),
+      debtId: data['debtId'] as String?,
+      notes: data[FirebaseConstants.notes] as String?,
+      transactionDate: transactionDate,
+      createdAt: createdAt,
+      createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
+      createdById: data['createdById'] as String?,
+      createdByName: data['createdByName'] as String?,
+      creatorRole: data['creatorRole'] as String?,
+      updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
+      updatedBy: data['updatedBy'] as String?,
+      isDeleted: data['isDeleted'] as bool? ?? false,
+      deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
+      deletedBy: data['deletedBy'] as String?,
+      bypassedLimit: data['bypassedLimit'] as bool? ?? false,
     );
   }
 
@@ -88,26 +117,28 @@ class TransactionModel {
     return {
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.walletId: walletId,
-      'transactionType': transactionType,
+      'transactionType': transactionType.name,
       'customerPhone': customerPhone,
       'customerName': customerName,
       'amount': amount,
       'commission': commission,
       'serviceFee': serviceFee,
-      'paymentStatus': paymentStatus,
+      'paymentStatus': paymentStatus.name,
       'debtId': debtId,
       FirebaseConstants.notes: notes,
-      'transactionDate': transactionDate,
-      FirebaseConstants.createdAt: createdAt,
+      'transactionDate': FieldValue.serverTimestamp(),
+      'createdAt': FieldValue.serverTimestamp(),
       FirebaseConstants.createdBy: createdBy,
       'createdById': createdById,
       'createdByName': createdByName,
       'creatorRole': creatorRole,
-      FirebaseConstants.updatedAt: updatedAt,
+      FirebaseConstants.updatedAt:
+          updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'updatedBy': updatedBy,
       'isDeleted': isDeleted,
-      'deletedAt': deletedAt,
+      'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
       'deletedBy': deletedBy,
+      'bypassedLimit': bypassedLimit,
     };
   }
 
@@ -115,26 +146,27 @@ class TransactionModel {
     String? transactionId,
     String? storeId,
     String? walletId,
-    String? transactionType,
+    TransactionType? transactionType,
     String? customerPhone,
     String? customerName,
     double? amount,
     double? commission,
     double? serviceFee,
-    String? paymentStatus,
+    PaymentStatus? paymentStatus,
     String? debtId,
     String? notes,
-    Timestamp? transactionDate,
-    Timestamp? createdAt,
+    DateTime? transactionDate,
+    DateTime? createdAt,
     String? createdBy,
     String? createdById,
     String? createdByName,
     String? creatorRole,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     String? updatedBy,
     bool? isDeleted,
-    Timestamp? deletedAt,
+    DateTime? deletedAt,
     String? deletedBy,
+    bool? bypassedLimit,
   }) {
     return TransactionModel(
       transactionId: transactionId ?? this.transactionId,
@@ -160,40 +192,54 @@ class TransactionModel {
       isDeleted: isDeleted ?? this.isDeleted,
       deletedAt: deletedAt ?? this.deletedAt,
       deletedBy: deletedBy ?? this.deletedBy,
+      bypassedLimit: bypassedLimit ?? this.bypassedLimit,
     );
   }
 
   // Getters
-  bool get isSend => transactionType == 'send';
-  bool get isReceive => transactionType == 'receive';
-  bool get isDeposit => transactionType == 'deposit';
-  bool get isPaid => paymentStatus == 'paid';
-  bool get isDebt => paymentStatus == 'debt';
+  bool get isSend => transactionType == TransactionType.debit;
+  bool get isReceive => transactionType == TransactionType.credit;
+  bool get isDeposit => transactionType == TransactionType.deposit;
+  bool get isPaid => paymentStatus == PaymentStatus.paid;
+  bool get isDebt => paymentStatus == PaymentStatus.debt;
   double get totalAmount =>
-      amount + commission; // Original total amount (base + comm)
-  String get transactionTypeDisplay =>
-      isSend ? 'إرسال' : (isReceive ? 'استقبال' : 'إيداع');
-  IconData get transactionTypeIcon => isSend
-      ? Icons.arrow_upward
-      : (isReceive ? Icons.arrow_downward : Icons.add_card_outlined);
-  Color get transactionTypeColor => isSend
-      ? AppColors.send
-      : (isReceive ? AppColors.receive : AppColors.primary);
-  String get paymentStatusDisplay => isPaid ? 'مدفوع' : 'دين';
-  bool get canBeModified {
-    // Can be modified within 5 minutes of creation
-    return DateTime.now().difference(createdAt.toDate()).inMinutes < 5;
-  }
-
-  String get formattedDate =>
-      DateHelper.formatTimestamp(transactionDate, format: 'dd/MM/yyyy');
-  String get formattedTime =>
-      DateHelper.formatTimestamp(transactionDate, format: 'hh:mm a');
-  String get relativeTime =>
-      DateHelper.getRelativeTime(transactionDate.toDate());
+      amount +
+      commission +
+      serviceFee; // Total deduction/credit including all fees
 
   @override
   String toString() {
-    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: $amount, serviceFee: $serviceFee, status: $paymentStatus)';
+    return 'TransactionModel(id: $transactionId, type: $transactionType, amount: [SENSITIVE], serviceFee: [SENSITIVE], status: $paymentStatus)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TransactionModel &&
+        other.transactionId == transactionId &&
+        other.storeId == storeId &&
+        other.walletId == walletId &&
+        other.transactionType == transactionType &&
+        other.amount == amount &&
+        other.commission == commission &&
+        other.serviceFee == serviceFee &&
+        other.paymentStatus == paymentStatus &&
+        other.debtId == debtId &&
+        other.isDeleted == isDeleted &&
+        other.bypassedLimit == bypassedLimit;
+  }
+
+  @override
+  int get hashCode =>
+      transactionId.hashCode ^
+      storeId.hashCode ^
+      walletId.hashCode ^
+      transactionType.hashCode ^
+      amount.hashCode ^
+      commission.hashCode ^
+      serviceFee.hashCode ^
+      paymentStatus.hashCode ^
+      debtId.hashCode ^
+      isDeleted.hashCode ^
+      bypassedLimit.hashCode;
 }

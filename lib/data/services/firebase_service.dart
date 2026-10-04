@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:walletmanager/core/errors/app_error_handler.dart';
 
 /// A singleton service class to initialize and provide Firebase services.
 class FirebaseService {
@@ -50,7 +51,8 @@ class FirebaseService {
   }
 
   /// Checks if the Firebase services have been initialized.
-  bool get isInitialized => _auth != null && _firestore != null;
+  bool get isInitialized =>
+      _firestore != null && (_auth != null || AppErrorHandler.isTestMode);
 
   // ===========================
   // Initialize Firebase
@@ -77,17 +79,20 @@ class FirebaseService {
         persistenceEnabled: true,
         cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
-    } catch (e) {
-      // Log the error and rethrow to allow for handling at the app's root.
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'FirebaseService.initialize',
+      );
       rethrow;
     }
   }
 
   /// Initializes the service with a mock or fake Firestore instance for testing.
   @visibleForTesting
-  void initializeForTest(FirebaseFirestore firestore) {
+  void initializeForTest(FirebaseFirestore firestore, {FirebaseAuth? auth}) {
     _firestore = firestore;
-    // We don't initialize FirebaseAuth here as it's not needed for these tests.
-    // If it were, we would use a mock instance.
+    _auth = auth;
   }
 }

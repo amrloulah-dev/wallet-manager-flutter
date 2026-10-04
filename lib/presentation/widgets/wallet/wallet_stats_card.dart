@@ -4,6 +4,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../core/utils/date_helper.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class WalletStatsCard extends StatelessWidget {
   final WalletStats stats;
@@ -12,6 +13,7 @@ class WalletStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 1,
       margin: const EdgeInsets.all(16),
@@ -26,7 +28,7 @@ class WalletStatsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.bar_chart, color: AppColors.primary),
                 const SizedBox(width: 8),
-                Text('الإحصائيات', style: AppTextStyles.h3),
+                Text(l10n.statistics, style: AppTextStyles.h3),
               ],
             ),
 
@@ -41,41 +43,42 @@ class WalletStatsCard extends StatelessWidget {
               children: [
                 _StatItem(
                   icon: Icons.swap_horiz,
-                  label: 'إجمالي المعاملات',
+                  label: l10n.totalTransactions,
                   value: '${stats.totalTransactions}',
                   color: AppColors.primary,
                 ),
                 _StatItem(
                   icon: Icons.account_balance_wallet,
-                  label: 'إجمالي المبلغ',
+                  label: l10n.totalAmount,
                   value: NumberFormatter.formatAmount(stats.totalAmount),
                   color: AppColors.primary,
                 ),
                 _StatItem(
                   icon: Icons.arrow_upward,
-                  label: 'مبلغ الإرسال',
+                  label: l10n.sendAmount,
                   value: NumberFormatter.formatAmount(stats.totalSentAmount),
                   color: AppColors.send,
                 ),
                 _StatItem(
                   icon: Icons.arrow_downward,
-                  label: 'مبلغ الاستقبال',
+                  label: l10n.receiveAmount,
                   value:
                       NumberFormatter.formatAmount(stats.totalReceivedAmount),
                   color: AppColors.receive,
                 ),
                 _StatItem(
                   icon: Icons.attach_money,
-                  label: 'إجمالي العمولة',
+                  label: l10n.totalCommissionLabel,
                   value: NumberFormatter.formatAmount(stats.totalCommission),
                   color: AppColors.success,
                 ),
                 if (stats.lastTransactionDate != null)
                   _StatItem(
                     icon: Icons.access_time,
-                    label: 'آخر معاملة',
+                    label: l10n.lastTransaction,
                     value: DateHelper.getRelativeTime(
-                      stats.lastTransactionDate!.toDate(),
+                      stats.lastTransactionDate!,
+                      l10n: l10n,
                     ),
                     color: AppColors.textSecondary(context),
                   ),
@@ -139,8 +142,6 @@ class _StatItem extends StatelessWidget {
             style: AppTextStyles.h3.copyWith(color: color),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textDirection:
-                label == 'آخر معاملة' ? TextDirection.rtl : TextDirection.ltr,
           ),
         ],
       ),

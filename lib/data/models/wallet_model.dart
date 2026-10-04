@@ -1,9 +1,11 @@
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/enums/wallet_enums.dart';
+import '../../core/utils/amount_validator.dart';
+import '../../core/di/service_locator.dart';
+import '../../providers/platform_settings_provider.dart';
+import 'platform_settings_model.dart';
 
 class WalletLimits {
   final double dailyLimit;
@@ -20,10 +22,10 @@ class WalletLimits {
 
   factory WalletLimits.fromMap(Map<String, dynamic> map) {
     return WalletLimits(
-      dailyLimit: (map['dailyLimit'] as num?)?.toDouble() ?? 0.0,
-      dailyUsed: (map['dailyUsed'] as num?)?.toDouble() ?? 0.0,
-      monthlyLimit: (map['monthlyLimit'] as num?)?.toDouble() ?? 0.0,
-      monthlyUsed: (map['monthlyUsed'] as num?)?.toDouble() ?? 0.0,
+      dailyLimit: NumberParser.toDouble(map['dailyLimit']),
+      dailyUsed: NumberParser.toDouble(map['dailyUsed']),
+      monthlyLimit: NumberParser.toDouble(map['monthlyLimit']),
+      monthlyUsed: NumberParser.toDouble(map['monthlyUsed']),
     );
   }
 
@@ -53,11 +55,28 @@ class WalletLimits {
   double get dailyRemaining => dailyLimit - dailyUsed;
   double get monthlyRemaining => monthlyLimit - monthlyUsed;
   double get dailyPercentage =>
-      dailyLimit > 0 ? (dailyUsed / dailyLimit) * 100 : 0;
+      dailyLimit > 0 ? ((dailyUsed / dailyLimit) * 100).clamp(0, 100) : 0;
   double get monthlyPercentage =>
-      monthlyLimit > 0 ? (monthlyUsed / monthlyLimit) * 100 : 0;
+      monthlyLimit > 0 ? ((monthlyUsed / monthlyLimit) * 100).clamp(0, 100) : 0;
   bool get isDailyLimitReached => dailyUsed >= dailyLimit;
   bool get isMonthlyLimitReached => monthlyUsed >= monthlyLimit;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WalletLimits &&
+        other.dailyLimit == dailyLimit &&
+        other.dailyUsed == dailyUsed &&
+        other.monthlyLimit == monthlyLimit &&
+        other.monthlyUsed == monthlyUsed;
+  }
+
+  @override
+  int get hashCode =>
+      dailyLimit.hashCode ^
+      dailyUsed.hashCode ^
+      monthlyLimit.hashCode ^
+      monthlyUsed.hashCode;
 }
 
 class WalletStats {
@@ -65,24 +84,28 @@ class WalletStats {
   final double totalSentAmount;
   final double totalReceivedAmount;
   final double totalCommission;
-  final Timestamp? lastTransactionDate;
+  final double totalServiceFee;
+  final DateTime? lastTransactionDate;
+
+  double get totalEarnings => totalCommission + totalServiceFee;
 
   WalletStats({
     this.totalTransactions = 0,
     this.totalSentAmount = 0.0,
     this.totalReceivedAmount = 0.0,
     this.totalCommission = 0.0,
+    this.totalServiceFee = 0.0,
     this.lastTransactionDate,
   });
 
   factory WalletStats.fromMap(Map<String, dynamic> map) {
     return WalletStats(
-      totalTransactions: (map['totalTransactions'] as num?)?.toInt() ?? 0,
-      totalSentAmount: (map['totalSentAmount'] as num?)?.toDouble() ?? 0.0,
-      totalReceivedAmount:
-          (map['totalReceivedAmount'] as num?)?.toDouble() ?? 0.0,
-      totalCommission: (map['totalCommission'] as num?)?.toDouble() ?? 0.0,
-      lastTransactionDate: map['lastTransactionDate'] as Timestamp?,
+      totalTransactions: NumberParser.toInt(map['totalTransactions']),
+      totalSentAmount: NumberParser.toDouble(map['totalSentAmount']),
+      totalReceivedAmount: NumberParser.toDouble(map['totalReceivedAmount']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalServiceFee: NumberParser.toDouble(map['totalServiceFee']),
+      lastTransactionDate: (map['lastTransactionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -92,7 +115,10 @@ class WalletStats {
       'totalSentAmount': totalSentAmount,
       'totalReceivedAmount': totalReceivedAmount,
       'totalCommission': totalCommission,
-      'lastTransactionDate': lastTransactionDate,
+      'totalServiceFee': totalServiceFee,
+      'lastTransactionDate': lastTransactionDate != null
+          ? Timestamp.fromDate(lastTransactionDate!)
+          : null,
     };
   }
 
@@ -101,36 +127,60 @@ class WalletStats {
     double? totalSentAmount,
     double? totalReceivedAmount,
     double? totalCommission,
-    Timestamp? lastTransactionDate,
+    double? totalServiceFee,
+    DateTime? lastTransactionDate,
   }) {
     return WalletStats(
       totalTransactions: totalTransactions ?? this.totalTransactions,
       totalSentAmount: totalSentAmount ?? this.totalSentAmount,
       totalReceivedAmount: totalReceivedAmount ?? this.totalReceivedAmount,
       totalCommission: totalCommission ?? this.totalCommission,
+      totalServiceFee: totalServiceFee ?? this.totalServiceFee,
       lastTransactionDate: lastTransactionDate ?? this.lastTransactionDate,
     );
   }
 
   double get totalAmount => totalSentAmount + totalReceivedAmount;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WalletStats &&
+        other.totalTransactions == totalTransactions &&
+        other.totalSentAmount == totalSentAmount &&
+        other.totalReceivedAmount == totalReceivedAmount &&
+        other.totalCommission == totalCommission &&
+        other.totalServiceFee == totalServiceFee &&
+        other.lastTransactionDate == lastTransactionDate;
+  }
+
+  @override
+  int get hashCode =>
+      totalTransactions.hashCode ^
+      totalSentAmount.hashCode ^
+      totalReceivedAmount.hashCode ^
+      totalCommission.hashCode ^
+      totalServiceFee.hashCode ^
+      lastTransactionDate.hashCode;
 }
 
 class WalletModel {
   final String walletId;
   final String storeId;
   final String phoneNumber;
-  final String walletType;
-  final String walletStatus;
+  final WalletType walletType; // ENUM refactor
+  final WalletStatus walletStatus; // ENUM refactor
   final double balance;
   final String? notes;
   final bool isActive;
-  final Timestamp createdAt;
+  final bool isFrozen;
+  final DateTime? createdAt; // Made nullable
   final String createdBy;
-  final Timestamp? updatedAt;
+  final DateTime? updatedAt;
   final WalletLimits sendLimits;
   final WalletLimits receiveLimits;
-  final Timestamp lastDailyReset;
-  final Timestamp lastMonthlyReset;
+  final DateTime? lastDailyReset; // Made nullable
+  final DateTime? lastMonthlyReset; // Made nullable
   final WalletStats stats;
 
   WalletModel({
@@ -142,38 +192,121 @@ class WalletModel {
     this.balance = 0.0,
     this.notes,
     this.isActive = true,
-    required this.createdAt,
+    this.isFrozen = false,
+    this.createdAt,
     required this.createdBy,
     this.updatedAt,
     required this.sendLimits,
     required this.receiveLimits,
-    required this.lastDailyReset,
-    required this.lastMonthlyReset,
+    this.lastDailyReset,
+    this.lastMonthlyReset,
     required this.stats,
   });
 
   factory WalletModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    return WalletModel.fromMap(data, doc.id);
+  }
+
+  factory WalletModel.fromMap(Map<String, dynamic> data, String docId) {
+    final createdAt =
+        (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate();
+    final lastDailyReset =
+        (data[FirebaseConstants.lastDailyReset] as Timestamp?)?.toDate();
+    final lastMonthlyReset =
+        (data[FirebaseConstants.lastMonthlyReset] as Timestamp?)?.toDate();
+
+    final balance = NumberParser.toDouble(data['balance']);
+    // Phase 3: Boundary Guard
+    AmountValidator.ensurePositiveOrZero(balance);
+
+    // Lazy Migration Fallbacks:
+    // 1. Missing walletStatus defaults to WalletStatus.inactive (never active/new).
+    // 2. Missing sendLimits/receiveLimits reconstruct from legacy root fields or networkOldLimits.
+    // 3. Null lastDailyReset/lastMonthlyReset are intentionally preserved so WalletProvider.needsDailyReset
+    //    triggers a silent auto-heal limit reset via pinpoint serverTimestamp updates in Firestore.
+    final rawStatus = data[FirebaseConstants.walletStatus] as String?;
+    final walletStatus = (rawStatus != null && rawStatus.isNotEmpty)
+        ? WalletStatus.fromString(rawStatus)
+        : WalletStatus.inactive;
+
+    final resolvedSettings = sl.isRegistered<PlatformSettingsProvider>()
+        ? sl<PlatformSettingsProvider>().settings
+        : const PlatformSettingsModel.defaults();
+
+    final sendLimitsMap =
+        data[FirebaseConstants.sendLimits] as Map<String, dynamic>?;
+    final sendLimits = (sendLimitsMap != null && sendLimitsMap.isNotEmpty)
+        ? WalletLimits.fromMap(sendLimitsMap)
+        : _resolveLegacySendLimits(data, resolvedSettings);
+
+    final receiveLimitsMap =
+        data[FirebaseConstants.receiveLimits] as Map<String, dynamic>?;
+    final receiveLimits =
+        (receiveLimitsMap != null && receiveLimitsMap.isNotEmpty)
+            ? WalletLimits.fromMap(receiveLimitsMap)
+            : _resolveLegacyReceiveLimits(data, resolvedSettings);
+
     return WalletModel(
-      walletId: doc.id,
-      storeId: data[FirebaseConstants.storeId] ?? '',
-      phoneNumber: data[FirebaseConstants.phoneNumber] ?? '',
-      walletType: data[FirebaseConstants.walletType] ?? '',
-      walletStatus: data[FirebaseConstants.walletStatus] ?? 'new',
-      balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
-      notes: data[FirebaseConstants.notes],
-      isActive: data[FirebaseConstants.isActive] ?? true,
-      createdAt: data[FirebaseConstants.createdAt] ?? Timestamp.now(),
-      createdBy: data[FirebaseConstants.createdBy] ?? '',
-      updatedAt: data[FirebaseConstants.updatedAt],
-      sendLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.sendLimits] ?? {}),
-      receiveLimits:
-          WalletLimits.fromMap(data[FirebaseConstants.receiveLimits] ?? {}),
-      lastDailyReset: data[FirebaseConstants.lastDailyReset] ?? Timestamp.now(),
-      lastMonthlyReset:
-          data[FirebaseConstants.lastMonthlyReset] ?? Timestamp.now(),
-      stats: WalletStats.fromMap(data[FirebaseConstants.stats] ?? {}),
+      walletId: docId,
+      storeId: data[FirebaseConstants.storeId] as String? ?? '',
+      phoneNumber: data[FirebaseConstants.phoneNumber] as String? ?? '',
+      walletType: WalletType.fromString(
+          data[FirebaseConstants.walletType] as String? ?? ''),
+      walletStatus: walletStatus,
+      balance: balance,
+      notes: data[FirebaseConstants.notes] as String?,
+      isActive: data[FirebaseConstants.isActive] as bool? ?? true,
+      isFrozen: false,
+      createdAt: createdAt,
+      createdBy: data[FirebaseConstants.createdBy] as String? ?? '',
+      updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
+      sendLimits: sendLimits,
+      receiveLimits: receiveLimits,
+      lastDailyReset: lastDailyReset,
+      lastMonthlyReset: lastMonthlyReset,
+      stats: WalletStats.fromMap(
+          data[FirebaseConstants.stats] as Map<String, dynamic>? ?? {}),
+    );
+  }
+
+  static WalletLimits _resolveLegacySendLimits(
+      Map<String, dynamic> data, PlatformSettingsModel settings) {
+    final rootDaily = data['dailyLimit'];
+    final rootMonthly = data['monthlyLimit'];
+
+    final dailyLimit = rootDaily != null
+        ? NumberParser.toDouble(rootDaily)
+        : settings.networkOldLimits.dailySend;
+    final monthlyLimit = rootMonthly != null
+        ? NumberParser.toDouble(rootMonthly)
+        : settings.networkOldLimits.monthlySend;
+
+    return WalletLimits(
+      dailyLimit: dailyLimit,
+      dailyUsed: 0.0,
+      monthlyLimit: monthlyLimit,
+      monthlyUsed: 0.0,
+    );
+  }
+
+  static WalletLimits _resolveLegacyReceiveLimits(
+      Map<String, dynamic> data, PlatformSettingsModel settings) {
+    final rootDaily = data['dailyLimit'];
+    final rootMonthly = data['monthlyLimit'];
+
+    final dailyLimit = rootDaily != null
+        ? NumberParser.toDouble(rootDaily)
+        : settings.networkOldLimits.dailyReceive;
+    final monthlyLimit = rootMonthly != null
+        ? NumberParser.toDouble(rootMonthly)
+        : settings.networkOldLimits.monthlyReceive;
+
+    return WalletLimits(
+      dailyLimit: dailyLimit,
+      dailyUsed: 0.0,
+      monthlyLimit: monthlyLimit,
+      monthlyUsed: 0.0,
     );
   }
 
@@ -181,19 +314,45 @@ class WalletModel {
     return {
       FirebaseConstants.storeId: storeId,
       FirebaseConstants.phoneNumber: phoneNumber,
-      FirebaseConstants.walletType: walletType,
-      FirebaseConstants.walletStatus: walletStatus,
+      FirebaseConstants.walletType: walletType.name,
+      FirebaseConstants.walletStatus: walletStatus.name,
       'balance': balance,
       FirebaseConstants.notes: notes,
       FirebaseConstants.isActive: isActive,
-      FirebaseConstants.createdAt: createdAt,
+      FirebaseConstants.createdAt:
+          createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       FirebaseConstants.createdBy: createdBy,
-      FirebaseConstants.updatedAt: updatedAt,
+      FirebaseConstants.updatedAt:
+          updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       FirebaseConstants.sendLimits: sendLimits.toMap(),
       FirebaseConstants.receiveLimits: receiveLimits.toMap(),
-      FirebaseConstants.lastDailyReset: lastDailyReset,
-      FirebaseConstants.lastMonthlyReset: lastMonthlyReset,
+      FirebaseConstants.lastDailyReset:
+          lastDailyReset != null ? Timestamp.fromDate(lastDailyReset!) : null,
+      FirebaseConstants.lastMonthlyReset: lastMonthlyReset != null
+          ? Timestamp.fromDate(lastMonthlyReset!)
+          : null,
       FirebaseConstants.stats: stats.toMap(),
+    };
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'walletId': walletId,
+      'storeId': storeId,
+      'phoneNumber': phoneNumber,
+      'walletType': walletType.name,
+      'walletStatus': walletStatus.name,
+      'balance': balance,
+      'notes': notes,
+      'isActive': isActive,
+      'createdAt': createdAt?.toIso8601String(),
+      'createdBy': createdBy,
+      'updatedAt': updatedAt?.toIso8601String(),
+      'sendLimits': sendLimits.toMap(),
+      'receiveLimits': receiveLimits.toMap(),
+      'lastDailyReset': lastDailyReset?.toIso8601String(),
+      'lastMonthlyReset': lastMonthlyReset?.toIso8601String(),
+      'stats': stats.toMap(),
     };
   }
 
@@ -201,18 +360,19 @@ class WalletModel {
     String? walletId,
     String? storeId,
     String? phoneNumber,
-    String? walletType,
-    String? walletStatus,
+    WalletType? walletType,
+    WalletStatus? walletStatus,
     double? balance,
     String? notes,
     bool? isActive,
-    Timestamp? createdAt,
+    bool? isFrozen,
+    DateTime? createdAt,
     String? createdBy,
-    Timestamp? updatedAt,
+    DateTime? updatedAt,
     WalletLimits? sendLimits,
     WalletLimits? receiveLimits,
-    Timestamp? lastDailyReset,
-    Timestamp? lastMonthlyReset,
+    DateTime? lastDailyReset,
+    DateTime? lastMonthlyReset,
     WalletStats? stats,
   }) {
     return WalletModel(
@@ -224,6 +384,7 @@ class WalletModel {
       balance: balance ?? this.balance,
       notes: notes ?? this.notes,
       isActive: isActive ?? this.isActive,
+      isFrozen: isFrozen ?? this.isFrozen,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -244,55 +405,74 @@ class WalletModel {
     required double balance,
     required String createdBy,
     String? notes,
+    PlatformSettingsModel? settings,
   }) {
-    final now = Timestamp.now();
-    final isNew = walletStatus == 'new';
-    final isInstapay = walletType == 'instapay';
+    final now = DateTime.now();
+    final typeEnum = WalletType.fromString(walletType);
+    final statusEnum = WalletStatus.fromString(walletStatus);
 
-    final double dailyLimit = isInstapay
-        ? AppConstants.instapayTransactionLimit
-        : (isNew
-            ? AppConstants.newWalletTransactionLimit
-            : (walletStatus == 'registered_store'
-                ? AppConstants.registeredStoreTransactionLimit
-                : AppConstants.oldWalletTransactionLimit));
+    final resolvedSettings = settings ??
+        (sl.isRegistered<PlatformSettingsProvider>()
+            ? sl<PlatformSettingsProvider>().settings
+            : const PlatformSettingsModel.defaults());
 
-    final double monthlyLimit = isInstapay
-        ? AppConstants.instapayMonthlyLimit
-        : (isNew
-            ? AppConstants.newWalletMonthlyLimit
-            : (walletStatus == 'registered_store'
-                ? AppConstants.registeredStoreMonthlyLimit
-                : AppConstants.oldWalletMonthlyLimit));
+    final NetworkLimits networkLimits;
+    if (typeEnum == WalletType.instaPay) {
+      networkLimits = resolvedSettings.instapayLimits;
+    } else if (statusEnum == WalletStatus.suspended ||
+        walletStatus == 'registered_store') {
+      networkLimits = resolvedSettings.networkCommercialLimits;
+    } else if (statusEnum == WalletStatus.active || walletStatus == 'new') {
+      networkLimits = resolvedSettings.networkNewLimits;
+    } else {
+      networkLimits = resolvedSettings.networkOldLimits;
+    }
 
     return WalletModel(
       walletId: walletId,
       storeId: storeId,
       phoneNumber: phoneNumber,
-      walletType: walletType,
-      walletStatus: walletStatus,
+      walletType: typeEnum,
+      walletStatus: statusEnum,
       balance: balance,
       notes: notes,
       isActive: true,
+      isFrozen: false,
       createdAt: now,
       createdBy: createdBy,
       lastDailyReset: now,
       lastMonthlyReset: now,
       sendLimits: WalletLimits(
-        dailyLimit: dailyLimit,
-        monthlyLimit: monthlyLimit,
+        dailyLimit: networkLimits.dailySend,
+        monthlyLimit: networkLimits.monthlySend,
       ),
       receiveLimits: WalletLimits(
-        dailyLimit: dailyLimit,
-        monthlyLimit: monthlyLimit,
+        dailyLimit: networkLimits.dailyReceive,
+        monthlyLimit: networkLimits.monthlyReceive,
       ),
       stats: WalletStats(),
     );
   }
 
+  NetworkLimits getDynamicNetworkLimits(PlatformSettingsModel settings) {
+    final isInstapay = walletType == WalletType.instaPay;
+    if (isInstapay) return settings.instapayLimits;
+
+    if (walletStatus == WalletStatus.suspended) {
+      return settings.networkCommercialLimits;
+    }
+
+    if (walletStatus == WalletStatus.active) {
+      return settings.networkNewLimits;
+    } else {
+      return settings.networkOldLimits;
+    }
+  }
+
   bool get needsDailyReset {
     final now = DateTime.now();
-    final lastReset = lastDailyReset.toDate();
+    final lastReset = lastDailyReset;
+    if (lastReset == null) return true;
     return now.day != lastReset.day ||
         now.month != lastReset.month ||
         now.year != lastReset.year;
@@ -300,114 +480,33 @@ class WalletModel {
 
   bool get needsMonthlyReset {
     final now = DateTime.now();
-    final lastReset = lastMonthlyReset.toDate();
+    final lastReset = lastMonthlyReset;
+    if (lastReset == null) return true;
     return now.month != lastReset.month || now.year != lastReset.year;
   }
 
-  String get walletTypeDisplayName {
-    switch (walletType) {
-      case 'vodafone_cash':
-        return 'فودافون كاش';
-      case 'instapay':
-        return 'إنستاباي';
-      default:
-        return walletType;
-    }
-  }
-
-  String get walletStatusDisplayName {
-    switch (walletStatus) {
-      case 'new':
-        return 'جديدة';
-      case 'old':
-        return 'قديمة';
-      case 'registered_store':
-        return 'محل مسجل';
-      default:
-        return walletStatus;
-    }
-  }
-
-  IconData get walletTypeIcon {
-    switch (walletType) {
-      case 'vodafone_cash':
-        return FontAwesomeIcons.mobileScreenButton;
-      case 'instapay':
-        return FontAwesomeIcons.buildingColumns;
-      default:
-        return FontAwesomeIcons.wallet;
-    }
-  }
-
-  double get availableToReceiveMonthly {
-    // 1. Standard flow limit (Limit - Used this month)
-    double flowRemaining =
-        receiveLimits.monthlyLimit - receiveLimits.monthlyUsed;
-    if (flowRemaining < 0) flowRemaining = 0;
-
-    // 2. Capacity limit (Limit - Current Balance)
-    // Apply only to e-wallets, NOT instapay
-    if (walletType != 'instapay') {
-      double capacityRemaining = receiveLimits.monthlyLimit - balance;
-      if (capacityRemaining < 0) capacityRemaining = 0;
-
-      // Return the stricter (smaller) limit
-      return min(flowRemaining, capacityRemaining);
-    }
-
-    // If InstaPay, just return flow limit
-    return flowRemaining;
-  }
-
-  double get availableToReceiveDaily {
-    double flowRemaining = receiveLimits.dailyLimit - receiveLimits.dailyUsed;
-    if (flowRemaining < 0) flowRemaining = 0;
-
-    if (walletType != 'instapay') {
-      // Capacity is always bound by the MONTHLY limit, not daily
-      double capacityRemaining = receiveLimits.monthlyLimit - balance;
-      if (capacityRemaining < 0) capacityRemaining = 0;
-
-      return min(flowRemaining, capacityRemaining);
-    }
-    return flowRemaining;
-  }
-
-  bool canSendAmount(double amount) {
-    // New Logic: Check Transaction Cap and Monthly Cap.
-    // Daily Limit in the model now represents Transaction Limit.
+  bool canSendAmount(double amount, {double totalFees = 0.0}) {
+    final totalDeduction = amount + totalFees;
     final limits = getLimits();
-    return amount <= limits.dailyLimit &&
+    return balance >= totalDeduction &&
+        totalDeduction <= limits.dailyRemaining &&
         !limits.isMonthlyLimitReached &&
-        (limits.monthlyRemaining >= amount);
+        (limits.monthlyRemaining >= totalDeduction);
   }
 
   bool canReceiveAmount(double amount) {
-    // New Logic: Check Transaction Cap and Monthly Cap.
-    // Daily Limit in the model now represents Transaction Limit.
     final limits = getReceiveLimits();
 
-    return amount <= limits.dailyLimit &&
+    return amount <= limits.dailyRemaining &&
         !limits.isMonthlyLimitReached &&
         (limits.monthlyRemaining >= amount);
   }
 
-  // Helper to get limits easily as requested
   WalletLimits getLimits() {
-    if (walletStatus == 'registered_store') {
-      return sendLimits.copyWith(
-        dailyLimit: AppConstants.registeredStoreTransactionLimit,
-      );
-    }
     return sendLimits;
   }
 
   WalletLimits getReceiveLimits() {
-    if (walletStatus == 'registered_store') {
-      return receiveLimits.copyWith(
-        dailyLimit: AppConstants.registeredStoreTransactionLimit,
-      );
-    }
     return receiveLimits;
   }
 
@@ -425,6 +524,21 @@ class WalletModel {
     return 'green';
   }
 
+  bool get isInstaPay => walletType == WalletType.instaPay;
+
+  double get availableToReceiveDaily => receiveLimits.dailyRemaining;
+
+  double get availableToReceiveMonthly {
+    if (isInstaPay) {
+      return receiveLimits.monthlyRemaining;
+    }
+    final capacityRemaining = receiveLimits.monthlyLimit - balance;
+    final safeCapacity = capacityRemaining < 0 ? 0.0 : capacityRemaining;
+    return receiveLimits.monthlyRemaining < safeCapacity
+        ? receiveLimits.monthlyRemaining
+        : safeCapacity;
+  }
+
   @override
   String toString() {
     return 'WalletModel(walletId: $walletId, phoneNumber: $phoneNumber, walletType: $walletType, walletStatus: $walletStatus)';
@@ -434,9 +548,31 @@ class WalletModel {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is WalletModel && other.walletId == walletId;
+    return other is WalletModel &&
+        other.walletId == walletId &&
+        other.storeId == storeId &&
+        other.phoneNumber == phoneNumber &&
+        other.walletType == walletType &&
+        other.walletStatus == walletStatus &&
+        other.balance == balance &&
+        other.isActive == isActive &&
+        other.isFrozen == isFrozen &&
+        other.sendLimits == sendLimits &&
+        other.receiveLimits == receiveLimits &&
+        other.stats == stats;
   }
 
   @override
-  int get hashCode => walletId.hashCode;
+  int get hashCode =>
+      walletId.hashCode ^
+      storeId.hashCode ^
+      phoneNumber.hashCode ^
+      walletType.hashCode ^
+      walletStatus.hashCode ^
+      balance.hashCode ^
+      isActive.hashCode ^
+      isFrozen.hashCode ^
+      sendLimits.hashCode ^
+      receiveLimits.hashCode ^
+      stats.hashCode;
 }

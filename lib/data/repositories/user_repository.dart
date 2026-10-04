@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../../core/utils/password_hasher.dart';
 import '../models/user_model.dart';
@@ -26,13 +28,21 @@ class UserRepository {
   // ===========================
 
   /// Creates a new user document in Firestore.
-  Future<void> createUser(UserModel user) async {
+  Future<void> createUser(UserModel user, {WriteBatch? batch}) async {
     try {
-      await _usersCollection.doc(user.userId).set(user.toFirestore());
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المستخدم: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء إنشاء المستخدم.');
+      if (batch != null) {
+        batch.set(_usersCollection.doc(user.userId), user.toFirestore());
+      } else {
+        await _usersCollection.doc(user.userId).set(user.toFirestore());
+      }
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createUser',
+          stackTrace: stack);
+      throw ServerException('user_error_create_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.createUser',
+          stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -41,18 +51,59 @@ class UserRepository {
   // ===========================
 
   /// Fetches a single user by their document ID.
-  Future<UserModel?> getUserById(String userId) async {
+  Future<UserModel?> getUserById(String userId,
+      {String? expectedStoreId}) async {
     try {
-      final doc = await _usersCollection.doc(userId).get();
-      if (doc.exists) {
-        return UserModel.fromFirestore(doc);
+      final doc = await _usersCollection
+          .doc(userId)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 10));
+      if (!doc.exists) return null;
+
+      final user = UserModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && user.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
       }
-      return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المستخدم: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+
+      return user;
+    } on TimeoutException catch (e, stack) {
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
+          stackTrace: stack);
+      throw ServerException('error_network_timeout');
+    } on FirebaseException catch (e, stack) {
+      if (e.code == 'permission-denied') {
+        try {
+          final querySnapshot = await _usersCollection
+              .where(FirebaseConstants.firebaseUidField, isEqualTo: userId)
+              .limit(1)
+              .get();
+
+          if (querySnapshot.docs.isNotEmpty) {
+            final user = UserModel.fromFirestore(querySnapshot.docs.first);
+            if (expectedStoreId != null && user.storeId != expectedStoreId) {
+              throw PermissionDeniedException();
+            }
+            return user;
+          }
+          return null;
+        } on FirebaseException catch (fallbackErr, fallbackStack) {
+          AppErrorHandler.logSilentError(
+              fallbackErr.toString(), 'UserRepository.getUserById.fallback',
+              stackTrace: fallbackStack);
+          throw ServerException('user_error_fetch_failed',
+              code: fallbackErr.code);
+        }
+      }
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
+          stackTrace: stack);
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      if (e is AppException) rethrow;
+      AppErrorHandler.logSilentError(e.toString(), 'UserRepository.getUserById',
+          stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -68,11 +119,12 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في البحث عن المستخدم: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -90,35 +142,43 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to find user by email: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while finding user by email.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.getUserByEmailAndStoreId',
+          stackTrace: stack);
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.getUserByEmailAndStoreId',
+          stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
   /// Fetches all active users for a given store ID.
-  Future<List<UserModel>> getUsersByStoreId(String storeId) async {
+  Future<List<UserModel>> getUsersByStoreId(String storeId,
+      {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
           .where(FirebaseConstants.isActive, isEqualTo: true)
+          .limit(limit)
           .get();
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب المستخدمين: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
   /// Fetches all active employees for a given store ID, ordered by name.
-  Future<List<UserModel>> getEmployeesByStoreId(String storeId) async {
+  Future<List<UserModel>> getEmployeesByStoreId(String storeId,
+      {int limit = 20}) async {
     try {
       final querySnapshot = await _usersCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -126,14 +186,17 @@ class UserRepository {
               isEqualTo: FirebaseConstants.employeeRole)
           .where(FirebaseConstants.isActive, isEqualTo: true)
           .orderBy(FirebaseConstants.fullName)
+          .limit(limit)
           .get();
       return querySnapshot.docs
           .map((doc) => UserModel.fromFirestore(doc))
           .toList();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب الموظفين: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -149,11 +212,12 @@ class UserRepository {
         return UserModel.fromFirestore(querySnapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل في جلب بيانات المالك: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -162,7 +226,9 @@ class UserRepository {
     try {
       final doc = await _usersCollection.doc(userId).get();
       return doc.exists;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'UserRepository.userExists');
       return false;
     }
   }
@@ -172,7 +238,10 @@ class UserRepository {
     try {
       final user = await getUserByFirebaseUid(firebaseUid);
       return user != null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'UserRepository.userExistsByFirebaseUid');
       return false;
     }
   }
@@ -186,28 +255,30 @@ class UserRepository {
     try {
       final updateData = {
         ...data,
-        FirebaseConstants.updatedAt: Timestamp.now()
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp()
       };
       await _usersCollection.doc(userId).update(updateData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث بيانات المستخدم: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء التحديث.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
   /// Updates the last login timestamp for a user.
   Future<void> updateLastLogin(String userId) async {
     try {
-      await _usersCollection
-          .doc(userId)
-          .update({FirebaseConstants.lastLogin: Timestamp.now()});
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث وقت تسجيل الدخول: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+      await _firestore.collection('users').doc(userId).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+      });
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+        e.toString(),
+        'UserRepository.updateLastLogin',
+        stackTrace: stack,
+      );
     }
   }
 
@@ -242,7 +313,7 @@ class UserRepository {
     try {
       final user = await getUserById(userId);
       if (user == null) {
-        throw NotFoundException('المستخدم');
+        throw NotFoundException('user');
       }
       if (!user.isEmployee) {
         throw PermissionDeniedException();
@@ -250,15 +321,17 @@ class UserRepository {
       if (user.pin == null) {
         return false; // No PIN set
       }
-      return PasswordHasher.verifyPassword(pin, user.pin!);
-    } catch (e) {
+      return await PasswordHasher.verifyPassword(pin, user.pin!);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'UserRepository.verifyEmployeePin');
       rethrow;
     }
   }
 
   /// Updates an employee's PIN.
   Future<void> updateEmployeePin(String userId, String newPin) async {
-    final hashedPassword = PasswordHasher.hashPassword(newPin);
+    final hashedPassword = PasswordHasher.hashPasswordBcrypt(newPin);
     await updateUser(userId, {FirebaseConstants.pin: hashedPassword});
   }
 
@@ -271,7 +344,7 @@ class UserRepository {
       String userId, UserPermissions permissions) async {
     final user = await getUserById(userId);
     if (user == null || !user.isEmployee) {
-      throw NotFoundException('الموظف');
+      throw NotFoundException('employee');
     }
     await updateUser(
         userId, {FirebaseConstants.permissions: permissions.toMap()});
@@ -304,14 +377,9 @@ class UserRepository {
     int? incrementDebts,
   }) async {
     try {
-      final user = await getUserById(userId);
-      if (user == null || !user.isEmployee) {
-        throw NotFoundException('الموظف');
-      }
-
       final statsData = <String, dynamic>{
         '${FirebaseConstants.stats}.${FirebaseConstants.lastTransactionDate}':
-            Timestamp.now(),
+            FieldValue.serverTimestamp(),
       };
       if (incrementTransactions != null) {
         statsData[
@@ -330,11 +398,12 @@ class UserRepository {
       }
 
       await _usersCollection.doc(userId).update(statsData);
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل تحديث إحصائيات الموظف: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e, stackTrace: stack, operation: 'UserRepository');
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -348,13 +417,27 @@ class UserRepository {
   }
 
   /// Permanently deletes a user document from Firestore.
-  Future<void> hardDeleteUser(String userId) async {
+  Future<void> hardDeleteUser(String userId,
+      {required String callerUserId}) async {
     try {
+      // Security Guard (Report 2: M-9)
+      final caller = await getUserById(callerUserId);
+      if (caller == null || !caller.isOwner) {
+        throw PermissionDeniedException();
+      }
+
       await _usersCollection.doc(userId).delete();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل حذف المستخدم: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع أثناء الحذف.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.hardDeleteUser',
+          stackTrace: stack);
+      throw ServerException('user_error_delete_failed', code: e.code);
+    } catch (e, stack) {
+      if (e is AppException) rethrow;
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.hardDeleteUser',
+          stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 
@@ -369,7 +452,10 @@ class UserRepository {
         return UserModel.fromFirestore(snapshot);
       }
       return null;
-    }).handleError((error) {});
+    }).handleError((error) {
+      AppErrorHandler.handle(error, operation: 'UserRepository.watchUser');
+      throw error;
+    });
   }
 
   /// Provides a real-time stream of active employees for a store.
@@ -380,11 +466,13 @@ class UserRepository {
             isEqualTo: FirebaseConstants.employeeRole)
         .where(FirebaseConstants.isActive, isEqualTo: true)
         .orderBy(FirebaseConstants.fullName)
+        .limit(100)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList())
         .handleError((error) {
-      return <UserModel>[];
+      AppErrorHandler.handle(error, operation: 'UserRepository.watchEmployees');
+      throw error;
     });
   }
 
@@ -401,11 +489,16 @@ class UserRepository {
         batch.set(docRef, user.toFirestore());
       }
       await batch.commit();
-    } on FirebaseException catch (e) {
-      throw ServerException('فشل إنشاء المستخدمين دفعة واحدة: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException('حدث خطأ غير متوقع.');
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.createMultipleUsers',
+          stackTrace: stack);
+      throw ServerException('user_error_create_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'UserRepository.createMultipleUsers',
+          stackTrace: stack);
+      throw ServerException('user_error_unexpected');
     }
   }
 }

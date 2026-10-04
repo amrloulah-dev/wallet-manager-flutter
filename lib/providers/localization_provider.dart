@@ -1,31 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:walletmanager/core/utils/number_formatter.dart';
+import 'package:walletmanager/core/utils/currency_formatter.dart';
+import 'package:walletmanager/core/utils/date_helper.dart';
+import 'package:walletmanager/data/services/local_storage_service.dart';
+import 'base_provider.dart';
 
-class LocalizationProvider extends ChangeNotifier {
+class LocalizationProvider extends BaseProvider {
+  final LocalStorageService _localStorage;
   Locale _locale = const Locale('ar');
-  static const String _localeKey = 'app_locale';
 
   Locale get locale => _locale;
 
-  LocalizationProvider() {
-    _loadLocale();
+  LocalizationProvider({LocalStorageService? localStorage})
+      : _localStorage = localStorage ?? LocalStorageService.instance {
+    // Configure formatters with the default locale immediately
+    _configureFormatters(_locale.languageCode);
+    Future.microtask(() => _loadLocale());
   }
 
   Future<void> _loadLocale() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLocale = prefs.getString(_localeKey);
+    final savedLocale = _localStorage.savedLocale;
     if (savedLocale != null) {
       _locale = Locale(savedLocale);
-      notifyListeners();
+      _configureFormatters(savedLocale);
+      safeNotify();
     }
   }
 
   Future<void> setLocale(Locale locale) async {
     if (_locale == locale) return;
     _locale = locale;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_localeKey, locale.languageCode);
-    notifyListeners();
+    _configureFormatters(locale.languageCode);
+    await _localStorage.saveLocale(locale.languageCode);
+    safeNotify();
+  }
+
+  /// Configures all static formatters to use the given language code.
+  /// Maps the language code to the appropriate ICU locale identifier.
+  static void _configureFormatters(String languageCode) {
+    final icuLocale = languageCode == 'ar' ? 'ar_EG' : 'en_US';
+
+    NumberFormatter.setLocale(icuLocale);
+    CurrencyFormatter.setLocale(icuLocale);
+    DateHelper.setLocale(icuLocale);
   }
 
   bool get isArabic => _locale.languageCode == 'ar';

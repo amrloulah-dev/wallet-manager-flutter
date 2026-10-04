@@ -1,18 +1,26 @@
-import 'package:firebase_performance/firebase_performance.dart';
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/providers/app_events.dart';
+import 'package:flutter/foundation.dart';
+
+import '../core/utils/number_parser.dart';
 import '../data/repositories/debt_repository.dart';
 import '../data/models/debt_model.dart';
 import '../core/errors/app_exceptions.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
 import '../data/models/user_model.dart';
-import '../data/models/user_permissions.dart'; // Added import
-import '../providers/auth_provider.dart'; // Added import for AuthProvider
+import '../data/models/user_permissions.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import '../providers/auth_provider.dart';
 import '../core/services/analytics_service.dart';
+import 'base_provider.dart';
+import '../core/enums/debt_enums.dart';
+import 'package:uuid/uuid.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
+import 'package:walletmanager/data/models/stats_summary_model.dart';
+import 'package:walletmanager/data/models/daily_stats_model.dart';
 
-enum DebtStatus {
+enum DebtProviderStatus {
   idle,
   loading,
   loadingMore,
@@ -22,240 +30,289 @@ enum DebtStatus {
   error
 }
 
-class DebtProvider extends ChangeNotifier {
+class DebtProvider extends BaseProvider {
   final DebtRepository _debtRepository;
+  AuthProvider _authProvider;
 
+  // State
   String? _currentStoreId;
-  final AuthProvider _authProvider; // Made final and non-nullable
   List<DebtModel> _debts = [];
-  Map<String, dynamic> _summary = {};
-  DocumentSnapshot? _lastDocument;
+  Map<String, DebtModel> _debtMap = {};
+  final Set<String> _pendingDebtIds = {};
+
   bool _hasMore = true;
+  DocumentSnapshot? _lastDocument;
+
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
 
   // Status
-  DebtStatus _status = DebtStatus.idle;
+  DebtProviderStatus _status = DebtProviderStatus.idle;
   String? _errorMessage;
 
   // Filter
   String _currentFilter = 'all'; // 'all' | 'open' | 'paid'
-  String _currentDebtType = 'transaction'; // 'transaction' | 'store_sale'
-
-  // Cache
-  List<DebtModel>? _cachedDebts;
-  DateTime? _cacheTimestamp;
-
-  StreamSubscription? _dataChangedSubscription;
-  bool _isDisposed = false;
+  DebtType _currentDebtType = DebtType.transaction; // ENUM refactor
 
   // Constructor
   DebtProvider({
-    required AuthProvider authProvider, // Required authProvider
+    required AuthProvider authProvider,
     DebtRepository? debtRepository,
     String? storeId,
   })  : _authProvider = authProvider,
-        _debtRepository = debtRepository ?? DebtRepository(),
-        _currentStoreId = storeId {
-    _dataChangedSubscription = appEvents.onDebtsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
-        fetchInitialDebts(forceRefresh: true);
-      }
+        _debtRepository = debtRepository ?? sl<DebtRepository>(),
+        _currentStoreId = storeId;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
     });
   }
 
-  @override
-  void dispose() {
-    _isDisposed = true;
-    _dataChangedSubscription?.cancel();
-    super.dispose();
+  @visibleForTesting
+  void activateFetchShieldExternal() {
+    _activateFetchShield();
   }
 
   // Getters
   List<DebtModel> get debts => _debts;
-  Map<String, dynamic> get summary => _summary;
-  DebtStatus get status => _status;
+  Map<String, DebtModel> get debtMap => _debtMap;
+  Map<String, dynamic> get summary {
+    final openDebts =
+        _debts.where((d) => d.debtStatus == DebtStatus.open).toList();
+    final paidDebts =
+        _debts.where((d) => d.debtStatus == DebtStatus.paid).toList();
+    final double openTotal = openDebts.fold(0.0, (acc, d) => acc + d.amountDue);
+    final double paidTotal =
+        paidDebts.fold(0.0, (acc, d) => acc + d.totalAmount);
+
+    return {
+      'openDebtsCount': openDebts.length,
+      'paidDebtsCount': paidDebts.length,
+      'totalDebtsCount': _debts.length,
+      'totalOpenAmount': openTotal,
+      'totalPaidAmount': paidTotal,
+    };
+  }
+
+  DebtProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String get currentFilter => _currentFilter;
-  String get currentDebtType => _currentDebtType;
-  String? get currentStoreId => _currentStoreId;
+  DebtType get currentDebtType => _currentDebtType;
   bool get hasMore => _hasMore;
+  bool get isLoading => _status == DebtProviderStatus.loading;
+  bool get isLoadingMore => _status == DebtProviderStatus.loadingMore;
+  bool get isCreating => _status == DebtProviderStatus.creating;
+  bool get isUpdating => _status == DebtProviderStatus.updating;
 
-  // Helper getters
-  bool get isLoading => _status == DebtStatus.loading;
-  bool get isLoadingMore => _status == DebtStatus.loadingMore;
-  bool get isCreating => _status == DebtStatus.creating;
-  bool get isUpdating => _status == DebtStatus.updating;
-  bool get hasError => _status == DebtStatus.error;
-
-  // Methods
-
-  void updateAuthState(AuthProvider auth) {
-    // _authProvider is final, we don't reassign it.
-    // Use the auth instance passed (should be same as constructor).
-    _currentStoreId = auth.currentStoreId;
-
-    // Logic to refetch if store changed is already in setStoreId,
-    // but better to consolidate or just keep setStoreId logic here.
-    // For minimal disruption, I will just set _currentUser here.
-    // The previously existing setStoreId might be called from outside/UI?
-    // If we use ProxyProvider, updateAuthState is better.
-    // Let's assume ProxyProvider is used or will be used.
-
-    // NOTE: setStoreId logic also resets cache.
-    // If I replace setStoreId logic or just support both?
-    // The previous code had setStoreId. I will keep it but updateAuthState is helper.
+  void _rebuildDebtMap() {
+    _debtMap = {for (var debt in _debts) debt.debtId: debt};
   }
 
-  // Robust permission check that ensures user is loaded
-  // Robust permission check that ensures user is loaded
-  Future<UserModel> _validateUserAndPermission(
-      bool Function(UserPermissions) selector) async {
-    // 1. Attempt to load user with retry
-    final user = await _authProvider.ensureUserLoaded();
-
-    // 2. Verify User
-    if (user == null) {
-      throw AuthException(
-          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
+  void _updateStatus(DebtProviderStatus status) {
+    if (isDisposed) return;
+    _status = status;
+    // Reset error when starting a new operation
+    if (status == DebtProviderStatus.loading ||
+        status == DebtProviderStatus.creating ||
+        status == DebtProviderStatus.updating) {
+      _errorMessage = null;
     }
-
-    // 3. Permission Guard
-    if (user.isOwner) return user;
-
-    if (!user.hasPermission(selector)) {
-      throw PermissionException();
-    }
-
-    return user;
+    safeNotify();
   }
 
-  void setStoreId(String storeId) {
+  @override
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'debt_operation']) {
+    if (isDisposed) return;
+    _errorMessage = errorCode;
+    _status = DebtProviderStatus.error;
+
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+
+    safeNotify();
+  }
+
+  @override
+  void dispose() {
+    _fetchShieldTimer?.cancel();
+    super.dispose();
+  }
+
+  void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _cachedDebts = null;
-      _cacheTimestamp = null;
+      if (storeId != null && storeId.isNotEmpty) {
+        fetchInitialDebts();
+      } else {
+        _debts = [];
+        _debtMap = {};
+        _status = DebtProviderStatus.idle;
+        safeNotify();
+      }
+    }
+  }
+
+  void updateAuthState(AuthProvider auth) {
+    _authProvider = auth;
+    setStoreId(auth.currentStoreId);
+  }
+
+  void setDebtType(DebtType type) {
+    if (_currentDebtType != type) {
+      _currentDebtType = type;
+      _debts = [];
+      _lastDocument = null;
+      _hasMore = true;
       fetchInitialDebts();
     }
   }
 
-  void setDebtType(String type) {
-    if (_currentDebtType != type) {
-      _currentDebtType = type;
-      _cachedDebts = null;
-      _cacheTimestamp = null;
-      // Reset filter if needed or keep it. Keeping it is fine.
-      fetchInitialDebts(forceRefresh: true);
+  void setFilter(String filter) {
+    if (_currentFilter != filter) {
+      _currentFilter = filter;
+      _debts = [];
+      _lastDocument = null;
+      _hasMore = true;
+      fetchInitialDebts();
     }
   }
 
   Future<void> fetchInitialDebts({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
+    if (!forceRefresh && _fetchShieldActive) return;
 
-    final now = DateTime.now();
-    if (!forceRefresh &&
-        _cachedDebts != null &&
-        _cacheTimestamp != null &&
-        now.difference(_cacheTimestamp!).inMinutes < 2) {
-      _debts = _cachedDebts!;
-      if (status != DebtStatus.loaded) {
-        _setStatus(DebtStatus.loaded);
-      }
-      return;
-    }
-
-    final trace = FirebasePerformance.instance.newTrace('fetch_initial_debts');
-    await trace.start();
-
-    _setStatus(DebtStatus.loading);
-    _lastDocument = null;
-    _hasMore = true;
+    _updateStatus(DebtProviderStatus.loading);
+    _errorMessage = null;
+    safeNotify();
 
     try {
-      final result = await _debtRepository.getDebtsByStoreIdPaginated(
+      final result = await _debtRepository.getDebtsByDateRange(
         _currentStoreId!,
-        status: _currentFilter == 'all' ? null : _currentFilter,
-        type: _currentDebtType,
-        limit: 20,
+        DateTime(2020),
+        DateTime(2100),
+        lastDocument: null,
+        debtType: _currentDebtType.name,
+        debtStatus: _currentFilter == 'all' ? null : _currentFilter,
       );
 
-      _debts = result['debts'];
-      _lastDocument = result['lastDoc'];
-      _hasMore = _debts.length == 20;
-      _cachedDebts = _debts;
-      _cacheTimestamp = now;
+      // Smart Merge: match incoming documents by UUID, preserving locally pending modifications/items
+      final Map<String, DebtModel> merged = {};
+      final incomingIds = result.items.map((d) => d.debtId).toSet();
+      for (final d in result.items) {
+        merged[d.debtId] = d;
+      }
+      for (final d in _debts) {
+        if (_pendingDebtIds.contains(d.debtId)) {
+          merged[d.debtId] = d;
+        }
+      }
 
-      await _fetchSummary();
-      _setStatus(DebtStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching debts.');
+      final List<DebtModel> mergedList = [];
+      for (final d in result.items) {
+        if (_pendingDebtIds.contains(d.debtId)) {
+          mergedList.add(merged[d.debtId]!);
+        } else {
+          mergedList.add(d);
+        }
+      }
+      for (final d in _debts) {
+        if (_pendingDebtIds.contains(d.debtId) &&
+            !incomingIds.contains(d.debtId)) {
+          // Prepend newly created pending items
+          mergedList.insert(0, d);
+        }
+      }
+
+      _debts = mergedList;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+
+      _rebuildDebtMap();
+      _updateStatus(DebtProviderStatus.loaded);
+    } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🤫 [SILENT ERROR] DebtProvider: permission-denied (likely native sign-out)');
+        }
+        return;
+      }
+      setError('debt_error_fetch_failed', e, stack);
     } finally {
-      await trace.stop();
+      safeNotify();
     }
   }
 
   Future<void> fetchMoreDebts() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
     }
 
-    _setStatus(DebtStatus.loadingMore);
+    _updateStatus(DebtProviderStatus.loadingMore);
+    safeNotify();
 
     try {
-      final result = await _debtRepository.getDebtsByStoreIdPaginated(
+      final result = await _debtRepository.getDebtsByDateRange(
         _currentStoreId!,
-        status: _currentFilter == 'all' ? null : _currentFilter,
-        type: _currentDebtType,
-        limit: 20,
-        lastDoc: _lastDocument,
+        DateTime(2020),
+        DateTime(2100),
+        lastDocument: _lastDocument,
+        debtType: _currentDebtType.name,
+        debtStatus: _currentFilter == 'all' ? null : _currentFilter,
       );
 
-      final newDebts = result['debts'];
-      _debts.addAll(newDebts);
-      _lastDocument = result['lastDoc'];
-      _hasMore = newDebts.length == 20;
+      if (result.items.isEmpty) {
+        _hasMore = false;
+      } else {
+        _debts.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
+      }
 
-      _setStatus(DebtStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching more debts.');
+      _rebuildDebtMap();
+      _updateStatus(DebtProviderStatus.loaded);
+    } catch (e, stack) {
+      setError('debt_error_fetch_more_failed', e, stack);
+    } finally {
+      safeNotify();
     }
   }
-
-  Future<void> _fetchSummary() async {
-    if (_currentStoreId == null) return;
-    try {
-      final stats = await _debtRepository.fetchDebtStatistics(
-        storeId: _currentStoreId!,
-        type: _currentDebtType,
-      );
-
-      _summary = {
-        'openDebtsCount': stats['openCount'],
-        'paidDebtsCount': stats['paidCount'],
-        'totalDebtsCount':
-            (stats['openCount'] as int) + (stats['paidCount'] as int),
-        'totalOpenAmount': stats['openTotal'],
-        'totalPaidAmount': stats['paidTotal'],
-      };
-    } catch (e) {
-      _summary = {};
-    }
-  }
-
-  // Helper to check permission - Deprecated but kept
-  // void _checkPermission(bool Function(UserPermissions) selector) { ... }
 
   Future<bool> createDebt({
     required String customerName,
     required String customerPhone,
-    required String debtType,
+    required DebtType debtType, // ENUM refactor
     required double amountDue,
     String? notes,
     required String createdBy,
   }) async {
-    _setStatus(DebtStatus.creating);
+    _status = DebtProviderStatus.creating;
+    _errorMessage = null;
+    safeNotify();
+
+    List<DebtModel>? oldDebts;
+    Map<String, DebtModel>? oldDebtMap;
+    StatsSummaryModel? oldStatsSummary;
+    DailyStatsModel? oldStatsToday;
+    StatisticsProvider? statsProvider;
+    String? pendingDebtId;
+
     try {
       final user = await _validateUserAndPermission((p) => p.createDebt);
 
@@ -264,29 +321,68 @@ class DebtProvider extends ChangeNotifier {
       }
       if (amountDue <= 0) throw ValidationException('Amount must be positive.');
 
-      // This logic for updating an existing debt is complex and should ideally be a transaction.
-      // For now, we adapt it to use the new transactional create method.
       final existingDebtByPhone = await _debtRepository.getDebtByCustomerPhone(
           _currentStoreId!, customerPhone);
       if (existingDebtByPhone != null) {
-        // --- CORRECTED: Use the new transactional method ---
         return await addPartialDebt(
             existingDebtByPhone.debtId, amountDue, user.userId);
       } else {
+        // Capture snapshot
+        oldDebts = _debts.toList();
+        oldDebtMap = Map<String, DebtModel>.from(_debtMap);
+
+        try {
+          statsProvider = sl<StatisticsProvider>();
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint(
+                'STATS_PROVIDER_RESOLVE_ERROR: $e | typeHash=${(StatisticsProvider).hashCode}');
+          }
+          statsProvider = null;
+        }
+        if (statsProvider != null) {
+          oldStatsSummary = statsProvider.dashboardSummary;
+          oldStatsToday = statsProvider.todayStats;
+        }
+
+        final newDebtId = const Uuid().v4();
+        pendingDebtId = newDebtId;
+        _pendingDebtIds.add(pendingDebtId);
+
         final newDebt = DebtModel(
-          debtId: FirebaseFirestore.instance.collection('debts').doc().id,
+          debtId: newDebtId,
           storeId: _currentStoreId!,
           customerName: customerName,
           customerPhone: customerPhone,
           debtType: debtType,
           amountDue: amountDue,
-          totalAmount: amountDue, // Set totalAmount explicitly
+          totalAmount: amountDue,
           notes: notes,
-          debtDate: Timestamp.now(),
-          createdAt: Timestamp.now(),
+          debtDate: DateTime.now(),
+          createdAt: DateTime.now(),
           createdBy: user.userId,
         );
-        await _debtRepository.createDebt(newDebt);
+
+        // Optimistically insert locally first
+        _debts.insert(0, newDebt);
+        _rebuildDebtMap();
+        notifyListeners();
+
+        if (statsProvider != null) {
+          statsProvider.addDebtOptimistically(amount: amountDue);
+        }
+
+        try {
+          await _debtRepository.createDebt(newDebt);
+        } catch (e, stack) {
+          _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider,
+              oldStatsSummary, oldStatsToday);
+          AppErrorHandler.handle(e,
+              severity: ErrorSeverity.medium,
+              operation: 'debt_create',
+              stackTrace: stack);
+          return false;
+        }
         AnalyticsService.logDebtAdded();
       }
 
@@ -298,136 +394,389 @@ class DebtProvider extends ChangeNotifier {
         );
       }
 
-      appEvents.fireDebtsChanged();
-      _setStatus(DebtStatus.loaded); // Reset status
+      _activateFetchShield();
+      _updateStatus(DebtProviderStatus.loaded); // Reset status
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to create debt.');
+    } catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError('debt_error_create_failed', e, stack);
       return false;
+    } finally {
+      if (pendingDebtId != null) {
+        _pendingDebtIds.remove(pendingDebtId);
+      }
+      if (_status == DebtProviderStatus.creating) {
+        _updateStatus(DebtProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> addPartialDebt(
       String debtId, double amountToAdd, String userId) async {
-    _setStatus(DebtStatus.updating);
+    List<DebtModel>? oldDebts;
+    Map<String, DebtModel>? oldDebtMap;
+    StatsSummaryModel? oldStatsSummary;
+    DailyStatsModel? oldStatsToday;
+    StatisticsProvider? statsProvider;
+
     try {
       await _validateUserAndPermission((p) => p.createDebt);
 
-      await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
-      appEvents.fireDebtsChanged();
+      _status = DebtProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldDebts = _debts.toList();
+      oldDebtMap = Map<String, DebtModel>.from(_debtMap);
+      _pendingDebtIds.add(debtId);
+
+      try {
+        statsProvider = sl<StatisticsProvider>();
+      } catch (_) {
+        statsProvider = null;
+      }
+      if (statsProvider != null) {
+        oldStatsSummary = statsProvider.dashboardSummary;
+        oldStatsToday = statsProvider.todayStats;
+      }
+
+      // Mutate locally
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      if (index == -1) {
+        throw ValidationException('debt_error_not_found');
+      }
+      final oldDebt = _debts[index];
+      final newDebt = oldDebt.copyWith(
+        amountDue: oldDebt.amountDue + amountToAdd,
+        totalAmount: oldDebt.totalAmount + amountToAdd,
+        updatedAt: DateTime.now(),
+        lastUpdatedBy: userId,
+      );
+
+      _debts = [
+        for (int i = 0; i < _debts.length; i++)
+          if (i == index) newDebt else _debts[i],
+      ];
+      _rebuildDebtMap();
+
+      if (statsProvider != null) {
+        statsProvider.addDebtOptimistically(amount: amountToAdd);
+      }
+
+      safeNotify();
+
+      try {
+        await _debtRepository.addPartialDebt(debtId, amountToAdd, userId);
+      } catch (e, stack) {
+        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary,
+            oldStatsToday);
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.addPartialDebt');
+        return false;
+      }
+
+      _activateFetchShield();
+      _updateStatus(DebtProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to add to debt.');
+    } catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError('debt_error_add_amount_failed', e, stack);
       return false;
+    } finally {
+      _pendingDebtIds.remove(debtId);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> updateDebt(String debtId, Map<String, dynamic> data) async {
-    _setStatus(DebtStatus.updating);
+    List<DebtModel>? oldDebts;
+    Map<String, DebtModel>? oldDebtMap;
+
     try {
-      // No specific permission for generic update, assuming createDebt or manageDebt covers it
-      // If a specific permission is needed, it should be added here.
-      // For now we will replicate the check if feasible or leave it if it was open.
-      // User requested "Refactor all Write methods", so I'll add a safe check for createDebt as a baseline
       await _validateUserAndPermission((p) => p.createDebt);
-      await _debtRepository.updateDebt(debtId, data);
-      appEvents.fireDebtsChanged();
+
+      _status = DebtProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldDebts = _debts.toList();
+      oldDebtMap = Map<String, DebtModel>.from(_debtMap);
+      _pendingDebtIds.add(debtId);
+
+      // Mutate locally
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      if (index == -1) {
+        throw ValidationException('debt_error_not_found');
+      }
+      final oldDebt = _debts[index];
+      final newDebt = oldDebt.copyWith(
+        customerName: data['customerName'] as String?,
+        customerPhone: data['customerPhone'] as String?,
+        debtType: data['debtType'] != null
+            ? DebtType.fromString(data['debtType'] as String)
+            : null,
+        amountDue: data['amountDue'] != null
+            ? NumberParser.toDouble(data['amountDue'])
+            : null,
+        totalAmount: data['totalAmount'] != null
+            ? NumberParser.toDouble(data['totalAmount'])
+            : null,
+        notes: data.containsKey('notes') ? data['notes'] as String? : null,
+        debtStatus: data['debtStatus'] != null
+            ? DebtStatus.fromString(data['debtStatus'] as String)
+            : null,
+        updatedAt: DateTime.now(),
+      );
+
+      _debts = [
+        for (int i = 0; i < _debts.length; i++)
+          if (i == index) newDebt else _debts[i],
+      ];
+      _rebuildDebtMap();
+      safeNotify();
+
+      try {
+        await _debtRepository.updateDebt(debtId, data);
+      } catch (e, stack) {
+        _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.updateDebt');
+        return false;
+      }
+
+      _activateFetchShield();
+      _updateStatus(DebtProviderStatus.loaded);
       return true;
-    } on ServerException catch (e) {
-      _setError(e.message);
+    } on ServerException catch (e, stack) {
+      _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to update debt.');
+    } catch (e, stack) {
+      _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+      setError('debt_error_update_failed', e, stack);
       return false;
+    } finally {
+      _pendingDebtIds.remove(debtId);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> payPartialDebt(
       String debtId, double amountToPay, String userId) async {
-    _setStatus(DebtStatus.updating);
+    List<DebtModel>? oldDebts;
+    Map<String, DebtModel>? oldDebtMap;
+    StatsSummaryModel? oldStatsSummary;
+    DailyStatsModel? oldStatsToday;
+    StatisticsProvider? statsProvider;
+
     try {
       await _validateUserAndPermission((p) => p.collectDebt);
 
-      // The provider now just calls the atomic repository method
-      await _debtRepository.processPayment(debtId, amountToPay, userId);
-      appEvents.fireDebtsChanged();
+      _status = DebtProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldDebts = _debts.toList();
+      oldDebtMap = Map<String, DebtModel>.from(_debtMap);
+      _pendingDebtIds.add(debtId);
+
+      try {
+        statsProvider = sl<StatisticsProvider>();
+      } catch (_) {
+        statsProvider = null;
+      }
+      if (statsProvider != null) {
+        oldStatsSummary = statsProvider.dashboardSummary;
+        oldStatsToday = statsProvider.todayStats;
+      }
+
+      // Mutate locally
+      final index = _debts.indexWhere((d) => d.debtId == debtId);
+      if (index == -1) {
+        throw ValidationException('debt_error_not_found');
+      }
+      final oldDebt = _debts[index];
+
+      if (amountToPay > oldDebt.amountDue) {
+        throw ValidationException('debt_error_amount_exceeded');
+      }
+
+      final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
+      final newDebt = oldDebt.copyWith(
+        amountDue: isFullPayment ? 0.0 : oldDebt.amountDue - amountToPay,
+        debtStatus: isFullPayment ? DebtStatus.paid : oldDebt.debtStatus,
+        paidDate: isFullPayment ? DateTime.now() : oldDebt.paidDate,
+        markedPaidBy: isFullPayment ? userId : oldDebt.markedPaidBy,
+        updatedAt: DateTime.now(),
+        lastUpdatedBy: userId,
+      );
+
+      // Instantly filter out if current filter is 'open' and it is full payment
+      if (_currentFilter == 'open' && isFullPayment) {
+        _debts = _debts.where((d) => d.debtId != debtId).toList();
+      } else if (_currentFilter == 'paid' && !isFullPayment) {
+        _debts = _debts.where((d) => d.debtId != debtId).toList();
+      } else {
+        _debts = [
+          for (int i = 0; i < _debts.length; i++)
+            if (i == index) newDebt else _debts[i],
+        ];
+      }
+
+      _rebuildDebtMap();
+
+      if (statsProvider != null) {
+        if (isFullPayment) {
+          statsProvider.settleDebtOptimistically(amount: oldDebt.amountDue);
+        } else {
+          statsProvider.payPartialDebtOptimistically(amount: amountToPay);
+        }
+      }
+
+      safeNotify();
+
+      try {
+        await _debtRepository.processPayment(debtId, amountToPay, userId);
+      } catch (e, stack) {
+        _rollbackLocalDebt(oldDebts, oldDebtMap, statsProvider, oldStatsSummary,
+            oldStatsToday);
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.payPartialDebt');
+        return false;
+      }
+
+      _activateFetchShield();
+      _updateStatus(DebtProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to process payment.');
+    } catch (e, stack) {
+      _rollbackLocalDebt(
+          oldDebts, oldDebtMap, statsProvider, oldStatsSummary, oldStatsToday);
+      setError('debt_error_settle_failed', e, stack);
       return false;
+    } finally {
+      _pendingDebtIds.remove(debtId);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> deleteDebt(String debtId) async {
-    _setStatus(DebtStatus.updating);
+    List<DebtModel>? oldDebts;
+    Map<String, DebtModel>? oldDebtMap;
+
     try {
       await _validateUserAndPermission((p) => p.deleteDebt);
 
-      await _debtRepository.deleteDebt(debtId);
+      _status = DebtProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
 
-      // Remove from local list
-      _debts.removeWhere((element) => element.debtId == debtId);
+      // Capture snapshot
+      oldDebts = _debts.toList();
+      oldDebtMap = Map<String, DebtModel>.from(_debtMap);
+      _pendingDebtIds.add(debtId);
 
-      // Refresh statistics as totals changed
-      await _fetchSummary();
+      // Mutate locally
+      _debts = _debts.where((d) => d.debtId != debtId).toList();
+      _rebuildDebtMap();
+      safeNotify();
 
-      _setStatus(DebtStatus.loaded);
-      appEvents.fireStatsRefresh();
+      try {
+        await _debtRepository.deleteDebt(debtId);
+      } catch (e, stack) {
+        _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+        AppErrorHandler.handle(e,
+            stackTrace: stack, operation: 'DebtProvider.deleteDebt');
+        return false;
+      }
+
+      _activateFetchShield();
+      _updateStatus(DebtProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on ServerException catch (e, stack) {
+      _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to delete debt.');
+    } catch (e, stack) {
+      _rollbackLocalDebt(oldDebts, oldDebtMap, null, null, null);
+      setError('debt_error_delete_failed', e, stack);
       return false;
+    } finally {
+      _pendingDebtIds.remove(debtId);
+      if (_status == DebtProviderStatus.updating) {
+        _updateStatus(DebtProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
-  void setFilter(String filter) {
-    if (['all', 'open', 'paid'].contains(filter) && _currentFilter != filter) {
-      _currentFilter = filter;
-      fetchInitialDebts(forceRefresh: true);
+  void _rollbackLocalDebt(
+    List<DebtModel>? oldDebts,
+    Map<String, DebtModel>? oldDebtMap,
+    StatisticsProvider? statsProvider,
+    StatsSummaryModel? oldStatsSummary,
+    DailyStatsModel? oldStatsToday,
+  ) {
+    if (oldDebts != null) _debts = oldDebts;
+    if (oldDebtMap != null) _debtMap = oldDebtMap;
+    if (statsProvider != null) {
+      statsProvider.rollbackStats(oldStatsSummary, oldStatsToday);
     }
+    _rebuildDebtMap();
+    safeNotify();
   }
 
-  // Helper Methods
-  void _setStatus(DebtStatus status) {
-    if (_isDisposed) return;
-    _status = status;
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    if (_isDisposed) return;
-    _errorMessage = message;
-    _status = DebtStatus.error;
-    notifyListeners();
-  }
-
-  void clearError() {
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _debts = [];
+    _debtMap = {};
+    _hasMore = true;
+    _lastDocument = null;
+    _status = DebtProviderStatus.idle;
     _errorMessage = null;
-    _status = DebtStatus.idle;
-    notifyListeners();
+    safeNotify();
   }
 
-  Future<List<DebtModel>> fetchDebtsForDateRange(
-      DateTime startDate, DateTime endDate) async {
-    if (_currentStoreId == null) return [];
-    try {
-      return await _debtRepository.getDebtsByDateRange(
-          _currentStoreId!, startDate, endDate);
-    } catch (e) {
-      _setError('Failed to fetch debts for date range.');
-      return [];
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) permissionCheck) async {
+    final user = _authProvider.currentUser;
+    if (user == null) throw AuthException('debt_error_auth_required');
+
+    // Owners have all permissions
+    if (user.isOwner) return user;
+
+    if (user.permissions == null || !permissionCheck(user.permissions!)) {
+      throw PermissionException();
     }
+    return user;
   }
 }

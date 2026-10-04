@@ -1,19 +1,30 @@
-import 'package:firebase_performance/firebase_performance.dart';
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/data/models/transaction_model.dart';
 import 'package:walletmanager/data/repositories/transaction_repository.dart';
-import 'package:walletmanager/providers/app_events.dart';
+import 'package:walletmanager/routes/navigation_service.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import '../data/repositories/wallet_repository.dart';
 import '../data/models/wallet_model.dart';
 import '../core/errors/app_exceptions.dart';
-import 'package:walletmanager/data/models/user_model.dart'; // Added
-import 'package:walletmanager/data/models/user_permissions.dart'; // Added
-import 'auth_provider.dart'; // Added
+import 'package:walletmanager/data/models/user_model.dart';
+import 'package:walletmanager/data/models/user_permissions.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
+import 'package:get_it/get_it.dart';
+import 'auth_provider.dart';
+import 'base_provider.dart';
+import 'subscription_provider.dart';
+import 'platform_settings_provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:walletmanager/data/services/wallet_cache_manager.dart';
+import 'package:walletmanager/core/utils/toast_utils.dart';
+import 'package:walletmanager/domain/usecases/wallet_usecase.dart';
+import '../core/errors/app_error_handler.dart';
+import '../core/errors/error_severity.dart';
+import '../core/utils/number_parser.dart';
+import '../core/enums/wallet_enums.dart';
+import '../core/enums/transaction_enums.dart';
 
-enum WalletStatusState {
+enum WalletProviderStatus {
   idle,
   loading,
   loadingMore,
@@ -24,385 +35,619 @@ enum WalletStatusState {
   deleting,
 }
 
-class WalletProvider extends ChangeNotifier {
+class WalletProvider extends BaseProvider {
   final WalletRepository _walletRepository;
   final TransactionRepository _transactionRepository;
+  final WalletCacheManager _cacheManager;
+  final WalletUseCase _walletUseCase;
 
   // State
   String? _currentStoreId;
 
+  // ignore: unused_field
   final AuthProvider _authProvider; // Made final and non-nullable
+  SubscriptionProvider? _subscriptionProvider;
   List<WalletModel> _wallets = [];
-  DocumentSnapshot? _lastDocument;
+  Map<String, WalletModel> _walletMap = {};
+  final Set<String> _frozenWalletIds = {};
+  final Set<String> _pendingWalletIds = {};
+  dynamic _lastDocument; // opaque cursor — typed at the repository boundary
+
+  void clearPendingWallet(String walletId) {
+    _pendingWalletIds.remove(walletId);
+    safeNotify();
+  }
+
   bool _hasMore = true;
 
   // Status
-  WalletStatusState _status = WalletStatusState.idle;
+  WalletProviderStatus _status = WalletProviderStatus.idle;
   String? _errorMessage;
 
   // Filters
   String _searchQuery = '';
-  String? _filterByType;
-  String? _filterByStatus;
+  WalletType? _filterByType; // ENUM refactor
+  WalletStatus? _filterByStatus; // ENUM refactor
 
-  // Cache
-  List<WalletModel>? _cachedWallets;
-  DateTime? _cacheTimestamp;
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
 
-  StreamSubscription? _dataChangedSubscription;
-  bool _isDisposed = false;
+  @visibleForTesting
+  bool get isFetchShieldActive => _fetchShieldActive;
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
+  }
 
   // Constructor
   WalletProvider({
     required AuthProvider authProvider, // Required authProvider
+    SubscriptionProvider? subscriptionProvider,
     WalletRepository? walletRepository,
     TransactionRepository? transactionRepository,
+    WalletCacheManager? cacheManager,
+    WalletUseCase? walletUseCase,
     String? storeId,
   })  : _authProvider = authProvider,
-        _walletRepository = walletRepository ?? WalletRepository(),
+        _subscriptionProvider = subscriptionProvider,
+        _walletRepository = walletRepository ?? sl<WalletRepository>(),
         _transactionRepository =
-            transactionRepository ?? TransactionRepository(),
-        _currentStoreId = storeId {
-    _dataChangedSubscription = appEvents.onWalletsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
-        fetchInitialWallets(forceRefresh: true);
+            transactionRepository ?? sl<TransactionRepository>(),
+        _cacheManager = cacheManager ?? sl<WalletCacheManager>(),
+        _walletUseCase = walletUseCase ?? sl<WalletUseCase>(),
+        _currentStoreId = storeId;
+
+  void applyLocalDeduction(String walletId, double deduction, bool isSend) {
+    if (isDisposed) return;
+    _pendingWalletIds.add(walletId);
+
+    final index = _wallets.indexWhere((w) => w.walletId == walletId);
+    if (index == -1) return;
+
+    final oldWallet = _wallets[index];
+    final newBalance =
+        isSend ? oldWallet.balance - deduction : oldWallet.balance + deduction;
+
+    if (newBalance < 0 && isSend) {
+      throw DomainException('Insufficient balance for local deduction');
+    }
+
+    _wallets = [
+      for (int i = 0; i < _wallets.length; i++)
+        if (i == index)
+          oldWallet.copyWith(balance: newBalance)
+        else
+          _wallets[i],
+    ];
+
+    _rebuildWalletMap();
+    safeNotify();
+  }
+
+  void updateLocalWalletBalance({
+    required String walletId,
+    required double amount,
+    required bool isIncome,
+    double serviceFee = 0.0,
+  }) {
+    if (isDisposed) return;
+    final index = _wallets.indexWhere((w) => w.walletId == walletId);
+    if (index != -1) {
+      final oldWallet = _wallets[index];
+      final totalChange = isIncome ? amount : amount + serviceFee;
+      final newBalance = isIncome
+          ? oldWallet.balance + totalChange
+          : oldWallet.balance - totalChange;
+
+      // Optimistically adjust send/receive limits to prevent
+      // double-spending race conditions between consecutive transactions.
+      WalletLimits? updatedSendLimits;
+      WalletLimits? updatedReceiveLimits;
+
+      if (!isIncome) {
+        // Send (debit): increment sendLimits usage
+        updatedSendLimits = oldWallet.sendLimits.copyWith(
+          dailyUsed: oldWallet.sendLimits.dailyUsed + amount,
+          monthlyUsed: oldWallet.sendLimits.monthlyUsed + amount,
+        );
+      } else {
+        // Receive (credit): increment receiveLimits usage
+        updatedReceiveLimits = oldWallet.receiveLimits.copyWith(
+          dailyUsed: oldWallet.receiveLimits.dailyUsed + amount,
+          monthlyUsed: oldWallet.receiveLimits.monthlyUsed + amount,
+        );
       }
-    });
+
+      // Create a brand new instance using copyWith
+      _wallets[index] = oldWallet.copyWith(
+        balance: newBalance,
+        sendLimits: updatedSendLimits,
+        receiveLimits: updatedReceiveLimits,
+      );
+
+      // Crucial: Update map reference
+      _walletMap[walletId] = _wallets[index];
+
+      _activateFetchShield();
+      _rebuildWalletMap();
+      safeNotify();
+    } else {
+      if (kDebugMode) {
+        debugPrint(
+            "CRITICAL BUG: Wallet not found in local RAM during optimistic update. Check DI instances.");
+      }
+    }
+  }
+
+  void updateLocalBalance(String walletId, double amount, dynamic type,
+      {double serviceFee = 0.0}) {
+    if (isDisposed) return;
+    final TransactionType t = type is String
+        ? TransactionType.fromString(type)
+        : (type is TransactionType ? type : TransactionType.credit);
+    final isIncome =
+        (t == TransactionType.credit || t == TransactionType.deposit);
+    updateLocalWalletBalance(
+      walletId: walletId,
+      amount: amount,
+      isIncome: isIncome,
+      serviceFee: serviceFee,
+    );
   }
 
   @override
   void dispose() {
-    _isDisposed = true;
-    _dataChangedSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
   }
 
   // Getters
   List<WalletModel> get wallets => _wallets;
-  WalletStatusState get status => _status;
+  Map<String, WalletModel> get walletMap => _walletMap;
+  WalletProviderStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   String get searchQuery => _searchQuery;
-  String? get filterByType => _filterByType;
-  String? get filterByStatus => _filterByStatus;
+  WalletType? get filterByType => _filterByType;
+  WalletStatus? get filterByStatus => _filterByStatus;
   bool get hasMore => _hasMore;
+  int get totalActiveWallets => _wallets
+      .where((w) => w.walletStatus == WalletStatus.active && w.isActive)
+      .length;
 
-  // Helper Getters
-  bool get isLoading => _status == WalletStatusState.loading;
-  bool get isLoadingMore => _status == WalletStatusState.loadingMore;
-  bool get isCreating => _status == WalletStatusState.creating;
-  bool get isUpdating => _status == WalletStatusState.updating;
-  bool get isDeleting => _status == WalletStatusState.deleting;
-  bool get hasError => _status == WalletStatusState.error;
-
-  // Methods
+  bool get isLoading => _status == WalletProviderStatus.loading;
+  bool get isLoadingMore => _status == WalletProviderStatus.loadingMore;
+  bool get isCreating => _status == WalletProviderStatus.creating;
+  bool get isUpdating => _status == WalletProviderStatus.updating;
+  bool get isDeleting => _status == WalletProviderStatus.deleting;
+  bool get hasError => _status == WalletProviderStatus.error;
 
   void updateAuthState(AuthProvider auth) {
-    // _authProvider is final, we don't reassign it.
     if (_currentStoreId != auth.currentStoreId) {
-      setStoreId(auth.currentStoreId ?? '');
+      setStoreId(auth.currentStoreId);
     }
   }
 
-  /// Robust permission check that ensures user is loaded
+  void updateSubscriptionProvider(SubscriptionProvider subscriptionProvider) {
+    _subscriptionProvider = subscriptionProvider;
+    if (_wallets.isNotEmpty) {
+      _rebuildWalletMap();
+      _enforceWalletLimits();
+      safeNotify();
+    }
+  }
+
   Future<UserModel> _validateUserAndPermission(
       bool Function(UserPermissions) selector) async {
-    // 1. Attempt to load user with retry
-    final user = await _authProvider.ensureUserLoaded();
-
-    // 2. Verify User
-    if (user == null) {
-      throw AuthException(
-          'فشلت عملية المصادقة، يرجى التأكد من اتصال الإنترنت أو تسجيل الدخول مجدداً');
-    }
-
-    // 3. Permission Guard
-    if (user.isOwner) return user;
-
-    if (!user.hasPermission(selector)) {
-      throw PermissionException();
-    }
-
-    return user;
+    return _walletUseCase.validatePermission(selector);
   }
 
-  // Helper Check - Deprecated in favor of _validateUserAndPermission but kept for non-async if needed
-  // void _checkPermission(bool Function(UserPermissions) selector) { ... }
-
-  void setStoreId(String storeId) {
+  void setStoreId(String? storeId) {
     if (_currentStoreId != storeId) {
       _currentStoreId = storeId;
-      _cachedWallets = null;
-      _cacheTimestamp = null;
-      fetchInitialWallets();
+      if (storeId != null && storeId.isNotEmpty) {
+        fetchInitialWallets();
+      } else {
+        _wallets = [];
+        _walletMap = {};
+        _status = WalletProviderStatus.idle;
+        safeNotify();
+      }
     }
+  }
+
+  Future<void> refresh() async {
+    fetchInitialWallets(forceRefresh: true);
   }
 
   Future<void> fetchInitialWallets({bool forceRefresh = false}) async {
     if (_currentStoreId == null) return;
+    if (!forceRefresh && _fetchShieldActive) return;
 
-    final now = DateTime.now();
-    if (!forceRefresh &&
-        _cachedWallets != null &&
-        _cacheTimestamp != null &&
-        now.difference(_cacheTimestamp!).inMinutes < 2) {
-      _wallets = _cachedWallets!;
-      if (status != WalletStatusState.loaded) {
-        _setStatus(WalletStatusState.loaded);
-      }
-      return;
-    }
-
-    final trace = FirebasePerformance.instance
-        .newTrace('fetch_initial_wallets_optimized');
-    await trace.start();
-
-    _setStatus(WalletStatusState.loading);
-    _lastDocument = null;
-    _hasMore = true;
+    _updateStatus(WalletProviderStatus.loading);
+    _errorMessage = null;
+    safeNotify();
 
     try {
-      // 1. Fetch only the first page of wallets
-      final result = await _walletRepository.getWalletsByStoreIdPaginated(
-        _currentStoreId!,
-        limit: 15,
-        walletType: _filterByType,
-        walletStatus: _filterByStatus,
-      );
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
 
-      List<WalletModel> fetchedWallets = result['wallets'];
-      _lastDocument = result['lastDoc'];
-      _hasMore = fetchedWallets.length == 15;
+      final result = await _walletRepository.getAllWallets(storeId);
 
-      // 2. Check which of the fetched wallets need a reset
-      final walletsNeedingReset = fetchedWallets
+      // Smart Merge: match incoming documents by UUID, preserving locally pending modifications/items
+      final Map<String, WalletModel> merged = {};
+      final incomingIds = result.items.map((w) => w.walletId).toSet();
+      for (final w in result.items) {
+        merged[w.walletId] = w;
+      }
+      for (final w in _wallets) {
+        if (_pendingWalletIds.contains(w.walletId)) {
+          merged[w.walletId] = w;
+        }
+      }
+
+      final List<WalletModel> mergedList = [];
+      for (final w in result.items) {
+        if (_pendingWalletIds.contains(w.walletId)) {
+          mergedList.add(merged[w.walletId]!);
+        } else {
+          mergedList.add(w);
+        }
+      }
+      for (final w in _wallets) {
+        if (_pendingWalletIds.contains(w.walletId) &&
+            !incomingIds.contains(w.walletId)) {
+          // Prepend newly created pending items
+          mergedList.insert(0, w);
+        }
+      }
+
+      _wallets = mergedList;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+
+      final walletsNeedingReset = _wallets
           .where((w) => w.needsDailyReset || w.needsMonthlyReset)
           .toList();
 
-      if (walletsNeedingReset.isNotEmpty) {
-        // 3. Trigger the backend update asynchronously (fire-and-forget)
+      if (_authProvider.isOwner && walletsNeedingReset.isNotEmpty) {
         _walletRepository.resetLimitsForWallets(walletsNeedingReset);
-
-        // 4. Update the in-memory models immediately for a responsive UI
-        final now = Timestamp.now();
-        fetchedWallets = fetchedWallets.map((wallet) {
-          if (walletsNeedingReset.any((w) => w.walletId == wallet.walletId)) {
-            var tempWallet = wallet;
-            if (wallet.needsDailyReset) {
-              tempWallet = tempWallet.copyWith(
-                  sendLimits: wallet.sendLimits.copyWith(dailyUsed: 0),
-                  receiveLimits: wallet.receiveLimits.copyWith(dailyUsed: 0),
-                  lastDailyReset: now);
-            }
-            if (wallet.needsMonthlyReset) {
-              tempWallet = tempWallet.copyWith(
-                  sendLimits: tempWallet.sendLimits.copyWith(monthlyUsed: 0),
-                  receiveLimits:
-                      tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
-                  lastMonthlyReset: now);
-            }
-            return tempWallet;
-          }
-          return wallet;
-        }).toList();
       }
 
-      _wallets = fetchedWallets;
-      _cachedWallets = fetchedWallets;
-      _cacheTimestamp = DateTime.now();
-      _setStatus(WalletStatusState.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching wallets.');
+      _rebuildWalletMap();
+      _updateStatus(WalletProviderStatus.loaded);
+      _cacheManager.cacheWallets(_wallets);
+    } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🤫 [SILENT ERROR] WalletProvider: permission-denied (likely native sign-out)');
+        }
+        return;
+      }
+      setError('wallet_error_fetch_failed', e, stack);
     } finally {
-      await trace.stop();
+      safeNotify();
     }
   }
 
   Future<void> fetchMoreWallets() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null)
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
+    }
 
-    _setStatus(WalletStatusState.loadingMore);
+    _updateStatus(WalletProviderStatus.loadingMore);
+    safeNotify();
 
     try {
-      final result = await _walletRepository.getWalletsByStoreIdPaginated(
-        _currentStoreId!,
-        limit: 15,
-        lastDoc: _lastDocument,
-        walletType: _filterByType,
-        walletStatus: _filterByStatus,
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
+
+      final result = await _walletRepository.getAllWallets(
+        storeId,
+        lastDocument: _lastDocument,
       );
 
-      final newWallets = result['wallets'] as List<WalletModel>;
-      _lastDocument = result['lastDoc'];
-      _hasMore = newWallets.length == 15;
-
-      final walletsNeedingReset = newWallets
-          .where((w) => w.needsDailyReset || w.needsMonthlyReset)
-          .toList();
-
-      if (walletsNeedingReset.isNotEmpty) {
-        // Fire and forget the backend update
-        _walletRepository.resetLimitsForWallets(walletsNeedingReset);
-
-        // Update models in memory for immediate UI consistency
-        final now = Timestamp.now();
-        final updatedNewWallets = newWallets.map((wallet) {
-          if (walletsNeedingReset.any((w) => w.walletId == wallet.walletId)) {
-            var tempWallet = wallet;
-            if (wallet.needsDailyReset) {
-              tempWallet = tempWallet.copyWith(
-                  sendLimits: wallet.sendLimits.copyWith(dailyUsed: 0),
-                  receiveLimits: wallet.receiveLimits.copyWith(dailyUsed: 0),
-                  lastDailyReset: now);
-            }
-            if (wallet.needsMonthlyReset) {
-              tempWallet = tempWallet.copyWith(
-                  sendLimits: tempWallet.sendLimits.copyWith(monthlyUsed: 0),
-                  receiveLimits:
-                      tempWallet.receiveLimits.copyWith(monthlyUsed: 0),
-                  lastMonthlyReset: now);
-            }
-            return tempWallet;
-          }
-          return wallet;
-        }).toList();
-
-        _wallets.addAll(updatedNewWallets);
+      if (result.items.isEmpty) {
+        _hasMore = false;
       } else {
-        _wallets.addAll(newWallets);
+        _wallets.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
       }
 
-      _setStatus(WalletStatusState.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching more wallets.');
+      _rebuildWalletMap();
+      _updateStatus(WalletProviderStatus.loaded);
+    } catch (e, stack) {
+      setError('wallet_error_fetch_more_failed', e, stack);
+    } finally {
+      safeNotify();
     }
   }
 
   Future<bool> createWallet({
     required String phoneNumber,
-    required String walletType,
-    required String walletStatus,
+    required WalletType walletType,
+    required WalletStatus walletStatus,
     required double balance,
     String? notes,
     required String createdBy,
   }) async {
-    _setStatus(WalletStatusState.creating);
+    _status = WalletProviderStatus.creating;
+    _errorMessage = null;
+    safeNotify();
+
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+    String? pendingWalletId;
+
     try {
       await _validateUserAndPermission((p) => p.createWallet);
 
-      if (_currentStoreId == null)
-        throw ValidationException('Store ID not found.');
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID missing'));
+
+      if (_subscriptionProvider == null) {
+        throw ValidationException('wallet_error_subscription_unresolved');
+      }
+
+      final currentCount = await _walletRepository.getWalletsCount(storeId);
+      if (!_subscriptionProvider!.canAddWallet(currentCount)) {
+        throw ValidationException('wallet_error_limit_reached');
+      }
+
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+
+      final newWalletId = const Uuid().v4();
+      pendingWalletId = newWalletId;
+      _pendingWalletIds.add(pendingWalletId);
 
       final newWallet = WalletModel.fromWalletStatus(
-        walletId: FirebaseFirestore.instance.collection('wallets').doc().id,
-        storeId: _currentStoreId!,
+        walletId: newWalletId,
+        storeId: storeId,
         phoneNumber: phoneNumber,
-        walletType: walletType,
-        walletStatus: walletStatus,
+        walletType: walletType.name,
+        walletStatus: walletStatus.name,
         balance: balance,
         notes: notes,
         createdBy: createdBy,
       );
 
+      // Mutate locally
+      _wallets.add(newWallet);
+      _rebuildWalletMap();
+      safeNotify();
+
       await _walletRepository.createWallet(newWallet);
-      appEvents.fireWalletsChanged();
+      _activateFetchShield();
+      _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError(e.message, e, stack);
+      _handleUIFeedback();
       return false;
-    } catch (e) {
-      _setError('Failed to create wallet.');
+    } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError('wallet_error_create_failed', e, stack);
+      _handleUIFeedback();
       return false;
+    } finally {
+      if (pendingWalletId != null) {
+        _pendingWalletIds.remove(pendingWalletId);
+      }
+      if (_status == WalletProviderStatus.creating) {
+        _updateStatus(WalletProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> updateWallet(String walletId, Map<String, dynamic> data) async {
-    _setStatus(WalletStatusState.updating);
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+
     try {
       await _validateUserAndPermission((p) => p.editWallet);
 
+      if (await _isWalletFrozen(walletId)) {
+        throw ValidationException('wallet_error_frozen');
+      }
+
+      _status = WalletProviderStatus.updating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+      _pendingWalletIds.add(walletId);
+
+      // Mutate locally
+      final index = _wallets.indexWhere((w) => w.walletId == walletId);
+      if (index == -1) {
+        throw ValidationException('wallet_error_not_found');
+      }
+      final oldWallet = _wallets[index];
+
+      final newWallet = oldWallet.copyWith(
+        phoneNumber: data['phoneNumber'] as String?,
+        walletType: data['walletType'] != null
+            ? WalletType.fromString(data['walletType'] as String)
+            : null,
+        walletStatus: data['walletStatus'] != null
+            ? WalletStatus.fromString(data['walletStatus'] as String)
+            : null,
+        balance: data['balance'] != null
+            ? NumberParser.toDouble(data['balance'])
+            : null,
+        notes: data.containsKey('notes') ? data['notes'] as String? : null,
+        isActive: data['isActive'] as bool?,
+      );
+
+      _wallets = [
+        for (int i = 0; i < _wallets.length; i++)
+          if (i == index) newWallet else _wallets[i],
+      ];
+      _rebuildWalletMap();
+      safeNotify();
+
       await _walletRepository.updateWallet(walletId, data);
-      appEvents.fireWalletsChanged();
+      _activateFetchShield();
+      _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on ServerException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError(e.message, e, stack);
+      _handleUIFeedback();
       return false;
-    } catch (e) {
-      _setError('Failed to update wallet.');
+    } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError('wallet_error_update_failed', e, stack);
+      _handleUIFeedback();
       return false;
+    } finally {
+      _pendingWalletIds.remove(walletId);
+      if (_status == WalletProviderStatus.updating) {
+        _updateStatus(WalletProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> addBalanceToWallet(
       String walletId, double amount, String createdBy) async {
-    _setStatus(WalletStatusState.updating);
+    _updateStatus(WalletProviderStatus.updating);
     try {
       await _validateUserAndPermission((p) => p.addBalance);
 
       if (amount <= 0) throw ValidationException('Amount must be positive.');
-      if (_currentStoreId == null)
-        throw ValidationException('Store ID not found.');
+      final storeId =
+          _currentStoreId ?? (throw ValidationException('Store ID not found.'));
 
-      final newTransaction = TransactionModel(
-        transactionId: _transactionRepository.transactionsCollection.doc().id,
-        storeId: _currentStoreId!,
+      if (await _isWalletFrozen(walletId)) {
+        throw ValidationException('wallet_error_frozen');
+      }
+
+      await _transactionRepository.createDeposit(
+        transactionId: _transactionRepository.generateId(),
+        storeId: storeId,
         walletId: walletId,
-        transactionType: 'deposit',
         amount: amount,
-        transactionDate: Timestamp.now(),
-        createdAt: Timestamp.now(),
         createdBy: createdBy,
       );
-
-      await _transactionRepository.createTransaction(newTransaction);
-      // This operation changes both wallets and transactions
-      appEvents.fireWalletsChanged();
-      appEvents.fireTransactionsChanged();
+      _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      _handleUIFeedback();
       return false;
-    } catch (e) {
-      _setError('Failed to update balance.');
+    } catch (e, stack) {
+      setError('wallet_error_balance_topup_failed', e, stack);
+      _handleUIFeedback();
       return false;
+    } finally {
+      if (_status == WalletProviderStatus.updating) {
+        _updateStatus(WalletProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
   Future<bool> deleteWallet(String walletId) async {
-    _setStatus(WalletStatusState.deleting);
+    List<WalletModel>? oldWallets;
+    Map<String, WalletModel>? oldWalletMap;
+
     try {
-      await _validateUserAndPermission((p) => p.editWallet);
+      // Security Guard: Only Owners can delete wallets (Axis 2/Phase 6)
+      if (!_authProvider.isOwner) {
+        throw PermissionDeniedException();
+      }
+
+      _status = WalletProviderStatus.deleting;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshot
+      oldWallets = _wallets.toList();
+      oldWalletMap = Map<String, WalletModel>.from(_walletMap);
+      _pendingWalletIds.add(walletId);
+
+      // Mutate locally
+      _wallets = _wallets.where((w) => w.walletId != walletId).toList();
+      _rebuildWalletMap();
+      safeNotify();
 
       await _walletRepository.deleteWallet(walletId);
-      appEvents.fireWalletsChanged();
-      _setStatus(WalletStatusState.loaded);
+      _activateFetchShield();
+      _updateStatus(WalletProviderStatus.loaded);
       return true;
-    } on FirebaseException catch (e) {
-      _setError(e.message ?? 'Failed to delete wallet.');
+    } on AppException catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError(e.message, e, stack);
+      _handleUIFeedback();
       return false;
-    } catch (e) {
-      _setError('Failed to delete wallet.');
+    } catch (e, stack) {
+      _rollbackLocalWallet(oldWallets, oldWalletMap);
+      setError('wallet_error_delete_failed', e, stack);
+      _handleUIFeedback();
       return false;
+    } finally {
+      _pendingWalletIds.remove(walletId);
+      if (_status == WalletProviderStatus.deleting) {
+        _updateStatus(WalletProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
-  // Note: Filters will now require re-fetching data.
+  void _rollbackLocalWallet(
+      List<WalletModel>? oldWallets, Map<String, WalletModel>? oldWalletMap) {
+    if (oldWallets != null) _wallets = oldWallets;
+    if (oldWalletMap != null) _walletMap = oldWalletMap;
+    _rebuildWalletMap();
+    safeNotify();
+  }
+
+  void rollbackWallet(WalletModel wallet) {
+    if (isDisposed) return;
+    final index = _wallets.indexWhere((w) => w.walletId == wallet.walletId);
+    if (index != -1) {
+      _wallets[index] = wallet;
+      _rebuildWalletMap();
+      safeNotify();
+    }
+  }
+
+  void _handleUIFeedback() {
+    if (AppErrorHandler.isTestMode) return;
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null) {
+      ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+    }
+  }
+
   void setSearchQuery(String query) {
     _searchQuery = query;
     fetchInitialWallets();
   }
 
-  void setTypeFilter(String? type) {
+  void setTypeFilter(WalletType? type) {
     _filterByType = type;
     fetchInitialWallets();
   }
 
-  void setStatusFilter(String? status) {
+  void setStatusFilter(WalletStatus? status) {
     _filterByStatus = status;
     fetchInitialWallets();
   }
@@ -414,24 +659,151 @@ class WalletProvider extends ChangeNotifier {
     fetchInitialWallets();
   }
 
-  // Helper Methods
-  void _setStatus(WalletStatusState status) {
-    if (_isDisposed) return;
+  void _updateStatus(WalletProviderStatus status) {
+    if (isDisposed) return;
     _status = status;
-    notifyListeners();
+    if (status == WalletProviderStatus.loading ||
+        status == WalletProviderStatus.creating ||
+        status == WalletProviderStatus.updating ||
+        status == WalletProviderStatus.deleting) {
+      _errorMessage = null;
+    }
+    safeNotify();
   }
 
-  void _setError(String message) {
-    if (_isDisposed) return;
-    _errorMessage = message;
-    _status = WalletStatusState.error;
-    notifyListeners();
+  @override
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'wallet_operation']) {
+    if (isDisposed) return;
+    _errorMessage = errorCode;
+    _status = WalletProviderStatus.error;
+
+    super.setError(errorCode, error, stack, showToast, operation);
+    safeNotify();
+  }
+
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldActive = false;
+    _wallets = [];
+    _walletMap = {};
+    _frozenWalletIds.clear();
+    _lastDocument = null;
+    _hasMore = true;
+    _status = WalletProviderStatus.idle;
+    _errorMessage = null;
+    safeNotify();
   }
 
   void clearError() {
-    if (_isDisposed) return;
+    if (isDisposed) return;
     _errorMessage = null;
-    _status = WalletStatusState.idle;
-    notifyListeners();
+    _status = WalletProviderStatus.idle;
+    safeNotify();
+  }
+
+  void _rebuildWalletMap() {
+    _recalculateFrozenWallets();
+  }
+
+  void _recalculateFrozenWallets() {
+    _frozenWalletIds.clear();
+    final frozen = _walletUseCase.calculateFrozenWallets(
+      wallets: _wallets,
+      subscriptionProvider: _subscriptionProvider,
+      storeId: _currentStoreId,
+    );
+    _frozenWalletIds.addAll(frozen);
+
+    // Update the in-memory wallet models to reflect the correct frozen state
+    _wallets = _wallets.map((w) {
+      return w.copyWith(isFrozen: _frozenWalletIds.contains(w.walletId));
+    }).toList();
+
+    _walletMap = {
+      for (final wallet in _wallets) wallet.walletId: wallet,
+    };
+  }
+
+  Future<bool> _isWalletFrozen(String walletId) async {
+    return _frozenWalletIds.contains(walletId);
+  }
+
+  bool isWalletFrozenSync(String walletId) {
+    return _frozenWalletIds.contains(walletId);
+  }
+
+  Future<void> _enforceWalletLimits() async {
+    final GetIt sl = GetIt.instance;
+    if (sl.isRegistered<PlatformSettingsProvider>()) {
+      final settingsProvider = sl<PlatformSettingsProvider>();
+      if (!settingsProvider.isInitialized ||
+          settingsProvider.settings.plans.isEmpty) {
+        return;
+      }
+    }
+
+    final subProvider = _subscriptionProvider;
+    if (subProvider == null) return;
+
+    final maxWallets = subProvider.maxWallets;
+    if (maxWallets == -1) return;
+
+    // Filter active wallets
+    final activeWallets =
+        _wallets.where((w) => w.walletStatus == WalletStatus.active).toList();
+    if (activeWallets.length <= maxWallets) return;
+
+    // Sort active wallets by createdAt ascending (oldest first)
+    activeWallets.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime(1970);
+      final bDate = b.createdAt ?? DateTime(1970);
+      return aDate.compareTo(bDate);
+    });
+
+    // The excess active wallets starting from the most recently created (indices >= maxWallets)
+    final excessWallets = activeWallets.sublist(maxWallets);
+
+    // Save previous state for rollback
+    final previousWallets = _wallets.toList();
+
+    // Optimistically update RAM
+    for (final wallet in excessWallets) {
+      final index = _wallets.indexWhere((w) => w.walletId == wallet.walletId);
+      if (index != -1) {
+        _wallets[index] =
+            _wallets[index].copyWith(walletStatus: WalletStatus.suspended);
+      }
+    }
+    _rebuildWalletMap();
+    safeNotify();
+
+    // Perform Firestore writes in background
+    try {
+      for (final wallet in excessWallets) {
+        await _walletRepository
+            .updateWallet(wallet.walletId, {'walletStatus': 'suspended'});
+      }
+      _activateFetchShield();
+    } catch (e, stack) {
+      // Rollback on failure
+      _wallets = previousWallets;
+      _rebuildWalletMap();
+      safeNotify();
+      AppErrorHandler.handle(e,
+          severity: ErrorSeverity.medium,
+          operation: 'wallet_enforce_limits_rollback',
+          stackTrace: stack);
+    }
+  }
+
+  @visibleForTesting
+  void setWalletsForTesting(List<WalletModel> wallets) {
+    _wallets = wallets;
+    _rebuildWalletMap();
   }
 }

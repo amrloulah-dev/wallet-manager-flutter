@@ -127,8 +127,7 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
         Icon(
           widget.icon ?? Icons.inbox_outlined,
           size: 80,
-          color:
-              AppColors.textSecondary(context).withAlpha((0.5 * 255).round()),
+          color: AppColors.textSecondary(context).withAlpha(128),
         );
 
     if (!widget.animate) {

@@ -1,4 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/enums/user_enums.dart';
+import '../../core/errors/app_exceptions.dart';
 
 import 'user_permissions.dart';
 
@@ -10,7 +14,7 @@ class UserModel {
   // Identity
   final String userId;
   final String storeId;
-  final String role; // "owner" | "employee"
+  final UserRole role; // ENUM refactor
 
   // Personal Info
   final String fullName;
@@ -19,18 +23,18 @@ class UserModel {
   final String? photoURL;
 
   // Authentication
-  final String firebaseUid;
+  final String? firebaseUid;
   final String? pin; // Hashed PIN for employees
 
   // Status
   final bool isActive;
 
   // Timestamps
-  final Timestamp createdAt;
+  final DateTime? createdAt; // Made nullable
   final String?
       createdBy; // ID of the user who created this user (e.g., owner ID)
-  final Timestamp? updatedAt;
-  final Timestamp lastLogin;
+  final DateTime? updatedAt;
+  final DateTime? lastLogin; // Made nullable
 
   // Nested objects (for employees)
   final UserPermissions? permissions;
@@ -44,20 +48,20 @@ class UserModel {
     this.email,
     this.phone,
     this.photoURL,
-    required this.firebaseUid,
+    this.firebaseUid,
     this.pin,
     this.isActive = true,
-    required this.createdAt,
+    this.createdAt,
     this.createdBy,
     this.updatedAt,
-    required this.lastLogin,
+    this.lastLogin,
     this.permissions,
     this.stats,
   });
 
   // Getters
-  bool get isOwner => role == 'owner';
-  bool get isEmployee => role == 'employee';
+  bool get isOwner => role == UserRole.owner;
+  bool get isEmployee => role == UserRole.employee;
 
   /// Helper to check permissions easily.
   /// Example: user.hasPermission((p) => p.createDebt)
@@ -73,27 +77,39 @@ class UserModel {
       throw Exception('User document does not exist!');
     }
     final data = doc.data() as Map<String, dynamic>;
-    final role = data['role'] ?? 'employee';
+    final roleStr = data['role'] as String? ?? 'employee';
+    final role = UserRole.fromString(roleStr);
+
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+    final lastLogin = (data['lastLogin'] as Timestamp?)?.toDate();
+
+    if (createdAt == null || lastLogin == null) {
+      throw NotFoundException(
+          'User document ${doc.id} missing required audit timestamps (createdAt or lastLogin)');
+    }
 
     return UserModel(
       userId: doc.id,
-      storeId: data['storeId'] ?? '',
+      storeId: data['storeId'] as String? ?? '',
       role: role,
-      fullName: data['fullName'] ?? '',
-      email: data['email'],
-      phone: data['phone'],
-      photoURL: data['photoURL'],
-      firebaseUid: data['firebaseUid'] ?? '',
-      pin: data['pin'],
-      isActive: data['isActive'] ?? true,
-      createdAt: data['createdAt'] ?? Timestamp.now(),
-      createdBy: data['createdBy'],
-      updatedAt: data['updatedAt'],
-      lastLogin: data['lastLogin'] ?? Timestamp.now(),
-      permissions: role == 'employee'
-          ? UserPermissions.fromMap(data['permissions'] ?? {})
+      fullName: data['fullName'] as String? ?? '',
+      email: data['email'] as String?,
+      phone: data['phone'] as String?,
+      photoURL: data['photoURL'] as String?,
+      firebaseUid: data['firebaseUid'] as String?,
+      pin: data['pin'] as String?,
+      isActive: data['isActive'] as bool? ?? true,
+      createdAt: createdAt,
+      createdBy: data['createdBy'] as String?,
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      lastLogin: lastLogin,
+      permissions: role == UserRole.employee
+          ? UserPermissions.fromMap(
+              data['permissions'] as Map<String, dynamic>? ?? {})
           : null,
-      stats: role == 'employee' ? UserStats.fromMap(data['stats'] ?? {}) : null,
+      stats: role == UserRole.employee
+          ? UserStats.fromMap(data['stats'] as Map<String, dynamic>? ?? {})
+          : null,
     );
   }
 
@@ -101,7 +117,7 @@ class UserModel {
   Map<String, dynamic> toFirestore() {
     final map = {
       'storeId': storeId,
-      'role': role,
+      'role': role.name,
       'fullName': fullName,
       'email': email,
       'phone': phone,
@@ -109,15 +125,23 @@ class UserModel {
       'firebaseUid': firebaseUid,
       'pin': pin,
       'isActive': isActive,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'createdBy': createdBy,
-      'updatedAt': updatedAt ?? FieldValue.serverTimestamp(),
-      'lastLogin': lastLogin,
+      'updatedAt': updatedAt != null
+          ? Timestamp.fromDate(updatedAt!)
+          : FieldValue.serverTimestamp(),
+      'lastLogin': lastLogin != null ? Timestamp.fromDate(lastLogin!) : null,
     };
 
-    if (isEmployee) {
-      map['permissions'] = permissions?.toMap();
-      map['stats'] = stats?.toMap();
+    if (isEmployee || role == UserRole.employee) {
+      map['permissions'] =
+          (permissions ?? UserPermissions.defaultPermissions()).toMap();
+      map['stats'] = (stats ?? UserStats()).toMap();
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 6 - MODEL TO_FIRESTORE] Final Map Role: $role, HasPermissionsKey: ${map.containsKey('permissions')}, PermissionsData: ${map['permissions']}');
     }
 
     return map;
@@ -126,7 +150,7 @@ class UserModel {
   UserModel copyWith({
     String? userId,
     String? storeId,
-    String? role,
+    UserRole? role,
     String? fullName,
     String? email,
     String? phone,
@@ -134,13 +158,17 @@ class UserModel {
     String? firebaseUid,
     String? pin,
     bool? isActive,
-    Timestamp? createdAt,
+    DateTime? createdAt,
     String? createdBy,
-    Timestamp? updatedAt,
-    Timestamp? lastLogin,
+    DateTime? updatedAt,
+    DateTime? lastLogin,
     UserPermissions? permissions,
     UserStats? stats,
   }) {
+    if (kDebugMode) {
+      debugPrint(
+          '🔍 [TRACE 5 - MODEL COPYWITH] Passed Permissions Arg: ${permissions?.toMap()}, Existing Permissions: ${this.permissions?.toMap()}');
+    }
     return UserModel(
       userId: userId ?? this.userId,
       storeId: storeId ?? this.storeId,
@@ -179,15 +207,11 @@ class UserModel {
   int get hashCode => userId.hashCode ^ storeId.hashCode;
 }
 
-// ===========================
-// Nested: User Stats
-// ===========================
-
 class UserStats {
   final int totalTransactions;
   final double totalCommission;
   final int totalDebtsCreated;
-  final Timestamp? lastTransactionDate;
+  final DateTime? lastTransactionDate;
 
   UserStats({
     this.totalTransactions = 0,
@@ -198,10 +222,10 @@ class UserStats {
 
   factory UserStats.fromMap(Map<String, dynamic> map) {
     return UserStats(
-      totalTransactions: map['totalTransactions'] ?? 0,
-      totalCommission: (map['totalCommission'] ?? 0.0).toDouble(),
-      totalDebtsCreated: map['totalDebtsCreated'] ?? 0,
-      lastTransactionDate: map['lastTransactionDate'],
+      totalTransactions: NumberParser.toInt(map['totalTransactions']),
+      totalCommission: NumberParser.toDouble(map['totalCommission']),
+      totalDebtsCreated: NumberParser.toInt(map['totalDebtsCreated']),
+      lastTransactionDate: (map['lastTransactionDate'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -210,7 +234,9 @@ class UserStats {
       'totalTransactions': totalTransactions,
       'totalCommission': totalCommission,
       'totalDebtsCreated': totalDebtsCreated,
-      'lastTransactionDate': lastTransactionDate,
+      'lastTransactionDate': lastTransactionDate != null
+          ? Timestamp.fromDate(lastTransactionDate!)
+          : null,
     };
   }
 
@@ -218,7 +244,7 @@ class UserStats {
     int? totalTransactions,
     double? totalCommission,
     int? totalDebtsCreated,
-    Timestamp? lastTransactionDate,
+    DateTime? lastTransactionDate,
   }) {
     return UserStats(
       totalTransactions: totalTransactions ?? this.totalTransactions,

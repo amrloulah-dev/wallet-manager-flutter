@@ -1,0 +1,263 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as fln;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:flutter/services.dart';
+import '../../routes/navigation_service.dart';
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import '../services/analytics_service.dart';
+import '../utils/toast_utils.dart';
+import 'app_exceptions.dart';
+import 'error_severity.dart';
+
+/// Centralized error handler responsible for logging and diagnostics.
+class AppErrorHandler {
+  static bool isTestMode = false;
+
+  static fln.FlutterLocalNotificationsPlugin _notificationsPlugin =
+      fln.FlutterLocalNotificationsPlugin();
+
+  /// Sets a custom notifications plugin (for testing).
+  @visibleForTesting
+  static void setNotificationsPlugin(
+      fln.FlutterLocalNotificationsPlugin plugin) {
+    _notificationsPlugin = plugin;
+    _notificationsInitialized = true; // Assume initialized if mocked
+  }
+
+  static bool _notificationsInitialized = false;
+
+  static Future<void> _ensureNotificationsInitialized() async {
+    if (_notificationsInitialized) return;
+    const fln.AndroidInitializationSettings androidSettings =
+        fln.AndroidInitializationSettings('@mipmap/ic_launcher');
+    const fln.InitializationSettings initSettings = fln.InitializationSettings(
+      android: androidSettings,
+    );
+    await _notificationsPlugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse:
+          (fln.NotificationResponse response) async {
+        try {
+          if (await FlutterOverlayWindow.isActive()) {
+            await FlutterOverlayWindow.closeOverlay();
+          }
+
+          // Launch main app if user tapped notification
+          if (response.payload == 'error_notification') {
+            await _launchMainApp();
+          }
+        } catch (e, stack) {
+          if (kDebugMode) {
+            debugPrint(
+                '⚠️ [ERROR_HANDLER] Failed to handle notification tap: $e\n$stack');
+          }
+        }
+      },
+    );
+    _notificationsInitialized = true;
+  }
+
+  /// High-level initialization to hook into Flutter's global error reporting.
+  static void init() {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      handle(
+        details.exception,
+        stackTrace: details.stack,
+        severity: ErrorSeverity.critical,
+        operation: 'flutter_global_error',
+      );
+    };
+
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      handle(
+        error,
+        stackTrace: stack,
+        severity: ErrorSeverity.critical,
+        operation: 'platform_dispatcher',
+      );
+      return false;
+    };
+  }
+
+  /// Logs a non-fatal error silently without interrupting the user.
+  /// In debug mode, logs to console. In release mode, reports to Crashlytics.
+  static void logSilentError(String error, String reason,
+      {StackTrace? stackTrace}) {
+    final sanitizedError = sanitizeMessage(error);
+    if (kDebugMode || isTestMode) {
+      if (kDebugMode) {
+        debugPrint(
+          '🤫 [SILENT ERROR] [$reason] $sanitizedError\n'
+          '  Stack: ${stackTrace ?? StackTrace.current}',
+        );
+      }
+      developer.log(
+        sanitizedError,
+        name: 'SILENT_ERROR',
+        error: sanitizedError,
+        stackTrace: stackTrace,
+      );
+    } else {
+      FirebaseCrashlytics.instance.recordError(
+        sanitizedError,
+        stackTrace,
+        reason: reason,
+        printDetails: false,
+        fatal: false,
+      );
+    }
+  }
+
+  /// Launches the main application using a platform channel.
+  static Future<void> _launchMainApp() async {
+    try {
+      final result = await const MethodChannel('com.ewallet.manager/app')
+          .invokeMethod('launchMainApp');
+      if (kDebugMode) {
+        debugPrint('🚀 [ERROR_HANDLER] Launched main app: $result');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [ERROR_HANDLER] Failed to launch main app: $e\n$stack');
+      }
+    }
+  }
+
+  static Future<void> handle(
+    Object error, {
+    ErrorSeverity severity = ErrorSeverity.medium,
+    String operation = 'unspecified',
+    StackTrace? stackTrace,
+    bool showToast = false,
+  }) async {
+    if (isTestMode) return;
+
+    final rawMessage = error is AppException ? error.message : error.toString();
+    final message = sanitizeMessage(rawMessage);
+    _logDiagnostic(severity, operation, message, stackTrace);
+
+    final context = NavigationService.navigatorKey.currentContext;
+
+    // 1. Visible Surfacing (Context-Aware)
+    if (context != null) {
+      // Foreground UI context exists
+      if (showToast) {
+        try {
+          ToastUtils.showError(message);
+        } catch (e, stack) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [ERROR_HANDLER] Failed to show toast: $e\n$stack');
+          }
+        }
+      }
+    } else {
+      // Background context — trigger Local Notification for critical issues
+      try {
+        await _ensureNotificationsInitialized();
+        const fln.AndroidNotificationDetails androidDetails =
+            fln.AndroidNotificationDetails(
+          'error_channel',
+          'Errors',
+          channelDescription: 'Critical background errors',
+          importance: fln.Importance.max,
+          priority: fln.Priority.high,
+          autoCancel: true,
+        );
+        const fln.NotificationDetails details = fln.NotificationDetails(
+          android: androidDetails,
+        );
+        await _notificationsPlugin.show(
+          999,
+          '⚠️ SMS Processing Error',
+          'Please open the app to verify your recent transactions.',
+          details,
+          payload: 'error_notification',
+        );
+      } catch (e, stack) {
+        if (kDebugMode) {
+          debugPrint(
+              '⚠️ [ERROR_HANDLER] Failed to show notification: $e\n$stack');
+        }
+      }
+    }
+
+    // 2. Report to Analytics & Crashlytics (Safeguarded)
+    try {
+      // Check if Firebase is truly initialized to avoid LateInitializationError
+      if (Firebase.apps.isNotEmpty) {
+        AnalyticsService.logError(
+          message,
+          severity: severity.name,
+          operation: operation,
+        ).catchError((e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ [ERROR_HANDLER] Analytics failed: $e');
+          }
+        });
+
+        if (!kDebugMode &&
+            (severity == ErrorSeverity.critical ||
+                severity == ErrorSeverity.medium)) {
+          // Send sanitized error string to Crashlytics instead of raw object
+          // to prevent leaking sensitive fields in internal state.
+          await FirebaseCrashlytics.instance.recordError(
+            message,
+            stackTrace,
+            reason: 'Operation: $operation',
+            fatal: severity == ErrorSeverity.critical,
+          );
+        }
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ [ERROR_HANDLER] Firebase reporting check failed: $e\n$stack');
+      }
+    }
+  }
+
+  /// Strips PII (Phone numbers, amounts, balances) from error messages.
+  @visibleForTesting
+  static String sanitizeMessage(String message) {
+    var sanitized = message;
+
+    // 1. Mask Egyptian Phone Numbers (01x xxxx xxxx)
+    final phoneRegex = RegExp(r'01[0125][0-9]{8}');
+    sanitized = sanitized.replaceAll(phoneRegex, '[PHONE]');
+
+    // 2. Mask values that look like balances/amounts (Report 2: M-6)
+    // Matches patterns like "balance: 123.45" or "amount: 1000"
+    final balanceRegex = RegExp(
+      r'(balance|amount|total|commission|fee)[:\s]+[0-9]+(\.[0-9]+)?',
+      caseSensitive: false,
+    );
+    sanitized = sanitized.replaceAllMapped(balanceRegex, (match) {
+      return '${match.group(1)}: [SENSITIVE]';
+    });
+
+    return sanitized;
+  }
+
+  static void _logDiagnostic(
+    ErrorSeverity severity,
+    String operation,
+    String message,
+    StackTrace? stackTrace,
+  ) {
+    if (kDebugMode) {
+      final timestamp = DateTime.now().toUtc().toIso8601String();
+      final stack = stackTrace?.toString() ?? 'No stack trace available';
+      if (kDebugMode) {
+        debugPrint(
+          '[ERROR] [${severity.name}] [$operation] $message\n'
+          '  Stack: $stack\n'
+          '  Timestamp: $timestamp',
+        );
+      }
+    }
+  }
+}

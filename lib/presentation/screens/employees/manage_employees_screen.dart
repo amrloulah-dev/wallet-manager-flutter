@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
@@ -34,10 +35,10 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
     final provider = context.read<EmployeeProvider>();
     final confirmed = await DialogUtils.showConfirmDialog(
       context,
-      title: 'تعطيل حساب الموظف',
-      message:
-          'هل أنت متأكد أنك تريد تعطيل حساب ${employee.fullName}؟\n\nلن يتمكن من تسجيل الدخول بعد الآن.',
-      confirmText: 'تعطيل',
+      title: AppLocalizations.of(context)!.deactivateEmployeeAccount,
+      message: AppLocalizations.of(context)!
+          .deactivateEmployeeConfirmation(employee.fullName),
+      confirmText: AppLocalizations.of(context)!.deactivate,
       type: DialogType.danger,
     );
 
@@ -45,9 +46,11 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       final success = await provider.deactivateEmployee(employee.userId);
       if (mounted) {
         if (success) {
-          ToastUtils.showSuccess('تم تعطيل حساب الموظف');
+          ToastUtils.showSuccess(
+              AppLocalizations.of(context)!.employeeDeactivated);
         } else {
-          ToastUtils.showError(provider.errorMessage ?? 'فشل تعطيل الحساب');
+          ToastUtils.showError(provider.errorMessage ??
+              AppLocalizations.of(context)!.deactivationFailed);
         }
       }
     }
@@ -57,42 +60,56 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة الموظفين'),
+        title: Text(AppLocalizations.of(context)!.manageEmployeesTitle),
         centerTitle: true,
       ),
       body: Consumer<EmployeeProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.employees.isEmpty) {
-            return const LoadingIndicator(message: 'جاري تحميل الموظفين...');
+            return LoadingIndicator(
+                message: AppLocalizations.of(context)!.loadingEmployees);
           }
 
           if (provider.hasError && provider.employees.isEmpty) {
             return CustomErrorWidget(
-              message: provider.errorMessage ?? 'حدث خطأ أثناء تحميل الموظفين',
+              message: provider.errorMessage ??
+                  AppLocalizations.of(context)!.errorLoadingEmployees,
               onRetry: () => provider.refresh(),
             );
           }
 
           if (provider.employees.isEmpty) {
             return EmptyStateWidget(
-              message: 'لا يوجد موظفين',
-              description: 'ابدأ بإضافة موظف جديد لإدارة صلاحياته.',
+              message: AppLocalizations.of(context)!.noEmployees,
+              description: AppLocalizations.of(context)!.startAddingEmployees,
               icon: Icons.people_outline,
-              actionText: 'إضافة موظف',
+              actionText: AppLocalizations.of(context)!.addEmployee,
               onAction: _navigateToAddEmployee,
             );
           }
 
           final activeEmployees = provider.activeEmployees;
           final inactiveEmployees = provider.inactiveEmployees;
+          final employeeProvider = context.read<EmployeeProvider>();
 
-          return ListView(
-            padding: const EdgeInsets.only(bottom: 80), // For FAB
-            children: [
+          return CustomScrollView(
+            slivers: [
               if (activeEmployees.isNotEmpty)
-                _buildEmployeeSection('الموظفين النشطين', activeEmployees),
+                ..._buildSliverSection(
+                  context,
+                  AppLocalizations.of(context)!.activeEmployees,
+                  activeEmployees,
+                  employeeProvider,
+                ),
               if (inactiveEmployees.isNotEmpty)
-                _buildEmployeeSection('الموظفين المعطلين', inactiveEmployees),
+                ..._buildSliverSection(
+                  context,
+                  AppLocalizations.of(context)!.inactiveEmployees,
+                  inactiveEmployees,
+                  employeeProvider,
+                ),
+              // Bottom padding for FAB
+              const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
             ],
           );
         },
@@ -100,28 +117,33 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddEmployee,
         icon: const Icon(Icons.add),
-        label: const Text('إضافة موظف'),
+        label: Text(AppLocalizations.of(context)!.addEmployee),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
     );
   }
 
-  Widget _buildEmployeeSection(String title, List<UserModel> employees) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+  List<Widget> _buildSliverSection(
+    BuildContext context,
+    String title,
+    List<UserModel> employees,
+    EmployeeProvider provider,
+  ) {
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 24, 16, 8),
           child: Text(title, style: Theme.of(context).textTheme.headlineSmall),
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: employees.length,
-          itemBuilder: (context, index) {
+      ),
+      SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
             final employee = employees[index];
             return EmployeeCard(
+              key: ValueKey(
+                  '${employee.userId}_${employee.isActive}_${provider.isEmployeeFrozen(employee)}'),
               employee: employee,
               onDelete: employee.isActive
                   ? () => _showDeactivateDialog(employee)
@@ -136,8 +158,9 @@ class _ManageEmployeesScreenState extends State<ManageEmployeesScreen> {
               },
             );
           },
+          childCount: employees.length,
         ),
-      ],
-    );
+      ),
+    ];
   }
 }

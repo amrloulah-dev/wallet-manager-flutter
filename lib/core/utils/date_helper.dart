@@ -1,24 +1,29 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:walletmanager/l10n/arb/app_localizations.dart';
 
 class DateHelper {
-  // ===========================
-  // Format Timestamp to String
-  // ===========================
-  /// Converts a Firestore Timestamp to a formatted string.
-  static String formatTimestamp(Timestamp timestamp,
-      {String format = 'dd/MM/yyyy'}) {
-    final dateTime = timestamp.toDate();
-    return DateFormat(format).format(dateTime);
+  /// The active locale for date formatting.
+  /// Initialized to 'en_US' as a safe default; call [setLocale] at app startup.
+  static String _locale = 'en_US';
+
+  /// Configures the locale used by date formatting methods.
+  /// Should be called once during app initialization.
+  static void setLocale(String locale) {
+    _locale = locale;
   }
 
   // ===========================
   // Format DateTime to String
   // ===========================
-  /// Formats a DateTime object into a string.
+  /// Formats a DateTime object into a localized string.
+  /// If [format] is not provided, it defaults to [DateFormat.yMd] for the given [locale].
   static String formatDateTime(DateTime dateTime,
-      {String format = 'dd/MM/yyyy'}) {
-    return DateFormat(format).format(dateTime);
+      {String? format, String? locale}) {
+    final effectiveLocale = locale ?? _locale;
+    if (format != null) {
+      return DateFormat(format, effectiveLocale).format(dateTime);
+    }
+    return DateFormat.yMd(effectiveLocale).format(dateTime);
   }
 
   // ===========================
@@ -94,55 +99,36 @@ class DateHelper {
   }
 
   // ===========================
-  // Check if Timestamp is Today
+  // Get Relative Time (Localized)
   // ===========================
-  /// Checks if the given Firestore Timestamp is today.
-  static bool isTimestampToday(Timestamp timestamp) {
-    return isToday(timestamp.toDate());
-  }
-
-  // ===========================
-  // Get Relative Time in Arabic
-  // ===========================
-  /// Returns a user-friendly relative time string in Arabic.
-  static String getRelativeTime(DateTime date) {
+  /// Returns a user-friendly relative time string.
+  /// Uses AppLocalizations ICU plural keys for proper multi-language support.
+  static String getRelativeTime(DateTime date, {AppLocalizations? l10n}) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
+    // Fallback if l10n is not provided (e.g. background tasks)
+    if (l10n == null) {
+      return DateFormat.yMd(_locale).add_Hm().format(date);
+    }
+
     if (difference.inSeconds < 60) {
-      return 'الآن';
+      return l10n.relativeJustNow;
     } else if (difference.inMinutes < 60) {
-      final minutes = difference.inMinutes;
-      if (minutes == 1) return 'منذ دقيقة';
-      if (minutes == 2) return 'منذ دقيقتين';
-      if (minutes <= 10) return 'منذ $minutes دقائق';
-      return 'منذ $minutes دقيقة';
+      return l10n.relativeMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      final hours = difference.inHours;
-      if (hours == 1) return 'منذ ساعة';
-      if (hours == 2) return 'منذ ساعتين';
-      if (hours <= 10) return 'منذ $hours ساعات';
-      return 'منذ $hours ساعة';
+      return l10n.relativeHoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      final days = difference.inDays;
-      if (days == 1) return 'أمس';
-      if (days == 2) return 'منذ يومين';
-      return 'منذ $days أيام';
+      return l10n.relativeDaysAgo(difference.inDays);
     } else if (difference.inDays < 30) {
       final weeks = (difference.inDays / 7).floor();
-      if (weeks == 1) return 'منذ أسبوع';
-      if (weeks == 2) return 'منذ أسبوعين';
-      return 'منذ $weeks أسابيع';
+      return l10n.relativeWeeksAgo(weeks);
     } else if (difference.inDays < 365) {
       final months = (difference.inDays / 30).floor();
-      if (months == 1) return 'منذ شهر';
-      if (months == 2) return 'منذ شهرين';
-      return 'منذ $months أشهر';
+      return l10n.relativeMonthsAgo(months);
     } else {
       final years = (difference.inDays / 365).floor();
-      if (years == 1) return 'منذ سنة';
-      if (years == 2) return 'منذ سنتين';
-      return 'منذ $years سنوات';
+      return l10n.relativeYearsAgo(years);
     }
   }
 
@@ -162,22 +148,6 @@ class DateHelper {
   /// Checks if two DateTime objects are in the same month of the same year.
   static bool isSameMonth(DateTime date1, DateTime date2) {
     return date1.year == date2.year && date1.month == date2.month;
-  }
-
-  // ===========================
-  // Convert DateTime to Timestamp
-  // ===========================
-  /// Converts a DateTime object to a Firestore Timestamp.
-  static Timestamp dateTimeToTimestamp(DateTime dateTime) {
-    return Timestamp.fromDate(dateTime);
-  }
-
-  // ===========================
-  // Convert Timestamp to DateTime
-  // ===========================
-  /// Converts a Firestore Timestamp to a DateTime object.
-  static DateTime timestampToDateTime(Timestamp timestamp) {
-    return timestamp.toDate();
   }
 
   // ===========================

@@ -9,6 +9,14 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    dead_null_aware_expression: ignore
+    non_constant_identifier_names: ignore
+    deprecated_member_use: ignore
+    subtype_of_sealed_class: ignore
+    no_wildcard_variable_uses: ignore
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

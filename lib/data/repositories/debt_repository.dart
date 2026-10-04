@@ -1,94 +1,73 @@
+import 'package:walletmanager/core/enums/debt_enums.dart';
+import 'package:walletmanager/core/utils/amount_validator.dart';
 import 'package:walletmanager/core/utils/cache_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walletmanager/data/repositories/stats_repository.dart';
 
 import '../../core/constants/firebase_constants.dart';
+import '../../core/errors/app_error_handler.dart';
 import '../../core/errors/app_exceptions.dart';
 import '../models/debt_model.dart';
+import '../models/paginated_result.dart';
 import '../services/firebase_service.dart';
 
 class DebtRepository {
   final FirebaseService _firebaseService;
   final CacheManager _cacheManager;
-  final StatsRepository _statsRepository;
+
+  final FirebaseFirestore? _customFirestore;
 
   DebtRepository({
     FirebaseService? firebaseService,
     CacheManager? cacheManager,
-    StatsRepository? statsRepository,
+    FirebaseFirestore? firestore,
   })  : _firebaseService = firebaseService ?? FirebaseService(),
         _cacheManager = cacheManager ?? CacheManager(),
-        _statsRepository = statsRepository ?? StatsRepository();
+        _customFirestore = firestore;
 
-  FirebaseFirestore get _firestore => _firebaseService.firestore;
+  FirebaseFirestore get _firestore =>
+      _customFirestore ?? _firebaseService.firestore;
   CollectionReference get _debtsCollection =>
       _firestore.collection(FirebaseConstants.debts);
 
+  String generateId() => _debtsCollection.doc().id;
+
   // 1️⃣ CREATE
   Future<void> createDebt(DebtModel debt) async {
-    try {
-      await _firestore.runTransaction((transaction) async {
-        // 1. Perform all reads first
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: debt.storeId,
-          oldDebt: null, // Indicates creation
-          newDebt: debt,
-        );
+    // Pre-validation
+    AmountValidator.ensurePositive(debt.amountDue);
 
-        // 2. Perform all writes after all reads
-        final debtDocRef = _debtsCollection.doc(debt.debtId);
-        transaction.set(debtDocRef, debt.toFirestore());
-      });
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to create debt: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while creating the debt: $e');
+    try {
+      final batch = _firestore.batch();
+      final statsRef =
+          _firestore.doc(FirebaseConstants.statsSummaryPath(debt.storeId));
+
+      final Map<String, dynamic> statsUpdates = {
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'openDebtsCount': FieldValue.increment(1),
+        'totalOpenAmount': FieldValue.increment(debt.amountDue),
+      };
+
+      final debtDocRef = _debtsCollection.doc(debt.debtId);
+      batch.set(debtDocRef, debt.toFirestore());
+      batch.set(statsRef, statsUpdates, SetOptions(merge: true));
+
+      await batch.commit();
+
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.createDebt');
+      throw ServerException('debt_error_create_failed');
     }
   }
 
   // 2️⃣ READ
-  Future<DebtModel?> getDebtById(String debtId) async {
-    final cacheKey = 'debt_details_$debtId';
-    final cachedDebt = _cacheManager.get<DebtModel>(cacheKey);
-    if (cachedDebt != null) {
-      return cachedDebt;
-    }
-
-    try {
-      final doc = await _debtsCollection.doc(debtId).get();
-      if (!doc.exists) return null;
-
-      final debt = DebtModel.fromFirestore(doc);
-      _cacheManager.set(cacheKey, debt, duration: const Duration(minutes: 10));
-      return debt;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debt: ${e.message}', code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching the debt.');
-    }
-  }
-
-  Future<Map<String, dynamic>> getDebtsByStoreIdPaginated(
+  Stream<List<DebtModel>> getDebtsStream(
     String storeId, {
     String? status,
     String? type,
-    int limit = 15,
-    DocumentSnapshot? lastDoc,
-  }) async {
-    // Caching logic remains the same
-    if (lastDoc == null) {
-      final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
-      final cachedResult = _cacheManager.get<Map<String, dynamic>>(cacheKey);
-      if (cachedResult != null) {
-        return cachedResult;
-      }
-    }
-
+    int limit = 20,
+  }) {
     try {
       Query query = _debtsCollection
           .where(FirebaseConstants.storeId, isEqualTo: storeId)
@@ -102,32 +81,63 @@ class DebtRepository {
         query = query.where('debtType', isEqualTo: type);
       }
 
-      if (lastDoc != null) {
-        query = query.startAfterDocument(lastDoc);
+      return query.limit(limit).snapshots().map((snapshot) {
+        final List<DebtModel> debts = [];
+        for (final doc in snapshot.docs) {
+          try {
+            debts.add(DebtModel.fromFirestore(doc));
+          } catch (e, stackTrace) {
+            AppErrorHandler.logSilentError(
+              'Skipping corrupt Debt document ${doc.id}: $e',
+              'DebtRepository.getDebtsStream',
+              stackTrace: stackTrace,
+            );
+          }
+        }
+        return debts;
+      });
+    } catch (e, stack) {
+      AppErrorHandler.logSilentError(
+          e.toString(), 'DebtRepository.getDebtsStream',
+          stackTrace: stack);
+      return Stream.error(ServerException('debt_error_stream_failed'));
+    }
+  }
+
+  Future<DebtModel?> getDebtById(String debtId,
+      {String? expectedStoreId}) async {
+    final cacheKey = 'debt_details_$debtId';
+    final cachedDebt = _cacheManager.get<DebtModel>(cacheKey);
+
+    if (cachedDebt != null) {
+      if (expectedStoreId != null && cachedDebt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+      return cachedDebt;
+    }
+
+    try {
+      final doc = await _debtsCollection.doc(debtId).get();
+      if (!doc.exists) return null;
+
+      final debt = DebtModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && debt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
       }
 
-      final snapshot = await query.limit(limit).get();
-      final debts =
-          snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
-      final newLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-
-      final result = {
-        'debts': debts,
-        'lastDoc': newLastDoc,
-      };
-
-      if (lastDoc == null) {
-        final cacheKey = 'debts_page_0_${storeId}_${status}_$type';
-        _cacheManager.set(cacheKey, result);
-      }
-
-      return result;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to get store debts: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching store debts.');
+      _cacheManager.set(cacheKey, debt, duration: const Duration(minutes: 10));
+      return debt;
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtById');
+      throw ServerException('debt_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      if (e is AppException) rethrow;
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtById');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -144,12 +154,14 @@ class DebtRepository {
         return DebtModel.fromFirestore(snapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debt by customer name: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching debt by customer name.');
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
+      throw ServerException('debt_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtByCustomerName');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -165,19 +177,23 @@ class DebtRepository {
         return DebtModel.fromFirestore(snapshot.docs.first);
       }
       return null;
-    } on FirebaseException catch (e) {
-      throw ServerException(
-          'Failed to get debt by customer phone: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching debt by customer phone.');
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'DebtRepository.getDebtByCustomerPhone');
+      throw ServerException('debt_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack,
+          operation: 'DebtRepository.getDebtByCustomerPhone');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
   // 3️⃣ UPDATE
   Future<void> processPayment(
       String debtId, double amountToPay, String userId) async {
+    AmountValidator.ensurePositive(amountToPay);
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -190,11 +206,8 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToPay <= 0) {
-          throw ValidationException('Amount must be positive.');
-        }
         if (amountToPay > oldDebt.amountDue) {
-          throw ValidationException('Paid amount exceeds remaining debt.');
+          throw InvalidAmountException('debt_error_amount_exceeded');
         }
 
         final isFullPayment = (oldDebt.amountDue - amountToPay).abs() < 0.01;
@@ -204,51 +217,55 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        DebtModel newDebt;
+        final statsRef =
+            _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
+
+        await transaction.get(statsRef);
+
+        final Map<String, dynamic> statsUpdates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+        };
 
         if (isFullPayment) {
           updateData['amountDue'] = 0.0;
-          updateData['debtStatus'] = 'paid';
+          updateData['debtStatus'] = DebtStatus.paid.name;
           updateData['paidDate'] = FieldValue.serverTimestamp();
           updateData['markedPaidBy'] = userId;
-          newDebt = oldDebt.copyWith(
-            amountDue: 0.0,
-            debtStatus: 'paid',
-          );
+
+          statsUpdates['openDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['totalOpenAmount'] =
+              FieldValue.increment(-oldDebt.amountDue);
+          statsUpdates['paidDebtsCount'] = FieldValue.increment(1);
+          statsUpdates['totalPaidAmount'] =
+              FieldValue.increment(oldDebt.totalAmount);
         } else {
           updateData['amountDue'] = FieldValue.increment(-amountToPay);
-          newDebt = oldDebt.copyWith(
-            amountDue: oldDebt.amountDue - amountToPay,
-          );
+
+          statsUpdates['totalOpenAmount'] = FieldValue.increment(-amountToPay);
         }
-
-        // Note: For payments, we do NOT change totalAmount.
-
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: oldDebt.storeId,
-          oldDebt: oldDebt,
-          newDebt: newDebt,
-        );
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
+        transaction.update(statsRef, statsUpdates);
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to process payment: ${e.message}',
-          code: e.code);
-    } catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.processPayment');
+      throw ServerException('debt_error_payment_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.processPayment');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while processing the payment: $e');
+      throw ServerException('debt_error_payment_failed');
     }
   }
 
   Future<void> addPartialDebt(
       String debtId, double amountToAdd, String userId) async {
+    AmountValidator.ensurePositive(amountToAdd);
     try {
       await _firestore.runTransaction((transaction) async {
         // --- All READ operations must come first ---
@@ -261,11 +278,7 @@ class DebtRepository {
 
         final oldDebt = DebtModel.fromFirestore(debtDoc);
 
-        if (amountToAdd <= 0) {
-          throw ValidationException('Amount must be positive.');
-        }
-
-        final wasPaid = oldDebt.debtStatus == 'paid';
+        final wasPaid = oldDebt.debtStatus == DebtStatus.paid;
 
         final Map<String, dynamic> updateData = {
           'amountDue': FieldValue.increment(amountToAdd),
@@ -274,118 +287,114 @@ class DebtRepository {
           'lastUpdatedBy': userId,
         };
 
-        // If a paid debt is being reopened, update its status
+        final statsRef =
+            _firestore.doc(FirebaseConstants.statsSummaryPath(oldDebt.storeId));
+
+        await transaction.get(statsRef);
+
+        final Map<String, dynamic> statsUpdates = {
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'totalOpenAmount': FieldValue.increment(amountToAdd),
+        };
+
         if (wasPaid) {
-          updateData['debtStatus'] = 'open';
+          updateData['debtStatus'] = DebtStatus.open.name;
+          statsUpdates['openDebtsCount'] = FieldValue.increment(1);
+          statsUpdates['paidDebtsCount'] = FieldValue.increment(-1);
+          statsUpdates['totalPaidAmount'] =
+              FieldValue.increment(-oldDebt.totalAmount);
         }
-
-        final newDebt = oldDebt.copyWith(
-          amountDue: oldDebt.amountDue + amountToAdd,
-          totalAmount: oldDebt.totalAmount + amountToAdd,
-          debtStatus: wasPaid ? 'open' : oldDebt.debtStatus,
-        );
-
-        await _statsRepository.updateStatsOnDebtUpdate(
-          firestoreTransaction: transaction,
-          storeId: oldDebt.storeId,
-          oldDebt: oldDebt,
-          newDebt: newDebt,
-        );
 
         // --- All WRITE operations must come last ---
         transaction.update(debtDocRef, updateData);
+        transaction.update(statsRef, statsUpdates);
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to add partial debt: ${e.message}',
-          code: e.code);
-    } catch (e) {
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
+      throw ServerException('debt_error_partial_add_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.addPartialDebt');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while adding partial debt: $e');
+      throw ServerException('debt_error_partial_add_failed');
     }
   }
 
   Future<void> updateDebt(String debtId, Map<String, dynamic> data) async {
+    // Domain Integrity Guard (Report 2: M-6)
+    assert(!data.containsKey(FirebaseConstants.storeId),
+        'storeId mutation is strictly forbidden for security reasons.');
+
     try {
       await _debtsCollection.doc(debtId).update(data);
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to update debt: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while updating the debt.');
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.updateDebt');
+      throw ServerException('debt_error_update_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.updateDebt');
+      throw ServerException('debt_error_update_failed');
     }
   }
 
-  Future<Map<String, dynamic>> getDebtAggregates(String storeId,
-      {DateTime? startDate, DateTime? endDate}) async {
+  Future<PaginatedResult<DebtModel>> getDebtsByDateRange(
+      String storeId, DateTime startDate, DateTime endDate,
+      {DocumentSnapshot? lastDocument,
+      String? debtType,
+      String? debtStatus}) async {
     try {
       Query query =
           _debtsCollection.where(FirebaseConstants.storeId, isEqualTo: storeId);
 
-      if (startDate != null) {
-        query = query.where('debtDate', isGreaterThanOrEqualTo: startDate);
+      if (debtType != null && debtType != 'all') {
+        query = query.where('debtType', isEqualTo: debtType);
       }
-      if (endDate != null) {
-        query = query.where('debtDate', isLessThanOrEqualTo: endDate);
+      if (debtStatus != null && debtStatus != 'all') {
+        query = query.where('debtStatus', isEqualTo: debtStatus);
       }
 
-      final snapshot = await query.get();
+      query = query
+          .where('createdAt', isGreaterThanOrEqualTo: startDate)
+          .where('createdAt', isLessThanOrEqualTo: endDate)
+          .orderBy('createdAt', descending: true);
 
-      int openDebtsCount = 0;
-      double totalOpenAmount = 0.0;
-      int paidDebtsCount = 0;
-      double totalPaidAmount = 0.0;
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        if (data['debtStatus'] == 'open') {
-          openDebtsCount++;
-          totalOpenAmount += (data['amountDue'] ?? 0.0).toDouble();
-        } else if (data['debtStatus'] == 'paid') {
-          paidDebtsCount++;
-          totalPaidAmount += (data['amountDue'] ?? 0.0).toDouble();
+      final snapshot = await query.limit(20).get();
+      final List<DebtModel> items = [];
+      for (final doc in snapshot.docs) {
+        try {
+          items.add(DebtModel.fromFirestore(doc));
+        } catch (e, stackTrace) {
+          AppErrorHandler.logSilentError(
+            'Skipping corrupt Debt document ${doc.id}: $e',
+            'DebtRepository.getDebtsByDateRange',
+            stackTrace: stackTrace,
+          );
         }
       }
 
-      return {
-        'openDebtsCount': openDebtsCount,
-        'totalOpenAmount': totalOpenAmount,
-        'paidDebtsCount': paidDebtsCount,
-        'totalPaidAmount': totalPaidAmount,
-        'totalDebtsCount': openDebtsCount + paidDebtsCount,
-      };
-    } catch (e) {
-      return {
-        'openDebtsCount': 0,
-        'totalOpenAmount': 0.0,
-        'paidDebtsCount': 0,
-        'totalPaidAmount': 0.0,
-        'totalDebtsCount': 0,
-      };
-    }
-  }
-
-  Future<List<DebtModel>> getDebtsByDateRange(
-      String storeId, DateTime startDate, DateTime endDate) async {
-    try {
-      final snapshot = await _debtsCollection
-          .where(FirebaseConstants.storeId, isEqualTo: storeId)
-          .where('createdAt', isGreaterThanOrEqualTo: startDate)
-          .where('createdAt', isLessThanOrEqualTo: endDate)
-          .get();
-      return snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList();
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to get debts by date range: ${e.message}',
-          code: e.code);
-    } catch (e) {
-      throw ServerException(
-          'An unexpected error occurred while fetching debts by date range.');
+      return PaginatedResult(
+        items: items,
+        lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      );
+    } on FirebaseException catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
+      throw ServerException('debt_error_fetch_failed', code: e.code);
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsByDateRange');
+      throw ServerException('debt_error_fetch_failed');
     }
   }
 
@@ -404,7 +413,9 @@ class DebtRepository {
       final countQuery = query.count();
       final snapshot = await countQuery.get();
       return snapshot.count ?? 0;
-    } catch (e) {
+    } catch (e, stack) {
+      await AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsCount');
       return 0;
     }
   }
@@ -425,7 +436,9 @@ class DebtRepository {
       final snapshot = await aggregateQuery.get();
 
       return snapshot.getSum('amountDue') ?? 0.0;
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.getDebtsTotalAmount');
       return 0.0;
     }
   }
@@ -446,10 +459,12 @@ class DebtRepository {
 
         // Stats Reference
         final statsRef = _firestore
-            .collection('stores')
+            .collection(FirebaseConstants.storesCollection)
             .doc(storeId)
-            .collection('stats')
-            .doc('summary');
+            .collection(FirebaseConstants.statsCollection)
+            .doc(FirebaseConstants.summaryDoc);
+
+        await transaction.get(statsRef);
 
         // Prepare Stats Updates
         final Map<String, dynamic> updates = {
@@ -466,30 +481,43 @@ class DebtRepository {
 
         // Perform Writes
         transaction.delete(debtDocRef);
-        // Attempt to update stats, assuming the summary document exists.
-        // If it doesn't, this part of the transaction will fail, ensuring consistency.
         transaction.update(statsRef, updates);
       });
 
-      _cacheManager.clearWhere((key) => key.startsWith('debts_page_0_'));
+      _cacheManager.clearWhere((key) => key.startsWith('debts_page_'));
       _cacheManager.clear('debt_details_$debtId');
-    } on FirebaseException catch (e) {
-      throw ServerException('Failed to delete debt: ${e.message}',
-          code: e.code);
-    } catch (e) {
+    } on FirebaseException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.deleteDebt');
+      throw ServerException('debt_error_delete_failed', code: e.code);
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.deleteDebt');
       if (e is AppException) rethrow;
-      throw ServerException(
-          'An unexpected error occurred while deleting the debt: $e');
+      throw ServerException('debt_error_delete_failed');
     }
   }
 
   // 5️⃣ STREAM
-  Stream<DebtModel> watchDebt(String debtId) {
+  Stream<DebtModel> watchDebt(String debtId, {String? expectedStoreId}) {
     return _debtsCollection.doc(debtId).snapshots().map((doc) {
       if (!doc.exists) {
         throw NotFoundException('Debt');
       }
-      return DebtModel.fromFirestore(doc);
+      final debt = DebtModel.fromFirestore(doc);
+
+      // Post-fetch Tenant Isolation Guard (Report 2: M-5)
+      if (expectedStoreId != null && debt.storeId != expectedStoreId) {
+        throw PermissionDeniedException();
+      }
+
+      return debt;
+    }).handleError((error, stack) {
+      AppErrorHandler.logSilentError(
+          error.toString(), 'DebtRepository.watchDebt',
+          stackTrace: stack);
+      if (error is AppException) throw error;
+      throw error;
     });
   }
 
@@ -504,14 +532,16 @@ class DebtRepository {
           .where('debtType', isEqualTo: type);
 
       // Open Debts Query
-      final openQuery = baseQuery.where('debtStatus', isEqualTo: 'open');
+      final openQuery =
+          baseQuery.where('debtStatus', isEqualTo: DebtStatus.open.name);
       final openAggregate = openQuery.aggregate(
         sum('amountDue'),
         count(),
       );
 
       // Paid Debts Query
-      final paidQuery = baseQuery.where('debtStatus', isEqualTo: 'paid');
+      final paidQuery =
+          baseQuery.where('debtStatus', isEqualTo: DebtStatus.paid.name);
 
       // We sum 'totalAmount' (original total)
       final paidAggregate = paidQuery.aggregate(
@@ -530,7 +560,9 @@ class DebtRepository {
         'paidCount': paidSnapshot.count ?? 0,
         'paidTotal': paidSnapshot.getSum('totalAmount') ?? 0.0,
       };
-    } catch (e) {
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'DebtRepository.fetchDebtStatistics');
       return {
         'openCount': 0,
         'openTotal': 0.0,

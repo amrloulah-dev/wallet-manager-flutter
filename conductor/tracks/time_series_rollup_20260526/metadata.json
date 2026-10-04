@@ -1,0 +1,8 @@
+{
+  "track_id": "time_series_rollup_20260526",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-05-26T17:23:00+03:00",
+  "updated_at": "2026-05-26T17:23:00+03:00",
+  "description": "Implement Time-Series Rollup Architecture (BUG-03 & BUG-04) by expanding daily_stats schema and replacing local filtering with Firestore O(1) aggregate queries."
+}

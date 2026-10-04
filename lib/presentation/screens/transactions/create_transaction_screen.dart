@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -9,17 +12,27 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/wallet_provider.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../providers/platform_settings_provider.dart';
 import '../../../data/models/wallet_model.dart';
+import '../../utils/wallet_extensions.dart';
+import '../../../domain/usecases/transaction_fee_calculator.dart';
+import '../../../core/errors/app_exceptions.dart';
+import '../../../core/errors/app_error_handler.dart';
+import '../../../core/errors/error_severity.dart';
+import '../../../core/di/service_locator.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import '../../widgets/wallet/wallet_limit_bar.dart';
-import '../../../core/utils/fee_calculator.dart';
+import '../../widgets/wallet/three_zone_progress_bar.dart';
+import '../../../core/utils/number_parser.dart';
+import '../../../core/sms_automation/models/parsed_sms_dto.dart' hide TransactionType;
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
-import 'package:walletmanager/core/errors/app_exceptions.dart';
+import '../../../core/enums/transaction_enums.dart';
 
 class CreateTransactionScreen extends StatefulWidget {
+  static bool showRiveInDialog = true;
+
   const CreateTransactionScreen({super.key});
 
   @override
@@ -35,11 +48,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   final _commissionController = TextEditingController();
   final _notesController = TextEditingController();
 
-  WalletModel? _selectedWallet;
-  String? _preSelectedWalletId;
+  String? _selectedWalletId;
 
-  String? _transactionType; // 'send' | 'receive'
-  final String _paymentStatus = 'paid'; // 'paid' | 'debt'
+  TransactionType? _transactionType; // ENUM refactor
+  final PaymentStatus _paymentStatus = PaymentStatus.paid; // ENUM refactor
 
   bool _isTypeValidated = true;
   double _totalAmount = 0.0;
@@ -53,30 +65,51 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     _customerPhoneController.addListener(_updateTotal);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Pre-select wallet if ID is passed
-      final arguments = ModalRoute.of(context)?.settings.arguments as String?;
-      if (arguments != null) {
-        _preSelectedWalletId = arguments;
-        final walletProvider = context.read<WalletProvider>();
-        if (walletProvider.wallets.isNotEmpty) {
-          _trySelectWallet(walletProvider.wallets);
-        }
+      final walletProvider = context.read<WalletProvider>();
+      if (walletProvider.wallets.isEmpty) {
+        walletProvider.fetchInitialWallets();
+      }
+
+      // Pre-select wallet / pre-fill fields if arguments passed
+      final arguments = ModalRoute.of(context)?.settings.arguments;
+      if (arguments is String) {
+        setState(() {
+          _selectedWalletId = arguments;
+        });
+      } else if (arguments is Map<String, dynamic>) {
+        setState(() {
+          if (arguments['walletId'] != null) {
+            _selectedWalletId = arguments['walletId'].toString();
+          }
+          if (arguments['amount'] != null) {
+            final netAmt = NumberParser.toDouble(arguments['amount']);
+            if (netAmt > 0) {
+              _amountController.text = netAmt.toString();
+            }
+          }
+          if (arguments['sender'] != null || arguments['customerPhone'] != null) {
+            _customerPhoneController.text =
+                (arguments['sender'] ?? arguments['customerPhone']).toString();
+          }
+          if (arguments['type'] != null) {
+            final t = arguments['type'].toString();
+            _transactionType = t == 'debit'
+                ? TransactionType.debit
+                : TransactionType.credit;
+          }
+        });
+      } else if (arguments is ParsedSmsDto) {
+        setState(() {
+          _amountController.text = arguments.amount.toString();
+          if (arguments.counterpartyNumber != null) {
+            _customerPhoneController.text = arguments.counterpartyNumber!;
+          }
+          _transactionType = arguments.type.name == 'debit'
+              ? TransactionType.debit
+              : TransactionType.credit;
+        });
       }
     });
-  }
-
-  void _trySelectWallet(List<WalletModel> wallets) {
-    if (_preSelectedWalletId != null) {
-      try {
-        final walletToSelect =
-            wallets.firstWhere((w) => w.walletId == _preSelectedWalletId);
-        setState(() {
-          _selectedWallet = walletToSelect;
-        });
-      } catch (e) {
-        // Wallet not found in the list
-      }
-    }
   }
 
   @override
@@ -92,26 +125,103 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     super.dispose();
   }
 
-  void _updateTotal() {
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final commission = double.tryParse(_commissionController.text) ?? 0.0;
-
-    double fee = 0.0;
-    if (_selectedWallet != null && _transactionType == 'send') {
-      fee = FeeCalculator.calculateTransactionFee(
-        amount: amount,
-        sourceWalletType: _selectedWallet!.walletType,
-        receiverPhone: _customerPhoneController.text,
-      );
-    }
-
-    setState(() {
-      _serviceFee = fee;
-      _totalAmount = amount + commission;
-    });
+  WalletModel? get _selectedWallet {
+    if (_selectedWalletId == null) return null;
+    return context.read<WalletProvider>().walletMap[_selectedWalletId!];
   }
 
-  Future<void> _handleCreate() async {
+  double get _maxAvailable {
+    final wallet = _selectedWallet;
+    if (wallet == null) return 0.0;
+    if (_transactionType == TransactionType.credit) {
+      return wallet.availableToReceiveDaily < wallet.availableToReceiveMonthly
+          ? wallet.availableToReceiveDaily
+          : wallet.availableToReceiveMonthly;
+    }
+    return double.infinity;
+  }
+
+  Widget? _buildMaxButton(AppLocalizations l10n) {
+    if (_transactionType != TransactionType.credit ||
+        _selectedWalletId == null) {
+      return null;
+    }
+    return IconButton(
+      tooltip: l10n.maxButtonLabel,
+      icon: const Icon(
+        Icons.keyboard_double_arrow_up_rounded,
+        color: AppColors.primary,
+      ),
+      onPressed: () {
+        final maxVal = _maxAvailable;
+        if (maxVal > 0 && maxVal != double.infinity) {
+          _amountController.text = maxVal.toStringAsFixed(2);
+          _formKey.currentState?.validate();
+        }
+      },
+    );
+  }
+
+  void _updateTotal() {
+    try {
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+      if (amount <= 0) {
+        if (_serviceFee != 0.0 || _totalAmount != 0.0) {
+          setState(() {
+            _serviceFee = 0.0;
+            _totalAmount = 0.0;
+          });
+        }
+        return;
+      }
+      final commission = double.tryParse(_commissionController.text) ?? 0.0;
+
+      final wallet = _selectedWalletId != null
+          ? context.read<WalletProvider>().walletMap[_selectedWalletId!]
+          : null;
+
+      final result = sl<TransactionFeeCalculator>().calculate(
+        wallet: wallet,
+        transactionType: _transactionType,
+        amount: amount,
+        commission: commission,
+        receiverPhone: _customerPhoneController.text,
+      );
+
+      setState(() {
+        _serviceFee = result.serviceFee;
+        _totalAmount = result.totalAmount;
+      });
+    } on DomainException catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'calculate_total',
+        severity: ErrorSeverity.low,
+      );
+      // Surface domain errors (like negative amount) via toast or similar
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ [TX_CALC] Domain error during calculation: ${e.message}');
+      }
+      // We don't want to show a toast on every keystroke, but we should clear the total
+      setState(() {
+        _serviceFee = 0.0;
+        _totalAmount = 0.0;
+      });
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'calculate_total',
+      );
+      if (kDebugMode) {
+        debugPrint('❌ [TX_CALC] Unexpected error during calculation: $e');
+      }
+    }
+  }
+
+  Future<void> _handleCreate({bool forceInstaPayBypass = false}) async {
     setState(() {
       _isTypeValidated = _transactionType != null;
     });
@@ -122,19 +232,11 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
 
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final commission = double.tryParse(_commissionController.text) ?? 0.0;
-    final authProvider = context.read<AuthProvider>();
     final transactionProvider = context.read<TransactionProvider>();
 
-    final currentUserId = authProvider.currentUserId;
-    if (currentUserId == null) {
-      ToastUtils.showError('خطأ في المصادقة، يرجى تسجيل الدخول مرة أخرى');
-      return;
-    }
-
     try {
-      // 1. Try normal creation (force: false is default)
       final success = await transactionProvider.createTransaction(
-        walletId: _selectedWallet!.walletId,
+        walletId: _selectedWalletId!,
         transactionType: _transactionType!,
         customerPhone: _customerPhoneController.text,
         customerName: _customerNameController.text,
@@ -143,74 +245,75 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         serviceFee: _serviceFee,
         paymentStatus: _paymentStatus,
         notes: _notesController.text,
-        force: false,
+        forceInstaPayBypass: forceInstaPayBypass,
       );
 
       if (mounted && success) {
-        ToastUtils.showSuccess('تم إنشاء المعاملة بنجاح');
+        ToastUtils.showSuccess(
+            AppLocalizations.of(context)!.transactionCreatedSuccess);
         Navigator.pop(context, true);
       } else if (mounted) {
-        // If it failed without throwing (shouldn't really happen with current logic but for safety)
-        if (transactionProvider.errorMessage != null) {
-          ToastUtils.showError(transactionProvider.errorMessage!);
-        }
+        final error = transactionProvider.errorMessage != null
+            ? ErrorTranslator.getLocalizedString(
+                context, transactionProvider.errorMessage!)
+            : AppLocalizations.of(context)!.transactionCreateFailed;
+        _showErrorDialog(error);
       }
-    } on LimitExceededWarning catch (_) {
-      // 2. Catch the specific Warning
-      // Show a Confirmation Dialog
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text("تجاوز الحدود"),
-          content: const Text(
-              "هذه المعاملة تتخطى الحدود الرسمية لـ InstaPay.\nهل قمت بهذه المعاملة عبر تطبيق البنك مباشرة؟"),
-          actions: [
-            TextButton(
-              child: const Text("إلغاء"),
-              onPressed: () => Navigator.pop(ctx),
-            ),
-            TextButton(
-              child: const Text("نعم، سجلها"),
-              onPressed: () async {
-                Navigator.pop(ctx); // Close Dialog
-
-                // 3. Retry with Force = true
-                final successForce =
-                    await transactionProvider.createTransaction(
-                  walletId: _selectedWallet!.walletId,
-                  transactionType: _transactionType!,
-                  customerPhone: _customerPhoneController.text,
-                  customerName: _customerNameController.text,
-                  amount: amount,
-                  commission: commission,
-                  serviceFee: _serviceFee,
-                  paymentStatus: _paymentStatus,
-                  notes: _notesController.text,
-                  force: true,
-                );
-
-                if (mounted && successForce) {
-                  ToastUtils.showSuccess('تمت إضافة المعاملة بنجاح');
-                  Navigator.pop(context, true);
-                }
-              },
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      // 3. Handle standard errors (Balance not enough, etc.)
+    } on InstaPayLimitWarningException {
       if (mounted) {
-        ToastUtils.showError(e.toString());
+        AwesomeDialog(
+          context: context,
+          dialogType: CreateTransactionScreen.showRiveInDialog
+              ? DialogType.warning
+              : DialogType.noHeader,
+          animType: AnimType.bottomSlide,
+          title: 'تنبيه تجاوز الحدود',
+          desc:
+              'لقد تجاوزت حدود إنستاباي المسموحة. هل قمت بتنفيذ هذه العملية من تطبيق البنك البديلي وتريد تسجيلها',
+          btnCancelText: 'إلغاء',
+          btnOkText: 'تسجيل العملية',
+          btnCancelOnPress: () {},
+          btnOkOnPress: () => _handleCreate(forceInstaPayBypass: true),
+        ).show();
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(
+        e,
+        stackTrace: stack,
+        operation: 'create_transaction',
+      );
+      if (mounted) {
+        final error = transactionProvider.errorMessage != null
+            ? ErrorTranslator.getLocalizedString(
+                context, transactionProvider.errorMessage!)
+            : AppLocalizations.of(context)!.unexpectedError;
+        _showErrorDialog(error);
+      }
+    } finally {
+      if (mounted) {
+        // Provider handles loading state
       }
     }
   }
 
+  void _showErrorDialog(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.bottomSlide,
+      title: AppLocalizations.of(context)!.errorTitle,
+      desc: message,
+      btnOkOnPress: () {},
+      btnOkColor: Colors.red,
+      btnOkText: AppLocalizations.of(context)!.okButton,
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('معاملة جديدة')),
+      appBar: AppBar(title: Text(l10n.newTransactionTitle)),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -219,21 +322,21 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildWalletSelection(),
+                _buildWalletSelection(l10n),
                 const SizedBox(height: 16),
-                if (_selectedWallet != null) ...[
-                  _buildTransactionTypeSection(),
+                if (_selectedWalletId != null) ...[
+                  _buildTransactionTypeSection(l10n),
                   const SizedBox(height: 24),
-                  _buildCustomerInfoSection(),
+                  _buildCustomerInfoSection(l10n),
                   const SizedBox(height: 24),
-                  _buildAmountSection(),
+                  _buildAmountSection(l10n),
                   const SizedBox(height: 24),
                   _buildFeeSection(),
-                  _buildLimitsPreview(),
+                  _buildLimitsPreview(l10n),
                   const SizedBox(height: 24),
-                  _buildNotesSection(),
+                  _buildNotesSection(l10n),
                   const SizedBox(height: 32),
-                  _buildCreateButton(),
+                  _buildCreateButton(l10n),
                 ],
               ],
             ),
@@ -243,104 +346,95 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildWalletSelection() {
-    return Consumer<WalletProvider>(
-      builder: (context, walletProvider, child) {
-        if (walletProvider.isLoading) {
+  Widget _buildWalletSelection(AppLocalizations l10n) {
+    return Selector<
+        WalletProvider,
+        ({
+          bool isLoading,
+          List<WalletModel> wallets,
+          Map<String, WalletModel> walletMap
+        })>(
+      selector: (_, provider) => (
+        isLoading: provider.isLoading,
+        wallets: provider.wallets,
+        walletMap: provider.walletMap
+      ),
+      builder: (context, data, child) {
+        if (data.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (walletProvider.wallets.isEmpty) {
+        if (data.wallets.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warning.withAlpha((0.1 * 255).round()),
+              color: AppColors.warning.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text('لا توجد محافظ متاحة. يرجى إضافة محفظة أولاً.'),
+            child: Text(l10n.noWalletsAvailableMessage),
           );
         }
 
-        // Try to pre-select wallet if not already selected
-        if (_selectedWallet == null) {
-          _trySelectWallet(walletProvider.wallets);
-        }
-
         return CustomDropdown<WalletModel>(
-          value: _selectedWallet,
-          hint: 'اختر المحفظة لإجراء المعاملة',
-          items: walletProvider.wallets.map((WalletModel wallet) {
-            return DropdownMenuItem<WalletModel>(
-              value: wallet,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-          selectedItemBuilder: (BuildContext context) {
-            return walletProvider.wallets.map((WalletModel wallet) {
-              return Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${wallet.walletTypeDisplayName} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-              );
-            }).toList();
+          value: _selectedWalletId != null
+              ? data.walletMap[_selectedWalletId!]
+              : null,
+          hint: l10n.selectWalletHint,
+          fillColor: AppColors.primary.withAlpha(13),
+
+          // 1. تمرير قائمة المحافظ (Data) مباشرة
+          itemsList: data.wallets,
+
+          // 2. دالة استخراج النص المدمج (الاسم + رقم الهاتف المنسق)
+          itemLabelBuilder: (WalletModel wallet) {
+            String label =
+                '${l10n.getWalletTypeName(wallet.walletType)} - ${NumberFormatter.formatPhoneNumber(wallet.phoneNumber)}';
+            if (wallet.isFrozen) {
+              label += ' ${l10n.walletIsFrozenShort}';
+            }
+            return label;
           },
+
           onChanged: (wallet) {
+            if (wallet != null && wallet.isFrozen) {
+              ToastUtils.showError(l10n.walletIsFrozen);
+              setState(() {
+                _selectedWalletId = null;
+                _updateTotal();
+              });
+              return;
+            }
             setState(() {
-              _selectedWallet = wallet;
-              _preSelectedWalletId =
-                  null; // Clear pre-selection after manual choice
+              _selectedWalletId = wallet?.walletId;
               _updateTotal(); // Recalculate fees when wallet changes
             });
           },
-          validator: (value) => value == null ? 'يرجى اختيار محفظة' : null,
-          fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
+          validator: (value) {
+            if (value == null) return l10n.pleaseSelectWallet;
+            if (value.isFrozen) return l10n.walletIsFrozen;
+            return null;
+          },
         );
       },
     );
   }
 
-  Widget _buildTransactionTypeSection() {
+  Widget _buildTransactionTypeSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('نوع المعاملة', style: AppTextStyles.labelMedium),
+        Text(l10n.transactionType, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: _TransactionTypeButton(
-                label: 'إرسال',
+                label: l10n.send,
                 icon: Icons.arrow_upward,
                 color: AppColors.send,
-                isSelected: _transactionType == 'send',
+                isSelected:
+                    _transactionType == TransactionType.debit, // ENUM refactor
                 onTap: () {
-                  setState(() => _transactionType = 'send');
+                  setState(() => _transactionType = TransactionType.debit);
                   _updateTotal();
                 },
               ),
@@ -348,12 +442,13 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _TransactionTypeButton(
-                label: 'استقبال',
+                label: l10n.receive,
                 icon: Icons.arrow_downward,
                 color: AppColors.receive,
-                isSelected: _transactionType == 'receive',
+                isSelected:
+                    _transactionType == TransactionType.credit, // ENUM refactor
                 onTap: () {
-                  setState(() => _transactionType = 'receive');
+                  setState(() => _transactionType = TransactionType.credit);
                   _updateTotal();
                 },
               ),
@@ -362,9 +457,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ),
         if (!_isTypeValidated)
           Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 12),
+            padding: const EdgeInsetsDirectional.only(top: 8.0, end: 12),
             child: Text(
-              'يرجى اختيار نوع المعاملة',
+              l10n.pleaseSelectTransactionType,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
             ),
           ),
@@ -372,16 +467,16 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildCustomerInfoSection() {
+  Widget _buildCustomerInfoSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('بيانات العميل', style: AppTextStyles.labelMedium),
+        Text(l10n.clientData, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         CustomTextField(
           controller: _customerPhoneController,
-          labelText: 'رقم موبايل العميل',
-          hintText: '01xxxxxxxxx',
+          labelText: l10n.clientPhoneNumber,
+          hintText: l10n.phonePlaceholder,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 11,
@@ -391,8 +486,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         const SizedBox(height: 16),
         CustomTextField(
           controller: _customerNameController,
-          labelText: 'اسم العميل (اختياري)',
-          hintText: 'أدخل اسم العميل',
+          labelText: l10n.clientNameOptional,
+          hintText: l10n.enterClientName,
           keyboardType: TextInputType.name,
           prefixIcon: const Icon(Icons.person_outline),
         ),
@@ -400,41 +495,116 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildAmountSection() {
+  Widget _buildAmountSection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('المبلغ والعمولة', style: AppTextStyles.labelMedium),
+        Text(l10n.amountAndCommission, style: AppTextStyles.labelMedium),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: CustomTextField(
-                controller: _amountController,
-                labelText: 'المبلغ',
-                hintText: '0.00',
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) =>
-                    Validators.validateAmount(val, minAmount: 0),
-                prefixIcon: const Icon(Icons.money),
-                onChanged: (_) => _updateTotal(),
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _amountController,
+                builder: (context, valValue, _) {
+                  final amount = double.tryParse(valValue.text) ?? 0.0;
+                  final wallet = _selectedWallet;
+                  String? errorText;
+                  InputBorder? errorBorder;
+                  InputBorder? focusedErrorBorder;
+                  TextStyle? errorStyle;
+
+                  if (wallet != null &&
+                      _transactionType == TransactionType.credit &&
+                      amount > 0) {
+                    final maxAvailable = _maxAvailable;
+                    if (amount > maxAvailable) {
+                      final exceedsDaily =
+                          amount > wallet.availableToReceiveDaily;
+                      final errorMsg = exceedsDaily
+                          ? l10n.exceedsDailyLimit
+                          : l10n.exceedsMonthlyLimitOrCapacity;
+
+                      if (wallet.isInstaPay) {
+                        errorText = errorMsg;
+                        errorStyle = const TextStyle(color: Colors.orange);
+                        errorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Colors.orange, width: 1.5),
+                        );
+                        focusedErrorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Colors.orange, width: 2.0),
+                        );
+                      } else {
+                        errorText = errorMsg;
+                        errorStyle = const TextStyle(color: AppColors.error);
+                        errorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppColors.error, width: 1.5),
+                        );
+                        focusedErrorBorder = OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: AppColors.error, width: 2.0),
+                        );
+                      }
+                    }
+                  }
+
+                  return CustomTextField(
+                    controller: _amountController,
+                    labelText: l10n.amountLabel,
+                    hintText: l10n.amountPlaceholder,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    errorText: errorText,
+                    errorStyle: errorStyle,
+                    errorBorder: errorBorder,
+                    focusedErrorBorder: focusedErrorBorder,
+                    validator: (val) {
+                      final formatError =
+                          Validators.validateAmount(val, minAmount: 0);
+                      if (formatError != null) return formatError;
+
+                      if (wallet != null &&
+                          _transactionType == TransactionType.credit) {
+                        final amt = double.tryParse(val ?? '') ?? 0.0;
+                        final maxAvailable = _maxAvailable;
+                        if (amt > maxAvailable && !wallet.isInstaPay) {
+                          final exceedsDaily =
+                              amt > wallet.availableToReceiveDaily;
+                          return exceedsDaily
+                              ? l10n.exceedsDailyLimit
+                              : l10n.exceedsMonthlyLimitOrCapacity;
+                        }
+                      }
+                      return null;
+                    },
+                    prefixIcon: const Icon(Icons.money),
+                    suffixIcon: _buildMaxButton(l10n),
+                    onChanged: (_) => _updateTotal(),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: CustomTextField(
                 controller: _commissionController,
-                labelText: 'العمولة',
-                hintText: '0.00',
+                labelText: l10n.commissionLabel,
+                hintText: l10n.amountPlaceholder,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) {
                   if (val != null &&
                       val.isNotEmpty &&
                       (double.tryParse(val) ?? -1) < 0) {
-                    return 'قيمة غير صالحة';
+                    return l10n.invalidValue;
                   }
                   return null;
                 },
@@ -448,14 +618,14 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha((0.05 * 255).round()),
+            color: AppColors.primary.withAlpha(13),
             borderRadius: BorderRadius.circular(8),
             border: null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('الإجمالي', style: AppTextStyles.labelMedium),
+              Text(l10n.totalLabel, style: AppTextStyles.labelMedium),
               Text(
                 NumberFormatter.formatAmount(_totalAmount),
                 style: AppTextStyles.h3.copyWith(color: AppColors.primary),
@@ -468,7 +638,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   }
 
   Widget _buildFeeSection() {
-    if (_transactionType != 'send' || _serviceFee <= 0) {
+    if (_transactionType != TransactionType.debit || _serviceFee <= 0) {
+      // ENUM refactor
       return const SizedBox.shrink();
     }
 
@@ -494,7 +665,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 style: AppTextStyles.bodyMedium,
               ),
               Text(
-                '${NumberFormatter.formatAmount(_serviceFee)} EGP',
+                NumberFormatter.formatAmount(_serviceFee, showCurrency: true),
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: AppColors.error,
                   fontWeight: FontWeight.bold,
@@ -512,7 +683,8 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                     .copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                '${NumberFormatter.formatAmount(totalDeduction)} EGP',
+                NumberFormatter.formatAmount(totalDeduction,
+                    showCurrency: true),
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],
@@ -522,120 +694,139 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildLimitsPreview() {
-    if (_selectedWallet == null || _transactionType == null) {
+  Widget _buildLimitsPreview(AppLocalizations l10n) {
+    if (_selectedWalletId == null || _transactionType == null) {
       return const SizedBox.shrink();
     }
 
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final isSend = _transactionType == 'send';
-    final limits = isSend
-        ? _selectedWallet!.getLimits()
-        : _selectedWallet!.getReceiveLimits();
-    final newUsed = limits.dailyUsed + amount;
-    final newMonthlyUsed = limits.monthlyUsed + amount;
+    return Selector<WalletProvider, WalletModel?>(
+      selector: (context, provider) => provider.walletMap[_selectedWalletId!],
+      builder: (context, wallet, child) {
+        if (wallet == null) return const SizedBox.shrink();
 
-    // Check individual limits
-    final bool dailyExceeded = newUsed > limits.dailyLimit;
-    final bool monthlyExceeded = newMonthlyUsed > limits.monthlyLimit;
-    final bool willExceed = dailyExceeded || monthlyExceeded;
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountController,
+          builder: (context, amountVal, _) {
+            final amount = double.tryParse(amountVal.text) ?? 0.0;
+            final isSend =
+                _transactionType == TransactionType.debit; // ENUM refactor
+            final limits =
+                isSend ? wallet.getLimits() : wallet.getReceiveLimits();
 
-    final isInstaPay = _selectedWallet!.walletType == 'instapay';
+            // Fetch dynamic limits matching the wallet's current type and status
+            final settings = context.read<PlatformSettingsProvider>().settings;
+            final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
 
-    // Default logic
-    double dailyPercentage =
-        limits.dailyLimit > 0 ? (newUsed / limits.dailyLimit) * 100 : 0;
-    double monthlyPercentage = limits.monthlyLimit > 0
-        ? (newMonthlyUsed / limits.monthlyLimit) * 100
-        : 0;
+            final dailyLimit =
+                isSend ? dynamicLimits.dailySend : dynamicLimits.dailyReceive;
+            final monthlyLimit = isSend
+                ? dynamicLimits.monthlySend
+                : dynamicLimits.monthlyReceive;
 
-    bool isCapacityRestricting = false;
-    if (!isSend && !isInstaPay) {
-      double monthlyLimit = limits.monthlyLimit;
-      double monthlyUsed = limits.monthlyUsed;
-      double flowRemaining = monthlyLimit - monthlyUsed;
-      
-      if (_selectedWallet!.availableToReceiveMonthly < flowRemaining) {
-        isCapacityRestricting = true;
-      }
-    }
+            final newUsed = limits.dailyUsed + amount;
+            final newMonthlyUsed = limits.monthlyUsed + amount;
 
-    final dailyLabel = isSend ? 'إرسال يومي' : 'استقبال يومي';
-    final monthlyLabel = isSend ? 'إرسال شهري' : 'استقبال شهري';
+            // Check individual limits
+            final bool dailyExceeded = newUsed > dailyLimit;
+            final bool monthlyExceeded = newMonthlyUsed > monthlyLimit;
+            final bool willExceed = dailyExceeded || monthlyExceeded;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: willExceed
-            ? AppColors.error.withAlpha((0.05 * 255).round())
-            : AppColors.info.withAlpha((0.05 * 255).round()),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: willExceed
-              ? AppColors.error.withAlpha((0.2 * 255).round())
-              : AppColors.info.withAlpha((0.2 * 255).round()),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                willExceed ? Icons.warning_amber_rounded : Icons.info_outline,
-                color: willExceed ? AppColors.error : AppColors.info,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'مراجعة حدود المحفظة',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: willExceed ? AppColors.error : AppColors.info,
+            final double dailyPercentage =
+                dailyLimit > 0 ? (newUsed / dailyLimit) * 100 : 0.0;
+            final double monthlyPercentage =
+                monthlyLimit > 0 ? (newMonthlyUsed / monthlyLimit) * 100 : 0.0;
+
+            final dailyWarningLevel = dailyExceeded
+                ? 'red'
+                : (dailyPercentage >= 70 ? 'yellow' : 'green');
+            final monthlyWarningLevel = monthlyExceeded
+                ? 'red'
+                : (monthlyPercentage >= 70 ? 'yellow' : 'green');
+
+            final isThreeZone = !isSend && !wallet.isInstaPay;
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: willExceed
+                    ? AppColors.error.withAlpha(13)
+                    : AppColors.info.withAlpha(13),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: willExceed
+                      ? AppColors.error.withAlpha(51)
+                      : AppColors.info.withAlpha(51),
                 ),
               ),
-            ],
-          ),
-          const Divider(height: 20),
-          WalletLimitBar(
-            label: dailyLabel,
-            used: newUsed,
-            limit: limits.dailyLimit,
-            percentage: dailyPercentage,
-            warningLevel: dailyExceeded ? 'red' : 'green',
-          ),
-          const SizedBox(height: 16),
-          WalletLimitBar(
-            label: monthlyLabel,
-            used: newMonthlyUsed,
-            limit: limits.monthlyLimit,
-            percentage: monthlyPercentage,
-            warningLevel: monthlyExceeded ? 'red' : 'green',
-          ),
-          if (isCapacityRestricting)
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Text(
-                '⚠️ تنبيه: نظراً لرصيد المحفظة الحالي، أقصى مبلغ يمكنك استقباله الآن هو ${NumberFormatter.formatAmount(_selectedWallet!.availableToReceiveMonthly)}',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        willExceed
+                            ? Icons.warning_amber_rounded
+                            : Icons.info_outline,
+                        color: willExceed ? AppColors.error : AppColors.info,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.reviewWalletLimits,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: willExceed ? AppColors.error : AppColors.info,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 20),
+                  WalletLimitBar(
+                    label: l10n.dailyLimitAfterTransaction,
+                    used: newUsed,
+                    limit: dailyLimit,
+                    percentage: dailyPercentage,
+                    warningLevel: dailyWarningLevel,
+                  ),
+                  const SizedBox(height: 16),
+                  if (isThreeZone)
+                    ThreeZoneProgressBar(
+                      label: l10n.monthlyLimitAfterTransaction,
+                      monthlyLimit: monthlyLimit,
+                      monthlyUsed: limits.monthlyUsed,
+                      maxAvailable: _maxAvailable,
+                      enteredAmount: amount,
+                      isThreeZone: true,
+                    )
+                  else
+                    WalletLimitBar(
+                      label: l10n.monthlyLimitAfterTransaction,
+                      used: newMonthlyUsed,
+                      limit: monthlyLimit,
+                      percentage: monthlyPercentage,
+                      warningLevel: monthlyWarningLevel,
+                    ),
+                  if (willExceed)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: Text(
+                        l10n.walletLimitWarning,
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: AppColors.error),
+                      ),
+                    ),
+                ],
               ),
-            ),
-          if (willExceed)
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Text(
-                'تحذير: هذه المعاملة ستتجاوز الحد المسموح به للمحفظة.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-              ),
-            ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildNotesSection() {
+  Widget _buildNotesSection(AppLocalizations l10n) {
     return CustomTextField(
       controller: _notesController,
-      labelText: 'ملاحظات (اختياري)',
-      hintText: 'أي تفاصيل إضافية عن المعاملة',
+      labelText: l10n.notesOptional,
+      hintText: l10n.additionalTransactionDetails,
       maxLines: 3,
       maxLength: 200,
       validator: (value) => Validators.validateNotes(value, maxLength: 200),
@@ -643,41 +834,63 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     );
   }
 
-  Widget _buildCreateButton() {
-    return Consumer<TransactionProvider>(
-      builder: (context, provider, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (provider.hasError && provider.errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withAlpha((0.1 * 255).round()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: AppColors.error),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        provider.errorMessage!,
-                        style: AppTextStyles.bodyMedium
-                            .copyWith(color: AppColors.error),
-                      ),
+  Widget _buildCreateButton(AppLocalizations l10n) {
+    return Selector<TransactionProvider,
+        ({bool isCreating, String? errorMessage, bool hasError})>(
+      selector: (_, provider) => (
+        isCreating: provider.isCreating,
+        errorMessage: provider.errorMessage,
+        hasError: provider.hasError
+      ),
+      builder: (context, data, child) {
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountController,
+          builder: (context, valValue, _) {
+            final wallet = _selectedWallet;
+            final amount = double.tryParse(valValue.text) ?? 0.0;
+            bool isExceeded = false;
+            if (wallet != null &&
+                _transactionType == TransactionType.credit &&
+                !wallet.isInstaPay) {
+              if (amount > _maxAvailable) {
+                isExceeded = true;
+              }
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (data.hasError && data.errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withAlpha(26),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: AppColors.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            data.errorMessage!,
+                            style: AppTextStyles.bodyMedium
+                                .copyWith(color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                CustomButton(
+                  text: l10n.createTransactionButton,
+                  onPressed: isExceeded ? null : _handleCreate,
+                  isLoading: data.isCreating,
+                  icon: const Icon(Icons.add_circle_outline),
                 ),
-              ),
-            CustomButton(
-              text: 'إنشاء المعاملة',
-              onPressed: _handleCreate,
-              isLoading: provider.isCreating,
-              icon: const Icon(Icons.add_circle_outline),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -707,9 +920,7 @@ class _TransactionTypeButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withAlpha((0.1 * 255).round())
-              : AppColors.surface(context),
+          color: isSelected ? color.withAlpha(26) : AppColors.surface(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : AppColors.divider(context),

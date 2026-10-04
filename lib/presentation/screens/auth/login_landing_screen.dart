@@ -4,14 +4,18 @@ import 'package:provider/provider.dart';
 import 'package:walletmanager/core/constants/route_constants.dart';
 import 'package:walletmanager/core/theme/app_colors.dart';
 import 'package:walletmanager/core/theme/app_text_styles.dart';
+import 'package:walletmanager/core/utils/error_translator.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
 import 'package:walletmanager/core/utils/validators.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_button.dart';
 import 'package:walletmanager/presentation/widgets/common/custom_text_field.dart';
 import 'package:walletmanager/providers/auth_provider.dart';
 import 'package:walletmanager/presentation/widgets/common/double_back_to_exit_wrapper.dart';
-import '../../../../core/errors/app_exceptions.dart';
+import '../../../core/enums/user_enums.dart';
+import '../../../core/errors/app_exceptions.dart';
+import '../../../core/errors/app_error_handler.dart';
 import 'employee_login_screen.dart';
+import '../../../l10n/arb/app_localizations.dart';
 
 class LoginLandingScreen extends StatefulWidget {
   const LoginLandingScreen({super.key});
@@ -55,9 +59,9 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     if (authProvider.isLoading) return;
 
     final success = await authProvider.loginWithGoogleOrNull();
-    if (success && mounted) {
-      _navigateBasedOnRole(authProvider);
-    } else if (mounted && authProvider.errorMessage != null) {
+    // Do NOT navigate manually on success.
+    // AuthCheckWrapper will rebuild and route automatically.
+    if (!success && mounted && authProvider.errorMessage != null) {
       ToastUtils.showError(authProvider.errorMessage!);
     }
   }
@@ -77,14 +81,39 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
       if (mounted) {
         _navigateBasedOnRole(authProvider);
       }
-    } on UserNotFoundException catch (e) {
-      ToastUtils.showError(e.message);
-    } on WrongPasswordException catch (e) {
-      ToastUtils.showError(e.message);
-    } on AuthException catch (e) {
-      ToastUtils.showError(e.message);
-    } catch (e) {
-      ToastUtils.showError("حدث خطأ غير متوقع");
+    } on UserNotFoundException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: UserNotFoundException');
+      if (mounted) {
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_user_not_found'));
+      }
+    } on WrongPasswordException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: WrongPasswordException');
+      if (mounted) {
+        ToastUtils.showError(ErrorTranslator.getLocalizedString(
+            context, 'auth_error_invalid_credentials'));
+      }
+    } on AuthException catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: AuthException');
+      if (mounted) {
+        ToastUtils.showError(e.code != null
+            ? ErrorTranslator.getLocalizedString(context, e.code!)
+            : ErrorTranslator.getLocalizedString(
+                context, 'auth_error_login_failed'));
+      }
+    } catch (e, stack) {
+      AppErrorHandler.handle(e,
+          stackTrace: stack, operation: 'LoginLanding: unexpected');
+      if (mounted) {
+        ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+      }
+    } finally {
+      if (mounted) {
+        // AuthProvider handles its own loading state, but we ensure consistency
+      }
     }
   }
 
@@ -94,19 +123,30 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     final authProvider = context.read<AuthProvider>();
     if (authProvider.isLoading) return;
 
-    final store = await authProvider.findStoreByEmail(
-      _storeEmailController.text.trim(),
-    );
-
-    if (store != null && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => EmployeeLoginScreen(store: store),
-        ),
+    try {
+      final store = await authProvider.findStoreByEmail(
+        _storeEmailController.text.trim(),
       );
-    } else if (mounted && authProvider.errorMessage != null) {
-      ToastUtils.showError(authProvider.errorMessage!);
+
+      if (store != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EmployeeLoginScreen(store: store),
+          ),
+        );
+      } else if (mounted) {
+        if (authProvider.errorMessage != null) {
+          ToastUtils.showError(ErrorTranslator.getLocalizedString(
+              context, authProvider.errorMessage!));
+        } else {
+          ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
+        }
+      }
+    } finally {
+      if (mounted) {
+        // Consistency
+      }
     }
   }
 
@@ -124,13 +164,11 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
     }
 
     // 2. Check role and navigate accordingly
-    final userRole = authProvider.currentUser?.role ?? '';
-    if (userRole == 'owner') {
-      Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
-    } else if (userRole == 'employee') {
-      Navigator.pushReplacementNamed(context, RouteConstants.ownerDashboard);
+    final role = authProvider.currentUser?.role;
+    if (role == UserRole.owner || role == UserRole.employee) {
+      Navigator.pushReplacementNamed(context, RouteConstants.mainDashboard);
     } else {
-      ToastUtils.showError('Role unknown');
+      ToastUtils.showError(AppLocalizations.of(context)!.unexpectedError);
     }
   }
 
@@ -138,6 +176,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return DoubleBackToExitWrapper(
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBg(context),
@@ -146,7 +185,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             children: [
               const SizedBox(height: 48),
               // Header
-              Text('Wallet Manager',
+              Text(l10n.walletManager,
                   style: AppTextStyles.h1.copyWith(color: AppColors.primary)),
               const SizedBox(height: 32),
 
@@ -161,7 +200,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 child: TabBar(
                   controller: _tabController,
                   indicator: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.primary),
                   ),
@@ -172,9 +211,9 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                   labelStyle: AppTextStyles.bodyLarge
                       .copyWith(fontWeight: FontWeight.bold),
                   labelPadding: const EdgeInsets.symmetric(vertical: 12),
-                  tabs: const [
-                    Tab(text: 'المالك'),
-                    Tab(text: 'موظف'),
+                  tabs: [
+                    Tab(text: l10n.owner),
+                    Tab(text: l10n.employee),
                   ],
                 ),
               ),
@@ -201,7 +240,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildOwnerTab() {
-    final authProvider = context.watch<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Form(
@@ -210,7 +249,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           children: [
             CustomTextField(
               controller: _ownerEmailController,
-              labelText: 'البريد الإلكتروني',
+              labelText: l10n.email,
               prefixIcon: const Icon(Icons.email_outlined),
               validator: Validators.validateEmail,
               keyboardType: TextInputType.emailAddress,
@@ -218,7 +257,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             const SizedBox(height: 16),
             CustomTextField(
               controller: _ownerPasswordController,
-              labelText: 'كلمة المرور',
+              labelText: l10n.password,
               prefixIcon: const Icon(Icons.lock_outline),
               validator: Validators.validatePassword,
               obscureText: _obscureOwnerPassword,
@@ -231,25 +270,26 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               ),
             ),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                  ToastUtils.showInfo('قريباً');
-                },
+                onPressed: () => _showForgotPasswordBottomSheet(context),
                 child: Text(
-                  'نسيت كلمة المرور؟',
+                  l10n.forgotPassword,
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.textSecondary(context)),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            CustomButton(
-              text: 'تسجيل الدخول',
-              onPressed:
-                  authProvider.isLoading ? null : _handleOwnerLoginWithEmail,
-              isLoading: authProvider.isLoading,
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.loginAction,
+                  onPressed: isLoading ? null : _handleOwnerLoginWithEmail,
+                  isLoading: isLoading,
+                );
+              },
             ),
             const SizedBox(height: 24),
             Row(
@@ -257,21 +297,24 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('أو', style: AppTextStyles.bodySmall),
+                  child: Text(l10n.orLabel, style: AppTextStyles.bodySmall),
                 ),
                 const Expanded(child: Divider()),
               ],
             ),
             const SizedBox(height: 24),
-            CustomButton(
-              text: 'المتابعة باستخدام Google',
-              onPressed:
-                  authProvider.isLoading ? null : _handleOwnerLoginWithGoogle,
-              isLoading: authProvider
-                  .isLoading, // Or use a separate loading state if needed
-              type: ButtonType.outlined,
-              icon: const FaIcon(FontAwesomeIcons.google,
-                  color: AppColors.primary),
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.continueWithGoogle,
+                  onPressed: isLoading ? null : _handleOwnerLoginWithGoogle,
+                  isLoading: isLoading,
+                  type: ButtonType.outlined,
+                  icon: const FaIcon(FontAwesomeIcons.google,
+                      color: AppColors.primary),
+                );
+              },
             ),
           ],
         ),
@@ -280,7 +323,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildEmployeeTab() {
-    final authProvider = context.watch<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Form(
@@ -290,7 +333,7 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
           children: [
             const SizedBox(height: 32),
             Text(
-              'أدخل البريد الإلكتروني للمتجر لتسجيل الدخول كموظف',
+              l10n.enterStoreEmailMessage,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.textSecondary(context)),
@@ -298,16 +341,21 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
             const SizedBox(height: 32),
             CustomTextField(
               controller: _storeEmailController,
-              labelText: 'بريد المتجر الإلكتروني',
+              labelText: l10n.storeEmail,
               prefixIcon: const Icon(Icons.store_outlined),
               validator: Validators.validateEmail,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 32),
-            CustomButton(
-              text: 'البحث عن المتجر',
-              onPressed: authProvider.isLoading ? null : _handleFindStore,
-              isLoading: authProvider.isLoading,
+            Selector<AuthProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, child) {
+                return CustomButton(
+                  text: l10n.findStore,
+                  onPressed: isLoading ? null : _handleFindStore,
+                  isLoading: isLoading,
+                );
+              },
             ),
           ],
         ),
@@ -316,12 +364,13 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
   }
 
   Widget _buildFooter() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, top: 16),
       child: Column(
         children: [
           Text(
-            'ليس لديك حساب؟',
+            l10n.noAccountYet,
             style: AppTextStyles.bodyMedium
                 .copyWith(color: AppColors.textSecondary(context)),
           ),
@@ -330,12 +379,97 @@ class _LoginLandingScreenState extends State<LoginLandingScreen>
               Navigator.pushNamed(context, RouteConstants.storeRegistration);
             },
             child: Text(
-              'إنشاء متجر جديد',
+              l10n.createStoreNew,
               style: AppTextStyles.h3.copyWith(color: AppColors.primary),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _showForgotPasswordBottomSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final emailController =
+        TextEditingController(text: _ownerEmailController.text);
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsetsDirectional.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          start: 24,
+          end: 24,
+          top: 24,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.forgotPassword, style: AppTextStyles.h2),
+              const SizedBox(height: 8),
+              Text(
+                l10n.forgotPasswordMessage,
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textSecondary(context)),
+              ),
+              const SizedBox(height: 24),
+              CustomTextField(
+                controller: emailController,
+                labelText: l10n.email,
+                prefixIcon: const Icon(Icons.email_outlined),
+                validator: Validators.validateEmail,
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+              ),
+              const SizedBox(height: 24),
+              Selector<AuthProvider, bool>(
+                selector: (_, p) => p.isLoading,
+                builder: (context, isLoading, child) {
+                  return CustomButton(
+                    text: l10n.sendLink,
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            if (formKey.currentState!.validate()) {
+                              await _handleForgotPassword(
+                                  context, emailController.text.trim());
+                            }
+                          },
+                    isLoading: isLoading,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleForgotPassword(BuildContext context, String email) async {
+    final authProvider = context.read<AuthProvider>();
+    final l10n = AppLocalizations.of(context)!;
+
+    await authProvider.sendPasswordReset(email);
+
+    if (!context.mounted) return;
+
+    if (authProvider.errorMessage != null) {
+      ToastUtils.showError(ErrorTranslator.getLocalizedString(
+          context, authProvider.errorMessage!));
+    } else {
+      Navigator.pop(context);
+      ToastUtils.showSuccess(l10n.passwordResetEmailSent);
+    }
   }
 }

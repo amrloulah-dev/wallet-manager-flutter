@@ -1,0 +1,8 @@
+{
+  "track_id": "instapay_limit_bypass_20260720",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-20T04:26:00Z",
+  "updated_at": "2026-07-20T04:26:00Z",
+  "description": "InstaPay Limit Force-Bypass: Soft-block flow for InstaPay wallets exceeding Daily/Monthly limits with interactive warning dialog and audit trail."
+}

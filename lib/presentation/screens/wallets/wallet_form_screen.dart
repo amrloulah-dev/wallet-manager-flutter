@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/utils/number_formatter.dart';
 import 'package:walletmanager/core/utils/toast_utils.dart';
@@ -14,6 +13,10 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_dropdown.dart';
 import 'package:walletmanager/l10n/arb/app_localizations.dart';
+import '../../../core/constants/route_constants.dart';
+import '../../../providers/subscription_provider.dart';
+import '../../../core/enums/wallet_enums.dart';
+import '../../../providers/platform_settings_provider.dart';
 
 class WalletFormScreen extends StatefulWidget {
   const WalletFormScreen({super.key});
@@ -30,33 +33,58 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
 
   bool _isEditMode = false;
   WalletModel? _walletToEdit;
-  String? _selectedWalletType;
-  String? _selectedWalletStatus;
+  WalletType? _selectedWalletType; // ENUM refactor
+  WalletStatus? _selectedWalletStatus; // ENUM refactor
 
   // Map for wallet type display names
-  // Map for wallet type display names
-  Map<String, String> _getWalletTypeDisplayNames(BuildContext context) {
+  Map<WalletType, String> _getWalletTypeDisplayNames(BuildContext context) {
     return {
-      'vodafone_cash': AppLocalizations.of(context)!.vodafoneCash,
-      'instapay': AppLocalizations.of(context)!.instapay,
-      'orange_cash': AppLocalizations.of(context)!.orangeCash,
-      'etisalat_cash': AppLocalizations.of(context)!.etisalatCash,
-      'we_pay': AppLocalizations.of(context)!.wePay,
-      'other': AppLocalizations.of(context)!.other,
+      WalletType.vodafoneCash: AppLocalizations.of(context)!.vodafoneCash,
+      WalletType.instaPay: AppLocalizations.of(context)!.instaPay,
+      WalletType.orangeCash: AppLocalizations.of(context)!.orangeCash,
+      WalletType.etisalatCash: AppLocalizations.of(context)!.etisalatCash,
+      WalletType.wePay: AppLocalizations.of(context)!.wePay,
+      WalletType.other: AppLocalizations.of(context)!.other,
     };
   }
 
   @override
   void initState() {
     super.initState();
+    _phoneController.addListener(_onPhoneChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final wallet = ModalRoute.of(context)?.settings.arguments as WalletModel?;
       if (wallet != null) {
         _initializeEditMode(wallet);
       }
       // Clear any previous errors when the screen loads
-      Provider.of<WalletProvider>(context, listen: false).clearError();
+      context.read<WalletProvider>().clearError();
     });
+  }
+
+  void _onPhoneChanged() {
+    if (_isEditMode) return; // Do not overwrite on edit mode!
+
+    final text = _phoneController.text;
+    if (text.length >= 3) {
+      final prefix = text.substring(0, 3);
+      WalletType? detectedType;
+      if (prefix == '010') {
+        detectedType = WalletType.vodafoneCash;
+      } else if (prefix == '011') {
+        detectedType = WalletType.etisalatCash;
+      } else if (prefix == '012') {
+        detectedType = WalletType.orangeCash;
+      } else if (prefix == '015') {
+        detectedType = WalletType.wePay;
+      }
+
+      if (detectedType != null && detectedType != _selectedWalletType) {
+        setState(() {
+          _selectedWalletType = detectedType;
+        });
+      }
+    }
   }
 
   void _initializeEditMode(WalletModel wallet) {
@@ -78,11 +106,21 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSubmit() async {
-    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  Future<void> _handleSubmit({bool bypassCarrierCheck = false}) async {
+    final walletProvider = context.read<WalletProvider>();
+    final authProvider = context.read<AuthProvider>();
 
     walletProvider.clearError();
+
+    // H006 (Tightened): Preemptive hard-stop paywall check — BEFORE form validation
+    if (!_isEditMode) {
+      final subProvider = context.read<SubscriptionProvider>();
+      final currentCount = walletProvider.wallets.length;
+      if (!subProvider.canAddWallet(currentCount)) {
+        Navigator.pushNamed(context, RouteConstants.upgradeScreen);
+        return;
+      }
+    }
 
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -100,6 +138,39 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
       return;
     }
 
+    // Carrier prefix validation (FR-5)
+    if (!bypassCarrierCheck) {
+      final carrierErrKey = Validators.validateCarrierMatch(
+        _selectedWalletType!.name,
+        _phoneController.text,
+      );
+      if (carrierErrKey != null) {
+        final l10n = AppLocalizations.of(context)!;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.warning),
+            content: Text(l10n.carrier_mismatch_warning),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(l10n.edit),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _handleSubmit(bypassCarrierCheck: true);
+                },
+                child: Text(l10n.confirmAnyway),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+
     final userId = authProvider.currentUserId;
     if (userId == null) {
       ToastUtils.showError(AppLocalizations.of(context)!.authErrorRelogin);
@@ -110,9 +181,9 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     if (_isEditMode) {
       // Update logic
       final data = {
-        'walletType': _selectedWalletType,
+        'walletType': _selectedWalletType!.name,
+        'walletStatus': _selectedWalletStatus!.name,
         'notes': _notesController.text,
-        // Wallet status and phone number are not editable in this version
       };
       success =
           await walletProvider.updateWallet(_walletToEdit!.walletId, data);
@@ -199,147 +270,84 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     return CustomTextField(
       controller: _balanceController,
       labelText: AppLocalizations.of(context)!.initialBalance,
-      hintText: '0.00',
+      hintText: AppLocalizations.of(context)!.amountPlaceholder,
       enabled: !_isEditMode,
       readOnly: _isEditMode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
       ],
-      validator: (val) => Validators.validateAmount(val, minAmount: -1),
+      validator: _isEditMode
+          ? null
+          : (val) => Validators.validateAmount(val, minAmount: -1),
       prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
     );
   }
 
   Widget _buildWalletTypeDropdown() {
     final walletTypes = _getWalletTypeDisplayNames(context);
-    return CustomDropdown<String>(
+    return CustomDropdown<WalletType>(
+      // ENUM refactor
       value: _selectedWalletType,
       labelText: AppLocalizations.of(context)!.walletType,
-      prefixIcon: const Icon(Icons.account_balance_wallet_outlined,
-          color: AppColors.primary),
+      prefixIcon: const Icon(
+        Icons.account_balance_wallet_outlined,
+        color: AppColors.primary,
+      ),
       hint: AppLocalizations.of(context)!.selectWalletType,
-      items: walletTypes.keys.map((String key) {
-        return DropdownMenuItem<String>(
-          value: key,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                walletTypes[key]!,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-      selectedItemBuilder: (BuildContext context) {
-        return walletTypes.keys.map((String key) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              walletTypes[key]!,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
-              ),
-            ),
-          );
-        }).toList();
-      },
+      fillColor: AppColors.primary.withAlpha(13),
+
+      // 1. نمرر قائمة المفاتيح (Keys) كـ List
+      itemsList: walletTypes.keys.toList(),
+
+      // 2. نستخرج النص الظاهر للمستخدم عن طريق جلب القيمة من الـ Map باستخدام المفتاح
+      itemLabelBuilder: (WalletType key) => walletTypes[key]!,
+
       onChanged: (value) {
         setState(() {
           _selectedWalletType = value;
         });
       },
+
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.walletTypeRequired
           : null,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 
   Widget _buildWalletStatusDropdown() {
     final statusDisplayNames = {
-      'new': AppLocalizations.of(context)!.newStatus,
-      'old': AppLocalizations.of(context)!.oldStatus,
-      'registered_store': AppLocalizations.of(context)!.registeredStore,
+      WalletStatus.active: AppLocalizations.of(context)!.newStatus,
+      WalletStatus.inactive: AppLocalizations.of(context)!.oldStatus,
+      WalletStatus.suspended: AppLocalizations.of(context)!.registeredStore,
     };
 
-    return CustomDropdown<String>(
+    return CustomDropdown<WalletStatus>(
+      // ENUM refactor
       value: _selectedWalletStatus,
       labelText: AppLocalizations.of(context)!.walletStatus,
-      prefixIcon:
-          const Icon(Icons.verified_user_outlined, color: AppColors.primary),
+      prefixIcon: const Icon(
+        Icons.verified_user_outlined,
+        color: AppColors.primary,
+      ),
       hint: AppLocalizations.of(context)!.pleaseSelectWalletStatus,
-      // 1. استخدام keys.map لتكرار نفس التصميم
-      items: statusDisplayNames.keys.map((String key) {
-        return DropdownMenuItem<String>(
-          value: key,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha((0.05 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primary.withAlpha((0.3 * 255).round()),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                statusDisplayNames[key]!,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black, // لون النص داخل القائمة المنسدلة
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-      // 2. إضافة selectedItemBuilder لضبط شكل العنصر المختار وهو مغلق
-      selectedItemBuilder: (BuildContext context) {
-        return statusDisplayNames.keys.map((String key) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              statusDisplayNames[key]!,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context), // لون النص وهو مختار
-              ),
-            ),
-          );
-        }).toList();
+      fillColor: AppColors.primary.withAlpha(13),
+
+      // 1. تمرير قائمة المفاتيح (حالات المحفظة) كـ List
+      itemsList: statusDisplayNames.keys.toList(),
+
+      // 2. استخراج الاسم الظاهر للمستخدم بناءً على المفتاح
+      itemLabelBuilder: (WalletStatus key) => statusDisplayNames[key]!,
+
+      onChanged: (value) {
+        setState(() {
+          _selectedWalletStatus = value;
+        });
       },
-      // الحفاظ على منطق التعديل كما هو
-      onChanged: _isEditMode
-          ? null
-          : (value) {
-              setState(() {
-                _selectedWalletStatus = value;
-              });
-            },
+
       validator: (value) => value == null
           ? AppLocalizations.of(context)!.pleaseSelectWalletStatus
           : null,
-      fillColor: AppColors.primary.withAlpha((0.05 * 255).round()),
     );
   }
 
@@ -348,12 +356,11 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
     final monthlyLimit = _getMonthlyLimit();
 
     return Card(
-      color: AppColors.primary.withAlpha((0.05 * 255).round()),
+      color: AppColors.primary.withAlpha(13),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side:
-            BorderSide(color: AppColors.primary.withAlpha((0.2 * 255).round())),
+        side: BorderSide(color: AppColors.primary.withAlpha(51)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -383,27 +390,32 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
   }
 
   double _getDailyLimit() {
-    if (_selectedWalletType == 'instapay') {
-      return AppConstants.instapayTransactionLimit;
+    final settings = context.read<PlatformSettingsProvider>().settings;
+    if (_selectedWalletType == WalletType.instaPay) {
+      // ENUM refactor
+      return settings.instapayTransactionLimit;
     }
-    if (_selectedWalletStatus == 'registered_store') {
-      return AppConstants.registeredStoreTransactionLimit;
+    if (_selectedWalletStatus == WalletStatus.suspended) {
+      // Mapping registered_store to suspended for now as placeholder
+      return settings.registeredStoreTransactionLimit;
     }
-    return _selectedWalletStatus == 'new'
-        ? AppConstants.newWalletTransactionLimit
-        : AppConstants.oldWalletTransactionLimit;
+    return _selectedWalletStatus == WalletStatus.active // Mapping new to active
+        ? settings.newWalletTransactionLimit
+        : settings.oldWalletTransactionLimit;
   }
 
   double _getMonthlyLimit() {
-    if (_selectedWalletType == 'instapay') {
-      return AppConstants.instapayMonthlyLimit;
+    final settings = context.read<PlatformSettingsProvider>().settings;
+    if (_selectedWalletType == WalletType.instaPay) {
+      // ENUM refactor
+      return settings.instapayMonthlyLimit;
     }
-    if (_selectedWalletStatus == 'registered_store') {
-      return AppConstants.registeredStoreMonthlyLimit;
+    if (_selectedWalletStatus == WalletStatus.suspended) {
+      return settings.registeredStoreMonthlyLimit;
     }
-    return _selectedWalletStatus == 'new'
-        ? AppConstants.newWalletMonthlyLimit
-        : AppConstants.oldWalletMonthlyLimit;
+    return _selectedWalletStatus == WalletStatus.active
+        ? settings.newWalletMonthlyLimit
+        : settings.oldWalletMonthlyLimit;
   }
 
   Widget _buildLimitRow(String label, String value) {
@@ -451,7 +463,7 @@ class _WalletFormScreenState extends State<WalletFormScreen> {
           return Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.error.withAlpha((0.1 * 255).round()),
+              color: AppColors.error.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(

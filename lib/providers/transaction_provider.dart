@@ -1,262 +1,556 @@
 import 'dart:async';
-
-import 'package:flutter/material.dart';
-import 'package:firebase_performance/firebase_performance.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:walletmanager/core/enums/transaction_enums.dart';
+import 'package:walletmanager/core/enums/wallet_enums.dart';
 import 'package:walletmanager/core/utils/date_helper.dart';
-import 'package:walletmanager/providers/app_events.dart';
+import 'package:walletmanager/services/time_service.dart';
+import 'package:walletmanager/core/di/service_locator.dart';
 import '../data/repositories/transaction_repository.dart';
+import '../data/repositories/stats_repository.dart';
+import '../data/repositories/wallet_repository.dart';
 import '../data/models/transaction_model.dart';
+import '../data/models/wallet_model.dart';
+import '../data/models/stats_summary_model.dart';
+import '../data/models/daily_stats_model.dart';
 import '../data/models/user_model.dart';
-import '../data/models/user_permissions.dart'; // Added
+import '../data/models/user_permissions.dart';
 import '../core/errors/app_exceptions.dart';
 import 'auth_provider.dart';
+import 'wallet_provider.dart';
+import 'employee_provider.dart';
+import 'platform_settings_provider.dart';
+import '../data/models/platform_settings_model.dart';
+import 'package:uuid/uuid.dart';
+import 'package:walletmanager/providers/statistics_provider.dart';
+import 'base_provider.dart';
 import '../core/services/analytics_service.dart';
 
-enum TransactionStatus { idle, loading, loadingMore, loaded, creating, error }
+enum TransactionProviderStatus {
+  idle,
+  loading,
+  loadingMore,
+  loaded,
+  creating,
+  error
+}
 
-class TransactionProvider extends ChangeNotifier {
+class TransactionProvider extends BaseProvider {
   final TransactionRepository _transactionRepository;
+  final StatsRepository _statsRepository;
+  final WalletRepository _walletRepository;
+  final PlatformSettingsProvider? _platformSettingsProvider;
 
   // State
   String? _currentStoreId;
   UserModel? _currentUser;
   List<TransactionModel> _transactions = [];
-  Map<String, dynamic> _summary = {};
-  DocumentSnapshot? _lastDocument;
+  Map<String, TransactionModel> _transactionMap = {};
+  List<TransactionModel> _todayTransactions = [];
+  final Map<String, dynamic> _summary = {};
+  final Set<String> _pendingTxIds = {};
+
   bool _hasMore = true;
-  final DateTimeRange _dateRange = DateTimeRange(
-      start: DateHelper.getStartOfDay(DateTime.now()),
-      end: DateHelper.getEndOfDay(DateTime.now()));
+  DocumentSnapshot? _lastDocument;
+  late DateTimeRange _dateRange;
 
   // Status
-  TransactionStatus _status = TransactionStatus.idle;
+  TransactionProviderStatus _status = TransactionProviderStatus.idle;
   String? _errorMessage;
 
   TransactionModel? _selectedTransaction;
 
+  // Providers
+  WalletProvider? _walletProvider;
+  EmployeeProvider? _employeeProvider;
+
   // Filter
-  String? _filterType;
+  TransactionType? _filterType; // ENUM refactor
 
-  // Cache
-  List<TransactionModel>? _cachedTransactions;
-  DateTime? _cacheTimestamp;
+  Timer? _fetchShieldTimer;
+  bool _fetchShieldActive = false;
+  bool _hasFetchedInitial = false;
 
-  StreamSubscription? _dataChangedSubscription;
-  bool _isDisposed = false;
+  void updateWalletProvider(WalletProvider walletProvider) {
+    _walletProvider = walletProvider;
+  }
+
+  void updateEmployeeProvider(EmployeeProvider employeeProvider) {
+    _employeeProvider = employeeProvider;
+  }
 
   // Constructor
   TransactionProvider({
     TransactionRepository? transactionRepository,
+    StatsRepository? statsRepository,
+    WalletRepository? walletRepository,
+    PlatformSettingsProvider? platformSettingsProvider,
     String? storeId,
   })  : _transactionRepository =
-            transactionRepository ?? TransactionRepository(),
+            transactionRepository ?? sl<TransactionRepository>(),
+        _statsRepository = statsRepository ?? sl<StatsRepository>(),
+        _walletRepository = walletRepository ?? sl<WalletRepository>(),
+        _platformSettingsProvider = platformSettingsProvider ??
+            (sl.isRegistered<PlatformSettingsProvider>()
+                ? sl<PlatformSettingsProvider>()
+                : null),
         _currentStoreId = storeId {
-    _dataChangedSubscription = appEvents.onTransactionsChanged.listen((_) {
-      if (_currentStoreId != null && !isLoading && !isLoadingMore) {
-        fetchInitialTransactions(forceRefresh: true);
-      }
-    });
+    _initializeDateRange();
+  }
+
+  void _initializeDateRange() {
+    final now = TimeService.now();
+    _dateRange = DateTimeRange(
+      start: DateHelper.getStartOfDay(now),
+      end: DateHelper.getEndOfDay(now),
+    );
   }
 
   @override
   void dispose() {
-    _isDisposed = true;
-    _dataChangedSubscription?.cancel();
+    _fetchShieldTimer?.cancel();
     super.dispose();
+  }
+
+  void _rebuildTransactionMap() {
+    _transactionMap = {
+      for (final tx in _transactions) tx.transactionId: tx,
+    };
+  }
+
+  void _recomputeTodayTransactions() {
+    final now = TimeService.now();
+    _todayTransactions = _transactions.where((tx) {
+      // Safe access for nullable transactionDate
+      return DateHelper.isSameDay(tx.transactionDate ?? now, now);
+    }).toList();
+  }
+
+  void _activateFetchShield() {
+    _fetchShieldActive = true;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldTimer = Timer(const Duration(seconds: 5), () {
+      _fetchShieldActive = false;
+    });
   }
 
   // Getters
   List<TransactionModel> get transactions => _transactions;
-  Map<String, dynamic> get summary => _summary;
-  TransactionStatus get status => _status;
+  Map<String, TransactionModel> get transactionMap => _transactionMap;
+  List<TransactionModel> get todayTransactions => _todayTransactions;
+  Map<String, dynamic> get summary => Map<String, dynamic>.from(_summary);
+  TransactionProviderStatus get status => _status;
+
+  double get totalSent => _transactions
+      .where((tx) => tx.transactionType == TransactionType.debit)
+      .fold(0.0, (acc, tx) => acc + tx.amount);
+
+  double get totalReceived => _transactions
+      .where((tx) => tx.transactionType == TransactionType.credit)
+      .fold(0.0, (acc, tx) => acc + tx.amount);
+
+  double get totalCommission =>
+      _transactions.fold(0.0, (acc, tx) => acc + tx.commission);
   String? get errorMessage => _errorMessage;
   String? get currentStoreId => _currentStoreId;
   bool get hasMore => _hasMore;
-  String? get filterType => _filterType;
+  TransactionType? get filterType => _filterType;
   TransactionModel? get selectedTransaction => _selectedTransaction;
+  DateTimeRange get dateRange => _dateRange;
 
   // Helper Getters
-  bool get isLoading => _status == TransactionStatus.loading;
-  bool get isLoadingMore => _status == TransactionStatus.loadingMore;
-  bool get isCreating => _status == TransactionStatus.creating;
-  bool get hasError => _status == TransactionStatus.error;
+  bool get isLoading => _status == TransactionProviderStatus.loading;
+  bool get isLoadingMore => _status == TransactionProviderStatus.loadingMore;
+  bool get isCreating => _status == TransactionProviderStatus.creating;
+  bool get hasError => _status == TransactionProviderStatus.error;
 
   // Methods
-  void updateAuthState(AuthProvider auth) {
-    if (_currentStoreId != auth.currentStoreId ||
-        _currentUser != auth.currentUser) {
-      _currentStoreId = auth.currentStoreId;
-      _currentUser = auth.currentUser;
 
-      // Only refresh if store changed (user change doesn't invalidate transaction list usually)
-      if (auth.currentStoreId != _currentStoreId) {
-        _cachedTransactions = null;
-        _cacheTimestamp = null;
+  void updateAuthState(AuthProvider auth) {
+    if (_currentStoreId != auth.currentStoreId) {
+      setStoreId(auth.currentStoreId);
+    }
+    _currentUser = auth.currentUser;
+  }
+
+  /// Internal security guard for sensitive mutations.
+  /// Validates both existence of user and specific granular permission (for employees).
+  Future<UserModel> _validateUserAndPermission(
+      bool Function(UserPermissions) permissionCheck) async {
+    final user = _currentUser;
+    if (user == null || _currentStoreId == null) {
+      throw AuthException('auth_error_required');
+    }
+
+    // Owners bypass granular permission checks
+    if (user.isOwner) return user;
+
+    if (user.permissions == null || !permissionCheck(user.permissions!)) {
+      throw PermissionDeniedException();
+    }
+    return user;
+  }
+
+  void setStoreId(String? storeId) {
+    if (_currentStoreId != storeId) {
+      _currentStoreId = storeId;
+      if (storeId != null && storeId.isNotEmpty) {
         fetchInitialTransactions();
-      } else if (_transactions.isEmpty && _currentStoreId != null) {
-        // Initial fetch if we have store but no data
-        fetchInitialTransactions();
+      } else {
+        _transactions = [];
+        _transactionMap = {};
+        _status = TransactionProviderStatus.idle;
+        safeNotify();
       }
     }
   }
 
-  void setFilter(String? type) {
-    if (_filterType != type) {
-      _filterType = type;
-      fetchInitialTransactions(forceRefresh: true);
-    }
+  void setDateRange(DateTimeRange range) {
+    _dateRange = range;
+    fetchInitialTransactions();
   }
 
-  Future<void> selectTransaction(String transactionId) async {
-    _setStatus(TransactionStatus.loading);
-    try {
-      _selectedTransaction =
-          await _transactionRepository.getTransactionById(transactionId);
-      _setStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('Failed to fetch transaction details.');
+  void setFilterType(TransactionType? type) {
+    // ENUM refactor
+    _filterType = type;
+    fetchInitialTransactions();
+  }
+
+  void _updateStatus(TransactionProviderStatus status) {
+    if (isDisposed) return;
+    _status = status;
+    // Reset error when starting a new operation
+    if (status == TransactionProviderStatus.loading ||
+        status == TransactionProviderStatus.creating) {
+      _errorMessage = null;
     }
+    safeNotify();
+  }
+
+  @override
+  void setError(String errorCode,
+      [Object? error,
+      StackTrace? stack,
+      bool showToast = false,
+      String operation = 'transaction_operation']) {
+    if (kDebugMode) {
+      debugPrint('💥 [TX ERROR] $errorCode | Error: $error');
+      if (stack != null) {
+        debugPrint('🔍 [STACK TRACE]: $stack');
+      }
+    }
+
+    if (isDisposed) return;
+    _errorMessage = errorCode;
+    _status = TransactionProviderStatus.error;
+
+    super.setError(
+      errorCode,
+      error,
+      stack,
+      showToast,
+      operation,
+    );
+
+    safeNotify();
   }
 
   Future<void> fetchInitialTransactions({bool forceRefresh = false}) async {
-    if (_currentStoreId == null) return;
-
-    final now = DateTime.now();
-    if (!forceRefresh &&
-        _cachedTransactions != null &&
-        _cacheTimestamp != null &&
-        now.difference(_cacheTimestamp!).inMinutes < 2) {
-      _transactions = _cachedTransactions!;
-      if (status != TransactionStatus.loaded) {
-        _setStatus(TransactionStatus.loaded);
+    if (kDebugMode) {
+      debugPrint(
+          '🚀 [INIT START] TransactionProvider: fetchInitialTransactions(forceRefresh: $forceRefresh)');
+    }
+    if (_currentStoreId == null) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [INIT ABORT] TransactionProvider: No currentStoreId');
+      }
+      return;
+    }
+    if (!forceRefresh && _fetchShieldActive) {
+      if (kDebugMode) {
+        debugPrint(
+            '🛡️ [INIT SHIELD] TransactionProvider: Fetch shield active, skipping.');
       }
       return;
     }
 
-    final trace =
-        FirebasePerformance.instance.newTrace('fetch_initial_transactions');
-    await trace.start();
-
-    _setStatus(TransactionStatus.loading);
-    _lastDocument = null;
-    _hasMore = true;
+    _updateStatus(TransactionProviderStatus.loading);
+    _errorMessage = null;
+    safeNotify();
 
     try {
-      final result =
-          await _transactionRepository.getTransactionsByDateRangePaginated(
+      if (kDebugMode) {
+        debugPrint(
+            '⏳ [INIT DATA] TransactionProvider: Requesting transactions from repository...');
+      }
+      final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
-        transactionType: _filterType,
-        limit: 20,
+        lastDocument: null,
       );
+      if (kDebugMode) {
+        debugPrint(
+            '✅ [INIT SUCCESS] TransactionProvider: Fetched ${result.items.length} transactions.');
+      }
 
-      _transactions = result['transactions'];
-      _lastDocument = result['lastDoc'];
-      _hasMore = _transactions.length == 20;
-      _cachedTransactions = _transactions;
-      _cacheTimestamp = now;
-      _calculateSummary();
-      _setStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError('An unexpected error occurred while fetching transactions.');
+      // Smart Merge: match incoming documents by UUID, preserving locally pending modifications/items
+      final Map<String, TransactionModel> merged = {};
+      final incomingIds = result.items.map((tx) => tx.transactionId).toSet();
+      for (final tx in result.items) {
+        merged[tx.transactionId] = tx;
+      }
+      for (final tx in _transactions) {
+        if (_pendingTxIds.contains(tx.transactionId)) {
+          merged[tx.transactionId] = tx;
+        }
+      }
+
+      final List<TransactionModel> mergedList = [];
+      for (final tx in result.items) {
+        if (_pendingTxIds.contains(tx.transactionId)) {
+          mergedList.add(merged[tx.transactionId]!);
+        } else {
+          mergedList.add(tx);
+        }
+      }
+      for (final tx in _transactions) {
+        if (_pendingTxIds.contains(tx.transactionId) &&
+            !incomingIds.contains(tx.transactionId)) {
+          // Prepend newly created pending items
+          mergedList.insert(0, tx);
+        }
+      }
+
+      _transactions = mergedList;
+      _lastDocument = result.lastDocument;
+      _hasMore = result.items.length >= 20;
+
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
+      if (!_hasFetchedInitial && _transactions.isEmpty) {
+        await fetchTodaySummary();
+        _hasFetchedInitial = true;
+      } else {
+        _hasFetchedInitial = true;
+        _deriveSummaryLocally();
+      }
+      _updateStatus(TransactionProviderStatus.loaded);
+    } catch (e, stack) {
+      if (e is ServerException && e.code == 'permission-denied') {
+        if (kDebugMode) {
+          debugPrint(
+              '🤫 [SILENT ERROR] TransactionProvider: permission-denied (likely native sign-out)');
+        }
+        return;
+      }
+      if (kDebugMode) {
+        debugPrint('❌ [INIT FATAL] TransactionProvider Error: $e');
+      }
+      if (kDebugMode) {
+        debugPrint('🔍 [STACK TRACE]: $stack');
+      }
+      setError('transaction_error_fetch_failed', e, stack);
     } finally {
-      await trace.stop();
+      safeNotify();
     }
   }
 
   Future<void> fetchMoreTransactions() async {
-    if (isLoading || isLoadingMore || !_hasMore || _currentStoreId == null) {
+    if (isLoading ||
+        isLoadingMore ||
+        !_hasMore ||
+        _currentStoreId == null ||
+        _lastDocument == null) {
       return;
     }
 
-    _setStatus(TransactionStatus.loadingMore);
+    _updateStatus(TransactionProviderStatus.loadingMore);
+    safeNotify();
 
     try {
-      final result =
-          await _transactionRepository.getTransactionsByDateRangePaginated(
+      final result = await _transactionRepository.getTransactionsByDateRange(
         _currentStoreId!,
         _dateRange.start,
         _dateRange.end,
-        transactionType: _filterType,
-        limit: 20,
-        lastDoc: _lastDocument,
+        lastDocument: _lastDocument,
       );
 
-      final newTransactions = result['transactions'] as List<TransactionModel>;
-      _transactions.addAll(newTransactions);
-      _lastDocument = result['lastDoc'];
-      _hasMore = newTransactions.length == 20;
-      _calculateSummary();
-      _setStatus(TransactionStatus.loaded);
-    } on ServerException catch (e) {
-      _setError(e.message);
-    } catch (e) {
-      _setError(
-          'An unexpected error occurred while fetching more transactions.');
-    }
-  }
-
-  void _calculateSummary() {
-    int sendCount = 0;
-    int receiveCount = 0;
-    double totalSendAmount = 0.0;
-    double totalReceiveAmount = 0.0;
-    double totalCommission = 0.0;
-
-    for (final tx in _transactions) {
-      if (tx.isSend) {
-        sendCount++;
-        totalSendAmount += tx.amount;
+      if (result.items.isEmpty) {
+        _hasMore = false;
       } else {
-        receiveCount++;
-        totalReceiveAmount += tx.amount;
+        _transactions.addAll(result.items);
+        _lastDocument = result.lastDocument;
+        _hasMore = result.items.length >= 20;
       }
-      totalCommission += tx.commission;
-    }
 
-    _summary = {
-      'totalTransactions': _transactions.length,
-      'sendCount': sendCount,
-      'receiveCount': receiveCount,
-      'totalSendAmount': totalSendAmount,
-      'totalReceiveAmount': totalReceiveAmount,
-      'totalCommission': totalCommission,
-    };
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
+      _updateStatus(TransactionProviderStatus.loaded);
+    } catch (e, stack) {
+      setError('transaction_error_fetch_more_failed', e, stack);
+    } finally {
+      safeNotify();
+    }
   }
 
   Future<bool> createTransaction({
     required String walletId,
-    required String transactionType,
-    String? customerPhone,
-    String? customerName,
+    required TransactionType transactionType,
     required double amount,
     required double commission,
     double serviceFee = 0.0,
-    String paymentStatus = 'paid',
+    PaymentStatus paymentStatus = PaymentStatus.paid,
+    String? customerPhone,
+    String? customerName,
     String? notes,
-    bool force = false,
+    bool forceInstaPayBypass = false,
   }) async {
-    _setStatus(TransactionStatus.creating);
+    List<TransactionModel>? oldTransactions;
+    Map<String, TransactionModel>? oldTransactionMap;
+    Map<String, dynamic>? oldSummary;
+    StatisticsProvider? statsProvider;
+    StatsSummaryModel? oldStatsSummary;
+    DailyStatsModel? oldStatsToday;
+    WalletModel? oldWalletSnapshot;
+    String? pendingTxId;
+
     try {
-      // Check Permission
-      if (_currentUser == null) throw ValidationException('المستخدم غير موجود');
-      if (!_currentUser!.hasPermission((p) => p.createTransaction)) {
-        throw PermissionException();
+      // Removed fallback to sl<WalletProvider>() to prevent ghost instances.
+      final user = await _validateUserAndPermission((p) => p.createTransaction);
+
+      // Validate wallet is not frozen
+      final wallet = await _walletRepository.getWalletById(walletId,
+          expectedStoreId: _currentStoreId);
+      if (wallet == null) {
+        throw ValidationException('wallet_not_found');
+      }
+      final isWalletFrozen = wallet.isFrozen ||
+          (_walletProvider?.isWalletFrozenSync(walletId) ?? false);
+      if (isWalletFrozen) {
+        throw ValidationException('wallet_is_frozen');
       }
 
-      if (_currentStoreId == null) {
-        throw ValidationException('Store ID not found.');
+      // Perform client-side limit check
+      final isSend = transactionType == TransactionType.debit;
+      final isReceive = transactionType == TransactionType.credit;
+      final isDeposit = transactionType == TransactionType.deposit;
+      final isInstaPay = wallet.walletType == WalletType.instaPay;
+
+      final settings = _platformSettingsProvider?.settings ??
+          const PlatformSettingsModel.defaults();
+      final dynamicLimits = wallet.getDynamicNetworkLimits(settings);
+
+      if (kDebugMode) {
+        debugPrint(
+            '🔥 CURRENT TX LIMIT: ${dynamicLimits.maxPerTransaction} | LOADED FROM SETTINGS: ${settings.toJson()}');
       }
-      if (amount <= 0) throw ValidationException('Amount must be positive.');
+
+      if (!isDeposit && amount > dynamicLimits.maxPerTransaction) {
+        if (isInstaPay) {
+          throw ValidationException('wallet_error_instapay_limit');
+        } else {
+          throw ValidationException('wallet_error_telecom_limit');
+        }
+      }
+
+      if (isSend) {
+        final totalDeduction = amount + serviceFee;
+        if ((wallet.balance + 0.01) < totalDeduction) {
+          throw ValidationException('wallet_error_insufficient_balance');
+        }
+
+        if (wallet.sendLimits.dailyUsed + amount > dynamicLimits.dailySend) {
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_daily_send_limit');
+          }
+        }
+        if (wallet.sendLimits.monthlyUsed + amount >
+            dynamicLimits.monthlySend) {
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_monthly_send_limit');
+          }
+        }
+      } else if (isReceive) {
+        if (wallet.receiveLimits.dailyUsed + amount >
+            dynamicLimits.dailyReceive) {
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_daily_receive_limit');
+          }
+        }
+        if (wallet.receiveLimits.monthlyUsed + amount >
+            dynamicLimits.monthlyReceive) {
+          if (isInstaPay) {
+            if (!forceInstaPayBypass) {
+              throw InstaPayLimitWarningException();
+            }
+          } else {
+            throw ValidationException('wallet_error_monthly_receive_limit');
+          }
+        }
+      }
+
+      _status = TransactionProviderStatus.creating;
+      _errorMessage = null;
+      safeNotify();
+
+      // Capture snapshots (Isolated copy)
+      oldTransactions = _transactions.toList();
+      oldTransactionMap = Map<String, TransactionModel>.from(_transactionMap);
+      oldSummary = Map<String, dynamic>.from(_summary);
+
+      if (_walletProvider != null &&
+          _walletProvider!.walletMap.containsKey(walletId)) {
+        oldWalletSnapshot = _walletProvider!.walletMap[walletId];
+      }
+
+      statsProvider = sl.isRegistered<StatisticsProvider>()
+          ? sl<StatisticsProvider>()
+          : null;
+      if (statsProvider != null) {
+        oldStatsSummary = statsProvider.dashboardSummary;
+        oldStatsToday = statsProvider.todayStats;
+      }
+
+      final now = TimeService.now();
+      final newTransactionId = const Uuid().v4();
+      pendingTxId = newTransactionId;
+      _pendingTxIds.add(pendingTxId);
+
+      String? createdByName;
+      String? creatorRole;
+
+      if (_employeeProvider != null) {
+        final employee = _employeeProvider!.getEmployeeById(user.userId);
+        if (employee != null) {
+          createdByName = employee.fullName;
+          creatorRole = employee.role.name;
+        }
+      }
+
+      if (createdByName == null || createdByName.isEmpty) {
+        createdByName =
+            user.fullName.isNotEmpty ? user.fullName : 'Store Member';
+      }
+      if (creatorRole == null || creatorRole.isEmpty) {
+        creatorRole = user.role.name;
+      }
 
       final newTransaction = TransactionModel(
-        transactionId: _transactionRepository.transactionsCollection.doc().id,
+        transactionId: newTransactionId,
         storeId: _currentStoreId!,
         walletId: walletId,
         transactionType: transactionType,
@@ -267,65 +561,310 @@ class TransactionProvider extends ChangeNotifier {
         serviceFee: serviceFee,
         paymentStatus: paymentStatus,
         notes: notes,
-        transactionDate: Timestamp.now(),
-        createdAt: Timestamp.now(),
-        createdBy: _currentUser?.userId ?? '',
-        createdById: _currentUser?.userId,
-        createdByName: _currentUser?.fullName,
-        creatorRole: _currentUser?.role,
+        transactionDate: now,
+        createdAt: now,
+        createdBy: user.userId,
+        createdById: user.userId,
+        createdByName: createdByName,
+        creatorRole: creatorRole,
+        bypassedLimit: forceInstaPayBypass,
       );
 
-      await _transactionRepository.createTransaction(newTransaction,
-          force: force);
-      AnalyticsService.logTransactionCreated(transactionType);
-      appEvents.fireTransactionsChanged();
-      appEvents.fireWalletsChanged();
+      // Optimistic mutation: insert locally first
+      _transactions.insert(0, newTransaction);
+      _rebuildTransactionMap();
+      _recomputeTodayTransactions();
+
+      // STRICTLY use the correctly injected instance from ProxyProvider.
+      // Never fallback to 'sl' for WalletProvider to avoid DI Ghost Instances.
+      if (_walletProvider != null) {
+        _walletProvider!.updateLocalBalance(
+          newTransaction.walletId,
+          newTransaction.amount,
+          transactionType,
+          serviceFee: serviceFee,
+        );
+      } else {
+        if (kDebugMode) {
+          debugPrint(
+              "CRITICAL UI BUG CAUGHT: _walletProvider is null inside TransactionProvider. ProxyProvider injection failed.");
+        }
+      }
+
+      if (_hasFetchedInitial) {
+        _deriveSummaryLocally();
+      } else {
+        _updateSummaryMapOptimistically(newTransaction);
+      }
+
+      if (sl.isRegistered<StatisticsProvider>()) {
+        sl<StatisticsProvider>().updateLocalStats(amount, transactionType,
+            commission: commission, serviceFee: serviceFee);
+      } else if (statsProvider != null) {
+        statsProvider.applyTransactionLocally(amount, newTransaction.isIncome,
+            commission: commission, serviceFee: serviceFee);
+      }
+
+      safeNotify();
+
+      await _transactionRepository.createTransaction(newTransaction);
+      AnalyticsService.logTransactionCreated(transactionType.name);
+
+      _activateFetchShield();
+      _updateStatus(TransactionProviderStatus.loaded);
+      _walletProvider?.clearPendingWallet(walletId);
       return true;
-    } on LimitExceededWarning {
-      _setStatus(TransactionStatus.idle);
+    } on InstaPayLimitWarningException {
+      // Re-throw directly so the UI catch block can handle it.
+      // Limit warnings are pre-mutation validation, so no rollback needed.
       rethrow;
-    } on AppException catch (e) {
-      _setError(e.message);
+    } on DomainException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary,
+          statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
+      setError(e.message, e, stack);
       return false;
-    } catch (e) {
-      _setError('Failed to create transaction.');
+    } on ValidationException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary,
+          statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
+      setError(e.message, e, stack);
       return false;
+    } on AppException catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary,
+          statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      _rollbackLocalTx(oldTransactions, oldTransactionMap, oldSummary,
+          statsProvider, oldStatsSummary, oldStatsToday, oldWalletSnapshot);
+      setError('transaction_error_create_failed', e, stack);
+      return false;
+    } finally {
+      if (pendingTxId != null) {
+        _pendingTxIds.remove(pendingTxId);
+      }
+      if (_status == TransactionProviderStatus.creating) {
+        _updateStatus(TransactionProviderStatus.loaded);
+      }
+      safeNotify();
     }
   }
 
-  Future<List<TransactionModel>> fetchTransactionsForDateRange(
-      DateTime startDate, DateTime endDate) async {
-    if (_currentStoreId == null) return [];
+  void insertTransactionLocally(TransactionModel transaction) {
+    if (isDisposed) return;
+
+    // Check if it already exists
+    if (_transactionMap.containsKey(transaction.transactionId)) return;
+
+    _transactions.add(transaction);
+    // Sort by transactionDate descending to maintain consistency with Firestore stream
+    // Safe comparison for nullable transactionDate
+    final now = TimeService.now();
+    _transactions.sort((a, b) =>
+        (b.transactionDate ?? now).compareTo(a.transactionDate ?? now));
+
+    _rebuildTransactionMap();
+    _recomputeTodayTransactions();
+    _activateFetchShield();
+    fetchTodaySummary();
+    safeNotify();
+  }
+
+  void _deriveSummaryLocally() {
+    final now = TimeService.now();
+    final todayTxs = _transactions.where((tx) {
+      return DateHelper.isSameDay(tx.transactionDate ?? now, now) &&
+          (tx.transactionType == TransactionType.debit ||
+              tx.transactionType == TransactionType.credit);
+    }).toList();
+
+    _summary['totalTransactions'] = todayTxs.length;
+    _summary['sendCount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.debit)
+        .length;
+    _summary['receiveCount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.credit)
+        .length;
+    _summary['totalSendAmount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.debit)
+        .fold(0.0, (acc, tx) => acc + tx.amount);
+    _summary['totalReceiveAmount'] = todayTxs
+        .where((tx) => tx.transactionType == TransactionType.credit)
+        .fold(0.0, (acc, tx) => acc + tx.amount);
+    _summary['totalCommission'] =
+        todayTxs.fold(0.0, (acc, tx) => acc + tx.commission);
+  }
+
+  Future<void> fetchTodaySummary() async {
+    if (_currentStoreId == null) return;
+    if (_hasFetchedInitial) {
+      _deriveSummaryLocally();
+      safeNotify();
+      return;
+    }
     try {
-      return await _transactionRepository.getTransactionsByDateRange(
-        _currentStoreId!,
-        startDate,
-        endDate,
-      );
-    } catch (e) {
-      _setError('Failed to fetch transactions for date range.');
-      return [];
+      final stats = await _statsRepository.fetchTodayStats(_currentStoreId!);
+      if (isDisposed) return;
+      _summary['totalTransactions'] = stats.totalTransactions;
+      _summary['sendCount'] = stats.sendCount;
+      _summary['receiveCount'] = stats.receiveCount;
+      _summary['totalSendAmount'] = stats.totalSentAmount;
+      _summary['totalReceiveAmount'] = stats.totalReceivedAmount;
+      _summary['totalCommission'] = stats.totalCommission;
+      safeNotify();
+    } catch (e, stack) {
+      setError('transaction_error_summary_fetch_failed', e, stack);
     }
   }
 
-  // Helper Methods
-  void _setStatus(TransactionStatus status) {
-    if (_isDisposed) return;
-    _status = status;
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    if (_isDisposed) return;
-    _errorMessage = message;
-    _status = TransactionStatus.error;
-    notifyListeners();
-  }
-
-  void clearError() {
-    if (_isDisposed) return;
+  Future<void> selectTransaction(String transactionId) async {
+    _selectedTransaction = null;
     _errorMessage = null;
-    _status = TransactionStatus.idle;
-    notifyListeners();
+    safeNotify();
+
+    try {
+      final tx = await _transactionRepository.getTransactionById(transactionId,
+          expectedStoreId: _currentStoreId);
+      _selectedTransaction = tx;
+      _updateStatus(TransactionProviderStatus.loaded);
+    } catch (e, stack) {
+      setError('transaction_error_details_fetch', e, stack);
+    } finally {
+      safeNotify();
+    }
+  }
+
+  Future<bool> updateTransaction(
+      String transactionId, Map<String, dynamic> data) async {
+    try {
+      await _validateUserAndPermission((p) => p.editTransaction);
+
+      // We need to fetch the transaction first to get the walletId to validate if it's frozen.
+      final currentTx = await _transactionRepository
+          .getTransactionById(transactionId, expectedStoreId: _currentStoreId);
+
+      if (currentTx == null) {
+        throw ValidationException('transaction_not_found');
+      }
+
+      // Ensure the wallet is not frozen. We use the updated walletId if provided, otherwise the current one.
+      final targetWalletId = data['walletId'] as String? ?? currentTx.walletId;
+      final wallet = await _walletRepository.getWalletById(targetWalletId,
+          expectedStoreId: _currentStoreId);
+
+      if (wallet == null) {
+        throw ValidationException('wallet_not_found');
+      }
+      final isWalletFrozen = wallet.isFrozen ||
+          (_walletProvider?.isWalletFrozenSync(targetWalletId) ?? false);
+      if (isWalletFrozen) {
+        throw ValidationException('wallet_is_frozen');
+      }
+
+      _updateStatus(TransactionProviderStatus
+          .creating); // Using creating for mutating state
+      _errorMessage = null;
+      safeNotify();
+
+      await _transactionRepository.updateTransaction(transactionId, data);
+
+      await fetchInitialTransactions(forceRefresh: true);
+      return true;
+    } on DomainException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } on ValidationException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('transaction_error_update_failed', e, stack);
+      return false;
+    } finally {
+      if (_status == TransactionProviderStatus.creating) {
+        _updateStatus(TransactionProviderStatus.loaded);
+      }
+      safeNotify();
+    }
+  }
+
+  void _updateSummaryMapOptimistically(TransactionModel tx) {
+    if (tx.transactionType != TransactionType.debit &&
+        tx.transactionType != TransactionType.credit) {
+      return;
+    }
+    _summary['totalTransactions'] =
+        (_summary['totalTransactions'] as int? ?? 0) + 1;
+    _summary['totalCommission'] =
+        (_summary['totalCommission'] as double? ?? 0.0) + tx.commission;
+
+    if (tx.transactionType == TransactionType.debit) {
+      _summary['sendCount'] = (_summary['sendCount'] as int? ?? 0) + 1;
+      _summary['totalSendAmount'] =
+          (_summary['totalSendAmount'] as double? ?? 0.0) + tx.amount;
+    } else if (tx.transactionType == TransactionType.credit) {
+      _summary['receiveCount'] = (_summary['receiveCount'] as int? ?? 0) + 1;
+      _summary['totalReceiveAmount'] =
+          (_summary['totalReceiveAmount'] as double? ?? 0.0) + tx.amount;
+    }
+  }
+
+  void _rollbackLocalTx(
+    List<TransactionModel>? oldTransactions,
+    Map<String, TransactionModel>? oldTransactionMap,
+    Map<String, dynamic>? oldSummary,
+    StatisticsProvider? statsProvider,
+    StatsSummaryModel? oldStatsSummary,
+    DailyStatsModel? oldStatsToday,
+    WalletModel? oldWalletSnapshot,
+  ) {
+    if (oldTransactions != null) _transactions = oldTransactions;
+    if (oldTransactionMap != null) _transactionMap = oldTransactionMap;
+    if (oldSummary != null) {
+      _summary.clear();
+      _summary.addAll(oldSummary);
+    }
+
+    final walletProvider = _walletProvider;
+    if (walletProvider != null && oldWalletSnapshot != null) {
+      walletProvider.rollbackWallet(oldWalletSnapshot);
+    }
+
+    final sProvider = statsProvider;
+    if (sProvider != null) {
+      sProvider.rollbackStats(oldStatsSummary, oldStatsToday);
+    }
+    _recomputeTodayTransactions();
+    safeNotify();
+  }
+
+  Future<bool> deleteTransaction(String transactionId) async {
+    try {
+      // Completely disable deletion according to strict financial integrity business logic
+      throw PermissionDeniedException();
+    } on AppException catch (e, stack) {
+      setError(e.message, e, stack);
+      return false;
+    } catch (e, stack) {
+      setError('transaction_error_delete_failed', e, stack);
+      return false;
+    }
+  }
+
+  void clearAndCancel() {
+    _currentStoreId = null;
+    _fetchShieldTimer?.cancel();
+    _fetchShieldActive = false;
+    _transactions = [];
+    _transactionMap = {};
+    _todayTransactions = [];
+    _summary.clear();
+    _hasMore = true;
+    _lastDocument = null;
+    _selectedTransaction = null;
+    _status = TransactionProviderStatus.idle;
+    _errorMessage = null;
+    safeNotify();
   }
 }

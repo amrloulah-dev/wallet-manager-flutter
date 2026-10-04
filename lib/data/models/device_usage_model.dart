@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/utils/number_parser.dart';
+import '../../core/errors/app_exceptions.dart';
 
 class DeviceUsageModel {
   final String deviceId;
   final int trialCount;
-  final Timestamp lastTrialDate;
+  final DateTime lastTrialDate;
   final List<String> associatedStoreIds;
 
   DeviceUsageModel({
@@ -22,8 +24,10 @@ class DeviceUsageModel {
 
     return DeviceUsageModel(
       deviceId: doc.id,
-      trialCount: data['trialCount'] ?? 0,
-      lastTrialDate: data['lastTrialDate'] ?? Timestamp.now(),
+      trialCount: NumberParser.toInt(data['trialCount']),
+      lastTrialDate: (data['lastTrialDate'] as Timestamp?)?.toDate() ??
+          (throw NotFoundException(
+              'DeviceUsage document missing required field: lastTrialDate')),
       associatedStoreIds: List<String>.from(data['associatedStoreIds'] ?? []),
     );
   }
@@ -32,7 +36,7 @@ class DeviceUsageModel {
   Map<String, dynamic> toFirestore() {
     return {
       'trialCount': trialCount,
-      'lastTrialDate': lastTrialDate,
+      'lastTrialDate': Timestamp.fromDate(lastTrialDate),
       'associatedStoreIds': associatedStoreIds,
     };
   }
@@ -40,7 +44,7 @@ class DeviceUsageModel {
   DeviceUsageModel copyWith({
     String? deviceId,
     int? trialCount,
-    Timestamp? lastTrialDate,
+    DateTime? lastTrialDate,
     List<String>? associatedStoreIds,
   }) {
     return DeviceUsageModel(
