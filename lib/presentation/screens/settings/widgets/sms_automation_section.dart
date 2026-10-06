@@ -15,6 +15,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
 import '../../../../core/constants/route_constants.dart';
 import 'section_title.dart';
+import 'sms_parser_playground_card.dart'; // [TEMP DIAGNOSTIC]
 
 class SmsAutomationSection extends StatefulWidget {
   const SmsAutomationSection({super.key});
@@ -76,7 +77,6 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
       });
     }
   }
-
 
   Future<void> _toggleSmsAutomation(bool value) async {
     if (_isToggling) return;
@@ -277,6 +277,8 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
           ),
         ),
         // [TEMP DIAGNOSTIC]
+        const SmsParserPlaygroundCard(),
+        // [TEMP DIAGNOSTIC]
         _buildDiagnosticCard(),
       ],
     );
@@ -406,7 +408,6 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
       ),
     );
   }
-
 
   Widget _buildSimDropdown(
       int slot, String label, SimWalletConfig? currentConfig) {

@@ -1,7 +1,7 @@
 class BankConstants {
   static const List<String> supportedBankSenders = [
     'NBE', // National Bank of Egypt
-    'BM', 'BANQUE MISR', // Bank Misr
+    'BM', 'BANQUE MISR', 'BANK MISR', // Bank Misr
     'CIB', // Commercial International Bank
     'QNB',
     'ALEXBANK',
@@ -25,4 +25,14 @@ class BankConstants {
     'IPN',
     'INSTAPAY' // The aggregator services
   ];
+
+  static final Set<String> _normalizedSupportedBankSenders =
+      supportedBankSenders.map((s) => s.toUpperCase().trim()).toSet();
+
+  /// Case-insensitive validation of whether [sender] belongs to a supported bank or aggregator.
+  static bool isSupportedBankSender(String? sender) {
+    if (sender == null || sender.trim().isEmpty) return false;
+    return _normalizedSupportedBankSenders
+        .contains(sender.toUpperCase().trim());
+  }
 }

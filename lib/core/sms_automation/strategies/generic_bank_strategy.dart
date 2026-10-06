@@ -3,6 +3,9 @@ import '../utils/bank_constants.dart';
 import 'sms_parser_strategy.dart';
 
 class GenericBankStrategy extends SmsParserStrategy {
+  static final RegExp ipnCreditRegex = SmsParserStrategy.bankIpnCreditRegex;
+  static final RegExp ipnDebitRegex = SmsParserStrategy.bankIpnDebitRegex;
+
   @override
   bool canParse(String sender) {
     // 1. Normalize the sender for comparison (remove +20, spaces, dashes)
@@ -24,7 +27,7 @@ class GenericBankStrategy extends SmsParserStrategy {
     }
 
     final upperSender = sender.toUpperCase().trim();
-    if (BankConstants.supportedBankSenders.contains(upperSender) ||
+    if (BankConstants.isSupportedBankSender(sender) ||
         upperSender.contains("IPN") ||
         upperSender.contains("INSTAPAY")) {
       return true;
@@ -46,7 +49,8 @@ class GenericBankStrategy extends SmsParserStrategy {
   ParsedSmsDto? parse(
     String normalizedBody, [
     String? sender,
-    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+    void Function(String reason, String failureStep)?
+        onDiagnostic, // [TEMP DIAGNOSTIC]
   ]) {
     return SmsParserStrategy.parseStrict(
       normalizedBody: normalizedBody,

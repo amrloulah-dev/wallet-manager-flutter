@@ -17,7 +17,8 @@ abstract class SmsParserStrategy {
   ParsedSmsDto? parse(
     String normalizedBody, [
     String? sender,
-    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+    void Function(String reason, String failureStep)?
+        onDiagnostic, // [TEMP DIAGNOSTIC]
   ]);
 
   // ── Strict Extraction Helpers ─────────────────────────────
@@ -40,12 +41,41 @@ abstract class SmsParserStrategy {
   /// Standalone fallback Egyptian mobile phone regex.
   static final RegExp standalonePhoneRegex = RegExp(r'01[0125]\d{8}');
 
+  /// Specialized Vodafone Cash & Telco Outbound Debit regex.
+  /// Matches `تحويل [مبلغ] <amount> [جنيه] ... لرقم <phone>`
+  static final RegExp telcoDebitRegex = RegExp(
+    r'(?:تم\s+)?تحويل\s+(?:مبلغ\s+)?(?<amount>\d+(?:\.\d+)?)\s*(?:جنيه|ج\.م|جم|egp|le)?.*?(?:لـ?رقم|إلى\s+رقم|الي\s+رقم|إلي\s+رقم)\s*(?<phone>01[0125]\d{8})',
+    caseSensitive: false,
+  );
+
+  /// Specialized Vodafone Cash & Telco Inbound Credit regex.
+  /// Matches `استلام [مبلغ] <amount> [جنيه] ... من رقم <phone>`
+  /// Strictly anchors to "من رقم" to prevent capturing receiver wallet number in "على رقم محفظتك".
+  static final RegExp telcoCreditRegex = RegExp(
+    r'(?:تم\s+)?(?:استلام|إستلام)\s+(?:مبلغ\s+)?(?<amount>\d+(?:\.\d+)?)\s*(?:جنيه|ج\.م|جم|egp|le)?.*?من\s+رقم\s*(?<phone>01[0125]\d{8})',
+    caseSensitive: false,
+  );
+
+  /// Specialized Bank Instant Payment Network (IPN / InstaPay) Inbound Credit regex.
+  /// Matches `تم اضافة [مبلغ] <amount> [EGP/LE/جنيه/جم] إلى حساب [رقم] <account>`
+  static final RegExp bankIpnCreditRegex = RegExp(
+    r'(?:تم\s+)?(?:اضاف[ةه]|إضاف[ةه])\s+(?:مبلغ\s+)?(?<amount>\d+(?:\.\d+)?)\s*(?<currency>EGP|LE|جنيه|جم)?\s+(?:إلى|الى|الي|إلي)\s+حساب\s+(?:رقم\s+)?(?<account>[a-zA-Z0-9*#\-_]+)',
+    caseSensitive: false,
+  );
+
+  /// Specialized Bank Instant Payment Network (IPN / InstaPay) Outbound Debit regex.
+  /// Matches `تم تحويل/خصم [مبلغ] <amount> [EGP/LE/جنيه/جم] من حساب [رقم] <account>`
+  static final RegExp bankIpnDebitRegex = RegExp(
+    r'(?:تم\s+)?(?:تحويل|خصم)\s+(?:مبلغ\s+)?(?<amount>\d+(?:\.\d+)?)\s*(?<currency>EGP|LE|جنيه|جم)?\s+من\s+حساب\s+(?:رقم\s+)?(?<account>[a-zA-Z0-9*#\-_]+)',
+    caseSensitive: false,
+  );
+
   /// Strips fee, service charge, and commission clauses from SMS body as noise.
   /// The app calculates all fees and commissions internally and automatically.
   static final RegExp feeClauseRegex = RegExp(
     r'(?:'
     // Arabic: [تم خصم / خصم / بخصم] X [جنيه/جم] رسوم/مصاريف/عمولة [الخدمة/تحويل/ادارية]
-    r'(?:تم\s+خصم|خصم|بخصم)?\s*[\d.]+\s*(?:جنيه|جم|egp|le)?\s*(?:رسوم|مصاريف|عمول[ةه])(?:\s*(?:الخدم[ةه]|خدم[ةه]|إداري[ةه]|اداري[ةه]|تحويل))*'
+    r'(?:(?:تم\s+خصم|خصم|بخصم)\s*\d{1,4}(?:\.\d+)?\s*(?:جنيه|جم|egp|le)?|\b\d{1,4}(?:\.\d+)?\s*(?:جنيه|جم|egp|le)\s*)\s*(?:رسوم|مصاريف|عمول[ةه])(?:\s*(?:الخدم[ةه]|خدم[ةه]|إداري[ةه]|اداري[ةه]|تحويل))*'
     r'|'
     // Arabic: رسوم/مصاريف/عمولة [الخدمة/تحويل/ادارية] [:] X [جنيه/جم]
     r'(?:رسوم|مصاريف|عمول[ةه])(?:\s*(?:الخدم[ةه]|خدم[ةه]|إداري[ةه]|اداري[ةه]|تحويل))?\s*(?:هي|:)?\s*[\d.]+\s*(?:جنيه|جم|egp|le)?'
@@ -65,10 +95,17 @@ abstract class SmsParserStrategy {
     RegExp(r'خصم', caseSensitive: false),
     RegExp(r'sent', caseSensitive: false),
     RegExp(r'تنفيذ\s+تحويل\s+من', caseSensitive: false),
-    RegExp(r'من\s+(?:بطاقة|بطاقه|كارت|كارتك|كارتكم|بطاقتك|بطاقتكم|حسابكم|حسابك)', caseSensitive: false),
-    RegExp(r'تحويل.*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))', caseSensitive: false),
-    RegExp(r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت).*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))', caseSensitive: false),
-    RegExp(r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت)\s+مبلغ', caseSensitive: false),
+    RegExp(
+        r'من\s+(?:بطاقة|بطاقه|كارت|كارتك|كارتكم|بطاقتك|بطاقتكم|حسابكم|حسابك)',
+        caseSensitive: false),
+    RegExp(
+        r'تحويل.*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))',
+        caseSensitive: false),
+    RegExp(
+        r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت).*?(?:إلى|الى|الي|إلي|لـ|ل\s+|لرقم)\s*(?!(?:محفظتك|محفظتكم|حسابك|حسابكم|كارتك|كارتكم|بطاقتك|بطاقتكم))',
+        caseSensitive: false),
+    RegExp(r'(?:تم\s+)?(?:ارسال|إرسال|أرسلت|ارسلت)\s+مبلغ',
+        caseSensitive: false),
     RegExp(r'دفع', caseSensitive: false),
     RegExp(r'سحب', caseSensitive: false),
     RegExp(r'paid', caseSensitive: false),
@@ -84,7 +121,9 @@ abstract class SmsParserStrategy {
     RegExp(r'received', caseSensitive: false),
     RegExp(r'ايداع|إيداع', caseSensitive: false),
     RegExp(r'وارد', caseSensitive: false),
-    RegExp(r'تحويل.*?(?:لبطاقتكم|لبطاقتك|لحسابكم|لحسابك|في\s+حسابكم|في\s+حسابك|الي\s+حسابك|الى\s+حسابك|الي\s+حسابكم|الى\s+حسابكم|في\s+محفظتك|في\s+محفظتكم|الي\s+محفظتك|الى\s+محفظتك|الي\s+محفظتكم|الى\s+محفظتكم)', caseSensitive: false),
+    RegExp(
+        r'تحويل.*?(?:لبطاقتكم|لبطاقتك|لحسابكم|لحسابك|في\s+حسابكم|في\s+حسابك|الي\s+حسابك|الى\s+حسابك|الي\s+حسابكم|الى\s+حسابكم|في\s+محفظتك|في\s+محفظتكم|الي\s+محفظتك|الى\s+محفظتك|الي\s+محفظتكم|الى\s+محفظتكم)',
+        caseSensitive: false),
     RegExp(r'(?:محول|تحويل|مرسل|ارسال|إرسال)\s+من', caseSensitive: false),
     RegExp(r'وصلك|وصل', caseSensitive: false),
     RegExp(r'credited', caseSensitive: false),
@@ -107,23 +146,98 @@ abstract class SmsParserStrategy {
     required String normalizedBody,
     required String defaultProvider,
     required String strategyTag,
-    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+    void Function(String reason, String failureStep)?
+        onDiagnostic, // [TEMP DIAGNOSTIC]
   }) {
     // 0. Fee Clause Stripping (Fees treated as noise per system architecture)
     final sanitizedBody = normalizedBody.replaceAll(feeClauseRegex, ' ');
+
+    // Check specialized Telco Inbound Credit pattern first
+    final telcoCreditMatch = telcoCreditRegex.firstMatch(sanitizedBody);
+    if (telcoCreditMatch != null) {
+      final amount =
+          double.tryParse(telcoCreditMatch.namedGroup('amount') ?? '');
+      final phone = telcoCreditMatch.namedGroup('phone');
+      if (amount != null && amount > 0 && phone != null && phone.isNotEmpty) {
+        return ParsedSmsDto(
+          amount: amount,
+          type: TransactionType.credit,
+          counterpartyNumber: phone,
+          serviceProvider: defaultProvider,
+          originalBody: normalizedBody,
+        );
+      }
+    }
+
+    // Check specialized Telco Outbound Debit pattern
+    final telcoDebitMatch = telcoDebitRegex.firstMatch(sanitizedBody);
+    if (telcoDebitMatch != null) {
+      final amount =
+          double.tryParse(telcoDebitMatch.namedGroup('amount') ?? '');
+      final phone = telcoDebitMatch.namedGroup('phone');
+      if (amount != null && amount > 0 && phone != null && phone.isNotEmpty) {
+        return ParsedSmsDto(
+          amount: amount,
+          type: TransactionType.debit,
+          counterpartyNumber: phone,
+          serviceProvider: defaultProvider,
+          originalBody: normalizedBody,
+        );
+      }
+    }
+
+    // Check specialized Bank IPN Inbound Credit pattern
+    final bankIpnCreditMatch = bankIpnCreditRegex.firstMatch(sanitizedBody);
+    if (bankIpnCreditMatch != null) {
+      final amount =
+          double.tryParse(bankIpnCreditMatch.namedGroup('amount') ?? '');
+      final account = bankIpnCreditMatch.namedGroup('account');
+      if (amount != null && amount > 0) {
+        return ParsedSmsDto(
+          amount: amount,
+          type: TransactionType.credit,
+          counterpartyNumber:
+              (account != null && account.isNotEmpty) ? account : 'IPN/Bank',
+          serviceProvider:
+              defaultProvider == 'Vodafone Cash' ? 'IPN/Bank' : defaultProvider,
+          originalBody: normalizedBody,
+        );
+      }
+    }
+
+    // Check specialized Bank IPN Outbound Debit pattern
+    final bankIpnDebitMatch = bankIpnDebitRegex.firstMatch(sanitizedBody);
+    if (bankIpnDebitMatch != null) {
+      final amount =
+          double.tryParse(bankIpnDebitMatch.namedGroup('amount') ?? '');
+      final account = bankIpnDebitMatch.namedGroup('account');
+      if (amount != null && amount > 0) {
+        return ParsedSmsDto(
+          amount: amount,
+          type: TransactionType.debit,
+          counterpartyNumber:
+              (account != null && account.isNotEmpty) ? account : 'IPN/Bank',
+          serviceProvider:
+              defaultProvider == 'Vodafone Cash' ? 'IPN/Bank' : defaultProvider,
+          originalBody: normalizedBody,
+        );
+      }
+    }
 
     // 1. Amount Extraction (Anchor-Based ONLY on sanitized body)
     final amountMatch = amountAnchorRegex.firstMatch(sanitizedBody);
     if (amountMatch == null) {
       // [TEMP DIAGNOSTIC]
-      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Regex anchor missing in: $normalizedBody');
+      onDiagnostic?.call(
+          'AMOUNT_NOT_FOUND', 'Regex anchor missing in: $normalizedBody');
       return null;
     }
 
     final rawAmountStr = amountMatch.namedGroup('amount');
     if (rawAmountStr == null) {
       // [TEMP DIAGNOSTIC]
-      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Amount named group missing in: $normalizedBody');
+      onDiagnostic?.call(
+          'AMOUNT_NOT_FOUND', 'Amount named group missing in: $normalizedBody');
       return null;
     }
 
@@ -134,13 +248,13 @@ abstract class SmsParserStrategy {
         '$strategyTag:parseStrict',
       );
       // [TEMP DIAGNOSTIC]
-      onDiagnostic?.call('AMOUNT_NOT_FOUND', 'Invalid numeric amount "$rawAmountStr" in: $normalizedBody');
+      onDiagnostic?.call('AMOUNT_NOT_FOUND',
+          'Invalid numeric amount "$rawAmountStr" in: $normalizedBody');
       return null;
     }
 
     // 2. Transaction Type Resolution (Compound Context with Action Anchor Precedence)
-    bool isDebit =
-        _debitCompoundRegexes.any((r) => r.hasMatch(sanitizedBody));
+    bool isDebit = _debitCompoundRegexes.any((r) => r.hasMatch(sanitizedBody));
     bool isCredit =
         _creditCompoundRegexes.any((r) => r.hasMatch(sanitizedBody));
 
@@ -155,7 +269,8 @@ abstract class SmsParserStrategy {
       } else {
         // True contradiction or ambiguity
         // [TEMP DIAGNOSTIC]
-        onDiagnostic?.call('TYPE_UNRESOLVED', 'Conflicting debit and credit indicators in: $sanitizedBody');
+        onDiagnostic?.call('TYPE_UNRESOLVED',
+            'Conflicting debit and credit indicators in: $sanitizedBody');
         return null;
       }
     }
@@ -163,7 +278,8 @@ abstract class SmsParserStrategy {
     // Fail-fast if neither matches or still ambiguous
     if (isDebit == isCredit) {
       // [TEMP DIAGNOSTIC]
-      onDiagnostic?.call('TYPE_UNRESOLVED', 'No debit/credit context found in: $sanitizedBody');
+      onDiagnostic?.call('TYPE_UNRESOLVED',
+          'No debit/credit context found in: $sanitizedBody');
       return null;
     }
 
@@ -183,8 +299,21 @@ abstract class SmsParserStrategy {
       }
     }
 
+    // Fallback: check masked account or card reference
+    if (counterpartyNumber == null || counterpartyNumber.isEmpty) {
+      final accountMatch = RegExp(
+        r'(?:حساب|بطاق[ةه]|كارت)\s*(?:رقم\s*)?(?<account>[a-zA-Z0-9*#\-_]+)',
+        caseSensitive: false,
+      ).firstMatch(sanitizedBody);
+      if (accountMatch != null) {
+        counterpartyNumber = accountMatch.namedGroup('account');
+      }
+    }
+
     final String serviceProvider;
-    if (counterpartyNumber != null && counterpartyNumber.isNotEmpty) {
+    if (counterpartyNumber != null &&
+        counterpartyNumber.isNotEmpty &&
+        counterpartyNumber != 'IPN/Bank') {
       // E-Wallet transaction
       serviceProvider = defaultProvider;
     } else {

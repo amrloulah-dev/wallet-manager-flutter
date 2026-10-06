@@ -59,7 +59,8 @@ class SmsParserEngine {
 
     final lower = trimmed.toLowerCase();
     if (_knownTelecomTriggers.contains(lower) ||
-        _knownTelecomTriggers.contains(lower.replaceAll(' ', '').replaceAll('_', ''))) {
+        _knownTelecomTriggers
+            .contains(lower.replaceAll(' ', '').replaceAll('_', ''))) {
       return true;
     }
 
@@ -73,7 +74,7 @@ class SmsParserEngine {
     }
 
     final upper = trimmed.toUpperCase();
-    if (BankConstants.supportedBankSenders.contains(upper) ||
+    if (BankConstants.isSupportedBankSender(trimmed) ||
         upper.contains('IPN') ||
         upper.contains('INSTAPAY')) {
       return true;
@@ -176,4 +177,3 @@ class SmsParserEngine {
     return null;
   }
 }
-

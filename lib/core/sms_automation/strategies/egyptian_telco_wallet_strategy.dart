@@ -5,6 +5,9 @@ import 'sms_parser_strategy.dart';
 /// Unified Egyptian Telco Wallet Strategy handling Vodafone Cash, Orange Cash,
 /// Etisalat Cash, and WE Pay with dynamic provider resolution.
 class EgyptianTelcoWalletStrategy extends SmsParserStrategy {
+  static final RegExp debitRegex = SmsParserStrategy.telcoDebitRegex;
+  static final RegExp creditRegex = SmsParserStrategy.telcoCreditRegex;
+
   static final Set<String> _vodafoneTriggers = {
     'vf-cash',
     'vodafone',
@@ -46,8 +49,10 @@ class EgyptianTelcoWalletStrategy extends SmsParserStrategy {
 
   String _currentProvider = 'Vodafone Cash';
 
-  static bool _matches(Set<String> triggers, String lower, String normalizedNoSpace) {
-    if (triggers.contains(lower) || triggers.contains(lower.replaceAll(' ', '').replaceAll('_', ''))) {
+  static bool _matches(
+      Set<String> triggers, String lower, String normalizedNoSpace) {
+    if (triggers.contains(lower) ||
+        triggers.contains(lower.replaceAll(' ', '').replaceAll('_', ''))) {
       return true;
     }
     return triggers.contains(normalizedNoSpace);
@@ -57,7 +62,8 @@ class EgyptianTelcoWalletStrategy extends SmsParserStrategy {
   String resolveProvider(String sender) {
     final lower = sender.toLowerCase().trim();
     final normalized = TextNormalizer.normalize(lower);
-    final normalizedNoSpace = normalized.replaceAll(' ', '').replaceAll('_', '');
+    final normalizedNoSpace =
+        normalized.replaceAll(' ', '').replaceAll('_', '');
 
     if (_matches(_orangeTriggers, lower, normalizedNoSpace)) {
       return 'Orange Cash';
@@ -75,7 +81,8 @@ class EgyptianTelcoWalletStrategy extends SmsParserStrategy {
   bool canParse(String sender) {
     final lower = sender.toLowerCase().trim();
     final normalized = TextNormalizer.normalize(lower);
-    final normalizedNoSpace = normalized.replaceAll(' ', '').replaceAll('_', '');
+    final normalizedNoSpace =
+        normalized.replaceAll(' ', '').replaceAll('_', '');
 
     if (_matches(_orangeTriggers, lower, normalizedNoSpace)) {
       _currentProvider = 'Orange Cash';
@@ -98,7 +105,8 @@ class EgyptianTelcoWalletStrategy extends SmsParserStrategy {
   ParsedSmsDto? parse(
     String normalizedBody, [
     String? sender,
-    void Function(String reason, String failureStep)? onDiagnostic, // [TEMP DIAGNOSTIC]
+    void Function(String reason, String failureStep)?
+        onDiagnostic, // [TEMP DIAGNOSTIC]
   ]) {
     final provider = (sender != null && sender.isNotEmpty)
         ? resolveProvider(sender)
