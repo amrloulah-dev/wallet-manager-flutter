@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +14,6 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../providers/subscription_provider.dart';
 import '../../../../core/constants/route_constants.dart';
 import 'section_title.dart';
-import 'sms_parser_playground_card.dart'; // [TEMP DIAGNOSTIC]
 
 class SmsAutomationSection extends StatefulWidget {
   const SmsAutomationSection({super.key});
@@ -31,8 +29,6 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
   List<Map<String, dynamic>> _availableWallets = [];
   SimWalletConfig? _sim1Config;
   SimWalletConfig? _sim2Config;
-  // [TEMP DIAGNOSTIC]
-  List<Map<String, dynamic>> _rejectedLogs = [];
 
   @override
   void initState() {
@@ -44,10 +40,6 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
     await _storage.initialize();
     final enabled = _storage.isSmsAutomationEnabled;
     final wallets = _storage.getCachedWalletLiteList();
-
-    // [TEMP DIAGNOSTIC] Reload and read rejected SMS logs
-    await _storage.reloadDisk();
-    final rejectedLogs = _storage.getRejectedSmsLogs();
 
     // Load current mappings
     final mappings = _storage.getSimMappings();
@@ -61,19 +53,6 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
         _availableWallets = wallets;
         _sim1Config = sim1;
         _sim2Config = sim2;
-        // [TEMP DIAGNOSTIC]
-        _rejectedLogs = rejectedLogs;
-      });
-    }
-  }
-
-  // [TEMP DIAGNOSTIC]
-  Future<void> _refreshDiagnosticLogs() async {
-    await _storage.reloadDisk();
-    final logs = _storage.getRejectedSmsLogs();
-    if (mounted) {
-      setState(() {
-        _rejectedLogs = logs;
       });
     }
   }
@@ -276,136 +255,7 @@ class _SmsAutomationSectionState extends State<SmsAutomationSection> {
             ],
           ),
         ),
-        // [TEMP DIAGNOSTIC]
-        const SmsParserPlaygroundCard(),
-        // [TEMP DIAGNOSTIC]
-        _buildDiagnosticCard(),
       ],
-    );
-  }
-
-  // [TEMP DIAGNOSTIC]
-  Widget _buildDiagnosticCard() {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.bug_report_outlined,
-                  color: AppColors.warning,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'سجل الرسائل المرفوضة (Diagnostic Logs)',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _rejectedLogs.isEmpty
-                        ? AppColors.divider(context).withAlpha(50)
-                        : AppColors.warning.withAlpha(50),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '(${_rejectedLogs.length} messages)',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: _rejectedLogs.isEmpty
-                          ? AppColors.textSecondary(context)
-                          : AppColors.warning,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.refresh, size: 20),
-                  tooltip: 'تحديث السجل',
-                  onPressed: _refreshDiagnosticLogs,
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('نسخ السجل'),
-                  onPressed: () async {
-                    if (_rejectedLogs.isEmpty) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('لا توجد رسائل مرفوضة حالياً'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                      return;
-                    }
-
-                    final jsonText = const JsonEncoder.withIndent('  ')
-                        .convert(_rejectedLogs);
-                    try {
-                      await Clipboard.setData(ClipboardData(text: jsonText));
-                    } catch (e, stack) {
-                      AppErrorHandler.logSilentError(
-                        e.toString(),
-                        'SmsAutomationSection.copyDiagnosticLogs',
-                        stackTrace: stack,
-                      );
-                    }
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('تم نسخ سجل الرسائل المرفوضة بنجاح'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  icon: const Icon(Icons.delete_outline, size: 16),
-                  label: const Text('مسح'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                  ),
-                  onPressed: _rejectedLogs.isEmpty
-                      ? null
-                      : () async {
-                          await _storage.clearRejectedSmsLogs();
-                          if (mounted) {
-                            setState(() {
-                              _rejectedLogs = [];
-                            });
-                            ToastUtils.showSuccess(
-                              'تم مسح سجل الرسائل المرفوضة',
-                            );
-                          }
-                        },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 

@@ -40,9 +40,16 @@ void main() {
     when(() => mockStorage.subIsSuspended).thenReturn(false);
     when(() => mockStorage.subSmsEnabled).thenReturn(true);
     when(() => mockStorage.isSubLifetime).thenReturn(true);
-    when(() => mockStorage.saveCurrentActiveSms(any())).thenAnswer((_) async {});
+    when(() => mockStorage.saveCurrentActiveSms(any()))
+        .thenAnswer((_) async {});
     when(() => mockStorage.reloadDisk()).thenAnswer((_) async {});
     when(() => mockStorage.cacheWalletLiteList(any())).thenAnswer((_) async {});
+    when(() => mockStorage.logRejectedSms(
+          sender: any(named: 'sender'),
+          rawBody: any(named: 'rawBody'),
+          reason: any(named: 'reason'),
+          failureStep: any(named: 'failureStep'),
+        )).thenAnswer((_) async {});
 
     when(() => mockNotifications.initialize(any()))
         .thenAnswer((_) async => true);
